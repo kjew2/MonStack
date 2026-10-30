@@ -25,11 +25,14 @@ namespace IdleRng.Sim.Tests
             var box = new EventOutbox(EventKinds.All);
             var sim = TestContent.NewSim(sink: box);
             var db = TestContent.Db;
-            // Stage 1: HP 21.4, hit 10 -> 3 hits -> 35 ticks per kill.
-            Assert.That(sim.Query.HitsToKill(db.EnemyHp(1)), Is.EqualTo(3));
-            sim.Advance(350);
+            // Stage 1: HP 21.4; ticks per kill = hits * ATTACK_INTERVAL_TICKS + SPAWN_DELAY_TICKS (derived from content).
+            var k = db.Constants;
+            int hits = sim.Query.HitsToKill(db.EnemyHp(1));
+            Assert.That(hits, Is.EqualTo((int)System.Math.Ceiling(db.EnemyHp(1) / k.BaseAtk)));
+            long perKill = hits * k.AttackIntervalTicks + k.SpawnDelayTicks;
+            sim.Advance(10 * perKill);
             var ev = box.Drain();
-            Assert.That(ev.OfType<StageAdvanced>().Single(), Is.EqualTo(new StageAdvanced(350, 1, 2, false)));
+            Assert.That(ev.OfType<StageAdvanced>().Single(), Is.EqualTo(new StageAdvanced(10 * perKill, 1, 2, false)));
             Assert.That(sim.State.Currencies.Gold, Is.EqualTo(10 * db.GoldPerKill(1)).Within(1e-9));
             sim.Validate();
         }
@@ -40,25 +43,26 @@ namespace IdleRng.Sim.Tests
             var box = new EventOutbox(EventKinds.All);
             var sim = TestContent.NewSim(sink: box);
             var db = TestContent.Db;
-            sim.Debug.SetStage(10);
+            const int S = 60;   // a stage under the default boss rule that base ATK cannot clear
+            sim.Debug.SetStage(S);
             // nine normal kills, then the 10th enemy is the boss
             while (!box.Drain().OfType<EnemySpawned>().Any(e => e.IsBoss)) sim.Tick();
-            Assert.That(sim.State.Combat.EnemyMaxHp, Is.EqualTo(10 * db.EnemyHp(10)));
-            Assert.That(sim.State.Combat.BossTimer, Is.EqualTo(200));
+            Assert.That(sim.State.Combat.EnemyMaxHp, Is.EqualTo(db.BossRuleFor(S).HpMult * db.EnemyHp(S)));
+            Assert.That(sim.State.Combat.BossTimer, Is.EqualTo(db.BossRuleFor(S).TimeTicks));
             Assert.That(sim.State.Daily.Progress[2], Is.EqualTo(1));   // boss attempt counts toward the quest
 
             sim.Advance(200);
-            Assert.That(box.Drain().OfType<BossFailed>().Single().Stage, Is.EqualTo(10));
+            Assert.That(box.Drain().OfType<BossFailed>().Single().Stage, Is.EqualTo(S));
             Assert.That(sim.State.Stage.Boss, Is.EqualTo(BossPhase.Walled));
-            Assert.That(sim.State.Lifetime.FirstWallStage, Is.EqualTo(10));
+            Assert.That(sim.State.Lifetime.FirstWallStage, Is.EqualTo(S));
 
             double gold = sim.State.Currencies.Gold;
             sim.Advance(500);
             Assert.That(sim.State.Stage.KillsInStage, Is.EqualTo(9));
             Assert.That(sim.State.Currencies.Gold, Is.GreaterThan(gold));
 
-            sim.Debug.SetStatLevel(200);
-            sim.Debug.SetStage(10);
+            sim.Debug.SetStatLevel(2000);
+            sim.Debug.SetStage(S);
             sim.State.Stage.KillsInStage = 9;
             sim.State.Stage.Boss = BossPhase.Walled;
             sim.State.Stage.BossFailsOnStage = 1;
@@ -67,8 +71,8 @@ namespace IdleRng.Sim.Tests
             box.Drain();
             sim.Advance(300);
             var ev = box.Drain();
-            Assert.That(ev.OfType<BossCleared>().Single().Stage, Is.EqualTo(10));
-            Assert.That(ev.OfType<StageAdvanced>().First(), Is.EqualTo(new StageAdvanced(ev.OfType<StageAdvanced>().First().Tick, 10, 11, true)));
+            Assert.That(ev.OfType<BossCleared>().Single().Stage, Is.EqualTo(S));
+            Assert.That(ev.OfType<StageAdvanced>().First(), Is.EqualTo(new StageAdvanced(ev.OfType<StageAdvanced>().First().Tick, S, S + 1, true)));
             Assert.That(ev.OfType<FirstClear>().Single().Gems, Is.EqualTo(10));
             Assert.That(sim.AttemptBoss().Reason, Is.EqualTo(Reject.NoBossToAttempt));
         }

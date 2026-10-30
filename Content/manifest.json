@@ -9,7 +9,7 @@
     },
     "boss_rules": {
       "file": "boss_rules.json",
-      "sha256": "6362966c98412e49a97907c7d451634d8467c31c9e1e547df1f06f05209aeac6"
+      "sha256": "e64c9c0323f51839c6b61a3171671611740d52cc1be0d28ecae4b94530d34819"
     },
     "class_advances": {
       "file": "class_advances.json",
@@ -17,7 +17,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "f8401cfa644de03fc36eea9f57c44ada908813ee3a835e67b77df9fb0d0e7079"
+      "sha256": "ad10ddcd3eb9c032b4bf40f7c8676af142cb24779e4eb598806d18c64a712e43"
     },
     "curves": {
       "file": "curves.json",
@@ -60,5 +60,5 @@
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "303d10c96325f48f33d0782a5bd5beee033052ded9a5276a5b4d768dcb33c09f"
+  "content_hash": "072e50ccdce50a2e116ab235582544e6c2f96deac53b12a6819797c8e3d87720"
 }

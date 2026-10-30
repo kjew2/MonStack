@@ -9,7 +9,7 @@
     {
       "key": "BASE_ATK",
       "type": "double",
-      "value": 10.0
+      "value": 20.0
     },
     {
       "key": "ATTACK_INTERVAL_TICKS",
