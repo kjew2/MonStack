@@ -132,8 +132,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('drill-str').waitFor();
   check(/costs 19 energy/.test(await text('[data-id=odds]')), 'the talent cut the next run\'s drill cost: ' + (await text('[data-id=odds]')).slice(-26));
   await act('tab-log').click();
-  page.once('dialog', (d) => d.accept());
   await act('abandon').click();
+  await act('abandon-no').click();
+  check((await readAccount()).ActiveRun !== null, 'declining the abandon prompt keeps the run');
+  await act('abandon').click();
+  await act('abandon-yes').click();
   await act('start').waitFor();
   check(((await readAccount()).ActiveRun) === null, 'abandoning ends the run without sealing');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'and the Vault is unchanged');

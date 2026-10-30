@@ -69,6 +69,8 @@ Content table `chase_conditions`: `id`, `tree_id` (a chase tree), `type`, `ref`,
 | `stat_at_least` | trained stat | the stat is at least `amount` |
 | `tally_at_least` | `damage_dealt`, `evades`, `crits`, `kills`, `wins`, or `damage_<element>` | the run tally (section 6) is at least `amount` |
 
+**Source hints (kj).** The Trees tab shows, under each chase tree, where every tree its conditions name comes from (the bridge's `source` text per tree: a species' native tree, the stat threshold that drafts a generic tree, or the book that holds a book tree), so a player can tell how to obtain what a condition asks for.
+
 After every command the run reconciles chase trees, in this order:
 
 1. A slotted chase tree whose conditions no longer hold **locks again** and leaves its slot (kj: an unlocked chase tree does not survive losing its prerequisites). **(agent)** It leaves like an overwritten tree (section 4). Repeat until nothing changes, since one removal can break another chase tree.
