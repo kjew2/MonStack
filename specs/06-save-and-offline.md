@@ -55,6 +55,8 @@ public sealed record GameState
     public DailyState        Daily       { get; init; } = new();        // 04 section 7.1
     public LifetimeStats     Stats       { get; init; } = new();
     public PendingPull?      PendingPull { get; set; }                  // 08 section 4; always null in local mode
+    public PendingReceipt?   PendingReceipt { get; set; }               // 08 section 6; null until IAP (P1)
+    public CertState?        Cert        { get; set; }                  // 10 section 4; null until the profile is certified
 }
 
 public sealed record ProfileHeader
@@ -65,6 +67,8 @@ public sealed record ProfileHeader
     public long LastSavedAtServerSec  { get; set; }    // IClock at last successful write; catch-up anchor (section 9)
     public long SaveSequence          { get; set; }    // +1 per write; cloud-save tiebreak (08 section 5)
     public bool DebugTainted          { get; set; }    // any debug command sets it (section 13)
+    public string? AccountId          { get; set; }    // 10 section 10; null in P0
+    public bool RankedLineage         { get; set; }    // 10 section 3; true only if created through a server genesis
 }
 
 public sealed record CombatState
@@ -94,6 +98,24 @@ public sealed record LifetimeStats
     public long GearDrops        { get; set; }   // invariant Rng["gear_rarity"].Counter == 2 * GearDrops
     public long EnhanceAttempts  { get; set; }   // invariant Rng["enhance"].Counter == EnhanceAttempts
     public long ActiveSeconds    { get; set; }   // ticked time; analytics only
+}
+
+public sealed record CertState        // last server-certified checkpoint, 10 section 4
+{
+    public long   Seq                    { get; init; }
+    public string StateHash              { get; init; } = "";   // lowercase hex SHA-256, 03 section 22
+    public long   CertifiedAtServerSec   { get; init; }
+    public string GenesisHash            { get; init; } = "";
+}
+
+public sealed record PendingReceipt     // IAP only, 08 section 6
+{
+    public string IdempotencyKey         { get; init; } = "";
+    public string Platform               { get; init; } = "";
+    public string ProductId              { get; init; } = "";
+    public string TransactionId          { get; init; } = "";
+    public string Payload                { get; init; } = "";
+    public long   RequestedAtServerSec   { get; init; }
 }
 
 public sealed record PendingPull       // remote gacha only, 08 section 4.4
@@ -258,6 +280,8 @@ Properties:
 - A crash during the `tmp` write leaves a partial `tmp` and untouched `sav`/`prev`. Startup deletes any stray `slot0.tmp`.
 - The directory entry is not fsynced (not reachable from C#). On a power loss within the filesystem's journal commit window the renames may be lost, which leaves the previous `slot0.sav` intact. Accepted.
 - Failure anywhere throws `SaveWriteException`; the caller keeps the in-memory state and retries at the next autosave (5.3). Note that `SaveStamp.Apply` has already run, so memory carries a newer `LastSavedAtServerSec` than disk; section 9.4 covers the consequence.
+
+**Command log sidecar (ranked profiles, P1).** Between server certifications the command log (`specs/03` section 22) is held in memory and written to `slot0.log` on the same cadence as the save, inside the same rotation, so a save and its log are replaced together or the previous pair is kept (`specs/10` section 12). Unranked profiles write no sidecar.
 
 ### 5.3 Autosave cadence
 
@@ -614,7 +638,7 @@ Rule P10 in 7.2 keeps the counters tied to the visible counts, so even a hand-ed
 
 | Attack | Effect | Why accepted in P0 |
 |---|---|---|
-| Editing the JSON (rooted device, desktop copy). The CRC is recomputable. | Arbitrary gold, gems, stage, copies. | 00 section 1 and 5: P0 is client-authoritative and single-player. There is no leaderboard, PvP or guild until P2, so a cheater only cheats their own progression. The money-adjacent assets (gems, pulls, receipts) move server-side in P1 (08 sections 4 and 6). An HMAC would need a key in the client, which is extractable: obfuscation, not protection, and not worth the engineering before P1. |
+| Editing the JSON (rooted device, desktop copy). The CRC is recomputable. | Arbitrary gold, gems, stage, copies. | 00 section 1 and 5: P0 is client-authoritative and single-player. (For ranked profiles in P1 the save is not trusted at all: the server replays the command log and compares `StateHash`, `specs/10` section 4, so an edited save simply fails certification.) There is no leaderboard, PvP or guild until P2, so a cheater only cheats their own progression. The money-adjacent assets (gems, pulls, receipts) move server-side in P1 (08 sections 4 and 6). An HMAC would need a key in the client, which is extractable: obfuscation, not protection, and not worth the engineering before P1. |
 | Reading `gacha_hero.Seed` and computing future pulls with the public generator. | Decide whether to pull now or wait. | 01 section 6: live, the server owns the seed and returns results; the client never has it. In the prototype the seed is local and this is accepted. |
 | Device clock jumps. | At most `OFFLINE_CAP_H` gold, one daily reset, one chest per jump (11.2 rule 5). | Bounded; `ServerClock` in P1 makes the device clock irrelevant. |
 | Speed hacks on the process clock or memory editing. | Faster ticks, edited values. | Same class as file editing; same reasoning. |

@@ -368,6 +368,7 @@ Thresholds and targets live in `src/IdleRng.Bots/Acceptance/acceptance-targets.j
 | AC4 | 4 | For each seed: every wall that opened on or before day `maxWallHoursThroughDay` has `WallClockHours <= maxWallHours`, measured at close or at the end of that day if still open | seed, stage, hours |
 | AC5 | 5 | For each seed and every day row: `StatLvl <= statLevelSlope * Stage + statLevelIntercept` | seed, day, statLvl, bound |
 | AC6 | 6 | `run --bot greedy-f2p --seed 7 --days 30 --all-days` executed twice in-process yields byte-identical text; and the golden check (section 11) passes | first differing line |
+| AC7 | `specs/10` 5 | Replay equivalence: record the command log of `greedy-f2p` seeds 1-4 for 30 days, replay it from genesis on a fresh `Simulation`, and require equal `StateHash()` at every day boundary and at the end; the committed `Fixtures/Replay/*.json` hashes also match | seed, day, expected hash, actual hash |
 
 The CLI prints one line per check and exits 1 if any fails:
 
@@ -382,6 +383,7 @@ FAIL AC3 first wall in 60..200: seed 13 walled first at stage 210
 PASS AC4 no wall opened by day 14 exceeds 48.00 h
 PASS AC5 statLvl <= 0.95*stage+50 on every day for 20 seeds
 PASS AC6 deterministic: seed 7 twice identical; golden matches
+PASS AC7 replay equivalence: seeds 1-4, 30 days, hashes equal at every day boundary
 RESULT 1 failure(s) in 38.2 s
 ```
 
@@ -395,6 +397,8 @@ Determinism is a property of `IdleRng.Sim` (`specs/03` sections 4, 5 and 18); th
 - Seeds in the sweep are aggregated in seed order after parallel execution.
 - `Math.Log` is used only in reporting (section 6.3) and never influences the run.
 - The same binary on x64 Linux, x64 Windows and Apple ARM64 must produce the same golden bytes; the golden check in CI on a different OS than the developer's machine is the standing proof. If it ever differs, the first suspect is a transcendental function or a `float` that crept into the sim, not the harness.
+
+Replay fixtures (`specs/10` section 5.1): the harness writes `Fixtures/Replay/seed-N.json` (genesis seeds, content hash, command log, expected `StateHash` at each day boundary). The same files are loaded by the .NET server runtime, the WebAssembly host and an IL2CPP device test; a hash that differs on any of them is a determinism bug in the sim, not in the harness.
 
 Tests: run seed 7 twice sequentially and compare bytes; run seeds 1-4 in parallel twice and compare each; compare the in-process `run` output with the committed golden.
 

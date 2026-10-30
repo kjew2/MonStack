@@ -24,8 +24,8 @@ P0 feature list:
 8. Headless bot harness that plays N days in seconds and emits the tuning table.
 9. Ugly-UI Unity client exposing all of the above.
 
-P1: gear substats and reroll/lock, pet banner, daily dungeon tickets, shard shop, rate-up banners, cloud save, receipt validation, rewarded ads.
-P2: rebirth/prestige, guilds, PvP, leaderboards.
+P1: gear substats and reroll/lock, pet banner, daily dungeon tickets, shard shop, rate-up banners, accounts, cloud save, receipt validation and IAP, rewarded ads, certified progress (server-verified), stage leaderboard, asynchronous PvP. The trust model that keeps these fair is `specs/10`; P0 builds only its cheap shapes (command log, state hash, schema fields).
+P2: rebirth/prestige, guilds, real-time PvP.
 
 ## 2. Canonical constants
 
@@ -163,6 +163,7 @@ Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, 
 4. **Save schema is versioned from v1** with forward-only migrations (`specs/06`).
 5. **Server-sensitive operations go through an interface** (`IGachaService`, `IClock`, `ISaveStore`) with a local implementation in the prototype and a documented remote contract (`specs/08`).
 6. **The bot harness is the acceptance test** for any balance change: `specs/09` defines the table it prints and the tolerance.
+7. **No competitive surface reads a value the client merely claims.** Anything a leaderboard, PvP match or paid balance depends on is either server-authoritative or server-verified by replaying the client's command log on the same `IdleRng.Sim` source (`specs/10`). The sim therefore records its commands and exposes `StateHash()` (`specs/03` section 22).
 
 ## 6. File map
 
@@ -180,6 +181,7 @@ idle-rng-game/
     07-client-unity-prototype.md
     08-backend-seams.md
     09-test-harness-and-bots.md
+    10-online-competitive.md
   tools/
     gacha_model.py               exact pity math
     power_curve_model.py         greedy-bot 30-day model
@@ -210,3 +212,4 @@ These were open or contradictory across the subagent-written specs and are now s
 7. **Enhancement does not carry** to a replacing piece in P0 (matches the bot). Revisit after the first playtest; full carry is estimated at +30 stages by day 30 and would need a bot rerun.
 8. **Constant ownership.** Names introduced by `04`/`05`/`03` are now rows in section 2. Until `specs/05` section 12 is done (Python models reading the JSON), the Python tools remain the place to change a number first.
 9. **Hero gacha replaces skill gacha.** The gacha pulls heroes (characters) instead of skills. Every number is unchanged: rates, pity, pool sizes, base DPS% and dupe levels carry over one for one, so `tools/` output and the bot targets are identical. In P0 a hero is a passive party bonus plus a cosmetic sprite on the combat screen (`specs/01` section 7.1); hero roles and active abilities are P1 ideas, not commitments. Identifiers were renamed (`gacha_skill` -> `gacha_hero`, `SKILL_*` -> `HERO_*`, `SkillId` -> `HeroId`, and so on).
+10. **Online and competitive play is P1, built on server verification, not a server sim.** Leaderboards, async PvP and IAP move from P2/unscheduled to P1. The engine stays on the device; the server replays segments of the command log to certify progress, owns time, gacha, the gem ledger and receipts, and issues every ranked profile's stream seeds at genesis (`specs/10` sections 2 to 4). A profile created offline is permanently unranked.

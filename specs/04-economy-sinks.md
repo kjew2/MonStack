@@ -537,7 +537,7 @@ Prices from 01 section 7: a chosen Epic for 250 shards, a chosen Legendary for 1
 
 ### 11.4 Other hooks (P1, P2)
 
-- IAP and rewarded ads (P1) add gems through one `GrantGems(source, amount)` call that also emits an event; nothing else changes.
+- IAP and rewarded ads (P1) add gems through one `GrantGems(source, amount)` call that also emits an event; nothing else changes. On a ranked profile the call applies a server ledger entry and is logged as `GrantFromLedger` with the ledger id, so segment replay applies the server's number and not the client's (`specs/10` sections 4.3 and 8).
 - Stage select or boss rush (P1) must make `ENH_COST` and `GEAR_TIER` read the player's highest stage, not the selected one, or the player farms cheap enhancement on a low stage (section 12 item 7).
 - Prestige (P2) resets `StatLevel` and `Stage`, keeps `Equipped` and `ClassAdvances` unless the design says otherwise, and must not reset `HighestFirstClearBossStage`.
 

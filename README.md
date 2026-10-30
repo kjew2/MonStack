@@ -16,6 +16,7 @@ Start with `specs/00-overview.md`. It holds the canonical constants and the cont
 | `specs/07-client-unity-prototype.md` | Unity project layout, screens, view-models, event wiring, placeholder art |
 | `specs/08-backend-seams.md` | `IClock` / `IGachaService` / `ISaveStore` contracts, local impls, future remote |
 | `specs/09-test-harness-and-bots.md` | Headless bot runner, acceptance table, determinism tests, CI |
+| `specs/10-online-competitive.md` | Trust model for accounts, IAP, leaderboards and async PvP: server-verified progress, genesis seeds, command log, fairness levers |
 
 Tools:
 

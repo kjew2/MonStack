@@ -932,7 +932,9 @@ Release build
 | Landscape and tablet layouts | P2 | |
 | Analytics and replay log | P1 | a second `IEventSink` alongside the outbox |
 | Push notifications (chest ready) | P2 | |
-| Prestige, guilds, PvP, leaderboards | P2 | |
+| Account sign-in, certified-progress status ("synced N min ago", "progress since last sync not counted"), leaderboard tab | P1 | HUD cog opens Settings (reserved section); a seventh tab slot is free; `specs/10` section 4.7 |
+| Async PvP screens (opponent list, battle playback from server result, rating) | P1 | `BattleSim` is pure and shared, so playback is a view-model over its events; `specs/10` section 9 |
+| Prestige, guilds, real-time PvP | P2 | |
 
 ## 17. Open decisions
 

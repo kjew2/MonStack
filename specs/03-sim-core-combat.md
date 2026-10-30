@@ -864,7 +864,7 @@ Performance (`PerfTests.cs`, `[Category("Perf")]`, skipped in Debug configuratio
 | Shard shop | P1 | `Currencies.Shards` is already tracked |
 | Pet banner, rate-up banners | P1 | `BannerDef`/`BannerState` are per banner; add a stream name per banner |
 | Daily quests, idle chest gem income | P1 (`specs/04`) | `Debug.GrantGems` is the harness stand-in until then |
-| Replay log of commands for bug reports | P1 | commands are methods with value-type arguments; wrap them in an `ICommand` record log |
+| Command log and `StateHash()` for server verification and bug reports | P0 shape, P1 service | section 22; `specs/10` sections 4 and 6 |
 | Server-issued `gacha_hero` seed | P1 (`specs/08`) | per-stream `Seed` is persisted individually |
 | Prestige / rebirth | P2 | would reset `Stage` and `Stat`; `Class.Advances` and a `MaxStage` field would need adding |
 | Mantissa/exponent number type | P2 | only if `STAGE_CAP` is ever approached |
@@ -879,3 +879,14 @@ Performance (`PerfTests.cs`, `[Category("Perf")]`, skipped in Debug configuratio
 6. Target framework: `netstandard2.1` with C# 9 is the safe Unity 2022 LTS choice. If the client moves to Unity 6 (.NET Standard 2.1 still, but C# 9 remains the ceiling), nothing changes; if the bots want C# 12 features, multi-target `netstandard2.1;net8.0`.
 7. Whether `SyncWallClock`'s UTC-day rollover becomes a server-local reset hour (`specs/08`).
 8. Starter grants (`specs/01` section 5: 1000 gems, 10 free pulls) are applied by `specs/04`, not by `NewProfile`; the harness does not apply them because the Python model does not. Confirm with `specs/04` and `specs/09`.
+
+## 22. Competitive-integrity requirements
+
+`specs/10` lets a server certify a client's progress by replaying its commands on this assembly and comparing a state hash. That needs four things here, all cheap now and costly to retrofit.
+
+1. **Command log.** Every player action in section 13 (`BuyStatLevel*`, `Enhance`, `EquipHero`, `UnequipHero`, `AutoEquipBestHeroes`, `AttemptBoss`, `Pull`, `Pull10`, the chest claim, `SyncWallClock`, `Debug.*`) appends a `CommandRecord(Tick, Kind, A, B, LedgerId)` to an `ICommandLog` set on `Simulation`. `Tick()` is not logged; ticks are the gaps between records. The default is a no-op log so the bot's hot path is unchanged.
+2. **`StateHash()`.** SHA-256 over a canonical encoding of `GameState`: fixed field order, maps sorted by key, `double` as raw IEEE bits, no serialiser involved. Defined once here; the server reuses it.
+3. **`Replay(log, signedTimes)`.** Applies a log to a state: `Advance` between records, the command at its tick, `SyncWallClock` with the supplied times. The bot harness uses it for the replay-equivalence check (`specs/09` AC7).
+4. **No new nondeterminism.** Anything iterated by the sim has a defined order (the `Copies` and `Banners` maps are iterated in key order). Streams still never read the clock.
+
+Debug commands are logged so tests can replay a debug-assisted run; certification rejects any segment that contains one (`specs/10` section 4.3). In server-issued-seed mode (`specs/10` section 3) the profile's stream seeds are inputs to genesis, not values the client chooses.

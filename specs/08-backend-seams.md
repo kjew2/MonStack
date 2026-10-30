@@ -70,6 +70,10 @@ public sealed class ServiceException : Exception
 | `IReceiptValidator` | `DisabledReceiptValidator`, `FakeReceiptValidator` (debug) | `RemoteReceiptValidator` | IAP verification and gem grants. |
 | `IRemoteConfig` | `NoRemoteConfig`, `FileRemoteConfig` (testers) | `RemoteConfig` | Content table overlay by `content_version`. |
 | `IAnalytics` | `FileAnalyticsSink`, `BotAnalyticsSink`, `NullAnalytics` | `RemoteAnalyticsSink` | Event delivery. |
+| `IAccountService` | `NoAccount` (anonymous local) | `RemoteAccountService` | Account id, ranked genesis and seed issue (`specs/10` section 3). |
+| `IProgressCertifier` | `NullCertifier` | `RemoteProgressCertifier` | Segment verification and the certified record (`specs/10` section 4). |
+| `ILeaderboardService` | none | `RemoteLeaderboardService` | Read-only boards fed by certification (`specs/10` section 7). |
+| `IPvpService` | none | `RemotePvpService` | Matchmaking, battle resolution, rating (`specs/10` section 9; interface written with the PvP rules). |
 
 ## 3. `IClock`
 
@@ -442,7 +446,7 @@ Server-authoritative from P1 (the seams in sections 3 to 7):
 
 Why this split is safe: P0 and P1 have no shared surface between players (00 section 1: leaderboards, PvP, guilds are P2). A cheater who edits gold or stage harms only their own experience and the tuning data, and 06 section 12 covers the data side. The cost of defending combat server-side is a full server sim or a replay verifier, neither of which pays for itself before P2.
 
-What P2 changes: leaderboards need a stage the server believes. Options are a replay verifier (the sim is deterministic, so a client can submit its inputs and the server re-runs them; feasible because the sim is pure C#) or a plausibility bound derived from the 02 bot curve plus purchase history. Decide then; nothing in P0 or P1 forecloses either.
+**Revised by `specs/10`.** The table above describes single-player and unranked play. Leaderboards, PvP and paid balances need values the server believes, so for ranked profiles combat, gold and gear are *server-verified* rather than client-authoritative: the client uploads a segment of its command log, the server replays it on the same `IdleRng.Sim` source and accepts the result only if the state hashes match (`specs/10` section 4). The decision recorded here earlier (replay verifier versus plausibility bound) is made: replay, because the sim is deterministic and a day of play replays in tens of milliseconds. Plausibility remains only as the analytics flag in `specs/06` section 12.2.
 
 ## 12. Open decisions
 
@@ -454,3 +458,4 @@ What P2 changes: leaderboards need a stage the server believes. Options are a re
 6. **`PendingReceipt` schema step.** Add it to v1 now (a nullable field costs nothing and avoids a migration) or wait for P1. Leaning add now, alongside `PendingPull`.
 7. **Server-side plausibility bound.** Whether `plausibility_flag` should also be computed server-side on cloud-save upload in P1, so flagged profiles can be excluded from live tuning data without trusting the client's own flag.
 8. **TypeScript vs Go for a Nakama port.** Only relevant if the fallback is taken; Go for exact uint64 arithmetic unless the team strongly prefers TypeScript.
+9. **Competitive-play seams.** `IAccountService`, `IProgressCertifier`, `ILeaderboardService` and `IPvpService` are fixed in shape by `specs/10`; their contracts are written when P1a to P1d start. The BaaS spike in section 10 must now also cover running the certifier (`Replay` plus `StateHash`) in the chosen server runtime, in addition to the gacha vectors.
