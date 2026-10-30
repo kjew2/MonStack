@@ -27,4 +27,4 @@ The cog opens playtest tools: speed x1/x5/x20/x100 (moves the game clock too, so
 
 - **Permanently unranked.** It creates its own random seeds, so it can never be certified for leaderboards or PvP (`specs/10` section 3). That is right for a playtest build; a ranked browser client needs a server genesis.
 - **Needs HTTP.** WebAssembly does not load from `file://`, and the claude.ai artifact page cannot host the .NET runtime, so there is no install-free way to play.
-- The core still lacks the command log, `StateHash` and `Replay` from `specs/03` section 22 and `specs/10`.
+- The core has the command log, `StateHash` and `Replay` (`specs/03` section 22, `specs/10` section 6), but the bridge does not expose them yet.

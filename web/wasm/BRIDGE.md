@@ -54,4 +54,4 @@ Labels and display numbers for the UI, from the same `ContentDb` (UPPER_SNAKE ke
 
 ## Not exposed yet
 
-The command log, `StateHash()` and `Replay` from `specs/03` section 22 and `specs/10` sections 4 to 6 are not in the core yet, so the bridge has nothing to expose for them.
+The core's command log, `StateHash()` and `Replay` (`specs/03` section 22, `specs/10` section 6) are not exposed through the bridge yet; they become relevant once the web client talks to a certifier (`specs/10` section 4).

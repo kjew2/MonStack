@@ -3,7 +3,7 @@
   "description": "specs/08 section 4.3 rule 4. Per vector: fresh banner (pity 0, no copies), gacha_hero stream RngStream(seed = streamSeed, counter = 0), batches run in order (length 10 = guaranteed 10-pull). Each pull is [tier, heroId, pityAfter].",
   "regenerate": "dotnet run --project src/IdleRng.Bots -- gacha-vectors --update",
   "contentVersion": "1.0",
-  "contentHash": "072e50ccdce50a2e116ab235582544e6c2f96deac53b12a6819797c8e3d87720",
+  "contentHash": "c370193e9029c39d0204606693fe28cb9cf8cf451d6939fb4d15c5fe7c5f1573",
   "bannerId": "hero_standard",
   "pullsPerSeed": 1000,
   "vectors": [
