@@ -35,6 +35,8 @@ Keep these true and the C# port is a translation:
 
 ## Known differences from the specs
 
+- **Permanently unranked.** It creates its own random seeds and keeps no command log, so it can never be certified for leaderboards or PvP (`specs/10` section 3). That is right for a playtest build. A ranked browser client would be the C# core compiled to WebAssembly plus a server genesis.
+
 - Replaced gear is discarded, not sold (`specs/03` section 8.2; `specs/00` mentions a sell value).
 - No P1 systems (substats, shard shop, pets, dungeons).
 - The bot plays one 2-hour session per day, as `specs/09` section 4 does, so it collects one idle chest per day. Gem income lands at about 160 to 290 per day against the 300 target, the gap `specs/04` section 7.4 and section 14 already describe. Stage targets still land within 20%.
