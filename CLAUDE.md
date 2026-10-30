@@ -26,4 +26,4 @@ This file is how lessons reach the next agent. When the user corrects you on som
 
 ## Lessons
 
-(none yet)
+- Generated test data is large and not for reading. Never open, grep through or hand-edit `Fixtures/Parity/*.json` (once it exists; the biggest is several MB). Regenerate with `node web/tools/gen-parity.js` and check with `node web/tools/verify-parity.js`. To inspect one, read only the first few lines or run its verify script. The same goes for `golden/` files: regenerate them through the bot CLI, never edit by hand.
