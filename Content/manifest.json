@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2.2",
+  "content_version": "2.3",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "banners": {
@@ -13,7 +13,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "23aaf37459108c0e24c1ac6e05092789b607885b894f31d70f314a8b85e830d2"
+      "sha256": "7853b4322d6679f4bbb480514d1abe8975d3beeb0d9034d1e3f07d72310d74ef"
     },
     "curves": {
       "file": "curves.json",
@@ -72,5 +72,5 @@
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "a77f919a83a680e19722f8ed210835a298bef3f1df52c6701230b290b040466e"
+  "content_hash": "56ef064e136bf5cc7ea40bd8493502654036eb78584699429d8499dd26a71b14"
 }

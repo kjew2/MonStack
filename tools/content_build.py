@@ -47,6 +47,20 @@ REQUIRED_CONSTANTS = {
     "IDLE_CHEST_HOURS": "double", "IDLE_CHEST_GEMS": "int",
     "BATTLE_GAUGE": "double", "DEF_K_MULT": "double", "ELEMENT_STRONG_MULT": "double", "ELEMENT_WEAK_MULT": "double",
     "BASIC_ATTACK_POWER": "double", "AI_HEAL_BELOW": "double", "AI_SHIELD_BELOW": "double",
+    # monster battle (specs/16)
+    "MON_HP_PER_POINT": "double", "MON_DEF_K": "double", "MON_EVADE_BASE": "double", "MON_EVADE_PER_DEX": "double",
+    "MON_EVADE_CAP": "double", "MON_CRIT_BASE": "double", "MON_CRIT_PER_LUK": "double", "MON_CRIT_CAP": "double",
+    "MON_CRIT_DMG": "double", "MON_SPD_MIN": "double", "MON_TIME_LIMIT_TICKS": "int", "MON_SIDE_SIZE": "int",
+}
+
+# Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
+MON_RANGES = {
+    "MON_HP_PER_POINT": ("> 0", lambda v: v > 0), "MON_DEF_K": ("> 0", lambda v: v > 0),
+    "MON_EVADE_BASE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_EVADE_PER_DEX": (">= 0", lambda v: v >= 0),
+    "MON_EVADE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_CRIT_BASE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_CRIT_PER_LUK": (">= 0", lambda v: v >= 0), "MON_CRIT_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_CRIT_DMG": (">= 1", lambda v: v >= 1), "MON_SPD_MIN": ("> 0", lambda v: v > 0),
+    "MON_TIME_LIMIT_TICKS": ("> 0", lambda v: v > 0), "MON_SIDE_SIZE": ("> 0", lambda v: v > 0),
 }
 
 TIERS = ENUMS["Tier"]
@@ -240,6 +254,9 @@ def validate(t, errs):
     for k in ("BATTLE_GAUGE", "DEF_K_MULT", "ELEMENT_STRONG_MULT", "ELEMENT_WEAK_MULT", "BASIC_ATTACK_POWER"):
         if k in keys and not keys[k]["value"] > 0:
             errs.add("E043", f"constants[{k}]", "value out of range (> 0)")
+    for k, (rule, ok) in MON_RANGES.items():
+        if k in keys and not ok(keys[k]["value"]):
+            errs.add("E043", f"constants[{k}]", f"value out of range ({rule})")
     # promotions (specs/11 section 10)
     pr = t["promotions"]
     for i, r in enumerate(pr):

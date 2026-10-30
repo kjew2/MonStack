@@ -264,6 +264,10 @@ namespace IdleRng.Sim.Content
                 BattleGauge = D("BATTLE_GAUGE"), DefKMult = D("DEF_K_MULT"), ElementStrongMult = D("ELEMENT_STRONG_MULT"),
                 ElementWeakMult = D("ELEMENT_WEAK_MULT"), BasicAttackPower = D("BASIC_ATTACK_POWER"),
                 AiHealBelow = D("AI_HEAL_BELOW"), AiShieldBelow = D("AI_SHIELD_BELOW"),
+                MonHpPerPoint = D("MON_HP_PER_POINT"), MonDefK = D("MON_DEF_K"), MonEvadeBase = D("MON_EVADE_BASE"),
+                MonEvadePerDex = D("MON_EVADE_PER_DEX"), MonEvadeCap = D("MON_EVADE_CAP"), MonCritBase = D("MON_CRIT_BASE"),
+                MonCritPerLuk = D("MON_CRIT_PER_LUK"), MonCritCap = D("MON_CRIT_CAP"), MonCritDmg = D("MON_CRIT_DMG"),
+                MonSpdMin = D("MON_SPD_MIN"), MonTimeLimitTicks = I("MON_TIME_LIMIT_TICKS"), MonSideSize = I("MON_SIDE_SIZE"),
             };
             if (errors.Count > 0) return;
 
@@ -293,6 +297,12 @@ namespace IdleRng.Sim.Content
             if (!(Constants.BattleGauge > 0 && Constants.DefKMult > 0 && Constants.ElementStrongMult > 0 && Constants.ElementWeakMult > 0
                   && Constants.BasicAttackPower > 0))
                 errors.Add(new ContentError("E043", "constants", "battle constants must be > 0"));
+            var mk = Constants;
+            bool In01(double v) => v >= 0 && v <= 1;
+            if (!(mk.MonHpPerPoint > 0 && mk.MonDefK > 0 && In01(mk.MonEvadeBase) && mk.MonEvadePerDex >= 0 && In01(mk.MonEvadeCap)
+                  && In01(mk.MonCritBase) && mk.MonCritPerLuk >= 0 && In01(mk.MonCritCap) && mk.MonCritDmg >= 1 && mk.MonSpdMin > 0
+                  && mk.MonTimeLimitTicks > 0 && mk.MonSideSize > 0))
+                errors.Add(new ContentError("E043", "constants", "monster battle constants out of range (specs/16 section 7)"));
             if (BossRules.Count == 0 || BossRules[0].FromStage != 1)
                 errors.Add(new ContentError("E045", "boss_rules", "first row must have from_stage = 1"));
 

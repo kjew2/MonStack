@@ -1,17 +1,17 @@
 # 13 - Transition Plan: Idle RNG to Monster Trainer
 
-Status: **plan, not started.** How the repo moves from the idle stage-push game (`specs/00`-`11`) to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
+Status: **in progress.** T1 (battle core) is live; see section 6. How the repo moves from the idle stage-push game (`specs/00`-`11`) to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
 
 ## 1. Approach
 
-**Pivot in place, keep the build green, cut over at the end** (proposed).
+**Pivot in place, keep the build green, cut over at the end** (kj, 2026-10-30).
 
 - Same repo. The valuable parts here are infrastructure, not the idle loop: the deterministic pure-C# core, named RNG streams, command log and state hash, content pipeline, save system, bot harness, WebAssembly prototype, gacha math and the 4v1 ATB battle. A new repo would mean rebuilding or copying all of it.
 - New systems are built beside the idle loop, in new folders, with their own tests. The idle game keeps building and passing `./check.sh` until the web prototype switches to the new loop (phase T6). Then the idle systems are deleted in one change (T7).
-- **No save migration from the idle game.** There are no released players (TestFlight, #11, is not done). The new game starts a new save lineage under a new save key; old idle saves are ignored, not migrated (proposed, section 9 item 4).
+- **No save migration from the idle game.** There are no released players (TestFlight, #11, is not done). The new game starts a new save lineage under a new save key; old idle saves are ignored, not migrated (kj, 2026-10-30).
 - **No rename yet.** `IdleRng` stays in namespaces, assemblies and paths until the game has a name (#47). Then one mechanical rename. Renaming twice is churn.
 - **Balance stays on hold.** Every number in the new systems is a placeholder (`CLAUDE.md`). The idle balance criteria AC1-AC5 retire with the idle loop.
-- **Web first.** The web prototype is the play surface for the MVP. The Unity client is paused until the run loop feels right (section 9 item 3).
+- **Web first** (kj, 2026-10-30; client technology was left to the agent). The call: the web client (`web/` on the C# core through WebAssembly) is the game's client, not just a prototype. Reasons: the drafts target Steam and web; the game is menu- and number-heavy with light animation, which HTML does well; the WebAssembly bridge already runs the real C# core and plays on a phone through `./play.sh`; the Unity project has never been opened in Unity (#10) and needs a Mac to build. Steam can ship the same web build in a desktop wrapper (Tauri or Electron) and mobile through a web-view wrapper, both decided at T12. The Unity client is paused, not deleted; reopen it only if a native mobile build becomes a priority and the wrappers fall short.
 
 ## 2. What carries over
 
@@ -20,7 +20,7 @@ Status: **plan, not started.** How the repo moves from the idle stage-push game 
 | Pure sim rules (`specs/00` section 5.1) | `IdleRng.Sim`: no IO, clock, JSON, reflection or `Math.Pow` | Same rules for the run engine, battles and gauntlet | Keep |
 | RNG streams | `Rng/SplitMix64.cs`, named `(seed, counter)` streams | New streams: `training`, `draft`, `gauntlet`, `tower`; `battle` kept; `gacha_hero` becomes the species banner | Keep, add streams |
 | Command log, replay, `StateHash` | `Replay/`, `Simulation.Replay.cs` | Every run decision is a command, so a run replays exactly; PvP and certification rely on it | Keep |
-| Battle engine | `Battle/BattleEngine.cs`: 4v1 ATB, skill vocabulary, triggers | One engine for 1v1 (gauntlet, in-run fights), 4v1 (Daily Tower) and 4v4 (Endless, PvP). Becomes the `BattleSim.Resolve` of `specs/10` section 9.2 | Adapt: N-vs-M sides, monster stat sheet, rule-modifier hooks |
+| Battle engine | `Battle/BattleEngine.cs`: 4v1 ATB, skill vocabulary, triggers | One engine for 1v1 (gauntlet, in-run fights), 4v1 (Daily Tower) and 4v4 (Endless, PvP). Becomes the `BattleSim.Resolve` of `specs/10` section 9.2 | Rebuilt as `IdleRng.Sim.Combat` (T1, `specs/16`) from the same ATB, damage and effect design; the idle engine retires at T7 |
 | Skill vocabulary and triggers | `skills.csv` kinds/targets, `BattleTrigger` | Tree nodes, chase traits and rule-breaking passives are written in it; the trigger list grows | Adapt |
 | Elements | `elements.csv`, strong/weak wheel | Species and skill types | Keep (section 9 item 9) |
 | Gacha math | `Gacha/Gacha.cs`, `specs/01`, pity, 10-pull guarantee, vectors | Species banner; dupes feed aptitude ranks instead of levels | Keep math, change rewards |
@@ -40,6 +40,7 @@ Deleted in T7 once the new loop is playable:
 - Stage push, kill counter, spawn loop, farming DPS (`specs/03` section 7, `specs/11` section 7).
 - Gold, stat levels (`specs/04` section 4), gear drops and enhancement (`specs/04` section 5), promotion (`specs/11` section 6).
 - Offline catch-up, idle chest, offline gold (`specs/06` section 9, `specs/04`).
+- The idle boss battle (`src/IdleRng.Sim/Battle`, `specs/11` section 8), replaced by `IdleRng.Sim.Combat` (`specs/16`).
 - Daily quests as written (the Daily Tower replaces them; section 9 item 10).
 - Stage-target acceptance AC1-AC5 and `progress_targets`, the power-curve model (`tools/power_curve_model.py`, #66), `specs/02`.
 - Idle save migrations v1 -> v2.
@@ -92,9 +93,9 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T1 - Generalized battle core
 
-- `BattleEngine` takes two sides of 1-4 units each instead of party-vs-boss. The idle boss fight keeps working as a 4v1 call (golden files may move; regenerate).
-- A `MonsterUnit` stat sheet: STR, INT, WIS, DEX, DEF, SPD (+ HP, section 9 item 5). Map to the current HP/ATK/DEF/SPD/crit with placeholder formulas.
-- Pure `BattleSim.Resolve(sideA, sideB, rules, seed)` with its own stream, usable by the run engine, gauntlet and later PvP.
+- A new engine, `IdleRng.Sim.Combat.BattleSim`, takes two sides of 1-4 units each (`specs/16`). It is built beside the idle boss battle (`IdleRng.Sim.Battle`), which stays untouched until T7 deletes it: porting the idle fight would need a save migration and golden churn for code that is about to go.
+- A monster stat sheet: HP, STR, INT, WIS, DEX, DEF, SPD, LUK (kj, 2026-10-30), turned into battle values by placeholder formulas.
+- Pure `BattleSim.Resolve(rules, sideA, sideB, seed)`, usable by the run engine, gauntlet and later PvP.
 - Hooks for rule modifiers (chase traits) and for the entropy gauge, phase shifts and environmental clock (built later, T9).
 - Exit: 1v1, 4v1 and 4v4 battles run deterministically, with tests and goldens.
 
@@ -162,13 +163,13 @@ Balance of any kind, art direction, the game's name, store presence. Those stay 
 
 Blocking questions first. Each has a recommendation.
 
-1. **Confirm the pivot approach** (in place, strangler, no rename yet; section 1). Blocks T1.
-2. **Tree slot layout** (`specs/12` section 13 item 2). Recommend 2 native + 1 draft + 1 chase, chase trait at every capstone. Blocks T3.
-3. **Platform.** Drafts say Steam and web; the repo targets iOS. Recommend web-first for the MVP and pausing Unity/iOS (#6, #10, #11). Blocks T6 (the web part is safe either way).
-4. **Clean save break**, no idle -> monster migration. Recommend yes. Blocks T5.
-5. **Stat list.** Recommend STR, INT, WIS, DEX, DEF, SPD + HP. Blocks T1/T2.
-6. **Epoch actions.** Heavy Drill / Rest / Tactical Challenge as the starting set, one drill per stat? Blocks T2.
-7. **Failed runs** (`specs/12` section 13 item 9). Recommend: injury ends the run early, monster still vaulted, shards still paid. Blocks T2/T4.
-8. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
-9. **Roles and elements.** Recommend keeping 5 elements, dropping fixed roles. Not blocking until T3 content.
-10. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T12.
+Answered (kj, 2026-10-30): pivot in place, no rename yet; tree slots are 2 native + 2 empty, any new tree may fill or overwrite any slot (`specs/12` section 5.1); web first (section 1); clean save break; stats HP, STR, INT, WIS, DEX, DEF, SPD, LUK; failed runs end on injury, the monster is still vaulted and shards are still paid.
+
+Open, blocking first. Each has a recommendation.
+
+1. **Epoch actions.** Heavy Drill / Rest / Tactical Challenge as the starting set, one drill per stat? Blocks T2.
+2. **Overwritten trees** (`specs/12` section 13 item 15). Recommend: points spent in an overwritten tree are lost; an unlocked chase tree stays unlocked. Blocks T3.
+3. **Chase traits at every capstone** (`specs/12` section 5.2). Recommend yes. Blocks T3 content.
+4. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
+5. **Roles and elements.** Recommend keeping 5 elements, dropping fixed roles. Not blocking until T3 content.
+6. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T12.
