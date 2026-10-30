@@ -5,7 +5,7 @@ namespace IdleRng.Sim.Combat
     public enum FightOutcome { Ongoing, SideAWon, SideBWon, TimedOut }
 
     /// <summary>
-    /// A fight in progress (specs/16 section 4). Plain mutable graph like GameState, so it can be saved and cloned; Clone plus
+    /// A fight in progress (specs/16 section 4). Plain mutable graph, so it can be saved and cloned; Clone plus
     /// the same random draws continues identically.
     /// </summary>
     public sealed class FightState

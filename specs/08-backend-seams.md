@@ -1,5 +1,8 @@
 # 08 - Backend Seams
 
+> **Status after the pivot (`specs/13` T7):** none of this is built. The idle game's local and remote implementations (`IClock`, `IGachaService`, `ISaveStore` wiring, `IdleRng.Remote`) were removed with it; `ISaveStore` survives in `IdleRng.Runtime` (`specs/06`). The seams below are the design for the backend when the species gacha (T9) and PvP (T12) need one: the gacha service and ledger, the clock, cloud save and receipts. References to heroes, stages, gold and the Unity client are the idle game's and will be rewritten then.
+
+
 Scope: the interfaces the prototype implements locally that a backend will own later, written so that adding a server is additive: new implementations of existing interfaces, one new assembly, no change to the sim. Each interface is given as a C# sketch with its local implementation named, its remote contract, and the error behaviour when the network is absent. Constants are canonical in `specs/00` section 2; the save shape is `specs/06`; gacha math is `specs/01`; payment rules are `specs/04` section 7.5.
 
 ## 1. Principle and assembly layout

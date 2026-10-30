@@ -132,9 +132,9 @@ try:
 except OSError:
     print('')" 2>/dev/null || true)
 
-LOCAL_URL="http://localhost:$PORT"   # index.html is the monster trainer; the idle page is idle.html
+LOCAL_URL="http://localhost:$PORT"   # index.html is the monster trainer
 say ""
-say "== Idle RNG is running"
+say "== Monster Trainer is running"
 say "   On this computer:  $LOCAL_URL"
 if [ "$BIND" = "0.0.0.0" ] && [ -n "$LAN_IP" ] && [ "$LAN_IP" != "127.0.0.1" ]; then
   PHONE_URL="http://$LAN_IP:$PORT"

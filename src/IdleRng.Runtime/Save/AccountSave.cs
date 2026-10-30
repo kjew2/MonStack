@@ -9,8 +9,8 @@ using Newtonsoft.Json.Linq;
 namespace IdleRng.Runtime.Save
 {
     /// <summary>
-    /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot, not a migration of the
-    /// idle game's GameState (specs/13 section 1). Same file shape as SaveSerializer (header line with CRC, then JSON):
+    /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
+    /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
     /// { "Kind": "monster_account", "SchemaVersion": 1, "Account": { ...AccountState without Active... },
     ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }

@@ -4,6 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace System.Runtime.CompilerServices
 {
-    /// <summary>Polyfill so C# 9 records and init accessors compile on netstandard2.1 / Unity.</summary>
+    /// <summary>Polyfill so C# 9 records and init accessors compile on netstandard2.1.</summary>
     internal static class IsExternalInit { }
 }

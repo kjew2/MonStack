@@ -6,12 +6,12 @@ namespace IdleRng.Sim.Account
 {
     /// <summary>
     /// The player's account between runs (specs/18): owned species, the Vault of finished monsters, Training Shards, skill
-    /// books, talent ranks and the run in progress. Plain mutable graph like GameState; IdleRng.Runtime saves it (the active
+    /// books, talent ranks and the run in progress. Plain mutable graph; IdleRng.Runtime saves it (the active
     /// run as its replay recipe, so a load rebuilds it exactly).
     /// </summary>
     public sealed class AccountState
     {
-        /// <summary>The account save lineage (specs/18 section 6), separate from the idle game's GameState schema.</summary>
+        /// <summary>The account save lineage (specs/18 section 6).</summary>
         public const int CurrentSchemaVersion = 1;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;

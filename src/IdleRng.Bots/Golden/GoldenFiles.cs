@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using IdleRng.Bots.Policies;
 using IdleRng.Bots.Report;
 using IdleRng.Sim.Content;
 
@@ -15,13 +14,6 @@ namespace IdleRng.Bots.Golden
 
         public static readonly IReadOnlyList<Entry> All = new[]
         {
-            new Entry("run-greedy-f2p-seed7-30d.txt", "run --bot greedy-f2p --seed 7 --days 30 --all-days",
-                db => TableWriter.Table(new BotRunner(db).Run(BotPolicies.Create("greedy-f2p"), 7, 30), allDays: true)),
-            new Entry("run-whale-seed7-30d.txt", "run --bot whale --seed 7 --days 30 --all-days",
-                db => TableWriter.Table(new BotRunner(db).Run(BotPolicies.Create("whale"), 7, 30), allDays: true)),
-            new Entry("sweep-greedy-f2p-seeds1-20-30d.txt", "sweep --bot greedy-f2p --seeds 1-20 --days 30",
-                db => Sweep.Table(Sweep.Run(db, "greedy-f2p", "1-20", 30, Environment.ProcessorCount),
-                                  TableWriter.ContentTag(db.Version, db.ContentHash))),
             new Entry("battle-sim-vectors.txt", "golden (BattleVectors, specs/16 section 8)", BattleVectors.Generate),
             new Entry("training-run-vectors.txt", "golden (RunBot.Vectors, specs/14 section 9)", IdleRng.Bots.Training.RunBot.Vectors),
             new Entry("gauntlet-vectors.txt", "golden (GauntletVectors, specs/19 section 6)", GauntletVectors.Generate),

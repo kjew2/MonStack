@@ -40,30 +40,18 @@ namespace IdleRng.Sim.Rng
 
     public static class StreamNames
     {
-        public const string Combat = "combat", GearDrop = "gear_drop", GearRarity = "gear_rarity",
-                            Enhance = "enhance", GachaHero = "gacha_hero", Battle = "battle";
-
-        /// <summary>Battle is the 4v1 boss battle's stream (crit rolls, boss targeting; specs/11 section 8).</summary>
-        public static readonly string[] All = { Combat, GearDrop, GearRarity, Enhance, GachaHero, Battle };
-
-        /// <summary>
-        /// Streams every save has had since schema v1. Streams added later (battle) are created by the Simulation
-        /// constructor when missing, so a save without them is valid.
-        /// </summary>
-        public static readonly string[] Required = { Combat, GearDrop, GearRarity, Enhance, GachaHero };
-
-        /// <summary>Per-stream seed derived from the profile seed.</summary>
+        /// <summary>Per-stream seed derived from a caller seed (a run seed, a fight seed, the account seed; specs/03 section 5.5).</summary>
         public static ulong StreamSeed(ulong profileSeed, string name) =>
             SplitMix64.Mix(unchecked(profileSeed + Fnv1a64.Hash(name)));
     }
 
-    /// <summary>Anything that hands out uniform doubles in [0,1). Lets tests script gacha/enhance outcomes.</summary>
+    /// <summary>Anything that hands out uniform doubles in [0,1). Lets tests script outcomes.</summary>
     public interface IRandomSource
     {
         double NextDouble();
     }
 
-    /// <summary>Persisted in GameState.Rng. Seed and Counter are the entire state.</summary>
+    /// <summary>Persisted in the state that owns the stream (RunState, FightState). Seed and Counter are the entire state.</summary>
     public sealed class RngStream : IRandomSource
     {
         public RngStream() { }

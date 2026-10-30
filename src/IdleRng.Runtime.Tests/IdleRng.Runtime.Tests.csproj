@@ -15,8 +15,4 @@
     <ProjectReference Include="../IdleRng.Runtime/IdleRng.Runtime.csproj" />
     <ProjectReference Include="../IdleRng.Sim/IdleRng.Sim.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- Engine-free Unity client math, compiled in directly (the client asmdefs are not dotnet projects). -->
-    <Compile Include="../../unity/IdleRngClient/Assets/IdleRng.Client/Core/SafeAreaMath.cs" Link="Client/SafeAreaMath.cs" />
-  </ItemGroup>
 </Project>

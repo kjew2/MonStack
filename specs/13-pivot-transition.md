@@ -1,6 +1,6 @@
 # 13 - Transition Plan: Idle RNG to Monster Trainer
 
-Status: **in progress.** T1 (battle core), T2 (training run) and T3 (skill trees) are live; see section 6. How the repo moves from the idle stage-push game (`specs/00`-`11`) to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
+Status: **MVP done (T1-T7); T8 engine done.** The idle game is removed (T7, 2026-10-30). Sections 2 to 4 describe the plan as it was made and what carried over; section 6 has each phase's result. How the repo moved from the idle stage-push game to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
 
 ## 1. Approach
 
@@ -18,24 +18,24 @@ Status: **in progress.** T1 (battle core), T2 (training run) and T3 (skill trees
 | Area | Today | In the new game | Action |
 |---|---|---|---|
 | Pure sim rules (`specs/00` section 5.1) | `IdleRng.Sim`: no IO, clock, JSON, reflection or `Math.Pow` | Same rules for the run engine, battles and gauntlet | Keep |
-| RNG streams | `Rng/SplitMix64.cs`, named `(seed, counter)` streams | New streams: `training`, `draft`, `gauntlet`, `tower`; `battle` kept; `gacha_hero` becomes the species banner | Keep, add streams |
-| Command log, replay, `StateHash` | `Replay/`, `Simulation.Replay.cs` | Every run decision is a command, so a run replays exactly; PvP and certification rely on it | Keep |
+| RNG streams | `Rng/SplitMix64.cs`, named `(seed, counter)` streams | New streams: `training`, `draft`, `fight`, `battle_sim`, `gauntlet`, `run` (`specs/03` section 5.5); the idle streams were removed | Keep, new streams |
+| Command log, replay, `StateHash` | `Replay/`, `Simulation.Replay.cs` | Every run decision is a command, so a run replays exactly; PvP and certification rely on it | Idea kept, code replaced: `TrainingRun.Replay` and the run/fight/gauntlet hashes; only the canonical hash writer survives from `Replay/` |
 | Battle engine | `Battle/BattleEngine.cs`: 4v1 ATB, skill vocabulary, triggers | One engine for 1v1 (gauntlet, in-run fights), 4v1 (Daily Tower) and 4v4 (Endless, PvP). Becomes the `BattleSim.Resolve` of `specs/10` section 9.2 | Rebuilt as `IdleRng.Sim.Combat` (T1, `specs/16`) from the same ATB, damage and effect design; the idle engine retires at T7 |
 | Skill vocabulary and triggers | `skills.csv` kinds/targets, `BattleTrigger` | Tree nodes, chase traits and rule-breaking passives are written in it; the trigger list grows | Adapt |
 | Elements | `elements.csv`, strong/weak wheel | Species and skill types | Keep (section 9 item 9) |
-| Gacha math | `Gacha/Gacha.cs`, `specs/01`, pity, 10-pull guarantee, vectors | Species banner; dupes feed aptitude ranks instead of levels | Keep math, change rewards |
+| Gacha math | `Gacha/Gacha.cs`, `specs/01`, pity, 10-pull guarantee, vectors | Species banner; dupes feed aptitude ranks instead of levels | Math and `tools/gacha_model.py` kept; the idle code and vectors were deleted at T7 and come back from git history as a starting point at T9 |
 | Content pipeline | `content_src/*.csv` -> `tools/content_build.py` -> `Content/*.json` -> `ContentDb` | New tables: species, stats, train actions, milestones, trees, nodes, chase conditions, books, talents, ladder bosses, floors | Keep pipeline, new tables |
 | Save system | `IdleRng.Runtime/Save`: serializer, CRC, self-check, migrations, stores | New `AccountState` + `RunState` schema, new lineage | Keep machinery, new schema |
-| Backend seams | `IClock`, `IGachaService`, `ISaveStore`, `IdleRng.Remote` | Same seams; PvP adds `IPvpService` | Keep |
+| Backend seams | `IClock`, `IGachaService`, `ISaveStore`, `IdleRng.Remote` | Same seams; PvP adds `IPvpService` | `specs/08` kept as a design; `IdleRng.Remote`, the clocks and the services wiring were deleted at T7 (`ISaveStore` stays in `IdleRng.Runtime`) |
 | Online trust model | `specs/10` | Fits better than before: async 4v4 PvP on stored teams, server-resolved battles | Keep, rewrite the snapshot types |
-| Bot harness | `IdleRng.Bots`: runner, policies, golden files, report writer | Bots play runs (random, greedy-stat, point-hoarder) and report run scores and gauntlet floors; goldens cover runs and battles | Adapt |
-| `check.sh`, golden workflow, bench | | Same gates; the bench measures battle and run throughput | Keep |
+| Bot harness | `IdleRng.Bots`: runner, policies, golden files, report writer | Bots play runs (random, greedy-stat, point-hoarder) and report run scores and gauntlet floors; goldens cover runs and battles | Replaced: the idle day-runner, sweep and acceptance went at T7; run bots and goldens stay |
+| `check.sh`, golden workflow, bench | | Same gates; the bench measures battle and run throughput | Kept, minus the idle tick benchmark and the balance sweep (a battle/run benchmark can return when speed matters) |
 | Web prototype | `web/` + `src/IdleRng.Web` WebAssembly bridge | Run screen, drafts, tree view, battle log, ladder/gauntlet result | Keep bridge, new UI |
-| Unity client | `unity/IdleRngClient` | Later, if mobile stays a target | Pause |
+| Unity client | `unity/IdleRngClient` | Later, if mobile stays a target | Deleted at T7: every screen was an idle-game screen on the idle `Simulation`. Git history has it |
 
 ## 3. What retires
 
-Deleted in T7 once the new loop is playable:
+Deleted at T7 (2026-10-30), when the web client had been on the new loop for a while:
 
 - Stage push, kill counter, spawn loop, farming DPS (`specs/03` section 7, `specs/11` section 7).
 - Gold, stat levels (`specs/04` section 4), gear drops and enhancement (`specs/04` section 5), promotion (`specs/11` section 6).
@@ -46,6 +46,8 @@ Deleted in T7 once the new loop is playable:
 - Idle save migrations v1 -> v2.
 
 ## 4. Spec changes
+
+Result at T7: `00`, `03`, `05`, `06` and `09` were rewritten; `02`, `04`, `07` and `11` were deleted; `01`, `08` and `10` kept with a status banner (designs for the gacha and PvP). The plan:
 
 | Spec | Fate |
 |---|---|
@@ -63,7 +65,7 @@ Deleted in T7 once the new loop is playable:
 | `11-party-and-builds` | Phases 3-5 cancelled. The battle, kit vocabulary and elements carry into the new battle spec; the rest retires. |
 | `12-monster-trainer-design` | The target design. Each built system moves out of it into its own rules spec. |
 
-New rules specs get written as phases start, one per system: `14-training-run`, `15-skill-trees`, `16-battle` (generalized), `17-gauntlet-and-vault`, `18-meta-progression`. Each says what is live, like `specs/11` does.
+New rules specs were written as phases landed, one per system: `14-training-run`, `15-skill-trees`, `16-battle`, `18-meta-progression`, `19-gauntlet` (the Vault is in `13` T4 and `18`; `17` was never used). Each says what is live.
 
 ## 5. Priorities and issue triage (applied 2026-10-30 at kj's request)
 
@@ -147,18 +149,23 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T6 - Web prototype on the new loop
 
-**Done except the gauntlet wheel screen and removing the idle UI.** First built ahead of T5 at kj's request (2026-10-30), then moved onto the account (`specs/18`). `web/index.html` plays on a phone: species pick, Drill and Rest with the odds and drill cost shown, rank fights with the battle log, tree drafts into slots, the tree view with buying, the end screen with the grade, stat breakdown and shard payout, the talent shop, the skill book inventory and the Vault list. The save is the C# `AccountSave` (account, shards, talents, Vault and the active run as its replay recipe) in one browser key. The bridge is `IdleRng.Web.Engine.Run*`/`Account*` (`web/wasm/BRIDGE.md`, "Run bridge"). `idle.html` (the idle UI, linked from the trainer's header) stays until T7. Abandoning a run pays and seals nothing and returns unused books (agent decision, `specs/18` is silent). Not yet: the gauntlet wheel screen (`specs/19`).
+**Done except the gauntlet wheel screen.** First built ahead of T5 at kj's request (2026-10-30), then moved onto the account (`specs/18`). `web/index.html` plays on a phone: species pick, Drill and Rest with the odds and drill cost shown, rank fights with the battle log, tree drafts into slots, the tree view with buying, the end screen with the grade, stat breakdown and shard payout, the talent shop, the skill book inventory and the Vault list. The save is the C# `AccountSave` (account, shards, talents, Vault and the active run as its replay recipe) in one browser key. The bridge is `IdleRng.Web.Engine.Run*`/`Account*` (`web/wasm/BRIDGE.md`). Abandoning a run pays and seals nothing and returns unused books (`AccountOps.AbandonRun`, `specs/18`). Not yet: the gauntlet wheel screen (`specs/19`).
 
 - `src/IdleRng.Web` bridge exposes the run engine; `web/` gets the run screen, drafts, tree view, Tactical Challenge battle log, ladder/grade screen, Vault, talent tree.
-- The idle UI is removed from `web/` here.
+- The idle UI was removed from `web/` at T7.
 - Exit: kj can play full runs on a phone browser via `./play.sh`.
 
 ### T7 - Remove the idle game
 
-- Delete the systems in section 3, their content tables, tests, bots, acceptance targets and goldens. Regenerate goldens.
-- Rewrite `specs/00`, `03`, `04`, `05`, `06`, `09` for the new game. Update `README.md` and `CLAUDE.md`.
-- Bot harness reports run outcomes instead of day tables.
-- Exit: the repo contains one game. MVP done.
+**Done** (kj, 2026-10-30: "remove the old idle game"). One change, so the build stayed green.
+
+- Deleted from `IdleRng.Sim`: the tick loop and `Simulation`, `GameState` and its parts, the events outbox, command log and idle state hash, the idle 4v1 boss battle, the idle gacha code, the clocks, `BigNumber`, the debug commands. Kept: `Combat`, `Training`, `Account`, `Gauntlet`, `Content`, `Rng`, and the canonical hash writer (`Replay/Canonical.cs`).
+- Deleted: `IdleRng.Remote` and its tests, `IdleRng.Runtime`'s `Session`, `Services` and the idle save system (`SaveSystem`, migrations, self-check, `SaveMeta`; `SaveSerializer` and `SaveConfig` trimmed to the account lineage), the idle bot runner, policies, sweep, acceptance checker and their tests, the whole `unity/` project, `Fixtures/Gacha`, `tools/power_curve_model.py`.
+- Content `3.0` (MAJOR: tables removed): the idle tables (`banners`, `boss_rules`, `curves`, `daily_quests`, `gear_*`, `hero_*`, `heroes`, `progress_targets`, `promotions`, `roles`, `skills`, `tutorial_grants`), their constants and strings. `elements` stays.
+- Web: `idle.html`, `app.js`, `format.js`, the idle bridge (`Host.cs`, the idle exports), `MAPPING.md` and `run-wasm.js`; `engine.js` is now only the wasm loader.
+- `check.sh`: no balance sweep, no idle bench, no idle browser test. The golden files left are the battle, training-run and gauntlet vectors.
+- Specs rewritten or deleted as listed in section 4.
+- Not done, deliberately: the species gacha code (T9; `specs/01` and `tools/gacha_model.py` stay) and any rename of `IdleRng`.
 
 ### Post-MVP (toward 1.0)
 
@@ -176,7 +183,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 - **The run might not be fun at 12 epochs.** T2-T6 get it in kj's hands as fast as possible; T6 is the real test. Keep T2-T5 thin.
 - **Rule-breaking passives vs a data-driven engine.** "Counterattacks deal damage equal to mitigated defense, bypassing range and speed rules" needs code, not a table row. Plan for a small set of coded rule modifiers referenced by id from content, and accept that each new chase trait may need code.
 - **Determinism in battles with gambits.** Gambit evaluation must be pure and ordered; it belongs in the battle engine, not the UI.
-- **Strangler overhead.** Two loops in one codebase for T1-T6. Keep the idle loop frozen (no fixes beyond keeping it green) so the overhead stays small.
+- **Strangler overhead** (gone): two loops lived in one codebase for T1-T6 and the idle loop was kept frozen; T7 deleted it.
 
 ## 8. Not decided by this plan
 

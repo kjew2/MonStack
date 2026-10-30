@@ -131,7 +131,7 @@ namespace IdleRng.Sim.Training
     }
 
     /// <summary>
-    /// A training run in progress (specs/14, specs/15). Plain mutable graph like GameState: saveable, and replaying Log from
+    /// A training run in progress (specs/14, specs/15). Plain mutable graph: saveable, and replaying Log from
     /// the same species, seed and books rebuilds it exactly (TrainingRun.Replay).
     /// </summary>
     public sealed class RunState

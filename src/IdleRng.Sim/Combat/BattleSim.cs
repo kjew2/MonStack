@@ -9,7 +9,7 @@ namespace IdleRng.Sim.Combat
     /// <summary>
     /// The monster battle (specs/16): two sides of 1..SideSize units, ATB turn order, automatic actions. Pure functions over a
     /// FightState plus a random source, so the same fighters, rules and draws give the same fight on the client, the bots and a
-    /// server (specs/10 section 9.2). Built beside the idle boss battle (IdleRng.Sim.Battle), which retires at specs/13 T7.
+    /// server (specs/10 section 9.2).
     /// </summary>
     public static class BattleSim
     {
@@ -515,7 +515,7 @@ namespace IdleRng.Sim.Combat
         // ------------------------------------------------------------------ hashing
 
         /// <summary>
-        /// Lowercase hex SHA-256 over a canonical encoding of the whole fight (same conventions as StateHasher): the golden
+        /// Lowercase hex SHA-256 over a canonical encoding of the whole fight (the canonical conventions of specs/03 section 1): the golden
         /// files, the replay tests and a future PvP server compare fights by this. Changing the encoding bumps HashVersion.
         /// </summary>
         public static string StateHash(FightState s)

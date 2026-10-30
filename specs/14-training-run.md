@@ -63,7 +63,7 @@ Both cost 1 AP. When AP reach 0 the run goes to `AwaitFight` if a fight is due, 
 - A win (`SideAWon`) promotes the monster one rank and pays `SP_PER_WIN`; at the top rank it stays. A loss or a timeout changes nothing (placeholder; no penalty yet). The fight's tallies add to the run tally (`specs/15` section 6).
 - Fight seed: `SplitMix64.Derive(StreamSeed(runSeed, "fight"), fightIndex)`, where `fightIndex` is the number of fights fought before it. Fights never advance the `training` stream.
 - `FIGHT_EVERY` (placeholder 1) sets how often fights come; kj suggested every other cycle if every cycle feels too frequent.
-- "Promotion" here means a rank up. It is unrelated to the idle game's companion promotion (`specs/11` section 6), which retires at T7. Code says `Rank`.
+- A rank up is called "promotion" in the drafts; code and specs say `Rank`.
 
 ## 6. Milestones
 

@@ -1,5 +1,8 @@
 # 01 - Gacha Math
 
+> **Status after the pivot (`specs/13` T7):** the idle game's gacha code, banners and tests were removed; this math and `tools/gacha_model.py` are kept for the **species gacha (T9)**. Read "hero" as "species" and "level from copies" as "genetic aptitude rank" (`specs/12` section 5.7, 10.1). The pity, rate and guarantee design carries over; the numbers will be revisited then.
+
+
 Scope: the P0 hero banner. Pet banner (P1) and rate-up banners (P1) reuse every mechanism here with a different table.
 Numbers come from `tools/gacha_model.py`; rerun it after any change and paste the new output into section 3.
 

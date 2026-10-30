@@ -1,151 +1,73 @@
 using System;
 using System.IO;
 using IdleRng.Runtime.Save;
-using IdleRng.Runtime.Services;
-using IdleRng.Runtime.Session;
-using IdleRng.Sim.State;
-using IdleRng.Sim.Time;
 using NUnit.Framework;
 
 namespace IdleRng.Runtime.Tests
 {
-    public class SaveStoreTests : TempDirTest
+    /// <summary>Two-slot save stores (specs/06 section 5): rotation, crash safety, quarantine.</summary>
+    public class SaveStoreTests
     {
-        static long Now => TestContent.T0 + 100;
+        static byte[] B(string s) => System.Text.Encoding.ASCII.GetBytes(s);
 
-        static void Write(ISaveStore store, GameState s, SaveMeta meta) =>
-            SaveSystem.Write(store, s, meta, Now, TestContent.Db.Version);
-
-        [Test]
-        public void FileStore_TwoWrites_Rotate()
+        static string Tmp()
         {
-            var store = new FileSaveStore(Dir);
-            var s = TestContent.NewSim().State;
-            var meta = new SaveMeta();
-            Write(store, s, meta);
-            s.Currencies.Gems = 777;
-            Write(store, s, meta);
-
-            Assert.That(File.Exists(store.TempPath), Is.False);
-            var r = SaveSystem.Load(store, TestContent.Db, Now);
-            Assert.That(r.Status, Is.EqualTo(LoadStatus.Loaded));
-            Assert.That(r.State.Currencies.Gems, Is.EqualTo(777));
-            Assert.That(r.Meta.SaveSequence, Is.EqualTo(2));
-            var (prev, prevMeta, _) = SaveSystem.DecodeFull(store.Read(SaveSlot.Backup), TestContent.Db);
-            Assert.That(prev.Currencies.Gems, Is.EqualTo(0));
-            Assert.That(prevMeta.SaveSequence, Is.EqualTo(1));
+            var d = Path.Combine(Path.GetTempPath(), "idlerng-store-" + Guid.NewGuid().ToString("N"));
+            return d;
         }
 
         [Test]
-        public void FileStore_StrayTempIsDeletedOnStartup()
+        public void MemoryStore_Rotates_AndQuarantines()
         {
-            File.WriteAllText(Path.Combine(Dir, "slot0.tmp"), "half a save");
-            var store = new FileSaveStore(Dir);
-            Assert.That(File.Exists(store.TempPath), Is.False);
+            var s = new MemorySaveStore();
+            Assert.That(s.Read(SaveSlot.Primary), Is.Null);
+            s.Write(B("one")); s.Write(B("two"));
+            Assert.That(s.Read(SaveSlot.Primary), Is.EqualTo(B("two")));
+            Assert.That(s.Read(SaveSlot.Backup), Is.EqualTo(B("one")));
+            s.Quarantine(SaveSlot.Primary, 10);
+            Assert.That(s.Read(SaveSlot.Primary), Is.Null);
+            Assert.That(s.Quarantined, Has.Count.EqualTo(1));
+            s.FailWrites = true;
+            Assert.Throws<SaveWriteException>(() => s.Write(B("three")));
+            Assert.That(s.Read(SaveSlot.Backup), Is.EqualTo(B("one")), "a failed write changes nothing");
         }
 
         [Test]
-        public void CorruptPrimary_FallsBackToPrevious_AndQuarantinesIt()
+        public void FileStore_Rotates_AndRemovesAPartialTmp()
         {
-            var store = new FileSaveStore(Dir);
-            var s = TestContent.NewSim().State;
-            var meta = new SaveMeta();
-            s.Currencies.Gems = 1;
-            Write(store, s, meta);
-            s.Currencies.Gems = 2;
-            Write(store, s, meta);
-            var bytes = File.ReadAllBytes(store.PrimaryPath);
-            bytes[bytes.Length - 5] ^= 0x01;   // flip one body bit
-            File.WriteAllBytes(store.PrimaryPath, bytes);
-
-            var analytics = new MemoryAnalytics();
-            var r = SaveSystem.Load(store, TestContent.Db, Now, analytics);
-
-            Assert.That(r.Status, Is.EqualTo(LoadStatus.LoadedFromBackup));
-            Assert.That(r.State.Currencies.Gems, Is.EqualTo(1));
-            Assert.That(r.Problems, Has.Count.EqualTo(1));
-            Assert.That(analytics.Count("save_fallback"), Is.EqualTo(1));
-            Assert.That(File.Exists(store.PrimaryPath), Is.False);
-            Assert.That(store.QuarantinedFiles(), Has.Length.EqualTo(1));
-        }
-
-        [Test]
-        public void BothCorrupt_QuarantinesBoth_AndSessionStartsNewProfile()
-        {
-            var store = new FileSaveStore(Dir);
-            File.WriteAllText(store.PrimaryPath, "not a save");
-            File.WriteAllBytes(store.BackupPath, SaveSerializer.Encode(TestContent.NewSim().State, null).AsSpan(0, 40).ToArray());
-
-            var analytics = new MemoryAnalytics();
-            var session = GameSession.Open(TestContent.Db, new GameServices
+            var dir = Tmp();
+            try
             {
-                Clock = new FakeClock(Now), Gacha = new IdleRng.Sim.Gacha.LocalGachaService(), SaveStore = store, Analytics = analytics,
-            });
-
-            Assert.That(session.LoadResult.Status, Is.EqualTo(LoadStatus.Corrupt));
-            Assert.That(session.IsNewProfile, Is.True);
-            Assert.That(store.QuarantinedFiles(), Has.Length.EqualTo(2));
-            Assert.That(analytics.Count("save_corrupt"), Is.EqualTo(1));
-            // The new profile was saved and loads cleanly.
-            Assert.That(SaveSystem.Load(store, TestContent.Db, Now).Status, Is.EqualTo(LoadStatus.Loaded));
+                Directory.CreateDirectory(dir);
+                File.WriteAllBytes(Path.Combine(dir, "account.tmp"), B("partial"));
+                var s = new FileSaveStore(dir, AccountSave.SlotName);
+                Assert.That(File.Exists(s.TempPath), Is.False, "a crash mid-write left a tmp: it is deleted");
+                s.Write(B("one")); s.Write(B("two")); s.Write(B("three"));
+                Assert.That(s.Read(SaveSlot.Primary), Is.EqualTo(B("three")));
+                Assert.That(s.Read(SaveSlot.Backup), Is.EqualTo(B("two")));
+                s.Quarantine(SaveSlot.Primary, 99);
+                Assert.That(s.Read(SaveSlot.Primary), Is.Null);
+                Assert.That(s.QuarantinedFiles(), Has.Length.EqualTo(1));
+                s.DeleteAll();
+                Assert.That(s.Read(SaveSlot.Backup), Is.Null);
+            }
+            finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
         }
 
         [Test]
-        public void SemanticallyInvalidSave_IsRejected()
+        public void FileStore_CrashBetweenTheRenames_KeepsThePreviousSave()
         {
-            var s = TestContent.NewSim().State;
-            s.ProfileId = Guid.Empty;
-            var store = new MemorySaveStore { Primary = SaveSerializer.Encode(s, new SaveMeta()) };
-            var r = SaveSystem.Load(store, TestContent.Db, Now);
-            Assert.That(r.Status, Is.EqualTo(LoadStatus.Corrupt));
-            Assert.That(r.State, Is.Null);
-
-            var t = TestContent.NewSim().State;
-            t.Lifetime.Kills = 99;   // gear_drop counter no longer matches kills: sim invariant breaks
-            Assert.Throws<SaveInvalidException>(() => SaveSystem.Validate(t, TestContent.Db));
-        }
-
-        [Test]
-        public void CrashBetweenRenames_LeavesPrevious_WhichLoads()
-        {
-            var store = new FileSaveStore(Dir);
-            var s = TestContent.NewSim().State;
-            var meta = new SaveMeta();
-            Write(store, s, meta);
-            store.AfterRotate = () => throw new IOException("power cut");
-            s.Currencies.Gems = 5;
-
-            Assert.Throws<SaveWriteException>(() => Write(store, s, meta));
-            Assert.That(File.Exists(store.PrimaryPath), Is.False);
-            Assert.That(File.Exists(store.BackupPath), Is.True);
-
-            var r = SaveSystem.Load(new FileSaveStore(Dir), TestContent.Db, Now);
-            Assert.That(r.Status, Is.EqualTo(LoadStatus.LoadedFromBackup));
-            Assert.That(r.State.Currencies.Gems, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void NoSave_ReportsNoSave()
-        {
-            Assert.That(SaveSystem.Load(new FileSaveStore(Dir), TestContent.Db, Now).Status, Is.EqualTo(LoadStatus.NoSave));
-            Assert.That(SaveSystem.Load(new MemorySaveStore(), TestContent.Db, Now).Status, Is.EqualTo(LoadStatus.NoSave));
-        }
-
-        [Test]
-        public void SessionSaveFailures_AreCounted_NotThrown_ThenRecover()
-        {
-            var store = new MemorySaveStore();
-            var session = GameSession.Open(TestContent.Db, GameServices.InMemory(new FakeClock(Now), store));
-            long seqBefore = session.Meta.SaveSequence;
-            store.FailWrites = true;
-            for (int i = 0; i < SaveConfig.SAVE_FAIL_WARN_COUNT; i++) Assert.That(session.SaveNow(), Is.False);
-            Assert.That(session.ShouldWarnSaveFailure, Is.True);
-            Assert.That(session.Meta.SaveSequence, Is.EqualTo(seqBefore + SaveConfig.SAVE_FAIL_WARN_COUNT), "stamp runs before the write");
-
-            store.FailWrites = false;
-            Assert.That(session.SaveNow(), Is.True);
-            Assert.That(session.ConsecutiveSaveFailures, Is.EqualTo(0));
-            Assert.That(SaveSystem.Load(store, TestContent.Db, Now).Meta.SaveSequence, Is.EqualTo(session.Meta.SaveSequence));
+            var dir = Tmp();
+            try
+            {
+                var s = new FileSaveStore(dir, AccountSave.SlotName);
+                s.Write(B("good"));
+                s.AfterRotate = () => throw new IOException("power cut");
+                Assert.Throws<SaveWriteException>(() => s.Write(B("new")));
+                var reopened = new FileSaveStore(dir, AccountSave.SlotName);
+                Assert.That(reopened.Read(SaveSlot.Backup), Is.EqualTo(B("good")), "the old save survives as the backup");
+            }
+            finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
         }
     }
 }

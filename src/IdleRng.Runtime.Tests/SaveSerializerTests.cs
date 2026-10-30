@@ -1,82 +1,15 @@
 using System;
 using System.Text;
 using IdleRng.Runtime.Save;
-using IdleRng.Sim;
-using IdleRng.Sim.Content;
-using IdleRng.Sim.Rng;
-using IdleRng.Sim.State;
+using IdleRng.Sim.Account;
 using NUnit.Framework;
 
 namespace IdleRng.Runtime.Tests
 {
+    /// <summary>The save file format (specs/06 section 4): header line, CRC, length, and the JSON conventions.</summary>
     public class SaveSerializerTests
     {
-        static GameState RoundTrip(GameState s, SaveMeta meta = null)
-        {
-            var (v, body) = SaveSerializer.Decode(SaveSerializer.Encode(s, meta ?? new SaveMeta()));
-            Assert.That(v, Is.EqualTo(SaveSchema.Current));
-            return SaveSerializer.Materialize(body).state;
-        }
-
-        [Test]
-        public void RoundTrip_PlayedState_IsExact()
-        {
-            var sim = TestContent.PlayedSim();
-            Assert.That(sim.State.HeroBanner.TotalPulls, Is.GreaterThan(0), "fixture should have pulled");
-            Assert.That(sim.State.Lifetime.Kills, Is.GreaterThan(0));
-            var back = RoundTrip(sim.State);
-            Assert.That(TestContent.Dump(back), Is.EqualTo(TestContent.Dump(sim.State)));
-            SaveSystem.Validate(back, TestContent.Db);
-        }
-
-        [Test]
-        public void Meta_RoundTrips()
-        {
-            var meta = new SaveMeta { LastSavedAtServerSec = 1793491200, SaveSequence = 412, DeviceInstallId = Guid.NewGuid(), DebugTainted = true };
-            var (_, body) = SaveSerializer.Decode(SaveSerializer.Encode(TestContent.NewSim().State, meta));
-            var back = SaveSerializer.Materialize(body).meta;
-            Assert.That(back.LastSavedAtServerSec, Is.EqualTo(meta.LastSavedAtServerSec));
-            Assert.That(back.SaveSequence, Is.EqualTo(meta.SaveSequence));
-            Assert.That(back.DeviceInstallId, Is.EqualTo(meta.DeviceInstallId));
-            Assert.That(back.DebugTainted, Is.True);
-        }
-
-        [TestCase(0UL)]
-        [TestCase(ulong.MaxValue)]
-        [TestCase(0x9f86d081884c7d65UL)]
-        public void UlongSeedsAndCounters_RoundTripExactly(ulong value)
-        {
-            var s = TestContent.NewSim().State;
-            s.Rng.ProfileSeed = value;
-            s.Rng.Streams[StreamNames.Combat].Seed = value;
-            s.Rng.Streams[StreamNames.Enhance].Counter = value;   // counters are JSON integers, exact past 2^53 too
-            var (_, body) = SaveSerializer.Decode(SaveSerializer.Encode(s, null));
-            Assert.That((string)body["State"]["Rng"]["ProfileSeed"], Is.EqualTo(value.ToString("x16")));
-            var back = SaveSerializer.Materialize(body).state;
-            Assert.That(back.Rng.ProfileSeed, Is.EqualTo(value));
-            Assert.That(back.Rng.Streams[StreamNames.Combat].Seed, Is.EqualTo(value));
-            Assert.That(back.Rng.Streams[StreamNames.Enhance].Counter, Is.EqualTo(value));
-        }
-
-        [Test]
-        public void EnumsAreStrings_DoublesExact_NullSlotsExplicit()
-        {
-            var s = TestContent.NewSim().State;
-            s.Gear.Slots[1] = new GearPiece(1, Rarity.L, 170, 6);
-            s.Currencies.Gold = 0.1 + 0.2;   // not representable nicely; must survive bit-exactly
-            s.Combat.EnemyHp = 1.2345678901234567e250;
-            var body = Encoding.UTF8.GetString(SaveSerializer.Encode(s, null));
-            StringAssert.Contains("\"Rarity\": \"L\"", body);
-            StringAssert.Contains("\"Phase\": \"Spawning\"", body);
-            StringAssert.Contains("null", body);
-            var back = RoundTrip(s);
-            Assert.That(back.Gear.Slots[1], Is.EqualTo(new GearPiece(1, Rarity.L, 170, 6)));
-            Assert.That(back.Gear.Slots[0], Is.Null);
-            Assert.That(BitConverter.DoubleToInt64Bits(back.Currencies.Gold), Is.EqualTo(BitConverter.DoubleToInt64Bits(0.1 + 0.2)));
-            Assert.That(back.Combat.EnemyHp, Is.EqualTo(1.2345678901234567e250));
-        }
-
-        static byte[] Good() => SaveSerializer.Encode(TestContent.NewSim().State, null);
+        static byte[] Good() => AccountSave.Encode(AccountOps.New(TestContent.Db, 5));
 
         static void Corrupt(Func<byte[], byte[]> mutate) =>
             Assert.Throws<SaveCorruptException>(() => SaveSerializer.Decode(mutate(Good())));
@@ -92,36 +25,35 @@ namespace IdleRng.Runtime.Tests
 
         [Test]
         public void Header_ValidCrcButNotJson_Corrupt() =>
-            Corrupt(f => SaveSerializer.EncodeBody("{ \"SchemaVersion\": 1, \"State\": "));
+            Corrupt(f => SaveSerializer.EncodeBody("{ \"SchemaVersion\": 1, \"Account\": "));
 
-        /// <summary>
-        /// The key determinism property (specs/06 S2): saving mid-fight and loading into a fresh Simulation continues
-        /// tick-for-tick, draw-for-draw like the run that never saved.
-        /// </summary>
         [Test]
-        public void SaveLoad_MidFight_ContinuesIdenticallyToUnsavedRun()
+        public void Header_ReadsBackTheVersion()
         {
-            var a = TestContent.PlayedSim();
-            a.Advance(12_345);
-            TestContent.Spend(a);
-            a.Advance(17);
-            Assert.That(a.State.Combat.Phase, Is.EqualTo(CombatPhase.Fighting), "should be mid-fight");
+            var (version, body) = SaveSerializer.Decode(Good());
+            Assert.That(version, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That((string)body["Kind"], Is.EqualTo(AccountSave.Kind));
+        }
 
-            var bytes = SaveSerializer.Encode(a.State, new SaveMeta());
-            var (state, _, _) = SaveSystem.DecodeFull(bytes, TestContent.Db);
-            var b = new Simulation(TestContent.Db, state);
-            Assert.That(TestContent.Dump(b.State), Is.EqualTo(TestContent.Dump(a.State)));
+        [TestCase(0UL)]
+        [TestCase(ulong.MaxValue)]
+        [TestCase(0x9f86d081884c7d65UL)]
+        public void UlongSeeds_AreHexStrings_AndRoundTripExactly(ulong value)
+        {
+            var a = AccountOps.New(TestContent.Db, value);
+            var (_, body) = SaveSerializer.Decode(AccountSave.Encode(a));
+            Assert.That((string)body["Account"]["Seed"], Is.EqualTo(value.ToString("x16")));
+            Assert.That(AccountSave.Decode(TestContent.Db, AccountSave.Encode(a)).Seed, Is.EqualTo(value));
+        }
 
-            for (int i = 0; i < 20; i++)
-            {
-                a.Advance(6000); TestContent.Spend(a);
-                b.Advance(6000); TestContent.Spend(b);
-            }
-            a.Validate();
-            Assert.That(TestContent.Dump(b.State), Is.EqualTo(TestContent.Dump(a.State)));
-            foreach (var name in StreamNames.All)
-                Assert.That(b.State.Rng.Streams[name].PeekDouble(b.State.Rng.Streams[name].Counter),
-                            Is.EqualTo(a.State.Rng.Streams[name].PeekDouble(a.State.Rng.Streams[name].Counter)), name);
+        [Test]
+        public void EnumsAreStrings_AndDoublesExact()
+        {
+            var a = AccountOps.New(TestContent.Db, 3);
+            a.Shards = 1234567890123;
+            var json = Encoding.UTF8.GetString(AccountSave.Encode(a));
+            StringAssert.Contains("\"Kind\": \"monster_account\"", json);
+            Assert.That(AccountSave.Decode(TestContent.Db, AccountSave.Encode(a)).Shards, Is.EqualTo(1234567890123));
         }
     }
 }

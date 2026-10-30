@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exact math for the hero-banner gacha (no simulation; closed-form over the pity counter).
 
-Rates and pity constants here are the source of truth for specs/02-gacha-math.md.
+Rates and pity constants here are the source of truth for specs/01-gacha-math.md.
 """
 from fractions import Fraction
 
