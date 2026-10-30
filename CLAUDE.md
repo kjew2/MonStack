@@ -6,7 +6,8 @@ The gameplay systems are being redesigned (4v1 party battle, companion builds, a
 
 - Do not spend effort on balance tuning: no retuning curves, constants or acceptance targets, no tuning passes on the power-curve model, no balance-only PRs. That work will be thrown away when the systems change.
 - Placeholder numbers in new systems are fine. Pick something reasonable and note it as a placeholder.
-- The acceptance sweep failing on main (#41) is known and on hold. Report it as pre-existing; do not tune numbers to fix it. If your change makes acceptance results worse, say so in the PR and ask rather than retuning.
+- **Imbalance is fine in this phase and must not block work.** The balance criteria AC1-AC5 are report-only: `advisory` in `src/IdleRng.Bots/Acceptance/acceptance-targets.json` makes them print `WARN` instead of failing `./check.sh`. Do not tune numbers to clear a WARN, and do not stop to ask about one; mention notable changes in the PR. AC6 (determinism, golden), tests and the bench still block.
+- When kj says balance work resumes, empty the `advisory` list, then fix or re-agree each failing criterion (#41 is the known AC4 one).
 
 ## Keep the specs current
 

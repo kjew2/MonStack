@@ -347,6 +347,8 @@ Seed lists: `--seeds 1-20` (inclusive range), `--seeds 3,5,9`, `--seeds 7`. The 
 
 Thresholds and targets live in `src/IdleRng.Bots/Acceptance/acceptance-targets.json`, the single copy in code of `specs/00` section 2.6 and `specs/02` section 9. Keep it in sync with those sections when they change.
 
+`advisory` in the same file lists check ids that are report-only: a failure prints `WARN`, is counted separately on the `RESULT` line and does not change the exit code. AC6 can never be advisory. During the overhaul (#60, `specs/11`) AC1-AC5 are advisory so imbalance does not block systems work; the list is emptied when balance work resumes.
+
 ```json
 {
   "stageTargets": { "1": 90, "3": 240, "7": 380, "14": 480, "30": 550 },

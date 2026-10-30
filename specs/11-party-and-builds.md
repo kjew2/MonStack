@@ -239,5 +239,5 @@ Changes to `specs/05` section 5. `content_version` goes to `2.0` (MAJOR: heroes 
 ## 11. Known gaps
 
 - `tools/power_curve_model.py` still models the pre-overhaul layers (6 heroes, base DPS%, class advance), issue #66. It is rebuilt when balance resumes; until then the C# bot harness is the only measurement.
-- Acceptance after phase 1 (20 seeds x 30 days): AC1 stage targets pass on days 1, 7 and 30. AC2 fails because the promotion layer is about 2-3% of ln(DPS) and 0 before the first promotion. AC3 fails on one seed (first wall at stage 50). AC4 is the pre-existing #41. These are balance outcomes of placeholder numbers; they are reported, not tuned.
+- Acceptance after phase 1 (20 seeds x 30 days): AC1 stage targets pass on days 1, 7 and 30. AC2 fails because the promotion layer is about 2-3% of ln(DPS) and 0 before the first promotion. AC3 fails on one seed (first wall at stage 50). AC4 is the pre-existing #41. These are balance outcomes of placeholder numbers; they are reported, not tuned. While the overhaul's systems are being finalized, AC1-AC5 are report-only (`advisory` in `acceptance-targets.json`, kj 2026-10-30): imbalance never blocks a phase. AC6 (determinism and goldens) still blocks.
 - Acceptance results move with every phase. Report them in the PR; do not retune (`CLAUDE.md`).

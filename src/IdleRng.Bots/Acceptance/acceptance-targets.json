@@ -1,4 +1,6 @@
 {
+  "advisory": ["AC1", "AC2", "AC3", "AC4", "AC5"],
+  "advisoryReason": "systems before balance (#60, CLAUDE.md): balance criteria are report-only while the overhaul's systems are being finalized",
   "stageTargets": { "1": 90, "3": 240, "7": 380, "14": 480, "30": 550 },
   "stageTolerance": 0.20,
   "stageCheckDays": [1, 7, 30],

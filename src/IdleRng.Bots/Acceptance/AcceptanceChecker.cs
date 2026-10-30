@@ -26,6 +26,19 @@ namespace IdleRng.Bots.Acceptance
         public double StatLevelSlope { get; set; }
         public double StatLevelIntercept { get; set; }
 
+        /// <summary>
+        /// Check ids that are report-only: a failure prints WARN and does not fail the run. During the overhaul (#60) the
+        /// balance criteria AC1-AC5 are advisory; AC6 (determinism, golden) always blocks. Empty the list when balance resumes.
+        /// </summary>
+        public string[] Advisory { get; set; } = Array.Empty<string>();
+
+        public string AdvisoryReason { get; set; } = "";
+
+        public bool IsAdvisory(string checkId) => Advisory != null && Array.IndexOf(Advisory, checkId) >= 0 && checkId != "AC6";
+
+        /// <summary>True when the result should fail the run.</summary>
+        public bool Blocks(CheckResult r) => !r.Pass && !IsAdvisory(r.Id);
+
         static readonly JsonSerializerOptions Opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
         public static AcceptanceTargets Parse(string json) => JsonSerializer.Deserialize<AcceptanceTargets>(json, Opts);

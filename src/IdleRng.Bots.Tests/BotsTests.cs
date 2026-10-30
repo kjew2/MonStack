@@ -161,11 +161,23 @@ namespace IdleRng.Bots.Tests
             Assert.That(targets.StageTargets["30"], Is.EqualTo(550));
             var sw = Sweep.Run(Content.Db, "greedy-f2p", "1-4", 7, Environment.ProcessorCount);
             var results = AcceptanceChecker.Check(sw, targets, () => null);
-            TestContext.WriteLine(string.Join("\n", results.Select(r => (r.Pass ? "PASS " : "FAIL ") + r.Id + " " + r.Message)));
+            TestContext.WriteLine(string.Join("\n", results.Select(r => (r.Pass ? "PASS " : targets.IsAdvisory(r.Id) ? "WARN " : "FAIL ") + r.Id + " " + r.Message)));
             Assert.That(results.Select(r => r.Id).Distinct(), Is.EqualTo(new[] { "AC1", "AC2", "AC3", "AC4", "AC5", "AC6" }));
             Assert.That(results.Count(r => r.Id == "AC1"), Is.EqualTo(2), "days 1 and 7 checked; 30 is beyond a 7-day run");
             Assert.That(results.Single(r => r.Id == "AC5").Pass, Is.True);
             Assert.That(results.Single(r => r.Id == "AC6").Pass, Is.True);
+        }
+
+        [Test]
+        public void Advisory_BalanceChecksWarn_DeterminismAlwaysBlocks()
+        {
+            var t = AcceptanceTargets.LoadDefault();
+            Assert.That(t.Advisory, Is.EquivalentTo(new[] { "AC1", "AC2", "AC3", "AC4", "AC5" }), "systems-before-balance phase (#60)");
+            Assert.That(t.Blocks(new CheckResult("AC2", false, "", Array.Empty<string>())), Is.False);
+            Assert.That(t.Blocks(new CheckResult("AC6", false, "", Array.Empty<string>())), Is.True);
+            var strict = AcceptanceTargets.Parse("{\"advisory\":[\"AC6\"]}");
+            Assert.That(strict.Blocks(new CheckResult("AC6", false, "", Array.Empty<string>())), Is.True, "AC6 can never be advisory");
+            Assert.That(AcceptanceTargets.Parse("{}").Blocks(new CheckResult("AC1", false, "", Array.Empty<string>())), Is.True);
         }
 
         [Test]
