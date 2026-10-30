@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdleRng.Sim", "src\IdleRng.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdleRng.Sim.Tests", "src\IdleRng.Sim.Tests\IdleRng.Sim.Tests.csproj", "{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdleRng.Runtime", "src\IdleRng.Runtime\IdleRng.Runtime.csproj", "{0FC6FE80-B550-4691-A2E0-D07E5644A9A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdleRng.Runtime.Tests", "src\IdleRng.Runtime.Tests\IdleRng.Runtime.Tests.csproj", "{5B27246F-8975-41F7-BE67-6942B55A9FBB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +30,19 @@ Global
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FC6FE80-B550-4691-A2E0-D07E5644A9A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FC6FE80-B550-4691-A2E0-D07E5644A9A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FC6FE80-B550-4691-A2E0-D07E5644A9A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FC6FE80-B550-4691-A2E0-D07E5644A9A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B27246F-8975-41F7-BE67-6942B55A9FBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B27246F-8975-41F7-BE67-6942B55A9FBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B27246F-8975-41F7-BE67-6942B55A9FBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B27246F-8975-41F7-BE67-6942B55A9FBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9500CC25-6B38-4E1C-8442-E467BA09650C} = {22381BA7-608E-4B1D-B20B-29D71D1605AE}
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E} = {22381BA7-608E-4B1D-B20B-29D71D1605AE}
+		{0FC6FE80-B550-4691-A2E0-D07E5644A9A7} = {22381BA7-608E-4B1D-B20B-29D71D1605AE}
+		{5B27246F-8975-41F7-BE67-6942B55A9FBB} = {22381BA7-608E-4B1D-B20B-29D71D1605AE}
 	EndGlobalSection
 EndGlobal
