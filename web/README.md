@@ -6,7 +6,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 
 | File | What it is |
 |---|---|
-| `index.html`, `run.js` | The trainer screens: species pick, Drill and Rest with the odds shown, rank fights with the battle log, tree drafts and buying, the gauntlet wheel after sealing (`specs/19` section 7), the grade screen with shard payout and Legacy Title, talents, the Vault list. No game rules. |
+| `index.html`, `run.js` | The trainer screens: species pick, Drill and Rest with the odds shown, rank fights played back action by action (ability in use, skill cooldowns, live HP; speed 1x/2x/Skip, `FIGHT_STEP_MS` is a placeholder) then the battle log, tree drafts and buying, the gauntlet wheel after sealing (`specs/19` section 7), the grade screen with shard payout and Legacy Title, talents, the Vault list. No game rules. |
 | `run-engine.js` | Facade over the C# trainer bridge (`IdleRng.Web.Engine.Run*` / `Account*`): the account save (shards, talents, Vault, active run). |
 | `engine.js` | Loader for the .NET runtime and the content pack. |
 | `sprites.js` | Seeded 12x12 pixel sprites drawn on canvas. Cosmetic only, never touches the game's RNG. |

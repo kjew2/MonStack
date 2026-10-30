@@ -97,11 +97,16 @@ namespace IdleRng.Sim.Combat
             if (needsScales && !StatIds.IsTrained(sk.Scales)) throw new ArgumentException($"{where}: scales '{sk.Scales}' is not a trained stat", side);
         }
 
-        /// <summary>Run a whole fight on a fresh stream seeded with <paramref name="seed"/>.</summary>
+        /// <summary>
+        /// Run a whole fight on a fresh stream seeded with <paramref name="seed"/>. <paramref name="onStart"/> sees the new state
+        /// before the first tick, so an observer (the web bridge) can read live HP and cooldowns from inside
+        /// <paramref name="onAction"/>; observers must not change the state.
+        /// </summary>
         public static FightResult Resolve(FightRules rules, IReadOnlyList<Fighter> sideA, IReadOnlyList<Fighter> sideB, ulong seed,
-                                          Action<FightAction> onAction = null)
+                                          Action<FightAction> onAction = null, Action<FightState> onStart = null)
         {
             var s = Start(rules, sideA, sideB);
+            onStart?.Invoke(s);
             var rng = new RngStream(StreamName, seed);
             while (Step(rules, s, rng, onAction) == FightOutcome.Ongoing) { }
             return new FightResult(s, StateHash(s));

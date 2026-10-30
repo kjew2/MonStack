@@ -114,15 +114,15 @@ namespace IdleRng.Sim.Training
         /// <summary>
         /// The due rank fight (specs/14 section 5): the monster with its current stats and bought tree skills against the
         /// current rank's opponent, 1v1. A win ranks up (the top rank stays) and pays SP_PER_WIN. The fight's tallies add to the
-        /// run tally. Then the next cycle starts, or the run completes.
+        /// run tally. Then the next cycle starts, or the run completes. The observers are passed to BattleSim.Resolve.
         /// </summary>
-        public static RankFightResult Fight(ContentDb c, RunState s, Action<FightAction> onAction = null)
+        public static RankFightResult Fight(ContentDb c, RunState s, Action<FightAction> onAction = null, Action<FightState> onStart = null)
         {
             RequirePhase(s, RunPhase.AwaitFight, "Fight");
             var rank = c.FightRanks[s.Rank];
             var monster = MonsterFighter(c, s);
             var opponent = new Fighter { Id = "rank_" + rank.Id, Element = rank.Element, Stats = rank.Stats.Clone() };
-            var fight = BattleSim.Resolve(FightRules.FromContent(c), new[] { monster }, new[] { opponent }, FightSeed(s.Seed, s.FightsFought), onAction);
+            var fight = BattleSim.Resolve(FightRules.FromContent(c), new[] { monster }, new[] { opponent }, FightSeed(s.Seed, s.FightsFought), onAction, onStart);
 
             var result = new RankFightResult { RankBefore = s.Rank, Won = fight.Outcome == FightOutcome.SideAWon, Fight = fight };
             s.FightsFought++;

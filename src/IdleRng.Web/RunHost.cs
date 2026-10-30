@@ -365,18 +365,16 @@ namespace IdleRng.Web
                     }
                     case "fight":
                     {
-                        var actions = new List<FightAction>();
-                        var r = TrainingRun.Fight(_db, s, actions.Add);
+                        var log = new FightLog();
+                        var r = TrainingRun.Fight(_db, s, log.Record, log.Watch);
                         w.P("ok", true).P("kind", "fight").P("won", r.Won).P("rankBefore", r.RankBefore).P("rankAfter", r.RankAfter).P("sp", r.SpGained);
                         w.P("outcome", r.Fight.Outcome.ToString()).P("ticks", r.Fight.Ticks);
                         w.Key("units").Arr();
-                        foreach (var u in r.Fight.Final.Units)
-                            w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp)
-                                .P("damage", u.Tally.DamageDealt).P("crits", u.Tally.Crits).P("evades", u.Tally.Evades).EndObj();
+                        foreach (var u in r.Fight.Final.Units) FightUnitOut(w, u);
                         w.EndArr();
-                        w.P("actionCount", actions.Count);
+                        w.P("actionCount", log.Count);
                         w.Key("actions").Arr();
-                        foreach (var x in actions.Take(MaxLoggedActions)) Action(w, x);
+                        foreach (var x in log.Entries) Action(w, x);
                         w.EndArr();
                         break;
                     }
@@ -418,10 +416,65 @@ namespace IdleRng.Web
             w.EndArr();
         }
 
-        private void Action(JsonOut w, FightAction x)
+        /// <summary>
+        /// The fight's action log for playback (specs/16 section 2): each action with a snapshot of the live fight taken as the
+        /// sim reports it (every unit's HP, the actor's cooldowns), so the UI shows exact HP and cooldown state without
+        /// computing any rule. Reads only; caps the stored entries at MaxLoggedActions and counts the rest.
+        /// </summary>
+        private sealed class FightLog
         {
+            private FightState _live;
+            public readonly List<(FightAction x, double[] hp, int[] cd, int si)> Entries = new List<(FightAction, double[], int[], int)>();
+            public int Count;
+
+            public void Watch(FightState s) => _live = s;
+
+            public void Record(FightAction x)
+            {
+                Count++;
+                if (Entries.Count >= MaxLoggedActions || _live == null) return;
+                var hp = new double[_live.Units.Count];
+                FightUnit actor = null;
+                for (int i = 0; i < hp.Length; i++)
+                {
+                    var u = _live.Units[i];
+                    hp[i] = Math.Max(0, u.Hp);
+                    if (u.Id == x.Actor) actor = u;
+                }
+                int si = -1;   // the actor's skill (by id, so an echo counts) this action used; -1 for basic attacks, counters and triggers not in its list
+                if (actor != null && x.Skill != null)
+                    for (int i = 0; i < actor.Source.Skills.Count && si < 0; i++)
+                        if (actor.Source.Skills[i].Id == x.Skill.Id && actor.Source.Skills[i].Kind != SkillKind.Passive) si = i;
+                Entries.Add((x, hp, actor == null ? new int[0] : (int[])actor.Cooldowns.Clone(), si));
+            }
+        }
+
+        private void FightUnitOut(JsonOut w, FightUnit u)
+        {
+            w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp)
+                .P("damage", u.Tally.DamageDealt).P("crits", u.Tally.Crits).P("evades", u.Tally.Evades);
+            w.Key("skills").Arr();   // in the fighter's skill order, the index the actions' "cd" and "si" use
+            foreach (var sk in u.Source.Skills)
+                w.Obj().P("name", _db.Text("mskill." + sk.Id + ".name")).P("kind", sk.Kind.ToString().ToLowerInvariant()).P("cooldown", sk.Cooldown).EndObj();
+            w.EndArr();
+            w.Key("cd").Arr();       // cooldowns left when the fight ended
+            foreach (var c in u.Cooldowns) w.Int(c);
+            w.EndArr();
+            w.EndObj();
+        }
+
+        private void Action(JsonOut w, (FightAction x, double[] hp, int[] cd, int si) e)
+        {
+            var x = e.x;
             w.Obj().P("actor", x.Actor).P("target", x.Target).P("amount", x.Amount).P("crit", x.Crit).P("evaded", x.Evaded).P("aoe", x.Aoe).P("counter", x.Counter);
             if (x.Skill != null) w.P("skill", _db.Text("mskill." + x.Skill.Id + ".name")).P("kind", x.Skill.Kind.ToString().ToLowerInvariant());
+            w.P("si", e.si);
+            w.Key("hp").Arr();
+            foreach (var v in e.hp) w.Num(v);
+            w.EndArr();
+            w.Key("cd").Arr();
+            foreach (var c in e.cd) w.Int(c);
+            w.EndArr();
             w.EndObj();
         }
 
