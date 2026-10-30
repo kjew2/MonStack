@@ -1,6 +1,6 @@
 # 13 - Transition Plan: Idle RNG to Monster Trainer
 
-Status: **in progress.** T1 (battle core) and T2 (training run) are live; see section 6. How the repo moves from the idle stage-push game (`specs/00`-`11`) to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
+Status: **in progress.** T1 (battle core), T2 (training run) and T3 (skill trees) are live; see section 6. How the repo moves from the idle stage-push game (`specs/00`-`11`) to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
 
 ## 1. Approach
 
@@ -11,7 +11,7 @@ Status: **in progress.** T1 (battle core) and T2 (training run) are live; see se
 - **No save migration from the idle game.** There are no released players (TestFlight, #11, is not done). The new game starts a new save lineage under a new save key; old idle saves are ignored, not migrated (kj, 2026-10-30).
 - **No rename yet.** `IdleRng` stays in namespaces, assemblies and paths until the game has a name (#47). Then one mechanical rename. Renaming twice is churn.
 - **Balance stays on hold.** Every number in the new systems is a placeholder (`CLAUDE.md`). The idle balance criteria AC1-AC5 retire with the idle loop.
-- **Web first** (kj, 2026-10-30; client technology was left to the agent). The call: the web client (`web/` on the C# core through WebAssembly) is the game's client, not just a prototype. Reasons: the drafts target Steam and web; the game is menu- and number-heavy with light animation, which HTML does well; the WebAssembly bridge already runs the real C# core and plays on a phone through `./play.sh`; the Unity project has never been opened in Unity (#10) and needs a Mac to build. Steam can ship the same web build in a desktop wrapper (Tauri or Electron) and mobile through a web-view wrapper, both decided at T12. The Unity client is paused, not deleted; reopen it only if a native mobile build becomes a priority and the wrappers fall short.
+- **Web first** (kj, 2026-10-30; client technology was left to the agent). The call: the web client (`web/` on the C# core through WebAssembly) is the game's client, not just a prototype. Reasons: the drafts target Steam and web; the game is menu- and number-heavy with light animation, which HTML does well; the WebAssembly bridge already runs the real C# core and plays on a phone through `./play.sh`; the Unity project has never been opened in Unity (#10) and needs a Mac to build. Steam can ship the same web build in a desktop wrapper (Tauri or Electron) and mobile through a web-view wrapper, both decided at T13. The Unity client is paused, not deleted; reopen it only if a native mobile build becomes a priority and the wrappers fall short.
 
 ## 2. What carries over
 
@@ -57,7 +57,7 @@ Deleted in T7 once the new loop is playable:
 | `05-content-data-schema` | Pipeline sections kept; table sections replaced. |
 | `06-save-and-offline` | Save machinery kept; schema replaced; offline catch-up removed. |
 | `07-client-unity-prototype` | Marked paused; a web client spec replaces it for the MVP. |
-| `08-backend-seams` | Kept; `IPvpService` added at T11. |
+| `08-backend-seams` | Kept; `IPvpService` added at T12. |
 | `09-test-harness-and-bots` | Rewritten around run policies and run reports. |
 | `10-online-competitive` | Kept; snapshot types updated for Vault teams. |
 | `11-party-and-builds` | Phases 3-5 cancelled. The battle, kit vocabulary and elements carry into the new battle spec; the rest retires. |
@@ -77,7 +77,7 @@ New rules specs get written as phases start, one per system: `14-training-run`, 
 | #63 companion stats, roles | Close; species and trees replace it. |
 | #41 AC4 walls, #66 power-curve model | Close: they measure the idle loop. |
 | #6, #10, #11 iOS / Unity | Park until platform is decided (section 9 item 3). |
-| #15, #17-#19, #21-#29, #32, #33 server and trust | Keep; re-scope when PvP is planned (T11). Most are game-agnostic. |
+| #15, #17-#19, #21-#29, #32, #33 server and trust | Keep; re-scope when PvP is planned (T12). Most are game-agnostic. |
 | #38 CI workflow | Keep. |
 | #45-#54 launch goals | Keep; revisit names and monetization (#47, #49) against `specs/12`. |
 
@@ -96,7 +96,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 - A new engine, `IdleRng.Sim.Combat.BattleSim`, takes two sides of 1-4 units each (`specs/16`). It is built beside the idle boss battle (`IdleRng.Sim.Battle`), which stays untouched until T7 deletes it: porting the idle fight would need a save migration and golden churn for code that is about to go.
 - A monster stat sheet: HP, STR, INT, WIS, DEX, DEF, SPD, LUK (kj, 2026-10-30), turned into battle values by placeholder formulas.
 - Pure `BattleSim.Resolve(rules, sideA, sideB, seed)`, usable by the run engine, gauntlet and later PvP.
-- Hooks for rule modifiers (chase traits) and for the entropy gauge, phase shifts and environmental clock (built later, T9).
+- Hooks for rule modifiers (chase traits) and for the entropy gauge, phase shifts and environmental clock (built later, T10).
 - Exit: 1v1, 4v1 and 4v4 battles run deterministically, with tests and goldens.
 
 ### T2 - Training run engine
@@ -111,14 +111,16 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T3 - Skill trees
 
-- Content: `trees`, `tree_nodes`, `chase_conditions`, `skill_books`. Nodes grant skills, stats or rule modifiers in the T1 vocabulary.
-- Native trees, milestone drafts into the draft slot, chase traits at each capstone, in-run chase trees, playstyle counters from Tactical Challenge fights. Book-gated trees use a debug grant until T9 produces books.
-- MVP content: 3 species, 6 native trees, 2 chase trees (`specs/12` section 12.1).
-- Exit: the point-dump path (`specs/12` section 5.4) is reachable in a scripted test.
+**Done** (`specs/15`). kj (2026-10-30): SP per cycle plus a bonus per rank fight win; trees are lines of nodes with about 75% filler and the chase trait last; points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; chase trees' capstones are much stronger and more unique.
+
+- Content `2.5`: `monster_skills`, `trees`, `tree_nodes`, `chase_conditions`, `skill_books`, species native trees, SP and slot constants. Placeholder content: 3 species x 2 native trees, 10 generic trees, 1 book tree, 2 chase trees.
+- Run commands `SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; milestone drafts on a `draft` stream; chase unlock and re-lock; run tallies from rank fights; the monster's fight kit from its bought nodes.
+- New rule modifier `echo_cast` (Arcane Overflow's capstone).
+- Books are passed into `TrainingRun.Start` until the Daily Tower drops them (T10).
 
 ### T4 - Run end: ladder, grade, Vault
 
-- MVP 3-boss ladder and S/A/B grade with stat breakdown. The 100-floor gauntlet and Legacy Titles follow in the same spec once the ladder works (the wheel and defeat animation are web UI). With rank fights in the run (T2), the rank reached may be enough of a grade for the MVP (section 9 item 3).
+- The rank reached in the run's rank fights (E-S) is the end-of-run grade, with a stat breakdown (kj, 2026-10-30). The boss-tower gauntlet with the wheel spin and Legacy Titles is T8, after the MVP.
 - Vault: certified monsters stored with their final build snapshot.
 - Exit: a finished run produces a grade and a Vault entry.
 
@@ -145,11 +147,12 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 | Phase | Content |
 |---|---|
-| T8 | Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors) |
-| T9 | Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
-| T10 | Endless Tower: 4v4, mutators, gambit rulebook editor |
-| T11 | Async 4v4 PvP on `specs/10`: accounts, server-resolved battles, cosmetic rewards |
-| T12 | Monetization: opt-in ads, ad-removal pass, cosmetics; platform builds |
+| T8 | End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
+| T9 | Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors) |
+| T10 | Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
+| T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |
+| T12 | Async 4v4 PvP on `specs/10`: accounts, server-resolved battles, cosmetic rewards |
+| T13 | Monetization: opt-in ads, ad-removal pass, cosmetics; platform builds |
 
 ## 7. Risks
 
@@ -166,14 +169,14 @@ Balance of any kind, art direction, the game's name, store presence. Those stay 
 
 Blocking questions first. Each has a recommendation.
 
-Answered (kj, 2026-10-30): pivot in place, no rename yet; tree slots are 2 native + 2 empty, any new tree may fill or overwrite any slot (`specs/12` section 5.1); web first (section 1); clean save break; stats HP, STR, INT, WIS, DEX, DEF, SPD, LUK; failed runs end on injury, the monster is still vaulted and shards are still paid. Second round: only Drill and Rest, AP cycles ending in a rank fight (`specs/12` section 4.2); points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; every tree has a chase trait, and chase trees' capstones are much stronger and more unique.
+Answered (kj, 2026-10-30): pivot in place, no rename yet; tree slots are 2 native + 2 empty, any new tree may fill or overwrite any slot (`specs/12` section 5.1); web first (section 1); clean save break; stats HP, STR, INT, WIS, DEX, DEF, SPD, LUK; failed runs end on injury, the monster is still vaulted and shards are still paid. Second round: only Drill and Rest, AP cycles ending in a rank fight (`specs/12` section 4.2); points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; every tree has a chase trait, and chase trees' capstones are much stronger and more unique. Third round: SP per cycle plus a per-win bonus; trees of nodes with about 75% filler; the rank reached is the MVP grade, with the simulated boss-tower gauntlet and wheel spin after the MVP (T8).
 
 Open, blocking first. Each has a recommendation.
 
-1. **Skill points** (`specs/12` section 4.3). How they are earned. Recommend: a fixed amount per cycle plus a bonus for each rank fight win, so hoarding for the point dump is a choice. Blocks T3.
-2. **Tree node shape.** Recommend: each tree is a short list of nodes bought in order (5 nodes, the last one the chase trait), each node a skill, a passive or a stat bonus in the T1 vocabulary. Simple to read on a phone; branching can come later. Blocks T3.
-3. **Rank as the MVP grade.** Use the rank reached (E-S) as the end-of-run grade instead of a separate 3-boss ladder? Recommend yes; the 100-floor gauntlet still comes after the MVP. Blocks T4.
+1. **Vault entry** (T4). What a finished monster keeps: its final stats, slotted trees with bought nodes, rank, species and run date. Recommend exactly that, frozen as a battle snapshot. Blocks T4.
+2. **Unspent skill points at the end of a run.** Recommend: lost (tree commands still work after the run ends, so the player can spend them first). Not blocking.
+3. **What overwriting takes away** (`specs/15` section 4, agent decision): the overwritten tree's flat stat boosts are removed too. Not blocking; easy to change.
 4. **One energy meter** (`specs/12` section 13 item 16): drafts had energy plus fatigue; T2 uses energy only. Recommend keeping one meter. Not blocking.
 5. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
-6. **Roles and elements.** Recommend keeping 5 elements, dropping fixed roles. Not blocking until T3 content.
-7. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T12.
+6. **Roles and elements.** The T3 placeholder content keeps the 5 elements and has no fixed roles (roles come from trees). Confirm. Not blocking.
+7. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T13.

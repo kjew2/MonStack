@@ -13,16 +13,20 @@ namespace IdleRng.Bots.Tests
         public void EveryPolicy_FinishesEverySpecies_AndReplays()
         {
             var db = Content.Db;
+            var books = new List<string>(db.SkillBooks.Keys);
             foreach (var sp in db.SpeciesList)
                 foreach (var name in RunPolicies.Names)
-                {
-                    var lines = new List<string>();
-                    var s = RunBot.Play(db, RunPolicies.Create(name), sp.Id, 3, lines.Add);
-                    Assert.That(s.Phase, Is.EqualTo(RunPhase.Finished), $"{sp.Id} {name}");
-                    Assert.That(lines.Count, Is.EqualTo(s.Log.Count));
-                    var again = TrainingRun.Replay(db, sp.Id, 3, s.Log);
-                    Assert.That(TrainingRun.StateHash(again), Is.EqualTo(TrainingRun.StateHash(s)), $"{sp.Id} {name}");
-                }
+                    foreach (var withBooks in new[] { false, true })
+                    {
+                        var lines = new List<string>();
+                        var b = withBooks ? books : null;
+                        var s = RunBot.Play(db, RunPolicies.Create(name), sp.Id, 3, lines.Add, b);
+                        Assert.That(s.Phase, Is.EqualTo(RunPhase.Finished), $"{sp.Id} {name}");
+                        Assert.That(s.Offers, Is.Empty, "bots resolve every offer");
+                        Assert.That(lines.Count, Is.EqualTo(s.Log.Count));
+                        var again = TrainingRun.Replay(db, sp.Id, 3, s.Log, b);
+                        Assert.That(TrainingRun.StateHash(again), Is.EqualTo(TrainingRun.StateHash(s)), $"{sp.Id} {name} books={withBooks}");
+                    }
         }
 
         [Test]

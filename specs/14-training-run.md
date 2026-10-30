@@ -2,7 +2,7 @@
 
 Status: **live as an engine (T2 of `specs/13`)**, not yet in the web client (T6) or saved in an account (T5). Code: `src/IdleRng.Sim/Training`. Tests: `src/IdleRng.Sim.Tests/TrainingRunTests.cs`, `src/IdleRng.Bots.Tests/RunBotTests.cs`. Golden: `golden/training-run-vectors.txt`.
 
-The design is `specs/12` section 4; the cycle flow is kj's (2026-10-30). Skill points, tree drafts and skill trees are T3 (`specs/15`, not written yet).
+The design is `specs/12` section 4; the cycle flow is kj's (2026-10-30). Skill points, tree offers and skill trees are `specs/15`.
 
 > **Numbers are placeholders.** Every constant and table value here is a placeholder until balance resumes (`CLAUDE.md`).
 
@@ -29,7 +29,7 @@ Every tap gives instant feedback (the command's result object). Fights are resol
 | `AwaitFight` | `Fight` |
 | `Finished` | none (`End` is `Completed` or `Injured`) |
 
-A command in the wrong phase throws `InvalidOperationException`; an unknown stat throws `ArgumentException`. Only accepted commands enter the log.
+Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` section 3) work in every phase. `Drill`, `Rest` and `Fight` also wait until no tree offer is pending. A command that is not allowed throws `InvalidOperationException`; an unknown stat throws `ArgumentException`. Only accepted commands enter the log.
 
 ## 3. Species
 
@@ -59,21 +59,21 @@ Both cost 1 AP. When AP reach 0 the run goes to `AwaitFight` if a fight is due, 
 ## 5. Rank fights
 
 - Content table `fight_ranks`: `id`, `sort_order` (0 = lowest, contiguous), `name_key`, `element` and the eight stats of the opponent at that rank. Placeholder ranks E, D, C, B, A, S.
-- `Fight` builds the monster as a `Fighter` (species element, current stats, no skills until T3) and the rank's opponent, and resolves a 1v1 `BattleSim` fight (`specs/16`).
-- A win (`SideAWon`) promotes the monster one rank; at the top rank it stays. A loss or a timeout changes nothing (placeholder; no penalty yet).
+- `Fight` builds the monster as a `Fighter` (species element, current stats, and the skills of its bought tree nodes, `specs/15` section 2) and the rank's opponent, and resolves a 1v1 `BattleSim` fight (`specs/16`).
+- A win (`SideAWon`) promotes the monster one rank and pays `SP_PER_WIN`; at the top rank it stays. A loss or a timeout changes nothing (placeholder; no penalty yet). The fight's tallies add to the run tally (`specs/15` section 6).
 - Fight seed: `SplitMix64.Derive(StreamSeed(runSeed, "fight"), fightIndex)`, where `fightIndex` is the number of fights fought before it. Fights never advance the `training` stream.
 - `FIGHT_EVERY` (placeholder 1) sets how often fights come; kj suggested every other cycle if every cycle feels too frequent.
 - "Promotion" here means a rank up. It is unrelated to the idle game's companion promotion (`specs/11` section 6), which retires at T7. Code says `Rank`.
 
 ## 6. Milestones
 
-Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill takes a stat from below a threshold to at or above it, the run records a `MilestoneHit` (stat, threshold, cycle) and returns it in the drill result. T3 turns these into tree offers (`specs/12` section 4.4).
+Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it, the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens a milestone draft (`specs/15` section 4).
 
 ## 7. Determinism, replay, hash
 
-- Pure: no clock, IO or `Math.Pow`. All randomness is the `training` stream plus derived fight seeds.
-- `TrainingRun.Replay(content, species, seed, log)` rebuilds a run from its command log; tests check it gives the same `StateHash` for every species and bot.
-- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions, `HashVersion` 1).
+- Pure: no clock, IO or `Math.Pow`. All randomness is the `training` and `draft` streams plus derived fight seeds.
+- `TrainingRun.Replay(content, species, seed, log, books)` rebuilds a run from its command log; tests check it gives the same `StateHash` for every species, bot and book list.
+- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions, `HashVersion` 2 since skill trees).
 
 ## 8. Content
 
@@ -104,12 +104,11 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 
 ## 9. Bots and goldens
 
-- `src/IdleRng.Bots/Training/RunBots.cs`: three policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the species' best-growth stat that is not capped; `reckless` never rests. All fight when a fight is due.
-- CLI: `dotnet run --project src/IdleRng.Bots -- train --species drake --policy focus --seed 7` prints every tap and fight, the summary and the hash.
-- `golden/training-run-vectors.txt`: every species x policy at seed 7, summary and hash. Regenerate with `golden --update` when the run rules, the battle or their content change.
+- `src/IdleRng.Bots/Training/RunBots.cs`: four policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the best-growth stat that is not capped; `reckless` never rests; `hoarder` is `focus` but saves skill points until cycle 9. All fight when a fight is due; tree handling is `specs/15` section 8.
+- CLI: `dotnet run --project src/IdleRng.Bots -- train --species drake --policy hoarder --seed 7 [--books book_echoes]` prints every command, the summary and the hash.
+- `golden/training-run-vectors.txt`: every species x policy at seed 7, plus `focus` with every book, summary and hash. Regenerate with `golden --update` when the run rules, the battle or their content change.
 
 ## 10. Open
 
-- Skill points: how they are earned (`specs/13` section 9 item 1). Blocks T3.
 - Retiring a monster early, and any penalty for losing a rank fight.
-- Whether the rank reached is the MVP's end-of-run grade (`specs/13` section 9 item 3).
+- The rank reached is the MVP's end-of-run grade (kj, 2026-10-30); the Vault entry is T4.

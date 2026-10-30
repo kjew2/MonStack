@@ -83,6 +83,13 @@ namespace IdleRng.Sim.Content
         public double StatMax { get; internal set; }             // STAT_MAX
         public int FightEvery { get; internal set; }             // FIGHT_EVERY
 
+        // Skill trees (specs/15 section 9). Placeholders.
+        public int SpPerCycle { get; internal set; }             // SP_PER_CYCLE
+        public int SpPerWin { get; internal set; }               // SP_PER_WIN
+        public int TreeSlots { get; internal set; }              // TREE_SLOTS
+        public int DraftSize { get; internal set; }              // DRAFT_SIZE
+        public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
+
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
 
@@ -383,6 +390,8 @@ namespace IdleRng.Sim.Content
         public string Id { get; internal set; }
         public string NameKey { get; internal set; }
         public string Element { get; internal set; }
+        public string NativeTree1 { get; internal set; }
+        public string NativeTree2 { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Base { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Growth { get; internal set; }
     }
@@ -406,5 +415,68 @@ namespace IdleRng.Sim.Content
         public string NameKey { get; internal set; }
         public string Element { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Stats { get; internal set; }
+    }
+
+    public enum TreeKind { Native, Generic, Chase, Book }
+    public enum NodeKind { Growth, Stat, Skill, Trigger, Rule }
+    public enum ConditionType { TreeMaxed, NodeOwned, StatAtLeast, TallyAtLeast }
+
+    /// <summary>A skill tree (specs/15 section 2). Nodes are bought in index order; the last node is the chase trait.</summary>
+    public sealed class TreeDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public TreeKind Kind { get; internal set; }
+
+        /// <summary>Generic trees: the stat whose milestones offer it; null = any stat.</summary>
+        public string OfferStat { get; internal set; }
+
+        /// <summary>Generic trees: the lowest milestone threshold that offers it. 0 for other kinds.</summary>
+        public int OfferThreshold { get; internal set; }
+
+        public IReadOnlyList<TreeNodeDef> Nodes { get; internal set; }
+
+        /// <summary>Chase trees: all must hold for the tree to unlock.</summary>
+        public IReadOnlyList<ChaseConditionDef> Conditions { get; internal set; }
+    }
+
+    public sealed class TreeNodeDef
+    {
+        public string Id { get; internal set; }
+        public string TreeId { get; internal set; }
+        public int Index { get; internal set; }
+        public int Cost { get; internal set; }
+        public NodeKind Kind { get; internal set; }
+
+        /// <summary>Growth and Stat nodes: the trained stat.</summary>
+        public string Stat { get; internal set; }
+
+        /// <summary>Growth: added to the growth multiplier. Stat: flat points added.</summary>
+        public double Amount { get; internal set; }
+
+        /// <summary>Skill and Trigger nodes.</summary>
+        public IdleRng.Sim.Combat.CombatSkill Skill { get; internal set; }
+        public IdleRng.Sim.Combat.FightTrigger? Trigger { get; internal set; }
+
+        /// <summary>Rule nodes: a RuleModifiers id.</summary>
+        public string RuleId { get; internal set; }
+    }
+
+    public sealed class ChaseConditionDef
+    {
+        public string Id { get; internal set; }
+        public string TreeId { get; internal set; }
+        public ConditionType Type { get; internal set; }
+
+        /// <summary>Tree id, node id, stat id or tally name, by Type.</summary>
+        public string Ref { get; internal set; }
+        public double Amount { get; internal set; }
+    }
+
+    public sealed class SkillBookDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string TreeId { get; internal set; }
     }
 }

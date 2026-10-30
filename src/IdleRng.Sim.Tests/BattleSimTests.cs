@@ -267,6 +267,20 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void EchoCast_RepeatsActiveSkillsAtEchoPower()
+        {
+            var bolt = new CombatSkill { Id = "bolt", Kind = SkillKind.Damage, Target = SkillTarget.Enemy, Scales = StatIds.Int, Power = 2, Cooldown = 3 };
+            var caster = Mon("a", 300, null, x => x.Spd = 900, bolt);
+            caster.Rules.Add(RuleModifiers.EchoCast);
+            var s = BattleSim.Start(Rules, Side(caster), Side(Mon("b", 999)));
+            var log = new List<FightAction>();
+            while (log.Count(a => a.Skill?.Id == "bolt") < 2) BattleSim.Step(Rules, s, new Fixed(0.99), log.Add);
+            var casts = log.Where(a => a.Skill?.Id == "bolt").ToList();
+            Assert.That(casts[1].Amount / casts[0].Amount, Is.EqualTo(Rules.EchoPower).Within(1e-9));
+            Assert.That(s.Units[0].Tally.Actions, Is.EqualTo(1), "the echo is part of the same action");
+        }
+
+        [Test]
         public void AoeDamage_HitsEveryLivingEnemy()
         {
             var quake = new CombatSkill { Id = "quake", Kind = SkillKind.Damage, Target = SkillTarget.AllEnemies, Scales = StatIds.Int, Power = 1, Cooldown = 5 };

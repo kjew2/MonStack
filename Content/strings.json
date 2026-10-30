@@ -605,6 +605,374 @@
     {
       "key": "rank.s.name",
       "text": "Rank S"
+    },
+    {
+      "key": "mskill.gel_mend.name",
+      "text": "Gel Mend"
+    },
+    {
+      "key": "mskill.gel_mend.desc",
+      "text": "Heal the weakest ally for 120% WIS. Cooldown 3."
+    },
+    {
+      "key": "mskill.ooze_back.name",
+      "text": "Ooze Back"
+    },
+    {
+      "key": "mskill.ooze_back.desc",
+      "text": "Chase trait. When hit: strike back for 8% of max HP."
+    },
+    {
+      "key": "mskill.harden.name",
+      "text": "Harden"
+    },
+    {
+      "key": "mskill.harden.desc",
+      "text": "Shield self for 100% DEF for 3 turns. Cooldown 4."
+    },
+    {
+      "key": "mskill.lucky_rebound.name",
+      "text": "Lucky Rebound"
+    },
+    {
+      "key": "mskill.lucky_rebound.desc",
+      "text": "Chase trait. On evade: +20% crit chance for 2 turns."
+    },
+    {
+      "key": "mskill.flame_breath.name",
+      "text": "Flame Breath"
+    },
+    {
+      "key": "mskill.flame_breath.desc",
+      "text": "Fire damage to all enemies for 90% STR. Cooldown 4."
+    },
+    {
+      "key": "mskill.wildfire.name",
+      "text": "Wildfire"
+    },
+    {
+      "key": "mskill.wildfire.desc",
+      "text": "Chase trait. On crit: fire damage to all enemies for 60% STR."
+    },
+    {
+      "key": "mskill.iron_hide.name",
+      "text": "Iron Hide"
+    },
+    {
+      "key": "mskill.iron_hide.desc",
+      "text": "+30% DEF for 3 turns. Cooldown 4."
+    },
+    {
+      "key": "mskill.plate_mastery.name",
+      "text": "Plate Mastery"
+    },
+    {
+      "key": "mskill.plate_mastery.desc",
+      "text": "Chase trait. Permanent +40% DEF."
+    },
+    {
+      "key": "mskill.aether_bolt.name",
+      "text": "Aether Bolt"
+    },
+    {
+      "key": "mskill.aether_bolt.desc",
+      "text": "Light damage for 180% INT. Cooldown 2."
+    },
+    {
+      "key": "mskill.overcharge.name",
+      "text": "Overcharge"
+    },
+    {
+      "key": "mskill.overcharge.desc",
+      "text": "Chase trait. Every action: +10% SPD for 2 turns."
+    },
+    {
+      "key": "mskill.confuse.name",
+      "text": "Confuse"
+    },
+    {
+      "key": "mskill.confuse.desc",
+      "text": "An enemy loses 30% DEX for 3 turns. Cooldown 4."
+    },
+    {
+      "key": "mskill.phase_shift.name",
+      "text": "Phase Shift"
+    },
+    {
+      "key": "mskill.phase_shift.desc",
+      "text": "Chase trait. On evade: heal self for 50% WIS."
+    },
+    {
+      "key": "mskill.second_wind.name",
+      "text": "Second Wind"
+    },
+    {
+      "key": "mskill.second_wind.desc",
+      "text": "Heal self for 25% max HP. Cooldown 5."
+    },
+    {
+      "key": "mskill.vital_surge.name",
+      "text": "Vital Surge"
+    },
+    {
+      "key": "mskill.vital_surge.desc",
+      "text": "Chase trait. Permanent +30% max HP."
+    },
+    {
+      "key": "mskill.smash.name",
+      "text": "Smash"
+    },
+    {
+      "key": "mskill.smash.desc",
+      "text": "Damage for 220% STR. Cooldown 3."
+    },
+    {
+      "key": "mskill.follow_through.name",
+      "text": "Follow Through"
+    },
+    {
+      "key": "mskill.follow_through.desc",
+      "text": "Chase trait. Every basic attack: extra hit for 50% STR."
+    },
+    {
+      "key": "mskill.arcane_blast.name",
+      "text": "Arcane Blast"
+    },
+    {
+      "key": "mskill.arcane_blast.desc",
+      "text": "Damage for 200% INT. Cooldown 3."
+    },
+    {
+      "key": "mskill.mana_surge.name",
+      "text": "Mana Surge"
+    },
+    {
+      "key": "mskill.mana_surge.desc",
+      "text": "Chase trait. On crit: +30% INT for 2 turns."
+    },
+    {
+      "key": "mskill.ward.name",
+      "text": "Ward"
+    },
+    {
+      "key": "mskill.ward.desc",
+      "text": "Shield all allies for 60% WIS for 3 turns. Cooldown 5."
+    },
+    {
+      "key": "mskill.enlightened.name",
+      "text": "Enlightened"
+    },
+    {
+      "key": "mskill.enlightened.desc",
+      "text": "Chase trait. Permanent +40% WIS."
+    },
+    {
+      "key": "mskill.quick_jab.name",
+      "text": "Quick Jab"
+    },
+    {
+      "key": "mskill.quick_jab.desc",
+      "text": "Damage for 120% STR. Cooldown 1."
+    },
+    {
+      "key": "mskill.riposte.name",
+      "text": "Riposte"
+    },
+    {
+      "key": "mskill.riposte.desc",
+      "text": "Chase trait. On evade: strike back for 80% DEX."
+    },
+    {
+      "key": "mskill.provoke.name",
+      "text": "Provoke"
+    },
+    {
+      "key": "mskill.provoke.desc",
+      "text": "Taunt for 3 turns. Cooldown 4."
+    },
+    {
+      "key": "mskill.spiked_shell.name",
+      "text": "Spiked Shell"
+    },
+    {
+      "key": "mskill.spiked_shell.desc",
+      "text": "Chase trait. When hit: strike back for 30% DEF."
+    },
+    {
+      "key": "mskill.blitz.name",
+      "text": "Blitz"
+    },
+    {
+      "key": "mskill.blitz.desc",
+      "text": "Damage for 150% SPD. Cooldown 2."
+    },
+    {
+      "key": "mskill.afterimage.name",
+      "text": "Afterimage"
+    },
+    {
+      "key": "mskill.afterimage.desc",
+      "text": "Chase trait. Every action: +15% DEX for 2 turns."
+    },
+    {
+      "key": "mskill.gamble.name",
+      "text": "Gamble"
+    },
+    {
+      "key": "mskill.gamble.desc",
+      "text": "Damage for 250% LUK. Cooldown 4."
+    },
+    {
+      "key": "mskill.jackpot.name",
+      "text": "Jackpot"
+    },
+    {
+      "key": "mskill.jackpot.desc",
+      "text": "Chase trait. Permanent +50% crit damage."
+    },
+    {
+      "key": "mskill.rally_cry.name",
+      "text": "Rally Cry"
+    },
+    {
+      "key": "mskill.rally_cry.desc",
+      "text": "+30% STR for 3 turns. Cooldown 4."
+    },
+    {
+      "key": "mskill.killer_instinct.name",
+      "text": "Killer Instinct"
+    },
+    {
+      "key": "mskill.killer_instinct.desc",
+      "text": "Chase trait. Permanent +15% crit chance."
+    },
+    {
+      "key": "mskill.regenerate.name",
+      "text": "Regenerate"
+    },
+    {
+      "key": "mskill.regenerate.desc",
+      "text": "Heal self for 80% WIS. Cooldown 3."
+    },
+    {
+      "key": "mskill.adrenaline.name",
+      "text": "Adrenaline"
+    },
+    {
+      "key": "mskill.adrenaline.desc",
+      "text": "Chase trait. When hit: +20% SPD for 2 turns."
+    },
+    {
+      "key": "mskill.echo_bolt.name",
+      "text": "Echo Bolt"
+    },
+    {
+      "key": "mskill.echo_bolt.desc",
+      "text": "Damage for 140% INT. Cooldown 2."
+    },
+    {
+      "key": "mskill.resonance.name",
+      "text": "Resonance"
+    },
+    {
+      "key": "mskill.resonance.desc",
+      "text": "Chase trait. Every action: +10% INT for 3 turns."
+    },
+    {
+      "key": "mskill.stand_firm.name",
+      "text": "Stand Firm"
+    },
+    {
+      "key": "mskill.stand_firm.desc",
+      "text": "Shield self for 150% DEF for 3 turns. Cooldown 4."
+    },
+    {
+      "key": "mskill.overflow_beam.name",
+      "text": "Overflow Beam"
+    },
+    {
+      "key": "mskill.overflow_beam.desc",
+      "text": "Damage to all enemies for 120% INT. Cooldown 3."
+    },
+    {
+      "key": "tree.slime_fundamentals.name",
+      "text": "Slime Fundamentals"
+    },
+    {
+      "key": "tree.gel_armor.name",
+      "text": "Gel Armor"
+    },
+    {
+      "key": "tree.pyromancy.name",
+      "text": "Pyromancy"
+    },
+    {
+      "key": "tree.heavy_armor.name",
+      "text": "Heavy Armor"
+    },
+    {
+      "key": "tree.aether_striker.name",
+      "text": "Aether Striker"
+    },
+    {
+      "key": "tree.mind_warp.name",
+      "text": "Mind Warp"
+    },
+    {
+      "key": "tree.vital_core.name",
+      "text": "Vital Core"
+    },
+    {
+      "key": "tree.brute_force.name",
+      "text": "Brute Force"
+    },
+    {
+      "key": "tree.spellcraft.name",
+      "text": "Spellcraft"
+    },
+    {
+      "key": "tree.sage_mind.name",
+      "text": "Sage Mind"
+    },
+    {
+      "key": "tree.nimble_feet.name",
+      "text": "Nimble Feet"
+    },
+    {
+      "key": "tree.bulwark.name",
+      "text": "Bulwark"
+    },
+    {
+      "key": "tree.overclock.name",
+      "text": "Overclock"
+    },
+    {
+      "key": "tree.fortune.name",
+      "text": "Fortune"
+    },
+    {
+      "key": "tree.battle_instinct.name",
+      "text": "Battle Instinct"
+    },
+    {
+      "key": "tree.survivor.name",
+      "text": "Survivor"
+    },
+    {
+      "key": "tree.tome_of_echoes.name",
+      "text": "Tome of Echoes"
+    },
+    {
+      "key": "tree.unbreakable_will.name",
+      "text": "Unbreakable Will"
+    },
+    {
+      "key": "tree.arcane_overflow.name",
+      "text": "Arcane Overflow"
+    },
+    {
+      "key": "book.book_echoes.name",
+      "text": "Skill Book: Tome of Echoes"
     }
   ]
 }

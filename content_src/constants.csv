@@ -57,3 +57,8 @@ INJURY_BELOW,double,0.25,energy fraction below which a drill can injure. Placeho
 INJURY_MAX_P,double,0.4,injury chance of a drill at zero energy; scales linearly up from INJURY_BELOW. Placeholder
 STAT_MAX,double,999,trained stat cap
 FIGHT_EVERY,int,1,a rank fight follows every Nth cycle (kj: maybe every other if too frequent). Placeholder
+SP_PER_CYCLE,int,2,skill points granted at the start of each cycle (specs/15; kj: per cycle plus a win bonus). Placeholder
+SP_PER_WIN,int,2,skill points for each rank fight win. Placeholder
+TREE_SLOTS,int,4,tree slots per monster: 2 native + 2 empty at the start (kj)
+DRAFT_SIZE,int,3,most trees offered by one milestone draft. Placeholder
+MON_ECHO_POWER,double,0.5,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder

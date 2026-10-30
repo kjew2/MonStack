@@ -102,9 +102,10 @@ Behaviour a table row cannot express is coded once and referenced by id from con
 
 | Id | Effect |
 |---|---|
-| `counter_mitigated` | After taking a single-target physical hit and surviving, counterattack the attacker at once for the damage DEF mitigated, as true damage (no evade, crit, element or mitigation; shields still absorb), regardless of gauge. The drafts' *Heavy Armor* + *Unbreakable Will* passive (`specs/12` section 5.3). |
+| `counter_mitigated` | After taking a single-target physical hit and surviving, counterattack the attacker at once for the damage DEF mitigated, as true damage (no evade, crit, element or mitigation; shields still absorb), regardless of gauge. The drafts' *Heavy Armor* + *Unbreakable Will* passive (`specs/12` section 5.3); the *Unbreakable Will* chase capstone. |
+| `echo_cast` | Every active damage, heal or shield skill the unit uses is cast again at once, at `MON_ECHO_POWER` of its power, within the same action. Passives, triggered effects and basic attacks do not echo. The *Arcane Overflow* chase capstone (`specs/15`). |
 
-Future hooks, not built: the entropy gauge, boss phase shifts and the environmental clock (`specs/12` section 8.3, `specs/13` T9) will be fields of `FightRules` and `FightState`.
+Future hooks, not built: the entropy gauge, boss phase shifts and the environmental clock (`specs/12` section 8.3, `specs/13` T10) will be fields of `FightRules` and `FightState`.
 
 ### 6.3 Tallies
 
@@ -128,6 +129,7 @@ New in content `2.3`, all placeholders. Reused from the idle battle: `BATTLE_GAU
 | `MON_SPD_MIN` | 10 | `> 0` | Minimum gauge fill per tick |
 | `MON_TIME_LIMIT_TICKS` | 900 | `> 0` | Turn limit (90 s) |
 | `MON_SIDE_SIZE` | 4 | `> 0` | Most units per side |
+| `MON_ECHO_POWER` | 0.5 | `[0, 1]` | `echo_cast` repeat power (content `2.5`) |
 
 Range violations are `E043` in both `tools/content_build.py` and `ContentDb`.
 
@@ -140,5 +142,5 @@ Range violations are `E043` in both `tools/content_build.py` and `ContentDb`.
 ## 9. Open
 
 - What a timeout means per mode (proposed: the challenger loses; rank fights already treat it as a loss).
-- Gambit rulebooks replace the default AI (T10).
+- Gambit rulebooks replace the default AI (T11).
 - Whether skills get their own elements in content (supported by the engine; content decides at T3).

@@ -54,7 +54,7 @@ namespace IdleRng.Bots
             "  golden     --check|--update --golden-dir path --content dir\n" +
             "  gacha-vectors --check|--update --out path --content dir\n" +
             "  bench      --ticks N --stage S --max-ms N\n" +
-            "  train      --species ID --policy balanced|focus|reckless --seed N --content dir   (one training run, specs/14)\n";
+            "  train      --species ID --policy balanced|focus|reckless|hoarder --seed N --books a,b --content dir   (one training run, specs/14-15)\n";
 
         public static int Main(string[] argv)
         {
@@ -109,7 +109,9 @@ namespace IdleRng.Bots
             string species = a.Str("species", db.SpeciesList[0].Id);
             var policy = IdleRng.Bots.Training.RunPolicies.Create(a.Str("policy", "balanced"));
             var sb = new StringBuilder();
-            var s = IdleRng.Bots.Training.RunBot.Play(db, policy, species, (ulong)a.Long("seed", 7), line => sb.Append(line).Append('\n'));
+            string books = a.Str("books", null);
+            var s = IdleRng.Bots.Training.RunBot.Play(db, policy, species, (ulong)a.Long("seed", 7), line => sb.Append(line).Append('\n'),
+                                                     books?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
             sb.Append(IdleRng.Bots.Training.RunBot.Summary(db, s)).Append('\n');
             sb.Append("hash ").Append(IdleRng.Sim.Training.TrainingRun.StateHash(s)).Append('\n');
             Emit(a, sb.ToString());

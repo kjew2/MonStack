@@ -1,0 +1,138 @@
+{
+  "table": "trees",
+  "rows": [
+    {
+      "id": "slime_fundamentals",
+      "name_key": "tree.slime_fundamentals.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "gel_armor",
+      "name_key": "tree.gel_armor.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "pyromancy",
+      "name_key": "tree.pyromancy.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "heavy_armor",
+      "name_key": "tree.heavy_armor.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "aether_striker",
+      "name_key": "tree.aether_striker.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "mind_warp",
+      "name_key": "tree.mind_warp.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "vital_core",
+      "name_key": "tree.vital_core.name",
+      "kind": "generic",
+      "offer_stat": "hp",
+      "offer_threshold": 300
+    },
+    {
+      "id": "brute_force",
+      "name_key": "tree.brute_force.name",
+      "kind": "generic",
+      "offer_stat": "str",
+      "offer_threshold": 300
+    },
+    {
+      "id": "spellcraft",
+      "name_key": "tree.spellcraft.name",
+      "kind": "generic",
+      "offer_stat": "int",
+      "offer_threshold": 300
+    },
+    {
+      "id": "sage_mind",
+      "name_key": "tree.sage_mind.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 300
+    },
+    {
+      "id": "nimble_feet",
+      "name_key": "tree.nimble_feet.name",
+      "kind": "generic",
+      "offer_stat": "dex",
+      "offer_threshold": 300
+    },
+    {
+      "id": "bulwark",
+      "name_key": "tree.bulwark.name",
+      "kind": "generic",
+      "offer_stat": "def",
+      "offer_threshold": 300
+    },
+    {
+      "id": "overclock",
+      "name_key": "tree.overclock.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 300
+    },
+    {
+      "id": "fortune",
+      "name_key": "tree.fortune.name",
+      "kind": "generic",
+      "offer_stat": "luk",
+      "offer_threshold": 300
+    },
+    {
+      "id": "battle_instinct",
+      "name_key": "tree.battle_instinct.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 500
+    },
+    {
+      "id": "survivor",
+      "name_key": "tree.survivor.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 500
+    },
+    {
+      "id": "tome_of_echoes",
+      "name_key": "tree.tome_of_echoes.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "unbreakable_will",
+      "name_key": "tree.unbreakable_will.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "arcane_overflow",
+      "name_key": "tree.arcane_overflow.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null
+    }
+  ]
+}
