@@ -29,6 +29,7 @@ Gems (premium currency) arrive with the gacha (T9).
 | `New(seed)` | Every species owned; no shards, books, talents or Vault entries |
 | `StartRun(species, books)` | No run in progress; the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3) |
 | `FinishRun(sealedUtcMs)` | The active run is over (completed or injured). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`) and clears the active run |
+| `AbandonRun()` | Ends the active run in any phase with no payout and no Vault entry; unused books return to the inventory (a misclick costs nothing). `RunsStarted` stays counted, so the next run gets a new seed and abandoning cannot reroll a run. (Agreed between the two building sessions, 2026-10-30; the web client's Abandon button calls it.) |
 | `BuyTalent(talent)` | Not maxed; enough shards. Costs shards, adds a rank. Applies from the next run: a run keeps the bonuses it started with |
 | `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower will grant books through it (T10); tests and debug use it now |
 
@@ -40,7 +41,7 @@ Rejected commands throw and change nothing. The sim has no clock: the caller pas
 
 | Field | Effect | Default |
 |---|---|---|
-| `DrillCostMult` | Multiplies `DRILL_ENERGY_COST` | 1 |
+| `DrillCostMult` | Multiplies `DRILL_ENERGY_COST` (`TrainingRun.DrillCost(c, run)` gives the run's cost, for the UI) | 1 |
 | `StatFloorMult` | Multiplies the species' base stats at the start (floored, capped at `STAT_MAX`) | 1 |
 | `DraftSizeBonus` | Added to `DRAFT_SIZE` | 0 |
 | `StartSp` | Extra skill points at the start | 0 |
