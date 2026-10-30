@@ -150,3 +150,95 @@ rank.c.name,Rank C
 rank.b.name,Rank B
 rank.a.name,Rank A
 rank.s.name,Rank S
+mskill.gel_mend.name,Gel Mend
+mskill.gel_mend.desc,Heal the weakest ally for 120% WIS. Cooldown 3.
+mskill.ooze_back.name,Ooze Back
+mskill.ooze_back.desc,Chase trait. When hit: strike back for 8% of max HP.
+mskill.harden.name,Harden
+mskill.harden.desc,Shield self for 100% DEF for 3 turns. Cooldown 4.
+mskill.lucky_rebound.name,Lucky Rebound
+mskill.lucky_rebound.desc,Chase trait. On evade: +20% crit chance for 2 turns.
+mskill.flame_breath.name,Flame Breath
+mskill.flame_breath.desc,Fire damage to all enemies for 90% STR. Cooldown 4.
+mskill.wildfire.name,Wildfire
+mskill.wildfire.desc,Chase trait. On crit: fire damage to all enemies for 60% STR.
+mskill.iron_hide.name,Iron Hide
+mskill.iron_hide.desc,+30% DEF for 3 turns. Cooldown 4.
+mskill.plate_mastery.name,Plate Mastery
+mskill.plate_mastery.desc,Chase trait. Permanent +40% DEF.
+mskill.aether_bolt.name,Aether Bolt
+mskill.aether_bolt.desc,Light damage for 180% INT. Cooldown 2.
+mskill.overcharge.name,Overcharge
+mskill.overcharge.desc,Chase trait. Every action: +10% SPD for 2 turns.
+mskill.confuse.name,Confuse
+mskill.confuse.desc,An enemy loses 30% DEX for 3 turns. Cooldown 4.
+mskill.phase_shift.name,Phase Shift
+mskill.phase_shift.desc,Chase trait. On evade: heal self for 50% WIS.
+mskill.second_wind.name,Second Wind
+mskill.second_wind.desc,Heal self for 25% max HP. Cooldown 5.
+mskill.vital_surge.name,Vital Surge
+mskill.vital_surge.desc,Chase trait. Permanent +30% max HP.
+mskill.smash.name,Smash
+mskill.smash.desc,Damage for 220% STR. Cooldown 3.
+mskill.follow_through.name,Follow Through
+mskill.follow_through.desc,Chase trait. Every basic attack: extra hit for 50% STR.
+mskill.arcane_blast.name,Arcane Blast
+mskill.arcane_blast.desc,Damage for 200% INT. Cooldown 3.
+mskill.mana_surge.name,Mana Surge
+mskill.mana_surge.desc,Chase trait. On crit: +30% INT for 2 turns.
+mskill.ward.name,Ward
+mskill.ward.desc,Shield all allies for 60% WIS for 3 turns. Cooldown 5.
+mskill.enlightened.name,Enlightened
+mskill.enlightened.desc,Chase trait. Permanent +40% WIS.
+mskill.quick_jab.name,Quick Jab
+mskill.quick_jab.desc,Damage for 120% STR. Cooldown 1.
+mskill.riposte.name,Riposte
+mskill.riposte.desc,Chase trait. On evade: strike back for 80% DEX.
+mskill.provoke.name,Provoke
+mskill.provoke.desc,Taunt for 3 turns. Cooldown 4.
+mskill.spiked_shell.name,Spiked Shell
+mskill.spiked_shell.desc,Chase trait. When hit: strike back for 30% DEF.
+mskill.blitz.name,Blitz
+mskill.blitz.desc,Damage for 150% SPD. Cooldown 2.
+mskill.afterimage.name,Afterimage
+mskill.afterimage.desc,Chase trait. Every action: +15% DEX for 2 turns.
+mskill.gamble.name,Gamble
+mskill.gamble.desc,Damage for 250% LUK. Cooldown 4.
+mskill.jackpot.name,Jackpot
+mskill.jackpot.desc,Chase trait. Permanent +50% crit damage.
+mskill.rally_cry.name,Rally Cry
+mskill.rally_cry.desc,+30% STR for 3 turns. Cooldown 4.
+mskill.killer_instinct.name,Killer Instinct
+mskill.killer_instinct.desc,Chase trait. Permanent +15% crit chance.
+mskill.regenerate.name,Regenerate
+mskill.regenerate.desc,Heal self for 80% WIS. Cooldown 3.
+mskill.adrenaline.name,Adrenaline
+mskill.adrenaline.desc,Chase trait. When hit: +20% SPD for 2 turns.
+mskill.echo_bolt.name,Echo Bolt
+mskill.echo_bolt.desc,Damage for 140% INT. Cooldown 2.
+mskill.resonance.name,Resonance
+mskill.resonance.desc,Chase trait. Every action: +10% INT for 3 turns.
+mskill.stand_firm.name,Stand Firm
+mskill.stand_firm.desc,Shield self for 150% DEF for 3 turns. Cooldown 4.
+mskill.overflow_beam.name,Overflow Beam
+mskill.overflow_beam.desc,Damage to all enemies for 120% INT. Cooldown 3.
+tree.slime_fundamentals.name,Slime Fundamentals
+tree.gel_armor.name,Gel Armor
+tree.pyromancy.name,Pyromancy
+tree.heavy_armor.name,Heavy Armor
+tree.aether_striker.name,Aether Striker
+tree.mind_warp.name,Mind Warp
+tree.vital_core.name,Vital Core
+tree.brute_force.name,Brute Force
+tree.spellcraft.name,Spellcraft
+tree.sage_mind.name,Sage Mind
+tree.nimble_feet.name,Nimble Feet
+tree.bulwark.name,Bulwark
+tree.overclock.name,Overclock
+tree.fortune.name,Fortune
+tree.battle_instinct.name,Battle Instinct
+tree.survivor.name,Survivor
+tree.tome_of_echoes.name,Tome of Echoes
+tree.unbreakable_will.name,Unbreakable Will
+tree.arcane_overflow.name,Arcane Overflow
+book.book_echoes.name,Skill Book: Tome of Echoes

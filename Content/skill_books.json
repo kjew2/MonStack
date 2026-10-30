@@ -1,0 +1,10 @@
+{
+  "table": "skill_books",
+  "rows": [
+    {
+      "id": "book_echoes",
+      "name_key": "book.book_echoes.name",
+      "tree_id": "tome_of_echoes"
+    }
+  ]
+}

@@ -20,6 +20,7 @@ namespace IdleRng.Sim.Content
             "banners", "boss_rules", "constants", "curves", "daily_quests", "elements", "gear_rarity",
             "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles", "skills",
             "tutorial_grants", "species", "drill_tiers", "fight_ranks", "stat_milestones",
+            "monster_skills", "trees", "tree_nodes", "chase_conditions", "skill_books",
         };
 
         // Curves are precomputed to this many steps (covers STAGE_CAP); beyond it Eval keeps multiplying.
@@ -97,6 +98,15 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Stat thresholds in increasing order.</summary>
         public IReadOnlyList<int> StatMilestones { get; private set; }
+
+        // Skill trees (specs/15)
+        public IReadOnlyDictionary<string, IdleRng.Sim.Combat.CombatSkill> MonsterSkills { get; private set; }
+        public IReadOnlyDictionary<string, TreeDef> Trees { get; private set; }
+
+        /// <summary>Trees in CSV order (drafts and chase checks iterate in this order).</summary>
+        public IReadOnlyList<TreeDef> TreeList { get; private set; }
+        public IReadOnlyDictionary<string, TreeNodeDef> TreeNodes { get; private set; }
+        public IReadOnlyDictionary<string, SkillBookDef> SkillBooks { get; private set; }
 
         public int GearSlotCount => GearSlots.Count;
 
@@ -287,6 +297,8 @@ namespace IdleRng.Sim.Content
                 RunEnergyStart = D("RUN_ENERGY_START"), DrillEnergyCost = D("DRILL_ENERGY_COST"), RestEnergy = D("REST_ENERGY"),
                 DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
+                SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
+                MonEchoPower = D("MON_ECHO_POWER"),
             };
             if (errors.Count > 0) return;
 
@@ -530,7 +542,8 @@ namespace IdleRng.Sim.Content
             if (!(k.RunCycles > 0 && k.RunAp > 0 && k.RunEnergyMax > 0 && k.RunEnergyStart >= 0 && k.RunEnergyStart <= k.RunEnergyMax
                   && k.DrillEnergyCost >= 0 && k.RestEnergy >= 0 && In01(k.DrillFailMin) && In01(k.DrillFailMax)
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
-                  && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0))
+                  && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0
+                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
 
             var trained = IdleRng.Sim.Combat.StatIds.Trained;
@@ -548,6 +561,7 @@ namespace IdleRng.Sim.Content
             SpeciesList = t["species"].Select(r => new SpeciesDef
             {
                 Id = r.Str("id"), NameKey = r.Str("name_key"), Element = r.Str("element"),
+                NativeTree1 = r.Str("native_tree_1"), NativeTree2 = r.Str("native_tree_2"),
                 Base = StatsFrom(r, "base_"), Growth = StatsFrom(r, "grow_"),
             }).ToList().AsReadOnly();
             Species = new ReadOnlyDictionary<string, SpeciesDef>(SpeciesList.ToDictionary(x => x.Id, StringComparer.Ordinal));
@@ -592,10 +606,221 @@ namespace IdleRng.Sim.Content
                 if (!StatsOk(fr.Stats, 0, k.StatMax, false)) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "stats must be in [0, STAT_MAX]"));
             }
 
+            BuildTrees(t, errors);
+
             StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
             for (int i = 0; i < StatMilestones.Count; i++)
                 if (StatMilestones[i] <= 0 || (i > 0 && StatMilestones[i] <= StatMilestones[i - 1]))
                     errors.Add(new ContentError("E032", $"stat_milestones[{StatMilestones[i]}]", "thresholds must be > 0 and strictly increasing"));
+        }
+
+        static readonly string[] Tallies = { "damage_dealt", "evades", "crits", "kills", "wins" };
+
+        /// <summary>Skill trees (specs/15 section 9). Mirrors validate_trees in tools/content_build.py.</summary>
+        void BuildTrees(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            bool Trained(string s) => IdleRng.Sim.Combat.StatIds.IsTrained(s);
+
+            var skills = new Dictionary<string, IdleRng.Sim.Combat.CombatSkill>(StringComparer.Ordinal);
+            foreach (var r in t["monster_skills"])
+            {
+                var sk = new IdleRng.Sim.Combat.CombatSkill
+                {
+                    Id = r.Str("id"), Kind = ParseSkillKind(r.Str("kind")), Target = ParseSkillTarget(r.Str("target")),
+                    Stat = r.NStr("stat"), Scales = r.NStr("scales"), Power = r.Dbl("power"), Cooldown = r.Int("cooldown"),
+                    Duration = r.Int("duration"), Element = r.NStr("element"),
+                };
+                string loc = $"monster_skills[{sk.Id}]";
+                bool needsStat = sk.Kind == SkillKind.Buff || sk.Kind == SkillKind.Debuff || sk.Kind == SkillKind.Passive;
+                if (needsStat && !IdleRng.Sim.Combat.StatIds.IsEffectStat(sk.Stat)) errors.Add(new ContentError("E023", loc, $"stat '{sk.Stat}' is not an effect stat"));
+                bool needsScales = sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield;
+                if (needsScales && !Trained(sk.Scales)) errors.Add(new ContentError("E023", loc, $"scales '{sk.Scales}' is not a trained stat"));
+                if (!(sk.Power >= 0) || sk.Cooldown < 0 || sk.Duration < 0) errors.Add(new ContentError("E043", loc, "power, cooldown and duration must be >= 0"));
+                if (sk.Element != null && !Elements.ContainsKey(sk.Element)) errors.Add(new ContentError("E023", loc, $"element '{sk.Element}' is not an element id"));
+                skills[sk.Id] = sk;
+            }
+            MonsterSkills = new ReadOnlyDictionary<string, IdleRng.Sim.Combat.CombatSkill>(skills);
+
+            var nodesByTree = new Dictionary<string, List<TreeNodeDef>>(StringComparer.Ordinal);
+            var allNodes = new Dictionary<string, TreeNodeDef>(StringComparer.Ordinal);
+            var treeIds = new HashSet<string>(t["trees"].Select(r => r.Str("id")), StringComparer.Ordinal);
+            var hasThreshold = new HashSet<string>(t["trees"].Where(r => r.NInt("offer_threshold") != null).Select(r => r.Str("id")), StringComparer.Ordinal);
+            foreach (var r in t["tree_nodes"])
+            {
+                var n = new TreeNodeDef
+                {
+                    Id = r.Str("id"), TreeId = r.Str("tree_id"), Index = r.Int("index"), Cost = r.Int("cost"),
+                    Kind = ParseNodeKind(r.Str("kind")), Stat = r.NStr("stat"), Amount = r.NDbl("amount") ?? 0,
+                    RuleId = r.NStr("rule_id"),
+                };
+                string loc = $"tree_nodes[{n.Id}]";
+                string skillId = r.NStr("skill_id"), trig = r.NStr("trigger");
+                if (skillId != null && skills.TryGetValue(skillId, out var nsk)) n.Skill = nsk;
+                if (trig != null) n.Trigger = ParseFightTrigger(trig);
+                allNodes[n.Id] = n;
+                if (!treeIds.Contains(n.TreeId)) { errors.Add(new ContentError("E023", loc, $"tree_id '{n.TreeId}' is not a tree id")); continue; }
+                if (!nodesByTree.TryGetValue(n.TreeId, out var list)) nodesByTree[n.TreeId] = list = new List<TreeNodeDef>();
+                list.Add(n);
+                if (n.Cost < 1) errors.Add(new ContentError("E043", loc, "cost must be >= 1"));
+                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat)
+                {
+                    if (!Trained(n.Stat)) errors.Add(new ContentError("E023", loc, $"stat '{n.Stat}' is not a trained stat"));
+                    if (!(n.Amount > 0)) errors.Add(new ContentError("E043", loc, "amount must be > 0"));
+                }
+                if ((n.Kind == NodeKind.Skill || n.Kind == NodeKind.Trigger) && n.Skill == null)
+                    errors.Add(new ContentError("E023", loc, $"skill_id '{skillId}' is not a monster skill id"));
+                if (n.Kind == NodeKind.Trigger)
+                {
+                    if (n.Trigger == null) errors.Add(new ContentError("E043", loc, "a trigger node needs a trigger"));
+                    else if (n.Skill != null && n.Skill.Kind == SkillKind.Passive) errors.Add(new ContentError("E043", loc, "a trigger node cannot fire a passive"));
+                }
+                if (n.Kind == NodeKind.Rule && !IdleRng.Sim.Combat.RuleModifiers.IsKnown(n.RuleId))
+                    errors.Add(new ContentError("E023", loc, $"rule_id '{n.RuleId}' is not a known rule modifier"));
+            }
+            TreeNodes = new ReadOnlyDictionary<string, TreeNodeDef>(allNodes);
+
+            var condsByTree = new Dictionary<string, List<ChaseConditionDef>>(StringComparer.Ordinal);
+            foreach (var r in t["chase_conditions"])
+            {
+                var cd = new ChaseConditionDef
+                {
+                    Id = r.Str("id"), TreeId = r.Str("tree_id"), Type = ParseConditionType(r.Str("type")), Ref = r.Str("ref"),
+                    Amount = r.NDbl("amount") ?? 0,
+                };
+                if (!condsByTree.TryGetValue(cd.TreeId, out var list)) condsByTree[cd.TreeId] = list = new List<ChaseConditionDef>();
+                list.Add(cd);
+            }
+
+            TreeList = t["trees"].Select(r =>
+            {
+                string id = r.Str("id");
+                nodesByTree.TryGetValue(id, out var ns);
+                condsByTree.TryGetValue(id, out var cs);
+                return new TreeDef
+                {
+                    Id = id, NameKey = r.Str("name_key"), Kind = ParseTreeKind(r.Str("kind")), OfferStat = r.NStr("offer_stat"),
+                    OfferThreshold = r.NInt("offer_threshold") ?? 0,
+                    Nodes = (ns ?? new List<TreeNodeDef>()).OrderBy(n => n.Index).ToList().AsReadOnly(),
+                    Conditions = (cs ?? new List<ChaseConditionDef>()).AsReadOnly(),
+                };
+            }).ToList().AsReadOnly();
+            Trees = new ReadOnlyDictionary<string, TreeDef>(TreeList.ToDictionary(x => x.Id, StringComparer.Ordinal));
+
+            foreach (var tr in TreeList)
+            {
+                string loc = $"trees[{tr.Id}]";
+                if (tr.Kind == TreeKind.Generic)
+                {
+                    if (tr.OfferThreshold <= 0) errors.Add(new ContentError("E043", loc, "a generic tree needs offer_threshold > 0"));
+                    if (tr.OfferStat != null && !Trained(tr.OfferStat)) errors.Add(new ContentError("E023", loc, $"offer_stat '{tr.OfferStat}' is not a trained stat"));
+                }
+                else if (tr.OfferStat != null || hasThreshold.Contains(tr.Id))
+                    errors.Add(new ContentError("E043", loc, "only generic trees have offer_stat and offer_threshold"));
+                if (tr.Nodes.Count < 2) { errors.Add(new ContentError("E044", loc, "a tree needs at least 2 nodes")); continue; }
+                for (int i = 0; i < tr.Nodes.Count; i++)
+                    if (tr.Nodes[i].Index != i) { errors.Add(new ContentError("E060", loc, "node index must be 0..N-1 contiguous")); break; }
+                var last = tr.Nodes[tr.Nodes.Count - 1].Kind;
+                if (last != NodeKind.Skill && last != NodeKind.Trigger && last != NodeKind.Rule)
+                    errors.Add(new ContentError("E064", loc, "the last node is the chase trait: it must be a skill, trigger or rule node"));
+                if (tr.Kind == TreeKind.Chase && tr.Conditions.Count == 0)
+                    errors.Add(new ContentError("E065", loc, "a chase tree needs at least one condition"));
+            }
+
+            foreach (var kv in condsByTree)
+                foreach (var cd in kv.Value)
+                {
+                    string loc = $"chase_conditions[{cd.Id}]";
+                    if (!Trees.TryGetValue(cd.TreeId, out var own) || own.Kind != TreeKind.Chase)
+                    {
+                        errors.Add(new ContentError("E023", loc, $"tree_id '{cd.TreeId}' is not a chase tree id"));
+                        continue;
+                    }
+                    switch (cd.Type)
+                    {
+                        case ConditionType.TreeMaxed:
+                            if (!Trees.ContainsKey(cd.Ref) || cd.Ref == cd.TreeId) errors.Add(new ContentError("E023", loc, $"ref '{cd.Ref}' is not another tree id"));
+                            break;
+                        case ConditionType.NodeOwned:
+                            if (!allNodes.TryGetValue(cd.Ref, out var rn) || rn.TreeId == cd.TreeId) errors.Add(new ContentError("E023", loc, $"ref '{cd.Ref}' is not a node of another tree"));
+                            break;
+                        case ConditionType.StatAtLeast:
+                            if (!Trained(cd.Ref)) errors.Add(new ContentError("E023", loc, $"ref '{cd.Ref}' is not a trained stat"));
+                            if (!(cd.Amount >= 0)) errors.Add(new ContentError("E043", loc, "amount must be >= 0"));
+                            break;
+                        case ConditionType.TallyAtLeast:
+                            bool ok = Array.IndexOf(Tallies, cd.Ref) >= 0 || (cd.Ref.StartsWith("damage_", StringComparison.Ordinal) && Elements.ContainsKey(cd.Ref.Substring(7)));
+                            if (!ok) errors.Add(new ContentError("E023", loc, $"ref '{cd.Ref}' is not a tally"));
+                            if (!(cd.Amount >= 0)) errors.Add(new ContentError("E043", loc, "amount must be >= 0"));
+                            break;
+                    }
+                }
+
+            foreach (var sp in SpeciesList)
+            {
+                foreach (var nt in new[] { sp.NativeTree1, sp.NativeTree2 })
+                    if (!Trees.TryGetValue(nt, out var tr) || tr.Kind != TreeKind.Native)
+                        errors.Add(new ContentError("E023", $"species[{sp.Id}]", $"'{nt}' is not a native tree id"));
+                if (sp.NativeTree1 == sp.NativeTree2) errors.Add(new ContentError("E043", $"species[{sp.Id}]", "native trees must differ"));
+            }
+
+            SkillBooks = new ReadOnlyDictionary<string, SkillBookDef>(t["skill_books"].Select(r => new SkillBookDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), TreeId = r.Str("tree_id"),
+            }).ToDictionary(b => b.Id, StringComparer.Ordinal));
+            foreach (var b in SkillBooks.Values)
+                if (!Trees.TryGetValue(b.TreeId, out var bt) || bt.Kind != TreeKind.Book)
+                    errors.Add(new ContentError("E023", $"skill_books[{b.Id}]", $"tree_id '{b.TreeId}' is not a book tree id"));
+        }
+
+        static TreeKind ParseTreeKind(string s)
+        {
+            switch (s)
+            {
+                case "native": return TreeKind.Native;
+                case "generic": return TreeKind.Generic;
+                case "chase": return TreeKind.Chase;
+                case "book": return TreeKind.Book;
+                default: throw new FormatException($"unknown tree kind '{s}'");
+            }
+        }
+
+        static NodeKind ParseNodeKind(string s)
+        {
+            switch (s)
+            {
+                case "growth": return NodeKind.Growth;
+                case "stat": return NodeKind.Stat;
+                case "skill": return NodeKind.Skill;
+                case "trigger": return NodeKind.Trigger;
+                case "rule": return NodeKind.Rule;
+                default: throw new FormatException($"unknown node kind '{s}'");
+            }
+        }
+
+        static IdleRng.Sim.Combat.FightTrigger ParseFightTrigger(string s)
+        {
+            switch (s)
+            {
+                case "battle_start": return IdleRng.Sim.Combat.FightTrigger.BattleStart;
+                case "on_action": return IdleRng.Sim.Combat.FightTrigger.OnAction;
+                case "on_basic_attack": return IdleRng.Sim.Combat.FightTrigger.OnBasicAttack;
+                case "on_crit": return IdleRng.Sim.Combat.FightTrigger.OnCrit;
+                case "on_hit_taken": return IdleRng.Sim.Combat.FightTrigger.OnHitTaken;
+                case "on_evade": return IdleRng.Sim.Combat.FightTrigger.OnEvade;
+                default: throw new FormatException($"unknown fight trigger '{s}'");
+            }
+        }
+
+        static ConditionType ParseConditionType(string s)
+        {
+            switch (s)
+            {
+                case "tree_maxed": return ConditionType.TreeMaxed;
+                case "node_owned": return ConditionType.NodeOwned;
+                case "stat_at_least": return ConditionType.StatAtLeast;
+                case "tally_at_least": return ConditionType.TallyAtLeast;
+                default: throw new FormatException($"unknown condition type '{s}'");
+            }
         }
 
         static void CheckFiveTiers(IEnumerable<Rarity> got, string table, List<ContentError> errors)
@@ -731,6 +956,7 @@ namespace IdleRng.Sim.Content
             }
 
             public int? NInt(string k) => _d.TryGetValue(k, out var v) && v is long l ? (int)l : (int?)null;
+            public double? NDbl(string k) => _d.TryGetValue(k, out var v) ? (v is double d ? d : v is long l ? l : (double?)null) : null;
 
             public double Dbl(string k)
             {

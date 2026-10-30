@@ -1,0 +1,7 @@
+id,tree_id,type,ref,amount
+unbreakable_will_c0,unbreakable_will,tree_maxed,heavy_armor,
+unbreakable_will_c1,unbreakable_will,stat_at_least,def,500
+unbreakable_will_c2,unbreakable_will,tally_at_least,wins,2
+arcane_overflow_c3,arcane_overflow,node_owned,tome_of_echoes_n5,
+arcane_overflow_c4,arcane_overflow,node_owned,spellcraft_n4,
+arcane_overflow_c5,arcane_overflow,tally_at_least,crits,3

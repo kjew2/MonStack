@@ -1,0 +1,47 @@
+{
+  "table": "chase_conditions",
+  "rows": [
+    {
+      "id": "unbreakable_will_c0",
+      "tree_id": "unbreakable_will",
+      "type": "tree_maxed",
+      "ref": "heavy_armor",
+      "amount": null
+    },
+    {
+      "id": "unbreakable_will_c1",
+      "tree_id": "unbreakable_will",
+      "type": "stat_at_least",
+      "ref": "def",
+      "amount": 500.0
+    },
+    {
+      "id": "unbreakable_will_c2",
+      "tree_id": "unbreakable_will",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "arcane_overflow_c3",
+      "tree_id": "arcane_overflow",
+      "type": "node_owned",
+      "ref": "tome_of_echoes_n5",
+      "amount": null
+    },
+    {
+      "id": "arcane_overflow_c4",
+      "tree_id": "arcane_overflow",
+      "type": "node_owned",
+      "ref": "spellcraft_n4",
+      "amount": null
+    },
+    {
+      "id": "arcane_overflow_c5",
+      "tree_id": "arcane_overflow",
+      "type": "tally_at_least",
+      "ref": "crits",
+      "amount": 3.0
+    }
+  ]
+}

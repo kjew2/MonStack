@@ -69,7 +69,7 @@ The rank fight replaces the drafts' *Tactical Challenge*: it is the in-run fight
 
 - **Stats (kj, 2026-10-30):** eight trained stats: HP, STR, INT, WIS, DEX, DEF, SPD, LUK. The drafts named six; kj added HP and LUK. How each one works in battle is `specs/16` section 3.
 - **Energy** is the one training meter (no separate fatigue). Drills spend it, rests restore it. Low energy makes a drill more likely to fail and, below a threshold, able to cause an **injury** that ends the run. Pushing on at low energy to cross a milestone before the run ends is the run's main risk-versus-reward decision. The talent tree can reduce drill cost.
-- **Skill points** are earned during the run and spent in trees. Saving them is a strategy (section 5.4). How points are earned is open until T3 (proposed: per cycle, plus extra for rank fight wins).
+- **Skill points** (kj, 2026-10-30): a fixed amount every cycle plus a bonus for each rank fight win, spent in trees. Saving them is a strategy (section 5.4). Rules: `specs/15`.
 
 ### 4.4 Attribute milestones and drafts
 
@@ -82,7 +82,7 @@ When a stat crosses **300 / 500 / 700 / 900**, the run pauses for a **3-card tre
 
 ## 5. Skill trees
 
-Monsters are skill vessels. Trees do not hand out flat percentage boosts; they change combat mechanics and rules. (One draft says base trees "provide essential stats"; section 13 item 3.)
+Monsters are skill vessels. **Tree shape (kj, 2026-10-30):** a tree is a line of nodes bought in order, long enough that about 75% of nodes are filler (a stat growth increase or a flat stat boost); the rest grant skills and effects, and the last node is the tree's chase trait. Rules: `specs/15`.
 
 ### 5.1 Tree slots (kj, 2026-10-30)
 
@@ -137,7 +137,7 @@ Duplicate pulls raise a species' **Genetic Aptitude rank**, which raises the odd
 - Presentation: a slowing wheel that lands on the floor and enemy that beat it, then a comic defeat animation (turned to ash, launched off screen).
 - The monster gets a permanent **Legacy Title** from the result, e.g. "Floor 42: Professional Punching Bag", "Floor 83: Hydra Food", "Floor 95: God-Slayer Slime".
 - The certified monster is stored in the Vault for towers and PvP.
-- **MVP stand-in:** a static 3-boss ladder and a score screen with a letter grade (S, A, B) and a stat breakdown.
+- **MVP stand-in (kj, 2026-10-30):** the rank the monster reached in its rank fights (E-S) is the end-of-run grade, on a score screen with a stat breakdown. The simulated boss-tower gauntlet with the wheel spin comes after the MVP.
 
 ## 7. Roster
 
@@ -205,8 +205,8 @@ Estimated 150-200 hours (8-12 weeks part time with AI help).
 - Training run engine (12 epochs).
 - 3 species.
 - 6 base trees + 2 chase synergy trees.
-- Static 3-boss ladder instead of towers.
-- Score screen with letter grade (S, A, B) and stat breakdown.
+- Rank fights during the run; the rank reached is the grade (instead of towers and the gauntlet).
+- Score screen with the rank and a stat breakdown.
 
 Not in the MVP: multiplayer and database, gacha UI, Endless Tower scaling, PvP.
 
@@ -223,7 +223,7 @@ Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeat
 
 1. **Run length.** 12 cycles as a content constant (`RUN_CYCLES`, placeholder).
 2. **Tree slots.** Decided (kj, 2026-10-30): 4 slots, 2 native + 2 empty at the start, any new tree may fill an empty slot or overwrite any slot (section 5.1). Still proposed: a chase trait at the top of every tree (section 5.2).
-3. **What trees give.** "Trees do not provide passive percentage boosts" vs "base trees provide essential stats". Proposed: native trees may give stats and core skills; draft trees, chase trees and chase traits change rules.
+3. **What trees give.** Decided (kj, 2026-10-30): about 75% filler (growth and flat stats), the rest skills and effects, chase traits last (section 5).
 4. **Stats.** Decided (kj, 2026-10-30): HP, STR, INT, WIS, DEX, DEF, SPD, LUK. Proposed: milestones on all eight.
 5. **Duplicates.** "Raise chase-tree odds" (four drafts) vs "Hidden Aptitude Trees" (one). Proposed: odds only, no extra tree.
 6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode. Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.

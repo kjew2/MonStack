@@ -217,6 +217,9 @@ namespace IdleRng.Sim.Combat
                 if (sk.Kind == SkillKind.Passive || u.Cooldowns[i] > 0 || !Useful(r, s, u, sk)) continue;
                 u.Cooldowns[i] = sk.Cooldown;
                 Use(r, s, u, sk, rng, onAction, triggered: false);
+                if (u.Alive && Has(u, RuleModifiers.EchoCast)
+                    && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield))
+                    Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
                 return;
             }
             BasicAttack(r, s, u, rng, onAction);
@@ -480,6 +483,13 @@ namespace IdleRng.Sim.Combat
             }
             u.Effects.Add(new FightEffect { Stat = stat, Frac = frac, TicksLeft = ticks, Source = source });
         }
+
+        /// <summary>The echo_cast copy of a skill: same skill at <paramref name="power"/> of its power.</summary>
+        static CombatSkill Echo(CombatSkill sk, double power) => new CombatSkill
+        {
+            Id = sk.Id, Kind = sk.Kind, Target = sk.Target, Stat = sk.Stat, Scales = sk.Scales, Power = sk.Power * power,
+            Cooldown = sk.Cooldown, Duration = sk.Duration, Element = sk.Element,
+        };
 
         static double Scaled(FightUnit src, CombatSkill sk) => (sk.Scales == StatIds.Hp ? src.MaxHp : Eff(src, sk.Scales)) * sk.Power;
 

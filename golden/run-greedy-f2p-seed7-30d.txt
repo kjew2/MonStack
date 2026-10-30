@@ -1,5 +1,5 @@
 # idle-rng run v1
-# bot=greedy-f2p seed=7 days=30 content=2.4/a98f4c4f
+# bot=greedy-f2p seed=7 days=30 content=2.5/2f010da0
 day stage      dps statLvl statMult   gearMult  heroMult promoMult pulls  L+ firstWall longestWallH
   1   100 9.56e+03      78     4.90   2.40e+01      4.77      1.40     8   0        60        22.37
   2   212 2.07e+07     151     8.55   1.69e+04      6.13      1.91    16   1        60        22.39

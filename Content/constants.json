@@ -290,6 +290,31 @@
       "key": "FIGHT_EVERY",
       "type": "int",
       "value": 1
+    },
+    {
+      "key": "SP_PER_CYCLE",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "SP_PER_WIN",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "TREE_SLOTS",
+      "type": "int",
+      "value": 4
+    },
+    {
+      "key": "DRAFT_SIZE",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "MON_ECHO_POWER",
+      "type": "double",
+      "value": 0.5
     }
   ]
 }

@@ -28,6 +28,10 @@ ENUMS = {
     "GrantTrigger": ["profile_created", "stage_reached", "first_boss_cleared"],
     "GrantType": ["gems", "free_pulls", "gold", "hero"],
     "ConstantType": ["int", "double", "bool"],
+    "TreeKind": ["native", "generic", "chase", "book"],
+    "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
+    "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
+    "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
     "SkillStat": ["hp", "atk", "def", "spd", "crit_rate", "crit_dmg"],
@@ -55,10 +59,16 @@ REQUIRED_CONSTANTS = {
     "RUN_CYCLES": "int", "RUN_AP": "int", "RUN_ENERGY_MAX": "double", "RUN_ENERGY_START": "double",
     "DRILL_ENERGY_COST": "double", "REST_ENERGY": "double", "DRILL_FAIL_MIN": "double", "DRILL_FAIL_MAX": "double",
     "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
+    # skill trees (specs/15)
+    "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "MON_ECHO_POWER": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
 DRILL_TIERS = ["fail", "success", "super"]
+EFFECT_STATS = STATS + ["crit_rate", "crit_dmg"]
+# Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
+RULE_IDS = ["counter_mitigated", "echo_cast"]
+TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
 MON_RANGES = {
@@ -74,6 +84,9 @@ MON_RANGES = {
     "DRILL_FAIL_MAX": ("[0, 1]", lambda v: 0 <= v <= 1), "DRILL_SUPER_P": ("[0, 1]", lambda v: 0 <= v <= 1),
     "INJURY_BELOW": ("[0, 1]", lambda v: 0 <= v <= 1), "INJURY_MAX_P": ("[0, 1]", lambda v: 0 <= v <= 1),
     "STAT_MAX": ("> 0", lambda v: v > 0), "FIGHT_EVERY": ("> 0", lambda v: v > 0),
+    "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
+    "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
+    "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
 }
 
 TIERS = ENUMS["Tier"]
@@ -120,12 +133,23 @@ SCHEMA = {
     "progress_targets": T([c("day", "int"), c("stage", "int")], key="day"),
     "promotions": T([c("index", "int"), c("unlock_stage", "int"), c("mult", "double"), c("cost_kills", "double"),
                      c("name_key", "key")], key="index"),
-    "species": T([c("id", "id"), c("name_key", "key"), c("element", "id")]
+    "species": T([c("id", "id"), c("name_key", "key"), c("element", "id"), c("native_tree_1", "id"), c("native_tree_2", "id")]
                   + [c("base_" + s, "double") for s in STATS] + [c("grow_" + s, "double") for s in STATS], key="id"),
     "drill_tiers": T([c("id", "id"), c("gain_min", "int"), c("gain_max", "int"), c("name_key", "key")], key="id"),
     "fight_ranks": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("element", "id")]
                      + [c(s, "double") for s in STATS], key="id"),
     "stat_milestones": T([c("threshold", "int")], key="threshold"),
+    "monster_skills": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("kind", "enum:SkillKind"),
+                         c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
+                         c("power", "double"), c("cooldown", "int"), c("duration", "int"), c("element", "id", True)], key="id"),
+    "trees": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:TreeKind"), c("offer_stat", "string", True),
+                c("offer_threshold", "int", True)], key="id"),
+    "tree_nodes": T([c("id", "id"), c("tree_id", "id"), c("index", "int"), c("cost", "int"), c("kind", "enum:NodeKind"),
+                     c("stat", "string", True), c("amount", "double", True), c("skill_id", "id", True),
+                     c("trigger", "enum:FightTrigger", True), c("rule_id", "id", True)], key="id"),
+    "chase_conditions": T([c("id", "id"), c("tree_id", "id"), c("type", "enum:ConditionType"), c("ref", "string"),
+                           c("amount", "double", True)], key="id"),
+    "skill_books": T([c("id", "id"), c("name_key", "key"), c("tree_id", "id")], key="id"),
     "skills": T([c("id", "id"), c("hero_id", "id"), c("slot", "int"), c("unlock_promotion", "int"), c("name_key", "key"),
                  c("desc_key", "key"), c("kind", "enum:SkillKind"), c("target", "enum:SkillTarget"),
                  c("stat", "enum:SkillStat", True), c("scales", "enum:SkillStat", True), c("power", "double"),
@@ -223,6 +247,100 @@ def read_table(path, name, schema, errs):
     return out
 
 
+def validate_trees(t, errs):
+    """Skill trees (specs/15 section 9). Mirrors ContentDb.BuildTrees."""
+    elements = {r["id"] for r in t["elements"]}
+    skills = {}
+    for s in t["monster_skills"]:
+        loc = f"monster_skills[{s['id']}]"
+        skills[s["id"]] = s
+        if s["kind"] in ("buff", "debuff", "passive") and s["stat"] not in EFFECT_STATS:
+            errs.add("E023", loc, f"stat '{s['stat']}' is not an effect stat")
+        if s["kind"] in ("damage", "heal", "shield") and s["scales"] not in STATS:
+            errs.add("E023", loc, f"scales '{s['scales']}' is not a trained stat")
+        if s["power"] < 0 or s["cooldown"] < 0 or s["duration"] < 0:
+            errs.add("E043", loc, "power, cooldown and duration must be >= 0")
+        if s["element"] is not None and s["element"] not in elements:
+            errs.add("E023", loc, f"element '{s['element']}' is not an element id")
+    trees = {r["id"]: r for r in t["trees"]}
+    for r in t["trees"]:
+        loc = f"trees[{r['id']}]"
+        if r["kind"] == "generic":
+            if r["offer_threshold"] is None or r["offer_threshold"] <= 0:
+                errs.add("E043", loc, "a generic tree needs offer_threshold > 0")
+            if r["offer_stat"] is not None and r["offer_stat"] not in STATS:
+                errs.add("E023", loc, f"offer_stat '{r['offer_stat']}' is not a trained stat")
+        elif r["offer_stat"] is not None or r["offer_threshold"] is not None:
+            errs.add("E043", loc, "only generic trees have offer_stat and offer_threshold")
+    by_tree = {}
+    nodes = {}
+    for n in t["tree_nodes"]:
+        loc = f"tree_nodes[{n['id']}]"
+        nodes[n["id"]] = n
+        if n["tree_id"] not in trees:
+            errs.add("E023", loc, f"tree_id '{n['tree_id']}' is not a tree id")
+            continue
+        by_tree.setdefault(n["tree_id"], []).append(n)
+        if n["cost"] < 1:
+            errs.add("E043", loc, "cost must be >= 1")
+        k = n["kind"]
+        if k in ("growth", "stat"):
+            if n["stat"] not in STATS:
+                errs.add("E023", loc, f"stat '{n['stat']}' is not a trained stat")
+            if n["amount"] is None or not n["amount"] > 0:
+                errs.add("E043", loc, "amount must be > 0")
+        if k in ("skill", "trigger") and n["skill_id"] not in skills:
+            errs.add("E023", loc, f"skill_id '{n['skill_id']}' is not a monster skill id")
+        if k == "trigger":
+            if n["trigger"] is None:
+                errs.add("E043", loc, "a trigger node needs a trigger")
+            elif n["skill_id"] in skills and skills[n["skill_id"]]["kind"] == "passive":
+                errs.add("E043", loc, "a trigger node cannot fire a passive")
+        if k == "rule" and n["rule_id"] not in RULE_IDS:
+            errs.add("E023", loc, f"rule_id '{n['rule_id']}' is not a known rule modifier")
+    for tid in trees:
+        ns = sorted(by_tree.get(tid, []), key=lambda n: n["index"])
+        if len(ns) < 2:
+            errs.add("E044", f"trees[{tid}]", "a tree needs at least 2 nodes")
+            continue
+        if [n["index"] for n in ns] != list(range(len(ns))):
+            errs.add("E060", f"trees[{tid}]", "node index must be 0..N-1 contiguous")
+        if ns[-1]["kind"] not in ("skill", "trigger", "rule"):
+            errs.add("E064", f"trees[{tid}]", "the last node is the chase trait: it must be a skill, trigger or rule node")
+    for sp in t["species"]:
+        loc = f"species[{sp['id']}]"
+        for col in ("native_tree_1", "native_tree_2"):
+            if sp[col] not in trees or trees[sp[col]]["kind"] != "native":
+                errs.add("E023", loc, f"{col} '{sp[col]}' is not a native tree id")
+        if sp["native_tree_1"] == sp["native_tree_2"]:
+            errs.add("E043", loc, "native trees must differ")
+    with_conds = set()
+    for cd in t["chase_conditions"]:
+        loc = f"chase_conditions[{cd['id']}]"
+        tid = cd["tree_id"]
+        if tid not in trees or trees[tid]["kind"] != "chase":
+            errs.add("E023", loc, f"tree_id '{tid}' is not a chase tree id")
+            continue
+        with_conds.add(tid)
+        typ, ref = cd["type"], cd["ref"]
+        if typ == "tree_maxed" and (ref not in trees or ref == tid):
+            errs.add("E023", loc, f"ref '{ref}' is not another tree id")
+        if typ == "node_owned" and (ref not in nodes or nodes[ref]["tree_id"] == tid):
+            errs.add("E023", loc, f"ref '{ref}' is not a node of another tree")
+        if typ == "stat_at_least" and ref not in STATS:
+            errs.add("E023", loc, f"ref '{ref}' is not a trained stat")
+        if typ == "tally_at_least" and ref not in TALLIES and not (ref.startswith("damage_") and ref[7:] in elements):
+            errs.add("E023", loc, f"ref '{ref}' is not a tally ({', '.join(TALLIES)}, damage_<element>)")
+        if typ in ("stat_at_least", "tally_at_least") and (cd["amount"] is None or cd["amount"] < 0):
+            errs.add("E043", loc, "amount must be >= 0")
+    for tid, r in trees.items():
+        if r["kind"] == "chase" and tid not in with_conds:
+            errs.add("E065", f"trees[{tid}]", "a chase tree needs at least one condition")
+    for b in t["skill_books"]:
+        if b["tree_id"] not in trees or trees[b["tree_id"]]["kind"] != "book":
+            errs.add("E023", f"skill_books[{b['id']}]", f"tree_id '{b['tree_id']}' is not a book tree id")
+
+
 def validate_training(t, keys, errs):
     """Training run tables and constants (specs/14 section 8)."""
     kv = {k: keys[k]["value"] for k in keys}
@@ -262,6 +380,7 @@ def validate_training(t, keys, errs):
         for s in STATS:
             if not 0 <= r[s] <= stat_max:
                 errs.add("E043", loc, f"{s} must be in [0, STAT_MAX]")
+    validate_trees(t, errs)
     ms = [r["threshold"] for r in t["stat_milestones"]]
     for i, v in enumerate(ms):
         if v <= 0 or (i > 0 and v <= ms[i - 1]):

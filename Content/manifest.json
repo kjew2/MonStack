@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2.4",
+  "content_version": "2.5",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "banners": {
@@ -11,9 +11,13 @@
       "file": "boss_rules.json",
       "sha256": "a35692dab219728ebd14673518837f3af07ace220f1423ed335a37edd4b54930"
     },
+    "chase_conditions": {
+      "file": "chase_conditions.json",
+      "sha256": "ee6a2e9836e037b540f7a05ca2025673d208a877bd57abedba354481bc80c4c4"
+    },
     "constants": {
       "file": "constants.json",
-      "sha256": "33a959385e8d484600af574b91a0d7e43cd74c08e2ec7f67d4b8944fc5c68d80"
+      "sha256": "c828055af95f323cbe969e230be993486713c772d2218a5e687d04f8a51288ed"
     },
     "curves": {
       "file": "curves.json",
@@ -55,6 +59,10 @@
       "file": "heroes.json",
       "sha256": "9b79716ee5687c7b7d3b41ba949de9dd5d56128a40cbb8dc620ae082611a9749"
     },
+    "monster_skills": {
+      "file": "monster_skills.json",
+      "sha256": "af5cc353414eb2f3884688864e4f6e213b478362cd0fa0cbc00024aef1ff4619"
+    },
     "progress_targets": {
       "file": "progress_targets.json",
       "sha256": "c947fa0265ac656ef89935de88b265e69bb849932c0ecc7dc16b6a4787011d99"
@@ -67,13 +75,17 @@
       "file": "roles.json",
       "sha256": "1017de3126a424837fbbb92a8993de2b5c264cae303a6c3a81d11ef0b939598c"
     },
+    "skill_books": {
+      "file": "skill_books.json",
+      "sha256": "878767de678ca926e1a609d9eef5ca33e3822f1e2da2a42a3fd23f1e20cd83d2"
+    },
     "skills": {
       "file": "skills.json",
       "sha256": "047e85f46bcd851ded0a0a82529c03c93689af81da5857d91d3c1493a6d705f7"
     },
     "species": {
       "file": "species.json",
-      "sha256": "b13067c4e15210a0516b63af4e08f3d8daba4905794bad8f0a5530c0168179c5"
+      "sha256": "6d241cdf8c425b8ed8d4dc48047c7232d8a20758931acef494633930281d8bcd"
     },
     "stat_milestones": {
       "file": "stat_milestones.json",
@@ -81,12 +93,20 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "a1c84b8998bfe94c8652a30a8a91e3b79195a673e0baf892a8b8225e326aef28"
+      "sha256": "19590757294285474e956ea5fc2268fa4e42f6ed2d032bea2c90c32cd6d4de02"
+    },
+    "tree_nodes": {
+      "file": "tree_nodes.json",
+      "sha256": "84953720015d40072374b9d345129b58b0c6cc43734be5538a35ed1455a31606"
+    },
+    "trees": {
+      "file": "trees.json",
+      "sha256": "3a3706172d7fb80dea79a6154b0b135e6a4b9600396de12549ae708f7bb46c72"
     },
     "tutorial_grants": {
       "file": "tutorial_grants.json",
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "a98f4c4f84da37a5917f9acb2354737a0ed90229cb328c3c4c5ba41043b0efd5"
+  "content_hash": "2f010da0429576e1b726d22bda8c6b0ff0156e1450cf852138713f622d9b2a15"
 }

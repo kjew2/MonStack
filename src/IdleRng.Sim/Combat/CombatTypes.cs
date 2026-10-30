@@ -145,6 +145,9 @@ namespace IdleRng.Sim.Combat
         public double CritDmg { get; set; }
         public double SpdMin { get; set; }
 
+        /// <summary>echo_cast: the echo's fraction of the skill's power.</summary>
+        public double EchoPower { get; set; }
+
         public static FightRules FromContent(ContentDb c)
         {
             var k = c.Constants;
@@ -155,7 +158,7 @@ namespace IdleRng.Sim.Combat
                 ElementStrongMult = k.ElementStrongMult, ElementWeakMult = k.ElementWeakMult,
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
-                CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin,
+                CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, EchoPower = k.MonEchoPower,
             };
             foreach (var e in c.ElementList) r.StrongVs[e.Id] = e.StrongVs;
             return r;
@@ -179,7 +182,13 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string CounterMitigated = "counter_mitigated";
 
-        public static readonly string[] Known = { CounterMitigated };
+        /// <summary>
+        /// Every active damage, heal or shield skill this unit uses is cast a second time at once, at MON_ECHO_POWER of its
+        /// power (passives, triggered effects and basic attacks do not echo). The Arcane Overflow chase capstone.
+        /// </summary>
+        public const string EchoCast = "echo_cast";
+
+        public static readonly string[] Known = { CounterMitigated, EchoCast };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }
