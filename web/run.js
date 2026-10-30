@@ -185,6 +185,13 @@
     ]);
   }
 
+  // How to get each tree a chase condition names (the engine words it in tree.source).
+  function conditionSources(t) {
+    const refs = [];
+    (t.conditionTrees || []).forEach((id) => { if (C.trees[id] && refs.indexOf(id) < 0) refs.push(id); });
+    return refs.map((id) => h('div', { class: 'small muted src', text: C.trees[id].name + ': ' + C.trees[id].source + '.' }));
+  }
+
   function renderTrees(main, s) {
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Skill trees' }), h('span', { class: 'num ' + (s.sp ? 'gems' : 'muted'), text: s.sp + ' SP', 'data-id': 'sp2' })]));
     s.slots.forEach((slot, i) => {
@@ -217,6 +224,7 @@
       main.append(h('div', { class: 'card' }, [
         h('div', { class: 'row between' }, [h('b', { text: t.name }), h('span', { class: 'tag', text: slotted ? 'slotted' : c.unlocked ? 'unlocked' : 'locked' })]),
         ...t.conditions.map((txt, i) => h('div', { class: 'cond' + (c.met[i] ? ' met' : '') }, [h('span', { text: c.met[i] ? '✓' : '○' }), h('span', { text: txt })])),
+        ...conditionSources(t),
       ]));
     });
     if (s.books.length) {
@@ -238,9 +246,20 @@
       h('div', { text: s.drills + ' drills · ' + s.rests + ' rests · ' + s.tally.crits + ' crits · ' + s.tally.evades + ' evades in rank fights' }),
       h('div', { text: 'Milestones: ' + (s.milestonesHit.map((m) => up(m.stat) + ' ' + m.threshold).join(', ') || 'none yet') }),
     ]));
-    main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'abandon', text: 'Abandon this run', onclick: () => {
-      if (window.confirm('Abandon this run? Nothing is sealed and no shards are paid. Unused books come back.')) { run.acct('abandon'); resetRunUi(); ui.view = 'home'; render(); }
-    } }));
+    // An in-page confirm: window.confirm is blocked (returns false) inside sandboxed frames such as the phone artifact.
+    if (ui.confirmAbandon) {
+      main.append(h('div', { class: 'card alert' }, [
+        h('p', { text: 'Abandon this run? Nothing is sealed and no shards are paid. Unused books come back.' }),
+        h('div', { class: 'row' }, [
+          h('button', { class: 'btn small warn', type: 'button', 'data-act': 'abandon-yes', text: 'Yes, abandon', onclick: () => {
+            ui.confirmAbandon = false; run.acct('abandon'); resetRunUi(); ui.view = 'home'; render();
+          } }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': 'abandon-no', text: 'Keep playing', onclick: () => { ui.confirmAbandon = false; render(); } }),
+        ]),
+      ]));
+    } else {
+      main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'abandon', text: 'Abandon this run', onclick: () => { ui.confirmAbandon = true; render(); } }));
+    }
   }
 
   // ---- modal: fight result and tree drafts
@@ -385,7 +404,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
+  function resetRunUi() { ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
   const log = (line) => { ui.feed.unshift(line); };
 
   function startRun() {

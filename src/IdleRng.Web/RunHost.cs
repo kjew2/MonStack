@@ -100,8 +100,17 @@ namespace IdleRng.Web
                     .P("last", i == t.Nodes.Count - 1).EndObj();
             }
             w.EndArr();
+            w.P("source", TreeSource(t));
             w.Key("conditions").Arr();
             if (t.Conditions != null) foreach (var cd in t.Conditions) w.Str(ConditionText(cd));
+            w.EndArr();
+            w.Key("conditionTrees").Arr();   // trees the conditions name, so the UI can say where each comes from
+            if (t.Conditions != null)
+                foreach (var cd in t.Conditions)
+                {
+                    if (cd.Type == ConditionType.TreeMaxed) w.Str(cd.Ref);
+                    else if (cd.Type == ConditionType.NodeOwned) w.Str(_db.TreeNodes[cd.Ref].TreeId);
+                }
             w.EndArr();
             w.EndObj();
         }
@@ -134,6 +143,27 @@ namespace IdleRng.Web
                 case FightTrigger.OnHitTaken: return "when hit";
                 case FightTrigger.OnEvade: return "on evade";
                 default: return "trigger";
+            }
+        }
+
+        /// <summary>Where a tree comes from, in words: tells the player how to get a tree a chase condition asks for.</summary>
+        private string TreeSource(TreeDef t)
+        {
+            switch (t.Kind)
+            {
+                case TreeKind.Native:
+                {
+                    var owners = _db.SpeciesList.Where(sp => sp.NativeTree1 == t.Id || sp.NativeTree2 == t.Id).Select(sp => _db.Text(sp.NameKey)).ToList();
+                    return owners.Count == 0 ? "A native tree" : "Native tree of " + string.Join(" and ", owners) + " (the monster starts with it)";
+                }
+                case TreeKind.Generic:
+                    return "Offered as a draft when " + (t.OfferStat == null ? "any stat" : t.OfferStat.ToUpperInvariant()) + " first reaches " + t.OfferThreshold;
+                case TreeKind.Book:
+                {
+                    var b = _db.SkillBooks.Values.FirstOrDefault(x => x.TreeId == t.Id);
+                    return b == null ? "From a skill book" : "From the skill book " + _db.Text(b.NameKey) + " (bring it into a run)";
+                }
+                default: return "Unlocks when its chase conditions hold";
             }
         }
 
