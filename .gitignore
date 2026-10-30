@@ -9,10 +9,13 @@ __pycache__/
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
-*.csproj
-*.sln
 .vs/
 .idea/
 
 # browser prototype build output
 web/dist/
+
+# dotnet
+[Bb]in/
+*.user
+TestResults/

@@ -1,0 +1,17 @@
+{
+    "name": "IdleRng.Client.Core",
+    "rootNamespace": "IdleRng.Client.Core",
+    "references": [
+        "IdleRng.Sim",
+        "IdleRng.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

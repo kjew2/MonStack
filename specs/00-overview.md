@@ -36,13 +36,13 @@ All constants below are validated by `tools/gacha_model.py` and `tools/power_cur
 | Name | Value | Notes |
 |---|---|---|
 | `TICK_HZ` | 10 | Fixed simulation tick. 1 tick = 100 ms. |
-| `BASE_ATK` | 10 | Player ATK at stat level 0, no multipliers. |
+| `BASE_ATK` | 10 | Player ATK at stat level 0, no multipliers. **POC content uses 20** (bot-harness tuning, specs/09: compensates the sim's discrete-hit kill time on day 1; Python model still uses 10). |
 | `ATTACK_INTERVAL_TICKS` | 10 | One hit per second. Sets the kill-time floor. |
 | `HP0`, `HP_G` | 20, 1.07 | Enemy HP at stage `s` = `HP0 * HP_G^s`. |
 | `KILLS_PER_STAGE` | 10 | Kills to advance a normal stage. |
 | `SPAWN_DELAY_TICKS` | 5 | Dead enemy to next enemy. |
 | `BOSS_EVERY` | 10 | Stage `s` is a boss stage when `s % 10 == 0`. |
-| `BOSS_HP_MULT` | 10 | Boss HP = `BOSS_HP_MULT * HP(s)`. |
+| `BOSS_HP_MULT` | 10 | Boss HP = `BOSS_HP_MULT * HP(s)`. **POC content adds an `intro` boss rule (hp_mult 4) for stages 1-59** so the first wall lands at 60+ (specs/02 section 9 item 3); 10 applies from stage 60. |
 | `BOSS_TIME_TICKS` | 200 | 20 s. Fail = boss despawns, player keeps farming stage `s` mobs. |
 | `BOSS_GOLD_MULT` | 3 | Boss drops 3x the stage's gold. |
 | `STAGE_CAP` | 9000 | Sim emits `StageCapReached` instead of advancing past it; `double` range guard (`specs/03`). |

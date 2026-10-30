@@ -1,0 +1,8 @@
+<Project>
+  <!-- Keep dotnet build output out of the source folders: Unity imports every file in a package folder
+       (specs/07 section 3.1 rule 1). Output lands in <repo>/build/, which is git-ignored. -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)../build/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)../build/bin/$(MSBuildProjectName)/</BaseOutputPath>
+  </PropertyGroup>
+</Project>
