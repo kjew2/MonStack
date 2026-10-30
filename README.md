@@ -18,6 +18,8 @@ Start with `specs/00-overview.md`. It holds the canonical constants and the cont
 | `specs/09-test-harness-and-bots.md` | Headless bot runner, acceptance table, determinism tests, CI |
 | `specs/10-online-competitive.md` | Trust model for accounts, IAP, leaderboards and async PvP: server-verified progress, genesis seeds, command log, fairness levers |
 
+Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.
+
 Tools:
 
 - `tools/gacha_model.py` - exact pity distribution and consolidated rates. `python3 tools/gacha_model.py`
