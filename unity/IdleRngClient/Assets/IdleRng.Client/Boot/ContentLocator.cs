@@ -8,7 +8,7 @@ namespace IdleRng.Client.Boot
     /// Finds Content/*.json without copying it into the project (specs/05 section 10). Order:
     ///   1. Editor / desktop dev: walk up from Assets/ to the repository's Content/ folder.
     ///   2. StreamingAssets/Content (desktop players, if someone copies it there).
-    ///   3. Resources/Content TextAssets (device builds: run tools/content_build.py --copy-to Assets/Resources/Content).
+    ///   3. Resources/Content TextAssets (device builds: Editor/ContentPreBuild.cs copies them in before each build).
     /// </summary>
     public static class ContentLocator
     {

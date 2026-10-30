@@ -72,7 +72,7 @@ idle-rng-game/
                                         "testables": ["com.idlerng.sim.tests"]
       ProjectSettings/
       Assets/
-        Resources/Content/*.json        copy of ../Content, kept current by content_build.py --copy-to (specs/05 section 10.1)
+        Resources/Content/*.json        git-ignored copy of ../Content, made by ContentPreBuild before each build (specs/05 section 10.1)
         Scenes/Boot.unity               the only scene
         IdleRng.Client/
           IdleRng.Client.asmdef
@@ -88,6 +88,7 @@ idle-rng-game/
         IdleRng.Client.Editor/
           IdleRng.Client.Editor.asmdef  editor only
           ContentMenu.cs                IdleRng > Content > Rebuild JSON (specs/05 section 10.2)
+          ContentPreBuild.cs            IPreprocessBuildWithReport: copy and hash-check Content/ (specs/05 section 10.1)
         IdleRng.Client.Tests/
           IdleRng.Client.Tests.asmdef   PlayMode tests, section 14
 ```

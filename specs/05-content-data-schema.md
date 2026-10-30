@@ -741,7 +741,7 @@ Sim code takes `ContentDb` through its constructor (`new Simulation(db, save, cl
 
 ### 10.1 Where the files live
 
-`Content/` at the repository root is the build output. The Unity project reads a copy under `Assets/Resources/Content/` (so each table is a `TextAsset` and `Resources.Load<TextAsset>("Content/heroes")` works on every platform without the StreamingAssets-on-Android detour). `content_build.py --copy-to <unity>/Assets/Resources/Content` keeps the copy current, and the `--check` run in CI fails if the two directories differ. Unity imports `.json` as `TextAsset` natively; no importer work.
+`Content/` at the repository root is the build output. The Unity project reads a copy under `Assets/Resources/Content/` (so each table is a `TextAsset` and `Resources.Load<TextAsset>("Content/heroes")` works on every platform without the StreamingAssets-on-Android detour). The copy is git-ignored and is never edited by hand. An editor pre-build step (`ContentPreBuild`, an `IPreprocessBuildWithReport` in the `IdleRng.Client.Editor` assembly) makes it before every player build: it loads `Content/` with hash checks, mirrors `*.json` into `Assets/Resources/Content`, loads the copy the same way, and fails the build if `manifest.json` is missing or any `sha256` does not match. `content_build.py --copy-to <dir>` still works for a manual copy. In the editor the client reads `Content/` directly, so no copy is needed for Play. Unity imports `.json` as `TextAsset` natively; no importer work.
 
 ```csharp
 public sealed class ResourcesContentSource : IContentSource      // Unity assembly, not Sim

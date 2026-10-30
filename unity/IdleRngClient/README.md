@@ -18,7 +18,7 @@ Ugly-UI Unity client for the idle RNG prototype (`specs/07`). It is a thin shell
 For a phone-like view, set the Game view to a portrait resolution such as 1080x1920. Landscape also works, with the
 layout centred.
 
-Content is read directly from the repo's `Content/` folder: the loader walks up from `Assets/`. Nothing is copied. Edit
+Content is read directly from the repo's `Content/` folder: the loader walks up from `Assets/`. Nothing is copied for Play. Edit
 `content_src/*.csv`, run `python3 tools/content_build.py`, then press Play again.
 
 **iOS player settings** (bundle ID, version, IL2CPP, .NET Standard 2.1, iOS 15 minimum, portrait only, Input
@@ -28,9 +28,12 @@ after the first open, restart the editor if it asks (Active Input Handling chang
 and `Assets/Settings/`. Re-running is safe. **Tools → IdleRng → Configure URP** does only the URP part. The bundle ID
 `com.kjew2.idlerng` is a placeholder (`Editor/ProjectSetup.cs`), and the signing team ID is left empty for the Mac.
 
-**Device builds** cannot see the repo. Copy the content in first with
-`python3 tools/content_build.py --copy-to unity/IdleRngClient/Assets/Resources/Content`. The loader falls back to
-`Resources/Content`.
+**Device builds** cannot see the repo, so every player build copies the content in for you.
+`Editor/ContentPreBuild.cs` (an `IPreprocessBuildWithReport`) checks the repo's `Content/` against its
+`manifest.json`, copies the `*.json` files into `Assets/Resources/Content`, and checks the copy. The loader falls back
+to `Resources/Content` on device. The build fails if `manifest.json` is missing or a hash doesn't match; fix that with
+`python3 tools/content_build.py`. The copy is git-ignored, so don't commit it or edit it. **Tools → IdleRng → Copy
+Content into Resources** runs the same step without building.
 
 **Code stripping.** `Assets/link.xml` keeps IL2CPP from stripping the Sim, Runtime and Newtonsoft.Json code that save
 serialization reaches only by reflection. At every launch `GameRoot` round-trips a sample save in memory
@@ -66,6 +69,7 @@ Assets/IdleRng.Client/
   Boot/      GameRoot.cs (bootstrap + MonoBehaviour), ContentLocator.cs, InputSetup.cs
   Editor/    ProjectSetup.cs (Tools > IdleRng menu: player settings, URP asset)
              BuildProfiles.cs (Tools > IdleRng > Build Profiles: Dev/Release defines, Release pre-build check)
+             ContentPreBuild.cs (copies Content/ into Resources/Content before each build)
   Art/       AppIcon.png (placeholder 1024x1024 icon)
   Screens/   Ui.cs (style kit), Shell.cs, HudAndStrip.cs, *Screen(s).cs, DebugScreen.cs
   Core/      IdleRng.Client.Core.asmdef (noEngineReferences: plain C#)
