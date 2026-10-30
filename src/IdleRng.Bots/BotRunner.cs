@@ -33,7 +33,14 @@ namespace IdleRng.Bots
         /// <summary>Optional hook called after each day's snapshot (tests).</summary>
         public Action<int, BotContext> AfterDay { get; set; }
 
+        /// <summary>Optional command log (replay fixtures, specs/10 section 5). Null: NullCommandLog, the fast path.</summary>
+        public ICommandLog CommandLog { get; set; }
+
         public static Guid ProfileIdFor(ulong seed) => new Guid((int)seed, 0, 0, new byte[8]);
+
+        /// <summary>The state a run for <paramref name="seed"/> starts from; replaying its command log on this reproduces it.</summary>
+        public static GameState Genesis(ContentDb content, ulong seed) =>
+            GameState.NewProfile(content, ProfileIdFor(seed), seed, HarnessConstants.Epoch.ToUnixTimeSeconds());
 
         public RunResult Run(IBotPolicy policy, ulong seed, int days)
         {
@@ -41,9 +48,9 @@ namespace IdleRng.Bots
             var k = c.Constants;
             long epochSec = HarnessConstants.Epoch.ToUnixTimeSeconds();
             var clock = new FakeClock(epochSec);
-            var state = GameState.NewProfile(c, ProfileIdFor(seed), seed, epochSec);
+            var state = Genesis(c, seed);
             var sink = new BotEventSink(state, k.TickHz);
-            var sim = new Simulation(c, state, sink);
+            var sim = new Simulation(c, state, sink) { CommandLog = CommandLog };
             var ctx = new BotContext(sim, clock, sink);
             var rows = new DayRow[days];
             var dayEnd = new long[days];

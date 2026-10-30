@@ -165,6 +165,13 @@ Rules:
 - The canonical encoding is defined once, in `IdleRng.Sim`, and the server reuses it. It is not JSON; it does not depend on a serialiser version.
 - `Debug` records exist so tests can replay a debug-assisted run; certification rejects them (4.3).
 
+As built (`src/IdleRng.Sim/Replay`, `Simulation.Replay.cs`):
+- `CommandRecord` is a `readonly struct` with the same members (the sim compiles as C# 9, which has no `record struct`). `ListCommandLog` is the in-memory log, bounded by an optional capacity (`CERT_MAX_COMMANDS`); `CommandLogCodec` is the compact binary form.
+- `CommandKind` appends `TutorialGrants`, `OfflineCatchUp` and `EnsureDay` after `Debug`, because those public methods also change state. Values are wire-stable: append only.
+- Arguments: hero ids are their index in `ContentDb.HeroList` (content is pinned by `ContentHash`); `SyncWallClock` is `A = nowServerSec, B = applyCatchUp`; `AutoEquipBest` has `A = 1` for on, 0 for `SetAutoEquipHeroes(false)`; `Debug` has `A = DebugOp | heroIndex << 8`, `B` = the argument (gold as raw double bits). A command is recorded whether it is accepted or rejected; nested calls inside a command are not recorded.
+- `Replay(log, times, toTick)` also advances to an end tick, and `ApplyCommand(record)` runs one record. When `times` is given, each `SyncWallClock` time must be one of them; signatures are checked by the server, not the sim.
+- `StateHasher` holds the canonical encoding and a hand-rolled SHA-256 (no platform crypto, for IL2CPP and WebAssembly). It hashes every `GameState` field except `SchemaVersion`, `ContentVersion`, `Cert` and `PendingReceipt` (section 12).
+
 This promotes the "replay log of commands" row in `specs/03` section 20 from a P1 hook to a P0 shape.
 
 ## 7. Leaderboards (P1)
