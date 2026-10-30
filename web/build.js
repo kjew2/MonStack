@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const dir = __dirname;
 const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
-const scripts = ['content.js', 'sim.js', 'app.js']
+const scripts = ['content.js', 'sim.js', 'sprites.js', 'app.js']
   .map((f) => '<script>\n' + fs.readFileSync(path.join(dir, f), 'utf8').replace(/<\/script/gi, '<\\/script') + '\n</script>')
   .join('\n');
 const between = (s, a, b) => s.slice(s.indexOf(a) + a.length, s.indexOf(b));

@@ -151,7 +151,7 @@
     this.heroById = {};
     const rar = content.rarities;
     content.heroes.pool.forEach(function (tierList) {
-      tierList.forEach(function (h) { this.heroById[h.id] = { id: h.id, name: h.name, tier: rar.indexOf(h.tier) }; }, this);
+      tierList.forEach(function (h) { this.heroById[h.id] = { id: h.id, name: h.name, short: h.short || h.name, tier: rar.indexOf(h.tier) }; }, this);
     }, this);
     this._dirty = true;
   }

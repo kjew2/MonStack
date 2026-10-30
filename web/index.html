@@ -24,6 +24,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.35 var(--font-body);
   -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
@@ -65,14 +66,20 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--gems);
 .arena { position: relative; height: 128px; display: flex; align-items: center; justify-content: space-between; margin: 6px 0; }
 .side { display: flex; align-items: center; gap: 10px; }
 .party { display: grid; grid-template-columns: repeat(3, 30px); gap: 4px; }
-.pslot { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 600 10px var(--font-display); border: 1px dashed var(--line); color: var(--muted); }
-.pslot.filled { border: 0; }
-.pslot.flash { box-shadow: 0 0 0 3px rgba(255,255,255,.55); }
-.player { width: 72px; height: 72px; border-radius: 8px; display: grid; place-items: center; font: 700 15px var(--font-display); color: #111; background: var(--cls-0); transition: background .4s; }
-.enemy { width: 76px; height: 76px; border-radius: 8px; display: grid; place-items: center; text-align: center; font: 700 13px/1.1 var(--font-display); color: #fff; transition: transform .08s; }
-.enemy.boss { width: 104px; height: 104px; border: 4px solid var(--r-L); font-size: 15px; }
-.enemy.hit { transform: translateX(4px) scale(.96); }
-.enemy.dead { opacity: .25; transform: scale(.85); }
+.sprite { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+.arena { border-radius: 8px; padding: 0 8px; }
+.pslot { width: 30px; height: 30px; border-radius: 4px; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.15); transition: transform .1s; }
+.pslot.filled { border: 0; border-bottom: 3px solid var(--slot-col, transparent); }
+.pslot .sprite { width: 28px; height: 28px; }
+.pslot.flash { transform: translateY(-4px); }
+.player { width: 72px; height: 72px; display: grid; place-items: center; }
+.player .sprite { width: 68px; height: 68px; }
+.enemy { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; font: 600 12px/1.1 var(--font-display); color: var(--text); text-shadow: 0 1px 2px #000; transition: transform .08s, opacity .12s; }
+.enemy .sprite { width: 76px; height: 76px; transform: scaleX(-1); }
+.enemy.boss .sprite { width: 100px; height: 100px; }
+.enemy.boss { color: var(--r-L); }
+.enemy.hit { transform: translateX(4px); }
+.enemy.dead { opacity: .2; }
 #floaters { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .floater { position: absolute; right: 30px; top: 40px; font: 700 15px var(--font-display); color: var(--gold); text-shadow: 0 1px 2px #000; animation: floatUp .7s ease-out forwards; }
 @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-40px); opacity: 0; } }
@@ -134,7 +141,10 @@ h3 { margin: 0; font: 600 12px var(--font-body); letter-spacing: .1em; text-tran
 .fg-r0 { color: var(--r-C); } .fg-r1 { color: var(--r-R); } .fg-r2 { color: var(--r-E); } .fg-r3 { color: var(--r-L); } .fg-r4 { color: var(--r-M); }
 
 /* Heroes */
+.hero-head { display: flex; gap: 12px; align-items: center; }
+.hero-head .sprite { width: 56px; height: 56px; flex: none; border-radius: 8px; padding: 4px; }
 .glyph { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--font-display); color: #111; position: relative; border: 0; padding: 0; }
+.glyph .sprite { width: 34px; height: 34px; }
 .glyph.r2, .glyph.r4 { color: #fff; }
 .glyph.unowned { opacity: .28; }
 .glyph.sel { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--gems); }
@@ -168,7 +178,8 @@ h3 { margin: 0; font: 600 12px var(--font-body); letter-spacing: .1em; text-tran
 .rcard .back { background: #3a3a3a; font: 700 22px var(--font-display); color: var(--muted); animation: hideAt .6s var(--d) both; }
 .rcard .front { animation: showAt .6s var(--d) both; color: #111; }
 .rcard .front.r2, .rcard .front.r4 { color: #fff; }
-.rcard .front b { font: 700 14px var(--font-display); }
+.rcard .front b { font: 700 13px var(--font-display); }
+.rcard .front .sprite { width: 70%; max-width: 64px; aspect-ratio: 1; height: auto; }
 .rcard .front small { font-size: 10px; font-weight: 600; }
 .rcard.glow .back { box-shadow: 0 0 14px 3px var(--r-L); }
 @keyframes flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
@@ -228,9 +239,9 @@ input[type=number] { width: 90px; background: #0d0d0d; color: var(--text); borde
     <div class="arena">
       <div class="side">
         <div class="party" id="partyStrip"></div>
-        <div class="player" id="playerEl">YOU</div>
+        <div class="player" id="playerEl"><canvas class="sprite" id="playerCv" aria-label="You"></canvas></div>
       </div>
-      <div class="enemy" id="enemyEl"><span id="enemyLabel"></span></div>
+      <div class="enemy" id="enemyEl"><canvas class="sprite" id="enemyCv" aria-hidden="true"></canvas><span id="enemyLabel"></span></div>
       <div id="floaters"></div>
     </div>
     <div class="bar hp"><div class="fill" id="hpFill"></div><span id="hpText" class="num">-</span></div>
@@ -253,6 +264,7 @@ input[type=number] { width: 90px; background: #0d0d0d; color: var(--text); borde
 <!--BUILD:SCRIPTS-->
 <script src="content.js"></script>
 <script src="sim.js"></script>
+<script src="sprites.js"></script>
 <script src="app.js"></script>
 <!--/BUILD:SCRIPTS-->
 </body>

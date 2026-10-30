@@ -4,14 +4,13 @@
 (function (root) {
   'use strict';
 
+  // Names from the earlier web-proto build, in pool order.
   const HERO_NAMES = {
-    C: ['Pip', 'Bram', 'Tilda', 'Odo', 'Wren', 'Moss', 'Kett', 'Lark', 'Fen', 'Rook',
-        'Nell', 'Cob', 'Sorrel', 'Hob', 'Juniper', 'Tam', 'Birch', 'Dace', 'Ivy', 'Gorse'],
-    R: ['Sable', 'Corin', 'Maren', 'Thistle', 'Jory', 'Vesna', 'Halden', 'Briar',
-        'Osric', 'Linnea', 'Pell', 'Rhosyn', 'Caddoc', 'Elsin', 'Wystan'],
-    E: ['Isolde', 'Draven', 'Seraphine', 'Kaelen', 'Mirelle', 'Thorne', 'Ysolde', 'Corvin', 'Anwen', 'Bastian'],
-    L: ['Aurelion', 'Nyx', 'Valka', 'Solenne', 'Grimwald', 'Eira'],
-    M: ['Astraeus', 'Morrigan', 'Zephyrine'],
+  C: ["Pell the Farmhand","Doss the Woodcutter","Mira the Scout","Tobb the Miller","Kesh the Slinger","Wren the Archer","Hollis the Guard","Bree the Herbalist","Garr the Smith","Lio the Fisher","Nim the Courier","Osk the Porter","Fen the Trapper","Rook the Sentry","Tamsin the Cook","Ulf the Brawler","Vesna the Spearmaiden","Juno the Lamplighter","Pip the Squire","Corra the Shepherd"],
+  R: ["Alder the Ranger","Isolde the Duelist","Marek the Pikeman","Sable the Rogue","Thane the Berserker","Yara the Falconer","Brom the Shieldwall","Celes the Acolyte","Dax the Gunner","Elowen the Druid","Faro the Lancer","Greta the Alchemist","Hale the Monk","Ivo the Bard","Kaya the Huntress"],
+  E: ["Seraphine the Spellblade","Vorn the Warlock","Lysa the Stormcaller","Orrin the Templar","Nyx the Shadowdancer","Calder the Frostknight","Mei the Sage","Rhea the Valkyrie","Taro the Ronin","Zephyr the Windwalker"],
+  L: ["Aurelia the Sunblade","Morgrim the Dragonbane","Kael the Starforged","Ishara the Oracle","Dravik the Bloodlord","Solenne the Lightbringer"],
+  M: ["Eon the Timeless","Vael the Void Empress","Ragnor the World-Ender"],
   };
 
   const content = {
@@ -91,7 +90,7 @@
       // Pool order is C, R, E, L, M; within a tier, index order. Glyph = tier letter + 1-based index.
       pool: ['C', 'R', 'E', 'L', 'M'].map(function (t) {
         return HERO_NAMES[t].map(function (name, i) {
-          return { id: t + String(i + 1).padStart(2, '0'), tier: t, name: name };
+          return { id: t + String(i + 1).padStart(2, '0'), tier: t, name: name, short: name.split(' ')[0] };
         });
       }),
     },

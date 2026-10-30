@@ -3,6 +3,7 @@
 (function () {
   'use strict';
   const C = window.IdleContent;
+  const SP = window.IdleSprites;
   const { Sim, serialize, deserialize, formatShort: fmt, consolidatedRates } = window.IdleSim;
   const R = C.rarities;
   const SAVE_KEY = 'idle-rng-web-save-v1';
@@ -56,9 +57,15 @@
   const setDisabled = (el, b) => { if (el.disabled !== b) el.disabled = b; };
   const toggle = (el, cls, b) => { if (el.classList.contains(cls) !== b) el.classList.toggle(cls, b); };
 
+  function spriteCanvas(sprite, cls) {
+    const cv = h('canvas', { class: 'sprite' + (cls ? ' ' + cls : ''), 'aria-hidden': 'true' });
+    SP.draw(cv, sprite);
+    return cv;
+  }
   function heroGlyph(id, opts) {
     const hero = sim.heroById[id], owned = sim.state.heroes.owned[id] || 0;
-    const el = h('button', { type: 'button', class: 'glyph r' + hero.tier + ' bg-r' + hero.tier, 'aria-label': hero.name }, [id]);
+    const el = h('button', { type: 'button', class: 'glyph r' + hero.tier + ' bg-r' + hero.tier, 'aria-label': hero.name + ' (' + id + ')', title: hero.name },
+      [owned || (opts && opts.force) ? spriteCanvas(SP.hero(id)) : '?']);
     if (opts && opts.level !== false && owned) el.append(h('span', { class: 'lv', text: 'Lv' + sim.heroLevel(owned) }));
     return el;
   }
@@ -170,14 +177,20 @@
     toggle(kills, 'walled', walled);
 
     const enemy = $('enemyEl');
-    const hue = (st.stage * 37) % 360;
-    const bg = 'hsl(' + hue + ' 60% 45%)';
-    if (enemy.style.background !== bg) enemy.style.background = bg;
-    toggle(enemy, 'boss', cb.enemyIsBoss && cb.phase === 'fighting');
+    const band = Math.floor(st.stage / 10), hue = (band * 37) % 360;
+    const arena = enemy.parentNode;
+    const bg = 'linear-gradient(hsl(' + hue + ' 35% 15%), hsl(' + ((hue + 30) % 360) + ' 30% 22%))';
+    if (arena.dataset.band !== String(band)) { arena.style.background = bg; arena.dataset.band = String(band); }
+    const isBossFight = cb.enemyIsBoss && cb.phase === 'fighting';
+    const showBoss = isBossFight || (cb.phase === 'spawning' && st.boss === 'pending');
+    const ekey = st.stage + '|' + showBoss + '|' + (s.life.kills % 4);
+    const ecv = $('enemyCv');
+    if (ecv.dataset.k !== ekey) { SP.draw(ecv, SP.enemy(st.stage, showBoss, s.life.kills)); ecv.dataset.k = ekey; }
+    toggle(enemy, 'boss', showBoss);
     toggle(enemy, 'dead', cb.phase === 'spawning' || now < enemyDeadUntil);
     let label;
-    if (cb.phase === 'spawning') label = st.boss === 'pending' ? 'Boss incoming' : '';
-    else label = cb.enemyIsBoss ? 'BOSS ' + st.stage : 's' + st.stage;
+    if (cb.phase === 'spawning') label = st.boss === 'pending' ? 'Boss incoming' : SP.enemyName(st.stage, false);
+    else label = SP.enemyName(st.stage, cb.enemyIsBoss);
     setText($('enemyLabel'), label);
 
     const hpFrac = cb.phase === 'fighting' ? Math.max(0, cb.enemyHp / cb.enemyMaxHp) : 0;
@@ -222,14 +235,17 @@
     party.forEach((id, i) => {
       const el = partyStripEls[i];
       const t = id ? sim.heroById[id].tier : -1;
-      const cls = 'pslot' + (id ? ' filled bg-r' + t : '') + (el.classList.contains('flash') ? ' flash' : '');
+      const cls = 'pslot' + (id ? ' filled' : '') + (el.classList.contains('flash') ? ' flash' : '');
       if (el.className !== cls) el.className = cls;
-      setText(el, id ? id : '');
-      if (id) el.style.color = t === 2 || t === 4 ? '#fff' : '#111'; else el.style.color = '';
+      if ((el.dataset.id || '') !== (id || '')) {
+        el.dataset.id = id || '';
+        el.textContent = '';
+        if (id) { el.append(spriteCanvas(SP.hero(id))); el.style.setProperty('--slot-col', 'var(--r-' + R[t] + ')'); el.title = sim.heroById[id].name; }
+      }
     });
-    const player = $('playerEl');
-    const col = 'var(--cls-' + sim.state.classAdvances + ')';
-    if (player.style.background !== col) player.style.background = col;
+    const k = sim.state.classAdvances;
+    const pc = $('playerCv');
+    if (pc.dataset.k !== String(k)) { SP.draw(pc, SP.player(k)); pc.dataset.k = String(k); }
     setText($('dpsEl'), fmt(sim.dps()));
     const st = sim.state.stage;
     const hits = sim.hitsToKill(sim.hp(st.stage));
@@ -438,6 +454,7 @@
     const grid = h('div', { class: 'hero-grid' });
     const dName = h('h2');
     const dLine = h('div', { class: 'num' });
+    const dSprite = h('canvas', { class: 'sprite', 'aria-hidden': 'true' });
     const addBtn = h('button', { type: 'button', class: 'btn small', onclick: () => {
       const slot = sim.state.heroes.party.indexOf(null);
       if (slot >= 0 && selected) { sim.equipHero(slot, selected); rebuild(); }
@@ -446,7 +463,7 @@
       const slot = sim.state.heroes.party.indexOf(selected);
       if (slot >= 0) { sim.unequipHero(slot); rebuild(); }
     } }, ['Remove']);
-    const detail = h('div', { class: 'card' }, [dName, dLine, h('div', { class: 'row' }, [addBtn, remBtn])]);
+    const detail = h('div', { class: 'card' }, [h('div', { class: 'hero-head' }, [dSprite, h('div', null, [dName, dLine])]), h('div', { class: 'row' }, [addBtn, remBtn])]);
     const countEl = h('span', { class: 'muted' });
     root.append(
       h('div', { class: 'row between' }, [h('h2', { text: 'Heroes' }), multEl]),
@@ -488,7 +505,7 @@
             const copies = s.heroes.owned[hero.id] || 0;
             if (copies) owned++;
             const g = heroGlyph(hero.id);
-            if (!copies) { g.classList.add('unowned'); g.firstChild.textContent = '?'; }
+            if (!copies) g.classList.add('unowned');
             if (s.heroes.party.indexOf(hero.id) >= 0) g.append(h('span', { class: 'inparty' }));
             if (selected === hero.id) g.classList.add('sel');
             g.addEventListener('click', () => { selected = copies ? (selected === hero.id ? null : hero.id) : null; if (!copies) toast(hero.name + ' (' + C.rarityNames[hero.tier] + ') not summoned yet'); rebuild(); });
@@ -497,12 +514,15 @@
           setText(countEl, owned + ' / ' + Object.keys(sim.heroById).length + ' owned');
         }
         if (!selected) {
+          setHidden(dSprite, true);
           setText(dName, 'No hero selected'); setText(dLine, 'Party bonus +' + pct(sim.heroMult() - 1, 0) + ' DPS from ' + s.heroes.party.filter(Boolean).length + ' heroes.');
           setHidden(addBtn, true); setHidden(remBtn, true); return;
         }
         const hero = sim.heroById[selected], copies = s.heroes.owned[selected], lvl = sim.heroLevel(copies);
         const cum = C.heroes.LVL_CUM;
-        setText(dName, hero.name + '  ·  ' + C.rarityNames[R[hero.tier]]);
+        setHidden(dSprite, false);
+        if (dSprite.dataset.id !== selected) { SP.draw(dSprite, SP.hero(selected)); dSprite.dataset.id = selected; dSprite.className = 'sprite bg-r' + hero.tier; }
+        setText(dName, hero.name + ' · ' + C.rarityNames[R[hero.tier]] + ' ' + selected);
         setText(dLine, 'Lv' + lvl + (lvl >= cum.length ? ' MAX' : ' (' + copies + '/' + cum[lvl] + ' copies)') + ' · +' + sim.heroPct(selected).toFixed(0) + '% DPS');
         const inParty = s.heroes.party.indexOf(selected) >= 0;
         setHidden(addBtn, inParty); setHidden(remBtn, !inParty);
@@ -549,7 +569,7 @@
         if (sig !== lastSig) {
           lastSig = sig;
           last.textContent = '';
-          for (const r of lastResults) last.append(heroGlyph(r.id, { level: false }));
+          for (const r of lastResults) last.append(heroGlyph(r.id, { level: false, force: true }));
         }
       },
     };
@@ -576,7 +596,7 @@
       const sub = r.isNew ? 'NEW' : r.levelAfter > r.levelBefore ? 'Lv ' + r.levelBefore + ' → ' + r.levelAfter : 'Lv ' + r.levelAfter;
       card.append(
         h('div', { class: 'face back', text: '?' }),
-        h('div', { class: 'face front r' + r.tier + ' bg-r' + r.tier }, [h('b', { text: r.id }), h('small', { text: r.name }), h('small', { text: sub + (r.shards ? ' +' + r.shards + ' shards' : '') })]),
+        h('div', { class: 'face front r' + r.tier + ' bg-r' + r.tier }, [spriteCanvas(SP.hero(r.id)), h('b', { text: sim.heroById[r.id].short }), h('small', { text: sub + (r.shards ? ' +' + r.shards + ' shards' : '') })]),
       );
       grid.append(card);
       t += count === 1 ? 0 : 0.15;

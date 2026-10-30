@@ -9,6 +9,7 @@ A lightweight, playable build of the P0 loop for feel and balance testing on a p
 | `app.js`, `index.html` | UI shell: ticks the core, sends commands, draws state. No game rules. |
 | `test.js` | Checks the core against the specs' published vectors (SplitMix64, FNV, pity table, consolidated rates, 10-pull guarantee, dupe levels, offline cap). |
 | `bot.js` | Greedy F2P bot (`specs/04` section 9) playing 30 days on the real core in under a second. |
+| `sprites.js` | Seeded 12x12 pixel sprites for heroes, player and enemies (ported from the earlier `web-proto` build). Cosmetic only. |
 | `build.js` | Bundles everything into one file, `dist/idle-rng.html`. |
 
 ## Run it
