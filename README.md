@@ -10,13 +10,14 @@ Start with `specs/00-overview.md`. It holds the canonical constants and the cont
 | `specs/01-gacha-math.md` | Rates, pity, 10-pull guarantee, dupe economy, RNG commitment, test vectors |
 | `specs/02-power-curve-math.md` | Enemy/gold curves, the four power layers, wall condition, bot results, tuning levers |
 | `specs/03-sim-core-combat.md` | Pure-C# simulation assembly: tick loop, combat, RNG streams, public API |
-| `specs/04-economy-sinks.md` | Currencies, stat levels, gear drops/enhancement, class advance, daily sources |
+| `specs/04-economy-sinks.md` | Currencies, stat levels, gear drops/enhancement, daily sources (class advance replaced by promotion, `specs/11`) |
 | `specs/05-content-data-schema.md` | Table schemas, sheet-to-JSON pipeline, validation, `ContentDb` API |
 | `specs/06-save-and-offline.md` | Save schema v1, migrations, offline catch-up, clock seam, integrity |
 | `specs/07-client-unity-prototype.md` | Unity project layout, screens, view-models, event wiring, placeholder art |
 | `specs/08-backend-seams.md` | `IClock` / `IGachaService` / `ISaveStore` contracts, local impls, future remote |
 | `specs/09-test-harness-and-bots.md` | Headless bot runner, acceptance table, determinism tests, CI |
 | `specs/10-online-competitive.md` | Trust model for accounts, IAP, leaderboards and async PvP: server-verified progress, genesis seeds, command log, fairness levers |
+| `specs/11-party-and-builds.md` | Gameplay overhaul (#60): 4-companion party, stat sheet, roles, elements, promotion; phased plan for 4v1 battle, affix gear, dungeons and uniques |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.
 

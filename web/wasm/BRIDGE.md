@@ -27,22 +27,22 @@ UiContent() : string                           // JSON, UI labels and display nu
 
 ### Query names (name -> args -> result)
 
-`hp(stage)`, `bossHp(stage)`, `gold(stage)`, `statCost(n)`, `statMult(n?)`, `gearTier(stage)`, `gearBasePct(piece)`, `gearEffPct(piece)`, `gearSlotMult(slot)`, `gearMult()`, `heroLevel(copies)`, `heroPct(id)`, `heroMult()`, `classMult(k?)`, `dps()`, `hitDamage()`, `hitsToKill(hp)`, `killTimeSeconds(stage)`, `isBossStage()`, `bossClearable()`, `needDps()`, `enhanceCost()`, `enhanceSuccess(level)`, `pityRate(n)`, `freePullsRemaining()`, `chestReadyAtMs()`, `chestReady()`, `bulkCost(n, m)`, `maxAffordable(gold?)`, `pullPrice(count)`, `bestParty()`, `autoEquipWouldChange()`, `nowMs()`, `validate()` (array of error strings), `consolidatedRates()`.
+`hp(stage)`, `bossHp(stage)`, `gold(stage)`, `statCost(n)`, `statMult(n?)`, `gearTier(stage)`, `gearBasePct(piece)`, `gearEffPct(piece)`, `gearSlotMult(slot)`, `gearMult()`, `heroLevel(copies)`, `heroFarmDps(id)`, `heroInfo(id)` (stat sheet, role, element, promotion state and kit), `heroMult()`, `promoMult(k?)`, `partyDps()`, `dps()`, `hitDamage()`, `hitsToKill(hp)`, `killTimeSeconds(stage)`, `isBossStage()`, `bossClearable()`, `needDps()`, `enhanceCost()`, `enhanceSuccess(level)`, `pityRate(n)`, `freePullsRemaining()`, `chestReadyAtMs()`, `chestReady()`, `bulkCost(n, m)`, `maxAffordable(gold?)`, `pullPrice(count)`, `bestParty()`, `autoEquipWouldChange()`, `nowMs()`, `validate()` (array of error strings), `consolidatedRates()`.
 A `piece` argument is `{"tier":int,"rarity":int,"enh":int}`. Optional args may be omitted or `null`.
 
 ### Command names (name -> args -> result object)
 
-`buyStatLevels(m)`, `buyStatLevelsMax()` (returns a bare JSON number), `enhance(slot)`, `attemptBoss()`, `pull(count)` (result `{ok,results:[{id,name,tier,isNew,levelBefore,levelAfter,shards,pity,forced}],paidWith}` or `{ok:false,reason}`), `equipHero(slot,id)`, `unequipHero(slot)`, `autoEquip()` (bare number), `claimChest()`, `syncWallClock(nowMs)`, `debugGrantGold(n)`, `debugGrantGems(n)`, `debugSetStage(stage)`.
+`buyStatLevels(m)`, `buyStatLevelsMax()` (returns a bare JSON number), `enhance(slot)`, `attemptBoss()`, `pull(count)` (result `{ok,results:[{id,name,tier,isNew,levelBefore,levelAfter,shards,pity,forced}],paidWith}` or `{ok:false,reason}`), `equipHero(slot,id)`, `unequipHero(slot)` (`{ok:false,reason:'lastCompanion'}` when it would empty the party), `autoEquip()` (bare number), `promote(id)` (`{ok}` or `{ok:false,reason}` with `heroNotOwned`, `maxed`, `locked`, `notEnoughGold`), `claimChest()`, `syncWallClock(nowMs)`, `debugGrantGold(n)`, `debugGrantGems(n)`, `debugSetStage(stage)`.
 
 ### UiState (what `State()` returns)
 
 camelCase, RNG internals and seeds omitted:
-`{ schema, contentVersion, profileId, createdUtcMs, tick, stage:{stage,killsInStage,boss,bossFailsOnStage}, combat:{phase,spawnTimer,enemyHp,enemyMaxHp,enemyIsBoss,attackTimer,bossTimer}, cur:{gold,gems,shards,freePullsDaily,freePullsBanked}, statLevel, gear:[null|{tier,rarity,enh}] (6), heroes:{owned:{id:copies},party:[null|id] (6)}, banner:{pity,totalPulls}, classAdvances, daily:{dayKey,progress:[],rewarded:[]}, prog:{highestFirstClearBoss,chestTimerStartMs,tutorialGranted}, clock:{lastSyncUtcMs,tickAtLastSync}, life:{kills,bossKills,bossFails,gearDrops,enhAttempts,enhSuccesses,goldEarned,offlineGold,firstWallStage,pulls,lplus} }`.
+`{ schema, contentVersion, profileId, createdUtcMs, tick, stage:{stage,killsInStage,boss,bossFailsOnStage}, combat:{phase,spawnTimer,enemyHp,enemyMaxHp,enemyIsBoss,attackTimer,bossTimer}, cur:{gold,gems,shards,freePullsDaily,freePullsBanked}, statLevel, gear:[null|{tier,rarity,enh}] (6), heroes:{owned:{id:copies},party:[null|id] (4),promotions:{id:n}}, banner:{pity,totalPulls}, daily:{dayKey,progress:[],rewarded:[]}, prog:{highestFirstClearBoss,chestTimerStartMs,tutorialGranted}, clock:{lastSyncUtcMs,tickAtLastSync}, life:{kills,bossKills,bossFails,gearDrops,enhAttempts,enhSuccesses,goldEarned,offlineGold,firstWallStage,pulls,lplus} }`.
 `boss` is `"none"|"pending"|"walled"`; `phase` is `"spawning"|"fighting"`. Numbers are JSON numbers; doubles are written in .NET/JS shortest round-trip form so they parse back to the identical double. `owned` and `heroes.owned` key order is sorted by id.
 
 ### Events (what `Drain()` returns)
 
-Objects with `type`, `tick` and per-type fields (see `src/IdleRng.Web/MAPPING.md`): `hit`, `spawn`, `kill`, `bossCleared`, `bossFailed`, `firstClear`, `stageAdvanced`, `classAdvanced`, `gearDropped`, `questCompleted`, `chestClaimed`, `dayRolledOver`, `offlineGold`, `clockWentBackwards`, `statLeveled`, `enhanced`, `pulled`, `stageCap`. Same order within a tick. `hit` events are only emitted after `SetEmitHits(1)`.
+Objects with `type`, `tick` and per-type fields (see `src/IdleRng.Web/MAPPING.md`): `hit`, `spawn`, `kill`, `bossCleared`, `bossFailed`, `firstClear`, `stageAdvanced`, `promoted`, `gearDropped`, `questCompleted`, `chestClaimed`, `dayRolledOver`, `offlineGold`, `clockWentBackwards`, `statLeveled`, `enhanced`, `pulled`, `stageCap`. Same order within a tick. `hit` events are only emitted after `SetEmitHits(1)`.
 
 ### UiContent (what `UiContent()` returns)
 

@@ -28,12 +28,15 @@ ENUMS = {
     "GrantTrigger": ["profile_created", "stage_reached", "first_boss_cleared"],
     "GrantType": ["gems", "free_pulls", "gold", "hero"],
     "ConstantType": ["int", "double", "bool"],
+    "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
+    "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
+    "SkillStat": ["hp", "atk", "def", "spd", "crit_rate", "crit_dmg"],
 }
 
 # key -> type. Mirrors IdleRng.Sim.Content.Constants. specs/05 section 5.1 plus the specs/00 names it
 # did not yet carry (STAGE_CAP, OFFLINE_MIN_GAP_S, DAY_SECONDS, GEAR_SELL_KILLS, IDLE_CHEST_*).
 REQUIRED_CONSTANTS = {
-    "TICK_HZ": "int", "BASE_ATK": "double", "ATTACK_INTERVAL_TICKS": "int",
+    "TICK_HZ": "int", "SPD_REF": "double", "ATTACK_INTERVAL_TICKS": "int",
     "KILLS_PER_STAGE": "int", "SPAWN_DELAY_TICKS": "int", "BOSS_EVERY": "int", "STAGE_CAP": "int",
     "STAT_PER_LVL": "double", "GEMS_PER_DAY_F2P": "int", "OFFLINE_RATE": "double",
     "OFFLINE_CAP_H": "double", "OFFLINE_MIN_GAP_S": "int", "DAY_SECONDS": "int",
@@ -68,8 +71,6 @@ SCHEMA = {
     "boss_rules": T([c("id", "id"), c("from_stage", "int"), c("hp_mult", "double"), c("time_ticks", "int"),
                      c("gold_mult", "double"), c("gear_drop_p", "double"), c("gear_min_rarity", "enum:Tier"),
                      c("first_clear_gems", "int")], key="id"),
-    "class_advances": T([c("id", "id"), c("index", "int"), c("stage", "int"), c("mult", "double"),
-                         c("name_key", "key"), c("icon_id", "string")], key="id"),
     "constants": T([c("key", "string"), c("type", "enum:ConstantType"), c("value", "constval")], key="key"),
     "curves": T([c("id", "enum:CurveId"), c("base", "double"), c("growth", "double")], key="id"),
     "daily_quests": T([c("id", "id"), c("type", "enum:QuestType"), c("target", "int"), c("reward_gems", "int"),
@@ -78,11 +79,22 @@ SCHEMA = {
                       c("display_color", "color"), c("name_key", "key")], key="rarity"),
     "gear_slots": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("icon_id", "string")], key="id"),
     "hero_level_thresholds": T([c("level", "int"), c("cum_copies", "int")], key="level"),
+    "elements": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("display_color", "color"),
+                   c("strong_vs", "id")], key="id"),
     "hero_tiers": T([c("tier", "enum:Tier"), c("display_color", "color"), c("name_key", "key"),
-                     c("shard_value", "int")], key="tier"),
+                     c("shard_value", "int"), c("max_promotions", "int")], key="tier"),
     "heroes": T([c("id", "id"), c("tier", "enum:Tier"), c("pool_id", "id"), c("name_key", "key"),
-                 c("desc_key", "key"), c("icon_id", "string"), c("base_pct", "double")], key="id"),
+                 c("desc_key", "key"), c("icon_id", "string"), c("role", "id"), c("element", "id"),
+                 c("hp", "double"), c("atk", "double"), c("def", "double"), c("spd", "double"),
+                 c("crit_rate", "double"), c("crit_dmg", "double"), c("starter", "bool")], key="id"),
     "progress_targets": T([c("day", "int"), c("stage", "int")], key="day"),
+    "promotions": T([c("index", "int"), c("unlock_stage", "int"), c("mult", "double"), c("cost_kills", "double"),
+                     c("name_key", "key")], key="index"),
+    "skills": T([c("id", "id"), c("hero_id", "id"), c("slot", "int"), c("unlock_promotion", "int"), c("name_key", "key"),
+                 c("desc_key", "key"), c("kind", "enum:SkillKind"), c("target", "enum:SkillTarget"),
+                 c("stat", "enum:SkillStat", True), c("scales", "enum:SkillStat", True), c("power", "double"),
+                 c("cooldown", "int"), c("duration", "int")], key="id"),
+    "roles": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("desc_key", "key")], key="id"),
     "strings": T([c("key", "key"), c("en", "string")], key="key", required=False),
     "tutorial_grants": T([c("id", "id"), c("trigger", "enum:GrantTrigger"), c("trigger_value", "int", True),
                           c("grant_type", "enum:GrantType"), c("amount", "int"), c("grant_ref", "string", True),
@@ -219,13 +231,79 @@ def validate(t, errs):
     br = t["boss_rules"]
     if not br or br[0]["from_stage"] != 1:
         errs.add("E045", "boss_rules", "first row must have from_stage = 1")
-    # class advances
-    ca = t["class_advances"]
-    for i, r in enumerate(ca):
+    # promotions (specs/11 section 9)
+    pr = t["promotions"]
+    for i, r in enumerate(pr):
+        loc = f"promotions[{r['index']}]"
         if r["index"] != i + 1:
-            errs.add("E060", f"class_advances[{r['id']}]", "index must be 1..N contiguous")
-        if i > 0 and r["stage"] <= ca[i - 1]["stage"]:
-            errs.add("E032", f"class_advances[{r['id']}]", "stage must strictly increase")
+            errs.add("E060", loc, "index must be 1..N contiguous")
+        if i > 0 and r["unlock_stage"] <= pr[i - 1]["unlock_stage"]:
+            errs.add("E032", loc, "unlock_stage must strictly increase")
+        if r["mult"] <= 0:
+            errs.add("E043", loc, "mult must be > 0")
+        if r["cost_kills"] < 0:
+            errs.add("E043", loc, "cost_kills must be >= 0")
+    for r in t["hero_tiers"]:
+        if not 0 <= r["max_promotions"] <= len(pr):
+            errs.add("E043", f"hero_tiers[{r['tier']}]", f"max_promotions must be in 0..{len(pr)}")
+    # roles and elements
+    for tab in ("roles", "elements"):
+        orders = sorted(r["sort_order"] for r in t[tab])
+        if orders != list(range(len(orders))):
+            errs.add("E047", tab, "sort_order must be exactly 0..N-1")
+    role_ids = {r["id"] for r in t["roles"]}
+    element_ids = {r["id"] for r in t["elements"]}
+    for e in t["elements"]:
+        if e["strong_vs"] not in element_ids:
+            errs.add("E023", f"elements[{e['id']}]", f"strong_vs '{e['strong_vs']}' is not an element id")
+    # companion stat sheet
+    starters = 0
+    for h in t["heroes"]:
+        loc = f"heroes[{h['id']}]"
+        if h["role"] not in role_ids:
+            errs.add("E023", loc, f"role '{h['role']}' is not a role id")
+        if h["element"] not in element_ids:
+            errs.add("E023", loc, f"element '{h['element']}' is not an element id")
+        for col in ("hp", "atk", "def", "spd"):
+            if h[col] <= 0:
+                errs.add("E043", loc, f"{col} must be > 0")
+        if not 0 <= h["crit_rate"] <= 1:
+            errs.add("E043", loc, "crit_rate must be in [0, 1]")
+        if h["crit_dmg"] < 1:
+            errs.add("E043", loc, "crit_dmg must be >= 1")
+        starters += 1 if h["starter"] else 0
+    if starters != 1:
+        errs.add("E062", "heroes", f"exactly one hero must have starter = true (found {starters})")
+    # skeleton kits (specs/11 section 4.4)
+    heroes_by_id = {h["id"]: h for h in t["heroes"]}
+    max_promo = {r["tier"]: r["max_promotions"] for r in t["hero_tiers"]}
+    kits = {}
+    for sk in t["skills"]:
+        loc = f"skills[{sk['id']}]"
+        if sk["hero_id"] not in heroes_by_id:
+            errs.add("E023", loc, f"hero_id '{sk['hero_id']}' is not a hero id")
+            continue
+        kits.setdefault(sk["hero_id"], []).append(sk)
+        kind = sk["kind"]
+        if kind in ("damage", "heal", "shield") and sk["scales"] is None:
+            errs.add("E054", loc, f"scales required for kind {kind}")
+        if kind in ("buff", "debuff", "passive") and sk["stat"] is None:
+            errs.add("E054", loc, f"stat required for kind {kind}")
+        if (kind == "passive") != (sk["cooldown"] == 0):
+            errs.add("E043", loc, "cooldown must be 0 for passives and >= 1 otherwise")
+        if sk["power"] < 0 or sk["duration"] < 0:
+            errs.add("E043", loc, "power and duration must be >= 0")
+    for hid, h in heroes_by_id.items():
+        kit = sorted(kits.get(hid, []), key=lambda r: r["slot"])
+        loc = f"skills[{hid}]"
+        if [r["slot"] for r in kit] != list(range(len(kit))):
+            errs.add("E060", loc, "slots must be 0..N-1 contiguous per hero")
+        if not any(r["unlock_promotion"] == 0 for r in kit):
+            errs.add("E063", loc, "a companion needs at least one base skill (unlock_promotion 0)")
+        promos = sorted(r["unlock_promotion"] for r in kit if r["unlock_promotion"] > 0)
+        cap = max_promo.get(h["tier"], 0)
+        if promos != list(range(1, cap + 1)):
+            errs.add("E063", loc, f"needs exactly one skill per promotion 1..{cap} (specs/11 section 4.4)")
     # banners
     pools = {}
     for h in t["heroes"]:

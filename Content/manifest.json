@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "content_version": "1.0",
-  "source_revision": "2026-10-30 poc placeholder content",
+  "content_version": "2.1",
+  "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "banners": {
       "file": "banners.json",
@@ -11,13 +11,9 @@
       "file": "boss_rules.json",
       "sha256": "e64c9c0323f51839c6b61a3171671611740d52cc1be0d28ecae4b94530d34819"
     },
-    "class_advances": {
-      "file": "class_advances.json",
-      "sha256": "4af71f54d31a0f5924195de091aca1bf16edd1f32448360ad9a6177e767d0c4f"
-    },
     "constants": {
       "file": "constants.json",
-      "sha256": "ad10ddcd3eb9c032b4bf40f7c8676af142cb24779e4eb598806d18c64a712e43"
+      "sha256": "bca849cde04c2cc075f08d068ee3163d7830ffb7802b12dce68240156a148b6e"
     },
     "curves": {
       "file": "curves.json",
@@ -26,6 +22,10 @@
     "daily_quests": {
       "file": "daily_quests.json",
       "sha256": "dba939ba5239c991dfd1f9d1680946bb14bab566a8df9b8d7bbc6361bbbbec1e"
+    },
+    "elements": {
+      "file": "elements.json",
+      "sha256": "e1e0657b38c0f66052178d5796abc118466300b94015717be638352de8804a25"
     },
     "gear_rarity": {
       "file": "gear_rarity.json",
@@ -41,24 +41,36 @@
     },
     "hero_tiers": {
       "file": "hero_tiers.json",
-      "sha256": "5f23118379c092c0a159ac6984d623c86c81ebd3259eda3c83d153b6c12b5a0e"
+      "sha256": "f3e94ac9cf87b779e0d369d26f975385625b7bb0ff0e65d183b98f8bdc438e1b"
     },
     "heroes": {
       "file": "heroes.json",
-      "sha256": "a84d690e2900643e38fb4be2e34ec251329490de85706083f1bd2587ea6e91b7"
+      "sha256": "9b79716ee5687c7b7d3b41ba949de9dd5d56128a40cbb8dc620ae082611a9749"
     },
     "progress_targets": {
       "file": "progress_targets.json",
       "sha256": "c947fa0265ac656ef89935de88b265e69bb849932c0ecc7dc16b6a4787011d99"
     },
+    "promotions": {
+      "file": "promotions.json",
+      "sha256": "b89bfc5f8e9941c4c20f553554ef66b63cf9bbca4abc27eb543ae97c8948d7b9"
+    },
+    "roles": {
+      "file": "roles.json",
+      "sha256": "1017de3126a424837fbbb92a8993de2b5c264cae303a6c3a81d11ef0b939598c"
+    },
+    "skills": {
+      "file": "skills.json",
+      "sha256": "047e85f46bcd851ded0a0a82529c03c93689af81da5857d91d3c1493a6d705f7"
+    },
     "strings": {
       "file": "strings.json",
-      "sha256": "8d0621d5ee19658ef02e981600a56e51475c0e3adffdde1be0c0904e9edef9e5"
+      "sha256": "451ef95f54b65552e8bb581e6fb7ef5940492a68e7240a2adb1911bc181d11cb"
     },
     "tutorial_grants": {
       "file": "tutorial_grants.json",
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "c370193e9029c39d0204606693fe28cb9cf8cf451d6939fb4d15c5fe7c5f1573"
+  "content_hash": "f7c9b9d3e745bbf4563305876e578c6877badee547f5e03856188fd8daebbd30"
 }

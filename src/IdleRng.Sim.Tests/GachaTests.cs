@@ -130,7 +130,7 @@ namespace IdleRng.Sim.Tests
             var before = TestContent.Dump(sim.State);
             Assert.That(sim.Pull10().Reason, Is.EqualTo(Reject.NotEnoughGems));
             Assert.That(TestContent.Dump(sim.State), Is.EqualTo(before));
-            Assert.That(sim.State.Heroes.Equipped.Count(x => x != null), Is.EqualTo(6));
+            Assert.That(sim.State.Heroes.Equipped.Count(x => x != null), Is.EqualTo(TestContent.Db.Constants.HeroSlots));
             Assert.That(sim.Query.HeroMult, Is.GreaterThan(1.0));
             sim.Validate();
         }
@@ -139,16 +139,22 @@ namespace IdleRng.Sim.Tests
         public void EquipHero_Rules()
         {
             var sim = TestContent.NewSim();
-            string a = Banner.Pool[0][0], b = Banner.Pool[0][1];
-            Assert.That(sim.EquipHero(0, a).Reason, Is.EqualTo(Reject.HeroNotOwned));
+            var db = TestContent.Db;
+            string starter = db.StarterHeroId;
+            Assert.That(sim.State.Heroes.Equipped[0], Is.EqualTo(starter));   // new profile starts with the starter
+            var others = Banner.Pool[0].Where(id => id != starter).ToList();
+            string a = others[0], b = others[1];
+            Assert.That(sim.EquipHero(1, a).Reason, Is.EqualTo(Reject.HeroNotOwned));
             sim.Debug.GrantHeroCopies(a, 1);
             sim.Debug.GrantHeroCopies(b, 1);
-            Assert.That(sim.State.Heroes.Equipped[0], Is.EqualTo(a));   // auto-equip on grant
+            int slotA = System.Array.IndexOf(sim.State.Heroes.Equipped, a);
+            Assert.That(slotA, Is.GreaterThanOrEqualTo(0));                     // auto-equip on grant
             Assert.That(sim.EquipHero(3, a).Reason, Is.EqualTo(Reject.HeroAlreadyEquipped));
-            Assert.That(sim.UnequipHero(0).Ok, Is.True);
+            Assert.That(sim.UnequipHero(slotA).Ok, Is.True);
             Assert.That(sim.EquipHero(3, a).Ok, Is.True);
             Assert.That(sim.State.Heroes.AutoEquipBest, Is.False);
-            Assert.That(sim.Query.HeroMult, Is.EqualTo(1.2).Within(1e-12));
+            double Farm(string id) => db.FarmDps(db.Heroes[id], 1, 0);
+            Assert.That(sim.Query.HeroMult, Is.EqualTo((Farm(starter) + Farm(a) + Farm(b)) / Farm(starter)).Within(1e-12));
             Assert.That(sim.AutoEquipBestHeroes(), Is.GreaterThan(0));
             sim.Validate();
         }

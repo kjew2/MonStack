@@ -116,6 +116,8 @@ Facts a developer can rely on:
 
 ## 5. Policies
 
+> Overhaul (#60): policies also promote party members (`specs/11` section 6, bot policy).
+
 ### 5.1 Interface
 
 ```csharp
@@ -253,6 +255,8 @@ public sealed record DayRow(
 
 ### 6.3 Layer shares
 
+> Overhaul (#60): layers are base, hero (party), promo, stat and gear; definitions in `specs/11` section 7.1. The `class` column is now `promo`.
+
 For acceptance check 2 and the `--shares` option. From a `DayRow`, with `L = ln(Dps)`:
 
 ```
@@ -342,6 +346,8 @@ Seed lists: `--seeds 1-20` (inclusive range), `--seeds 3,5,9`, `--seeds 7`. The 
 `AcceptanceChecker` encodes `specs/02` section 9. The CLI verb `acceptance` and the NUnit tests in `IdleRng.Bots.Tests/AcceptanceTests.cs` call the same class, so they cannot disagree. Every check is a test that fails today if the balance is off; none is skipped or marked expected-to-fail.
 
 Thresholds and targets live in `src/IdleRng.Bots/Acceptance/acceptance-targets.json`, the single copy in code of `specs/00` section 2.6 and `specs/02` section 9. Keep it in sync with those sections when they change.
+
+`advisory` in the same file lists check ids that are report-only: a failure prints `WARN`, is counted separately on the `RESULT` line and does not change the exit code. AC6 can never be advisory. During the overhaul (#60, `specs/11`) AC1-AC5 are advisory so imbalance does not block systems work; the list is emptied when balance work resumes.
 
 ```json
 {

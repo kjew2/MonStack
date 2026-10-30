@@ -20,8 +20,14 @@ namespace IdleRng.Sim
         public double HitDamage => _sim.HitDamageCached;
         public double StatMult => _sim.StatMultCached;
         public double GearMult => _sim.GearMultCached;
+        /// <summary>Party DPS before promotions, relative to BaseDps (reporting layer, specs/11 section 7.1).</summary>
         public double HeroMult => _sim.HeroMultCached;
-        public double ClassMult => _sim.ClassMultCached;
+        /// <summary>Party DPS with promotions / without (reporting layer; replaces ClassMult).</summary>
+        public double PromoMult => _sim.PromoMultCached;
+        /// <summary>Sum of FarmDps over the party (specs/11 section 7).</summary>
+        public double PartyDps => _sim.PartyDpsCached;
+        /// <summary>The starter companion's FarmDps at level 1, promotion 0: the reporting base.</summary>
+        public double BaseDps => _sim.BaseDpsCached;
 
         // ---- stage / combat
         public int Stage => S.Stage.Stage;
@@ -108,8 +114,49 @@ namespace IdleRng.Sim
         public int HeroCopies(string hero) => hero != null && S.Heroes.Copies.TryGetValue(hero, out int c) ? c : 0;
         public int HeroLevelOf(string hero) => C.HeroLevel(HeroCopies(hero));
 
-        /// <summary>Percentage points (40 = +40%); 0 if not owned.</summary>
-        public double HeroPct(string hero) => _sim.HeroPct(hero);
+        /// <summary>A companion's farming DPS at its current level and promotions; 0 if not owned.</summary>
+        public double HeroFarmDps(string hero) => _sim.HeroFarmDps(hero);
+
+        // ---- companion stats and promotion (specs/11 sections 3 and 6)
+        public int Promotions(string hero) => _sim.PromotionsOf(hero);
+        public int MaxPromotions(string hero) => C.MaxPromotions(C.Heroes[hero]);
+
+        /// <summary>Current HP/ATK/DEF of a companion (level and promotion applied); 0 if not owned.</summary>
+        public double HeroHp(string hero) => HeroStatMult(hero) * C.Heroes[hero].Hp;
+        public double HeroAtk(string hero) => HeroStatMult(hero) * C.Heroes[hero].Atk;
+        public double HeroDef(string hero) => HeroStatMult(hero) * C.Heroes[hero].Def;
+
+        double HeroStatMult(string hero) => C.LevelMult(HeroLevelOf(hero)) * C.PromoMult(Promotions(hero));
+
+        /// <summary>Gold for the companion's next promotion, or 0 if it is at its cap.</summary>
+        public double NextPromotionCost(string hero)
+        {
+            int next = Promotions(hero) + 1;
+            return next > MaxPromotions(hero) ? 0 : C.PromotionCost(next);
+        }
+
+        /// <summary>Stage that unlocks the companion's next promotion, or 0 if it is at its cap.</summary>
+        public int NextPromotionStage(string hero)
+        {
+            int next = Promotions(hero) + 1;
+            return next > MaxPromotions(hero) ? 0 : C.Promotions[next - 1].UnlockStage;
+        }
+
+        /// <summary>FarmDps after one more promotion (same as now if at the cap).</summary>
+        public double HeroFarmDpsAfterPromotion(string hero)
+        {
+            int lvl = HeroLevelOf(hero);
+            int p = Math.Min(Promotions(hero) + 1, MaxPromotions(hero));
+            return lvl <= 0 ? 0 : C.FarmDps(C.Heroes[hero], lvl, p);
+        }
+
+        /// <summary>True when Promote(hero) would succeed now.</summary>
+        public bool CanPromote(string hero)
+        {
+            if (HeroCopies(hero) <= 0) return false;
+            int stage = NextPromotionStage(hero);
+            return stage > 0 && S.Stage.Stage >= stage && S.Currencies.Gold >= NextPromotionCost(hero);
+        }
 
         public int FreePullsDaily => S.Currencies.FreePullsDaily;
         public int FreePullsBanked => S.Currencies.FreePullsBanked;

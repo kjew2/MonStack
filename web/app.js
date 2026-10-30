@@ -107,7 +107,7 @@
         case 'questCompleted': log('Quest done: ' + e.label + '  +' + e.gems + ' gems', 'gems'); toast('Quest done: ' + e.label + '  +' + e.gems + ' gems'); break;
         case 'chestClaimed': log('Idle chest  +' + e.gems + ' gems', 'gems'); break;
         case 'dayRolledOver': log('New day: quests reset, ' + C.economy.FREE_PULLS_PER_DAY + ' free pulls', 'gems'); break;
-        case 'classAdvanced': log('Class advance: ' + C.class.NAMES[e.advances] + ' (stage ' + e.stage + ')', 'ok'); showClassCard(e); break;
+        case 'promoted': log(e.name + ' promoted: ' + e.promotionName + ' (-' + fmt(e.cost) + ' gold)', 'ok'); toast(e.name + ' is now ' + e.promotionName); break;
         case 'offlineGold': log('Offline: +' + fmt(e.gold) + ' gold for ' + hours(e.creditedS), 'gold'); showWelcomeBack(e); break;
         case 'enhanced': log((e.success ? 'Enhance success: ' : 'Enhance failed: ') + C.gear.SLOTS[e.slot] + ' +' + e.level, e.success ? 'ok' : 'muted'); break;
         case 'statLeveled': break;
@@ -239,7 +239,9 @@
         if (id) { el.append(spriteCanvas(SP.hero(id))); el.style.setProperty('--slot-col', 'var(--r-' + R[t] + ')'); el.title = sim.heroById[id].name; }
       }
     });
-    const k = sim.state.classAdvances;
+    // The party has no player character (specs/11); the banner sprite shows the highest promotion in the party.
+    let k = 0;
+    for (const id of party) if (id) k = Math.max(k, sim.state.heroes.promotions[id] || 0);
     const pc = $('playerCv');
     if (pc.dataset.k !== String(k)) { SP.draw(pc, SP.player(k)); pc.dataset.k = String(k); }
     setText($('dpsEl'), fmt(sim.dps()));
@@ -262,7 +264,7 @@
   // ------------------------------------------------------------ tabs
   const TABS = [
     { id: 'fight', label: 'Fight' }, { id: 'stats', label: 'Stats' }, { id: 'gear', label: 'Gear' },
-    { id: 'heroes', label: 'Heroes' }, { id: 'summon', label: 'Summon' }, { id: 'class', label: 'Class' },
+    { id: 'heroes', label: 'Party' }, { id: 'summon', label: 'Summon' },
   ];
   const tabEls = {}, tabBtns = {}, views = {};
   let currentTab = 'fight';
@@ -329,7 +331,7 @@
           setText(wallTitle, 'Boss failed (attempt ' + st.bossFailsOnStage + ')');
           setText(wallLine, 'Boss HP ' + fmt(sim.bossHp(st.stage)) + '  ·  your DPS ' + fmt(sim.dps()) + '  ·  need ' + fmt(sim.needDps()));
           const clear = sim.bossClearable();
-          setText(wallNeed, clear ? 'You can beat it now.' : 'Need about ' + needX() + ' DPS. Buy ATK levels, enhance gear or summon heroes. Farming stage ' + st.stage + ' mobs meanwhile.');
+          setText(wallNeed, clear ? 'You can beat it now.' : 'Need about ' + needX() + ' DPS. Buy ATK levels, enhance gear, summon or promote companions. Farming stage ' + st.stage + ' mobs meanwhile.');
           setText(retry, clear ? 'Fight boss' : 'Retry boss');
         }
         C.quests.forEach((q, i) => {
@@ -442,10 +444,15 @@
   };
 
   // ---- Heroes
+  function unequip(slot) {
+    const r = sim.unequipHero(slot);
+    if (!r.ok && r.reason === 'lastCompanion') toast('The party needs at least one companion');
+    return r.ok;
+  }
   BUILD.heroes = function (root) {
     let selected = null;
     const multEl = h('span', { class: 'num muted' });
-    const auto = h('button', { type: 'button', class: 'btn small', onclick: () => { const n = sim.autoEquip(); toast(n ? 'Changed ' + n + ' slot' + (n > 1 ? 's' : '') : 'Party is already the best six'); rebuild(); } }, ['Auto-equip best']);
+    const auto = h('button', { type: 'button', class: 'btn small', onclick: () => { const n = sim.autoEquip(); toast(n ? 'Changed ' + n + ' slot' + (n > 1 ? 's' : '') : 'Party is already the best ' + C.heroes.SLOTS); rebuild(); } }, ['Auto-equip best']);
     const partyRow = h('div', { class: 'party-row' });
     const grid = h('div', { class: 'hero-grid' });
     const dName = h('h2');
@@ -457,27 +464,38 @@
     } }, ['Add to party']);
     const remBtn = h('button', { type: 'button', class: 'btn small', onclick: () => {
       const slot = sim.state.heroes.party.indexOf(selected);
-      if (slot >= 0) { sim.unequipHero(slot); rebuild(); }
+      if (slot >= 0) { unequip(slot); rebuild(); }
     } }, ['Remove']);
-    const detail = h('div', { class: 'card' }, [h('div', { class: 'hero-head' }, [dSprite, h('div', null, [dName, dLine])]), h('div', { class: 'row' }, [addBtn, remBtn])]);
+    const dKit = h('div', { class: 'muted num' });
+    const dStats = h('div', { class: 'num' });
+    const dPromo = h('div', { class: 'muted' });
+    const dSkills = h('ul', { class: 'kit' });
+    const promoBtn = h('button', { type: 'button', class: 'btn small primary', onclick: () => {
+      if (!selected) return;
+      const r = sim.promote(selected);
+      if (!r.ok) toast(r.reason === 'locked' ? 'Reach the unlock stage first' : r.reason === 'maxed' ? 'Already at max promotion' : 'Not enough gold');
+      rebuild();
+    } }, ['Promote']);
+    const detail = h('div', { class: 'card' }, [h('div', { class: 'hero-head' }, [dSprite, h('div', null, [dName, dLine, dKit])]), dStats, dSkills, dPromo,
+      h('div', { class: 'row' }, [addBtn, remBtn, promoBtn])]);
     const countEl = h('span', { class: 'muted' });
     root.append(
-      h('div', { class: 'row between' }, [h('h2', { text: 'Heroes' }), multEl]),
+      h('div', { class: 'row between' }, [h('h2', { text: 'Party' }), multEl]),
       h('div', { class: 'card' }, [h('div', { class: 'row between' }, [h('h3', { text: 'Party' }), auto]), partyRow,
-        h('div', { class: 'muted', text: 'Tap a hero below, then a party slot to place it. Tap a slot with nothing selected to empty it.' })]),
+        h('div', { class: 'muted', text: 'Tap a companion below, then a party slot to place it. Tap a slot with nothing selected to empty it.' })]),
       detail,
       h('div', { class: 'row between' }, [h('h3', { text: 'Collection' }), countEl]),
       grid,
     );
-    let sig = '';
+    let sig = '', detailSig = '';
     function rebuild() {
-      sig = '';
+      sig = ''; detailSig = '';
       this_.update();
     }
     const this_ = {
       update() {
         const s = sim.state;
-        setText(multEl, 'x' + sim.heroMult().toFixed(2));
+        setText(multEl, 'Party DPS ' + fmt(sim.partyDps()));
         setDisabled(auto, !sim.autoEquipWouldChange());
         const newSig = JSON.stringify(s.heroes) + '|' + selected;
         if (newSig !== sig) {
@@ -488,9 +506,9 @@
             el.addEventListener('click', () => {
               if (selected && s.heroes.owned[selected]) {
                 const at = s.heroes.party.indexOf(selected);
-                if (at >= 0 && at !== i) sim.unequipHero(at);
+                if (at >= 0 && at !== i && !unequip(at)) { rebuild(); return; }
                 sim.equipHero(i, selected);
-              } else if (id) sim.unequipHero(i);
+              } else if (id) unequip(i);
               rebuild();
             });
             partyRow.append(el);
@@ -511,15 +529,34 @@
         }
         if (!selected) {
           setHidden(dSprite, true);
-          setText(dName, 'No hero selected'); setText(dLine, 'Party bonus +' + pct(sim.heroMult() - 1, 0) + ' DPS from ' + s.heroes.party.filter(Boolean).length + ' heroes.');
-          setHidden(addBtn, true); setHidden(remBtn, true); return;
+          setText(dName, 'No companion selected'); setText(dLine, 'Party DPS ' + fmt(sim.partyDps()) + ' from ' + s.heroes.party.filter(Boolean).length + ' companions.');
+          setText(dKit, ''); setText(dStats, ''); setText(dPromo, ''); dSkills.textContent = '';
+          setHidden(addBtn, true); setHidden(remBtn, true); setHidden(promoBtn, true); return;
         }
         const hero = sim.heroById[selected], copies = s.heroes.owned[selected], lvl = sim.heroLevel(copies);
         const cum = C.heroes.LVL_CUM;
         setHidden(dSprite, false);
         if (dSprite.dataset.id !== selected) { SP.draw(dSprite, SP.hero(selected)); dSprite.dataset.id = selected; dSprite.className = 'sprite bg-r' + hero.tier; }
         setText(dName, hero.name + ' · ' + C.rarityNames[R[hero.tier]] + ' ' + selected);
-        setText(dLine, 'Lv' + lvl + (lvl >= cum.length ? ' MAX' : ' (' + copies + '/' + cum[lvl] + ' copies)') + ' · +' + sim.heroPct(selected).toFixed(0) + '% DPS');
+        // heroInfo crosses the wasm bridge: refresh the detail only when the companion, stage or gold changed
+        const dSig = newSig + '|' + s.stage.stage + '|' + Math.floor(s.cur.gold);
+        if (dSig === detailSig) return;
+        detailSig = dSig;
+        const info = sim.heroInfo(selected);
+        setText(dLine, 'Lv' + lvl + (lvl >= cum.length ? ' MAX' : ' (' + copies + '/' + cum[lvl] + ' copies)') + ' · ' + fmt(info.farmDps) + ' DPS');
+        setText(dKit, info.roleName + ' · ' + info.elementName + ' · promotion ' + info.promotions + '/' + info.maxPromotions);
+        setText(dStats, 'HP ' + fmt(info.hp) + ' · ATK ' + fmt(info.atk) + ' · DEF ' + fmt(info.def) + ' · SPD ' + info.spd +
+          ' · Crit ' + pct(info.critRate, 0) + ' x' + info.critDmg.toFixed(2));
+        dSkills.textContent = '';
+        for (const sk of info.kit)
+          dSkills.append(h('li', { class: sk.unlocked ? '' : 'muted' }, [h('b', { text: sk.name + (sk.passive ? ' (passive)' : '') }),
+            h('span', { text: ' ' + sk.desc + (sk.unlocked ? '' : ' Unlocks at promotion ' + sk.unlockPromotion + '.') })]));
+        if (info.maxPromotions === 0) setText(dPromo, C.rarityNames[R[hero.tier]] + ' companions cannot be promoted.');
+        else if (info.promotions >= info.maxPromotions) setText(dPromo, 'Fully promoted.');
+        else setText(dPromo, 'Next: ' + C.promotion.NAMES[info.promotions] + ' (unlocks a new skill, x' + C.promotion.MULTS[info.promotions] +
+          ' HP/ATK/DEF). Stage ' + info.nextPromotionStage + ', ' + fmt(info.nextPromotionCost) + ' gold.');
+        setHidden(promoBtn, info.maxPromotions === 0 || info.promotions >= info.maxPromotions);
+        setDisabled(promoBtn, !info.canPromote);
         const inParty = s.heroes.party.indexOf(selected) >= 0;
         setHidden(addBtn, inParty); setHidden(remBtn, !inParty);
         setDisabled(addBtn, s.heroes.party.indexOf(null) < 0);
@@ -617,37 +654,6 @@
     if (sim.autoEquipWouldChange() && sim.state.heroes.party.indexOf(null) >= 0) sim.autoEquip();  // fill empty party slots
   }
 
-  // ---- Class
-  BUILD['class'] = function (root) {
-    const name = h('h2');
-    const mult = h('span', { class: 'num muted' });
-    const next = h('div', { class: 'num' });
-    const barFill = h('div', { class: 'fill' });
-    barFill.style.background = 'var(--ok)';
-    const rows = C.class.STAGES.map((stage, i) => {
-      const row = h('div', { class: 'ms' }, [h('span', { class: 'chk' }), h('span', { class: 'num', text: 'Stage ' + stage }),
-        h('span', { text: C.class.NAMES[i + 1] }), h('span', { class: 'num muted', text: 'ATK x' + sim.classMult(i + 1).toFixed(2) })]);
-      return row;
-    });
-    root.append(
-      h('div', { class: 'card' }, [h('div', { class: 'row between' }, [name, mult]), next, h('div', { class: 'bar' }, [barFill, h('span')])]),
-      h('div', { class: 'card' }, rows),
-      h('p', { class: 'muted', text: 'Class advances happen automatically when you reach the stage. Each one multiplies ATK by ' + C.class.MULT + '.' }),
-    );
-    return {
-      update() {
-        const k = sim.state.classAdvances, stage = sim.state.stage.stage, st = C.class.STAGES;
-        setText(name, C.class.NAMES[k]);
-        setText(mult, 'ATK x' + sim.classMult().toFixed(2));
-        rows.forEach((r, i) => toggle(r, 'got', i < k));
-        if (k >= st.length) { setText(next, 'All class advances done'); barFill.style.width = '100%'; return; }
-        const prev = k === 0 ? 1 : st[k - 1];
-        setText(next, 'Next: ' + C.class.NAMES[k + 1] + ' at stage ' + st[k] + ' · (' + stage + '/' + st[k] + ')');
-        barFill.style.width = Math.max(0, Math.min(1, (stage - prev) / (st[k] - prev))) * 100 + '%';
-      },
-    };
-  };
-
   // ------------------------------------------------------------ modal layer
   let onModalClose = null;
   function openModal(node, onClose) {
@@ -691,18 +697,6 @@
       h('p', { class: 'muted', text: 'Offline you earn ' + pct(C.economy.OFFLINE_RATE, 0) + ' of your in-app rate at your current stage.' }),
       h('button', { type: 'button', class: 'btn primary', onclick: closeModal }, ['Collect']),
     ]));
-  }
-
-  let classCardTimer = 0;
-  function showClassCard(e) {
-    openModal(h('div', { class: 'card' }, [
-      h('h3', { text: 'Class advance' }),
-      h('div', { class: 'big', text: C.class.NAMES[e.advances] }),
-      h('p', { class: 'num', text: 'ATK x' + C.class.MULT + ' · DPS ' + fmt(e.dpsBefore) + ' → ' + fmt(e.dpsAfter) }),
-      h('button', { type: 'button', class: 'btn primary', onclick: closeModal }, ['OK']),
-    ]), () => clearTimeout(classCardTimer));
-    clearTimeout(classCardTimer);
-    classCardTimer = setTimeout(closeModal, 6000);
   }
 
   // ---- Settings + debug (specs/07 section 11.8)

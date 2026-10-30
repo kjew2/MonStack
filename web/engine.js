@@ -11,17 +11,17 @@
   const WASM_BASE = 'wasm/dist/';
 
   const QUERIES = ['hp', 'bossHp', 'gold', 'statCost', 'statMult', 'gearTier', 'gearBasePct', 'gearEffPct', 'gearSlotMult', 'gearMult',
-    'heroLevel', 'heroPct', 'heroMult', 'classMult', 'dps', 'hitDamage', 'hitsToKill', 'killTimeSeconds', 'isBossStage', 'bossClearable',
+    'heroLevel', 'heroFarmDps', 'heroInfo', 'heroMult', 'promoMult', 'partyDps', 'dps', 'hitDamage', 'hitsToKill', 'killTimeSeconds', 'isBossStage', 'bossClearable',
     'needDps', 'enhanceCost', 'enhanceSuccess', 'pityRate', 'freePullsRemaining', 'chestReadyAtMs', 'chestReady', 'bulkCost',
     'maxAffordable', 'pullPrice', 'bestParty', 'autoEquipWouldChange', 'nowMs', 'validate', 'consolidatedRates'];
-  const COMMANDS = ['buyStatLevels', 'buyStatLevelsMax', 'enhance', 'attemptBoss', 'pull', 'equipHero', 'unequipHero', 'autoEquip',
+  const COMMANDS = ['buyStatLevels', 'buyStatLevelsMax', 'enhance', 'attemptBoss', 'pull', 'equipHero', 'unequipHero', 'autoEquip', 'promote',
     'claimChest', 'syncWallClock', 'debugGrantGold', 'debugGrantGems', 'debugSetStage'];
 
   // Caching classes: PURE depend only on content and arguments; BUILD change only when the player's build changes.
   const PURE = new Set(['hp', 'bossHp', 'gold', 'statCost', 'gearTier', 'gearBasePct', 'gearEffPct', 'heroLevel', 'pityRate',
     'enhanceSuccess', 'bulkCost', 'consolidatedRates']);
-  const BUILD = new Set(['dps', 'hitDamage', 'heroMult', 'gearMult', 'gearSlotMult', 'hitsToKill', 'killTimeSeconds']);
-  const BUILD_IF_NO_ARG = new Set(['statMult', 'classMult']);
+  const BUILD = new Set(['dps', 'hitDamage', 'heroMult', 'partyDps', 'gearMult', 'gearSlotMult', 'hitsToKill', 'killTimeSeconds']);
+  const BUILD_IF_NO_ARG = new Set(['statMult', 'promoMult']);
 
   function randomSeedHex() {
     const a = new Uint32Array(2);
@@ -30,7 +30,7 @@
   }
   function buildHeroById(content) {
     const out = {}, rar = content.rarities;
-    content.heroes.pool.forEach((tierList) => tierList.forEach((h) => { out[h.id] = { id: h.id, name: h.name, short: h.short || h.name, tier: rar.indexOf(h.tier) }; }));
+    content.heroes.pool.forEach((tierList) => tierList.forEach((h) => { out[h.id] = { id: h.id, name: h.name, short: h.short || h.name, tier: rar.indexOf(h.tier), role: h.role, element: h.element }; }));
     return out;
   }
 
@@ -47,7 +47,7 @@
       cache = JSON.parse(host.State());
       dirty = false; stats.stateReads++;
       const s = cache, g = s.gear, p = s.heroes.party, own = s.heroes.owned;
-      let k = s.statLevel + '|' + s.classAdvances;
+      let k = s.statLevel + '|' + JSON.stringify(s.heroes.promotions);
       for (let i = 0; i < g.length; i++) k += g[i] ? '|' + g[i].tier + ',' + g[i].rarity + ',' + g[i].enh : '|-';
       for (let i = 0; i < p.length; i++) k += p[i] ? '|' + p[i] + ':' + own[p[i]] : '|-';
       if (k !== buildKey) { buildKey = k; buildMemo.clear(); }

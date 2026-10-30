@@ -68,7 +68,12 @@ namespace IdleRng.Client.Core
         public string Id, Glyph, Name;
         public Rarity Tier;
         public int Copies, Level, NextLevelCopies, EquippedSlot = -1;
-        public double Pct;
+        public string Role, Element;
+
+        /// <summary>Kit as display lines; locked skills are marked (specs/11 section 4.4, skeleton).</summary>
+        public string Kit = "";
+        public double FarmDps, Hp, Atk, Def, Spd, CritRate, CritDmg;
+        public int Promotions, MaxPromotions;
         public bool Owned => Copies > 0;
     }
 
@@ -76,8 +81,12 @@ namespace IdleRng.Client.Core
     {
         public HeroRow[] All = new HeroRow[0];
         public HeroRow[] Equipped = new HeroRow[0];   // per party slot, null = empty
-        public double HeroMult;
+        public double PartyDps;
         public string SelectedHero;
+
+        /// <summary>Promotion line for the selected companion and whether Promote would succeed now (specs/11 section 6).</summary>
+        public string SelectedPromoText = "";
+        public bool SelectedCanPromote, SelectedCanEverPromote;
         public bool AutoEquipOn;
 
         /// <summary>Bumped whenever rows are rebuilt (copies/party changed) so screens rebuild only then.</summary>
@@ -107,6 +116,7 @@ namespace IdleRng.Client.Core
         public int ResultsVersion;
     }
 
+    /// <summary>A promotion milestone (specs/11 section 6). The Class screen now lists these.</summary>
     public sealed class ClassMilestone
     {
         public int Stage;
@@ -119,7 +129,7 @@ namespace IdleRng.Client.Core
     {
         public int Advances, NextStage, MaxAdvances;
         public string ClassName;
-        public double ClassMult, Progress01;
+        public double PromoMult, Progress01;
         public ClassMilestone[] Milestones = new ClassMilestone[0];
     }
 

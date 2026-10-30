@@ -157,13 +157,14 @@ namespace IdleRng.Client.Core
                 case HeroEquipped _:
                     _heroesDirty = true;
                     break;
-                case ClassAdvanced ca:
+                case CompanionPromoted cp:
                     {
-                        string name = ca.Advances >= 1 && ca.Advances <= _c.ClassAdvances.Count
-                            ? _c.Text(_c.ClassAdvances[ca.Advances - 1].NameKey) : "?";
-                        _popups.Add("CLASS ADVANCE!\n" + name + " (advance " + ca.Advances + "/" + _c.ClassAdvances.Count + ")\n" +
-                                    "ATK " + TextFmt.Mult(ca.Mult) + " total\n" +
+                        string who = _c.Text(_c.Heroes[cp.Hero].NameKey);
+                        string rank = _c.Text(_c.Promotions[cp.Promotions - 1].NameKey);
+                        _popups.Add("PROMOTED!\n" + who + " is now " + rank + "\n" +
+                                    "New skill unlocked (battle skills arrive with phase 2)\n" +
                                     "DPS " + TextFmt.Num(Combat.Dps) + " -> " + TextFmt.Num(_sim.Query.Dps));
+                        _heroesDirty = true;
                         SaveRequested = true;
                         break;
                     }
@@ -256,7 +257,9 @@ namespace IdleRng.Client.Core
             c.NeedDps = q.BossHp(stage) * _k.TickHz / rule.TimeTicks;
             c.NeedDpsRatio = c.Dps > 0 ? c.NeedDps / c.Dps : 0;
             c.ShowBossButton = c.IsWalled;
-            c.ClassIndex = st.Progression.ClassAdvances;
+            int topPromo = 0;   // no player character (specs/11): the hero sprite shows the party's highest promotion
+            foreach (var id in st.Heroes.Equipped) if (id != null) topPromo = Math.Max(topPromo, q.Promotions(id));
+            c.ClassIndex = topPromo;
             c.EnemyHue = (float)(((_k.TierOf(stage) / Math.Max(1, _k.TierWidth)) * 23) % 360);
             var eq = st.Heroes.Equipped;
             for (int i = 0; i < c.PartyGlyphs.Length; i++)
@@ -311,8 +314,20 @@ namespace IdleRng.Client.Core
 
             // Heroes (rows rebuilt only when copies/party changed)
             if (_heroesDirty) RebuildHeroRows();
-            Heroes.HeroMult = q.HeroMult;
+            Heroes.PartyDps = q.PartyDps;
             Heroes.AutoEquipOn = st.Heroes.AutoEquipBest;
+            string selId = Heroes.SelectedHero;
+            if (selId != null && _c.Heroes.ContainsKey(selId))
+            {
+                int pr = q.Promotions(selId), max = q.MaxPromotions(selId);
+                Heroes.SelectedCanEverPromote = max > 0 && pr < max;
+                Heroes.SelectedCanPromote = q.CanPromote(selId);
+                Heroes.SelectedPromoText = max == 0 ? "This rarity cannot be promoted."
+                    : pr >= max ? "Fully promoted (" + pr + "/" + max + ")."
+                    : "Promotion " + pr + "/" + max + ". Next: " + _c.Text(_c.Promotions[pr].NameKey) + " at stage " + q.NextPromotionStage(selId) +
+                      ", " + TextFmt.Num(q.NextPromotionCost(selId)) + " gold (adds a skill, x" + _c.Promotions[pr].Mult + " HP/ATK/DEF).";
+            }
+            else { Heroes.SelectedCanEverPromote = false; Heroes.SelectedCanPromote = false; Heroes.SelectedPromoText = ""; }
 
             // Gacha
             var b = _c.HeroBanner;
@@ -336,21 +351,22 @@ namespace IdleRng.Client.Core
             g.Pull10Label = st.Currencies.FreePullsBanked >= batch ? "Pull x" + batch + "   FREE (" + batch + " banked)"
                           : "Pull x" + batch + "   " + ((long)b.PullCostGems * batch) + " gems";
 
-            // Class
-            var adv = _c.ClassAdvances;
-            int a = st.Progression.ClassAdvances;
+            // Promotion milestones (replaces class advance, specs/11 section 6)
+            var adv = _c.Promotions;
+            int a = 0;
+            while (a < adv.Count && stage >= adv[a].UnlockStage) a++;   // milestones unlocked by the current stage
             Class.Advances = a;
             Class.MaxAdvances = adv.Count;
-            Class.ClassName = a == 0 ? "Novice" : _c.Text(adv[Math.Min(a, adv.Count) - 1].NameKey);
-            Class.ClassMult = q.ClassMult;
-            Class.NextStage = a < adv.Count ? adv[a].Stage : 0;
-            int prev = a == 0 ? 1 : adv[Math.Min(a, adv.Count) - 1].Stage;
+            Class.ClassName = a == 0 ? "No promotions unlocked" : _c.Text(adv[a - 1].NameKey) + " unlocked";
+            Class.PromoMult = q.PromoMult;
+            Class.NextStage = a < adv.Count ? adv[a].UnlockStage : 0;
+            int prev = a == 0 ? 1 : adv[a - 1].UnlockStage;
             Class.Progress01 = Class.NextStage > prev ? Clamp01((stage - prev) / (double)(Class.NextStage - prev)) : 1.0;
             if (Class.Milestones.Length != adv.Count)
             {
                 Class.Milestones = new ClassMilestone[adv.Count];
                 for (int i = 0; i < adv.Count; i++)
-                    Class.Milestones[i] = new ClassMilestone { Stage = adv[i].Stage, Name = _c.Text(adv[i].NameKey), Mult = _c.ClassMult(i + 1) };
+                    Class.Milestones[i] = new ClassMilestone { Stage = adv[i].UnlockStage, Name = _c.Text(adv[i].NameKey), Mult = _c.PromoMult(i + 1) };
             }
             for (int i = 0; i < Class.Milestones.Length; i++) Class.Milestones[i].Reached = a > i;
         }
@@ -387,7 +403,19 @@ namespace IdleRng.Client.Core
                 row.Copies = q.HeroCopies(row.Id);
                 row.Level = q.HeroLevel(row.Copies);
                 row.NextLevelCopies = row.Level < thresholds.Count ? thresholds[row.Level] : -1;
-                row.Pct = q.HeroPct(row.Id);
+                var def = _c.Heroes[row.Id];
+                row.Role = _c.Text(_c.Roles[def.Role].NameKey);
+                row.Element = _c.Text(_c.Elements[def.Element].NameKey);
+                row.FarmDps = q.HeroFarmDps(row.Id);
+                row.Hp = q.HeroHp(row.Id); row.Atk = q.HeroAtk(row.Id); row.Def = q.HeroDef(row.Id);
+                row.Spd = def.Spd; row.CritRate = def.CritRate; row.CritDmg = def.CritDmg;
+                row.Promotions = q.Promotions(row.Id);
+                row.MaxPromotions = q.MaxPromotions(row.Id);
+                var kit = new System.Text.StringBuilder();
+                foreach (var sk in _c.Kits[row.Id])
+                    kit.Append(sk.UnlockPromotion <= row.Promotions ? "* " : "[P" + sk.UnlockPromotion + "] ")
+                       .Append(_c.Text(sk.NameKey)).Append(": ").Append(_c.Text(sk.DescKey)).Append('\n');
+                row.Kit = kit.ToString().TrimEnd('\n');
                 row.EquippedSlot = -1;
                 for (int s = 0; s < eq.Length; s++)
                     if (eq[s] == row.Id) { row.EquippedSlot = s; Heroes.Equipped[s] = row; }
@@ -421,6 +449,9 @@ namespace IdleRng.Client.Core
             Sim.Reject.ChestNotReady => "Chest not ready yet",
             Sim.Reject.BannerDisabled => "Banner disabled",
             Sim.Reject.InvalidCount => "Invalid count",
+            Sim.Reject.PromotionMaxed => "Already at max promotion",
+            Sim.Reject.PromotionLocked => "Reach the unlock stage first",
+            Sim.Reject.LastCompanion => "The party needs at least one companion",
             _ => r.ToString(),
         };
 
@@ -514,7 +545,7 @@ namespace IdleRng.Client.Core
             }
             else
             {
-                _sim.UnequipHero(slot);
+                ToastReject(_sim.UnequipHero(slot).Reason);
             }
             _heroesDirty = true;
             Changed();
@@ -535,7 +566,22 @@ namespace IdleRng.Client.Core
             var sel = Heroes.SelectedHero;
             int slot = sel == null ? -1 : Array.IndexOf(_sim.State.Heroes.Equipped, sel);
             if (slot < 0) { Toasts.Push("Selected hero is not equipped", 1.5); return; }
-            _sim.UnequipHero(slot);
+            ToastReject(_sim.UnequipHero(slot).Reason);
+            _heroesDirty = true;
+            Changed();
+        }
+
+        /// <summary>Party size from content (HERO_SLOTS).</summary>
+        public int PartySize => _k.HeroSlots;
+
+        public void PromoteSelected()
+        {
+            var sel = Heroes.SelectedHero;
+            if (sel == null) { Toasts.Push("Select a companion first", 1.5); return; }
+            var r = _sim.Promote(sel);
+            if (!r.Ok)
+                Toasts.Push(r.Reason == IdleRng.Sim.Reject.PromotionLocked ? "Reach the unlock stage first"
+                          : r.Reason == IdleRng.Sim.Reject.PromotionMaxed ? "Already at max promotion" : "Not enough gold", 1.5);
             _heroesDirty = true;
             Changed();
         }

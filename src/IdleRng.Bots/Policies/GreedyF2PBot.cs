@@ -21,6 +21,8 @@ namespace IdleRng.Bots.Policies
         {
             var sim = ctx.Sim;
 
+            PromoteBest(ctx);                                                         // 0. one promotion if affordable (specs/11 section 6)
+
             sim.BuyStatLevelsMax();                                                   // 1. stat levels while affordable
 
             int slot = WeakestEnhanceableSlot(ctx.State, ctx.Content.Constants.EnhMax);
@@ -43,6 +45,26 @@ namespace IdleRng.Bots.Policies
                 while (w.Gems >= (long)batch * cost && sim.Pull10().Ok) pulled = true;
             while (w.Gems >= cost && sim.Pull().Ok) pulled = true;
             if (pulled) sim.AutoEquipBestHeroes();
+        }
+
+        /// <summary>Promote the party member with the best FarmDps gain per gold, if any promotion is affordable now.</summary>
+        public static bool PromoteBest(BotContext ctx)
+        {
+            var q = ctx.Sim.Query;
+            string best = null;
+            double bestScore = 0;
+            foreach (var id in ctx.State.Heroes.Equipped)
+            {
+                if (id == null || !q.CanPromote(id)) continue;
+                double gain = q.HeroFarmDpsAfterPromotion(id) - q.HeroFarmDps(id), cost = q.NextPromotionCost(id);
+                double score = cost > 0 ? gain / cost : gain > 0 ? double.MaxValue : 0;   // free promotions first, never NaN
+                if (best == null || score > bestScore || (score == bestScore && string.CompareOrdinal(id, best) < 0))
+                {
+                    best = id;
+                    bestScore = score;
+                }
+            }
+            return best != null && ctx.Sim.Promote(best).Ok;
         }
 
         /// <summary>Lowest Enhance among occupied slots below ENH_MAX; lowest index on ties; -1 if none.</summary>

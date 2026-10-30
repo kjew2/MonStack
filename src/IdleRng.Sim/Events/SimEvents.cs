@@ -25,7 +25,8 @@ namespace IdleRng.Sim.Events
     /// <summary>Hero null = slot cleared.</summary>
     public sealed record HeroEquipped(long Tick, int Slot, string Hero) : SimEvent(Tick);
 
-    public sealed record ClassAdvanced(long Tick, int Advances, int Stage, double Mult) : SimEvent(Tick);
+    /// <summary>A companion was promoted to <paramref name="Promotions"/> (specs/11 section 6).</summary>
+    public sealed record CompanionPromoted(long Tick, string Hero, int Promotions, double Cost) : SimEvent(Tick);
     public sealed record OfflineGoldCredited(long Tick, long ElapsedSec, long CreditedSec, bool Capped, double Gold) : SimEvent(Tick);
     public sealed record DayRolledOver(long Tick, long DayKey) : SimEvent(Tick);
     public sealed record ClockWentBackwards(long Tick, long ByMs) : SimEvent(Tick);
@@ -40,7 +41,7 @@ namespace IdleRng.Sim.Events
         None = 0,
         EnemySpawned = 1 << 0, HitLanded = 1 << 1, EnemyKilled = 1 << 2, StageAdvanced = 1 << 3, BossFailed = 1 << 4,
         BossCleared = 1 << 5, GearDropped = 1 << 6, StatLeveled = 1 << 7, EnhanceAttempted = 1 << 8, HeroPulled = 1 << 9,
-        HeroEquipped = 1 << 10, ClassAdvanced = 1 << 11, OfflineGoldCredited = 1 << 12, DayRolledOver = 1 << 13,
+        HeroEquipped = 1 << 10, CompanionPromoted = 1 << 11, OfflineGoldCredited = 1 << 12, DayRolledOver = 1 << 13,
         ClockWentBackwards = 1 << 14, StageCapReached = 1 << 15, QuestCompleted = 1 << 16, FirstClear = 1 << 17,
         IdleChestClaimed = 1 << 18,
         All = (1u << 19) - 1,

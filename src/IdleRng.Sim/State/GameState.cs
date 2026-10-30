@@ -13,7 +13,7 @@ namespace IdleRng.Sim.State
     /// </summary>
     public sealed class GameState
     {
-        public const int CurrentSchemaVersion = 1;
+        public const int CurrentSchemaVersion = 2;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";
@@ -55,7 +55,8 @@ namespace IdleRng.Sim.State
             NewProfile(content, profileId, SeedFromProfileId(profileId), createdServerSec);
 
         /// <summary>
-        /// Fresh profile at stage 1. No starter grants (call Simulation.ApplyTutorialGrants for those).
+        /// Fresh profile at stage 1 with the starter companion in party slot 0 (specs/11 section 4.5). No tutorial
+        /// grants (call Simulation.ApplyTutorialGrants for those).
         /// Daily.DayKey starts at -1 so the first tick (or SyncWallClock) rolls the first day: login quest,
         /// daily free pulls.
         /// </summary>
@@ -82,6 +83,11 @@ namespace IdleRng.Sim.State
             };
             foreach (var name in StreamNames.All)
                 s.Rng.Streams[name] = new RngStream(name, StreamNames.StreamSeed(profileSeed, name));
+            if (content.StarterHeroId != null && s.Heroes.Equipped.Length > 0)
+            {
+                s.Heroes.Copies[content.StarterHeroId] = 1;
+                s.Heroes.Equipped[0] = content.StarterHeroId;
+            }
             return s;
         }
 
@@ -105,6 +111,7 @@ namespace IdleRng.Sim.State
                 Copies = new Dictionary<string, int>(Heroes.Copies, StringComparer.Ordinal),
                 Equipped = (string[])Heroes.Equipped?.Clone(),
                 AutoEquipBest = Heroes.AutoEquipBest,
+                Promotions = new Dictionary<string, int>(Heroes.Promotions, StringComparer.Ordinal),
             };
             c.HeroBanner = new BannerState { PityCounter = HeroBanner.PityCounter, TotalPulls = HeroBanner.TotalPulls };
             c.Rng = new RngState { ProfileSeed = Rng.ProfileSeed };
@@ -153,7 +160,6 @@ namespace IdleRng.Sim.State
     public sealed class ProgressionState
     {
         public int StatLevel { get; set; }
-        public int ClassAdvances { get; set; }
         public int HighestFirstClearBossStage { get; set; }
 
         /// <summary>Server seconds; chest is ready at ChestTimerStart + IDLE_CHEST_HOURS.</summary>
@@ -213,8 +219,11 @@ namespace IdleRng.Sim.State
         /// <summary>The party. Length HERO_SLOTS; null = empty; entries distinct and owned.</summary>
         public string[] Equipped { get; set; } = Array.Empty<string>();
 
-        /// <summary>When true the sim re-picks the best party after every pull. Manual equip turns it off.</summary>
+        /// <summary>When true the sim re-picks the best party after every pull or promotion. Manual equip turns it off.</summary>
         public bool AutoEquipBest { get; set; } = true;
+
+        /// <summary>Promotions per hero id (specs/11 section 6). Missing = 0.</summary>
+        public Dictionary<string, int> Promotions { get; set; } = new Dictionary<string, int>(StringComparer.Ordinal);
     }
 
     public sealed class BannerState

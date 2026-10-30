@@ -27,8 +27,10 @@ Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both w
 | gearTier | `Constants.TierOf` | |
 | gearBasePct / gearEffPct (piece) | `SimQuery.GearBasePct/GearEffPct(new GearPiece(0, rarity, tier, enh))` | null piece -> 0 |
 | gearSlotMult, gearMult, heroMult, dps, hitDamage | `SimQuery.*` | |
-| heroLevel, heroPct(id) | `SimQuery.HeroLevel/HeroPct` | id mapped |
-| classMult(k?) | `SimQuery.ClassMult`; with k: `ContentDb.ClassMult(k)` (clamps at 4) | |
+| heroLevel, heroFarmDps(id) | `SimQuery.HeroLevel/HeroFarmDps` | id mapped |
+| heroInfo(id) | derived: `ContentDb.Kits[id]` (kit: name, desc, unlockPromotion, unlocked, passive), `HeroDef` stats x `LevelMult * PromoMult`, `SimQuery.Promotions/MaxPromotions/NextPromotionCost/NextPromotionStage/HeroFarmDpsAfterPromotion/CanPromote` | id mapped; role/element names from `ContentDb.Roles/Elements` |
+| partyDps | `SimQuery.PartyDps` | |
+| promoMult(k?) | `SimQuery.PromoMult`; with k: `ContentDb.PromoMult(k)` (clamps at the promotion count) | |
 | hitsToKill, killTimeSeconds, isBossStage, bossClearable | `SimQuery.*` | hitsToKill saturates at int.MaxValue |
 | needDps | derived | `BossHp / (rule.TimeTicks / AttackIntervalTicks) * TickHz / AttackIntervalTicks`, using the core's boss rule for the stage |
 | enhanceCost, enhanceSuccess, pityRate, freePullsRemaining | `SimQuery.*` | |
@@ -36,7 +38,7 @@ Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both w
 | bulkCost(n, m) | derived | sum of `ContentDb.StatCost(n+i)`; the core's `BulkStatCost` only starts at the current level |
 | maxAffordable(gold?) | `SimQuery.MaxAffordableStatLevels`; with gold: derived loop (cap 100000) | |
 | pullPrice(count) | derived | same payment rule as `Simulation.PullBatch` (daily, banked, gems; x10: banked >= 10 or 10 x cost) |
-| bestParty | derived | the order `AutoEquipInternal` uses (HeroPct desc, id ordinal, take HeroSlots) |
+| bestParty | derived | the order `AutoEquipInternal` uses (HeroFarmDps desc, id ordinal, take HeroSlots) |
 | autoEquipWouldChange | derived | best sum > current sum + 1e-9  |
 | nowMs | derived | `Clock.LastSyncServerMs + (Tick - TickAtLastSync) * 1000 / TickHz` (the core's `NowServerMs` is internal) |
 | validate | `Simulation.Validate()` | `[message]` on `InvariantViolationException`, else `[]` |
@@ -51,8 +53,9 @@ Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both w
 | attemptBoss | `AttemptBoss()` | `bossAlreadyPending`, `noBossToAttempt` |
 | pull(count) | `Pull()` / `Pull10()` (count 10, else 1) | `{ok,results,paidWith}`; `NotEnoughGems` -> `cannotAfford`; result fields: see below |
 | equipHero(slot, id) | `EquipHero` | `heroNotOwned` (also for unknown ids), `heroAlreadyEquipped` |
-| unequipHero(slot) | `UnequipHero` | `{ok:true}` |
+| unequipHero(slot) | `UnequipHero` | `{ok:true}`; `lastCompanion` when it would empty the party |
 | autoEquip | `AutoEquipBestHeroes()` | slots changed; positional, turns AutoEquipBest on |
+| promote(id) | `Promote` | `heroNotOwned` (also for unknown ids), `maxed`, `locked`, `notEnoughGold` |
 | claimChest | `ClaimIdleChest()` | `{ok}` / `{ok:false,reason:"notReady"}` |
 | syncWallClock(nowMs) | `SyncWallClock(floor(nowMs/1000))` | `null` |
 | debugGrantGold/Gems, debugSetStage | `Debug.GrantGold/GrantGems/SetStage` | `null` |
@@ -69,9 +72,10 @@ Pull result fields: `id` mapped; `name` = `ContentDb.Text(NameKey)` ; `tier` = `
 | stage.* | `Stage.Stage/KillsInStage/Boss (BossPhase -> none,pending,walled)/BossFailsOnStage` |
 | combat.* | `Combat.Phase (Spawning,Fighting -> lower case)/SpawnTimer/EnemyHp/EnemyMaxHp/EnemyIsBoss/AttackTimer/BossTimer` |
 | cur.* | `Currencies.Gold/Gems/Shards/FreePullsDaily/FreePullsBanked` |
-| statLevel, classAdvances | `Progression.StatLevel/ClassAdvances` |
+| statLevel | `Progression.StatLevel` |
 | gear | `Gear.Slots` -> `{tier, rarity:(int)Rarity, enh:Enhance}` or null |
 | heroes.owned / party | `Heroes.Copies` (copies > 0, sorted by bridge id) / `Heroes.Equipped`; ids mapped |
+| heroes.promotions | `Heroes.Promotions` (value > 0, sorted by bridge id); ids mapped |
 | banner.pity / totalPulls | `HeroBanner.PityCounter/TotalPulls` |
 | daily.* | `Daily.DayKey/Progress/Rewarded` |
 | prog.highestFirstClearBoss | `Progression.HighestFirstClearBossStage` |
@@ -95,7 +99,7 @@ Not exposed (core only): `Currencies.EnhMaterials/DungeonTickets`, `Lifetime.Gem
 | bossFailed | `BossFailed` | `stage`, `attempt` = FailsOnStage |
 | stageAdvanced | `StageAdvanced` | `from, to, viaBoss` |
 | stageCap | `StageCapReached` | no fields |
-| classAdvanced | `ClassAdvanced` | `advances, stage`; **`dpsAfter` derived** (`Query.Dps` at publication), **`dpsBefore` derived** (`dpsAfter / (ClassMult(k)/ClassMult(k-1))`) |
+| promoted | `CompanionPromoted` | `id, name, promotions, cost`; **`promotionName`** from `promotions.name_key`, **`dpsAfter` derived** (`Query.Dps` at publication) |
 | gearDropped | `GearDropped` | `slot, piece, equipped, replaced, current` (current = the slot's piece when not equipped), plus **`soldFor`** (core-only) |
 | questCompleted | `QuestCompleted` | `id, gems`; **`label` derived** from `ContentDb.Text(quest.NameKey)` |
 | chestClaimed | `IdleChestClaimed` | `gems` |

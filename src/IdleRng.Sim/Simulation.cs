@@ -25,7 +25,7 @@ namespace IdleRng.Sim
         RngStream _gearDrop, _gearRarity, _enhance, _gachaHero;
 
         bool _dpsDirty = true;
-        double _dps, _hit, _statMult, _gearMult, _heroMult, _classMult;
+        double _dps, _hit, _statMult, _gearMult, _heroMult, _promoMult, _partyDps, _baseDps;
         long _nextDayTick;
 
         public Simulation(ContentDb content, GameState state, IEventSink events = null, IGachaService gacha = null)
@@ -77,6 +77,7 @@ namespace IdleRng.Sim
             if (s.Heroes.Equipped == null || s.Heroes.Equipped.Length != _k.HeroSlots)
                 s.Heroes.Equipped = Resize(s.Heroes.Equipped, _k.HeroSlots);
             s.Heroes.Copies ??= new Dictionary<string, int>(StringComparer.Ordinal);
+            s.Heroes.Promotions ??= new Dictionary<string, int>(StringComparer.Ordinal);
             int nq = Content.DailyQuests.Count;
             if (s.Daily.Progress == null || s.Daily.Progress.Length != nq) s.Daily.Progress = Resize(s.Daily.Progress, nq);
             if (s.Daily.Rewarded == null || s.Daily.Rewarded.Length != nq) s.Daily.Rewarded = Resize(s.Daily.Rewarded, nq);
@@ -218,21 +219,6 @@ namespace IdleRng.Sim
             stg.Boss = BossPhase.None;
             stg.BossFailsOnStage = 0;
             if (Wants(EventKinds.StageAdvanced)) _sink.Publish(new StageAdvanced(State.Tick, from, from + 1, viaBoss));
-            ApplyClassAdvances();
-        }
-
-        /// <summary>Reaching CLASS_STAGES[k] grants advance k+1 on arrival (specs/04 section 6).</summary>
-        void ApplyClassAdvances()
-        {
-            var p = State.Progression;
-            var adv = Content.ClassAdvances;
-            while (p.ClassAdvances < adv.Count && State.Stage.Stage >= adv[p.ClassAdvances].Stage)
-            {
-                p.ClassAdvances += 1;
-                MarkDpsDirty();
-                if (Wants(EventKinds.ClassAdvanced))
-                    _sink.Publish(new ClassAdvanced(State.Tick, p.ClassAdvances, State.Stage.Stage, Content.ClassMult(p.ClassAdvances)));
-            }
         }
 
         void BossFail()
@@ -341,7 +327,7 @@ namespace IdleRng.Sim
         internal double SellValue(GearPiece p) =>
             _k.GearSellKills * Content.GoldPerKill(p.Tier) * Content.GearRarity[(int)p.Rarity].Mult;
 
-        // ================================================================ DPS (specs/03 section 8.4)
+        // ================================================================ DPS (specs/11 section 7)
 
         internal void MarkDpsDirty() => _dpsDirty = true;
 
@@ -358,8 +344,11 @@ namespace IdleRng.Sim
         internal double StatMultCached { get { if (_dpsDirty) RecomputeDps(); return _statMult; } }
         internal double GearMultCached { get { if (_dpsDirty) RecomputeDps(); return _gearMult; } }
         internal double HeroMultCached { get { if (_dpsDirty) RecomputeDps(); return _heroMult; } }
-        internal double ClassMultCached { get { if (_dpsDirty) RecomputeDps(); return _classMult; } }
+        internal double PromoMultCached { get { if (_dpsDirty) RecomputeDps(); return _promoMult; } }
+        internal double PartyDpsCached { get { if (_dpsDirty) RecomputeDps(); return _partyDps; } }
+        internal double BaseDpsCached { get { if (_dpsDirty) RecomputeDps(); return _baseDps; } }
 
+        /// <summary>Dps = PartyDps * StatMult * GearMult; HeroMult and PromoMult split PartyDps for reporting (specs/11 section 7.1).</summary>
         void RecomputeDps()
         {
             var s = State;
@@ -368,21 +357,31 @@ namespace IdleRng.Sim
             foreach (var p in s.Gear.Slots)
                 if (p != null) gear *= 1.0 + GearBasePct(p) * (1.0 + _k.EnhPerLvl * p.Enhance);
             _gearMult = gear;
-            double heroSum = 0;
+            double party = 0, partyNoPromo = 0;
             foreach (var id in s.Heroes.Equipped)
-                if (id != null) heroSum += HeroPct(id);
-            _heroMult = 1.0 + heroSum / 100.0;
-            _classMult = Content.ClassMult(s.Progression.ClassAdvances);
-            _dps = _k.BaseAtk * _statMult * _gearMult * _heroMult * _classMult;
+            {
+                if (id == null) continue;
+                party += HeroFarmDps(id);
+                partyNoPromo += HeroFarmDps(id, ignorePromotions: true);
+            }
+            _partyDps = party;
+            _baseDps = Content.BaseFarmDps;
+            _heroMult = partyNoPromo / _baseDps;
+            _promoMult = partyNoPromo > 0 ? party / partyNoPromo : 1.0;
+            _dps = _partyDps * _statMult * _gearMult;
             _hit = _dps * _k.AttackIntervalTicks / _k.TickHz;
             _dpsDirty = false;
         }
 
-        internal double HeroPct(string id)
+        /// <summary>A companion's FarmDps at its current level and promotions; 0 if not owned or unknown.</summary>
+        internal double HeroFarmDps(string id, bool ignorePromotions = false)
         {
             if (id == null || !State.Heroes.Copies.TryGetValue(id, out int copies) || copies <= 0) return 0;
             if (!Content.Heroes.TryGetValue(id, out var def)) return 0;
-            return Content.HeroPct(def, Content.HeroLevel(copies));
+            return Content.FarmDps(def, Content.HeroLevel(copies), ignorePromotions ? 0 : PromotionsOf(id));
         }
+
+        internal int PromotionsOf(string id) =>
+            id != null && State.Heroes.Promotions.TryGetValue(id, out int p) ? p : 0;
     }
 }

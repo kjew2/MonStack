@@ -1,0 +1,35 @@
+{
+  "table": "roles",
+  "rows": [
+    {
+      "id": "tank",
+      "sort_order": 0,
+      "name_key": "role.tank.name",
+      "desc_key": "role.tank.desc"
+    },
+    {
+      "id": "striker",
+      "sort_order": 1,
+      "name_key": "role.striker.name",
+      "desc_key": "role.striker.desc"
+    },
+    {
+      "id": "caster",
+      "sort_order": 2,
+      "name_key": "role.caster.name",
+      "desc_key": "role.caster.desc"
+    },
+    {
+      "id": "healer",
+      "sort_order": 3,
+      "name_key": "role.healer.name",
+      "desc_key": "role.healer.desc"
+    },
+    {
+      "id": "support",
+      "sort_order": 4,
+      "name_key": "role.support.name",
+      "desc_key": "role.support.desc"
+    }
+  ]
+}

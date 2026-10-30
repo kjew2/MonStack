@@ -1,0 +1,40 @@
+{
+  "table": "elements",
+  "rows": [
+    {
+      "id": "fire",
+      "sort_order": 0,
+      "name_key": "element.fire.name",
+      "display_color": "#E8622C",
+      "strong_vs": "nature"
+    },
+    {
+      "id": "water",
+      "sort_order": 1,
+      "name_key": "element.water.name",
+      "display_color": "#2D8FD5",
+      "strong_vs": "fire"
+    },
+    {
+      "id": "nature",
+      "sort_order": 2,
+      "name_key": "element.nature.name",
+      "display_color": "#4CAF50",
+      "strong_vs": "water"
+    },
+    {
+      "id": "light",
+      "sort_order": 3,
+      "name_key": "element.light.name",
+      "display_color": "#F2C94C",
+      "strong_vs": "dark"
+    },
+    {
+      "id": "dark",
+      "sort_order": 4,
+      "name_key": "element.dark.name",
+      "display_color": "#7E57C2",
+      "strong_vs": "light"
+    }
+  ]
+}

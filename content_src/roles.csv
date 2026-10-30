@@ -1,0 +1,6 @@
+id,sort_order,name_key,desc_key
+tank,0,role.tank.name,role.tank.desc
+striker,1,role.striker.name,role.striker.desc
+caster,2,role.caster.name,role.caster.desc
+healer,3,role.healer.name,role.healer.desc
+support,4,role.support.name,role.support.desc

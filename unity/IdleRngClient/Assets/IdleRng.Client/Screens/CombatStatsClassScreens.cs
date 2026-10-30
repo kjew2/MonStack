@@ -118,17 +118,17 @@ namespace IdleRng.Client.Screens
             Root.Add(p);
             _milestones = Ui.Text("");
             Root.Add(_milestones);
-            Root.Add(Ui.Text("Class advances are automatic on reaching the stage. Each multiplies ATK.", Ui.Small, Palette.Muted));
+            Root.Add(Ui.Text("Reaching a milestone stage unlocks the next promotion. Promote companions one by one on the Heroes tab.", Ui.Small, Palette.Muted));
         }
 
-        public override string Title => "Class";
+        public override string Title => "Promotion";
 
         public override void Refresh()
         {
             var c = Vm.Class;
-            Ui.Set(_header, "Class: " + c.ClassName + "    ATK " + TextFmt.Mult(c.ClassMult));
-            Ui.Set(_adv, "Advances " + c.Advances + " / " + c.MaxAdvances);
-            Ui.Set(_next, c.NextStage > 0 ? "Next: stage " + c.NextStage : "All advances reached");
+            Ui.Set(_header, c.ClassName + "    party promo " + TextFmt.Mult(c.PromoMult));
+            Ui.Set(_adv, "Milestones " + c.Advances + " / " + c.MaxAdvances);
+            Ui.Set(_next, c.NextStage > 0 ? "Next unlock: stage " + c.NextStage : "All promotions unlocked");
             _bar.Set(c.Progress01, c.NextStage > 0 ? Vm.Combat.Stage + " / " + c.NextStage : "max");
             var sb = new System.Text.StringBuilder();
             foreach (var m in c.Milestones)

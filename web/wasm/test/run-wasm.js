@@ -36,7 +36,7 @@ function readSave(raw) {
     if (m.type() === 'warning' && /wasm engine failed/.test(m.text())) errors.push('console.warn: ' + m.text());
   });
   const shot = async (n) => { if (shotsDir) { fs.mkdirSync(shotsDir, { recursive: true }); await page.screenshot({ path: path.join(shotsDir, n + '.png') }); } };
-  const ready = () => page.waitForFunction(() => { const e = document.getElementById('stageEl'); return e && e.textContent && !/Loading|failed/.test(e.textContent) && document.querySelectorAll('#tabs button').length >= 6; }, null, { timeout: 90000 });
+  const ready = () => page.waitForFunction(() => { const e = document.getElementById('stageEl'); return e && e.textContent && !/Loading|failed/.test(e.textContent) && document.querySelectorAll('#tabs button').length >= 5; }, null, { timeout: 90000 });
   const url = srv.url + 'index.html';
 
   // ---- cold load
@@ -59,7 +59,7 @@ function readSave(raw) {
 
   // ---- tabs
   const tabNames = await page.$$eval('#tabs button', (bs) => bs.map((b) => b.textContent.trim()));
-  check(tabNames.length >= 6, 'tabs: ' + tabNames.join(', '));
+  check(tabNames.length >= 5, 'tabs: ' + tabNames.join(', '));
   for (const n of tabNames) {
     await page.click('#tabs button:has-text("' + n + '")');
     await page.waitForTimeout(400);
@@ -84,6 +84,16 @@ function readSave(raw) {
   check(save.state.HeroBanner.TotalPulls === 10, 'save has 10 pulls (' + save.state.HeroBanner.TotalPulls + ')');
   const owned = Object.keys(save.state.Heroes.Copies).length;
   check(owned >= 1, 'heroes owned in save: ' + owned);
+
+  // ---- Party tab: companion stat sheet and promotion line (specs/11)
+  await page.click('#tabs button:has-text("Party")');
+  await page.click('.hero-grid .glyph:not(.unowned)');
+  await page.waitForTimeout(300);
+  const detailText = await page.$eval('.hero-head', (e) => e.parentElement.innerText);
+  check(/ATK/.test(detailText) && /SPD/.test(detailText) && /(Tank|Striker|Caster|Healer|Support)/.test(detailText),
+    'companion detail shows role and stats: ' + detailText.replace(/\s+/g, ' ').slice(0, 120));
+  check(/promot/i.test(detailText), 'companion detail shows promotion state');
+  await shot('party-detail');
 
   // ---- Settings chip
   await page.click('#cogBtn');

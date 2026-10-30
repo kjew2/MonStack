@@ -383,6 +383,8 @@ Left alone on purpose: `Daily.DayKey > DayKey(now)` and `LastSavedAtServerSec > 
 
 ## 8. Migrations
 
+> Schema v2 (#60): removed companions become shards, the party is cut to 4, class advances become per-companion promotions, `Progression.ClassAdvances` is removed. Exact steps in `specs/11` section 8.
+
 ### 8.1 API
 
 ```csharp

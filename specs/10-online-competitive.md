@@ -144,6 +144,7 @@ public enum CommandKind : byte
 {
     BuyStatLevels, Enhance, EquipHero, UnequipHero, AutoEquipBest, AttemptBoss,
     Pull, Pull10, ClaimChest, SyncWallClock, GrantFromLedger, Debug,
+    // ... TutorialGrants, OfflineCatchUp, EnsureDay (code additions), then Promote (specs/11 section 6)
 }
 
 // A value-type record per player action. The sim appends one when a command runs.

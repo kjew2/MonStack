@@ -1,0 +1,4 @@
+index,unlock_stage,mult,cost_kills,name_key,#notes
+1,50,1.5,300,promotion.p1.name,placeholder numbers (specs/11 section 6)
+2,150,1.5,300,promotion.p2.name,
+3,300,1.5,300,promotion.p3.name,

@@ -52,6 +52,11 @@ namespace IdleRng.Sim.Tests
             sim.UnequipHero(0);
             sim.EquipHero(0, hero);
             sim.AutoEquipBestHeroes();
+            var rare = TestContent.Db.HeroList.First(h => h.Tier == Content.Rarity.R).Id;
+            sim.Debug.GrantHeroCopies(rare, 1);
+            sim.Debug.SetStage(50);
+            sim.Debug.GrantGold(TestContent.Db.PromotionCost(1));
+            sim.Promote(rare);
             for (int d = 0; d < days; d++) GreedyBot.PlayDay(sim, clock, activeMinutes: 30);
             sim.Advance(1234);
             sim.EnsureDay(clock.NowServerSeconds);
@@ -84,7 +89,7 @@ namespace IdleRng.Sim.Tests
             foreach (var k in new[] { CommandKind.BuyStatLevels, CommandKind.Enhance, CommandKind.EquipHero, CommandKind.UnequipHero,
                                       CommandKind.AutoEquipBest, CommandKind.Pull, CommandKind.Pull10, CommandKind.ClaimChest,
                                       CommandKind.SyncWallClock, CommandKind.Debug, CommandKind.TutorialGrants,
-                                      CommandKind.OfflineCatchUp, CommandKind.EnsureDay })
+                                      CommandKind.OfflineCatchUp, CommandKind.EnsureDay, CommandKind.Promote })
                 Assert.That(kinds, Does.Contain(k));
 
             var replay = Genesis();

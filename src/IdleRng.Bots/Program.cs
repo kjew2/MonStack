@@ -191,14 +191,17 @@ namespace IdleRng.Bots
             var sb = new StringBuilder();
             sb.Append("# idle-rng acceptance v1\n");
             sb.Append($"# bot=greedy-f2p seeds={seeds} days={days} content={TableWriter.ContentTag(db.Version, db.ContentHash)}\n");
+            if (targets.Advisory != null && targets.Advisory.Length > 0)
+                sb.Append($"# advisory (report only, WARN does not fail): {string.Join(",", targets.Advisory)} - {targets.AdvisoryReason}\n");
             foreach (var r in results)
             {
-                sb.Append(r.Pass ? "PASS " : "FAIL ").Append(r.Id).Append(' ').Append(r.Message).Append('\n');
+                sb.Append(r.Pass ? "PASS " : targets.IsAdvisory(r.Id) ? "WARN " : "FAIL ").Append(r.Id).Append(' ').Append(r.Message).Append('\n');
                 if (a.Has("verbose")) foreach (var d in r.Details) sb.Append("     ").Append(d).Append('\n');
             }
-            int failures = results.Count(r => !r.Pass);
+            int failures = results.Count(targets.Blocks);
+            int warnings = results.Count(r => !r.Pass) - failures;
             if (secs > budget) { sb.Append(string.Format(CultureInfo.InvariantCulture, "FAIL time budget: {0:0.0} s > {1} s\n", secs, budget)); failures++; }
-            sb.Append(string.Format(CultureInfo.InvariantCulture, "RESULT {0} failure(s) in {1:0.0} s\n", failures, secs));
+            sb.Append(string.Format(CultureInfo.InvariantCulture, "RESULT {0} failure(s), {1} advisory warning(s) in {2:0.0} s\n", failures, warnings, secs));
             Console.Out.Write(sb.ToString());
             return failures == 0 ? 0 : 1;
         }

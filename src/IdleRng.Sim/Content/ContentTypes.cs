@@ -19,7 +19,7 @@ namespace IdleRng.Sim.Content
     public sealed class Constants
     {
         public int TickHz { get; internal set; }                 // TICK_HZ
-        public double BaseAtk { get; internal set; }             // BASE_ATK
+        public double SpdRef { get; internal set; }              // SPD_REF (specs/11 section 7)
         public int AttackIntervalTicks { get; internal set; }    // ATTACK_INTERVAL_TICKS
         public int KillsPerStage { get; internal set; }          // KILLS_PER_STAGE
         public int SpawnDelayTicks { get; internal set; }        // SPAWN_DELAY_TICKS
@@ -120,6 +120,62 @@ namespace IdleRng.Sim.Content
         public string DisplayColor { get; internal set; }
         public string NameKey { get; internal set; }
         public int ShardValue { get; internal set; }
+
+        /// <summary>Promotion cap for this rarity (specs/11 section 6): C 0, R 1, E 2, L 3, M 3.</summary>
+        public int MaxPromotions { get; internal set; }
+    }
+
+    /// <summary>Companion role (specs/11 section 4.1). Display only in phase 1.</summary>
+    public sealed class RoleDef
+    {
+        public string Id { get; internal set; }
+        public int SortOrder { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string DescKey { get; internal set; }
+    }
+
+    /// <summary>Companion element (specs/11 section 4.2). StrongVs is the element this one beats.</summary>
+    public sealed class ElementDef
+    {
+        public string Id { get; internal set; }
+        public int SortOrder { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string DisplayColor { get; internal set; }
+        public string StrongVs { get; internal set; }
+    }
+
+    public enum SkillKind { Damage, Heal, Shield, Taunt, Buff, Debuff, Passive }
+    public enum SkillTarget { Enemy, AllEnemies, Self, LowestAlly, AllAllies }
+
+    /// <summary>
+    /// One skill in a companion's kit (specs/11 section 4.4). Skeleton data: the battle (phase 2) gives it effect.
+    /// UnlockPromotion 0 = base kit; k = unlocked by promotion k. Stat/Scales are stat-sheet ids ("atk", "def", ...) or null.
+    /// </summary>
+    public sealed class SkillDef
+    {
+        public string Id { get; internal set; }
+        public string HeroId { get; internal set; }
+        public int Slot { get; internal set; }
+        public int UnlockPromotion { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string DescKey { get; internal set; }
+        public SkillKind Kind { get; internal set; }
+        public SkillTarget Target { get; internal set; }
+        public string Stat { get; internal set; }
+        public string Scales { get; internal set; }
+        public double Power { get; internal set; }
+        public int Cooldown { get; internal set; }
+        public int Duration { get; internal set; }
+    }
+
+    /// <summary>One promotion step (specs/11 section 6). Index is 1-based.</summary>
+    public sealed class PromotionDef
+    {
+        public int Index { get; internal set; }
+        public int UnlockStage { get; internal set; }
+        public double Mult { get; internal set; }
+        public double CostKills { get; internal set; }
+        public string NameKey { get; internal set; }
     }
 
     public sealed class HeroDef
@@ -130,7 +186,19 @@ namespace IdleRng.Sim.Content
         public string NameKey { get; internal set; }
         public string DescKey { get; internal set; }
         public string IconId { get; internal set; }
-        public double BasePct { get; internal set; }
+        public string Role { get; internal set; }
+        public string Element { get; internal set; }
+
+        // Base stat sheet at level 1, promotion 0 (specs/11 section 3).
+        public double Hp { get; internal set; }
+        public double Atk { get; internal set; }
+        public double Def { get; internal set; }
+        public double Spd { get; internal set; }
+        public double CritRate { get; internal set; }
+        public double CritDmg { get; internal set; }
+
+        /// <summary>The one companion every new profile starts with (specs/11 section 4.5).</summary>
+        public bool Starter { get; internal set; }
     }
 
     public sealed class BannerDef
@@ -161,16 +229,6 @@ namespace IdleRng.Sim.Content
         /// <summary>L+ chance on the n-th pull since the last L+ (specs/01 section 3.1).</summary>
         public double PityRate(int n) =>
             n >= PityHard ? 1.0 : Math.Min(1.0, BaseLplus + PitySoftStep * Math.Max(0, n - PitySoftStart));
-    }
-
-    public sealed class ClassAdvanceDef
-    {
-        public string Id { get; internal set; }
-        public int Index { get; internal set; }
-        public int Stage { get; internal set; }
-        public double Mult { get; internal set; }
-        public string NameKey { get; internal set; }
-        public string IconId { get; internal set; }
     }
 
     public sealed class DailyQuestDef

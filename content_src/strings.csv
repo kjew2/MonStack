@@ -1,112 +1,44 @@
 key,en
 hero.c_01.name,Pell the Farmhand
-hero.c_01.desc,Placeholder Common hero. Passive +10% DPS at level 1.
+hero.c_01.desc,Your first companion. Swings a pitchfork with more grit than skill.
 hero.c_02.name,Doss the Woodcutter
-hero.c_02.desc,Placeholder Common hero. Passive +10% DPS at level 1.
+hero.c_02.desc,Plants his feet and takes the hits so others don't have to.
 hero.c_03.name,Mira the Scout
-hero.c_03.desc,Placeholder Common hero. Passive +10% DPS at level 1.
+hero.c_03.desc,"Calls out weak spots, speeding up the whole party."
 hero.c_04.name,Tobb the Miller
-hero.c_04.desc,Placeholder Common hero. Passive +10% DPS at level 1.
+hero.c_04.desc,Patches up the party with flour-dusted bandages.
 hero.c_05.name,Kesh the Slinger
-hero.c_05.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_06.name,Wren the Archer
-hero.c_06.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_07.name,Hollis the Guard
-hero.c_07.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_08.name,Bree the Herbalist
-hero.c_08.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_09.name,Garr the Smith
-hero.c_09.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_10.name,Lio the Fisher
-hero.c_10.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_11.name,Nim the Courier
-hero.c_11.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_12.name,Osk the Porter
-hero.c_12.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_13.name,Fen the Trapper
-hero.c_13.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_14.name,Rook the Sentry
-hero.c_14.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_15.name,Tamsin the Cook
-hero.c_15.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_16.name,Ulf the Brawler
-hero.c_16.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_17.name,Vesna the Spearmaiden
-hero.c_17.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_18.name,Juno the Lamplighter
-hero.c_18.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_19.name,Pip the Squire
-hero.c_19.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.c_20.name,Corra the Shepherd
-hero.c_20.desc,Placeholder Common hero. Passive +10% DPS at level 1.
-hero.r_01.name,Alder the Ranger
-hero.r_01.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
+hero.c_05.desc,Lobs shadow-laced stones that splash nearby foes.
+hero.r_01.name,Alder the Herbalist
+hero.r_01.desc,Brews quick remedies from whatever grows nearby.
 hero.r_02.name,Isolde the Duelist
-hero.r_02.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
+hero.r_02.desc,"Fast, precise strikes against a single target."
 hero.r_03.name,Marek the Pikeman
-hero.r_03.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
+hero.r_03.desc,Holds the line behind a long pike and a tower shield.
 hero.r_04.name,Sable the Rogue
-hero.r_04.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
+hero.r_04.desc,Weakens the enemy with poisons and dirty tricks.
 hero.r_05.name,Thane the Berserker
-hero.r_05.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_06.name,Yara the Falconer
-hero.r_06.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_07.name,Brom the Shieldwall
-hero.r_07.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_08.name,Celes the Acolyte
-hero.r_08.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_09.name,Dax the Gunner
-hero.r_09.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_10.name,Elowen the Druid
-hero.r_10.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_11.name,Faro the Lancer
-hero.r_11.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_12.name,Greta the Alchemist
-hero.r_12.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_13.name,Hale the Monk
-hero.r_13.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_14.name,Ivo the Bard
-hero.r_14.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
-hero.r_15.name,Kaya the Huntress
-hero.r_15.desc,Placeholder Rare hero. Passive +20% DPS at level 1.
+hero.r_05.desc,Hits harder the longer the fight goes on.
 hero.e_01.name,Seraphine the Spellblade
-hero.e_01.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
+hero.e_01.desc,Blends sword and spell into rapid critical strikes.
 hero.e_02.name,Vorn the Warlock
-hero.e_02.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
+hero.e_02.desc,Curses and dark bolts that hit the whole field.
 hero.e_03.name,Lysa the Stormcaller
-hero.e_03.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
+hero.e_03.desc,Calls down storms that crash over every enemy.
 hero.e_04.name,Orrin the Templar
-hero.e_04.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
-hero.e_05.name,Nyx the Shadowdancer
-hero.e_05.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
-hero.e_06.name,Calder the Frostknight
-hero.e_06.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
-hero.e_07.name,Mei the Sage
-hero.e_07.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
-hero.e_08.name,Rhea the Valkyrie
-hero.e_08.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
-hero.e_09.name,Taro the Ronin
-hero.e_09.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
-hero.e_10.name,Zephyr the Windwalker
-hero.e_10.desc,Placeholder Epic hero. Passive +40% DPS at level 1.
+hero.e_04.desc,A burning shield that punishes whoever strikes it.
 hero.l_01.name,Aurelia the Sunblade
-hero.l_01.desc,Placeholder Legendary hero. Passive +80% DPS at level 1.
+hero.l_01.desc,A legendary blade of dawn. Built around crits and speed.
 hero.l_02.name,Morgrim the Dragonbane
-hero.l_02.desc,Placeholder Legendary hero. Passive +80% DPS at level 1.
+hero.l_02.desc,Wears dragon scale and fears nothing. Built around DEF.
 hero.l_03.name,Kael the Starforged
-hero.l_03.desc,Placeholder Legendary hero. Passive +80% DPS at level 1.
+hero.l_03.desc,Channels starlight through living wood. Built around skill damage.
 hero.l_04.name,Ishara the Oracle
-hero.l_04.desc,Placeholder Legendary hero. Passive +80% DPS at level 1.
-hero.l_05.name,Dravik the Bloodlord
-hero.l_05.desc,Placeholder Legendary hero. Passive +80% DPS at level 1.
-hero.l_06.name,Solenne the Lightbringer
-hero.l_06.desc,Placeholder Legendary hero. Passive +80% DPS at level 1.
+hero.l_04.desc,Sees the next blow coming and heals before it lands.
 hero.m_01.name,Eon the Timeless
-hero.m_01.desc,Placeholder Mythic hero. Passive +160% DPS at level 1.
+hero.m_01.desc,Bends time so the party acts first and acts more.
 hero.m_02.name,Vael the Void Empress
-hero.m_02.desc,Placeholder Mythic hero. Passive +160% DPS at level 1.
-hero.m_03.name,Ragnor the World-Ender
-hero.m_03.desc,Placeholder Mythic hero. Passive +160% DPS at level 1.
+hero.m_02.desc,"Tears open the void. Devastating, if she survives."
 hero_tier.c.name,Common
 rarity.c.name,Common
 hero_tier.r.name,Rare
@@ -124,12 +56,85 @@ gear_slot.gloves.name,Gloves
 gear_slot.boots.name,Boots
 gear_slot.ring.name,Ring
 banner.hero_standard.name,Standard Hero Banner
-class.base.name,Recruit
-class.class_1.name,Squire
-class.class_2.name,Knight
-class.class_3.name,Champion
-class.class_4.name,Paragon
 quest.daily_login.name,Log in
 quest.daily_kills.name,Defeat 500 enemies
 quest.daily_boss.name,Challenge a boss
-quest.daily_pulls.name,Recruit 3 heroes
+quest.daily_pulls.name,Recruit 3 companions
+role.tank.name,Tank
+role.tank.desc,Soaks damage and protects the party.
+role.striker.name,Striker
+role.striker.desc,Single-target burst damage.
+role.caster.name,Caster
+role.caster.desc,Area and skill damage.
+role.healer.name,Healer
+role.healer.desc,Heals and keeps the party standing.
+role.support.name,Support
+role.support.desc,Buffs allies and weakens enemies.
+element.fire.name,Fire
+element.water.name,Water
+element.nature.name,Nature
+element.light.name,Light
+element.dark.name,Dark
+promotion.p1.name,Promoted
+promotion.p2.name,Elite
+promotion.p3.name,Ascended
+skill.heavy_strike.name,Heavy Strike
+skill.heavy_strike.desc,Deal 200% ATK damage to the enemy. Cooldown 3 turns.
+skill.taunt.name,Taunt
+skill.taunt.desc,Force the enemy to attack this companion for 2 turns. Cooldown 4 turns.
+skill.rally.name,Rally
+skill.rally.desc,All allies: +20% ATK for 2 turns. Cooldown 4 turns.
+skill.mend.name,Mend
+skill.mend.desc,Heal the weakest ally for 150% ATK. Cooldown 3 turns.
+skill.arc_burst.name,Arc Burst
+skill.arc_burst.desc,Deal 150% ATK damage to all enemies. Cooldown 3 turns.
+skill.purify.name,Purify
+skill.purify.desc,Heal all allies for 80% ATK. Cooldown 4 turns.
+skill.focus.name,Focus
+skill.focus.desc,Self: +25% crit rate for 2 turns. Cooldown 4 turns.
+skill.shield_wall.name,Shield Wall
+skill.shield_wall.desc,Shield all allies for 100% DEF for 2 turns. Cooldown 4 turns.
+skill.haste.name,Haste
+skill.haste.desc,All allies: +20% SPD for 2 turns. Cooldown 4 turns.
+skill.execute.name,Execute
+skill.execute.desc,Deal 350% ATK damage to the enemy. Cooldown 5 turns.
+skill.hex.name,Hex
+skill.hex.desc,The enemy: -20% DEF for 2 turns. Cooldown 4 turns.
+skill.meteor.name,Meteor
+skill.meteor.desc,Deal 300% ATK damage to all enemies. Cooldown 5 turns.
+skill.counter_stance.name,Counter Stance
+skill.counter_stance.desc,Self: +40% DEF for 2 turns. Cooldown 4 turns.
+skill.radiant_beam.name,Radiant Beam
+skill.radiant_beam.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.killer_instinct.name,Killer Instinct
+skill.killer_instinct.desc,Passive: +10% crit rate.
+skill.blade_flurry.name,Blade Flurry
+skill.blade_flurry.desc,Deal 250% ATK damage to the enemy. Cooldown 3 turns.
+skill.flame_burst.name,Flame Burst
+skill.flame_burst.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.iron_skin.name,Iron Skin
+skill.iron_skin.desc,Passive: +20% DEF.
+skill.bulwark.name,Bulwark
+skill.bulwark.desc,Shield all allies for 200% DEF for 2 turns. Cooldown 5 turns.
+skill.thorn_lash.name,Thorn Lash
+skill.thorn_lash.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.arcane_mind.name,Arcane Mind
+skill.arcane_mind.desc,Passive: +15% ATK.
+skill.overload.name,Overload
+skill.overload.desc,Self: +40% ATK for 2 turns. Cooldown 5 turns.
+skill.tidal_crash.name,Tidal Crash
+skill.tidal_crash.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.grace.name,Grace
+skill.grace.desc,Passive: +15% HP.
+skill.ward.name,Ward
+skill.ward.desc,Shield the weakest ally for 150% ATK for 2 turns. Cooldown 4 turns.
+skill.sanctuary.name,Sanctuary
+skill.sanctuary.desc,Heal all allies for 150% ATK. Cooldown 5 turns.
+skill.swiftness.name,Swiftness
+skill.swiftness.desc,Passive: +10% SPD.
+skill.weaken.name,Weaken
+skill.weaken.desc,The enemy: -20% ATK for 2 turns. Cooldown 4 turns.
+skill.battle_hymn.name,Battle Hymn
+skill.battle_hymn.desc,All allies: +30% crit damage for 2 turns. Cooldown 5 turns.
+skill.shadow_rend.name,Shadow Rend
+skill.shadow_rend.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.

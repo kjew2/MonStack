@@ -41,7 +41,7 @@ namespace IdleRng.Sim.Tests
                 TestContext.WriteLine(
                     $"day {day}: stage {sim.State.Stage.Stage,4} (target {targets[day]})  dps {BigNumber.Short(q.Dps),7}  " +
                     $"stat {sim.State.Progression.StatLevel} x{q.StatMult:0.0}  gear x{BigNumber.Short(q.GearMult)}  " +
-                    $"heroes x{q.HeroMult:0.00}  class x{q.ClassMult:0.00}  pulls {sim.State.HeroBanner.TotalPulls}  gems {sim.State.Currencies.Gems}");
+                    $"heroes x{q.HeroMult:0.00}  promo x{q.PromoMult:0.00}  pulls {sim.State.HeroBanner.TotalPulls}  gems {sim.State.Currencies.Gems}");
             }
             sim.Validate();
             Assert.That(sim.State.Stage.Stage, Is.GreaterThan(100));

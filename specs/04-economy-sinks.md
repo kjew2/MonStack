@@ -278,6 +278,8 @@ What to leave room for (P1 candidate, section 14 item 1): a transfer-at-a-fee ac
 
 ## 6. Class advance
 
+> Removed by the overhaul (#60). Replaced by per-companion promotion, a gold sink in phase 1 (`specs/11` section 6).
+
 ```
 OnStageEntered(stage):                                  // called by specs/03 when Stage becomes `stage`
   while ClassAdvances < CLASS_STAGES.Length and stage >= CLASS_STAGES[ClassAdvances]:

@@ -22,7 +22,7 @@ SPAWN_S = 0.5                     # fixed overhead per kill
 MIN_KILL_S = 1.0
 
 # ---------- gold sink: ATK stat levels ----------
-BASE_ATK = 10.0
+BASE_ATK = 10.0  # TODO(#66): pre-overhaul model; specs/11 replaced BASE_ATK, hero DPS% and class advance
 STAT_PER_LVL = 0.05               # statMult = 1 + 0.05 n
 STAT_COST0, STAT_COST_G = 50.0, 1.07
 

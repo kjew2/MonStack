@@ -271,11 +271,11 @@ namespace IdleRng.Runtime.Session
 
         /// <summary>
         /// Forwards events to the caller's sink (respecting its mask) and flags a save after pulls and class
-        /// advances (specs/06 5.3 "immediate" triggers).
+        /// promotions (specs/06 5.3 "immediate" triggers).
         /// </summary>
         sealed class ImportantEventSink : IEventSink
         {
-            const EventKinds SaveTriggers = EventKinds.HeroPulled | EventKinds.ClassAdvanced;
+            const EventKinds SaveTriggers = EventKinds.HeroPulled | EventKinds.CompanionPromoted;
             readonly IEventSink _inner;
 
             public ImportantEventSink(IEventSink inner) { _inner = inner; }
@@ -285,7 +285,7 @@ namespace IdleRng.Runtime.Session
 
             public void Publish(SimEvent e)
             {
-                if (e is HeroPulled || e is ClassAdvanced) SaveRequested = true;
+                if (e is HeroPulled || e is CompanionPromoted) SaveRequested = true;
                 if ((_inner.Mask & KindOf(e)) != 0) _inner.Publish(e);
             }
 
@@ -304,7 +304,7 @@ namespace IdleRng.Runtime.Session
                     case EnhanceAttempted _: return EventKinds.EnhanceAttempted;
                     case HeroPulled _: return EventKinds.HeroPulled;
                     case HeroEquipped _: return EventKinds.HeroEquipped;
-                    case ClassAdvanced _: return EventKinds.ClassAdvanced;
+                    case CompanionPromoted _: return EventKinds.CompanionPromoted;
                     case OfflineGoldCredited _: return EventKinds.OfflineGoldCredited;
                     case DayRolledOver _: return EventKinds.DayRolledOver;
                     case ClockWentBackwards _: return EventKinds.ClockWentBackwards;
