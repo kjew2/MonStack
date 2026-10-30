@@ -81,6 +81,7 @@ src/IdleRng.Runtime/         save format, stores, account save
 src/IdleRng.Bots/            run bots, golden files, the `train` and `golden` verbs
 src/IdleRng.Web/             .NET 8 WebAssembly host: the bridge to the browser UI
 web/                         the monster trainer UI (index.html) and the wasm build
+.github/workflows/check.yml  CI: the full ./check.sh on every PR and push to main (specs/09 section 6)
 ```
 
 ## 6. Decisions log

@@ -58,9 +58,12 @@ dotnet run -c Release --project src/IdleRng.Bots -- golden --check | --update [-
 
 `./check.sh` runs, in order: the content build with no drift (`tools/content_build.py --check`), the .NET build, all tests, `golden --check`, then (when the wasm-tools workload is installed) the WebAssembly build and the headless-browser test that plays a whole run through the buttons (`web/wasm/test/run-trainer.js`). `--fast` skips the golden tests and the golden check; `--no-wasm` skips the web steps; `--no-dotnet` runs only the content check (a partial pass: say so). A change is not done while any check fails.
 
+When the `CI` environment variable is set (anything but empty or `false`; GitHub Actions sets `CI=true`), a missing wasm-tools workload in full mode is an error, not a skip, so CI cannot pass without the web steps. `--no-wasm` still skips them on purpose.
+
+**CI.** `.github/workflows/check.yml` runs the full `./check.sh` on every pull request, every push to `main` and on manual dispatch, on `ubuntu-latest`. It installs Python 3.12, Node 22, the .NET 8 SDK (in its own directory, so newer SDKs on the runner image are not selected and `wasm-tools` matches `net8.0`), the wasm-tools workload, and Playwright (pinned in the workflow, installed outside the repo and found through `NODE_PATH`, since the repo has no `package.json`) with Chromium. NuGet packages are cached. Making the check required for merging is a branch-protection setting on GitHub, not part of the repo.
+
 `RunBotTests` plays every policy on every species, with and without books, and checks that the command log replays to the same hash.
 
 ## 7. Open
 
 - A run-balance harness (score distributions over many seeds per policy and species) when balance resumes.
-- A CI workflow that runs `./check.sh` (#38).

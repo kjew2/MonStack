@@ -15,7 +15,7 @@ Status: **proposal** (agent draft, 2026-10-30; kj has not reviewed it). A high-l
 | # | Item | Kind | Size | Issues |
 |---|---|---|---|---|
 | R0.1 | **Close the MVP goal.** T0-T7 are done (`specs/13` section 6); the goal still lists T7 as in progress. Close it and point to #70. | Fix | S | #69 |
-| R0.2 | **CI workflow running `./check.sh`** on PRs and `main`. Everything else depends on the gates being enforced, and CI has never existed. | Tech | S | #38 |
+| R0.2 | **CI workflow running `./check.sh`** on PRs and `main`. Everything else depends on the gates being enforced. Done: `.github/workflows/check.yml` (`specs/09` section 6); making it a required check is kj's GitHub setting. | Tech | S | #38 |
 | R0.3 | **Pick the game's name**, then do the one mechanical `IdleRng` rename (`specs/13` section 1). Cheaper the earlier it happens; store listing, site and community channels wait on it. | Fix / Tech | S + decision | #47 (name part) |
 | R0.4 | **Answer the open design questions** in `specs/13` section 9 (what overwriting removes, one energy meter, roles and elements). Not blocking, but each is a rule the next specs build on. | Fix | decision | none |
 
