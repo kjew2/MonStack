@@ -2,7 +2,7 @@
 # Run every check in the repo. Agents and humans run this before calling a change done.
 #
 #   ./check.sh            everything (what CI runs, see specs/09 section 13)
-#   ./check.sh --fast     inner loop: skips the acceptance sweep, perf and bench
+#   ./check.sh --fast     inner loop: skips golden tests, the bench and the acceptance sweep
 #   ./check.sh --no-dotnet  only the Python and web checks (for machines without the .NET SDK)
 #
 # Exits non-zero on the first failure.
@@ -44,23 +44,20 @@ dotnet build IdleRng.sln -c Release
 BOTS="dotnet run -c Release --no-build --project src/IdleRng.Bots --"
 
 if [ "$FAST" -eq 1 ]; then
-  step ".NET: unit tests (no acceptance, no perf)"
-  dotnet test IdleRng.sln -c Release --no-build --filter "TestCategory!=Acceptance&TestCategory!=Perf"
+  step ".NET: unit tests (no golden)"
+  dotnet test IdleRng.sln -c Release --no-build --filter "TestCategory!=Golden"
 else
-  step ".NET: tests (incl. acceptance and golden)"
-  dotnet test IdleRng.sln -c Release --no-build --filter "TestCategory!=Perf"
-
-  step ".NET: perf tests"
-  dotnet test IdleRng.sln -c Release --no-build --filter "TestCategory=Perf"
+  step ".NET: all tests"
+  dotnet test IdleRng.sln -c Release --no-build
 
   step "Bots: tick benchmark"
   $BOTS bench --ticks 1000000 --max-ms 2000
 
   step "Bots: acceptance sweep (20 seeds x 30 days)"
   $BOTS acceptance --seeds 1-20 --days 30 --time-budget-s 180
-fi
 
-step "Bots: golden files match"
-$BOTS golden --check
+  step "Bots: golden files match"
+  $BOTS golden --check
+fi
 
 printf '\nAll checks passed.\n'

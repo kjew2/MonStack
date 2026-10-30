@@ -15,7 +15,7 @@ When something is discussed and agreed with the user that diverges from what a s
 
 `./check.sh` runs everything CI runs: content build drift, the web prototype's spec vectors, .NET build and tests, the tick benchmark, the 20-seed acceptance sweep and the golden-file check.
 
-- `./check.sh --fast` for the inner loop (skips acceptance, perf and bench). Run the full `./check.sh` before you finish.
+- `./check.sh --fast` for the inner loop (skips golden tests, the bench and the acceptance sweep). Run the full `./check.sh` before you finish.
 - `./check.sh --no-dotnet` on a machine without the .NET SDK. It is a partial check: say so when you report results.
 - A change is not done while any check fails. Do not weaken a test, threshold or golden file to make it pass unless the user agreed to that change (and then the spec rule above applies).
 - If you add a new kind of check, wire it into `check.sh`.
