@@ -1,0 +1,19 @@
+{
+    "name": "IdleRng.Client",
+    "rootNamespace": "IdleRng.Client",
+    "references": [
+        "IdleRng.Sim",
+        "IdleRng.Client.Core",
+        "UnityEngine.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
