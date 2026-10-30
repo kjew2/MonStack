@@ -57,3 +57,5 @@ This file is how lessons reach the next agent. When the user corrects you on som
 ## Lessons
 
 - Generated test data is large and not for reading. Never open, grep through or hand-edit `golden/` files: regenerate them through the bot CLI, never edit by hand.
+- The Workflow loop applies to every task, including ones that only edit CLAUDE.md or settings. "Show me X" means merge, then show X in the report: it is not a reason to stop before merging.
+- Cloud containers may lack the .NET SDK. `apt-get install -y dotnet-sdk-8.0` works through the proxy (dot.net's install script is blocked). Install it and run the full `./check.sh` instead of settling for `--no-dotnet`.
