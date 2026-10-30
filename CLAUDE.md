@@ -1,5 +1,13 @@
 # Instructions for agents
 
+## Current focus: finalize systems, not balance
+
+The gameplay systems are being redesigned (4v1 party battle, companion builds, affix gear, uniques, daily dungeons; see issue #60). Until kj says otherwise:
+
+- Do not spend effort on balance tuning: no retuning curves, constants or acceptance targets, no tuning passes on the power-curve model, no balance-only PRs. That work will be thrown away when the systems change.
+- Placeholder numbers in new systems are fine. Pick something reasonable and note it as a placeholder.
+- The acceptance sweep failing on main (#41) is known and on hold. Report it as pre-existing; do not tune numbers to fix it. If your change makes acceptance results worse, say so in the PR and ask rather than retuning.
+
 ## Keep the specs current
 
 The specs in `specs/` are the source of truth for this project. Start with `specs/00-overview.md`, which holds the canonical constants and cross-spec contracts.
