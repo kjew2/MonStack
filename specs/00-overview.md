@@ -44,7 +44,8 @@ All constants below are validated by `tools/gacha_model.py` and `tools/power_cur
 | `SPAWN_DELAY_TICKS` | 5 | Dead enemy to next enemy. |
 | `BOSS_EVERY` | 10 | Stage `s` is a boss stage when `s % 10 == 0`. |
 | `BOSS_HP_MULT` | 10 | Boss HP = `BOSS_HP_MULT * HP(s)`. **POC content adds an `intro` boss rule (hp_mult 4) for stages 1-59** so the first wall lands at 60+ (specs/02 section 9 item 3); 10 applies from stage 60. |
-| `BOSS_TIME_TICKS` | 200 | 20 s. Fail = boss despawns, player keeps farming stage `s` mobs. |
+| `BOSS_TIME_TICKS` | 200 | 20 s. Turn limit of the 4v1 boss battle (`specs/11` section 8). Fail (wipe or limit) = boss despawns, player keeps farming stage `s` mobs. |
+| Boss battle | see `specs/11` section 8 | ATB gauge `BATTLE_GAUGE` 1000, `DEF_K_MULT` 0.1, elements x1.3 / x0.8, boss ATK/DEF/SPD/AoE per `boss_rules`. Placeholders. |
 | `BOSS_GOLD_MULT` | 3 | Boss drops 3x the stage's gold. |
 | `STAGE_CAP` | 9000 | Sim emits `StageCapReached` instead of advancing past it; `double` range guard (`specs/03`). |
 
@@ -164,7 +165,7 @@ Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, 
 ## 5. Cross-spec contracts
 
 1. **Sim core is pure C#** (`IdleRng.Sim` assembly). No `UnityEngine` reference, no JSON library, no reflection, no clock reads, no `Math.Pow/Exp/Log` (`specs/03` section 4). The Unity client, the bot harness and the offline catch-up all call the same `Simulation.Tick()` / `Simulation.Advance(ticks)`. Code that needs IO, a real clock or a serializer lives in `IdleRng.Runtime` (plain C#, references `IdleRng.Sim` and Newtonsoft.Json, still no `UnityEngine`), which both the client and the bots reference.
-2. **Every RNG consumer gets its own named stream.** Streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`. A stream is `(seed, counter)`; the counter persists in the save. See `specs/03` for the algorithm and `specs/01` for why the gacha stream is pre-committed.
+2. **Every RNG consumer gets its own named stream.** Streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`, and `battle` (the 4v1 boss battle, `specs/11` section 8). A stream is `(seed, counter)`; the counter persists in the save. See `specs/03` for the algorithm and `specs/01` for why the gacha stream is pre-committed.
 3. **Content is data.** Every number in section 2 lives in a table defined by `specs/05`; code receives a `ContentDb` object and never a literal.
 4. **Save schema is versioned from v1** with forward-only migrations (`specs/06`).
 5. **Server-sensitive operations go through an interface** (`IGachaService`, `IClock`, `ISaveStore`) with a local implementation in the prototype and a documented remote contract (`specs/08`).

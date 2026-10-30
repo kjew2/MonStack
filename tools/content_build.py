@@ -45,6 +45,8 @@ REQUIRED_CONSTANTS = {
     "ENH_SUCCESS_STEP": "double", "ENH_COST_GOLD_MULT": "double",
     "HERO_SLOTS": "int", "HERO_LVL_BONUS": "double",
     "IDLE_CHEST_HOURS": "double", "IDLE_CHEST_GEMS": "int",
+    "BATTLE_GAUGE": "double", "DEF_K_MULT": "double", "ELEMENT_STRONG_MULT": "double", "ELEMENT_WEAK_MULT": "double",
+    "BASIC_ATTACK_POWER": "double", "AI_HEAL_BELOW": "double", "AI_SHIELD_BELOW": "double",
 }
 
 TIERS = ENUMS["Tier"]
@@ -70,7 +72,8 @@ SCHEMA = {
                  key="id", folds={"rates": ["rate_c", "rate_r", "rate_e", "rate_l", "rate_m"]}),
     "boss_rules": T([c("id", "id"), c("from_stage", "int"), c("hp_mult", "double"), c("time_ticks", "int"),
                      c("gold_mult", "double"), c("gear_drop_p", "double"), c("gear_min_rarity", "enum:Tier"),
-                     c("first_clear_gems", "int")], key="id"),
+                     c("first_clear_gems", "int"), c("atk_mult", "double"), c("def_mult", "double"), c("spd", "double"),
+                     c("aoe_every", "int"), c("aoe_power", "double")], key="id"),
     "constants": T([c("key", "string"), c("type", "enum:ConstantType"), c("value", "constval")], key="key"),
     "curves": T([c("id", "enum:CurveId"), c("base", "double"), c("growth", "double")], key="id"),
     "daily_quests": T([c("id", "id"), c("type", "enum:QuestType"), c("target", "int"), c("reward_gems", "int"),
@@ -231,7 +234,13 @@ def validate(t, errs):
     br = t["boss_rules"]
     if not br or br[0]["from_stage"] != 1:
         errs.add("E045", "boss_rules", "first row must have from_stage = 1")
-    # promotions (specs/11 section 9)
+    for r in br:
+        if r["atk_mult"] < 0 or r["def_mult"] < 0 or r["spd"] <= 0 or r["aoe_every"] < 0 or r["aoe_power"] < 0:
+            errs.add("E043", f"boss_rules[{r['id']}]", "atk_mult, def_mult, aoe_power >= 0; spd > 0; aoe_every >= 0")
+    for k in ("BATTLE_GAUGE", "DEF_K_MULT", "ELEMENT_STRONG_MULT", "ELEMENT_WEAK_MULT", "BASIC_ATTACK_POWER"):
+        if k in keys and not keys[k]["value"] > 0:
+            errs.add("E043", f"constants[{k}]", "value out of range (> 0)")
+    # promotions (specs/11 section 10)
     pr = t["promotions"]
     for i, r in enumerate(pr):
         loc = f"promotions[{r['index']}]"
@@ -289,6 +298,8 @@ def validate(t, errs):
             errs.add("E054", loc, f"scales required for kind {kind}")
         if kind in ("buff", "debuff", "passive") and sk["stat"] is None:
             errs.add("E054", loc, f"stat required for kind {kind}")
+        if sk["stat"] == "hp" and kind != "passive":
+            errs.add("E054", loc, "stat hp is only allowed on passives (a timed HP change has no effect)")
         if (kind == "passive") != (sk["cooldown"] == 0):
             errs.add("E043", loc, "cooldown must be 0 for passives and >= 1 otherwise")
         if sk["power"] < 0 or sk["duration"] < 0:

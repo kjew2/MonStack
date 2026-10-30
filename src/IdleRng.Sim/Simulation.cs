@@ -22,7 +22,7 @@ namespace IdleRng.Sim
         readonly long _msPerTick;
         readonly int[][] _questsByType;
 
-        RngStream _gearDrop, _gearRarity, _enhance, _gachaHero;
+        RngStream _gearDrop, _gearRarity, _enhance, _gachaHero, _battle;
 
         bool _dpsDirty = true;
         double _dps, _hit, _statMult, _gearMult, _heroMult, _promoMult, _partyDps, _baseDps;
@@ -71,6 +71,7 @@ namespace IdleRng.Sim
             _gearRarity = s.Rng.Streams[StreamNames.GearRarity];
             _enhance = s.Rng.Streams[StreamNames.Enhance];
             _gachaHero = s.Rng.Streams[StreamNames.GachaHero];
+            _battle = s.Rng.Streams[StreamNames.Battle];
 
             if (s.Gear.Slots == null || s.Gear.Slots.Length != Content.GearSlotCount)
                 s.Gear.Slots = Resize(s.Gear.Slots, Content.GearSlotCount);
@@ -82,6 +83,15 @@ namespace IdleRng.Sim
             if (s.Daily.Progress == null || s.Daily.Progress.Length != nq) s.Daily.Progress = Resize(s.Daily.Progress, nq);
             if (s.Daily.Rewarded == null || s.Daily.Rewarded.Length != nq) s.Daily.Rewarded = Resize(s.Daily.Rewarded, nq);
             if (s.Combat.Phase == CombatPhase.Spawning && s.Combat.SpawnTimer <= 0) s.Combat.SpawnTimer = _k.SpawnDelayTicks;
+            // a save from before the battle existed (or a boss with no battle): start the battle now, no draws needed
+            if (s.Combat.Phase == CombatPhase.Fighting && s.Combat.EnemyIsBoss && s.Combat.Battle == null)
+            {
+                s.Combat.Battle = NewBossBattle(s.Stage.Stage);
+                s.Combat.EnemyHp = s.Combat.Battle.Boss.Hp;
+                s.Combat.EnemyMaxHp = s.Combat.Battle.Boss.MaxHp;
+                s.Combat.BossTimer = Content.BossRuleFor(s.Stage.Stage).TimeTicks;   // a fresh fight gets the full turn limit
+            }
+            if (!(s.Combat.Phase == CombatPhase.Fighting && s.Combat.EnemyIsBoss)) s.Combat.Battle = null;
         }
 
         static T[] Resize<T>(T[] a, int n)
@@ -110,6 +120,19 @@ namespace IdleRng.Sim
                 return;
             }
 
+            if (cb.EnemyIsBoss)
+            {
+                // 4v1 ATB battle (specs/11 section 8); the boss timer is the turn limit
+                var outcome = Battle.BattleEngine.Step(Content, cb.Battle, _battle,
+                    Wants(EventKinds.BattleAction) || Wants(EventKinds.HitLanded) ? _onBattleAction : null);
+                cb.EnemyHp = cb.Battle.Boss.Hp;
+                if (outcome == Battle.BattleOutcome.Won) { Kill(); return; }
+                if (outcome == Battle.BattleOutcome.Wiped) { BossFail(wiped: true); return; }
+                cb.BossTimer -= 1;
+                if (cb.BossTimer <= 0) BossFail(wiped: false);
+                return;
+            }
+
             cb.AttackTimer -= 1;
             if (cb.AttackTimer <= 0)
             {
@@ -119,11 +142,73 @@ namespace IdleRng.Sim
                 if (Wants(EventKinds.HitLanded)) _sink.Publish(new HitLanded(st.Tick, dmg, Math.Max(0, cb.EnemyHp)));
                 if (cb.EnemyHp <= 0) { Kill(); return; }
             }
-            if (cb.EnemyIsBoss)
+        }
+
+        // ================================================================ boss battle (specs/11 section 8)
+
+        Action<Battle.BattleActionInfo> _onBattleActionField;
+
+        Action<Battle.BattleActionInfo> _onBattleAction => _onBattleActionField ??= a =>
+        {
+            if (Wants(EventKinds.BattleAction))
+                _sink.Publish(new BattleAction(State.Tick, a.Actor ?? Battle.BattleEngine.BossTarget, a.Skill?.Id, a.Target, a.Amount, a.Crit, a.Aoe));
+            if (a.Actor != null && a.Target == Battle.BattleEngine.BossTarget && a.Amount > 0 && Wants(EventKinds.HitLanded))
+                _sink.Publish(new HitLanded(State.Tick, a.Amount, Math.Max(0, State.Combat.Battle.Boss.Hp)));
+        };
+
+        /// <summary>Snapshot the party (stats x level x promotion x stat layer x gear) against the boss of <paramref name="stage"/>.</summary>
+        internal Battle.BattleState NewBossBattle(int stage)
+        {
+            double power = StatMultCached * GearMultCached;
+            var eq = State.Heroes.Equipped;
+            var party = new Battle.BattleUnit[eq.Length];
+            for (int i = 0; i < eq.Length; i++)
             {
-                cb.BossTimer -= 1;
-                if (cb.BossTimer <= 0) BossFail();
+                string id = eq[i];
+                if (id == null || !Content.Heroes.ContainsKey(id)) continue;
+                int lvl = Content.HeroLevel(State.Heroes.Copies.TryGetValue(id, out int c) ? c : 0);
+                if (lvl <= 0) continue;
+                party[i] = Battle.BattleEngine.CreateCompanion(Content, id, lvl, PromotionsOf(id), power);
             }
+            return Battle.BattleEngine.Start(Content, party, Battle.BattleEngine.CreateBoss(Content, stage), stage);
+        }
+
+        /// <summary>
+        /// Would the current party beat the boss of the current stage? Runs the whole battle on copies (a cloned battle
+        /// stream), so nothing in the state changes. Used by bots and the UI's retry hint.
+        /// </summary>
+        internal bool SimulateBossWin()
+        {
+            int stage = State.Stage.Stage;
+            ulong counter = _battle.Counter;
+            if (_clearableKnown && _clearableBuild == _buildVersion && _clearableStage == stage && _clearableCounter == counter)
+                return _clearable;
+            _clearable = SimulateBossWinUncached(stage);
+            _clearableKnown = true;
+            _clearableBuild = _buildVersion;
+            _clearableStage = stage;
+            _clearableCounter = counter;
+            return _clearable;
+        }
+
+        // BossClearable cache: valid while the build (anything that marks DPS dirty), stage and battle stream are unchanged
+        bool _clearableKnown, _clearable;
+        long _clearableBuild, _buildVersion;
+        int _clearableStage;
+        ulong _clearableCounter;
+
+        bool SimulateBossWinUncached(int stage)
+        {
+            var b = NewBossBattle(stage);
+            var rng = _battle.Clone();
+            int limit = Content.BossRuleFor(stage).TimeTicks;
+            for (int t = 0; t < limit; t++)
+            {
+                var o = Battle.BattleEngine.Step(Content, b, rng);
+                if (o == Battle.BattleOutcome.Won) return true;
+                if (o == Battle.BattleOutcome.Wiped) return false;
+            }
+            return false;
         }
 
         /// <summary>Tick() repeated.</summary>
@@ -145,11 +230,12 @@ namespace IdleRng.Sim
             if (isBoss)
             {
                 var rule = Content.BossRuleFor(s);
-                hp = rule.HpMult * hp;
+                cb.Battle = NewBossBattle(s);
+                hp = cb.Battle.Boss.MaxHp;
                 cb.BossTimer = rule.TimeTicks;
                 QuestProgress(QuestType.ClearBoss, 1);   // boss fights STARTED count (specs/00 section 7.2)
             }
-            else cb.BossTimer = 0;
+            else { cb.BossTimer = 0; cb.Battle = null; }
             cb.EnemyIsBoss = isBoss;
             cb.EnemyHp = cb.EnemyMaxHp = hp;
             cb.AttackTimer = _k.AttackIntervalTicks;
@@ -200,6 +286,7 @@ namespace IdleRng.Sim
             cb.EnemyIsBoss = false;
             cb.EnemyHp = 0;
             cb.BossTimer = 0;
+            cb.Battle = null;
         }
 
         void AdvanceStage(bool viaBoss)
@@ -221,7 +308,7 @@ namespace IdleRng.Sim
             if (Wants(EventKinds.StageAdvanced)) _sink.Publish(new StageAdvanced(State.Tick, from, from + 1, viaBoss));
         }
 
-        void BossFail()
+        void BossFail(bool wiped)
         {
             var stg = State.Stage;
             var cb = State.Combat;
@@ -230,12 +317,13 @@ namespace IdleRng.Sim
             stg.BossFailsOnStage += 1;
             State.Lifetime.BossFails += 1;
             if (State.Lifetime.FirstWallStage == 0) State.Lifetime.FirstWallStage = s;
-            if (Wants(EventKinds.BossFailed)) _sink.Publish(new BossFailed(State.Tick, s, stg.BossFailsOnStage));
+            if (Wants(EventKinds.BossFailed)) _sink.Publish(new BossFailed(State.Tick, s, stg.BossFailsOnStage, wiped));
             cb.Phase = CombatPhase.Spawning;
             cb.SpawnTimer = _k.SpawnDelayTicks;
             cb.EnemyIsBoss = false;
             cb.EnemyHp = 0;
             cb.BossTimer = 0;
+            cb.Battle = null;
         }
 
         // ================================================================ economy hooks
@@ -329,7 +417,7 @@ namespace IdleRng.Sim
 
         // ================================================================ DPS (specs/11 section 7)
 
-        internal void MarkDpsDirty() => _dpsDirty = true;
+        internal void MarkDpsDirty() { _dpsDirty = true; _buildVersion++; }
 
         internal double HitDamageCached
         {

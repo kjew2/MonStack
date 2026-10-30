@@ -304,6 +304,7 @@ namespace IdleRng.Runtime.Session
                     case EnhanceAttempted _: return EventKinds.EnhanceAttempted;
                     case HeroPulled _: return EventKinds.HeroPulled;
                     case HeroEquipped _: return EventKinds.HeroEquipped;
+                    case BattleAction _: return EventKinds.BattleAction;
                     case CompanionPromoted _: return EventKinds.CompanionPromoted;
                     case OfflineGoldCredited _: return EventKinds.OfflineGoldCredited;
                     case DayRolledOver _: return EventKinds.DayRolledOver;

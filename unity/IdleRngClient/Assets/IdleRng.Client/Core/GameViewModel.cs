@@ -142,7 +142,7 @@ namespace IdleRng.Client.Core
                     break;
                 case BossFailed b:
                     if (_summaryMode) break;
-                    Feed.Add("BOSS FAILED on " + b.Stage + " (attempt " + b.FailsOnStage + ")");
+                    Feed.Add("BOSS FAILED on " + b.Stage + (b.Wiped ? ": party wiped" : ": out of turns") + " (attempt " + b.FailsOnStage + ")");
                     Toasts.Push("Boss failed on stage " + b.Stage + " - farming. Get stronger, then retry.", 2.5);
                     break;
                 case BossCleared bc:
@@ -253,7 +253,7 @@ namespace IdleRng.Client.Core
             c.HitsToKill = q.HitsToKill(c.EnemyIsBoss ? c.EnemyMaxHp : q.Hp(stage));
             c.KillTimeS = q.KillTimeSeconds(stage);
             c.IsWalled = q.IsWalled;
-            c.BossClearable = c.IsBossStage && q.BossClearable;
+            c.BossClearable = c.IsWalled && q.BossClearable;   // runs a whole battle (cached by the sim); only needed while walled
             c.NeedDps = q.BossHp(stage) * _k.TickHz / rule.TimeTicks;
             c.NeedDpsRatio = c.Dps > 0 ? c.NeedDps / c.Dps : 0;
             c.ShowBossButton = c.IsWalled;
@@ -264,6 +264,15 @@ namespace IdleRng.Client.Core
             var eq = st.Heroes.Equipped;
             for (int i = 0; i < c.PartyGlyphs.Length; i++)
                 c.PartyGlyphs[i] = i < eq.Length && eq[i] != null ? Glyph(eq[i]) : null;
+            var bt = q.BossBattle;
+            if (bt == null) c.BattleText = "";
+            else
+            {
+                var sb = new System.Text.StringBuilder("Boss (" + _c.Text(_c.Elements[bt.Boss.Element].NameKey) + ")  party:");
+                foreach (var u in bt.Party)
+                    if (u != null) sb.Append("  ").Append(Glyph(u.HeroId)).Append(' ').Append(u.Hp <= 0 ? "KO" : TextFmt.Num(u.Hp) + "/" + TextFmt.Num(u.MaxHp));
+                c.BattleText = sb.ToString();
+            }
             c.ChestReady = q.IsChestReady;
             c.ChestReadyInSec = Math.Max(0, q.ChestReadyAtServerSec - q.NowServerSec);
             c.ChestGems = _k.IdleChestGems;

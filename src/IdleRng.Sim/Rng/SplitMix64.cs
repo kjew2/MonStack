@@ -41,9 +41,16 @@ namespace IdleRng.Sim.Rng
     public static class StreamNames
     {
         public const string Combat = "combat", GearDrop = "gear_drop", GearRarity = "gear_rarity",
-                            Enhance = "enhance", GachaHero = "gacha_hero";
+                            Enhance = "enhance", GachaHero = "gacha_hero", Battle = "battle";
 
-        public static readonly string[] All = { Combat, GearDrop, GearRarity, Enhance, GachaHero };
+        /// <summary>Battle is the 4v1 boss battle's stream (crit rolls, boss targeting; specs/11 section 8).</summary>
+        public static readonly string[] All = { Combat, GearDrop, GearRarity, Enhance, GachaHero, Battle };
+
+        /// <summary>
+        /// Streams every save has had since schema v1. Streams added later (battle) are created by the Simulation
+        /// constructor when missing, so a save without them is valid.
+        /// </summary>
+        public static readonly string[] Required = { Combat, GearDrop, GearRarity, Enhance, GachaHero };
 
         /// <summary>Per-stream seed derived from the profile seed.</summary>
         public static ulong StreamSeed(ulong profileSeed, string name) =>

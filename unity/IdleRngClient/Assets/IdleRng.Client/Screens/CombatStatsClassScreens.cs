@@ -7,12 +7,14 @@ namespace IdleRng.Client.Screens
     public sealed class CombatScreen : ScreenBase
     {
         readonly VisualElement _wallCard;
-        readonly Label _wallText, _feed, _lifetime;
+        readonly Label _wallText, _feed, _lifetime, _battle;
         readonly Button _chest;
         int _feedVersion = -1;
 
         public CombatScreen(GameViewModel vm) : base(vm)
         {
+            _battle = Ui.Text("", Ui.Small);
+            Root.Add(_battle);
             _wallCard = Ui.Panel();
             Ui.Border(_wallCard, 3, Palette.Bad);
             _wallText = Ui.Text("");
@@ -38,10 +40,11 @@ namespace IdleRng.Client.Screens
         {
             var c = Vm.Combat;
             Ui.Show(_wallCard, c.IsWalled);
+            Ui.Set(_battle, c.BattleText);
             if (c.IsWalled)
                 Ui.Set(_wallText, "BOSS FAILED (attempt " + c.BossFailsOnStage + ")\n" +
                                   "Your DPS " + TextFmt.Num(c.Dps) + "   Need " + TextFmt.Num(c.NeedDps) + "\n" +
-                                  "Need ~" + TextFmt.Ratio(c.NeedDpsRatio) + "x DPS" + (c.BossClearable ? "  (clearable now!)" : "") + "\n" +
+                                  (c.BossClearable ? "Your party can beat it now!" : "Your party would still lose: get stronger or bring a tank/healer") + "\n" +
                                   "Farming stage " + c.Stage + " mobs meanwhile.");
             if (_feedVersion != Vm.Feed.Version) { _feedVersion = Vm.Feed.Version; Ui.Set(_feed, Vm.Feed.Text()); }
             Ui.Set(_chest, c.ChestReady ? "Claim idle chest (+" + c.ChestGems + " gems)"

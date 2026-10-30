@@ -101,7 +101,8 @@
           }
           break;
         }
-        case 'bossFailed': log('Boss failed on stage ' + e.stage + ' (attempt ' + e.attempt + ')', 'bad'); toast('Boss failed. Farming stage ' + e.stage + '.', undefined, 2000); break;
+        case 'bossFailed': log('Boss failed on stage ' + e.stage + (e.wiped ? ': party wiped' : ': out of turns') + ' (attempt ' + e.attempt + ')', 'bad'); toast((e.wiped ? 'Party wiped' : 'Out of turns') + '. Farming stage ' + e.stage + '.', undefined, 2000); break;
+        case 'skill': if (speed <= 5) log(e.actorName + ': ' + e.skill + (e.amount > 0 ? ' ' + fmt(e.amount) : '') + (e.crit ? ' (crit)' : ''), 'muted'); break;
         case 'bossCleared': log('Boss cleared on stage ' + e.stage, 'ok'); break;
         case 'firstClear': log('+' + e.gems + ' gems first clear (stage ' + e.stage + ')', 'gems'); break;
         case 'questCompleted': log('Quest done: ' + e.label + '  +' + e.gems + ' gems', 'gems'); toast('Quest done: ' + e.label + '  +' + e.gems + ' gems'); break;
@@ -116,7 +117,6 @@
       }
     }
   }
-  const needX = () => (Math.ceil(sim.needDps() / sim.dps() * 10) / 10).toFixed(1) + 'x';
   const hours = (s) => s >= 3600 ? (s / 3600).toFixed(1) + ' h' : Math.round(s / 60) + ' min';
 
   // ------------------------------------------------------------ main loop
@@ -187,6 +187,7 @@
     let label;
     if (cb.phase === 'spawning') label = st.boss === 'pending' ? 'Boss incoming' : SP.enemyName(st.stage, false);
     else label = SP.enemyName(st.stage, cb.enemyIsBoss);
+    if (cb.battle && C.elements[cb.battle.bossElement]) label += ' · ' + C.elements[cb.battle.bossElement].name;
     setText($('enemyLabel'), label);
 
     const hpFrac = cb.phase === 'fighting' ? Math.max(0, cb.enemyHp / cb.enemyMaxHp) : 0;
@@ -228,10 +229,13 @@
   }
   function drawStripSlow() {
     const party = sim.state.heroes.party;
+    const battle = sim.state.combat.battle;   // 4v1 boss battle: HP bar per companion (specs/11 section 8)
     party.forEach((id, i) => {
       const el = partyStripEls[i];
+      const bu = battle && battle.party[i];
+      if (bu) el.style.setProperty('--hp', String(Math.max(0, bu.hp / bu.maxHp)));
       const t = id ? sim.heroById[id].tier : -1;
-      const cls = 'pslot' + (id ? ' filled' : '') + (el.classList.contains('flash') ? ' flash' : '');
+      const cls = 'pslot' + (id ? ' filled' : '') + (bu ? ' inbattle' : '') + (bu && bu.hp <= 0 ? ' ko' : '') + (el.classList.contains('flash') ? ' flash' : '');
       if (el.className !== cls) el.className = cls;
       if ((el.dataset.id || '') !== (id || '')) {
         el.dataset.id = id || '';
@@ -254,7 +258,7 @@
     if (walled) {
       const clear = sim.bossClearable();
       toggle(bb, 'clearable', clear);
-      setText(bb, clear ? 'Boss: clearable' : 'Boss: need ~' + needX());
+      setText(bb, clear ? 'Boss: clearable' : 'Boss: not yet');
     }
   }
   $('bossBtn').addEventListener('click', () => { const r = sim.attemptBoss(); if (!r.ok) toast(r.reason === 'bossAlreadyPending' ? 'Boss is already coming' : 'No boss to fight'); });
@@ -329,9 +333,9 @@
         setHidden(wall, !walled);
         if (walled) {
           setText(wallTitle, 'Boss failed (attempt ' + st.bossFailsOnStage + ')');
-          setText(wallLine, 'Boss HP ' + fmt(sim.bossHp(st.stage)) + '  ·  your DPS ' + fmt(sim.dps()) + '  ·  need ' + fmt(sim.needDps()));
+          setText(wallLine, 'Boss HP ' + fmt(sim.bossHp(st.stage)) + '  ·  your DPS ' + fmt(sim.dps()) + '  ·  rough DPS guide ' + fmt(sim.needDps()));
           const clear = sim.bossClearable();
-          setText(wallNeed, clear ? 'You can beat it now.' : 'Need about ' + needX() + ' DPS. Buy ATK levels, enhance gear, summon or promote companions. Farming stage ' + st.stage + ' mobs meanwhile.');
+          setText(wallNeed, clear ? 'Your party can beat it now.' : 'Your party would still lose. Buy ATK levels, enhance gear, summon or promote companions, or bring a tank or healer. Farming stage ' + st.stage + ' mobs meanwhile.');
           setText(retry, clear ? 'Fight boss' : 'Retry boss');
         }
         C.quests.forEach((q, i) => {

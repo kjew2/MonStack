@@ -334,6 +334,8 @@ Units, to avoid a recurring confusion: a gear piece's `BasePct` is a fraction (`
 
 ## 7. Tick loop and combat resolution
 
+> Overhaul (#60): boss fights are a 4v1 ATB battle stepped once per tick (`specs/11` section 8); the boss timer is its turn limit. Normal enemies still take one party hit per `ATTACK_INTERVAL_TICKS`.
+
 ### 7.1 Entry points
 
 ```csharp

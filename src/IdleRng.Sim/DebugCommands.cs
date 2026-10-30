@@ -54,6 +54,7 @@ namespace IdleRng.Sim
             st.Combat.EnemyIsBoss = false;
             st.Combat.EnemyHp = 0;
             st.Combat.BossTimer = 0;
+            st.Combat.Battle = null;
             _sim.MarkDpsDirty();
         }
     }

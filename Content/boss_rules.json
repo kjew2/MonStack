@@ -9,7 +9,12 @@
       "gold_mult": 3.0,
       "gear_drop_p": 0.1,
       "gear_min_rarity": "R",
-      "first_clear_gems": 10
+      "first_clear_gems": 10,
+      "atk_mult": 0.4,
+      "def_mult": 0.02,
+      "spd": 100.0,
+      "aoe_every": 4,
+      "aoe_power": 0.6
     },
     {
       "id": "default",
@@ -19,7 +24,12 @@
       "gold_mult": 3.0,
       "gear_drop_p": 0.1,
       "gear_min_rarity": "R",
-      "first_clear_gems": 10
+      "first_clear_gems": 10,
+      "atk_mult": 0.4,
+      "def_mult": 0.02,
+      "spd": 100.0,
+      "aoe_every": 4,
+      "aoe_power": 0.6
     }
   ]
 }

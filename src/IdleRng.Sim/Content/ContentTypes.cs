@@ -45,6 +45,18 @@ namespace IdleRng.Sim.Content
         public double IdleChestHours { get; internal set; }      // IDLE_CHEST_HOURS
         public int IdleChestGems { get; internal set; }          // IDLE_CHEST_GEMS
 
+        // 4v1 boss battle (specs/11 section 8)
+        public double BattleGauge { get; internal set; }         // BATTLE_GAUGE
+        public double DefKMult { get; internal set; }            // DEF_K_MULT
+        public double ElementStrongMult { get; internal set; }   // ELEMENT_STRONG_MULT
+        public double ElementWeakMult { get; internal set; }     // ELEMENT_WEAK_MULT
+        public double BasicAttackPower { get; internal set; }    // BASIC_ATTACK_POWER
+        public double AiHealBelow { get; internal set; }         // AI_HEAL_BELOW
+        public double AiShieldBelow { get; internal set; }       // AI_SHIELD_BELOW
+
+        /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
+        public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
+
         public int TierOf(int stage) => (stage / TierWidth) * TierWidth;
         public bool IsBossStage(int stage) => stage % BossEvery == 0;
         public double EnhSuccess(int level) => Math.Max(EnhSuccessFloor, 1.0 - EnhSuccessStep * level);
@@ -95,6 +107,15 @@ namespace IdleRng.Sim.Content
         public double GearDropP { get; internal set; }
         public Rarity GearMinRarity { get; internal set; }
         public int FirstClearGems { get; internal set; }
+
+        // boss battle stats (specs/11 section 8): ATK/DEF are multiples of the stage's normal enemy HP
+        public double AtkMult { get; internal set; }
+        public double DefMult { get; internal set; }
+        public double Spd { get; internal set; }
+
+        /// <summary>Every Nth boss action hits the whole party for AoePower x ATK (0 = never).</summary>
+        public int AoeEvery { get; internal set; }
+        public double AoePower { get; internal set; }
     }
 
     public sealed class GearSlotDef

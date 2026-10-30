@@ -12,7 +12,8 @@ namespace IdleRng.Sim.Events
     public sealed record HitLanded(long Tick, double Damage, double RemainingHp) : SimEvent(Tick);
     public sealed record EnemyKilled(long Tick, int Stage, bool IsBoss, double Gold) : SimEvent(Tick);
     public sealed record StageAdvanced(long Tick, int FromStage, int ToStage, bool ViaBoss) : SimEvent(Tick);
-    public sealed record BossFailed(long Tick, int Stage, int FailsOnStage) : SimEvent(Tick);
+    /// <summary>Wiped = the party died; otherwise the boss outlasted the turn limit.</summary>
+    public sealed record BossFailed(long Tick, int Stage, int FailsOnStage, bool Wiped = false) : SimEvent(Tick);
     public sealed record BossCleared(long Tick, int Stage) : SimEvent(Tick);
 
     /// <summary>Equipped=false means the piece was sold immediately; SoldFor is the gold from whichever piece was sold.</summary>
@@ -27,6 +28,9 @@ namespace IdleRng.Sim.Events
 
     /// <summary>A companion was promoted to <paramref name="Promotions"/> (specs/11 section 6).</summary>
     public sealed record CompanionPromoted(long Tick, string Hero, int Promotions, double Cost) : SimEvent(Tick);
+    /// <summary>One action in a boss battle (opt-in, like HitLanded). Actor/Target are hero ids, "boss", or null (boss / several).</summary>
+    public sealed record BattleAction(long Tick, string Actor, string SkillId, string Target, double Amount, bool Crit, bool Aoe) : SimEvent(Tick);
+
     public sealed record OfflineGoldCredited(long Tick, long ElapsedSec, long CreditedSec, bool Capped, double Gold) : SimEvent(Tick);
     public sealed record DayRolledOver(long Tick, long DayKey) : SimEvent(Tick);
     public sealed record ClockWentBackwards(long Tick, long ByMs) : SimEvent(Tick);
@@ -43,11 +47,11 @@ namespace IdleRng.Sim.Events
         BossCleared = 1 << 5, GearDropped = 1 << 6, StatLeveled = 1 << 7, EnhanceAttempted = 1 << 8, HeroPulled = 1 << 9,
         HeroEquipped = 1 << 10, CompanionPromoted = 1 << 11, OfflineGoldCredited = 1 << 12, DayRolledOver = 1 << 13,
         ClockWentBackwards = 1 << 14, StageCapReached = 1 << 15, QuestCompleted = 1 << 16, FirstClear = 1 << 17,
-        IdleChestClaimed = 1 << 18,
-        All = (1u << 19) - 1,
+        IdleChestClaimed = 1 << 18, BattleAction = 1 << 19,
+        All = (1u << 20) - 1,
 
-        /// <summary>The two per-enemy events are opt-in.</summary>
-        Default = All & ~(HitLanded | EnemySpawned),
+        /// <summary>The per-enemy and per-action events are opt-in.</summary>
+        Default = All & ~(HitLanded | EnemySpawned | BattleAction),
     }
 
     public interface IEventSink

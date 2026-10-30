@@ -42,9 +42,17 @@ namespace IdleRng.Sim
 
         public bool IsBossStage => K.IsBossStage(S.Stage.Stage);
 
-        /// <summary>Would the boss of the current stage die within its timer at current DPS?</summary>
-        public bool BossClearable =>
-            (double)HitsToKill(BossHp(S.Stage.Stage)) * K.AttackIntervalTicks <= C.BossRuleFor(S.Stage.Stage).TimeTicks;
+        /// <summary>
+        /// Would the current party beat the boss of the current stage? Runs the 4v1 battle to the end on copies
+        /// (specs/11 section 8): no state or RNG counter changes.
+        /// </summary>
+        public bool BossClearable => _sim.SimulateBossWin();
+
+        /// <summary>The boss battle in progress, or null. Read-only use (UI party HP bars).</summary>
+        public Battle.BattleState BossBattle => S.Combat.Battle;
+
+        /// <summary>The boss element on a stage (rotates every BOSS_EVERY stages).</summary>
+        public string BossElement(int stage) => C.BossElement(stage);
 
         public bool IsWalled => S.Stage.Boss == BossPhase.Walled;
 

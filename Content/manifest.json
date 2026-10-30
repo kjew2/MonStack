@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2.1",
+  "content_version": "2.2",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "banners": {
@@ -9,11 +9,11 @@
     },
     "boss_rules": {
       "file": "boss_rules.json",
-      "sha256": "e64c9c0323f51839c6b61a3171671611740d52cc1be0d28ecae4b94530d34819"
+      "sha256": "a35692dab219728ebd14673518837f3af07ace220f1423ed335a37edd4b54930"
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "bca849cde04c2cc075f08d068ee3163d7830ffb7802b12dce68240156a148b6e"
+      "sha256": "23aaf37459108c0e24c1ac6e05092789b607885b894f31d70f314a8b85e830d2"
     },
     "curves": {
       "file": "curves.json",
@@ -72,5 +72,5 @@
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "f7c9b9d3e745bbf4563305876e578c6877badee547f5e03856188fd8daebbd30"
+  "content_hash": "a77f919a83a680e19722f8ed210835a298bef3f1df52c6701230b290b040466e"
 }

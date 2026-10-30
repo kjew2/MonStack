@@ -37,12 +37,12 @@ A `piece` argument is `{"tier":int,"rarity":int,"enh":int}`. Optional args may b
 ### UiState (what `State()` returns)
 
 camelCase, RNG internals and seeds omitted:
-`{ schema, contentVersion, profileId, createdUtcMs, tick, stage:{stage,killsInStage,boss,bossFailsOnStage}, combat:{phase,spawnTimer,enemyHp,enemyMaxHp,enemyIsBoss,attackTimer,bossTimer}, cur:{gold,gems,shards,freePullsDaily,freePullsBanked}, statLevel, gear:[null|{tier,rarity,enh}] (6), heroes:{owned:{id:copies},party:[null|id] (4),promotions:{id:n}}, banner:{pity,totalPulls}, daily:{dayKey,progress:[],rewarded:[]}, prog:{highestFirstClearBoss,chestTimerStartMs,tutorialGranted}, clock:{lastSyncUtcMs,tickAtLastSync}, life:{kills,bossKills,bossFails,gearDrops,enhAttempts,enhSuccesses,goldEarned,offlineGold,firstWallStage,pulls,lplus} }`.
+`{ schema, contentVersion, profileId, createdUtcMs, tick, stage:{stage,killsInStage,boss,bossFailsOnStage}, combat:{phase,spawnTimer,enemyHp,enemyMaxHp,enemyIsBoss,attackTimer,bossTimer,battle:null|{bossElement,party:[null|{id,hp,maxHp,shield,taunt}]}}, cur:{gold,gems,shards,freePullsDaily,freePullsBanked}, statLevel, gear:[null|{tier,rarity,enh}] (6), heroes:{owned:{id:copies},party:[null|id] (4),promotions:{id:n}}, banner:{pity,totalPulls}, daily:{dayKey,progress:[],rewarded:[]}, prog:{highestFirstClearBoss,chestTimerStartMs,tutorialGranted}, clock:{lastSyncUtcMs,tickAtLastSync}, life:{kills,bossKills,bossFails,gearDrops,enhAttempts,enhSuccesses,goldEarned,offlineGold,firstWallStage,pulls,lplus} }`.
 `boss` is `"none"|"pending"|"walled"`; `phase` is `"spawning"|"fighting"`. Numbers are JSON numbers; doubles are written in .NET/JS shortest round-trip form so they parse back to the identical double. `owned` and `heroes.owned` key order is sorted by id.
 
 ### Events (what `Drain()` returns)
 
-Objects with `type`, `tick` and per-type fields (see `src/IdleRng.Web/MAPPING.md`): `hit`, `spawn`, `kill`, `bossCleared`, `bossFailed`, `firstClear`, `stageAdvanced`, `promoted`, `gearDropped`, `questCompleted`, `chestClaimed`, `dayRolledOver`, `offlineGold`, `clockWentBackwards`, `statLeveled`, `enhanced`, `pulled`, `stageCap`. Same order within a tick. `hit` events are only emitted after `SetEmitHits(1)`.
+Objects with `type`, `tick` and per-type fields (see `src/IdleRng.Web/MAPPING.md`): `hit`, `spawn`, `kill`, `bossCleared`, `bossFailed` (with `wiped`), `firstClear`, `stageAdvanced`, `promoted`, `skill` (a companion used a kit skill in a boss battle: actor, actorName, skill, amount, crit), `gearDropped`, `questCompleted`, `chestClaimed`, `dayRolledOver`, `offlineGold`, `clockWentBackwards`, `statLeveled`, `enhanced`, `pulled`, `stageCap`. Same order within a tick. `hit` events are only emitted after `SetEmitHits(1)`.
 
 ### UiContent (what `UiContent()` returns)
 

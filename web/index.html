@@ -71,6 +71,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--gems);
 .pslot.filled { border: 0; border-bottom: 3px solid var(--slot-col, transparent); }
 .pslot .sprite { width: 28px; height: 28px; }
 .pslot.flash { transform: translateY(-4px); }
+.pslot { position: relative; }
+.pslot.inbattle::after { content: ''; position: absolute; left: 0; bottom: -7px; height: 3px; width: calc(var(--hp, 1) * 100%); background: var(--ok); border-radius: 2px; }
+.pslot.ko { opacity: .35; }
 .player { width: 72px; height: 72px; display: grid; place-items: center; }
 .player .sprite { width: 68px; height: 68px; }
 .enemy { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; font: 600 12px/1.1 var(--font-display); color: var(--text); text-shadow: 0 1px 2px #000; transition: transform .08s, opacity .12s; }

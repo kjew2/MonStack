@@ -87,7 +87,7 @@ namespace IdleRng.Runtime.Save
             };
         }
 
-        // ---- v1 -> v2: party and builds overhaul (specs/11 section 8). Literals frozen from content 1.0 / 2.0.
+        // ---- v1 -> v2: party and builds overhaul (specs/11 section 9). Literals frozen from content 1.0 / 2.0.
 
         /// <summary>Hero ids kept by content 2.0. Every other v1 id is converted to shards.</summary>
         static readonly HashSet<string> V2KeptHeroes = new HashSet<string>(StringComparer.Ordinal)
