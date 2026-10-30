@@ -103,6 +103,7 @@ namespace IdleRng.Client.Core
         public double NextPullLplus;
         public PullCard[] LastResults = new PullCard[0];
         public string LastSummary = "";
+        public string RatesText = "";
         public int ResultsVersion;
     }
 

@@ -43,9 +43,35 @@ namespace IdleRng.Client.Core
                 int n = ++perTier[(int)h.Tier];
                 _glyphs[h.Id] = h.Tier + n.ToString("00");
             }
+            Gacha.RatesText = BuildRatesText(_c.HeroBanner);
             Gear.Slots = new GearSlotRow[_c.GearSlotCount];
             for (int i = 0; i < Gear.Slots.Length; i++) Gear.Slots[i] = new GearSlotRow();
             Refresh();
+        }
+
+        /// <summary>Base rates plus the pity-consolidated L+/M rates (specs/07 section 11.6, specs/01 section 3.3).</summary>
+        static string BuildRatesText(BannerDef b)
+        {
+            double survive = 1, expected = 0;
+            for (int n = 1; n <= b.PityHard; n++)
+            {
+                double q = b.PityRate(n);
+                expected += n * survive * q;
+                survive *= 1 - q;
+            }
+            double lplus = expected > 0 ? 1 / expected : 0;
+            var sb = new StringBuilder("Rates: ");
+            for (int t = 0; t < b.Rates.Count; t++)
+            {
+                if (t > 0) sb.Append("   ");
+                sb.Append((Rarity)t).Append(' ').Append((b.Rates[t] * 100).ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture)).Append('%');
+            }
+            sb.Append("\nWith pity: L+ ").Append((lplus * 100).ToString("0.000", System.Globalization.CultureInfo.InvariantCulture))
+              .Append("%  (M ").Append((lplus * b.MythicShareOfLplus * 100).ToString("0.000", System.Globalization.CultureInfo.InvariantCulture))
+              .Append("%), expected ").Append(expected.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)).Append(" pulls per L+.")
+              .Append("\nL+ chance rises from pull ").Append(b.PitySoftStart + 1).Append("; guaranteed at ").Append(b.PityHard)
+              .Append(". A ").Append(b.GuaranteeBatchSize).Append("-pull guarantees at least one ").Append(b.GuaranteeMinTier).Append('.');
+            return sb.ToString();
         }
 
         // ------------------------------------------------------------------ state for screens
