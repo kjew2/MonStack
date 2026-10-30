@@ -36,29 +36,31 @@ The web prototype is the real C# game core (`src/IdleRng.Sim`, the code the Unit
 1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), Node 18+ and Python 3.
 2. Install the WebAssembly build tools: `dotnet workload install wasm-tools` (may need `sudo` on Linux/macOS).
 
-### Build and play
+### Play
 
 From the repo root:
 
 ```
-web/wasm/build.sh                 # first build takes 1-3 minutes; later ones are faster
-cd web && python3 -m http.server 8000
+./play.sh
 ```
 
-Open http://localhost:8000 . Settings (the cog, top right) shows "Engine: C# (wasm)" and the content version. Rebuild with `web/wasm/build.sh` after pulling changes to `src/` or `Content/`.
+It checks the prerequisites (and tells you the command to fix anything missing), builds the C# engine only when `src/` or `Content/` changed since the last build (the first build takes 1-3 minutes), starts a local server, prints the link for this computer and for your phone, and opens your browser. Stop it with Ctrl+C. Settings in the game (the cog, top right) shows "Engine: C# (wasm)" and the content version.
+
+Options: `--rebuild` forces a build, `--port 8080` picks another port (it moves to the next free one if the port is taken), `--no-open` skips opening a browser, `--local` refuses connections from other devices. If `qrencode` is installed it also prints a QR code for the phone link.
+
+By hand, the same thing is `web/wasm/build.sh` then `cd web && python3 -m http.server 8000`.
 
 It must be served over HTTP: browsers refuse to load WebAssembly from a `file://` page, so opening `index.html` directly shows an error telling you to start the server. On Windows, run `build.sh` from Git Bash or WSL.
 
-If the page says "The C# engine did not load", it names the cause: the bundle is not built (run `web/wasm/build.sh`), the page was opened as a file, or loading failed (rerun the build and read its output; the usual cause is the missing `wasm-tools` workload).
+If the page says "The C# engine did not load", it names the cause: the bundle is not built (run `./play.sh --rebuild`), the page was opened as a file, or loading failed (rerun the build and read its output; the usual cause is the missing `wasm-tools` workload).
 
 ### On a phone
 
 The repo is private, so GitHub cannot serve the page (raw links show source, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly). Serve it from your computer:
 
-1. Build and start the server as above.
-2. Find the computer's local IP: macOS `ipconfig getifaddr en0`, Linux `hostname -I`, Windows `ipconfig` (IPv4 Address).
-3. On the phone, on the same Wi-Fi, open `http://<that-ip>:8000` (for example `http://192.168.1.20:8000`). If it does not load, allow Python through the computer's firewall.
-4. Optional: Add to Home Screen from the browser's share menu for a full-screen icon.
+1. Run `./play.sh` on the computer. It prints an "On your phone" link such as `http://192.168.1.20:8000`.
+2. Open that link on the phone, on the same Wi-Fi. If it does not load, allow Python through the computer's firewall.
+3. Optional: Add to Home Screen from the browser's share menu for a full-screen icon.
 
 Progress is saved in the browser, separately for each address. Fonts load from Google Fonts; offline the page falls back to system fonts and still plays.
 

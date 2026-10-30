@@ -2,7 +2,7 @@
 
 A playable, phone-sized UI for feel and balance testing, running the **real C# game core** (`src/IdleRng.Sim`) compiled to WebAssembly. The native product is still the Unity client in `specs/07`; this page and Unity drive the same engine.
 
-How to build and run it: the README at the repo root, "Running the web prototype".
+To play: `./play.sh` from the repo root (details in the root README, "Running the web prototype").
 
 | File | What it is |
 |---|---|
