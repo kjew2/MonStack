@@ -141,7 +141,7 @@ One scene, `Boot.unity`, containing: `Main Camera` (solid clear color, culling n
 
 Portrait only: `Default Orientation = Portrait`, all `Allowed Orientations for Auto Rotation` off except Portrait. Reference resolution **1080 x 1920** (9:16). `PanelSettings`: Scale Mode `Scale With Screen Size`, Screen Match Mode `Match Width Or Height`, Match `0` (width). Taller phones (19.5:9, 20:9) get extra vertical room that the content panel absorbs; nothing is anchored to the bottom except the tab bar. A 16:10 tablet shows the same layout with letterbox-free stretching, which is acceptable for P0 (tablet layout is P2).
 
-Safe area: `SafeAreaPadding` reads `Screen.safeArea` on `Start` and whenever `rootVisualElement` receives a `GeometryChangedEvent`, and sets `paddingTop/Bottom/Left/Right` on the `#safe` element in reference pixels. Everything else is a child of `#safe`.
+Safe area: `GameRoot` reads `Screen.safeArea` on `Start`, whenever `rootVisualElement` receives a `GeometryChangedEvent`, and on any frame where the safe area or screen size changed, converts it to panel units (`Core/SafeAreaMath`, engine-free and unit-tested) and sets `left/top/right/bottom` on the absolutely positioned `#safe` element (insets rather than padding, so absolutely positioned overlays stay inside it too). Everything else is a child of `#safe`; the camera clear color fills the notch and home-indicator bands.
 
 Vertical bands, in reference pixels, top to bottom:
 

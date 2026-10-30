@@ -25,7 +25,7 @@ namespace IdleRng.Client.Core
         readonly Dictionary<string, string> _glyphs = new Dictionary<string, string>(StringComparer.Ordinal);
         readonly List<string> _popups = new List<string>();
         bool _heroesDirty = true;
-        bool _summaryMode;
+        bool _summaryMode = false;  // only DebugRunHours sets it; explicit so Release builds do not warn (CS0649)
 
         public GameViewModel(Simulation sim, EventOutbox outbox, OffsetClock clock, string saveDescription = "")
         {
@@ -92,7 +92,7 @@ namespace IdleRng.Client.Core
         public long ClockOffsetSeconds => _clock?.OffsetSeconds ?? 0;
         public long OutboxDropped => _outbox.Dropped;
 
-        /// <summary>Sim seconds per real second; only the debug panel changes it.</summary>
+        /// <summary>Sim seconds per real second; only the debug panel changes it, so Release always runs at 1.</summary>
         public double TimeScale { get; private set; } = 1.0;
 
         /// <summary>Modal popups (offline earnings, class advance), oldest first.</summary>
@@ -562,7 +562,10 @@ namespace IdleRng.Client.Core
             Changed();
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS
         // ------------------------------------------------------------------ debug panel
+        // Compiled only where Shell.DebugEnabled is true (specs/07 sections 6.8 and 13); a Release build has no
+        // code path that grants currency, sets the stage, moves the clock or changes TimeScale.
 
         public void DebugGrantGold(double amount) { _sim.Debug.GrantGold(amount); Changed(); }
 
@@ -646,5 +649,6 @@ namespace IdleRng.Client.Core
         public void DebugRequestSave() { SaveRequested = true; Toasts.Push("Saved (" + SaveDescription + ")", 1.5); }
 
         public void DebugResetProfile() { ResetRequested = true; }
+#endif
     }
 }

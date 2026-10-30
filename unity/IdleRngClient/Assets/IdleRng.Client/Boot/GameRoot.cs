@@ -26,6 +26,10 @@ namespace IdleRng.Client.Boot
         }
 
         UIDocument _doc;
+        VisualElement _safe;   // the safe-area rect inside the document root; all UI lives under it
+        Rect _lastSafeArea;
+        Vector2Int _lastScreen;
+        Vector2 _lastPanel;
         ContentDb _content;
         ISaveBridge _save;
         OffsetClock _clock;
@@ -83,6 +87,14 @@ namespace IdleRng.Client.Boot
             var root = _doc.rootVisualElement;
             root.style.position = Position.Absolute;
             root.style.left = 0; root.style.right = 0; root.style.top = 0; root.style.bottom = 0;
+
+            // Safe area (specs/07 section 5): an absolute child inset by Screen.safeArea, re-applied on change.
+            _safe = new VisualElement { name = "safe", pickingMode = PickingMode.Ignore };
+            _safe.style.position = Position.Absolute;
+            root.Add(_safe);
+            root.RegisterCallback<GeometryChangedEvent>(_ => ApplySafeArea());
+            ApplySafeArea();
+
             if (_useBuiltinFont)
             {
                 // No theme found: give the tree a font explicitly so labels still render.
@@ -115,7 +127,7 @@ namespace IdleRng.Client.Boot
             try
             {
                 _runner = SimRunnerCore.Start(_content, _save, _clock);
-                _shell = new Shell(_doc.rootVisualElement, _runner.Vm);
+                _shell = new Shell(_safe, _runner.Vm);
             }
             catch (Exception e)
             {
@@ -132,16 +144,36 @@ namespace IdleRng.Client.Boot
                 _fatal = Ui.Text("", Ui.Body, Palette.Bad);
                 _fatal.style.position = Position.Absolute;
                 _fatal.style.left = 20; _fatal.style.right = 20; _fatal.style.top = 20;
-                _doc.rootVisualElement.Add(_fatal);
+                _safe.Add(_fatal);
             }
             _fatal.text = message;
         }
 
+        /// <summary>Insets the #safe element by Screen.safeArea, converted to panel units. No-op when nothing changed.</summary>
+        void ApplySafeArea()
+        {
+            if (_safe == null) return;
+            Rect safe = Screen.safeArea;
+            var screen = new Vector2Int(Screen.width, Screen.height);
+            Vector2 panel = _doc.rootVisualElement.layout.size;   // NaN until the first layout pass
+            if (safe == _lastSafeArea && screen == _lastScreen && panel == _lastPanel) return;
+            _lastSafeArea = safe; _lastScreen = screen; _lastPanel = panel;
+
+            var i = SafeAreaMath.ToPanelInsets(screen.x, screen.y, safe.x, safe.y, safe.width, safe.height, panel.x, panel.y);
+            _safe.style.left = i.Left;
+            _safe.style.top = i.Top;
+            _safe.style.right = i.Right;
+            _safe.style.bottom = i.Bottom;
+        }
+
         void Update()
         {
+            ApplySafeArea();   // the safe area can change without the panel resizing (e.g. rotation, simulator device switch)
             float dt = Time.unscaledDeltaTime;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS
             _fpsAcc += dt; _fpsFrames++;
             if (_fpsAcc >= 0.5f) { DebugScreen.Fps = _fpsFrames / _fpsAcc; _fpsAcc = 0; _fpsFrames = 0; }
+#endif
 
             if (_runner == null) return;
             _runner.Frame(dt);
