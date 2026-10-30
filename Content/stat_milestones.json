@@ -1,0 +1,17 @@
+{
+  "table": "stat_milestones",
+  "rows": [
+    {
+      "threshold": 300
+    },
+    {
+      "threshold": 500
+    },
+    {
+      "threshold": 700
+    },
+    {
+      "threshold": 900
+    }
+  ]
+}

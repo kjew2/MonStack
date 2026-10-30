@@ -138,3 +138,15 @@ skill.battle_hymn.name,Battle Hymn
 skill.battle_hymn.desc,All allies: +30% crit damage for 2 turns. Cooldown 5 turns.
 skill.shadow_rend.name,Shadow Rend
 skill.shadow_rend.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+species.slime.name,Slime
+species.drake.name,Drake
+species.sprite.name,Sprite
+drill.fail.name,Fail
+drill.success.name,Success
+drill.super.name,Super
+rank.e.name,Rank E
+rank.d.name,Rank D
+rank.c.name,Rank C
+rank.b.name,Rank B
+rank.a.name,Rank A
+rank.s.name,Rank S

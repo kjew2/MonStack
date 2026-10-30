@@ -557,6 +557,54 @@
     {
       "key": "skill.shadow_rend.desc",
       "text": "Deal 220% ATK damage to the enemy. Cooldown 4 turns."
+    },
+    {
+      "key": "species.slime.name",
+      "text": "Slime"
+    },
+    {
+      "key": "species.drake.name",
+      "text": "Drake"
+    },
+    {
+      "key": "species.sprite.name",
+      "text": "Sprite"
+    },
+    {
+      "key": "drill.fail.name",
+      "text": "Fail"
+    },
+    {
+      "key": "drill.success.name",
+      "text": "Success"
+    },
+    {
+      "key": "drill.super.name",
+      "text": "Super"
+    },
+    {
+      "key": "rank.e.name",
+      "text": "Rank E"
+    },
+    {
+      "key": "rank.d.name",
+      "text": "Rank D"
+    },
+    {
+      "key": "rank.c.name",
+      "text": "Rank C"
+    },
+    {
+      "key": "rank.b.name",
+      "text": "Rank B"
+    },
+    {
+      "key": "rank.a.name",
+      "text": "Rank A"
+    },
+    {
+      "key": "rank.s.name",
+      "text": "Rank S"
     }
   ]
 }

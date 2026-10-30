@@ -19,7 +19,7 @@ namespace IdleRng.Sim.Content
         {
             "banners", "boss_rules", "constants", "curves", "daily_quests", "elements", "gear_rarity",
             "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles", "skills",
-            "tutorial_grants",
+            "tutorial_grants", "species", "drill_tiers", "fight_ranks", "stat_milestones",
         };
 
         // Curves are precomputed to this many steps (covers STAGE_CAP); beyond it Eval keeps multiplying.
@@ -82,6 +82,21 @@ namespace IdleRng.Sim.Content
         public IReadOnlyList<TutorialGrantDef> TutorialGrants { get; private set; }
         public IReadOnlyList<ProgressTargetDef> ProgressTargets { get; private set; }
         public IReadOnlyDictionary<string, string> Strings { get; private set; }
+
+        // Training run (specs/14)
+        public IReadOnlyDictionary<string, SpeciesDef> Species { get; private set; }
+
+        /// <summary>Species in CSV order.</summary>
+        public IReadOnlyList<SpeciesDef> SpeciesList { get; private set; }
+
+        /// <summary>Indexed by (int)DrillTier.</summary>
+        public IReadOnlyList<DrillTierDef> DrillTiers { get; private set; }
+
+        /// <summary>Index == sort_order == rank index in a run (0 = lowest).</summary>
+        public IReadOnlyList<FightRankDef> FightRanks { get; private set; }
+
+        /// <summary>Stat thresholds in increasing order.</summary>
+        public IReadOnlyList<int> StatMilestones { get; private set; }
 
         public int GearSlotCount => GearSlots.Count;
 
@@ -268,6 +283,10 @@ namespace IdleRng.Sim.Content
                 MonEvadePerDex = D("MON_EVADE_PER_DEX"), MonEvadeCap = D("MON_EVADE_CAP"), MonCritBase = D("MON_CRIT_BASE"),
                 MonCritPerLuk = D("MON_CRIT_PER_LUK"), MonCritCap = D("MON_CRIT_CAP"), MonCritDmg = D("MON_CRIT_DMG"),
                 MonSpdMin = D("MON_SPD_MIN"), MonTimeLimitTicks = I("MON_TIME_LIMIT_TICKS"), MonSideSize = I("MON_SIDE_SIZE"),
+                RunCycles = I("RUN_CYCLES"), RunAp = I("RUN_AP"), RunEnergyMax = D("RUN_ENERGY_MAX"),
+                RunEnergyStart = D("RUN_ENERGY_START"), DrillEnergyCost = D("DRILL_ENERGY_COST"), RestEnergy = D("REST_ENERGY"),
+                DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
+                InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
             };
             if (errors.Count > 0) return;
 
@@ -489,10 +508,94 @@ namespace IdleRng.Sim.Content
             ProgressTargets = t["progress_targets"].Select(r => new ProgressTargetDef { Day = r.Int("day"), Stage = r.Int("stage") })
                 .OrderBy(p => p.Day).ToList().AsReadOnly();
 
+            BuildTraining(t, errors);
+
             var strings = new Dictionary<string, string>(StringComparer.Ordinal);
             if (t.TryGetValue("strings", out var srows))
                 foreach (var r in srows) strings[r.Str("key")] = r.Str("text");
             Strings = new ReadOnlyDictionary<string, string>(strings);
+        }
+
+        static IdleRng.Sim.Combat.MonsterStats StatsFrom(Row r, string prefix) => new IdleRng.Sim.Combat.MonsterStats
+        {
+            Hp = r.Dbl(prefix + "hp"), Str = r.Dbl(prefix + "str"), Int = r.Dbl(prefix + "int"), Wis = r.Dbl(prefix + "wis"),
+            Dex = r.Dbl(prefix + "dex"), Def = r.Dbl(prefix + "def"), Spd = r.Dbl(prefix + "spd"), Luk = r.Dbl(prefix + "luk"),
+        };
+
+        /// <summary>Training run tables and constants (specs/14 section 8). Mirrors validate_training in tools/content_build.py.</summary>
+        void BuildTraining(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            var k = Constants;
+            bool In01(double v) => v >= 0 && v <= 1;
+            if (!(k.RunCycles > 0 && k.RunAp > 0 && k.RunEnergyMax > 0 && k.RunEnergyStart >= 0 && k.RunEnergyStart <= k.RunEnergyMax
+                  && k.DrillEnergyCost >= 0 && k.RestEnergy >= 0 && In01(k.DrillFailMin) && In01(k.DrillFailMax)
+                  && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
+                  && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0))
+                errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
+
+            var trained = IdleRng.Sim.Combat.StatIds.Trained;
+            bool StatsOk(IdleRng.Sim.Combat.MonsterStats s, double lo, double hi, bool loExclusive)
+            {
+                foreach (var id in trained)
+                {
+                    double v = s.Get(id);
+                    if (loExclusive ? !(v > lo) : !(v >= lo)) return false;
+                    if (!(v <= hi)) return false;
+                }
+                return true;
+            }
+
+            SpeciesList = t["species"].Select(r => new SpeciesDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), Element = r.Str("element"),
+                Base = StatsFrom(r, "base_"), Growth = StatsFrom(r, "grow_"),
+            }).ToList().AsReadOnly();
+            Species = new ReadOnlyDictionary<string, SpeciesDef>(SpeciesList.ToDictionary(x => x.Id, StringComparer.Ordinal));
+            if (SpeciesList.Count == 0) errors.Add(new ContentError("E044", "species", "at least one species is required"));
+            foreach (var sp in SpeciesList)
+            {
+                if (!Elements.ContainsKey(sp.Element)) errors.Add(new ContentError("E023", $"species[{sp.Id}]", $"element '{sp.Element}' is not an element id"));
+                if (!StatsOk(sp.Base, 0, k.StatMax, false)) errors.Add(new ContentError("E043", $"species[{sp.Id}]", "base stats must be in [0, STAT_MAX]"));
+                if (!StatsOk(sp.Growth, 0, double.MaxValue, true)) errors.Add(new ContentError("E043", $"species[{sp.Id}]", "growth must be > 0"));
+            }
+
+            var tiers = new DrillTierDef[3];
+            foreach (var r in t["drill_tiers"])
+            {
+                DrillTier tier;
+                switch (r.Str("id"))
+                {
+                    case "fail": tier = DrillTier.Fail; break;
+                    case "success": tier = DrillTier.Success; break;
+                    case "super": tier = DrillTier.Super; break;
+                    default: errors.Add(new ContentError("E044", $"drill_tiers[{r.Str("id")}]", "id must be fail, success or super")); continue;
+                }
+                if (tiers[(int)tier] != null) { errors.Add(new ContentError("E020", $"drill_tiers[{r.Str("id")}]", "duplicate key")); continue; }
+                var d = new DrillTierDef { Tier = tier, GainMin = r.Int("gain_min"), GainMax = r.Int("gain_max"), NameKey = r.Str("name_key") };
+                if (!(d.GainMin >= 0 && d.GainMin <= d.GainMax)) errors.Add(new ContentError("E043", $"drill_tiers[{r.Str("id")}]", "need 0 <= gain_min <= gain_max"));
+                tiers[(int)tier] = d;
+            }
+            if (tiers.Any(x => x == null)) errors.Add(new ContentError("E044", "drill_tiers", "must list fail, success, super exactly once"));
+            DrillTiers = Array.AsReadOnly(tiers);
+
+            FightRanks = t["fight_ranks"].Select(r => new FightRankDef
+            {
+                Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"), Element = r.Str("element"),
+                Stats = StatsFrom(r, ""),
+            }).OrderBy(x => x.SortOrder).ToList().AsReadOnly();
+            if (FightRanks.Count == 0) errors.Add(new ContentError("E044", "fight_ranks", "at least one rank is required"));
+            if (!FightRanks.Select(x => x.SortOrder).SequenceEqual(Enumerable.Range(0, FightRanks.Count)))
+                errors.Add(new ContentError("E047", "fight_ranks", "sort_order must be exactly 0..N-1"));
+            foreach (var fr in FightRanks)
+            {
+                if (!Elements.ContainsKey(fr.Element)) errors.Add(new ContentError("E023", $"fight_ranks[{fr.Id}]", $"element '{fr.Element}' is not an element id"));
+                if (!StatsOk(fr.Stats, 0, k.StatMax, false)) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "stats must be in [0, STAT_MAX]"));
+            }
+
+            StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
+            for (int i = 0; i < StatMilestones.Count; i++)
+                if (StatMilestones[i] <= 0 || (i > 0 && StatMilestones[i] <= StatMilestones[i - 1]))
+                    errors.Add(new ContentError("E032", $"stat_milestones[{StatMilestones[i]}]", "thresholds must be > 0 and strictly increasing"));
         }
 
         static void CheckFiveTiers(IEnumerable<Rarity> got, string table, List<ContentError> errors)

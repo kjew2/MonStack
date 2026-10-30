@@ -1,0 +1,4 @@
+id,gain_min,gain_max,name_key,#notes
+fail,0,2,drill.fail.name,drill gain before the species growth multiplier (specs/14 section 4). Placeholder
+success,8,15,drill.success.name,Placeholder
+super,20,30,drill.super.name,Placeholder

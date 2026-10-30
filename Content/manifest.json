@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2.3",
+  "content_version": "2.4",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "banners": {
@@ -13,7 +13,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "7853b4322d6679f4bbb480514d1abe8975d3beeb0d9034d1e3f07d72310d74ef"
+      "sha256": "33a959385e8d484600af574b91a0d7e43cd74c08e2ec7f67d4b8944fc5c68d80"
     },
     "curves": {
       "file": "curves.json",
@@ -23,9 +23,17 @@
       "file": "daily_quests.json",
       "sha256": "dba939ba5239c991dfd1f9d1680946bb14bab566a8df9b8d7bbc6361bbbbec1e"
     },
+    "drill_tiers": {
+      "file": "drill_tiers.json",
+      "sha256": "0fe107c318643c9b79376f5da74dede777f51c3a693fa55d8d1f47e6779e8f1f"
+    },
     "elements": {
       "file": "elements.json",
       "sha256": "e1e0657b38c0f66052178d5796abc118466300b94015717be638352de8804a25"
+    },
+    "fight_ranks": {
+      "file": "fight_ranks.json",
+      "sha256": "89a4eea53570606ee4c6a274775f30ef28bfba0975230d202ecb95cca1b2ea38"
     },
     "gear_rarity": {
       "file": "gear_rarity.json",
@@ -63,14 +71,22 @@
       "file": "skills.json",
       "sha256": "047e85f46bcd851ded0a0a82529c03c93689af81da5857d91d3c1493a6d705f7"
     },
+    "species": {
+      "file": "species.json",
+      "sha256": "b13067c4e15210a0516b63af4e08f3d8daba4905794bad8f0a5530c0168179c5"
+    },
+    "stat_milestones": {
+      "file": "stat_milestones.json",
+      "sha256": "06b2c1dda03eb1bf73c0ffd95443197d404e44ca97a4aeb80b6aa05d19718b46"
+    },
     "strings": {
       "file": "strings.json",
-      "sha256": "451ef95f54b65552e8bb581e6fb7ef5940492a68e7240a2adb1911bc181d11cb"
+      "sha256": "a1c84b8998bfe94c8652a30a8a91e3b79195a673e0baf892a8b8225e326aef28"
     },
     "tutorial_grants": {
       "file": "tutorial_grants.json",
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "56ef064e136bf5cc7ea40bd8493502654036eb78584699429d8499dd26a71b14"
+  "content_hash": "a98f4c4f84da37a5917f9acb2354737a0ed90229cb328c3c4c5ba41043b0efd5"
 }

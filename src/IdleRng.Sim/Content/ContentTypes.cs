@@ -68,6 +68,21 @@ namespace IdleRng.Sim.Content
         public int MonTimeLimitTicks { get; internal set; }      // MON_TIME_LIMIT_TICKS
         public int MonSideSize { get; internal set; }            // MON_SIDE_SIZE
 
+        // Training run (specs/14 section 8). Placeholders.
+        public int RunCycles { get; internal set; }              // RUN_CYCLES
+        public int RunAp { get; internal set; }                  // RUN_AP
+        public double RunEnergyMax { get; internal set; }        // RUN_ENERGY_MAX
+        public double RunEnergyStart { get; internal set; }      // RUN_ENERGY_START
+        public double DrillEnergyCost { get; internal set; }     // DRILL_ENERGY_COST
+        public double RestEnergy { get; internal set; }          // REST_ENERGY
+        public double DrillFailMin { get; internal set; }        // DRILL_FAIL_MIN
+        public double DrillFailMax { get; internal set; }        // DRILL_FAIL_MAX
+        public double DrillSuperP { get; internal set; }         // DRILL_SUPER_P
+        public double InjuryBelow { get; internal set; }         // INJURY_BELOW
+        public double InjuryMaxP { get; internal set; }          // INJURY_MAX_P
+        public double StatMax { get; internal set; }             // STAT_MAX
+        public int FightEvery { get; internal set; }             // FIGHT_EVERY
+
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
 
@@ -360,5 +375,36 @@ namespace IdleRng.Sim.Content
 
         public bool Exists(string fileName) => _files.ContainsKey(fileName);
         public string ReadText(string fileName) => _files[fileName];
+    }
+
+    /// <summary>A monster species (specs/14 section 3): element, starting stats and per-stat drill growth multipliers.</summary>
+    public sealed class SpeciesDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string Element { get; internal set; }
+        public IdleRng.Sim.Combat.MonsterStats Base { get; internal set; }
+        public IdleRng.Sim.Combat.MonsterStats Growth { get; internal set; }
+    }
+
+    public enum DrillTier { Fail, Success, Super }
+
+    /// <summary>Gain range of one drill result before the species growth multiplier (specs/14 section 4).</summary>
+    public sealed class DrillTierDef
+    {
+        public DrillTier Tier { get; internal set; }
+        public int GainMin { get; internal set; }
+        public int GainMax { get; internal set; }
+        public string NameKey { get; internal set; }
+    }
+
+    /// <summary>A fight rank and the opponent fought at it (specs/14 section 5). Index == sort_order.</summary>
+    public sealed class FightRankDef
+    {
+        public string Id { get; internal set; }
+        public int SortOrder { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string Element { get; internal set; }
+        public IdleRng.Sim.Combat.MonsterStats Stats { get; internal set; }
     }
 }

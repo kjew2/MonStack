@@ -1,0 +1,89 @@
+{
+  "table": "fight_ranks",
+  "rows": [
+    {
+      "id": "e",
+      "sort_order": 0,
+      "name_key": "rank.e.name",
+      "element": "nature",
+      "hp": 100.0,
+      "str": 100.0,
+      "int": 100.0,
+      "wis": 100.0,
+      "dex": 100.0,
+      "def": 100.0,
+      "spd": 100.0,
+      "luk": 100.0
+    },
+    {
+      "id": "d",
+      "sort_order": 1,
+      "name_key": "rank.d.name",
+      "element": "water",
+      "hp": 160.0,
+      "str": 160.0,
+      "int": 160.0,
+      "wis": 160.0,
+      "dex": 160.0,
+      "def": 160.0,
+      "spd": 160.0,
+      "luk": 160.0
+    },
+    {
+      "id": "c",
+      "sort_order": 2,
+      "name_key": "rank.c.name",
+      "element": "fire",
+      "hp": 230.0,
+      "str": 230.0,
+      "int": 230.0,
+      "wis": 230.0,
+      "dex": 230.0,
+      "def": 230.0,
+      "spd": 230.0,
+      "luk": 230.0
+    },
+    {
+      "id": "b",
+      "sort_order": 3,
+      "name_key": "rank.b.name",
+      "element": "light",
+      "hp": 310.0,
+      "str": 310.0,
+      "int": 310.0,
+      "wis": 310.0,
+      "dex": 310.0,
+      "def": 310.0,
+      "spd": 310.0,
+      "luk": 310.0
+    },
+    {
+      "id": "a",
+      "sort_order": 4,
+      "name_key": "rank.a.name",
+      "element": "dark",
+      "hp": 400.0,
+      "str": 400.0,
+      "int": 400.0,
+      "wis": 400.0,
+      "dex": 400.0,
+      "def": 400.0,
+      "spd": 400.0,
+      "luk": 400.0
+    },
+    {
+      "id": "s",
+      "sort_order": 5,
+      "name_key": "rank.s.name",
+      "element": "dark",
+      "hp": 500.0,
+      "str": 500.0,
+      "int": 500.0,
+      "wis": 500.0,
+      "dex": 500.0,
+      "def": 500.0,
+      "spd": 500.0,
+      "luk": 500.0
+    }
+  ]
+}

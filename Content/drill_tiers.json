@@ -1,0 +1,23 @@
+{
+  "table": "drill_tiers",
+  "rows": [
+    {
+      "id": "fail",
+      "gain_min": 0,
+      "gain_max": 2,
+      "name_key": "drill.fail.name"
+    },
+    {
+      "id": "success",
+      "gain_min": 8,
+      "gain_max": 15,
+      "name_key": "drill.success.name"
+    },
+    {
+      "id": "super",
+      "gain_min": 20,
+      "gain_max": 30,
+      "name_key": "drill.super.name"
+    }
+  ]
+}
