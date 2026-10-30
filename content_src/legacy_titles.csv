@@ -1,0 +1,9 @@
+min_floor,title_key,#notes
+1,title.punching_bag,"Legacy Title by the floor the monster fell on (specs/19); the highest min_floor <= floor wins. {killer} is the enemy that beat it. Placeholder"
+10,title.warm_up_act,
+25,title.respectable_brawler,
+42,title.professional_punching_bag,
+60,title.food,
+80,title.nightmare,
+95,title.god_slayer,
+101,title.tower_breaker,cleared every floor

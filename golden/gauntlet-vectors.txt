@@ -1,0 +1,13 @@
+# gauntlet vectors, hash v1 content=2.7/c44347fa
+
+slime focus seed=7 rank=s
+  floor=60 cleared=False killer=storm_titan title=title.food
+  hash 0c328e7c6a7bfb7e8ec7105db9ede793464fddfe2374671969f5a0c4d023fb66
+
+drake focus seed=7 rank=b
+  floor=40 cleared=False killer=apex_chimera title=title.respectable_brawler
+  hash a788347d3282dc271c8ed8cde1714c9fd4ebedb6b6f16eb99b3abf912d12d1df
+
+sprite focus seed=7 rank=b
+  floor=40 cleared=False killer=apex_chimera title=title.respectable_brawler
+  hash 1528c8e1985795a49e825c59eadcc34413c4a3f36ac8e2f15277dfe8ed6fbd60

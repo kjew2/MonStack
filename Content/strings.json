@@ -1021,6 +1021,70 @@
     {
       "key": "talent.head_start.desc",
       "text": "Start each run with one extra skill point per rank."
+    },
+    {
+      "key": "gauntlet.slimeling.name",
+      "text": "Slimeling"
+    },
+    {
+      "key": "gauntlet.imp.name",
+      "text": "Imp"
+    },
+    {
+      "key": "gauntlet.golem.name",
+      "text": "Golem"
+    },
+    {
+      "key": "gauntlet.wisp.name",
+      "text": "Wisp"
+    },
+    {
+      "key": "gauntlet.shade.name",
+      "text": "Shade"
+    },
+    {
+      "key": "gauntlet.apex_chimera.name",
+      "text": "Apex Chimera"
+    },
+    {
+      "key": "gauntlet.void_hydra.name",
+      "text": "Void Hydra"
+    },
+    {
+      "key": "gauntlet.storm_titan.name",
+      "text": "Storm Titan"
+    },
+    {
+      "key": "title.punching_bag",
+      "text": "Punching Bag"
+    },
+    {
+      "key": "title.warm_up_act",
+      "text": "Warm-Up Act"
+    },
+    {
+      "key": "title.respectable_brawler",
+      "text": "Respectable Brawler"
+    },
+    {
+      "key": "title.professional_punching_bag",
+      "text": "Professional Punching Bag"
+    },
+    {
+      "key": "title.food",
+      "text": "{killer} Food"
+    },
+    {
+      "key": "title.nightmare",
+      "text": "{killer}'s Nightmare"
+    },
+    {
+      "key": "title.god_slayer",
+      "text": "God-Slayer"
+    },
+    {
+      "key": "title.tower_breaker",
+      "text": "Tower Breaker"
     }
   ]
 }

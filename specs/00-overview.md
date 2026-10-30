@@ -137,6 +137,10 @@ The run constants of `specs/14` section 8 (content `2.4`): cycles, action points
 
 `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` and the `talents` table (content `2.6`). All placeholders.
 
+### 2.6e End-of-run gauntlet (pivot, `specs/19`)
+
+`GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` and the `gauntlet_enemies` and `legacy_titles` tables (content `2.7`). All placeholders.
+
 ### 2.6 Session model and targets
 
 Assumed F2P player: 2 h active/day, offline the rest. Targets the bot must land within +/-20%:
@@ -214,6 +218,7 @@ idle-rng-game/
     14-training-run.md          training run: AP cycles, Drill/Rest, rank fights (pivot T2)
     15-skill-trees.md           skill trees: slots, SP, nodes, offers, chase trees (pivot T3)
     18-meta-progression.md      account, shards, talents, run modifiers, account save (pivot T5)
+    19-gauntlet.md              end-of-run gauntlet: tower floors, wheel result, Legacy Titles (pivot T8)
     16-battle.md                monster battle engine: 1-4 vs 1-4, stat sheet, ATB, triggers (pivot T1)
   tools/
     gacha_model.py               exact pity math

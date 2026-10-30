@@ -20,7 +20,7 @@ namespace IdleRng.Sim.Content
             "banners", "boss_rules", "constants", "curves", "daily_quests", "elements", "gear_rarity",
             "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles", "skills",
             "tutorial_grants", "species", "drill_tiers", "fight_ranks", "stat_milestones",
-            "monster_skills", "trees", "tree_nodes", "chase_conditions", "skill_books", "talents",
+            "monster_skills", "trees", "tree_nodes", "chase_conditions", "skill_books", "talents", "gauntlet_enemies", "legacy_titles",
         };
 
         // Curves are precomputed to this many steps (covers STAGE_CAP); beyond it Eval keeps multiplying.
@@ -113,6 +113,16 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Talents in CSV order.</summary>
         public IReadOnlyList<TalentDef> TalentList { get; private set; }
+
+        // End-of-run gauntlet (specs/19)
+        /// <summary>Normal gauntlet enemies in CSV order (floors rotate through them).</summary>
+        public IReadOnlyList<GauntletEnemyDef> GauntletEnemies { get; private set; }
+
+        /// <summary>Boss gauntlet enemies in CSV order (boss floors rotate through them).</summary>
+        public IReadOnlyList<GauntletEnemyDef> GauntletBosses { get; private set; }
+
+        /// <summary>Legacy titles by increasing MinFloor; the first has MinFloor 1.</summary>
+        public IReadOnlyList<LegacyTitleDef> LegacyTitles { get; private set; }
 
         public int GearSlotCount => GearSlots.Count;
 
@@ -305,6 +315,8 @@ namespace IdleRng.Sim.Content
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
                 MonEchoPower = D("MON_ECHO_POWER"), ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
+                GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
+                GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
             };
             if (errors.Count > 0) return;
 
@@ -550,7 +562,8 @@ namespace IdleRng.Sim.Content
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0
                   && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)
-                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0))
+                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
+                  && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
 
             var trained = IdleRng.Sim.Combat.StatIds.Trained;
@@ -615,6 +628,7 @@ namespace IdleRng.Sim.Content
 
             BuildTrees(t, errors);
             BuildAccount(t, errors);
+            BuildGauntlet(t, errors);
 
             StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
             for (int i = 0; i < StatMilestones.Count; i++)
@@ -804,6 +818,32 @@ namespace IdleRng.Sim.Content
                 }
                 if (!ok) errors.Add(new ContentError("E043", loc, $"per_rank {p} out of range for {d.Effect}"));
             }
+        }
+
+        /// <summary>End-of-run gauntlet (specs/19 section 4). Mirrors validate_gauntlet in tools/content_build.py.</summary>
+        void BuildGauntlet(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            var all = t["gauntlet_enemies"].Select(r => new GauntletEnemyDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), Element = r.Str("element"), Boss = r.Bool("boss"), Weights = StatsFrom(r, ""),
+            }).ToList();
+            GauntletEnemies = all.Where(e => !e.Boss).ToList().AsReadOnly();
+            GauntletBosses = all.Where(e => e.Boss).ToList().AsReadOnly();
+            if (GauntletEnemies.Count == 0 || GauntletBosses.Count == 0)
+                errors.Add(new ContentError("E044", "gauntlet_enemies", "need at least one normal enemy and one boss"));
+            foreach (var e in all)
+            {
+                if (!Elements.ContainsKey(e.Element)) errors.Add(new ContentError("E023", $"gauntlet_enemies[{e.Id}]", $"element '{e.Element}' is not an element id"));
+                foreach (var id in IdleRng.Sim.Combat.StatIds.Trained)
+                    if (!(e.Weights.Get(id) >= 0)) { errors.Add(new ContentError("E043", $"gauntlet_enemies[{e.Id}]", "stat weights must be >= 0")); break; }
+            }
+            LegacyTitles = t["legacy_titles"].Select(r => new LegacyTitleDef { MinFloor = r.Int("min_floor"), TitleKey = r.Str("title_key") })
+                .ToList().AsReadOnly();
+            if (LegacyTitles.Count == 0 || LegacyTitles[0].MinFloor != 1)
+                errors.Add(new ContentError("E045", "legacy_titles", "first row must have min_floor = 1"));
+            for (int i = 1; i < LegacyTitles.Count; i++)
+                if (LegacyTitles[i].MinFloor <= LegacyTitles[i - 1].MinFloor)
+                    errors.Add(new ContentError("E032", $"legacy_titles[{LegacyTitles[i].MinFloor}]", "min_floor must strictly increase"));
         }
 
         static TalentEffect ParseTalentEffect(string s)

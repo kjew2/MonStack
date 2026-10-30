@@ -254,3 +254,19 @@ talent.wide_scouting.name,Wide Scouting
 talent.wide_scouting.desc,Milestone drafts offer one more tree per rank.
 talent.head_start.name,Head Start
 talent.head_start.desc,Start each run with one extra skill point per rank.
+gauntlet.slimeling.name,Slimeling
+gauntlet.imp.name,Imp
+gauntlet.golem.name,Golem
+gauntlet.wisp.name,Wisp
+gauntlet.shade.name,Shade
+gauntlet.apex_chimera.name,Apex Chimera
+gauntlet.void_hydra.name,Void Hydra
+gauntlet.storm_titan.name,Storm Titan
+title.punching_bag,Punching Bag
+title.warm_up_act,Warm-Up Act
+title.respectable_brawler,Respectable Brawler
+title.professional_punching_bag,Professional Punching Bag
+title.food,{killer} Food
+title.nightmare,{killer}'s Nightmare
+title.god_slayer,God-Slayer
+title.tower_breaker,Tower Breaker

@@ -94,6 +94,13 @@ namespace IdleRng.Sim.Content
         public int ShardsPerCycle { get; internal set; }         // SHARDS_PER_CYCLE
         public int ShardsPerRank { get; internal set; }          // SHARDS_PER_RANK
 
+        // End-of-run gauntlet (specs/19 section 4). Placeholders.
+        public int GauntletFloors { get; internal set; }         // GAUNTLET_FLOORS
+        public double GauntletBase { get; internal set; }        // GAUNTLET_BASE
+        public double GauntletGrowth { get; internal set; }      // GAUNTLET_GROWTH
+        public int GauntletBossEvery { get; internal set; }      // GAUNTLET_BOSS_EVERY
+        public double GauntletBossMult { get; internal set; }    // GAUNTLET_BOSS_MULT
+
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
 
@@ -497,5 +504,22 @@ namespace IdleRng.Sim.Content
         public int MaxRank { get; internal set; }
         public int CostBase { get; internal set; }
         public int CostStep { get; internal set; }
+    }
+
+    /// <summary>A gauntlet enemy (specs/19 section 2): its stats are Weights x the floor's level.</summary>
+    public sealed class GauntletEnemyDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string Element { get; internal set; }
+        public bool Boss { get; internal set; }
+        public IdleRng.Sim.Combat.MonsterStats Weights { get; internal set; }
+    }
+
+    /// <summary>A Legacy Title band (specs/19 section 3). TitleKey's text may contain {killer}.</summary>
+    public sealed class LegacyTitleDef
+    {
+        public int MinFloor { get; internal set; }
+        public string TitleKey { get; internal set; }
     }
 }

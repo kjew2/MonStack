@@ -64,3 +64,8 @@ DRAFT_SIZE,int,3,most trees offered by one milestone draft. Placeholder
 MON_ECHO_POWER,double,0.5,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder
 SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/18; injured runs pay too). Placeholder
 SHARDS_PER_RANK,int,10,training shards per rank index reached (E = 0). Placeholder
+GAUNTLET_FLOORS,int,100,end-of-run gauntlet (specs/19): floors in the tower. Placeholder
+GAUNTLET_BASE,double,60,floor 1 level: enemy stat = weight x level. Placeholder
+GAUNTLET_GROWTH,double,1.03,level grows by this factor per floor. Placeholder
+GAUNTLET_BOSS_EVERY,int,10,every Nth floor is a boss floor. Placeholder
+GAUNTLET_BOSS_MULT,double,1.2,boss floors multiply the level by this. Placeholder

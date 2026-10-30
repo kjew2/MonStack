@@ -24,6 +24,7 @@ namespace IdleRng.Bots.Golden
                                   TableWriter.ContentTag(db.Version, db.ContentHash))),
             new Entry("battle-sim-vectors.txt", "golden (BattleVectors, specs/16 section 8)", BattleVectors.Generate),
             new Entry("training-run-vectors.txt", "golden (RunBot.Vectors, specs/14 section 9)", IdleRng.Bots.Training.RunBot.Vectors),
+            new Entry("gauntlet-vectors.txt", "golden (GauntletVectors, specs/19 section 6)", GauntletVectors.Generate),
         };
 
         /// <summary>The repo's golden/ folder: a sibling of the Content folder.</summary>

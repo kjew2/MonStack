@@ -1,5 +1,5 @@
 # idle-rng sweep v1
-# bot=greedy-f2p seeds=1-20 days=30 content=2.6/5533902d
+# bot=greedy-f2p seeds=1-20 days=30 content=2.7/c44347fa
 day stageP10 stageMed stageP90   dpsMed statLvlMed gearMultMed heroMultMed promoMultMed pullsMed L+Med firstWallMin firstWallMax longestWallHMax
   1       70       90      115 3.36e+03         65    1.43e+01        4.13         1.00        8     0           40           70           23.05
   2      136      170      200 7.41e+05        124    1.19e+03        5.36         1.39       16     0           40           70           23.07
