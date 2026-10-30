@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Run every check in the repo. Agents and humans run this before calling a change done.
+#
+#   ./check.sh            everything (what CI runs, see specs/09 section 13)
+#   ./check.sh --fast     inner loop: skips golden tests, the bench and the acceptance sweep
+#   ./check.sh --no-dotnet  only the Python and web checks (for machines without the .NET SDK)
+#
+# Exits non-zero on the first failure.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+FAST=0
+DOTNET=1
+for arg in "$@"; do
+  case "$arg" in
+    --fast) FAST=1 ;;
+    --no-dotnet) DOTNET=0 ;;
+    -h|--help) sed -n 2,8p "$0"; exit 0 ;;
+    *) echo "unknown option: $arg" >&2; exit 2 ;;
+  esac
+done
+
+step() { printf '\n== %s\n' "$1"; }
+
+step "Content: content_src builds to Content/ with no drift"
+python3 tools/content_build.py --check
+
+step "Web prototype: spec test vectors"
+node web/test.js
+
+if [ "$DOTNET" -eq 0 ]; then
+  printf '\nSkipped .NET checks (--no-dotnet). Not a full pass.\n'
+  exit 0
+fi
+
+if ! command -v dotnet >/dev/null 2>&1; then
+  echo "dotnet not found. Install the .NET SDK, or run with --no-dotnet for a partial check." >&2
+  exit 1
+fi
+
+step ".NET: build"
+dotnet build IdleRng.sln -c Release
+
+BOTS="dotnet run -c Release --no-build --project src/IdleRng.Bots --"
+
+if [ "$FAST" -eq 1 ]; then
+  step ".NET: unit tests (no golden)"
+  dotnet test IdleRng.sln -c Release --no-build --filter "TestCategory!=Golden"
+else
+  step ".NET: all tests"
+  dotnet test IdleRng.sln -c Release --no-build
+
+  step "Bots: tick benchmark"
+  $BOTS bench --ticks 1000000 --max-ms 2000
+
+  step "Bots: acceptance sweep (20 seeds x 30 days)"
+  $BOTS acceptance --seeds 1-20 --days 30 --time-budget-s 180
+
+  step "Bots: golden files match"
+  $BOTS golden --check
+fi
+
+printf '\nAll checks passed.\n'
