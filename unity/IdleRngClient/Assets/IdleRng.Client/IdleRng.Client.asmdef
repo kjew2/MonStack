@@ -3,6 +3,8 @@
     "rootNamespace": "IdleRng.Client",
     "references": [
         "IdleRng.Sim",
+        "IdleRng.Runtime",
+        "IdleRng.Remote",
         "IdleRng.Client.Core",
         "UnityEngine.UI",
         "Unity.InputSystem"

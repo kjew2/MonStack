@@ -118,8 +118,12 @@ namespace IdleRng.Client.Boot
                 return;
             }
             RunSaveSelfCheck();
-            _save = SaveBridgeFactory.Create(Application.persistentDataPath);
-            _clock = new OffsetClock(new IdleRng.Sim.Time.SystemClock());
+            // specs/08 section 1: the build-time BackendMode picks the service implementations. Gacha stays the
+            // sim's local roll in both modes until the server-rolled pull contract exists (RemoteGachaService).
+            var services = Backend.Create(Application.persistentDataPath);
+            Debug.Log("IdleRng: backend " + Backend.Mode);
+            _save = new RuntimeSaveBridge(services.SaveStore);
+            _clock = new OffsetClock(services.Clock);
             StartSession();
         }
 

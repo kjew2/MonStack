@@ -9,8 +9,8 @@ The sim (`IdleRng.Sim`, pure C#, 00 section 5.1) depends on interfaces only. The
 | Assembly | Contains | Tag |
 |---|---|---|
 | `IdleRng.Sim` | The interfaces in this spec, every `Local*` / `File*` / `Fake*` implementation, `Services.Local(...)`. | P0 |
-| `IdleRng.Client` | Unity wiring (`specs/07`): calls `Services.Local` or `Services.Remote` from a build-time `BackendMode`. | P0 |
-| `IdleRng.Remote` | `ServerClock`, `RemoteGachaService`, `CloudSaveStore`, `RemoteReceiptValidator`, `RemoteConfig`, `RemoteAnalyticsSink`, the HTTP client. References the chosen BaaS SDK (section 10). | P1 |
+| `IdleRng.Client` | Unity wiring (`specs/07`): calls `GameServices.Local` or `RemoteGameServices.Create` from a build-time `BackendMode` (`Local` by default; the scripting define `IDLERNG_BACKEND_REMOTE` selects `Remote`). Gacha stays the sim's local roll in both modes until the section 4.3 contract exists, because `Simulation.Pull` charges before calling the service. | P0 |
+| `IdleRng.Remote` | `ServerClock`, `RemoteGachaService`, `CloudSaveStore`, `RemoteReceiptValidator`, `RemoteConfig`, `RemoteAnalyticsSink`, the HTTP client. Vendor-neutral: calls go through `IRemoteTransport` (`RemoteRequest` in, HTTP-style `RemoteResponse` out), and the chosen BaaS SDK (section 10) is one transport implementation. Until the spike decides, it ships `OfflineTransport` (every call is `Offline`), `FakeTransport` for tests, and stubs: `ServerClock` and a local-first `CloudSaveStore` work against the transport, `RemoteGachaService` throws `Unsupported`. | P1 (skeleton in P0) |
 | `IdleRng.Server` | The server-side code that must be bit-identical with the client: 03's generator, 01 section 8's `Pull`, the pity table. Shared source with `IdleRng.Sim` if the backend runs .NET; a port with cross-language test vectors otherwise (section 4.3). | P1 |
 
 ```csharp
@@ -40,8 +40,8 @@ public sealed class Services
         };
     }
 
-    // P1. Lives in IdleRng.Remote; shown here so the shape is fixed now.
-    // public static Services Remote(RemoteOptions o, Simulation sim, ContentDb db) { ... }
+    // P1. Lives in IdleRng.Remote as a static factory, since Services cannot reference that assembly:
+    // RemoteGameServices.Create(string dataDir, IRemoteTransport transport, RemoteOptions o = null, IAnalytics a = null)
 }
 ```
 
@@ -391,7 +391,7 @@ Rules of thumb: anything client-authoritative (section 11) never waits on the ne
 | Analytics | File | File, upload queued, drop oldest past the cap | Never block, never grow unbounded. |
 | Clock sync | None | Retry on resume and every `CLOCK_RESYNC_SEC` | |
 
-Exception mapping in `IdleRng.Remote`: no connectivity or DNS failure -> `Offline`; HTTP timeout -> `Timeout`; 4xx -> `Rejected` with the body's code; 409 on cloud save -> `Conflict`; 5xx -> `Internal`. The sim and the client only ever see `ServiceException`.
+Exception mapping in `IdleRng.Remote`: no connectivity or DNS failure -> `Offline`; HTTP timeout -> `Timeout`; 408 -> `Timeout`; 409 -> `Conflict`; other 4xx -> `Rejected` with the body's `code` (else `Http<status>`); 5xx and anything unexpected -> `Internal`. The sim and the client only ever see `ServiceException`.
 
 ## 10. BaaS comparison for v1
 
