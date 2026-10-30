@@ -39,6 +39,17 @@ When unsure between 1 and 3, treat it as 3. Create issues with `gh api repos/kje
 - A change is not done while any check fails. Do not weaken a test, threshold or golden file to make it pass unless the user agreed to that change (and then the spec rule above applies).
 - If you add a new kind of check, wire it into `check.sh`.
 
+## Workflow
+
+Standing rule for every implementation task. Run it to the end without waiting for kj's input.
+
+1. **Review, fix, repeat.** When the change is written, review your own diff (committed and uncommitted) for bugs, edge cases, missing tests and style issues. Fix what you find, re-run the checks (`./check.sh --fast` while iterating, the full `./check.sh` at the end) and review again. Stop looping only when a review pass finds nothing.
+2. **Happy path: merge without asking.** When the full `./check.sh` passes, the review is clean and the merge has no conflicts: commit with a clear message, then `git fetch origin main`, check out `main`, `git pull --ff-only origin main`, `git merge --no-ff <your branch>` (so there is a merge commit) and `git push origin main`. If `main` moved since you branched, re-run `./check.sh` on the merged result before pushing. Never force-push, rewrite pushed history or delete branches.
+3. **Stop and ask kj only if:** checks still fail after three fix attempts; a merge conflict you can't resolve confidently; the change touches secrets, credentials or anything irreversible; or the review raises a design question that is kj's to decide (gap rule 3 above).
+4. **Report briefly:** what changed, what the review caught, and the merge commit hash.
+
+This path has no PR, so anything the rules above say to put in "the PR description" (gap decisions, notable WARN changes) goes in the merge commit message and the final report instead.
+
 ## Learn from mistakes
 
 This file is how lessons reach the next agent. When the user corrects you on something that is likely to come up again (a convention, a command, a gotcha, a wrong assumption), add a short rule for it under "Lessons" below in the same change. Keep each rule to one or two lines, say what to do rather than what went wrong, and remove a rule once it no longer applies.
@@ -46,3 +57,5 @@ This file is how lessons reach the next agent. When the user corrects you on som
 ## Lessons
 
 - Generated test data is large and not for reading. Never open, grep through or hand-edit `golden/` files: regenerate them through the bot CLI, never edit by hand.
+- The Workflow loop applies to every task, including ones that only edit CLAUDE.md or settings. "Show me X" means merge, then show X in the report: it is not a reason to stop before merging.
+- Cloud containers may lack the .NET SDK. `apt-get install -y dotnet-sdk-8.0` works through the proxy (dot.net's install script is blocked). Install it and run the full `./check.sh` instead of settling for `--no-dotnet`.
