@@ -1,6 +1,6 @@
 key,type,value,#notes
 TICK_HZ,int,10,1 tick = 100 ms
-BASE_ATK,double,10,
+BASE_ATK,double,20,POC tuning: was 10 (specs/00); compensates discrete-hit kill time (specs/09 section 14)
 ATTACK_INTERVAL_TICKS,int,10,one hit per second
 KILLS_PER_STAGE,int,10,
 SPAWN_DELAY_TICKS,int,5,
