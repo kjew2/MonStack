@@ -23,3 +23,7 @@ Tools:
 - `tools/power_curve_model.py` - greedy F2P bot, 30 days, prints the day table. `python3 tools/power_curve_model.py`
 
 Both run on Python 3.7+ with no dependencies.
+
+Playable prototype:
+
+- `web-proto/index.html` - throwaway single-file browser version of the core loop (combat, boss walls, ATK levels, gear, hero summons with pity, party, class advances, dailies) using the `specs/00` numbers, with playtest speed controls. Open it in any browser. It is for judging feel only: the real rules live in the C# sim, this copy will drift, and it uses unseeded `Math.random` instead of the committed RNG streams.
