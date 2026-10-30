@@ -70,6 +70,17 @@ namespace IdleRng.Sim
             w.Bool(cb.EnemyIsBoss);
             w.F64(cb.EnemyHp);
             w.F64(cb.EnemyMaxHp);
+            var bt = cb.Battle;
+            w.Bool(bt != null);
+            if (bt != null)
+            {
+                w.I32(bt.Stage);
+                w.F64(bt.DefK);
+                w.I32(bt.BossActions);
+                w.I32(bt.Party.Length);
+                foreach (var u in bt.Party) Unit(w, u);
+                Unit(w, bt.Boss);
+            }
 
             var slots = s.Gear.Slots;
             if (slots == null) w.I32(-1);
@@ -125,6 +136,21 @@ namespace IdleRng.Sim
             w.I32(l.FirstWallStage);
 
             return w.ToArray();
+        }
+
+        static void Unit(CanonicalWriter w, Battle.BattleUnit u)
+        {
+            w.Bool(u != null);
+            if (u == null) return;
+            w.Str(u.HeroId);
+            w.I32(u.Promotions);
+            w.Str(u.Element);
+            w.F64(u.MaxHp); w.F64(u.Hp); w.F64(u.Atk); w.F64(u.Def); w.F64(u.Spd); w.F64(u.CritRate); w.F64(u.CritDmg);
+            w.F64(u.Gauge); w.F64(u.Shield); w.I32(u.ShieldTicks); w.I32(u.TauntTicks);
+            w.I32(u.Cooldowns.Length);
+            foreach (var cd in u.Cooldowns) w.I32(cd);
+            w.I32(u.Effects.Count);
+            foreach (var e in u.Effects) { w.Str(e.Stat); w.F64(e.Frac); w.I32(e.TicksLeft); w.Str(e.Source); }
         }
 
         static List<string> SortedKeys<T>(Dictionary<string, T> map)

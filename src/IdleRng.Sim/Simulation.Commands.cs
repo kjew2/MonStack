@@ -312,6 +312,7 @@ namespace IdleRng.Sim
             cb.EnemyIsBoss = false;
             cb.EnemyHp = 0;
             cb.BossTimer = 0;
+            cb.Battle = null;
             return CommandResult.Success;
         }
 
@@ -386,6 +387,7 @@ namespace IdleRng.Sim
             Check(_enhance.Counter == (ulong)s.Lifetime.EnhanceAttempts, "enhance counter == attempts");
             Check(_gachaHero.Counter == (ulong)(3 * s.HeroBanner.TotalPulls), "gacha_hero counter == 3 * pulls");
             Check(s.Rng.Streams[Rng.StreamNames.Combat].Counter == 0, "combat counter == 0");
+            Check((s.Combat.Battle != null) == (s.Combat.Phase == CombatPhase.Fighting && s.Combat.EnemyIsBoss), "battle iff fighting a boss");
             Check((s.Lifetime.FirstWallStage == 0) == (s.Lifetime.BossFails == 0), "first wall stage iff boss fails");
             Check(s.Clock.TickAtLastSync <= s.Tick, "clock anchor <= tick");
             Check(!double.IsNaN(Query.Dps) && !double.IsInfinity(Query.Dps) && Query.Dps > 0, "dps finite and > 0");

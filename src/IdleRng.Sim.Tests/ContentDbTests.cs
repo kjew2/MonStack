@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndMatchesSpec00()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("2.1"));
+            Assert.That(db.Version, Is.EqualTo("2.2"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             var b = db.HeroBanner;
             Assert.That(Enumerable.Range(0, 5).Select(i => b.Pool[i].Count), Is.EqualTo(new[] { 5, 5, 4, 4, 2 }));
@@ -83,7 +83,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void IsCompatibleWith()
         {
-            var db = TestContent.Db;   // 2.1
+            var db = TestContent.Db;   // 2.2
             Assert.That(db.IsCompatibleWith("2.7"), Is.True);
             Assert.That(db.IsCompatibleWith("1.0"), Is.False);
             Assert.That(db.IsCompatibleWith(""), Is.False);

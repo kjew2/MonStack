@@ -92,7 +92,7 @@ Not every entry in `specs/00` section 2 is a scalar, so not every one is a row i
 | `specs/00` entry | Lives in | Type |
 |---|---|---|
 | `TICK_HZ` | `constants` | int |
-| `SPD_REF` | `constants` (replaced `BASE_ATK`, `specs/11` section 9) | double |
+| `SPD_REF` | `constants` (replaced `BASE_ATK`, `specs/11` section 10) | double |
 | `ATTACK_INTERVAL_TICKS` | `constants` | int |
 | `HP0`, `HP_G` | `curves[enemy_hp].base`, `.growth` | double, double |
 | `KILLS_PER_STAGE` | `constants` | int |
@@ -125,12 +125,12 @@ Not every entry in `specs/00` section 2 is a scalar, so not every one is a row i
 | `M_SHARE_OF_LPLUS` | `banners.mythic_share_of_lplus` | double |
 | 10-pull guarantee (at least one E+) | `banners.guarantee_batch_size`, `.guarantee_min_tier` | int, enum(Tier) |
 | `HERO_SLOTS` | `constants` | int |
-| Companion stats, role, element, starter | `heroes.hp` ... `heroes.starter` (`specs/11` section 9) | per hero row |
+| Companion stats, role, element, starter | `heroes.hp` ... `heroes.starter` (`specs/11` section 10) | per hero row |
 | `HERO_LVL_CUM` | `hero_level_thresholds.cum_copies` | int per row |
 | `HERO_LVL_BONUS` | `constants` | double |
 | Pool size by tier | derived: count of `heroes` rows per `(pool_id, tier)` | - |
 | Shard value of excess copy (P1) | `hero_tiers.shard_value` | int |
-| Promotion stages, mult, cost | `promotions.unlock_stage`, `.mult`, `.cost_kills` (replaced `class_advances`, `specs/11` section 9) | int, double, double per row |
+| Promotion stages, mult, cost | `promotions.unlock_stage`, `.mult`, `.cost_kills` (replaced `class_advances`, `specs/11` section 10) | int, double, double per row |
 | Max promotions by rarity | `hero_tiers.max_promotions` | int |
 | Section 2.6 day/stage targets | `progress_targets` | int, int |
 
@@ -229,7 +229,7 @@ Per-tier hero facts that are not per-hero. Small, but it is where the P1 shard v
 
 ### 5.7 `heroes`
 
-> Overhaul (#60): `base_pct` was replaced by the companion stat sheet, role, element and `starter` columns. The current column list is `specs/11` section 9; the table below is the pre-overhaul shape.
+> Overhaul (#60): `base_pct` was replaced by the companion stat sheet, role, element and `starter` columns. The current column list is `specs/11` section 10; the table below is the pre-overhaul shape.
 
 | Column | Type | Constraint |
 |---|---|---|
@@ -278,7 +278,7 @@ Derived in the loader, not stored: `BaseLplus = rates[L] + rates[M]`; `Pool[tier
 
 ### 5.10 `class_advances` (removed)
 
-> Replaced by `promotions` (`specs/11` section 9). Kept here as history.
+> Replaced by `promotions` (`specs/11` section 10). Kept here as history.
 
 | Column | Type | Constraint |
 |---|---|---|
@@ -522,8 +522,8 @@ Range rules (`{rule}` text in parentheses): `TICK_HZ`, `ATTACK_INTERVAL_TICKS`, 
 | `E054` | tutorial_grants | Conditional column wrong | `{column} must be {'set' or 'empty'} when {cond_column} = {cond_value}` |
 | `E060` | hero_level_thresholds, class_advances | Index column not `1..N` in row order | `{column} must be exactly 1..{n} in row order, got {values}` |
 | `E061` | hero_level_thresholds | Level 1 threshold not 1 | `cum_copies for level 1 must be 1 (one copy = level 1), got {value}` |
-| `E062` | heroes | Not exactly one starter (`specs/11` section 9) | `exactly one hero must have starter = true (found {n})` |
-| `E063` | skills | Kit shape wrong (`specs/11` section 9) | `needs a base skill and exactly one skill per promotion 1..{max}` |
+| `E062` | heroes | Not exactly one starter (`specs/11` section 10) | `exactly one hero must have starter = true (found {n})` |
+| `E063` | skills | Kit shape wrong (`specs/11` section 10) | `needs a base skill and exactly one skill per promotion 1..{max}` |
 
 ### 8.5 Versioning and manifest
 

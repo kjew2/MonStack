@@ -41,9 +41,10 @@ namespace IdleRng.Sim.Rng
     public static class StreamNames
     {
         public const string Combat = "combat", GearDrop = "gear_drop", GearRarity = "gear_rarity",
-                            Enhance = "enhance", GachaHero = "gacha_hero";
+                            Enhance = "enhance", GachaHero = "gacha_hero", Battle = "battle";
 
-        public static readonly string[] All = { Combat, GearDrop, GearRarity, Enhance, GachaHero };
+        /// <summary>Battle is the 4v1 boss battle's stream (crit rolls, boss targeting; specs/11 section 8).</summary>
+        public static readonly string[] All = { Combat, GearDrop, GearRarity, Enhance, GachaHero, Battle };
 
         /// <summary>Per-stream seed derived from the profile seed.</summary>
         public static ulong StreamSeed(ulong profileSeed, string name) =>

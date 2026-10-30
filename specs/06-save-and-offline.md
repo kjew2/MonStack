@@ -143,7 +143,7 @@ Reused records, defined elsewhere and serialised as declared there:
 - **Hero ids in JSON.** `HeroId(Rarity Tier, int Index)` serialises as the string `{TierLetter}{Index:D2}`, for example `"E07"` or `"M00"`. `Copies` is a JSON object keyed by that string; `Equipped` is an array of those strings or `null`. One Json.NET converter handles both directions.
 - **Enums** (`GearSlot`, `Rarity`) serialise as their member names (`"Weapon"`, `"L"`), not integers. Rule: a saved enum member is never renamed in place; a rename is a migration step that rewrites the string.
 - **Seeds.** `RngStreamState.Seed` is a hex string, not a JSON number, because numbers above 2^53 are not exact in every JSON parser the save may meet later (cloud save, tooling). `Counter` fits in a `long` (2^63 draws is unreachable).
-- **Seed derivation (prototype).** `seed(name) = first 8 bytes of SHA-256(ProfileId.ToByteArray() ++ UTF8(name))` as a little-endian ulong. All five streams of 00 section 5.2 (`combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`) are created with `Counter = 0` at profile creation. 01 section 6 covers why the live `gacha_hero` seed moves server-side (`specs/08`).
+- **Seed derivation (prototype).** `seed(name) = first 8 bytes of SHA-256(ProfileId.ToByteArray() ++ UTF8(name))` as a little-endian ulong. All streams of 00 section 5.2 (`combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`, and since #61 `battle`) are created with `Counter = 0` at profile creation. 01 section 6 covers why the live `gacha_hero` seed moves server-side (`specs/08`).
 - **Timestamps** are `long` unix seconds, UTC, read from `IClock` (section 11). Field names end in `ServerSec`.
 - **Gold is a `double`** (02 section 2). Json.NET writes doubles in round-trip form, so a value survives save/load bit-exactly.
 - **First clears** are the set `{BOSS_EVERY, 2 * BOSS_EVERY, ..., HighestFirstClearBossStage}` compressed to one integer because P0 stages are linear and monotone (04 section 7.3). If P1 stage select arrives, the migration replaces it with a bitset keyed by `stage / BOSS_EVERY`.
@@ -383,7 +383,7 @@ Left alone on purpose: `Daily.DayKey > DayKey(now)` and `LastSavedAtServerSec > 
 
 ## 8. Migrations
 
-> Schema v2 (#60): removed companions become shards, the party is cut to 4, class advances become per-companion promotions, `Progression.ClassAdvances` is removed. Exact steps in `specs/11` section 8.
+> Schema v2 (#60): removed companions become shards, the party is cut to 4, class advances become per-companion promotions, `Progression.ClassAdvances` is removed. Exact steps in `specs/11` section 9.
 
 ### 8.1 API
 

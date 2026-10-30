@@ -135,7 +135,8 @@ namespace IdleRng.Web
 
         public void SetEmitHits(bool on)
         {
-            _sink.Mask = on ? EventKinds.Default | EventKinds.HitLanded | EventKinds.EnemySpawned : EventKinds.Default | EventKinds.EnemySpawned;
+            var baseMask = EventKinds.Default | EventKinds.EnemySpawned | EventKinds.BattleAction;
+            _sink.Mask = on ? baseMask | EventKinds.HitLanded : baseMask;
         }
 
         // ------------------------------------------------------------------ state
@@ -159,7 +160,19 @@ namespace IdleRng.Web
             var c = s.Combat;
             o.Key("combat").Obj().P("phase", c.Phase == CombatPhase.Fighting ? "fighting" : "spawning").P("spawnTimer", c.SpawnTimer)
              .P("enemyHp", c.EnemyHp).P("enemyMaxHp", c.EnemyMaxHp).P("enemyIsBoss", c.EnemyIsBoss).P("attackTimer", c.AttackTimer)
-             .P("bossTimer", c.BossTimer).EndObj();
+             .P("bossTimer", c.BossTimer);
+            if (c.Battle == null) o.Key("battle").Null();
+            else
+            {
+                o.Key("battle").Obj().P("bossElement", c.Battle.Boss.Element).Key("party").Arr();
+                foreach (var u in c.Battle.Party)
+                {
+                    if (u == null) { o.Null(); continue; }
+                    o.Obj().P("id", Br(u.HeroId)).P("hp", u.Hp).P("maxHp", u.MaxHp).P("shield", u.Shield).P("taunt", u.TauntTicks > 0).EndObj();
+                }
+                o.EndArr().EndObj();
+            }
+            o.EndObj();
             var cu = s.Currencies;
             o.Key("cur").Obj().P("gold", cu.Gold).P("gems", cu.Gems).P("shards", cu.Shards).P("freePullsDaily", cu.FreePullsDaily)
              .P("freePullsBanked", cu.FreePullsBanked).EndObj();
@@ -218,7 +231,7 @@ namespace IdleRng.Web
         private sealed class Sink : IEventSink
         {
             private readonly Host _h;
-            public Sink(Host h) { _h = h; Mask = EventKinds.Default | EventKinds.EnemySpawned; }
+            public Sink(Host h) { _h = h; Mask = EventKinds.Default | EventKinds.EnemySpawned | EventKinds.BattleAction; }
             public EventKinds Mask { get; set; }
             public void Publish(SimEvent e) => _h.Convert(e);
         }
@@ -238,7 +251,13 @@ namespace IdleRng.Web
                     Enqueue(o.ToString());
                     if (_pendingFirstClear != null) { Enqueue(_pendingFirstClear); _pendingFirstClear = null; }
                     return;
-                case BossFailed x: o.P("type", "bossFailed").P("stage", x.Stage).P("attempt", x.FailsOnStage); break;
+                case BossFailed x: o.P("type", "bossFailed").P("stage", x.Stage).P("attempt", x.FailsOnStage).P("wiped", x.Wiped); break;
+                case BattleAction x:
+                    if (x.SkillId == null || x.Actor == null || !_db.Heroes.ContainsKey(x.Actor)) return;   // the feed shows skill uses only
+                    var sk = _db.Kits[x.Actor].First(k => k.Id == x.SkillId);
+                    o.P("type", "skill").P("actor", Br(x.Actor)).P("actorName", _db.Text(_db.Heroes[x.Actor].NameKey))
+                     .P("skill", _db.Text(sk.NameKey)).P("amount", x.Amount).P("crit", x.Crit);
+                    break;
                 case FirstClear x:
                     _pendingFirstClear = new JsonOut().Obj().P("type", "firstClear").P("stage", x.Stage).P("gems", x.Gems).P("tick", e.Tick).EndObj().ToString();
                     return;

@@ -199,7 +199,15 @@ namespace IdleRng.Sim.State
         public double EnemyHp { get; set; }
         public double EnemyMaxHp { get; set; }
 
-        public CombatState Clone() => (CombatState)MemberwiseClone();
+        /// <summary>The 4v1 battle while a boss is being fought; null otherwise (specs/11 section 8).</summary>
+        public Battle.BattleState Battle { get; set; }
+
+        public CombatState Clone()
+        {
+            var c = (CombatState)MemberwiseClone();
+            c.Battle = Battle?.Clone();
+            return c;
+        }
     }
 
     /// <summary>Immutable gear piece. Slot is the gear_slots sort_order. BasePct is derived, never stored.</summary>

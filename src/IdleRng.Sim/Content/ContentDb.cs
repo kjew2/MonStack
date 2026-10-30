@@ -136,6 +136,19 @@ namespace IdleRng.Sim.Content
         public double FarmDps(HeroDef hero, int level, int promotions) =>
             hero.Atk * LevelMult(level) * PromoMult(promotions) * CritFactor(hero) * hero.Spd / Constants.SpdRef;
 
+        /// <summary>Element damage multiplier for attacker vs defender (specs/11 section 8): strong, weak or 1.</summary>
+        public double ElementMult(string attacker, string defender)
+        {
+            if (attacker == null || defender == null) return 1.0;
+            if (Elements.TryGetValue(attacker, out var a) && a.StrongVs == defender) return Constants.ElementStrongMult;
+            if (Elements.TryGetValue(defender, out var d) && d.StrongVs == attacker) return Constants.ElementWeakMult;
+            return 1.0;
+        }
+
+        /// <summary>The boss element on <paramref name="stage"/>: rotates through elements every BOSS_EVERY stages.</summary>
+        public string BossElement(int stage) =>
+            ElementList.Count == 0 ? null : ElementList[(stage / Math.Max(1, Constants.BossEvery)) % ElementList.Count].Id;
+
         public string Text(string key) => Strings.TryGetValue(key, out var s) ? s : key;
 
         /// <summary>True when MAJOR matches. False on malformed input.</summary>
@@ -248,6 +261,9 @@ namespace IdleRng.Sim.Content
                 EnhPerLvl = D("ENH_PER_LVL"), EnhSuccessFloor = D("ENH_SUCCESS_FLOOR"), EnhSuccessStep = D("ENH_SUCCESS_STEP"),
                 EnhCostGoldMult = D("ENH_COST_GOLD_MULT"), HeroSlots = I("HERO_SLOTS"), HeroLvlBonus = D("HERO_LVL_BONUS"),
                 IdleChestHours = D("IDLE_CHEST_HOURS"), IdleChestGems = I("IDLE_CHEST_GEMS"),
+                BattleGauge = D("BATTLE_GAUGE"), DefKMult = D("DEF_K_MULT"), ElementStrongMult = D("ELEMENT_STRONG_MULT"),
+                ElementWeakMult = D("ELEMENT_WEAK_MULT"), BasicAttackPower = D("BASIC_ATTACK_POWER"),
+                AiHealBelow = D("AI_HEAL_BELOW"), AiShieldBelow = D("AI_SHIELD_BELOW"),
             };
             if (errors.Count > 0) return;
 
@@ -268,8 +284,15 @@ namespace IdleRng.Sim.Content
             {
                 Id = r.Str("id"), FromStage = r.Int("from_stage"), HpMult = r.Dbl("hp_mult"), TimeTicks = r.Int("time_ticks"),
                 GoldMult = r.Dbl("gold_mult"), GearDropP = r.Dbl("gear_drop_p"), GearMinRarity = ParseRarity(r.Str("gear_min_rarity")),
-                FirstClearGems = r.Int("first_clear_gems"),
+                FirstClearGems = r.Int("first_clear_gems"), AtkMult = r.Dbl("atk_mult"), DefMult = r.Dbl("def_mult"),
+                Spd = r.Dbl("spd"), AoeEvery = r.Int("aoe_every"), AoePower = r.Dbl("aoe_power"),
             }).OrderBy(b => b.FromStage).ToList().AsReadOnly();
+            foreach (var b in BossRules)
+                if (!(b.Spd > 0) || b.AtkMult < 0 || b.DefMult < 0 || b.AoeEvery < 0 || b.AoePower < 0)
+                    errors.Add(new ContentError("E043", $"boss_rules[{b.Id}]", "atk_mult, def_mult, aoe_power >= 0; spd > 0; aoe_every >= 0"));
+            if (!(Constants.BattleGauge > 0 && Constants.DefKMult > 0 && Constants.ElementStrongMult > 0 && Constants.ElementWeakMult > 0
+                  && Constants.BasicAttackPower > 0))
+                errors.Add(new ContentError("E043", "constants", "battle constants must be > 0"));
             if (BossRules.Count == 0 || BossRules[0].FromStage != 1)
                 errors.Add(new ContentError("E045", "boss_rules", "first row must have from_stage = 1"));
 
@@ -326,7 +349,7 @@ namespace IdleRng.Sim.Content
                 errors.Add(new ContentError("E062", "heroes", $"exactly one hero must have starter = true (found {starters.Count})"));
             else StarterHeroId = starters[0].Id;
 
-            // roles and elements (specs/11 section 9)
+            // roles and elements (specs/11 section 10)
             RoleList = t["roles"].Select(r => new RoleDef
             {
                 Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"), DescKey = r.Str("desc_key"),

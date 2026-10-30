@@ -117,3 +117,5 @@ Command log (`ICommandLog`), `Simulation.StateHash()`, `Simulation.Replay(...)`:
 
 ## Additive changes to existing projects
 None. `src/IdleRng.Web/` is new; `IdleRng.sln` is not modified (the wasm project is built by `web/wasm/build.sh`).
+
+Boss battle (`specs/11` section 8): `combat.battle` mirrors `CombatState.Battle` (boss element, per-slot hp/maxHp/shield/taunt; ids mapped). Event `skill` comes from `BattleAction` with a non-null `SkillId` (basic attacks are not sent; damage floaters still come from `HitLanded`). `bossFailed.wiped` is `BossFailed.Wiped`.

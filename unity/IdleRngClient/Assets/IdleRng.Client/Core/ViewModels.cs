@@ -22,6 +22,9 @@ namespace IdleRng.Client.Core
         public int HitsToKill;
         public float EnemyHue;   // degrees 0..360
         public readonly string[] PartyGlyphs = new string[6];
+
+        /// <summary>Boss battle status line (party HP per slot, boss element); empty outside a boss fight (specs/11 section 8).</summary>
+        public string BattleText = "";
         public bool ChestReady;
         public long ChestReadyInSec;
         public int ChestGems;

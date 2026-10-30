@@ -101,7 +101,8 @@
           }
           break;
         }
-        case 'bossFailed': log('Boss failed on stage ' + e.stage + ' (attempt ' + e.attempt + ')', 'bad'); toast('Boss failed. Farming stage ' + e.stage + '.', undefined, 2000); break;
+        case 'bossFailed': log('Boss failed on stage ' + e.stage + (e.wiped ? ': party wiped' : ': out of turns') + ' (attempt ' + e.attempt + ')', 'bad'); toast((e.wiped ? 'Party wiped' : 'Out of turns') + '. Farming stage ' + e.stage + '.', undefined, 2000); break;
+        case 'skill': if (speed <= 5) log(e.actorName + ': ' + e.skill + (e.amount > 0 ? ' ' + fmt(e.amount) : '') + (e.crit ? ' (crit)' : ''), 'muted'); break;
         case 'bossCleared': log('Boss cleared on stage ' + e.stage, 'ok'); break;
         case 'firstClear': log('+' + e.gems + ' gems first clear (stage ' + e.stage + ')', 'gems'); break;
         case 'questCompleted': log('Quest done: ' + e.label + '  +' + e.gems + ' gems', 'gems'); toast('Quest done: ' + e.label + '  +' + e.gems + ' gems'); break;
@@ -187,6 +188,7 @@
     let label;
     if (cb.phase === 'spawning') label = st.boss === 'pending' ? 'Boss incoming' : SP.enemyName(st.stage, false);
     else label = SP.enemyName(st.stage, cb.enemyIsBoss);
+    if (cb.battle && C.elements[cb.battle.bossElement]) label += ' · ' + C.elements[cb.battle.bossElement].name;
     setText($('enemyLabel'), label);
 
     const hpFrac = cb.phase === 'fighting' ? Math.max(0, cb.enemyHp / cb.enemyMaxHp) : 0;
@@ -228,10 +230,13 @@
   }
   function drawStripSlow() {
     const party = sim.state.heroes.party;
+    const battle = sim.state.combat.battle;   // 4v1 boss battle: HP bar per companion (specs/11 section 8)
     party.forEach((id, i) => {
       const el = partyStripEls[i];
+      const bu = battle && battle.party[i];
+      if (bu) el.style.setProperty('--hp', String(Math.max(0, bu.hp / bu.maxHp)));
       const t = id ? sim.heroById[id].tier : -1;
-      const cls = 'pslot' + (id ? ' filled' : '') + (el.classList.contains('flash') ? ' flash' : '');
+      const cls = 'pslot' + (id ? ' filled' : '') + (bu ? ' inbattle' : '') + (bu && bu.hp <= 0 ? ' ko' : '') + (el.classList.contains('flash') ? ' flash' : '');
       if (el.className !== cls) el.className = cls;
       if ((el.dataset.id || '') !== (id || '')) {
         el.dataset.id = id || '';

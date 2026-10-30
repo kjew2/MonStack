@@ -7,12 +7,14 @@ namespace IdleRng.Client.Screens
     public sealed class CombatScreen : ScreenBase
     {
         readonly VisualElement _wallCard;
-        readonly Label _wallText, _feed, _lifetime;
+        readonly Label _wallText, _feed, _lifetime, _battle;
         readonly Button _chest;
         int _feedVersion = -1;
 
         public CombatScreen(GameViewModel vm) : base(vm)
         {
+            _battle = Ui.Text("", Ui.Small);
+            Root.Add(_battle);
             _wallCard = Ui.Panel();
             Ui.Border(_wallCard, 3, Palette.Bad);
             _wallText = Ui.Text("");
@@ -38,6 +40,7 @@ namespace IdleRng.Client.Screens
         {
             var c = Vm.Combat;
             Ui.Show(_wallCard, c.IsWalled);
+            Ui.Set(_battle, c.BattleText);
             if (c.IsWalled)
                 Ui.Set(_wallText, "BOSS FAILED (attempt " + c.BossFailsOnStage + ")\n" +
                                   "Your DPS " + TextFmt.Num(c.Dps) + "   Need " + TextFmt.Num(c.NeedDps) + "\n" +

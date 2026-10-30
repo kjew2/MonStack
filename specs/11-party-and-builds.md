@@ -28,21 +28,20 @@ From #63:
 | Phase | Content | Issues | Status |
 |---|---|---|---|
 | 1 | Party of 4, companion stat sheet, roles, elements, 20-companion pool, per-companion promotion, farming DPS from the stat sheet | #62, #63, part of #59 | **Live** |
-| 2 | 4v1 turn-based battle for bosses (and dungeons later); skills and kits; HP/DEF/SPD used in combat; crit rolled per hit | #61, rest of #59 | Planned |
+| 2 | 4v1 ATB battle for bosses (dungeons later); kits take effect; HP/DEF/SPD used in combat; crit rolled per hit | #61, rest of #59 | **Live** |
 | 3 | Per-companion gear slots, prefix/suffix affixes with roll ranges, slot-bound enhancement | #57, #55 | Planned |
 | 4 | Daily dungeons, build-defining uniques target-farmed there | #56, #64 | Planned |
 | 5 | Stat upgrade overhaul (multiple gold tracks, milestones, auto-buy) | #58 | Planned |
 
-While phase 1 is live and later phases are not:
+While phases 1-2 are live and later phases are not:
 
 - Gear is still the party-wide `GearMult` of `specs/04` section 5 (one set of 6 slots shared by the whole party).
-- Bosses still use the timer DPS check of `specs/03` section 7 against party DPS (section 7 here).
-- The gold stat layer (`specs/04` section 4) multiplies the whole party's ATK.
-- Roles, elements, HP and DEF are content and display only; nothing in the farming sim reads them yet.
+- Normal stages use the farming DPS of section 7; bosses use the 4v1 battle of section 8.
+- The gold stat layer (`specs/04` section 4) and gear multiply the whole party's ATK in farming, and HP/ATK/DEF in battle.
 
 ## 3. Stat sheet
 
-Every companion has the same six stats. Later phases add damage buckets from affixes and uniques (section 9).
+Every companion has the same six stats. Later phases add damage buckets from affixes and uniques (section 11).
 
 | Stat | Meaning | Phase 1 use |
 |---|---|---|
@@ -116,9 +115,9 @@ Low-rarity skills are one simple effect each (e.g. "hit twice", "heal lowest all
 | Passive | L, M | by role: Killer Instinct, Iron Skin, Arcane Mind, Grace, Swiftness |
 | Promotion skills 1-3 | up to the rarity cap | by role, e.g. Striker Focus / Execute / Blade Flurry |
 
-So kit sizes are C 1, R 2, E 3, L 6, M 6 skills (plus the basic attack every companion has). Names and numbers repeat across companions of the same role on purpose. Later passes overhaul kits one companion at a time, starting with L and M; a kit can change freely as long as the content rules in section 9 hold.
+So kit sizes are C 1, R 2, E 3, L 6, M 6 skills (plus the basic attack every companion has). Names and numbers repeat across companions of the same role on purpose. Later passes overhaul kits one companion at a time, starting with L and M; a kit can change freely as long as the content rules in section 10 hold.
 
-Skill effects run in the battle (phase 2). In phase 1 kits are content and display only: the Party screen lists each skill and whether its promotion has unlocked it.
+Kits take effect in the boss battle (section 8). The Party screen lists each skill and whether its promotion has unlocked it.
 
 ### 4.5 Starter companion
 
@@ -175,7 +174,7 @@ HitDamage     = Dps * ATTACK_INTERVAL_TICKS / TICK_HZ
 ```
 
 - The combat loop of `specs/03` section 7 is unchanged: one hit of `HitDamage` every `ATTACK_INTERVAL_TICKS`. Crit is folded in as its expected value, so farming draws no RNG and no stream counter changes.
-- Bosses in phase 1 use the same `HitDamage` against the boss timer.
+- Bosses do not use `HitDamage`: they are fought in the 4v1 battle (section 8).
 - An empty party has `Dps = 0`. The starter grant (section 4.5) and the "equipped heroes owned" invariant keep a normal profile above zero; `Validate()` still requires `Dps > 0`.
 
 ### 7.1 Layers for reporting (`specs/09` section 6.3, AC2)
@@ -192,7 +191,60 @@ Dps        = Base * HeroMult * PromoMult * StatMult * GearMult
 
 `SimQuery.ClassMult` is renamed `PromoMult`. The bot table's `class` column is `promo`.
 
-## 8. Save schema v2
+## 8. Boss battle: 4v1 ATB (phase 2, #61)
+
+Decided (kj, 2026-10-30): ATB gauge; lose on wipe or turn limit, free retry; DEF as diminishing %; elements x1.3 / x0.8 with the boss element rotating every 10 stages. Numbers are placeholders.
+
+### 8.1 Flow
+
+- The 10th enemy of a boss stage starts a battle instead of the timer DPS check. `CombatState.Battle` holds it, the boss timer (`boss_rules.time_ticks`) is the turn limit, and the battle runs inside the normal tick loop, one `BattleEngine.Step` per tick.
+- **Win:** boss HP reaches 0. Gold, drops, first clear and stage advance as before.
+- **Lose:** the party is wiped, or the timer runs out. `BossFailed.Wiped` says which. The stage walls as before; `AttemptBoss` retries any time.
+- The party is snapshotted when the battle starts. Pulls, promotions and stat buys during a fight apply to the next fight.
+- The battle is saved with the state (`CombatState.Battle`, hashed by `StateHash`), so a reload mid-fight continues identically. A save with a boss but no battle (older v2) starts the battle on load.
+- Offline catch-up never fights bosses (unchanged).
+
+### 8.2 Units and stats
+
+```
+power      = StatMult * GearMult                        (gold stat layer x gear; split per stat in phases 3/5)
+companion  = HP/ATK/DEF from section 3.1 x power; SPD, crit as in content
+boss       = HP  = hp_mult  * HP(s)                     (unchanged boss HP)
+             ATK = atk_mult * HP(s), DEF = def_mult * HP(s), SPD = boss_rules.spd, no crit
+boss element = elements[(s / BOSS_EVERY) mod 5] in sort order
+```
+
+### 8.3 ATB and actions
+
+- Each tick every living unit adds its current SPD to its gauge. A unit at or above `BATTLE_GAUGE` acts and pays `BATTLE_GAUGE`; highest gauge first, ties to the lower party slot, boss last. At SPD 100 a unit acts once per second. A "turn" for durations is `BATTLE_GAUGE / SPD_REF` ticks.
+- **Companion AI:** cooldowns tick down by one per own action. It uses the first unlocked, ready kit skill (kit order, passives skipped) that would do something: damage always; heal when an ally is below `AI_HEAL_BELOW` of max HP; shield below `AI_SHIELD_BELOW`; taunt when not taunting; buff/debuff when the target does not already carry that skill's effect. Otherwise a basic attack of `BASIC_ATTACK_POWER x ATK`.
+- **Boss:** every `aoe_every`-th action hits the whole living party for `aoe_power x ATK`; otherwise one target: a taunting companion if any, else a random living one (one `battle` draw).
+
+### 8.4 Damage and effects
+
+```
+damage = scaled * crit * element * K / (K + DEF_target)        then the target's shield absorbs first
+scaled = power x (the skill's `scales` stat, current value)
+crit   = CRIT_DMG with chance CRIT_RATE (one `battle` draw per hit by a unit that can crit)
+element= ELEMENT_STRONG_MULT if attacker beats defender, ELEMENT_WEAK_MULT if defender beats attacker, else 1
+K      = DEF_K_MULT * HP(s)
+```
+
+- Heal: `scaled` to the weakest ally (by HP fraction) or all allies, capped at max HP. Shield: absorbs `scaled` for `duration` turns. Taunt: the boss must target this companion for `duration` turns.
+- Buff/debuff: `power` as a fraction of base for HP/ATK/DEF/SPD (floored at 10% of base), added directly for crit rate and crit damage; lasts `duration` turns.
+- Passive: the same effect, permanent, applied at battle start.
+
+### 8.5 Triggers (hook for uniques, #64)
+
+Every effect goes through one function (`BattleEngine.Apply`) using the kit-skill vocabulary. Triggered effects are collected per unit by `BattleEngine.CollectTriggers` and fired at `BattleStart`, `OnAction`, `OnBasicAttack`, `OnCrit` and `OnHitTaken`. Phase 2 registers kit passives at `BattleStart`; uniques add their entries there, derived from the unit's snapshot, so a saved battle re-derives the same triggers after a reload.
+
+### 8.6 Determinism and queries
+
+- New RNG stream `battle` (added to `specs/00` section 5 contract 2). Crit rolls and boss targeting are its only draws; farming still draws nothing.
+- `SimQuery.BossClearable` runs the whole battle on copies (a cloned stream) and reports whether the current party would win; it changes no state. Bots retry a walled boss when it is true.
+- Event `BattleAction` (opt-in, like `HitLanded`) reports each action; damage to the boss also publishes `HitLanded` for damage floaters.
+
+## 9. Save schema v2
 
 `GameState.CurrentSchemaVersion` and `SaveSchema.Current` go to 2. Migration v1 -> v2 (`specs/06` section 8 rules: literals frozen in the step, no ContentDb):
 
@@ -201,7 +253,7 @@ Dps        = Base * HeroMult * PromoMult * StatMult * GearMult
 3. **Promotions.** `Heroes.Promotions` is created. Each kept, owned companion gets `min(Progression.ClassAdvances, cap)` with cap C 0, R 1, E 2, L 3, M 3, so a migrated player keeps most of their class power. `Progression.ClassAdvances` is removed.
 4. **Starter.** If no kept companion is owned after step 1, grant one copy of `hero_c_01` and put it in slot 0.
 
-## 9. Content tables (phase 1)
+## 10. Content tables (phases 1-2)
 
 Changes to `specs/05` section 5. `content_version` goes to `2.0` (MAJOR: heroes removed, `class_advances` removed).
 
@@ -225,18 +277,19 @@ Changes to `specs/05` section 5. `content_version` goes to `2.0` (MAJOR: heroes 
 
 `elements`: `id` (key), `sort_order` (int, `0..N-1`), `name_key`, `display_color` (color), `strong_vs` (ref(elements)).
 
+Phase 2 adds constants `BATTLE_GAUGE`, `DEF_K_MULT`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW` and `boss_rules` columns `atk_mult`, `def_mult`, `spd`, `aoe_every`, `aoe_power` (content `2.2`, section 8).
+
 `skills` (skeleton kits, section 4.4): `id` (key), `hero_id` (ref(heroes), `E023`), `slot` (int, `0..N-1` contiguous per hero, `E060`), `unlock_promotion` (int; 0 = base kit), `name_key`, `desc_key`, `kind` (enum `damage`, `heal`, `shield`, `taunt`, `buff`, `debuff`, `passive`), `target` (enum `enemy`, `all_enemies`, `self`, `lowest_ally`, `all_allies`), `stat` (stat id, required for buff/debuff/passive), `scales` (stat id, required for damage/heal/shield), `power` (double `>= 0`: multiplier of `scales`, or the buff/debuff fraction), `cooldown` (int turns; 0 iff passive), `duration` (int turns). Each companion needs at least one base skill and exactly one skill per promotion `1..max_promotions` (`E063`). Adding the table took content to `2.1`.
 
 `promotions` (replaces `class_advances`): `index` (key, `1..N` contiguous, `E060`), `unlock_stage` (int, strictly increasing, `E032`), `mult` (double, `> 0`), `cost_kills` (double, `>= 0`), `name_key`.
 
-## 10. Later phases (design so far)
+## 11. Later phases (design so far)
 
-- **Phase 2, battle (#61).** 4 companions vs 1 boss, turn order by SPD, boss attacks back, lose on wipe or turn limit. Runs on its own `battle` RNG stream with a fixed draw budget per action. Normal stages keep the section 7 farming model, so offline catch-up stays closed-form.
 - **Phase 3, gear (#57, #55).** Each companion gets its own slots (count open, 4-5 suggested). Pieces roll prefixes and suffixes with tiered roll ranges on a `gear_affix` stream. Enhancement belongs to the companion's slot, not the item.
 - **Phase 4, dungeons and uniques (#56, #64).** Daily tickets; each unique drops from one dungeon with bad-luck protection; dungeon materials replace gold for promotion and enhancement.
 - **Phase 5, stat tracks (#58).** Party-wide gold tracks for HP/ATK/DEF/SPD/crit with milestones and auto-buy.
 
-## 11. Known gaps
+## 12. Known gaps
 
 - `tools/power_curve_model.py` still models the pre-overhaul layers (6 heroes, base DPS%, class advance), issue #66. It is rebuilt when balance resumes; until then the C# bot harness is the only measurement.
 - Acceptance after phase 1 (20 seeds x 30 days): AC1 stage targets pass on days 1, 7 and 30. AC2 fails because the promotion layer is about 2-3% of ln(DPS) and 0 before the first promotion. AC3 fails on one seed (first wall at stage 50). AC4 is the pre-existing #41. These are balance outcomes of placeholder numbers; they are reported, not tuned. While the overhaul's systems are being finalized, AC1-AC5 are report-only (`advisory` in `acceptance-targets.json`, kj 2026-10-30): imbalance never blocks a phase. AC6 (determinism and goldens) still blocks.
