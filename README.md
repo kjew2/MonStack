@@ -33,8 +33,25 @@ The web prototype is the real C# game core (`src/IdleRng.Sim`, the code the Unit
 
 ### One-time setup
 
-1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), Node 18+ and Python 3.
-2. Install the WebAssembly build tools: `dotnet workload install wasm-tools` (may need `sudo` on Linux/macOS).
+**1. Check what you already have:**
+
+```
+./play.sh --check
+```
+
+It lists each dependency as `ok` or `MISSING`, with the install command for your OS next to anything missing. Run it again after installing until it says "All set".
+
+**2. Install anything missing.** You need four things; the fifth is optional:
+
+| Dependency | Why | macOS | Windows (PowerShell) | Ubuntu / Debian |
+|---|---|---|---|---|
+| Python 3 | serves the page | `brew install python` | `winget install Python.Python.3.12` | `sudo apt install python3` |
+| Node.js 18+ | packs the game content | `brew install node` | `winget install OpenJS.NodeJS.LTS` | `sudo apt install nodejs` |
+| .NET 8 SDK | builds the C# engine | [installer](https://dotnet.microsoft.com/download/dotnet/8.0) | `winget install Microsoft.DotNet.SDK.8` | `sudo apt install dotnet-sdk-8.0` |
+| WebAssembly tools | compile C# for the browser | `sudo dotnet workload install wasm-tools` | `dotnet workload install wasm-tools` (as administrator) | `sudo dotnet workload install wasm-tools` |
+| qrencode (optional) | QR code for the phone link | `brew install qrencode` | not needed | `sudo apt install qrencode` |
+
+Install them top to bottom: the WebAssembly tools need the .NET SDK first. On macOS, `brew` is [Homebrew](https://brew.sh); the official installers from python.org and nodejs.org work too. Ubuntu's `nodejs` package must be version 18 or newer (`node --version`); older releases need the installer from nodejs.org. On Windows, run `./play.sh` from Git Bash (comes with [Git for Windows](https://git-scm.com/download/win)) or WSL; open a new terminal after installing so it sees the new tools.
 
 ### Play
 
