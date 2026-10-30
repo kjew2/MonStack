@@ -23,14 +23,30 @@ From #63:
 8. **Max promotions by rarity:** C 0, R 1, E 2, L 3, M 3. L and M share the cap so the gap between them stays small.
 9. **About 20 distinct kits.** Low-rarity kits are small and simple; only Legendary and Mythic get fully fleshed-out kits.
 
+From #57, #55 and #56 (kj, 2026-10-30), phase 3 (section 10):
+
+10. **4 gear slots per companion:** weapon, armor, helm, accessory (16 across the party). This replaces the 6 party-wide slots.
+11. **Affix gear.** Each piece has a base type (slot + implicit stat) and rolls prefixes (mostly offensive) and suffixes (mostly defensive or utility). Affixes have tiers T1 (best) to T5, gated by the item's tier; the value rolls uniformly inside the tier's range and the UI shows the range. The affix count depends on rarity, and slot-weighted pools give each slot an identity. Affixes add to the companion stat sheet (section 3) plus gold find. Same-kind bonuses add within a bucket, buckets multiply.
+12. **New `gear_affix` RNG stream** with a fixed draw budget per drop, so existing stream counters are untouched and server replay holds.
+13. **Enhancement belongs to the party position (1-4) and gear slot**, `SlotEnh[position][slot]`, not to the item and not to the companion. Whoever sits in that position gets those levels; swapping items keeps them. Enhancement boosts only the implicit stat of the piece in that slot, never affixes. Long track (`ENH_MAX` raised a lot) with a per-level cost curve. Equipped items stay with their companion when it is benched; only enhancement belongs to the position.
+14. **Salvage.** Unwanted gear is dismantled into materials, which pay for enhancement. In phase 4 they also pay for promotion and unique upgrades.
+15. **Crafting is a very premium currency** (the main loop is rolling gear). Operations: reroll one affix value within its tier range, reroll affixes entirely, lock affixes during a reroll for a cost multiplier. The currency is never purchasable with gems or gold and never comes from salvage; it comes from specific milestones (and events, later).
+16. **Gear sources in phase 3 stay stage kills and boss drops.** Gear becomes dungeon-only in phase 4 (#56).
+17. **Auto-equip** uses a per-companion score weighted by role, so idle players are fine; manual equip and unequip exist for theorycrafters; a gear bag holds unequipped pieces.
+
+From #56 and #64 (kj, 2026-10-30), phase 4, recorded so phase 3 leaves room:
+
+18. **Dungeons:** one shared pool of 2 tickets per day for every dungeon and difficulty, reset through `EnsureDay`; extra tickets for gems (placeholder price); sweep once a difficulty is cleared; no weekday rotation. Dungeons drop only gear (uniques included) and stages and bosses stop dropping gear. No materials drop from dungeons: materials come only from salvage.
+19. **Uniques:** 1 per companion; each copy is a separate item with its own affixes, duplicates do not upgrade each other; hard pity set very high; uniques drop at the difficulty's tier and are upgraded with enhancement/materials.
+
 ## 2. Phases and status
 
 | Phase | Content | Issues | Status |
 |---|---|---|---|
 | 1 | Party of 4, companion stat sheet, roles, elements, 20-companion pool, per-companion promotion, farming DPS from the stat sheet | #62, #63, part of #59 | **Live** |
 | 2 | 4v1 turn-based battle for bosses (and dungeons later); skills and kits; HP/DEF/SPD used in combat; crit rolled per hit | #61, rest of #59 | Planned |
-| 3 | Per-companion gear slots, prefix/suffix affixes with roll ranges, slot-bound enhancement | #57, #55 | Planned |
-| 4 | Daily dungeons, build-defining uniques target-farmed there | #56, #64 | Planned |
+| 3 | 4 gear slots per companion, base types with prefix/suffix affixes in tiered roll ranges, gear bag and auto-equip score, enhancement per party position and gear slot, salvage into materials, Starglass crafting, save v3 (section 10) | #57, #55 | Planned |
+| 4 | Daily dungeons (2 shared tickets/day) become the only gear source; build-defining uniques target-farmed there; salvage materials also pay promotion and unique upgrades | #56, #64 | Planned |
 | 5 | Stat upgrade overhaul (multiple gold tracks, milestones, auto-buy) | #58 | Planned |
 
 While phase 1 is live and later phases are not:
@@ -40,9 +56,11 @@ While phase 1 is live and later phases are not:
 - The gold stat layer (`specs/04` section 4) multiplies the whole party's ATK.
 - Roles, elements, HP and DEF are content and display only; nothing in the farming sim reads them yet.
 
+Section 10 is the phase 3 design. Until phase 3 is Live, the bullets above hold; the PR that ships phase 3 flips its status and replaces the first bullet with "Gear is per companion (section 10)".
+
 ## 3. Stat sheet
 
-Every companion has the same six stats. Later phases add damage buckets from affixes and uniques (section 9).
+Every companion has the same six stats. Phase 3 gear adds to them (section 10.7) and adds one economy stat, gold find, that is not on the sheet. Later phases add damage buckets (boss, element, final damage) from uniques and the battle.
 
 | Stat | Meaning | Phase 1 use |
 |---|---|---|
@@ -129,6 +147,7 @@ Exactly one companion has `starter = true` (Pell, a Common Striker). `GameState.
 - `HERO_SLOTS = 4`.
 - `AutoEquipBestHeroes` fills the party with the 4 owned companions with the highest `FarmDps` (section 7), ties broken by id ordinal. Promotion changes `FarmDps`, so auto-equip re-picks after a promotion when it is on.
 - Manual equip rules are unchanged (`specs/03` section 9), except that `UnequipHero` rejects emptying the last occupied slot (`Reject.LastCompanion`): party DPS comes only from companions, so an empty party could never kill anything.
+- Phase 3 changes (section 10.10): the party index is the **party position** (code 0-3, player-facing 1-4) that owns enhancement levels, so the auto re-pick becomes position-stable, ranking uses `FarmDps` with the companion's gear but without enhancement, and `SwapPartyPositions` moves companions between positions.
 
 ## 6. Promotion (replaces class advance)
 
@@ -177,6 +196,7 @@ HitDamage     = Dps * ATTACK_INTERVAL_TICKS / TICK_HZ
 - The combat loop of `specs/03` section 7 is unchanged: one hit of `HitDamage` every `ATTACK_INTERVAL_TICKS`. Crit is folded in as its expected value, so farming draws no RNG and no stream counter changes.
 - Bosses in phase 1 use the same `HitDamage` against the boss timer.
 - An empty party has `Dps = 0`. The starter grant (section 4.5) and the "equipped heroes owned" invariant keep a normal profile above zero; `Validate()` still requires `Dps > 0`.
+- **Phase 3 plugs gear in here.** `ATK(c)`, `SPD(c)`, `CRIT_RATE(c)` and `CRIT_DMG(c)` become the geared values of section 10.7.1 (the companion's own items, implicits enhanced by its party position), and `GearMult` stops being a factor: `Dps = PartyDps * StatMult`. `GearMult` survives as a reporting ratio (section 10.7.3). The loop, `HitDamage` and the closed-form offline credit are unchanged.
 
 ### 7.1 Layers for reporting (`specs/09` section 6.3, AC2)
 
@@ -190,7 +210,7 @@ StatMult, GearMult as before
 Dps        = Base * HeroMult * PromoMult * StatMult * GearMult
 ```
 
-`SimQuery.ClassMult` is renamed `PromoMult`. The bot table's `class` column is `promo`.
+`SimQuery.ClassMult` is renamed `PromoMult`. The bot table's `class` column is `promo`. Phase 3 computes `HeroMult` and `PromoMult` on the ungeared party and defines `GearMult` as the geared over the ungeared party (section 10.7.3), so the identity above still holds exactly.
 
 ## 8. Save schema v2
 
