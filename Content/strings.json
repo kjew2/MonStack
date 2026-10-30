@@ -76,7 +76,7 @@
     },
     {
       "key": "mskill.gel_mend.desc",
-      "text": "Heal the weakest ally for 120% WIS. Cooldown 3."
+      "text": "Heal the weakest ally for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.ooze_back.name",
@@ -84,7 +84,7 @@
     },
     {
       "key": "mskill.ooze_back.desc",
-      "text": "Chase trait. When hit: strike back for 8% of max HP."
+      "text": "Chase trait. When hit: strike back for {power:pct} of {scales}."
     },
     {
       "key": "mskill.harden.name",
@@ -92,7 +92,7 @@
     },
     {
       "key": "mskill.harden.desc",
-      "text": "Shield self for 100% DEF for 3 turns. Cooldown 4."
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
     },
     {
       "key": "mskill.lucky_rebound.name",
@@ -100,7 +100,7 @@
     },
     {
       "key": "mskill.lucky_rebound.desc",
-      "text": "Chase trait. On evade: +20% crit chance for 2 turns."
+      "text": "Chase trait. On evade: +{power:pct} {stat} for {duration} turns."
     },
     {
       "key": "mskill.flame_breath.name",
@@ -108,7 +108,7 @@
     },
     {
       "key": "mskill.flame_breath.desc",
-      "text": "Fire damage to all enemies for 90% STR. Cooldown 4."
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.wildfire.name",
@@ -116,7 +116,7 @@
     },
     {
       "key": "mskill.wildfire.desc",
-      "text": "Chase trait. On crit: fire damage to all enemies for 60% STR."
+      "text": "Chase trait. On crit: {element} damage to all enemies for {power:pct} {scales}."
     },
     {
       "key": "mskill.iron_hide.name",
@@ -124,7 +124,7 @@
     },
     {
       "key": "mskill.iron_hide.desc",
-      "text": "+30% DEF for 3 turns. Cooldown 4."
+      "text": "+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
     },
     {
       "key": "mskill.plate_mastery.name",
@@ -132,7 +132,7 @@
     },
     {
       "key": "mskill.plate_mastery.desc",
-      "text": "Chase trait. Permanent +40% DEF."
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
     },
     {
       "key": "mskill.aether_bolt.name",
@@ -140,7 +140,7 @@
     },
     {
       "key": "mskill.aether_bolt.desc",
-      "text": "Light damage for 180% INT. Cooldown 2."
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.overcharge.name",
@@ -148,7 +148,7 @@
     },
     {
       "key": "mskill.overcharge.desc",
-      "text": "Chase trait. Every action: +10% SPD for 2 turns."
+      "text": "Chase trait. Every action: +{power:pct} {stat} for {duration} turns."
     },
     {
       "key": "mskill.confuse.name",
@@ -156,7 +156,7 @@
     },
     {
       "key": "mskill.confuse.desc",
-      "text": "An enemy loses 30% DEX for 3 turns. Cooldown 4."
+      "text": "An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
     },
     {
       "key": "mskill.phase_shift.name",
@@ -164,7 +164,7 @@
     },
     {
       "key": "mskill.phase_shift.desc",
-      "text": "Chase trait. On evade: heal self for 50% WIS."
+      "text": "Chase trait. On evade: heal self for {power:pct} {scales}."
     },
     {
       "key": "mskill.second_wind.name",
@@ -172,7 +172,7 @@
     },
     {
       "key": "mskill.second_wind.desc",
-      "text": "Heal self for 25% max HP. Cooldown 5."
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.vital_surge.name",
@@ -180,7 +180,7 @@
     },
     {
       "key": "mskill.vital_surge.desc",
-      "text": "Chase trait. Permanent +30% max HP."
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
     },
     {
       "key": "mskill.smash.name",
@@ -188,7 +188,7 @@
     },
     {
       "key": "mskill.smash.desc",
-      "text": "Damage for 220% STR. Cooldown 3."
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.follow_through.name",
@@ -196,7 +196,7 @@
     },
     {
       "key": "mskill.follow_through.desc",
-      "text": "Chase trait. Every basic attack: extra hit for 50% STR."
+      "text": "Chase trait. Every basic attack: extra hit for {power:pct} {scales}."
     },
     {
       "key": "mskill.arcane_blast.name",
@@ -204,7 +204,7 @@
     },
     {
       "key": "mskill.arcane_blast.desc",
-      "text": "Damage for 200% INT. Cooldown 3."
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.mana_surge.name",
@@ -212,7 +212,7 @@
     },
     {
       "key": "mskill.mana_surge.desc",
-      "text": "Chase trait. On crit: +30% INT for 2 turns."
+      "text": "Chase trait. On crit: +{power:pct} {stat} for {duration} turns."
     },
     {
       "key": "mskill.ward.name",
@@ -220,7 +220,7 @@
     },
     {
       "key": "mskill.ward.desc",
-      "text": "Shield all allies for 60% WIS for 3 turns. Cooldown 5."
+      "text": "Shield all allies for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
     },
     {
       "key": "mskill.enlightened.name",
@@ -228,7 +228,7 @@
     },
     {
       "key": "mskill.enlightened.desc",
-      "text": "Chase trait. Permanent +40% WIS."
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
     },
     {
       "key": "mskill.quick_jab.name",
@@ -236,7 +236,7 @@
     },
     {
       "key": "mskill.quick_jab.desc",
-      "text": "Damage for 120% STR. Cooldown 1."
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.riposte.name",
@@ -244,7 +244,7 @@
     },
     {
       "key": "mskill.riposte.desc",
-      "text": "Chase trait. On evade: strike back for 80% DEX."
+      "text": "Chase trait. On evade: strike back for {power:pct} {scales}."
     },
     {
       "key": "mskill.provoke.name",
@@ -252,7 +252,7 @@
     },
     {
       "key": "mskill.provoke.desc",
-      "text": "Taunt for 3 turns. Cooldown 4."
+      "text": "Taunt for {duration} turns. Cooldown {cooldown}."
     },
     {
       "key": "mskill.spiked_shell.name",
@@ -260,7 +260,7 @@
     },
     {
       "key": "mskill.spiked_shell.desc",
-      "text": "Chase trait. When hit: strike back for 30% DEF."
+      "text": "Chase trait. When hit: strike back for {power:pct} {scales}."
     },
     {
       "key": "mskill.blitz.name",
@@ -268,7 +268,7 @@
     },
     {
       "key": "mskill.blitz.desc",
-      "text": "Damage for 150% SPD. Cooldown 2."
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.afterimage.name",
@@ -276,7 +276,7 @@
     },
     {
       "key": "mskill.afterimage.desc",
-      "text": "Chase trait. Every action: +15% DEX for 2 turns."
+      "text": "Chase trait. Every action: +{power:pct} {stat} for {duration} turns."
     },
     {
       "key": "mskill.gamble.name",
@@ -284,7 +284,7 @@
     },
     {
       "key": "mskill.gamble.desc",
-      "text": "Damage for 250% LUK. Cooldown 4."
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.jackpot.name",
@@ -292,7 +292,7 @@
     },
     {
       "key": "mskill.jackpot.desc",
-      "text": "Chase trait. Permanent +50% crit damage."
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
     },
     {
       "key": "mskill.rally_cry.name",
@@ -300,7 +300,7 @@
     },
     {
       "key": "mskill.rally_cry.desc",
-      "text": "+30% STR for 3 turns. Cooldown 4."
+      "text": "+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
     },
     {
       "key": "mskill.killer_instinct.name",
@@ -308,7 +308,7 @@
     },
     {
       "key": "mskill.killer_instinct.desc",
-      "text": "Chase trait. Permanent +15% crit chance."
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
     },
     {
       "key": "mskill.regenerate.name",
@@ -316,7 +316,7 @@
     },
     {
       "key": "mskill.regenerate.desc",
-      "text": "Heal self for 80% WIS. Cooldown 3."
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.adrenaline.name",
@@ -324,7 +324,7 @@
     },
     {
       "key": "mskill.adrenaline.desc",
-      "text": "Chase trait. When hit: +20% SPD for 2 turns."
+      "text": "Chase trait. When hit: +{power:pct} {stat} for {duration} turns."
     },
     {
       "key": "mskill.echo_bolt.name",
@@ -332,7 +332,7 @@
     },
     {
       "key": "mskill.echo_bolt.desc",
-      "text": "Damage for 140% INT. Cooldown 2."
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "mskill.resonance.name",
@@ -340,7 +340,7 @@
     },
     {
       "key": "mskill.resonance.desc",
-      "text": "Chase trait. Every action: +10% INT for 3 turns."
+      "text": "Chase trait. Every action: +{power:pct} {stat} for {duration} turns."
     },
     {
       "key": "mskill.stand_firm.name",
@@ -348,7 +348,7 @@
     },
     {
       "key": "mskill.stand_firm.desc",
-      "text": "Shield self for 150% DEF for 3 turns. Cooldown 4."
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
     },
     {
       "key": "mskill.overflow_beam.name",
@@ -356,7 +356,7 @@
     },
     {
       "key": "mskill.overflow_beam.desc",
-      "text": "Damage to all enemies for 120% INT. Cooldown 3."
+      "text": "Damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
       "key": "tree.slime_fundamentals.name",
@@ -452,7 +452,7 @@
     },
     {
       "key": "rule.echo_cast.desc",
-      "text": "Every active damage, heal or shield skill is cast a second time at once, at reduced power."
+      "text": "Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power."
     },
     {
       "key": "talent.frugal_drills.name",
@@ -549,6 +549,394 @@
     {
       "key": "title.tower_breaker",
       "text": "Tower Breaker"
+    },
+    {
+      "key": "stat.hp.name",
+      "text": "Health"
+    },
+    {
+      "key": "stat.hp.label",
+      "text": "max HP"
+    },
+    {
+      "key": "stat.hp.desc",
+      "text": "Max HP in battle is HP x {MON_HP_PER_POINT}. Skills that scale with HP use max HP."
+    },
+    {
+      "key": "stat.hp.now",
+      "text": "{max_hp} max HP"
+    },
+    {
+      "key": "stat.str.name",
+      "text": "Strength"
+    },
+    {
+      "key": "stat.str.desc",
+      "text": "Physical damage. The basic attack hits for {BASIC_ATTACK_POWER} x the higher of STR and INT, and STR-scaled skills deal physical damage. Physical hits can be dodged (DEX) and the target's DEF reduces them."
+    },
+    {
+      "key": "stat.str.now",
+      "text": "Basic attack: {basic} damage before defences ({basic_type})"
+    },
+    {
+      "key": "stat.int.name",
+      "text": "Intelligence"
+    },
+    {
+      "key": "stat.int.desc",
+      "text": "Magical damage. INT-scaled skills deal magical damage, which cannot be dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
+    },
+    {
+      "key": "stat.int.now",
+      "text": "Basic attack: {basic} damage before defences ({basic_type})"
+    },
+    {
+      "key": "stat.wis.name",
+      "text": "Wisdom"
+    },
+    {
+      "key": "stat.wis.desc",
+      "text": "Magic defence: magical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + WIS), so {MON_DEF_K} WIS halves it. WIS also sets the amount of WIS-scaled heals and shields."
+    },
+    {
+      "key": "stat.wis.now",
+      "text": "Takes {wis_taken:pct} of magical damage"
+    },
+    {
+      "key": "stat.dex.name",
+      "text": "Dexterity"
+    },
+    {
+      "key": "stat.dex.desc",
+      "text": "Dodging physical hits. Dodge chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. DEX also makes the unit's own physical hits harder to dodge. Magical hits cannot be dodged."
+    },
+    {
+      "key": "stat.dex.now",
+      "text": "Dodges {evade:pct} of {foe}'s physical hits; {foe} dodges {foe_evade:pct} of the physical hits it takes"
+    },
+    {
+      "key": "stat.def.name",
+      "text": "Defence"
+    },
+    {
+      "key": "stat.def.desc",
+      "text": "Physical defence: physical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + DEF), so {MON_DEF_K} DEF halves it."
+    },
+    {
+      "key": "stat.def.now",
+      "text": "Takes {def_taken:pct} of physical damage"
+    },
+    {
+      "key": "stat.spd.name",
+      "text": "Speed"
+    },
+    {
+      "key": "stat.spd.desc",
+      "text": "Turn speed. Each tick the action gauge fills by SPD (at least {MON_SPD_MIN}) and the unit acts each time it reaches {BATTLE_GAUGE}. SPD {SPD_REF} acts once per turn; twice the SPD acts twice as often."
+    },
+    {
+      "key": "stat.spd.now",
+      "text": "{acts} actions per turn"
+    },
+    {
+      "key": "stat.luk.name",
+      "text": "Luck"
+    },
+    {
+      "key": "stat.luk.desc",
+      "text": "Critical hits. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage (plus crit damage effects). Physical and magical hits can both crit."
+    },
+    {
+      "key": "stat.luk.now",
+      "text": "{crit:pct} crit chance"
+    },
+    {
+      "key": "stat.crit_rate.label",
+      "text": "crit chance"
+    },
+    {
+      "key": "stat.crit_dmg.label",
+      "text": "crit damage"
+    },
+    {
+      "key": "trigger.battle_start.name",
+      "text": "battle start"
+    },
+    {
+      "key": "trigger.on_action.name",
+      "text": "each action"
+    },
+    {
+      "key": "trigger.on_basic_attack.name",
+      "text": "on basic attack"
+    },
+    {
+      "key": "trigger.on_crit.name",
+      "text": "on crit"
+    },
+    {
+      "key": "trigger.on_hit_taken.name",
+      "text": "when hit"
+    },
+    {
+      "key": "trigger.on_evade.name",
+      "text": "on evade"
+    },
+    {
+      "key": "tip.now",
+      "text": "Now vs {foe}, before buffs and passives"
+    },
+    {
+      "key": "tip.label.effect",
+      "text": "Effect"
+    },
+    {
+      "key": "tip.label.amount",
+      "text": "Amount"
+    },
+    {
+      "key": "tip.label.damage_type",
+      "text": "Damage type"
+    },
+    {
+      "key": "tip.label.element",
+      "text": "Element"
+    },
+    {
+      "key": "tip.label.target",
+      "text": "Target"
+    },
+    {
+      "key": "tip.label.duration",
+      "text": "Lasts"
+    },
+    {
+      "key": "tip.label.fires",
+      "text": "Fires"
+    },
+    {
+      "key": "tip.label.cooldown",
+      "text": "Cooldown"
+    },
+    {
+      "key": "tip.label.ai",
+      "text": "Used when"
+    },
+    {
+      "key": "tip.label.priority",
+      "text": "Priority"
+    },
+    {
+      "key": "tip.label.stacks",
+      "text": "Stacking"
+    },
+    {
+      "key": "tip.label.cost",
+      "text": "Unlock cost"
+    },
+    {
+      "key": "tip.kind.damage",
+      "text": "Damage"
+    },
+    {
+      "key": "tip.kind.heal",
+      "text": "Heal"
+    },
+    {
+      "key": "tip.kind.shield",
+      "text": "Shield"
+    },
+    {
+      "key": "tip.kind.taunt",
+      "text": "Taunt"
+    },
+    {
+      "key": "tip.kind.buff",
+      "text": "Buff"
+    },
+    {
+      "key": "tip.kind.debuff",
+      "text": "Debuff"
+    },
+    {
+      "key": "tip.kind.passive",
+      "text": "Passive"
+    },
+    {
+      "key": "tip.tag.physical",
+      "text": "Physical"
+    },
+    {
+      "key": "tip.tag.magical",
+      "text": "Magical"
+    },
+    {
+      "key": "tip.tag.growth",
+      "text": "Growth"
+    },
+    {
+      "key": "tip.tag.stat",
+      "text": "Flat stat"
+    },
+    {
+      "key": "tip.tag.rule",
+      "text": "Rule"
+    },
+    {
+      "key": "tip.tag.chase",
+      "text": "Chase trait"
+    },
+    {
+      "key": "tip.physical",
+      "text": "Physical: DEX can dodge it, the target's DEF reduces it"
+    },
+    {
+      "key": "tip.magical",
+      "text": "Magical: cannot be dodged, the target's WIS reduces it"
+    },
+    {
+      "key": "tip.element.own",
+      "text": "The user's element"
+    },
+    {
+      "key": "tip.effect.damage",
+      "text": "Hits for the amount; then a crit (LUK), the element (x{ELEMENT_STRONG_MULT} when strong, x{ELEMENT_WEAK_MULT} when weak) and the target's defence apply. Shields absorb it first."
+    },
+    {
+      "key": "tip.effect.heal",
+      "text": "Restores HP, never above max HP."
+    },
+    {
+      "key": "tip.effect.shield",
+      "text": "Absorbs damage before HP while it lasts. A new shield replaces a smaller one; shields do not add up."
+    },
+    {
+      "key": "tip.effect.taunt",
+      "text": "Single-target enemy actions must target this unit while it lasts."
+    },
+    {
+      "key": "tip.effect.buff",
+      "text": "Raises a stat while it lasts: a trained stat by a share of its base value, crit chance and crit damage by the amount itself."
+    },
+    {
+      "key": "tip.effect.debuff",
+      "text": "Lowers a stat while it lasts, by a share of its base value. A stat never drops below 10% of its base."
+    },
+    {
+      "key": "tip.effect.passive",
+      "text": "Raises a stat for the whole fight: a trained stat by a share of its base value (max HP raises current HP too), crit chance and crit damage by the amount itself."
+    },
+    {
+      "key": "tip.amount.scaled",
+      "text": "{power:pct} of {scales}"
+    },
+    {
+      "key": "tip.amount.raise",
+      "text": "+{power:pct} {stat}"
+    },
+    {
+      "key": "tip.amount.lower",
+      "text": "-{power:pct} {stat}"
+    },
+    {
+      "key": "tip.target.enemy",
+      "text": "One enemy: a taunting enemy if there is one, else a random one"
+    },
+    {
+      "key": "tip.target.all_enemies",
+      "text": "All enemies"
+    },
+    {
+      "key": "tip.target.self",
+      "text": "Itself"
+    },
+    {
+      "key": "tip.target.lowest_ally",
+      "text": "The ally with the lowest share of max HP"
+    },
+    {
+      "key": "tip.target.all_allies",
+      "text": "All allies"
+    },
+    {
+      "key": "tip.duration",
+      "text": "{duration} turns ({ticks} ticks)"
+    },
+    {
+      "key": "tip.duration.permanent",
+      "text": "The whole fight"
+    },
+    {
+      "key": "tip.fires.battle_start",
+      "text": "At battle start, before anyone acts"
+    },
+    {
+      "key": "tip.fires.on_action",
+      "text": "At the start of each of its actions"
+    },
+    {
+      "key": "tip.fires.on_basic_attack",
+      "text": "Before each of its basic attacks"
+    },
+    {
+      "key": "tip.fires.on_crit",
+      "text": "Each time it lands a critical hit"
+    },
+    {
+      "key": "tip.fires.on_hit_taken",
+      "text": "Each time it is hit and survives, after the damage"
+    },
+    {
+      "key": "tip.fires.on_evade",
+      "text": "Each time it dodges a hit"
+    },
+    {
+      "key": "tip.cooldown.none",
+      "text": "None: usable on every action"
+    },
+    {
+      "key": "tip.cooldown.n",
+      "text": "At most once every {cooldown} of its own actions"
+    },
+    {
+      "key": "tip.cooldown.triggered",
+      "text": "None: fires every time"
+    },
+    {
+      "key": "tip.stacks.triggered",
+      "text": "Each trigger adds another stack"
+    },
+    {
+      "key": "tip.ai.damage",
+      "text": "An enemy is alive"
+    },
+    {
+      "key": "tip.ai.heal",
+      "text": "It or an ally is below {AI_HEAL_BELOW:pct} of max HP"
+    },
+    {
+      "key": "tip.ai.shield",
+      "text": "It or an ally is below {AI_SHIELD_BELOW:pct} of max HP"
+    },
+    {
+      "key": "tip.ai.taunt",
+      "text": "It is not taunting already"
+    },
+    {
+      "key": "tip.ai.buff",
+      "text": "The target does not have this buff"
+    },
+    {
+      "key": "tip.ai.debuff",
+      "text": "An enemy does not have this debuff"
+    },
+    {
+      "key": "tip.priority",
+      "text": "Each action uses the first ready skill, in slot then node order, whose condition holds; otherwise a basic attack"
+    },
+    {
+      "key": "tip.cost",
+      "text": "{cost} SP"
     }
   ]
 }

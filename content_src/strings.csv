@@ -17,77 +17,77 @@ rank.b.name,Rank B
 rank.a.name,Rank A
 rank.s.name,Rank S
 mskill.gel_mend.name,Gel Mend
-mskill.gel_mend.desc,Heal the weakest ally for 120% WIS. Cooldown 3.
+mskill.gel_mend.desc,Heal the weakest ally for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.ooze_back.name,Ooze Back
-mskill.ooze_back.desc,Chase trait. When hit: strike back for 8% of max HP.
+mskill.ooze_back.desc,Chase trait. When hit: strike back for {power:pct} of {scales}.
 mskill.harden.name,Harden
-mskill.harden.desc,Shield self for 100% DEF for 3 turns. Cooldown 4.
+mskill.harden.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 mskill.lucky_rebound.name,Lucky Rebound
-mskill.lucky_rebound.desc,Chase trait. On evade: +20% crit chance for 2 turns.
+mskill.lucky_rebound.desc,Chase trait. On evade: +{power:pct} {stat} for {duration} turns.
 mskill.flame_breath.name,Flame Breath
-mskill.flame_breath.desc,Fire damage to all enemies for 90% STR. Cooldown 4.
+mskill.flame_breath.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.wildfire.name,Wildfire
-mskill.wildfire.desc,Chase trait. On crit: fire damage to all enemies for 60% STR.
+mskill.wildfire.desc,Chase trait. On crit: {element} damage to all enemies for {power:pct} {scales}.
 mskill.iron_hide.name,Iron Hide
-mskill.iron_hide.desc,+30% DEF for 3 turns. Cooldown 4.
+mskill.iron_hide.desc,+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
 mskill.plate_mastery.name,Plate Mastery
-mskill.plate_mastery.desc,Chase trait. Permanent +40% DEF.
+mskill.plate_mastery.desc,Chase trait. Permanent +{power:pct} {stat}.
 mskill.aether_bolt.name,Aether Bolt
-mskill.aether_bolt.desc,Light damage for 180% INT. Cooldown 2.
+mskill.aether_bolt.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.overcharge.name,Overcharge
-mskill.overcharge.desc,Chase trait. Every action: +10% SPD for 2 turns.
+mskill.overcharge.desc,Chase trait. Every action: +{power:pct} {stat} for {duration} turns.
 mskill.confuse.name,Confuse
-mskill.confuse.desc,An enemy loses 30% DEX for 3 turns. Cooldown 4.
+mskill.confuse.desc,An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
 mskill.phase_shift.name,Phase Shift
-mskill.phase_shift.desc,Chase trait. On evade: heal self for 50% WIS.
+mskill.phase_shift.desc,Chase trait. On evade: heal self for {power:pct} {scales}.
 mskill.second_wind.name,Second Wind
-mskill.second_wind.desc,Heal self for 25% max HP. Cooldown 5.
+mskill.second_wind.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.vital_surge.name,Vital Surge
-mskill.vital_surge.desc,Chase trait. Permanent +30% max HP.
+mskill.vital_surge.desc,Chase trait. Permanent +{power:pct} {stat}.
 mskill.smash.name,Smash
-mskill.smash.desc,Damage for 220% STR. Cooldown 3.
+mskill.smash.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.follow_through.name,Follow Through
-mskill.follow_through.desc,Chase trait. Every basic attack: extra hit for 50% STR.
+mskill.follow_through.desc,Chase trait. Every basic attack: extra hit for {power:pct} {scales}.
 mskill.arcane_blast.name,Arcane Blast
-mskill.arcane_blast.desc,Damage for 200% INT. Cooldown 3.
+mskill.arcane_blast.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.mana_surge.name,Mana Surge
-mskill.mana_surge.desc,Chase trait. On crit: +30% INT for 2 turns.
+mskill.mana_surge.desc,Chase trait. On crit: +{power:pct} {stat} for {duration} turns.
 mskill.ward.name,Ward
-mskill.ward.desc,Shield all allies for 60% WIS for 3 turns. Cooldown 5.
+mskill.ward.desc,Shield all allies for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 mskill.enlightened.name,Enlightened
-mskill.enlightened.desc,Chase trait. Permanent +40% WIS.
+mskill.enlightened.desc,Chase trait. Permanent +{power:pct} {stat}.
 mskill.quick_jab.name,Quick Jab
-mskill.quick_jab.desc,Damage for 120% STR. Cooldown 1.
+mskill.quick_jab.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.riposte.name,Riposte
-mskill.riposte.desc,Chase trait. On evade: strike back for 80% DEX.
+mskill.riposte.desc,Chase trait. On evade: strike back for {power:pct} {scales}.
 mskill.provoke.name,Provoke
-mskill.provoke.desc,Taunt for 3 turns. Cooldown 4.
+mskill.provoke.desc,Taunt for {duration} turns. Cooldown {cooldown}.
 mskill.spiked_shell.name,Spiked Shell
-mskill.spiked_shell.desc,Chase trait. When hit: strike back for 30% DEF.
+mskill.spiked_shell.desc,Chase trait. When hit: strike back for {power:pct} {scales}.
 mskill.blitz.name,Blitz
-mskill.blitz.desc,Damage for 150% SPD. Cooldown 2.
+mskill.blitz.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.afterimage.name,Afterimage
-mskill.afterimage.desc,Chase trait. Every action: +15% DEX for 2 turns.
+mskill.afterimage.desc,Chase trait. Every action: +{power:pct} {stat} for {duration} turns.
 mskill.gamble.name,Gamble
-mskill.gamble.desc,Damage for 250% LUK. Cooldown 4.
+mskill.gamble.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.jackpot.name,Jackpot
-mskill.jackpot.desc,Chase trait. Permanent +50% crit damage.
+mskill.jackpot.desc,Chase trait. Permanent +{power:pct} {stat}.
 mskill.rally_cry.name,Rally Cry
-mskill.rally_cry.desc,+30% STR for 3 turns. Cooldown 4.
+mskill.rally_cry.desc,+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
 mskill.killer_instinct.name,Killer Instinct
-mskill.killer_instinct.desc,Chase trait. Permanent +15% crit chance.
+mskill.killer_instinct.desc,Chase trait. Permanent +{power:pct} {stat}.
 mskill.regenerate.name,Regenerate
-mskill.regenerate.desc,Heal self for 80% WIS. Cooldown 3.
+mskill.regenerate.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.adrenaline.name,Adrenaline
-mskill.adrenaline.desc,Chase trait. When hit: +20% SPD for 2 turns.
+mskill.adrenaline.desc,Chase trait. When hit: +{power:pct} {stat} for {duration} turns.
 mskill.echo_bolt.name,Echo Bolt
-mskill.echo_bolt.desc,Damage for 140% INT. Cooldown 2.
+mskill.echo_bolt.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.resonance.name,Resonance
-mskill.resonance.desc,Chase trait. Every action: +10% INT for 3 turns.
+mskill.resonance.desc,Chase trait. Every action: +{power:pct} {stat} for {duration} turns.
 mskill.stand_firm.name,Stand Firm
-mskill.stand_firm.desc,Shield self for 150% DEF for 3 turns. Cooldown 4.
+mskill.stand_firm.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 mskill.overflow_beam.name,Overflow Beam
-mskill.overflow_beam.desc,Damage to all enemies for 120% INT. Cooldown 3.
+mskill.overflow_beam.desc,Damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
 tree.slime_fundamentals.name,Slime Fundamentals
 tree.gel_armor.name,Gel Armor
 tree.pyromancy.name,Pyromancy
@@ -111,7 +111,7 @@ book.book_echoes.name,Skill Book: Tome of Echoes
 rule.counter_mitigated.name,Mitigation Counter
 rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage).
 rule.echo_cast.name,Echo Cast
-rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at reduced power."
+rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power."
 talent.frugal_drills.name,Frugal Drills
 talent.frugal_drills.desc,Drills cost 5% less energy per rank.
 talent.strong_stock.name,Strong Stock
@@ -136,3 +136,100 @@ title.food,{killer} Food
 title.nightmare,{killer}'s Nightmare
 title.god_slayer,God-Slayer
 title.tower_breaker,Tower Breaker
+stat.hp.name,Health
+stat.hp.label,max HP
+stat.hp.desc,Max HP in battle is HP x {MON_HP_PER_POINT}. Skills that scale with HP use max HP.
+stat.hp.now,{max_hp} max HP
+stat.str.name,Strength
+stat.str.desc,"Physical damage. The basic attack hits for {BASIC_ATTACK_POWER} x the higher of STR and INT, and STR-scaled skills deal physical damage. Physical hits can be dodged (DEX) and the target's DEF reduces them."
+stat.str.now,Basic attack: {basic} damage before defences ({basic_type})
+stat.int.name,Intelligence
+stat.int.desc,"Magical damage. INT-scaled skills deal magical damage, which cannot be dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
+stat.int.now,Basic attack: {basic} damage before defences ({basic_type})
+stat.wis.name,Wisdom
+stat.wis.desc,"Magic defence: magical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + WIS), so {MON_DEF_K} WIS halves it. WIS also sets the amount of WIS-scaled heals and shields."
+stat.wis.now,Takes {wis_taken:pct} of magical damage
+stat.dex.name,Dexterity
+stat.dex.desc,"Dodging physical hits. Dodge chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. DEX also makes the unit's own physical hits harder to dodge. Magical hits cannot be dodged."
+stat.dex.now,Dodges {evade:pct} of {foe}'s physical hits; {foe} dodges {foe_evade:pct} of the physical hits it takes
+stat.def.name,Defence
+stat.def.desc,"Physical defence: physical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + DEF), so {MON_DEF_K} DEF halves it."
+stat.def.now,Takes {def_taken:pct} of physical damage
+stat.spd.name,Speed
+stat.spd.desc,Turn speed. Each tick the action gauge fills by SPD (at least {MON_SPD_MIN}) and the unit acts each time it reaches {BATTLE_GAUGE}. SPD {SPD_REF} acts once per turn; twice the SPD acts twice as often.
+stat.spd.now,{acts} actions per turn
+stat.luk.name,Luck
+stat.luk.desc,"Critical hits. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage (plus crit damage effects). Physical and magical hits can both crit."
+stat.luk.now,{crit:pct} crit chance
+stat.crit_rate.label,crit chance
+stat.crit_dmg.label,crit damage
+trigger.battle_start.name,battle start
+trigger.on_action.name,each action
+trigger.on_basic_attack.name,on basic attack
+trigger.on_crit.name,on crit
+trigger.on_hit_taken.name,when hit
+trigger.on_evade.name,on evade
+tip.now,"Now vs {foe}, before buffs and passives"
+tip.label.effect,Effect
+tip.label.amount,Amount
+tip.label.damage_type,Damage type
+tip.label.element,Element
+tip.label.target,Target
+tip.label.duration,Lasts
+tip.label.fires,Fires
+tip.label.cooldown,Cooldown
+tip.label.ai,Used when
+tip.label.priority,Priority
+tip.label.stacks,Stacking
+tip.label.cost,Unlock cost
+tip.kind.damage,Damage
+tip.kind.heal,Heal
+tip.kind.shield,Shield
+tip.kind.taunt,Taunt
+tip.kind.buff,Buff
+tip.kind.debuff,Debuff
+tip.kind.passive,Passive
+tip.tag.physical,Physical
+tip.tag.magical,Magical
+tip.tag.growth,Growth
+tip.tag.stat,Flat stat
+tip.tag.rule,Rule
+tip.tag.chase,Chase trait
+tip.physical,"Physical: DEX can dodge it, the target's DEF reduces it"
+tip.magical,"Magical: cannot be dodged, the target's WIS reduces it"
+tip.element.own,The user's element
+tip.effect.damage,"Hits for the amount; then a crit (LUK), the element (x{ELEMENT_STRONG_MULT} when strong, x{ELEMENT_WEAK_MULT} when weak) and the target's defence apply. Shields absorb it first."
+tip.effect.heal,"Restores HP, never above max HP."
+tip.effect.shield,Absorbs damage before HP while it lasts. A new shield replaces a smaller one; shields do not add up.
+tip.effect.taunt,Single-target enemy actions must target this unit while it lasts.
+tip.effect.buff,"Raises a stat while it lasts: a trained stat by a share of its base value, crit chance and crit damage by the amount itself."
+tip.effect.debuff,"Lowers a stat while it lasts, by a share of its base value. A stat never drops below 10% of its base."
+tip.effect.passive,"Raises a stat for the whole fight: a trained stat by a share of its base value (max HP raises current HP too), crit chance and crit damage by the amount itself."
+tip.amount.scaled,{power:pct} of {scales}
+tip.amount.raise,+{power:pct} {stat}
+tip.amount.lower,-{power:pct} {stat}
+tip.target.enemy,"One enemy: a taunting enemy if there is one, else a random one"
+tip.target.all_enemies,All enemies
+tip.target.self,Itself
+tip.target.lowest_ally,The ally with the lowest share of max HP
+tip.target.all_allies,All allies
+tip.duration,{duration} turns ({ticks} ticks)
+tip.duration.permanent,The whole fight
+tip.fires.battle_start,"At battle start, before anyone acts"
+tip.fires.on_action,At the start of each of its actions
+tip.fires.on_basic_attack,Before each of its basic attacks
+tip.fires.on_crit,Each time it lands a critical hit
+tip.fires.on_hit_taken,"Each time it is hit and survives, after the damage"
+tip.fires.on_evade,Each time it dodges a hit
+tip.cooldown.none,None: usable on every action
+tip.cooldown.n,At most once every {cooldown} of its own actions
+tip.cooldown.triggered,None: fires every time
+tip.stacks.triggered,Each trigger adds another stack
+tip.ai.damage,An enemy is alive
+tip.ai.heal,It or an ally is below {AI_HEAL_BELOW:pct} of max HP
+tip.ai.shield,It or an ally is below {AI_SHIELD_BELOW:pct} of max HP
+tip.ai.taunt,It is not taunting already
+tip.ai.buff,The target does not have this buff
+tip.ai.debuff,An enemy does not have this debuff
+tip.priority,"Each action uses the first ready skill, in slot then node order, whose condition holds; otherwise a basic attack"
+tip.cost,{cost} SP

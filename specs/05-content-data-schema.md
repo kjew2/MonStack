@@ -63,11 +63,13 @@ One file per table, shape `{ "table": "...", "rows": [ ... ] }`: UTF-8 without B
 
 `manifest.json` lists `schema_version` (the layout version; the loader refuses unknown values, `E901`), `content_version`, `source_revision`, every table's file and sha256, and `content_hash` (sha256 over the table hashes in name order). There is no timestamp, so rebuilding the same CSVs gives the same bytes. The loader verifies every file against the manifest (`E900`).
 
-`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.0**: MAJOR 3 at the removal of the idle game's tables. Bump MINOR for any value or addition; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches. The converter does not yet compare against the previous build (the `E09x` codes below are reserved).
+`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.1**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9). Bump MINOR for any value or addition; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches. The converter does not yet compare against the previous build (the `E09x` codes below are reserved).
 
 ## 5. Strings
 
 Every player-visible name and description is a `key` into `strings` (en only for now). `ContentDb.Text(key)` returns the text, or the key itself when missing so a gap is visible rather than blank. A name key follows `<table singular>.<id>.<field>` (`species.slime.name`, `tree.pyromancy.name`, `mskill.flame_breath.desc`). `ContentDbTests.EveryNameKey_HasText` checks that every name key in content has text.
+
+**Templates.** A string may hold placeholders, filled by `TextTemplate.Fill` so a number in a text comes from the data it describes: `{name}`, or `{name:pct}` for a percentage (`0.05` reads `5%`). Numbers print with up to two decimals. An UPPER_CASE name is a constant (`{MON_DEF_K}`, from `ContentDb.ConstantValues`); a lower-case name is a value of the thing described, and which names exist depends on the string family (`specs/16` section 9 lists the stat, skill and rule ones; `{killer}` in `legacy_titles`). A placeholder nothing resolves stays as written, so the gap is visible. `BattleTextTests` checks that every stat, skill, rule and tooltip string in the shipped content resolves; the builder does not parse templates.
 
 ## 6. Error codes
 
@@ -96,7 +98,7 @@ One line per error on stderr: `CONTENT <code> <location>: <message>`, where the 
 
 ## 7. `ContentDb`
 
-`ContentDb.LoadFromDirectory(dir)` or `ContentDb.Load(IContentSource, verifyHashes)`. Read-only after load and safe to share. Tables are exposed as typed lists and dictionaries (`SpeciesList`, `Species`, `FightRanks`, `DrillTiers`, `StatMilestones`, `Trees`, `TreeList`, `TreeNodes`, `MonsterSkills`, `SkillBooks`, `TalentList`, `Talents`, `GauntletEnemies`, `GauntletBosses`, `LegacyTitles`, `ElementList`, `Elements`, `Strings`) and constants through `Constants` (one typed property per constant; property name = PascalCase of the key). `ElementMult(attacker, defender)` is the wheel. `IContentSource` has `FileContentSource` (a directory) and `DictionaryContentSource` (in memory: tests and the browser's content pack).
+`ContentDb.LoadFromDirectory(dir)` or `ContentDb.Load(IContentSource, verifyHashes)`. Read-only after load and safe to share. Tables are exposed as typed lists and dictionaries (`SpeciesList`, `Species`, `FightRanks`, `DrillTiers`, `StatMilestones`, `Trees`, `TreeList`, `TreeNodes`, `MonsterSkills`, `SkillBooks`, `TalentList`, `Talents`, `GauntletEnemies`, `GauntletBosses`, `LegacyTitles`, `ElementList`, `Elements`, `Strings`) and constants through `Constants` (one typed property per constant; property name = PascalCase of the key). `ConstantValues` maps every numeric constant's key to its value, for text templates (section 5); rules read the typed properties. `ElementMult(attacker, defender)` is the wheel. `IContentSource` has `FileContentSource` (a directory) and `DictionaryContentSource` (in memory: tests and the browser's content pack).
 
 ## 8. Tests
 

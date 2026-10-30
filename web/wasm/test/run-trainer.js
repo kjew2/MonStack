@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // End-to-end browser check of the monster-trainer page (web/index.html) on the C# (wasm) engine at 390x844: picks a species,
-// plays a whole run through the real buttons (drill, rest, rank fights, tree drafts, buying nodes), watches two rank fights play
-// back (current ability, live HP, skill cooldowns, the remembered 1x/2x/Skip speed), seals it, checks the grade
+// opens a stat and an ability tooltip, plays a whole run through the real buttons (drill, rest, rank fights, tree drafts, buying
+// nodes), watches two rank fights play back (current ability, live HP, skill cooldowns, the remembered 1x/2x/Skip speed), seals
+// it, checks the grade
 // screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
@@ -66,11 +67,33 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const after = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.stat .bar span')].map((e) => e.textContent).join('|') }));
   check(JSON.stringify(before) === JSON.stringify(after), 'reload restores cycle and stats exactly');
 
+  // ---- tooltips (specs/16 section 9): a stat and an ability, from the engine's text, inside a 390px screen
+  const tip = page.locator('#tip');
+  const fits = async () => { const b = await tip.boundingBox(); return !!b && b.x >= 0 && b.y >= 0 && b.x + b.width <= 390 && b.y + b.height <= 844; };
+  const strLabel = page.locator('[data-tip="stat:str"]').first();
+  await strLabel.click();
+  check(await tip.isVisible(), 'tapping a stat opens its tooltip');
+  const strTip = await tip.innerText();
+  check(/Strength/.test(strTip) && /Basic attack: \d+ damage/.test(strTip) && !/[{}]/.test(strTip), 'the STR tooltip explains the stat with the engine\'s numbers: ' + strTip.replace(/\s+/g, ' ').slice(0, 70));
+  check((await tip.getAttribute('role')) === 'tooltip' && (await strLabel.getAttribute('aria-describedby')) === 'tip' && (await strLabel.getAttribute('aria-expanded')) === 'true', 'the open trigger is aria-described by the role=tooltip box');
+  check(await fits(), 'the stat tooltip fits the screen');
+  await shot('02b-stat-tip');
+  await page.locator('[data-id=odds]').click();
+  check(!(await tip.isVisible()) && (await strLabel.getAttribute('aria-describedby')) === null, 'tapping elsewhere closes it');
+
   // ---- trees tab
   await act('tab-trees').click();
   check((await page.locator('[data-id^="slot-"]').count()) === 2, 'two native trees slotted at the start');
   check(/SP/.test(await text('[data-id=sp2]')), 'skill points shown');
   await shot('03-trees');
+  await page.locator('[data-tip="node:pyromancy_n4"]').click();
+  const abTip = await tip.innerText();
+  check(/Flame Breath/.test(abTip) && /90% of STR/.test(abTip) && /once every 4/.test(abTip) && /Physical/.test(abTip) && /2 SP/.test(abTip) && !/[{}]/.test(abTip),
+    'an ability tooltip shows effect, scaling, cooldown, tags and cost: ' + abTip.replace(/\s+/g, ' ').slice(0, 70));
+  check(await fits(), 'the ability tooltip fits the screen');
+  await shot('03b-ability-tip');
+  await page.keyboard.press('Escape');
+  check(!(await tip.isVisible()), 'Escape closes it');
   await act('tab-train').click();
 
   // ---- play through the buttons. stop: 'fight' returns when a rank fight is due, 'skill' when one is due and slot 1 has bought
