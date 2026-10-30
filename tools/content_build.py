@@ -51,7 +51,14 @@ REQUIRED_CONSTANTS = {
     "MON_HP_PER_POINT": "double", "MON_DEF_K": "double", "MON_EVADE_BASE": "double", "MON_EVADE_PER_DEX": "double",
     "MON_EVADE_CAP": "double", "MON_CRIT_BASE": "double", "MON_CRIT_PER_LUK": "double", "MON_CRIT_CAP": "double",
     "MON_CRIT_DMG": "double", "MON_SPD_MIN": "double", "MON_TIME_LIMIT_TICKS": "int", "MON_SIDE_SIZE": "int",
+    # training run (specs/14)
+    "RUN_CYCLES": "int", "RUN_AP": "int", "RUN_ENERGY_MAX": "double", "RUN_ENERGY_START": "double",
+    "DRILL_ENERGY_COST": "double", "REST_ENERGY": "double", "DRILL_FAIL_MIN": "double", "DRILL_FAIL_MAX": "double",
+    "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
 }
+
+STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
+DRILL_TIERS = ["fail", "success", "super"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
 MON_RANGES = {
@@ -61,6 +68,12 @@ MON_RANGES = {
     "MON_CRIT_PER_LUK": (">= 0", lambda v: v >= 0), "MON_CRIT_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_CRIT_DMG": (">= 1", lambda v: v >= 1), "MON_SPD_MIN": ("> 0", lambda v: v > 0),
     "MON_TIME_LIMIT_TICKS": ("> 0", lambda v: v > 0), "MON_SIDE_SIZE": ("> 0", lambda v: v > 0),
+    "RUN_CYCLES": ("> 0", lambda v: v > 0), "RUN_AP": ("> 0", lambda v: v > 0), "RUN_ENERGY_MAX": ("> 0", lambda v: v > 0),
+    "RUN_ENERGY_START": (">= 0", lambda v: v >= 0), "DRILL_ENERGY_COST": (">= 0", lambda v: v >= 0),
+    "REST_ENERGY": (">= 0", lambda v: v >= 0), "DRILL_FAIL_MIN": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "DRILL_FAIL_MAX": ("[0, 1]", lambda v: 0 <= v <= 1), "DRILL_SUPER_P": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "INJURY_BELOW": ("[0, 1]", lambda v: 0 <= v <= 1), "INJURY_MAX_P": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "STAT_MAX": ("> 0", lambda v: v > 0), "FIGHT_EVERY": ("> 0", lambda v: v > 0),
 }
 
 TIERS = ENUMS["Tier"]
@@ -107,6 +120,12 @@ SCHEMA = {
     "progress_targets": T([c("day", "int"), c("stage", "int")], key="day"),
     "promotions": T([c("index", "int"), c("unlock_stage", "int"), c("mult", "double"), c("cost_kills", "double"),
                      c("name_key", "key")], key="index"),
+    "species": T([c("id", "id"), c("name_key", "key"), c("element", "id")]
+                  + [c("base_" + s, "double") for s in STATS] + [c("grow_" + s, "double") for s in STATS], key="id"),
+    "drill_tiers": T([c("id", "id"), c("gain_min", "int"), c("gain_max", "int"), c("name_key", "key")], key="id"),
+    "fight_ranks": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("element", "id")]
+                     + [c(s, "double") for s in STATS], key="id"),
+    "stat_milestones": T([c("threshold", "int")], key="threshold"),
     "skills": T([c("id", "id"), c("hero_id", "id"), c("slot", "int"), c("unlock_promotion", "int"), c("name_key", "key"),
                  c("desc_key", "key"), c("kind", "enum:SkillKind"), c("target", "enum:SkillTarget"),
                  c("stat", "enum:SkillStat", True), c("scales", "enum:SkillStat", True), c("power", "double"),
@@ -204,6 +223,51 @@ def read_table(path, name, schema, errs):
     return out
 
 
+def validate_training(t, keys, errs):
+    """Training run tables and constants (specs/14 section 8)."""
+    kv = {k: keys[k]["value"] for k in keys}
+    elements = {r["id"] for r in t["elements"]}
+    stat_max = kv.get("STAT_MAX", 999)
+    if "RUN_ENERGY_START" in kv and "RUN_ENERGY_MAX" in kv and kv["RUN_ENERGY_START"] > kv["RUN_ENERGY_MAX"]:
+        errs.add("E043", "constants[RUN_ENERGY_START]", "value out of range (<= RUN_ENERGY_MAX)")
+    if kv.get("DRILL_FAIL_MIN", 0) > kv.get("DRILL_FAIL_MAX", 1):
+        errs.add("E043", "constants[DRILL_FAIL_MIN]", "value out of range (<= DRILL_FAIL_MAX)")
+    if kv.get("DRILL_FAIL_MAX", 0) + kv.get("DRILL_SUPER_P", 0) > 1:
+        errs.add("E043", "constants[DRILL_SUPER_P]", "value out of range (DRILL_FAIL_MAX + DRILL_SUPER_P <= 1)")
+    if not t["species"]:
+        errs.add("E044", "species", "at least one species is required")
+    for r in t["species"]:
+        loc = f"species[{r['id']}]"
+        if r["element"] not in elements:
+            errs.add("E023", loc, f"element '{r['element']}' is not an element id")
+        for s in STATS:
+            if not 0 <= r["base_" + s] <= stat_max:
+                errs.add("E043", loc, f"base_{s} must be in [0, STAT_MAX]")
+            if not r["grow_" + s] > 0:
+                errs.add("E043", loc, f"grow_{s} must be > 0")
+    if sorted(r["id"] for r in t["drill_tiers"]) != sorted(DRILL_TIERS):
+        errs.add("E044", "drill_tiers", "must list fail, success, super exactly once")
+    for r in t["drill_tiers"]:
+        if not 0 <= r["gain_min"] <= r["gain_max"]:
+            errs.add("E043", f"drill_tiers[{r['id']}]", "need 0 <= gain_min <= gain_max")
+    ranks = t["fight_ranks"]
+    if not ranks:
+        errs.add("E044", "fight_ranks", "at least one rank is required")
+    if sorted(r["sort_order"] for r in ranks) != list(range(len(ranks))):
+        errs.add("E047", "fight_ranks", "sort_order must be exactly 0..N-1")
+    for r in ranks:
+        loc = f"fight_ranks[{r['id']}]"
+        if r["element"] not in elements:
+            errs.add("E023", loc, f"element '{r['element']}' is not an element id")
+        for s in STATS:
+            if not 0 <= r[s] <= stat_max:
+                errs.add("E043", loc, f"{s} must be in [0, STAT_MAX]")
+    ms = [r["threshold"] for r in t["stat_milestones"]]
+    for i, v in enumerate(ms):
+        if v <= 0 or (i > 0 and v <= ms[i - 1]):
+            errs.add("E032", f"stat_milestones[{v}]", "thresholds must be > 0 and strictly increasing")
+
+
 def validate(t, errs):
     # constants
     keys = {r["key"]: r for r in t["constants"]}
@@ -257,6 +321,7 @@ def validate(t, errs):
     for k, (rule, ok) in MON_RANGES.items():
         if k in keys and not ok(keys[k]["value"]):
             errs.add("E043", f"constants[{k}]", f"value out of range ({rule})")
+    validate_training(t, keys, errs)
     # promotions (specs/11 section 10)
     pr = t["promotions"]
     for i, r in enumerate(pr):

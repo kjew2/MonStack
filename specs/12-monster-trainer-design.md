@@ -48,26 +48,28 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
 ### 4.1 Shape
 
 - One monster per run, picked from the species the account owns.
-- **12 epochs** (one draft said 12-15; section 13 item 1). Each epoch is one macro decision. 8-10 minutes in total, so roughly 40 seconds of decisions per epoch including drafts.
+- **12 cycles** (an "epoch" in the drafts; one draft said 12-15). 8-10 minutes in total.
 - No events, dialogue or story scenes. Every screen is a mechanical choice.
-- A run ends after epoch 12, or early if the player retires the monster (section 4.5).
+- A run ends after the last cycle, or early on an injury (section 4.5).
 
-### 4.2 Epoch actions
+### 4.2 Cycle flow (kj, 2026-10-30)
+
+Each cycle the monster has a few **action points** (AP). Every tap spends 1 AP on one of two actions, with instant feedback:
 
 | Action | Effect |
 |---|---|
-| **Heavy Drill** | Large stat gain in the drilled stat(s); costs energy and adds fatigue. |
-| **Maintenance / Rest** | Restores energy, removes fatigue, little or no stat gain. |
-| **Tactical Challenge** | A fight during the run (proposed: an auto-battle against a scaled opponent). Earns skill points and progress toward playstyle conditions (section 5.5). |
+| **Drill** (one stat) | Roll fail, success or super, which sets a gain range; a second roll picks the exact gain in that range. Costs energy. |
+| **Rest** | Restores training energy. Nothing else. |
 
-The exact action list is open; the drafts name these three as examples.
+When the AP are spent, the run moves to a **rank fight**, in the spirit of *Monster Rancher*'s fight classes: almost always a single 1v1 fight against the opponent of the monster's current rank (E up to S). A win promotes the monster one rank. If a fight every cycle turns out too frequent, it moves to every other cycle (`FIGHT_EVERY`). This keeps the training loop snappy. Rules: `specs/14`.
+
+The rank fight replaces the drafts' *Tactical Challenge*: it is the in-run fight that feeds playstyle conditions (section 5.5).
 
 ### 4.3 Stats, energy, fatigue, injury
 
 - **Stats (kj, 2026-10-30):** eight trained stats: HP, STR, INT, WIS, DEX, DEF, SPD, LUK. The drafts named six; kj added HP and LUK. How each one works in battle is `specs/16` section 3.
-- **Energy** pays for actions. The talent tree reduces energy cost.
-- **Fatigue** builds with hard training. Training at high fatigue raises **injury risk** but gives the large gains needed to cross a milestone before epoch 12. This is the run's main risk-versus-reward decision.
-- **Skill points** are earned during the run and spent in trees. Saving them is a strategy (section 5.4). How points are earned is open (proposed: per epoch, plus extra from Tactical Challenges).
+- **Energy** is the one training meter (no separate fatigue). Drills spend it, rests restore it. Low energy makes a drill more likely to fail and, below a threshold, able to cause an **injury** that ends the run. Pushing on at low energy to cross a milestone before the run ends is the run's main risk-versus-reward decision. The talent tree can reduce drill cost.
+- **Skill points** are earned during the run and spent in trees. Saving them is a strategy (section 5.4). How points are earned is open until T3 (proposed: per cycle, plus extra for rank fight wins).
 
 ### 4.4 Attribute milestones and drafts
 
@@ -90,11 +92,11 @@ Every newly acquired tree, from any source, is offered the same way: put it in a
 
 Example: the run starts with 2 native trees and 2 empty slots. The player uses a Skill Book and puts its tree in slot 3. Later a stat milestone offers a generic tree; it goes in slot 4. More generic trees arrive and are discarded in favour of the current four. Then a chase tree unlocks and overwrites the generic tree, or the weaker native tree.
 
-Open (section 13 item 15): what happens to skill points already spent in an overwritten tree, and whether a chase tree whose conditions used an overwritten tree stays unlocked.
+**Overwriting (kj, 2026-10-30):** skill points spent in an overwritten tree are lost. An unlocked chase tree does not survive losing its prerequisites: if a tree its conditions used is overwritten, the chase tree locks again.
 
 ### 5.2 Chase traits
 
-Every tree has a hidden capstone, its **chase trait**, that breaks a standard rule. Maxing the tree reveals and unlocks it. Example: *Omniscience*: ignores resistances and refunds 50% energy.
+Every tree has a hidden capstone, its **chase trait**, that breaks a standard rule (kj, 2026-10-30). Maxing the tree reveals and unlocks it. Example: *Omniscience*: ignores resistances and refunds 50% energy. **A chase tree's own capstone must be significantly more impactful and unique** than a normal tree's chase trait: it is the run's jackpot, not a bigger number.
 
 ### 5.3 Chase trees
 
@@ -219,18 +221,19 @@ Not in the MVP: multiplayer and database, gacha UI, Endless Tower scaling, PvP.
 
 Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeats the ones that block work.
 
-1. **Run length.** 12 epochs (four drafts) vs 12-15 (one). Proposed: 12, as a content constant.
+1. **Run length.** 12 cycles as a content constant (`RUN_CYCLES`, placeholder).
 2. **Tree slots.** Decided (kj, 2026-10-30): 4 slots, 2 native + 2 empty at the start, any new tree may fill an empty slot or overwrite any slot (section 5.1). Still proposed: a chase trait at the top of every tree (section 5.2).
 3. **What trees give.** "Trees do not provide passive percentage boosts" vs "base trees provide essential stats". Proposed: native trees may give stats and core skills; draft trees, chase trees and chase traits change rules.
 4. **Stats.** Decided (kj, 2026-10-30): HP, STR, INT, WIS, DEX, DEF, SPD, LUK. Proposed: milestones on all eight.
 5. **Duplicates.** "Raise chase-tree odds" (four drafts) vs "Hidden Aptitude Trees" (one). Proposed: odds only, no extra tree.
 6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode. Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.
 7. **Dodges in an auto-battle.** "Perfect dodges" implies action input. Proposed: combat stays automatic and the condition counts evasions.
-8. **Where in-run fights come from.** Playstyle conditions need fights during the run. Proposed: Tactical Challenge is that fight.
+8. **Where in-run fights come from.** Decided (kj, 2026-10-30): the rank fight after each cycle's AP (section 4.2).
 9. **Failed runs.** Decided (kj, 2026-10-30): section 4.5.
 10. **Gem sales.** The drafts describe a gacha with premium currency but only an ad-removal pass as revenue. Proposed: no gem sales at launch; revenue is the pass and cosmetics. Monetization is kj's call.
 11. **Platform.** Decided: web first (kj, 2026-10-30, with the client technology left to the agent). `specs/13` section 1 records the call.
 12. **Stamina.** "Quick stamina refills" implies an account stamina gate on runs; no draft describes it. Proposed: no stamina gate in the MVP.
 13. **Idle.** No draft has an idle or offline layer. Proposed: drop it (offline catch-up, idle chest, stage push).
 14. **Roles and elements.** No draft mentions the current game's 5 roles and 5 elements. Proposed: keep the 5 elements as species/skill types; roles come from trees, not fixed per species.
-15. **Overwritten trees.** Points spent in a tree that gets overwritten: lost, or refunded? Proposed: lost, so overwriting is a real cost and the point-dump timing matters. A chase tree that is already unlocked stays unlocked even if a tree its conditions used is overwritten. Blocks `specs/13` T3.
+15. **Overwritten trees.** Decided (kj, 2026-10-30): points lost; a chase tree whose prerequisite tree is overwritten locks again (section 5.1).
+16. **One energy meter.** The drafts have energy and fatigue; kj's cycle flow has only training energy. Proposed (agent, T2): one meter, energy; low energy raises the fail chance and allows injury (`specs/14` section 4). Easy to split later.

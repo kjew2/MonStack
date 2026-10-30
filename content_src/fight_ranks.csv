@@ -1,0 +1,7 @@
+id,sort_order,name_key,element,hp,str,int,wis,dex,def,spd,luk,#notes
+e,0,rank.e.name,nature,100,100,100,100,100,100,100,100,rank fight opponent at each rank (specs/14 section 5). Placeholder
+d,1,rank.d.name,water,160,160,160,160,160,160,160,160,Placeholder
+c,2,rank.c.name,fire,230,230,230,230,230,230,230,230,Placeholder
+b,3,rank.b.name,light,310,310,310,310,310,310,310,310,Placeholder
+a,4,rank.a.name,dark,400,400,400,400,400,400,400,400,Placeholder
+s,5,rank.s.name,dark,500,500,500,500,500,500,500,500,Placeholder

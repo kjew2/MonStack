@@ -1,0 +1,46 @@
+# training-run vectors, hash v1 content=2.4/a98f4c4f
+
+slime balanced seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0
+  stats hp 169 str 168 int 166 wis 156 dex 159 def 164 spd 155 luk 164
+  hash 9d1a88fe73bebcb2eea409518bd85424f06fc86c6aee473a87e5cdc5034cb075
+
+slime focus seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3
+  stats hp 706 str 90 int 100 wis 110 dex 90 def 110 spd 100 luk 120
+  hash b4065ab403fecd99ea17267d3e8155d417f590fd270ec44d660cbb2b3a8f8cf2
+
+slime reckless seed=7
+  end=Injured cycle=2 rank=d fights=1/1 drills=6 rests=0 energy=0 milestones=0
+  stats hp 213 str 90 int 100 wis 110 dex 90 def 110 spd 100 luk 120
+  hash f64e9cc9e552b0c7c720b53ddb1383d3e5d92b67c5a6f35b72d2d0d3d5c78124
+
+drake balanced seed=7
+  end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=0
+  stats hp 143 str 150 int 138 wis 144 dex 143 def 140 spd 153 luk 146
+  hash 848a08f572fae337c919541e8616b51a3f742cfa55fbd56ccaf25d4d4688f572
+
+drake focus seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3
+  stats hp 130 str 716 int 60 wis 80 dex 90 def 140 spd 90 luk 70
+  hash 09fe8dfdf450b3e3b034c00b0bbd7e2f45dd0c2d982c845ca17ec2cc9312b976
+
+drake reckless seed=7
+  end=Injured cycle=2 rank=d fights=1/1 drills=6 rests=0 energy=0 milestones=0
+  stats hp 130 str 223 int 60 wis 80 dex 90 def 140 spd 90 luk 70
+  hash d6bdb0a1904e1d5a23df1255ff48613ce9ec827cee1b0b9130e0786580c9f29f
+
+sprite balanced seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0
+  stats hp 154 str 148 int 150 wis 154 dex 157 def 150 spd 169 luk 148
+  hash 5f0f8971770657050b5cbfe5d4a286982f680bacc6a42bc4ff93d91d63b3d4c8
+
+sprite focus seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3
+  stats hp 90 str 60 int 716 wis 140 dex 120 def 70 spd 140 luk 110
+  hash 54d4a61cd3ad7791781f783450db00094f2ee8c93e6f75016e3989accf7098f8
+
+sprite reckless seed=7
+  end=Injured cycle=2 rank=d fights=1/1 drills=6 rests=0 energy=0 milestones=0
+  stats hp 90 str 60 int 223 wis 140 dex 120 def 70 spd 140 luk 110
+  hash f53619478f10a4d34251e6e46dbc7e8d89e2c0ebbaed654a63db10d5e2104ed1

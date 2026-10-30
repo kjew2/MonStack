@@ -1,6 +1,6 @@
 # 13 - Transition Plan: Idle RNG to Monster Trainer
 
-Status: **in progress.** T1 (battle core) is live; see section 6. How the repo moves from the idle stage-push game (`specs/00`-`11`) to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
+Status: **in progress.** T1 (battle core) and T2 (training run) are live; see section 6. How the repo moves from the idle stage-push game (`specs/00`-`11`) to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
 
 ## 1. Approach
 
@@ -101,10 +101,13 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T2 - Training run engine
 
-- `RunState` and a `Run` command set: `Train(action, stat)`, `Rest`, `Challenge`, `PickDraft(i)`, `SpendPoint(node)`, `Retire`. Run decisions are turn-based, not ticked.
-- 12 epochs, energy, fatigue, injury risk, stat gains, skill points, milestone detection at 300/500/700/900. Streams `training` and `draft`.
-- Content: `species`, `stats`, `train_actions`, `milestones`, run constants.
-- Exit: a bot can play a full run headless; replaying its command log gives the same `StateHash`.
+**Done** (`specs/14`). kj's cycle flow (2026-10-30): cycles of action points, each tap a Drill (two rolls: tier, then exact gain) or a Rest (energy), then a 1v1 rank fight on the T1 engine; a win promotes the rank.
+
+- `IdleRng.Sim.Training`: `RunState`, commands `Drill(stat)`, `Rest`, `Fight`, a command log, `Replay` and `StateHash`. Turn-based, not ticked.
+- One energy meter (fail odds and injury from low energy), stat cap, milestone detection at 300/500/700/900 for T3's tree offers. Stream `training`; fight seeds derive from the run seed.
+- Content `2.4`: `species` (3 placeholders), `drill_tiers`, `fight_ranks` (E-S), `stat_milestones`, run constants.
+- Bots: `balanced`, `focus`, `reckless` run policies, the `train` CLI verb, `golden/training-run-vectors.txt`.
+- Not yet: skill points (T3), retiring early, tree drafts on milestones (T3).
 
 ### T3 - Skill trees
 
@@ -115,7 +118,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T4 - Run end: ladder, grade, Vault
 
-- MVP 3-boss ladder and S/A/B grade with stat breakdown. The 100-floor gauntlet and Legacy Titles follow in the same spec once the ladder works (the wheel and defeat animation are web UI).
+- MVP 3-boss ladder and S/A/B grade with stat breakdown. The 100-floor gauntlet and Legacy Titles follow in the same spec once the ladder works (the wheel and defeat animation are web UI). With rank fights in the run (T2), the rank reached may be enough of a grade for the MVP (section 9 item 3).
 - Vault: certified monsters stored with their final build snapshot.
 - Exit: a finished run produces a grade and a Vault entry.
 
@@ -163,13 +166,14 @@ Balance of any kind, art direction, the game's name, store presence. Those stay 
 
 Blocking questions first. Each has a recommendation.
 
-Answered (kj, 2026-10-30): pivot in place, no rename yet; tree slots are 2 native + 2 empty, any new tree may fill or overwrite any slot (`specs/12` section 5.1); web first (section 1); clean save break; stats HP, STR, INT, WIS, DEX, DEF, SPD, LUK; failed runs end on injury, the monster is still vaulted and shards are still paid.
+Answered (kj, 2026-10-30): pivot in place, no rename yet; tree slots are 2 native + 2 empty, any new tree may fill or overwrite any slot (`specs/12` section 5.1); web first (section 1); clean save break; stats HP, STR, INT, WIS, DEX, DEF, SPD, LUK; failed runs end on injury, the monster is still vaulted and shards are still paid. Second round: only Drill and Rest, AP cycles ending in a rank fight (`specs/12` section 4.2); points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; every tree has a chase trait, and chase trees' capstones are much stronger and more unique.
 
 Open, blocking first. Each has a recommendation.
 
-1. **Epoch actions.** Heavy Drill / Rest / Tactical Challenge as the starting set, one drill per stat? Blocks T2.
-2. **Overwritten trees** (`specs/12` section 13 item 15). Recommend: points spent in an overwritten tree are lost; an unlocked chase tree stays unlocked. Blocks T3.
-3. **Chase traits at every capstone** (`specs/12` section 5.2). Recommend yes. Blocks T3 content.
-4. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
-5. **Roles and elements.** Recommend keeping 5 elements, dropping fixed roles. Not blocking until T3 content.
-6. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T12.
+1. **Skill points** (`specs/12` section 4.3). How they are earned. Recommend: a fixed amount per cycle plus a bonus for each rank fight win, so hoarding for the point dump is a choice. Blocks T3.
+2. **Tree node shape.** Recommend: each tree is a short list of nodes bought in order (5 nodes, the last one the chase trait), each node a skill, a passive or a stat bonus in the T1 vocabulary. Simple to read on a phone; branching can come later. Blocks T3.
+3. **Rank as the MVP grade.** Use the rank reached (E-S) as the end-of-run grade instead of a separate 3-boss ladder? Recommend yes; the 100-floor gauntlet still comes after the MVP. Blocks T4.
+4. **One energy meter** (`specs/12` section 13 item 16): drafts had energy plus fatigue; T2 uses energy only. Recommend keeping one meter. Not blocking.
+5. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
+6. **Roles and elements.** Recommend keeping 5 elements, dropping fixed roles. Not blocking until T3 content.
+7. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T12.

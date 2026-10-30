@@ -1,6 +1,6 @@
 # 16 - Monster Battle
 
-Status: **live as an engine (T1 of `specs/13`)**, not yet used by any game mode. The training run (T2), gauntlet (T4), towers and PvP will call it. Code: `src/IdleRng.Sim/Combat`. Tests: `src/IdleRng.Sim.Tests/BattleSimTests.cs`. Golden: `golden/battle-sim-vectors.txt`.
+Status: **live (T1 of `specs/13`)**. Used by the training run's rank fights (`specs/14` section 5); the gauntlet (T4), towers and PvP will call it too. Code: `src/IdleRng.Sim/Combat`. Tests: `src/IdleRng.Sim.Tests/BattleSimTests.cs`. Golden: `golden/battle-sim-vectors.txt`.
 
 It replaces the idle 4v1 boss battle (`specs/11` section 8, `src/IdleRng.Sim/Battle`), which keeps running the idle game unchanged until `specs/13` T7 deletes it. The two engines share no code; this one was rebuilt from the same design (ATB gauge, kit vocabulary, damage formula, triggers).
 
@@ -139,6 +139,6 @@ Range violations are `E043` in both `tools/content_build.py` and `ContentDb`.
 
 ## 9. Open
 
-- What a timeout means per mode (proposed: the challenger loses).
+- What a timeout means per mode (proposed: the challenger loses; rank fights already treat it as a loss).
 - Gambit rulebooks replace the default AI (T10).
 - Whether skills get their own elements in content (supported by the engine; content decides at T3).

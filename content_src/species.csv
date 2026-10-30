@@ -1,0 +1,4 @@
+id,name_key,element,base_hp,base_str,base_int,base_wis,base_dex,base_def,base_spd,base_luk,grow_hp,grow_str,grow_int,grow_wis,grow_dex,grow_def,grow_spd,grow_luk,#notes
+slime,species.slime.name,water,140,90,100,110,90,110,100,120,1.3,0.8,1.0,1.1,0.9,1.1,0.9,1.2,"placeholder MVP species (specs/14): balanced, tanky; native trees arrive in T3"
+drake,species.drake.name,fire,130,150,60,80,90,140,90,70,1.1,1.3,0.6,0.8,0.9,1.2,0.9,0.8,placeholder: STR/DEF bruiser
+sprite,species.sprite.name,light,90,60,150,140,120,70,140,110,0.8,0.6,1.3,1.2,1.1,0.7,1.3,1.0,placeholder: INT/WIS/SPD caster

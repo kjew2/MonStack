@@ -22,6 +22,7 @@ Start with `specs/00-overview.md`. It holds the canonical constants and the cont
 | `specs/11-party-and-builds.md` | Gameplay overhaul (#60): 4-companion party, stat sheet, roles, elements, promotion, 4v1 battle (phases 3-5 cancelled by the pivot) |
 | `specs/12-monster-trainer-design.md` | Pivot target (not built): monster raising with 12-epoch training runs, skill trees and chase traits, gauntlet, towers, async PvP |
 | `specs/13-pivot-transition.md` | Plan for moving this repo from the idle game to `specs/12`: what carries over, phases, open questions |
+| `specs/14-training-run.md` | Training run (pivot T2): AP cycles of Drill and Rest, drill rolls, energy and injury, rank fights, milestones |
 | `specs/16-battle.md` | Monster battle engine (pivot T1): sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.

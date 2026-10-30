@@ -225,6 +225,71 @@
       "key": "MON_SIDE_SIZE",
       "type": "int",
       "value": 4
+    },
+    {
+      "key": "RUN_CYCLES",
+      "type": "int",
+      "value": 12
+    },
+    {
+      "key": "RUN_AP",
+      "type": "int",
+      "value": 5
+    },
+    {
+      "key": "RUN_ENERGY_MAX",
+      "type": "double",
+      "value": 100.0
+    },
+    {
+      "key": "RUN_ENERGY_START",
+      "type": "double",
+      "value": 100.0
+    },
+    {
+      "key": "DRILL_ENERGY_COST",
+      "type": "double",
+      "value": 20.0
+    },
+    {
+      "key": "REST_ENERGY",
+      "type": "double",
+      "value": 50.0
+    },
+    {
+      "key": "DRILL_FAIL_MIN",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "DRILL_FAIL_MAX",
+      "type": "double",
+      "value": 0.6
+    },
+    {
+      "key": "DRILL_SUPER_P",
+      "type": "double",
+      "value": 0.1
+    },
+    {
+      "key": "INJURY_BELOW",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "INJURY_MAX_P",
+      "type": "double",
+      "value": 0.4
+    },
+    {
+      "key": "STAT_MAX",
+      "type": "double",
+      "value": 999.0
+    },
+    {
+      "key": "FIGHT_EVERY",
+      "type": "int",
+      "value": 1
     }
   ]
 }

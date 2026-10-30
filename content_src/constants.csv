@@ -44,3 +44,16 @@ MON_CRIT_DMG,double,1.5,monster battle: crit damage multiplier before effects. P
 MON_SPD_MIN,double,10,monster battle: minimum ATB gauge fill per tick so SPD 0 still acts. Placeholder
 MON_TIME_LIMIT_TICKS,int,900,monster battle: turn limit (90 s); reaching it is a timeout. Placeholder
 MON_SIDE_SIZE,int,4,monster battle: most units per side
+RUN_CYCLES,int,12,training run (specs/14): cycles per run; each cycle is RUN_AP taps then maybe a rank fight. Placeholder
+RUN_AP,int,5,action points per cycle; Drill and Rest cost 1 each. Placeholder
+RUN_ENERGY_MAX,double,100,Placeholder
+RUN_ENERGY_START,double,100,Placeholder
+DRILL_ENERGY_COST,double,20,energy a drill costs (floors at 0). Placeholder
+REST_ENERGY,double,50,energy a rest restores (capped at max). Placeholder
+DRILL_FAIL_MIN,double,0.05,drill fail chance at full energy. Placeholder
+DRILL_FAIL_MAX,double,0.6,drill fail chance at zero energy. Placeholder
+DRILL_SUPER_P,double,0.1,drill super chance. Placeholder
+INJURY_BELOW,double,0.25,energy fraction below which a drill can injure. Placeholder
+INJURY_MAX_P,double,0.4,injury chance of a drill at zero energy; scales linearly up from INJURY_BELOW. Placeholder
+STAT_MAX,double,999,trained stat cap
+FIGHT_EVERY,int,1,a rank fight follows every Nth cycle (kj: maybe every other if too frequent). Placeholder

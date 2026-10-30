@@ -23,6 +23,7 @@ namespace IdleRng.Bots.Golden
                 db => Sweep.Table(Sweep.Run(db, "greedy-f2p", "1-20", 30, Environment.ProcessorCount),
                                   TableWriter.ContentTag(db.Version, db.ContentHash))),
             new Entry("battle-sim-vectors.txt", "golden (BattleVectors, specs/16 section 8)", BattleVectors.Generate),
+            new Entry("training-run-vectors.txt", "golden (RunBot.Vectors, specs/14 section 9)", IdleRng.Bots.Training.RunBot.Vectors),
         };
 
         /// <summary>The repo's golden/ folder: a sibling of the Content folder.</summary>

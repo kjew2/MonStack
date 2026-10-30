@@ -46,14 +46,15 @@ namespace IdleRng.Bots
     public static class Program
     {
         const string Usage =
-            "usage: IdleRng.Bots <run|sweep|compare|acceptance|golden|gacha-vectors|bench> [options]\n" +
+            "usage: IdleRng.Bots <run|sweep|compare|acceptance|golden|gacha-vectors|bench|train> [options]\n" +
             "  run        --bot greedy-f2p|whale --seed N --days N --all-days --shares --format table|csv|json --out path --content dir\n" +
             "  sweep      --bot B --seeds 1-20 --days N --format table|csv|json --out path --parallel N --content dir\n" +
             "  compare    --seeds 1-20 --days N --content dir\n" +
             "  acceptance --seeds 1-20 --days N --time-budget-s 180 --targets path --verbose --content dir\n" +
             "  golden     --check|--update --golden-dir path --content dir\n" +
             "  gacha-vectors --check|--update --out path --content dir\n" +
-            "  bench      --ticks N --stage S --max-ms N\n";
+            "  bench      --ticks N --stage S --max-ms N\n" +
+            "  train      --species ID --policy balanced|focus|reckless --seed N --content dir   (one training run, specs/14)\n";
 
         public static int Main(string[] argv)
         {
@@ -70,6 +71,7 @@ namespace IdleRng.Bots
                     case "golden": return GoldenCmd(a);
                     case "gacha-vectors": return GachaVectorsCmd(a);
                     case "bench": return Bench(a);
+                    case "train": return Train(a);
                     case "help": case "--help": Console.Out.Write(Usage); return 0;
                     default: Console.Error.Write($"unknown verb '{a.Verb}'\n" + Usage); return 2;
                 }
@@ -99,6 +101,19 @@ namespace IdleRng.Bots
             if (path == null) { Console.Out.Write(text); return; }
             File.WriteAllText(path, text, new UTF8Encoding(false));
             Console.Error.Write($"# wrote {path}\n");
+        }
+
+        static int Train(CliArgs a)
+        {
+            var db = LoadContent(a);
+            string species = a.Str("species", db.SpeciesList[0].Id);
+            var policy = IdleRng.Bots.Training.RunPolicies.Create(a.Str("policy", "balanced"));
+            var sb = new StringBuilder();
+            var s = IdleRng.Bots.Training.RunBot.Play(db, policy, species, (ulong)a.Long("seed", 7), line => sb.Append(line).Append('\n'));
+            sb.Append(IdleRng.Bots.Training.RunBot.Summary(db, s)).Append('\n');
+            sb.Append("hash ").Append(IdleRng.Sim.Training.TrainingRun.StateHash(s)).Append('\n');
+            Emit(a, sb.ToString());
+            return 0;
         }
 
         static int Run(CliArgs a)
