@@ -19,3 +19,8 @@ web/dist/
 [Bb]in/
 *.user
 TestResults/
+
+# C# and wasm build output
+src/**/bin/
+src/**/obj/
+web/wasm/dist/
