@@ -83,7 +83,7 @@ If the page says "The C# engine did not load", it names the cause: the bundle is
 
 The repo is private, so GitHub cannot serve the page (raw links show source, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly). Two ways in:
 
-**Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude rebuilds and republishes it (`web/wasm/build.sh`, then publish `web/index.html` with the file map from `web/wasm/artifact-files.py`, root = repo root, to that URL). The cog shows the content version, and `wasm/dist/build-info.json` in the artifact holds the build time.
+**Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It opens the monster trainer; "Idle prototype" in its header goes to the old idle game. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude rebuilds and republishes it (`web/wasm/build.sh`, then publish `web/run.html` with the file map from `web/wasm/artifact-files.py`, root = repo root, to that URL). The cog shows the content version, and `wasm/dist/build-info.json` in the artifact holds the build time.
 
 **From your computer, on the same Wi-Fi (always matches your checkout):**
 
@@ -95,5 +95,6 @@ Progress is saved in the browser, separately for each address, so the artifact l
 
 ### Tests for the web build
 
-- `node web/wasm/test/run-wasm.js` (after `web/wasm/build.sh`): plays the page on the C# engine in headless Chromium: ticks, tabs, a summon, save and reload, and the file:// error.
+- `node web/wasm/test/run-wasm.js` (after `web/wasm/build.sh`): plays the idle page on the C# engine in headless Chromium: ticks, tabs, a summon, save and reload, and the file:// error.
+- `node web/wasm/test/run-trainer.js`: plays a whole monster-trainer run on `run.html` through the real buttons (drill, rest, fights, drafts, buying), seals it, checks the grade and Vault, and reloads mid-run and after the end.
 - Game rules are tested in C# (`src/IdleRng.Sim.Tests`); `./check.sh` runs everything, including the web build and browser test in full mode.

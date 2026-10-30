@@ -132,12 +132,12 @@ try:
 except OSError:
     print('')" 2>/dev/null || true)
 
-LOCAL_URL="http://localhost:$PORT"
+LOCAL_URL="http://localhost:$PORT/run.html"   # the monster trainer; the idle page is index.html
 say ""
 say "== Idle RNG is running"
 say "   On this computer:  $LOCAL_URL"
 if [ "$BIND" = "0.0.0.0" ] && [ -n "$LAN_IP" ] && [ "$LAN_IP" != "127.0.0.1" ]; then
-  PHONE_URL="http://$LAN_IP:$PORT"
+  PHONE_URL="http://$LAN_IP:$PORT/run.html"
   say "   On your phone:     $PHONE_URL   (same Wi-Fi; allow Python through the firewall if it does not load)"
   if command -v qrencode >/dev/null 2>&1; then qrencode -t ANSIUTF8 "$PHONE_URL"; fi
 fi

@@ -255,31 +255,30 @@ namespace IdleRng.Sim.Training
         public static bool ChaseConditionsHold(ContentDb c, RunState s, TreeDef tree)
         {
             foreach (var cd in tree.Conditions)
-            {
-                switch (cd.Type)
-                {
-                    case ConditionType.TreeMaxed:
-                    {
-                        int i = Slotted(s, cd.Ref);
-                        if (i < 0 || s.Slots[i].Bought < c.Trees[cd.Ref].Nodes.Count) return false;
-                        break;
-                    }
-                    case ConditionType.NodeOwned:
-                    {
-                        var n = c.TreeNodes[cd.Ref];
-                        int i = Slotted(s, n.TreeId);
-                        if (i < 0 || s.Slots[i].Bought <= n.Index) return false;
-                        break;
-                    }
-                    case ConditionType.StatAtLeast:
-                        if (s.Stats.Get(cd.Ref) < cd.Amount) return false;
-                        break;
-                    case ConditionType.TallyAtLeast:
-                        if (TallyValue(s, cd.Ref) < cd.Amount) return false;
-                        break;
-                }
-            }
+                if (!ConditionHolds(c, s, cd)) return false;
             return true;
+        }
+
+        /// <summary>Whether one chase condition holds now (the UI shows which are met).</summary>
+        public static bool ConditionHolds(ContentDb c, RunState s, ChaseConditionDef cd)
+        {
+            switch (cd.Type)
+            {
+                case ConditionType.TreeMaxed:
+                {
+                    int i = Slotted(s, cd.Ref);
+                    return i >= 0 && s.Slots[i].Bought >= c.Trees[cd.Ref].Nodes.Count;
+                }
+                case ConditionType.NodeOwned:
+                {
+                    var n = c.TreeNodes[cd.Ref];
+                    int i = Slotted(s, n.TreeId);
+                    return i >= 0 && s.Slots[i].Bought > n.Index;
+                }
+                case ConditionType.StatAtLeast: return s.Stats.Get(cd.Ref) >= cd.Amount;
+                case ConditionType.TallyAtLeast: return TallyValue(s, cd.Ref) >= cd.Amount;
+                default: return true;
+            }
         }
 
         public static double TallyValue(RunState s, string name)

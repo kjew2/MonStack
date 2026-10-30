@@ -118,11 +118,14 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 - New rule modifier `echo_cast` (Arcane Overflow's capstone).
 - Books are passed into `TrainingRun.Start` until the Daily Tower drops them (T10).
 
-### T4 - Run end: ladder, grade, Vault
+### T4 - Run end: grade, Vault
 
-- The rank reached in the run's rank fights (E-S) is the end-of-run grade, with a stat breakdown (kj, 2026-10-30). The boss-tower gauntlet with the wheel spin and Legacy Titles is T8, after the MVP.
-- Vault: certified monsters stored with their final build snapshot.
-- Exit: a finished run produces a grade and a Vault entry.
+**Done** (`Training/VaultEntry.cs`). The rank reached in the run's rank fights (E-S) is the end-of-run grade, with a stat breakdown (kj, 2026-10-30). The boss-tower gauntlet with the wheel spin and Legacy Titles is T8, after the MVP.
+
+- `Vault.Seal(content, run, sealedUtcMs)` freezes a finished run into a `VaultEntry`: species, grade (rank id), end reason, cycles, fights, final stats, slotted trees with bought nodes, the seal time (caller-supplied; the sim has no clock), the run hash, and the seed, books and command log. `Fighter(content)` rebuilds the battle snapshot by replaying the log, so an entry can be re-checked against its hash.
+- Unspent skill points are lost at sealing. Tree commands still work after the run ends, so the player can spend them first.
+- Injured runs are vaulted too. Storing entries in the account is T5; until then the web page keeps them in their own storage key.
+- Exit: a finished run produces a grade and a Vault entry (`VaultTests`).
 
 ### T5 - Account and meta-progression
 
@@ -131,6 +134,8 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 - Exit: run -> shards -> talent -> next run is measurably different, saved and reloaded.
 
 ### T6 - Web prototype on the new loop
+
+**First slice done, built ahead of T5 (kj, 2026-10-30) and kept as the real T6 work.** `web/run.html` plays a whole run on a phone: species pick, Drill and Rest with the odds shown, rank fights with the battle log, tree drafts into slots, the tree view with buying, the end screen with the grade and stat breakdown, the Vault list, and a replay save (species + seed + command log). The bridge is `IdleRng.Web.Engine.Run*` (`web/wasm/BRIDGE.md`, "Run bridge"). `index.html` links to it and the idle UI stays until T7. Not yet: account and shards, talent tree (T5).
 
 - `src/IdleRng.Web` bridge exposes the run engine; `web/` gets the run screen, drafts, tree view, Tactical Challenge battle log, ladder/grade screen, Vault, talent tree.
 - The idle UI is removed from `web/` here.
@@ -169,14 +174,12 @@ Balance of any kind, art direction, the game's name, store presence. Those stay 
 
 Blocking questions first. Each has a recommendation.
 
-Answered (kj, 2026-10-30): pivot in place, no rename yet; tree slots are 2 native + 2 empty, any new tree may fill or overwrite any slot (`specs/12` section 5.1); web first (section 1); clean save break; stats HP, STR, INT, WIS, DEX, DEF, SPD, LUK; failed runs end on injury, the monster is still vaulted and shards are still paid. Second round: only Drill and Rest, AP cycles ending in a rank fight (`specs/12` section 4.2); points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; every tree has a chase trait, and chase trees' capstones are much stronger and more unique. Third round: SP per cycle plus a per-win bonus; trees of nodes with about 75% filler; the rank reached is the MVP grade, with the simulated boss-tower gauntlet and wheel spin after the MVP (T8).
+Answered (kj, 2026-10-30): pivot in place, no rename yet; tree slots are 2 native + 2 empty, any new tree may fill or overwrite any slot (`specs/12` section 5.1); web first (section 1); clean save break; stats HP, STR, INT, WIS, DEX, DEF, SPD, LUK; failed runs end on injury, the monster is still vaulted and shards are still paid. Second round: only Drill and Rest, AP cycles ending in a rank fight (`specs/12` section 4.2); points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; every tree has a chase trait, and chase trees' capstones are much stronger and more unique. Third round: SP per cycle plus a per-win bonus; trees of nodes with about 75% filler; the rank reached is the MVP grade, with the simulated boss-tower gauntlet and wheel spin after the MVP (T8). Fourth round: a Vault entry keeps final stats, slotted trees with bought nodes, rank, species and run date, frozen so it replays; unspent skill points are lost at sealing; the run screen is built ahead of T5 so kj can play it early.
 
 Open, blocking first. Each has a recommendation.
 
-1. **Vault entry** (T4). What a finished monster keeps: its final stats, slotted trees with bought nodes, rank, species and run date. Recommend exactly that, frozen as a battle snapshot. Blocks T4.
-2. **Unspent skill points at the end of a run.** Recommend: lost (tree commands still work after the run ends, so the player can spend them first). Not blocking.
-3. **What overwriting takes away** (`specs/15` section 4, agent decision): the overwritten tree's flat stat boosts are removed too. Not blocking; easy to change.
-4. **One energy meter** (`specs/12` section 13 item 16): drafts had energy plus fatigue; T2 uses energy only. Recommend keeping one meter. Not blocking.
-5. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
-6. **Roles and elements.** The T3 placeholder content keeps the 5 elements and has no fixed roles (roles come from trees). Confirm. Not blocking.
-7. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T13.
+1. **What overwriting takes away** (`specs/15` section 4, agent decision): the overwritten tree's flat stat boosts are removed too. Not blocking; easy to change.
+2. **One energy meter** (`specs/12` section 13 item 16): drafts had energy plus fatigue; T2 uses energy only. Recommend keeping one meter. Not blocking.
+3. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
+4. **Roles and elements.** The T3 placeholder content keeps the 5 elements and has no fixed roles (roles come from trees). Confirm. Not blocking.
+5. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T13.

@@ -111,4 +111,4 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 ## 10. Open
 
 - Retiring a monster early, and any penalty for losing a rank fight.
-- The rank reached is the MVP's end-of-run grade (kj, 2026-10-30); the Vault entry is T4.
+- The rank reached is the MVP's end-of-run grade (kj, 2026-10-30); the Vault entry (T4) is `specs/13`.

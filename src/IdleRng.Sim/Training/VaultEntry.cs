@@ -1,0 +1,72 @@
+using System;
+using System.Collections.Generic;
+using IdleRng.Sim.Combat;
+using IdleRng.Sim.Content;
+
+namespace IdleRng.Sim.Training
+{
+    /// <summary>A tree the monster ended the run with and how many of its nodes it had bought.</summary>
+    public sealed class VaultTree
+    {
+        public string TreeId { get; set; }
+        public int Bought { get; set; }
+    }
+
+    /// <summary>
+    /// A finished monster, frozen (specs/13 T4, kj 2026-10-30: final stats, slotted trees with bought nodes, rank, species and
+    /// run date). Carries the species, seed, books and command log, so the run replays exactly (TrainingRun.Replay) and
+    /// <see cref="Fighter"/> rebuilds the battle snapshot from them. Unspent skill points are lost. Injured runs are vaulted too.
+    /// </summary>
+    public sealed class VaultEntry
+    {
+        public string SpeciesId { get; set; }
+        public ulong Seed { get; set; }
+        public List<string> Books { get; set; } = new List<string>();
+        public List<RunCommand> Log { get; set; } = new List<RunCommand>();
+
+        /// <summary>The MVP grade: the rank the monster reached (a fight_ranks id, e.g. "c").</summary>
+        public string Grade { get; set; }
+        public int RankIndex { get; set; }
+        public RunEnd End { get; set; }
+
+        /// <summary>Cycles played, including the one an injury ended.</summary>
+        public int Cycles { get; set; }
+        public int FightsFought { get; set; }
+        public int FightsWon { get; set; }
+        public MonsterStats Stats { get; set; } = new MonsterStats();
+        public List<VaultTree> Trees { get; set; } = new List<VaultTree>();
+
+        /// <summary>Hash of the finished run (TrainingRun.StateHash): lets a server check the entry against its log.</summary>
+        public string RunHash { get; set; }
+
+        /// <summary>Wall-clock time the run was sealed. The sim has no clock: the caller supplies it (0 = not recorded).</summary>
+        public long SealedUtcMs { get; set; }
+
+        /// <summary>The monster as a battle fighter, rebuilt by replaying the run.</summary>
+        public Fighter Fighter(ContentDb c) => TrainingRun.MonsterFighter(c, TrainingRun.Replay(c, SpeciesId, Seed, Log, Books));
+    }
+
+    public static class Vault
+    {
+        /// <summary>Freeze a finished run. Throws if the run is still going.</summary>
+        public static VaultEntry Seal(ContentDb c, RunState s, long sealedUtcMs = 0)
+        {
+            if (c == null) throw new ArgumentNullException(nameof(c));
+            if (s == null) throw new ArgumentNullException(nameof(s));
+            if (s.Phase != RunPhase.Finished) throw new InvalidOperationException("only a finished run can be vaulted");
+
+            var e = new VaultEntry
+            {
+                SpeciesId = s.SpeciesId, Seed = s.Seed, End = s.End, RankIndex = s.Rank, Grade = c.FightRanks[s.Rank].Id,
+                Cycles = s.Cycle, FightsFought = s.FightsFought, FightsWon = s.FightsWon, Stats = s.Stats.Clone(),
+                RunHash = TrainingRun.StateHash(s), SealedUtcMs = sealedUtcMs,
+                Log = s.Log.ConvertAll(l => l.Clone()),
+            };
+            // Books brought into the run = unused ones now + the ones the log used.
+            e.Books.AddRange(s.Books);
+            foreach (var l in s.Log) if (l.Kind == RunCommandKind.UseBook) e.Books.Add(l.Book);
+            foreach (var slot in s.Slots) if (slot != null) e.Trees.Add(new VaultTree { TreeId = slot.TreeId, Bought = slot.Bought });
+            return e;
+        }
+    }
+}
