@@ -32,7 +32,7 @@ A `piece` argument is `{"tier":int,"rarity":int,"enh":int}`. Optional args may b
 
 ### Command names (name -> args -> result object)
 
-`buyStatLevels(m)`, `buyStatLevelsMax()` (returns a bare JSON number), `enhance(slot)`, `attemptBoss()`, `pull(count)` (result `{ok,results:[{id,name,tier,isNew,levelBefore,levelAfter,shards,pity,forced}],paidWith}` or `{ok:false,reason}`), `equipHero(slot,id)`, `unequipHero(slot)`, `autoEquip()` (bare number), `promote(id)` (`{ok}` or `{ok:false,reason}` with `heroNotOwned`, `maxed`, `locked`, `notEnoughGold`), `claimChest()`, `syncWallClock(nowMs)`, `debugGrantGold(n)`, `debugGrantGems(n)`, `debugSetStage(stage)`.
+`buyStatLevels(m)`, `buyStatLevelsMax()` (returns a bare JSON number), `enhance(slot)`, `attemptBoss()`, `pull(count)` (result `{ok,results:[{id,name,tier,isNew,levelBefore,levelAfter,shards,pity,forced}],paidWith}` or `{ok:false,reason}`), `equipHero(slot,id)`, `unequipHero(slot)` (`{ok:false,reason:'lastCompanion'}` when it would empty the party), `autoEquip()` (bare number), `promote(id)` (`{ok}` or `{ok:false,reason}` with `heroNotOwned`, `maxed`, `locked`, `notEnoughGold`), `claimChest()`, `syncWallClock(nowMs)`, `debugGrantGold(n)`, `debugGrantGems(n)`, `debugSetStage(stage)`.
 
 ### UiState (what `State()` returns)
 

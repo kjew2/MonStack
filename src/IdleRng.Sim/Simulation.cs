@@ -365,8 +365,7 @@ namespace IdleRng.Sim
                 partyNoPromo += HeroFarmDps(id, ignorePromotions: true);
             }
             _partyDps = party;
-            var starter = Content.StarterHeroId != null ? Content.Heroes[Content.StarterHeroId] : null;
-            _baseDps = starter == null ? 1.0 : Content.FarmDps(starter, 1, 0);
+            _baseDps = Content.BaseFarmDps;
             _heroMult = partyNoPromo / _baseDps;
             _promoMult = partyNoPromo > 0 ? party / partyNoPromo : 1.0;
             _dps = _partyDps * _statMult * _gearMult;

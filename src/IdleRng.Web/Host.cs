@@ -455,6 +455,7 @@ namespace IdleRng.Web
                 case Reject.InvalidCount: return "invalid";
                 case Reject.PromotionMaxed: return "maxed";
                 case Reject.PromotionLocked: return "locked";
+                case Reject.LastCompanion: return "lastCompanion";
                 default: return r.ToString();
             }
         }

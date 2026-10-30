@@ -53,7 +53,7 @@ Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both w
 | attemptBoss | `AttemptBoss()` | `bossAlreadyPending`, `noBossToAttempt` |
 | pull(count) | `Pull()` / `Pull10()` (count 10, else 1) | `{ok,results,paidWith}`; `NotEnoughGems` -> `cannotAfford`; result fields: see below |
 | equipHero(slot, id) | `EquipHero` | `heroNotOwned` (also for unknown ids), `heroAlreadyEquipped` |
-| unequipHero(slot) | `UnequipHero` | `{ok:true}` |
+| unequipHero(slot) | `UnequipHero` | `{ok:true}`; `lastCompanion` when it would empty the party |
 | autoEquip | `AutoEquipBestHeroes()` | slots changed; positional, turns AutoEquipBest on |
 | promote(id) | `Promote` | `heroNotOwned` (also for unknown ids), `maxed`, `locked`, `notEnoughGold` |
 | claimChest | `ClaimIdleChest()` | `{ok}` / `{ok:false,reason:"notReady"}` |

@@ -24,6 +24,42 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Unequip_CannotEmptyTheParty()
+        {
+            var sim = TestContent.NewSim();
+            Assert.That(sim.UnequipHero(0).Reason, Is.EqualTo(Reject.LastCompanion));
+            Assert.That(sim.State.Heroes.Equipped[0], Is.EqualTo(Db.StarterHeroId));
+            Assert.That(sim.State.Heroes.AutoEquipBest, Is.True, "a rejected unequip changes nothing");
+            sim.Debug.GrantHeroCopies(FirstOf(Rarity.R), 1);
+            int other = System.Array.FindIndex(sim.State.Heroes.Equipped, id => id != null && id != Db.StarterHeroId);
+            Assert.That(sim.UnequipHero(other).Ok, Is.True);
+            Assert.That(sim.UnequipHero(System.Array.IndexOf(sim.State.Heroes.Equipped, Db.StarterHeroId)).Reason, Is.EqualTo(Reject.LastCompanion));
+            Assert.That(sim.Query.Dps, Is.GreaterThan(0));
+            sim.Validate();
+        }
+
+        [Test]
+        public void Promoted_IsPublishedAfterAutoEquipRePicks()
+        {
+            var box = new EventOutbox(EventKinds.All);
+            var sim = TestContent.NewSim(sink: box);
+            foreach (var h in Db.HeroList.Where(h => h.Tier == Rarity.C)) sim.Debug.GrantHeroCopies(h.Id, 1);   // a full party of Commons
+            string leg = FirstOf(Rarity.L);
+            sim.Debug.GrantHeroCopies(leg, 1);
+            sim.SetAutoEquipHeroes(false);
+            int slot = System.Array.IndexOf(sim.State.Heroes.Equipped, leg);
+            if (slot >= 0) Assert.That(sim.UnequipHero(slot).Ok, Is.True);                                         // bench the Legendary
+            sim.SetAutoEquipHeroes(true);
+            Assert.That(sim.State.Heroes.Equipped, Does.Contain(leg), "auto-equip puts the strongest back");
+            sim.Debug.SetStage(Db.Promotions[0].UnlockStage);
+            sim.Debug.GrantGold(Db.PromotionCost(1));
+            box.Drain();
+            Assert.That(sim.Promote(leg).Ok, Is.True);
+            var ev = box.Drain();
+            Assert.That(ev.Last(), Is.InstanceOf<CompanionPromoted>(), "promotion event comes after any re-pick events");
+        }
+
+        [Test]
         public void FarmDps_IsAtkTimesCritTimesSpeed()
         {
             var h = Db.Heroes[FirstOf(Rarity.L)];

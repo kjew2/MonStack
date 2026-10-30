@@ -301,8 +301,9 @@ def validate(t, errs):
         if not any(r["unlock_promotion"] == 0 for r in kit):
             errs.add("E063", loc, "a companion needs at least one base skill (unlock_promotion 0)")
         promos = sorted(r["unlock_promotion"] for r in kit if r["unlock_promotion"] > 0)
-        if promos != list(range(1, max_promo[h["tier"]] + 1)):
-            errs.add("E063", loc, f"needs exactly one skill per promotion 1..{max_promo[h['tier']]} (specs/11 section 4.4)")
+        cap = max_promo.get(h["tier"], 0)
+        if promos != list(range(1, cap + 1)):
+            errs.add("E063", loc, f"needs exactly one skill per promotion 1..{cap} (specs/11 section 4.4)")
     # banners
     pools = {}
     for h in t["heroes"]:

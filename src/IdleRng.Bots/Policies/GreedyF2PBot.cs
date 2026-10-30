@@ -56,7 +56,8 @@ namespace IdleRng.Bots.Policies
             foreach (var id in ctx.State.Heroes.Equipped)
             {
                 if (id == null || !q.CanPromote(id)) continue;
-                double score = (q.HeroFarmDpsAfterPromotion(id) - q.HeroFarmDps(id)) / q.NextPromotionCost(id);
+                double gain = q.HeroFarmDpsAfterPromotion(id) - q.HeroFarmDps(id), cost = q.NextPromotionCost(id);
+                double score = cost > 0 ? gain / cost : gain > 0 ? double.MaxValue : 0;   // free promotions first, never NaN
                 if (best == null || score > bestScore || (score == bestScore && string.CompareOrdinal(id, best) < 0))
                 {
                     best = id;

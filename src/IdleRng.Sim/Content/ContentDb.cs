@@ -75,6 +75,9 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Id of the starter companion (specs/11 section 4.5).</summary>
         public string StarterHeroId { get; private set; }
+
+        /// <summary>The starter's FarmDps at level 1, promotion 0: the base of the reporting layers (specs/11 section 7.1).</summary>
+        public double BaseFarmDps { get; private set; } = 1.0;
         public IReadOnlyList<DailyQuestDef> DailyQuests { get; private set; }
         public IReadOnlyList<TutorialGrantDef> TutorialGrants { get; private set; }
         public IReadOnlyList<ProgressTargetDef> ProgressTargets { get; private set; }
@@ -310,6 +313,14 @@ namespace IdleRng.Sim.Content
                 heroes[h.Id] = h;
             }
             Heroes = new ReadOnlyDictionary<string, HeroDef>(heroes);
+            if (!(Constants.SpdRef > 0)) errors.Add(new ContentError("E043", "constants[SPD_REF]", "value out of range (> 0)"));
+            foreach (var h in heroList)
+            {
+                if (!(h.Hp > 0 && h.Atk > 0 && h.Def > 0 && h.Spd > 0))
+                    errors.Add(new ContentError("E043", $"heroes[{h.Id}]", "hp, atk, def and spd must be > 0"));
+                if (!(h.CritRate >= 0 && h.CritRate <= 1)) errors.Add(new ContentError("E043", $"heroes[{h.Id}]", "crit_rate must be in [0, 1]"));
+                if (!(h.CritDmg >= 1)) errors.Add(new ContentError("E043", $"heroes[{h.Id}]", "crit_dmg must be >= 1"));
+            }
             var starters = heroList.Where(h => h.Starter).ToList();
             if (starters.Count != 1)
                 errors.Add(new ContentError("E062", "heroes", $"exactly one hero must have starter = true (found {starters.Count})"));
@@ -394,7 +405,10 @@ namespace IdleRng.Sim.Content
                     errors.Add(new ContentError("E060", $"promotions[{Promotions[i].Index}]", "index must be 1..N contiguous"));
                 if (i > 0 && Promotions[i].UnlockStage <= Promotions[i - 1].UnlockStage)
                     errors.Add(new ContentError("E032", $"promotions[{Promotions[i].Index}]", "unlock_stage must strictly increase"));
+                if (!(Promotions[i].Mult > 0) || !(Promotions[i].CostKills >= 0))
+                    errors.Add(new ContentError("E043", $"promotions[{Promotions[i].Index}]", "mult must be > 0 and cost_kills >= 0"));
             }
+            if (StarterHeroId != null && Constants.SpdRef > 0) BaseFarmDps = FarmDps(Heroes[StarterHeroId], 1, 0);
             foreach (var tierDef in HeroTiers)
                 if (tierDef.MaxPromotions < 0 || tierDef.MaxPromotions > Promotions.Count)
                     errors.Add(new ContentError("E043", $"hero_tiers[{tierDef.Tier}]", $"max_promotions must be in 0..{Promotions.Count}"));

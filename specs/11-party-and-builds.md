@@ -128,7 +128,7 @@ Exactly one companion has `starter = true` (Pell, a Common Striker). `GameState.
 
 - `HERO_SLOTS = 4`.
 - `AutoEquipBestHeroes` fills the party with the 4 owned companions with the highest `FarmDps` (section 7), ties broken by id ordinal. Promotion changes `FarmDps`, so auto-equip re-picks after a promotion when it is on.
-- Manual equip rules are unchanged (`specs/03` section 9).
+- Manual equip rules are unchanged (`specs/03` section 9), except that `UnequipHero` rejects emptying the last occupied slot (`Reject.LastCompanion`): party DPS comes only from companions, so an empty party could never kill anything.
 
 ## 6. Promotion (replaces class advance)
 
@@ -151,8 +151,8 @@ Promote(heroId):
   cost = promotions[next].cost_kills * GOLD(promotions[next].unlock_stage)
   if Gold < cost:                            reject NotEnoughGold
   Gold -= cost; Promotions[heroId] = next; mark DPS dirty
-  publish CompanionPromoted(heroId, next, cost)
   if AutoEquipBest: re-pick the party
+  publish CompanionPromoted(heroId, next, cost)        // after the re-pick, so listeners see the final party
 ```
 
 - Cost reads the milestone's stage, not the current stage, so catching up on old promotions gets cheap as you push. Gold is a placeholder currency; promotion moves to dungeon materials in phase 4.

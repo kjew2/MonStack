@@ -12,7 +12,7 @@ namespace IdleRng.Sim
     {
         None = 0, NotEnoughGold, NotEnoughGems, EmptySlot, EnhanceMaxed, HeroNotOwned, HeroAlreadyEquipped,
         NoBossToAttempt, BossAlreadyPending, StageCap, ChestNotReady, BannerDisabled, InvalidCount,
-        PromotionMaxed, PromotionLocked,
+        PromotionMaxed, PromotionLocked, LastCompanion,
     }
 
     public enum PaidWith { None, FreeDaily, FreeBanked, Gems }
@@ -214,9 +214,13 @@ namespace IdleRng.Sim
         {
             CheckHeroSlot(slot);
             Log(CommandKind.UnequipHero, slot);
-            State.Heroes.AutoEquipBest = false;
             var eq = State.Heroes.Equipped;
-            if (eq[slot] == null) return CommandResult.Success;
+            if (eq[slot] == null) { State.Heroes.AutoEquipBest = false; return CommandResult.Success; }
+            // Party DPS comes only from companions (specs/11 section 5): the party never goes empty.
+            int filled = 0;
+            foreach (var id in eq) if (id != null) filled++;
+            if (filled <= 1) return new CommandResult(Reject.LastCompanion);
+            State.Heroes.AutoEquipBest = false;
             eq[slot] = null;
             MarkDpsDirty();
             if (Wants(EventKinds.HeroEquipped)) _sink.Publish(new HeroEquipped(State.Tick, slot, null));
@@ -282,8 +286,8 @@ namespace IdleRng.Sim
             State.Currencies.Gold -= cost;
             State.Heroes.Promotions[heroId] = next;
             MarkDpsDirty();
+            if (State.Heroes.AutoEquipBest) AutoEquipInternal();   // re-pick first so listeners see the final party
             if (Wants(EventKinds.CompanionPromoted)) _sink.Publish(new CompanionPromoted(State.Tick, heroId, next, cost));
-            if (State.Heroes.AutoEquipBest) AutoEquipInternal();
             return CommandResult.Success;
         }
 

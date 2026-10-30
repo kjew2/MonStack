@@ -449,6 +449,9 @@ namespace IdleRng.Client.Core
             Sim.Reject.ChestNotReady => "Chest not ready yet",
             Sim.Reject.BannerDisabled => "Banner disabled",
             Sim.Reject.InvalidCount => "Invalid count",
+            Sim.Reject.PromotionMaxed => "Already at max promotion",
+            Sim.Reject.PromotionLocked => "Reach the unlock stage first",
+            Sim.Reject.LastCompanion => "The party needs at least one companion",
             _ => r.ToString(),
         };
 
@@ -542,7 +545,7 @@ namespace IdleRng.Client.Core
             }
             else
             {
-                _sim.UnequipHero(slot);
+                ToastReject(_sim.UnequipHero(slot).Reason);
             }
             _heroesDirty = true;
             Changed();
@@ -563,7 +566,7 @@ namespace IdleRng.Client.Core
             var sel = Heroes.SelectedHero;
             int slot = sel == null ? -1 : Array.IndexOf(_sim.State.Heroes.Equipped, sel);
             if (slot < 0) { Toasts.Push("Selected hero is not equipped", 1.5); return; }
-            _sim.UnequipHero(slot);
+            ToastReject(_sim.UnequipHero(slot).Reason);
             _heroesDirty = true;
             Changed();
         }

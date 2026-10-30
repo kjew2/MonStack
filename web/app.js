@@ -444,6 +444,11 @@
   };
 
   // ---- Heroes
+  function unequip(slot) {
+    const r = sim.unequipHero(slot);
+    if (!r.ok && r.reason === 'lastCompanion') toast('The party needs at least one companion');
+    return r.ok;
+  }
   BUILD.heroes = function (root) {
     let selected = null;
     const multEl = h('span', { class: 'num muted' });
@@ -459,7 +464,7 @@
     } }, ['Add to party']);
     const remBtn = h('button', { type: 'button', class: 'btn small', onclick: () => {
       const slot = sim.state.heroes.party.indexOf(selected);
-      if (slot >= 0) { sim.unequipHero(slot); rebuild(); }
+      if (slot >= 0) { unequip(slot); rebuild(); }
     } }, ['Remove']);
     const dKit = h('div', { class: 'muted num' });
     const dStats = h('div', { class: 'num' });
@@ -482,9 +487,9 @@
       h('div', { class: 'row between' }, [h('h3', { text: 'Collection' }), countEl]),
       grid,
     );
-    let sig = '';
+    let sig = '', detailSig = '';
     function rebuild() {
-      sig = '';
+      sig = ''; detailSig = '';
       this_.update();
     }
     const this_ = {
@@ -492,7 +497,7 @@
         const s = sim.state;
         setText(multEl, 'Party DPS ' + fmt(sim.partyDps()));
         setDisabled(auto, !sim.autoEquipWouldChange());
-        const newSig = JSON.stringify(s.heroes) + '|' + selected + '|' + s.stage.stage + '|' + Math.floor(Math.log10(s.cur.gold + 1));
+        const newSig = JSON.stringify(s.heroes) + '|' + selected;
         if (newSig !== sig) {
           sig = newSig;
           partyRow.textContent = '';
@@ -501,9 +506,9 @@
             el.addEventListener('click', () => {
               if (selected && s.heroes.owned[selected]) {
                 const at = s.heroes.party.indexOf(selected);
-                if (at >= 0 && at !== i) sim.unequipHero(at);
+                if (at >= 0 && at !== i && !unequip(at)) { rebuild(); return; }
                 sim.equipHero(i, selected);
-              } else if (id) sim.unequipHero(i);
+              } else if (id) unequip(i);
               rebuild();
             });
             partyRow.append(el);
@@ -533,6 +538,10 @@
         setHidden(dSprite, false);
         if (dSprite.dataset.id !== selected) { SP.draw(dSprite, SP.hero(selected)); dSprite.dataset.id = selected; dSprite.className = 'sprite bg-r' + hero.tier; }
         setText(dName, hero.name + ' · ' + C.rarityNames[R[hero.tier]] + ' ' + selected);
+        // heroInfo crosses the wasm bridge: refresh the detail only when the companion, stage or gold changed
+        const dSig = newSig + '|' + s.stage.stage + '|' + Math.floor(s.cur.gold);
+        if (dSig === detailSig) return;
+        detailSig = dSig;
         const info = sim.heroInfo(selected);
         setText(dLine, 'Lv' + lvl + (lvl >= cum.length ? ' MAX' : ' (' + copies + '/' + cum[lvl] + ' copies)') + ' · ' + fmt(info.farmDps) + ' DPS');
         setText(dKit, info.roleName + ' · ' + info.elementName + ' · promotion ' + info.promotions + '/' + info.maxPromotions);
