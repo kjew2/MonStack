@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!--BUILD:HEAD-->
 <title>Idle RNG Prototype</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -214,7 +213,6 @@ input[type=number] { width: 90px; background: #0d0d0d; color: var(--text); borde
 }
 @media (max-width: 360px) { .cur { font-size: 15px; } .chip { padding: 6px 8px; } }
 </style>
-<!--/BUILD:HEAD-->
 </head>
 <body>
 <div id="app">
@@ -261,12 +259,9 @@ input[type=number] { width: 90px; background: #0d0d0d; color: var(--text); borde
   <nav id="tabs" role="tablist"></nav>
   <div id="toasts" aria-live="polite"></div>
 </div>
-<!--BUILD:SCRIPTS-->
-<script src="content.js"></script>
-<script src="sim.js"></script>
+<script src="format.js"></script>
 <script src="engine.js"></script>
 <script src="sprites.js"></script>
 <script src="app.js"></script>
-<!--/BUILD:SCRIPTS-->
 </body>
 </html>

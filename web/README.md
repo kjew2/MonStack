@@ -1,56 +1,30 @@
 # Browser prototype
 
-A lightweight, playable build of the P0 loop for feel and balance testing on a phone. It is a throwaway client, not the product: the native app is still the Unity client in `specs/07`. What is meant to carry over is the game core.
+A playable, phone-sized UI for feel and balance testing, running the **real C# game core** (`src/IdleRng.Sim`) compiled to WebAssembly. The native product is still the Unity client in `specs/07`; this page and Unity drive the same engine.
+
+How to build and run it: the README at the repo root, "Running the web prototype".
 
 | File | What it is |
 |---|---|
-| `content.js` | Every balance number from `specs/00` section 2. Change numbers here. |
-| `sim.js` | Pure game core, a mirror of the planned C# `IdleRng.Sim`. No DOM, no clock reads, no `Math.random`, no `Math.pow`. |
-| `app.js`, `index.html` | UI shell: ticks the core, sends commands, draws state. No game rules. |
-| `test.js` | Checks the core against the specs' published vectors (SplitMix64, FNV, pity table, consolidated rates, 10-pull guarantee, dupe levels, offline cap). |
-| `bot.js` | Greedy F2P bot (`specs/04` section 9) playing 30 days on the real core in under a second. |
-| `sprites.js` | Seeded 12x12 pixel sprites for heroes, player and enemies (ported from the earlier `web-proto` build). Cosmetic only. |
-| `engine.js` | Backend-agnostic facade the UI plays through: `js` (wraps `sim.js`) or `wasm` (the C# core via `IdleRng.Web.Engine`, contract in `wasm/BRIDGE.md`). |
-| `tools/engine-*.js` | Facade tests (`engine-test.js`, with `engine-mock.js` standing in for the wasm host) and a Playwright smoke test (`engine-smoke.js`). |
-| `build.js` | Bundles everything into one file, `dist/idle-rng.html`. |
+| `index.html`, `app.js` | UI shell: ticks the engine, sends commands, reads queries, drains events. No game rules. |
+| `engine.js` | Facade over the C# engine (`IdleRng.Web.Engine`): caches state per tick batch, memoises queries, wraps saves. |
+| `format.js` | Big-number display (`1.23K`, `45.6M`, `123aa`); same output as the C# `BigNumber.Short`. |
+| `sprites.js` | Seeded 12x12 pixel sprites for heroes, player and enemies. Cosmetic only, never touches the game's RNG. |
+| `wasm/build.sh` | Builds `src/IdleRng.Web` and lays out `wasm/dist/` (gitignored). |
+| `wasm/pack-content.js` | Bundles `Content/*.json` into the content pack the engine loads and hash-checks. |
+| `wasm/BRIDGE.md` | The JS <-> C# contract: exports, JSON shapes, events. |
+| `wasm/test/run-wasm.js` | Headless-Chromium end-to-end test on the built bundle. |
 
-## Run it
+## Where things come from
 
-```
-node web/test.js          # spec vectors
-node web/bot.js 30 7      # days, seed: day table against the specs/00 targets
-node web/build.js         # one-file build in web/dist/idle-rng.html
-```
-
-To play, open `web/index.html` (or the built file) in a browser. No server or install needed. Progress saves to the browser's local storage.
+- **Rules and numbers**: the C# core and `Content/*.json` (built from `content_src/` by `tools/content_build.py`). Change a number in `content_src/`, rebuild content and the bundle, reload.
+- **Labels and display numbers** (hero names, slot names, pity limits, costs shown on buttons): `Engine.UiContent()`, read from the same `ContentDb`. The UI never evaluates a game formula itself.
+- **Saves**: the C# save format (`IdleRng.Runtime` `SaveSerializer`) inside a small JSON envelope, in `localStorage['idle-rng-wasm-save-v1']`. Saves from the old JS engine are rejected with a message.
 
 The cog opens playtest tools: speed x1/x5/x20/x100 (moves the game clock too, so chests, offline time and daily resets come faster), clock skips (+1 h, +8 h, +1 day), gold and gem grants, stage jump, save export/import, and reset.
 
-## Engine selection (JS or C#/wasm)
+## Known limits
 
-`?engine=js|wasm` in the URL wins, then `localStorage['idle-rng-engine']` (the Settings button sets it), then auto: wasm only if `wasm/dist/_framework/dotnet.js` is served next to the page, else JS silently. An explicit wasm request that fails shows the toast "C# engine unavailable, using JS engine". Artifact pages (claude.ai origins) always use JS. Settings shows the active engine and its `Version()`. Saves are per engine (`idle-rng-web-save-v1` for JS, `idle-rng-wasm-save-v1` for wasm) and importing the other engine's save fails with a message.
-
-```
-node web/tools/engine-test.js            # facade: JS vs sim.js, mock-wasm vs JS, saves, fallback
-node web/build.js && node web/tools/engine-smoke.js   # headless Chromium (Playwright) on the built page
-node web/build.js --with-wasm            # also copies web/wasm/dist to web/dist/wasm/dist
-```
-
-The one-file build cannot contain the .NET runtime, so it always runs the JS engine. For wasm, serve `web/dist/` (or `web/` after `web/wasm/build.sh`) over HTTP, for example `python3 -m http.server -d web/dist`; `file://` cannot load wasm.
-
-## Porting to the Unity build
-
-Keep these true and the C# port is a translation:
-
-1. Game rules live only in `sim.js`. The UI calls commands and reads queries.
-2. Numbers come from `content.js`, whose keys are the `specs/00` constant names. These become the JSON content tables of `specs/05`.
-3. Randomness goes through the named streams, three draws per pull, one per kill, two per drop, one per enhance (`specs/03` section 5.5). `sim.validate()` checks the counters.
-4. `test.js` vectors are the same ones `IdleRng.Sim.Tests` must pass, so both builds can be checked against each other. A fixed seed plus the bot's command sequence is a ready-made golden run.
-
-## Known differences from the specs
-
-- **Permanently unranked.** It creates its own random seeds and keeps no command log, so it can never be certified for leaderboards or PvP (`specs/10` section 3). That is right for a playtest build. A ranked browser client would be the C# core compiled to WebAssembly plus a server genesis.
-
-- Replaced gear is discarded, not sold (`specs/03` section 8.2; `specs/00` mentions a sell value).
-- No P1 systems (substats, shard shop, pets, dungeons).
-- The bot plays one 2-hour session per day, as `specs/09` section 4 does, so it collects one idle chest per day. Gem income lands at about 160 to 290 per day against the 300 target, the gap `specs/04` section 7.4 and section 14 already describe. Stage targets still land within 20%.
+- **Permanently unranked.** It creates its own random seeds, so it can never be certified for leaderboards or PvP (`specs/10` section 3). That is right for a playtest build; a ranked browser client needs a server genesis.
+- **Needs HTTP.** WebAssembly does not load from `file://`, and the claude.ai artifact page cannot host the .NET runtime, so there is no install-free way to play.
+- The core still lacks the command log, `StateHash` and `Replay` from `specs/03` section 22 and `specs/10`.

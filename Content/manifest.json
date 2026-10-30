@@ -53,12 +53,12 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "8fc856ba781046f517f28872a7c748ed694183bd616152549b33c85cfdd496b8"
+      "sha256": "8d0621d5ee19658ef02e981600a56e51475c0e3adffdde1be0c0904e9edef9e5"
     },
     "tutorial_grants": {
       "file": "tutorial_grants.json",
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "072e50ccdce50a2e116ab235582544e6c2f96deac53b12a6819797c8e3d87720"
+  "content_hash": "c370193e9029c39d0204606693fe28cb9cf8cf451d6939fb4d15c5fe7c5f1573"
 }

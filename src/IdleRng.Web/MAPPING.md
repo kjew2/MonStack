@@ -15,7 +15,7 @@ Host code: `Engine.cs` (the `[JSExport]` surface), `Host.cs` (all mapping), `Pac
 | `SetEmitHits(on)` | event mask `Default | EnemySpawned [| HitLanded]` |
 | `Version()` | constant text + `content <ContentDb.Version>` |
 
-Content pack: `{ "manifest.json": "<raw text>", "<table>.json": "<raw text>", ... }` from `web/wasm/pack-content.js`; raw text is kept byte for byte so the manifest sha256 checks pass in memory. If `contentJson` is not a pack (engine.js falls back to `JSON.stringify(content.js)`), the pack embedded in the assembly (`build/content-pack.json`) is used.
+Content pack: `{ "manifest.json": "<raw text>", "<table>.json": "<raw text>", ... }` from `web/wasm/pack-content.js`; raw text is kept byte for byte so the manifest sha256 checks pass in memory. If `contentJson` is not a pack, the pack embedded in the assembly (`build/content-pack.json`) is used.
 Time: `Init(nowMs)` and `syncWallClock(nowMs)` floor to whole seconds (the core's clock unit). Nothing reads a clock.
 Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both ways in every query, command, state and event.
 
@@ -30,14 +30,14 @@ Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both w
 | heroLevel, heroPct(id) | `SimQuery.HeroLevel/HeroPct` | id mapped |
 | classMult(k?) | `SimQuery.ClassMult`; with k: `ContentDb.ClassMult(k)` (clamps at 4) | |
 | hitsToKill, killTimeSeconds, isBossStage, bossClearable | `SimQuery.*` | hitsToKill saturates at int.MaxValue |
-| needDps | derived | `BossHp / (rule.TimeTicks / AttackIntervalTicks) * TickHz / AttackIntervalTicks`, same as sim.js with the core's boss rule |
+| needDps | derived | `BossHp / (rule.TimeTicks / AttackIntervalTicks) * TickHz / AttackIntervalTicks`, using the core's boss rule for the stage |
 | enhanceCost, enhanceSuccess, pityRate, freePullsRemaining | `SimQuery.*` | |
 | chestReadyAtMs / chestReady | `ChestReadyAtServerSec * 1000` / `SimQuery.IsChestReady` | whole-second resolution |
 | bulkCost(n, m) | derived | sum of `ContentDb.StatCost(n+i)`; the core's `BulkStatCost` only starts at the current level |
-| maxAffordable(gold?) | `SimQuery.MaxAffordableStatLevels`; with gold: derived loop (cap 100000, as sim.js) | |
+| maxAffordable(gold?) | `SimQuery.MaxAffordableStatLevels`; with gold: derived loop (cap 100000) | |
 | pullPrice(count) | derived | same payment rule as `Simulation.PullBatch` (daily, banked, gems; x10: banked >= 10 or 10 x cost) |
 | bestParty | derived | the order `AutoEquipInternal` uses (HeroPct desc, id ordinal, take HeroSlots) |
-| autoEquipWouldChange | derived | best sum > current sum + 1e-9 (sim.js rule) |
+| autoEquipWouldChange | derived | best sum > current sum + 1e-9  |
 | nowMs | derived | `Clock.LastSyncServerMs + (Tick - TickAtLastSync) * 1000 / TickHz` (the core's `NowServerMs` is internal) |
 | validate | `Simulation.Validate()` | `[message]` on `InvariantViolationException`, else `[]` |
 | consolidatedRates | derived | the specs/01 section 3.3 loop over `BannerDef.PityRate` |
@@ -52,12 +52,12 @@ Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both w
 | pull(count) | `Pull()` / `Pull10()` (count 10, else 1) | `{ok,results,paidWith}`; `NotEnoughGems` -> `cannotAfford`; result fields: see below |
 | equipHero(slot, id) | `EquipHero` | `heroNotOwned` (also for unknown ids), `heroAlreadyEquipped` |
 | unequipHero(slot) | `UnequipHero` | `{ok:true}` |
-| autoEquip | `AutoEquipBestHeroes()` | slots changed; semantics differ from sim.js (positional, turns AutoEquipBest on) |
+| autoEquip | `AutoEquipBestHeroes()` | slots changed; positional, turns AutoEquipBest on |
 | claimChest | `ClaimIdleChest()` | `{ok}` / `{ok:false,reason:"notReady"}` |
 | syncWallClock(nowMs) | `SyncWallClock(floor(nowMs/1000))` | `null` |
 | debugGrantGold/Gems, debugSetStage | `Debug.GrantGold/GrantGems/SetStage` | `null` |
 
-Pull result fields: `id` mapped; `name` = `ContentDb.Text(NameKey)` (differs from content.js); `tier` = `(int)PullResult.Tier`; `isNew, levelBefore, levelAfter` direct; `shards` = `ShardsGained`; **`pity` derived** (pity counter before the batch + position, reset after an L+; the core's `PullResult` has no pity); **`forced` derived** (last slot of a x10, no earlier tier >= GuaranteeMinTier, result below L).
+Pull result fields: `id` mapped; `name` = `ContentDb.Text(NameKey)` ; `tier` = `(int)PullResult.Tier`; `isNew, levelBefore, levelAfter` direct; `shards` = `ShardsGained`; **`pity` derived** (pity counter before the batch + position, reset after an L+; the core's `PullResult` has no pity); **`forced` derived** (last slot of a x10, no earlier tier >= GuaranteeMinTier, result below L).
 
 ## UiState
 | UiState field | C# member |
@@ -104,9 +104,9 @@ Not exposed (core only): `Currencies.EnhMaterials/DungeonTickets`, `Lifetime.Gem
 | clockWentBackwards | `ClockWentBackwards` | `byMs` |
 | statLeveled | `StatLeveled` | `from = NewLevel - Count`, `to`, `cost` |
 | enhanced | `EnhanceAttempted` | `slot, success, level = NewLevel, cost` |
-| pulled | `HeroPulled` x n | **synthesised** by the pull command from the `PullOutcome` (one event with all results), after the quest event like sim.js |
+| pulled | `HeroPulled` x n | **synthesised** by the pull command from the `PullOutcome` (one event with all results), after the quest event |
 | engineError | (adapter) | `message`; only when `Advance` threw |
-| (none) | `HeroEquipped` | dropped, sim.js has no such event |
+| (none) | `HeroEquipped` | dropped, the UI has no use for it |
 
 ## Missing from the core (bridge cannot expose)
 Command log (`ICommandLog`), `Simulation.StateHash()`, `Simulation.Replay(...)`: not present in `IdleRng.Sim`.

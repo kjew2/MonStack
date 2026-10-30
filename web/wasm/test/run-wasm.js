@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// End-to-end browser check of the C# (wasm) backend: serves web/ over HTTP, loads index.html?engine=wasm in headless Chromium at
+// End-to-end browser check of the C# (wasm) backend: serves web/ over HTTP, loads index.html in headless Chromium at
 // 390x844, plays ~10 s, visits every tab, summons x10, checks the Settings engine chip, reloads and checks the save restored.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-wasm.js [--keep-open] [--shots dir]
@@ -37,7 +37,7 @@ function readSave(raw) {
   });
   const shot = async (n) => { if (shotsDir) { fs.mkdirSync(shotsDir, { recursive: true }); await page.screenshot({ path: path.join(shotsDir, n + '.png') }); } };
   const ready = () => page.waitForFunction(() => { const e = document.getElementById('stageEl'); return e && e.textContent && !/Loading|failed/.test(e.textContent) && document.querySelectorAll('#tabs button').length >= 6; }, null, { timeout: 90000 });
-  const url = srv.url + 'index.html?engine=wasm';
+  const url = srv.url + 'index.html';
 
   // ---- cold load
   const t0 = Date.now();
@@ -56,7 +56,6 @@ function readSave(raw) {
   check(save && save.wrapper.backend === 'wasm', 'save wrapper tagged backend=wasm');
   check(save && save.state.Tick >= 80, 'sim advanced while playing (tick ' + (save && save.state.Tick) + ')');
   check(save && save.state.Lifetime.Kills > 0, 'kills happened (' + (save && save.state.Lifetime.Kills) + ')');
-  check(!(await page.evaluate(() => localStorage.getItem('idle-rng-web-save-v1'))), 'js save key untouched');
 
   // ---- tabs
   const tabNames = await page.$$eval('#tabs button', (bs) => bs.map((b) => b.textContent.trim()));
@@ -75,6 +74,8 @@ function readSave(raw) {
   await page.waitForSelector('#modal button:has-text("Close")', { state: 'visible', timeout: 10000 });
   const summary = await page.$eval('#modal .muted', (e) => e.textContent);
   check(/pity/.test(summary), 'summon result shown: ' + summary);
+  const cardName = await page.textContent('#modal .rcard .front b').catch(() => '');
+  check(cardName && cardName.length > 0, 'hero card shows a name from the C# content: ' + cardName);
   await shot('summon-result');
   await page.click('#modal button:has-text("Close")');
   await page.waitForTimeout(300);
@@ -121,6 +122,14 @@ function readSave(raw) {
   check(/Invariants: ok/.test(inv2 || ''), 'invariants after x100 run: ' + inv2);
 
   check(errors.length === 0, 'no page/console errors' + (errors.length ? ': ' + errors.slice(0, 5).join(' | ') : ''));
+
+  // Opened as a file, the page must explain how to serve it instead of failing silently.
+  const fp = await ctx.newPage();
+  await fp.route(/fonts\.(googleapis|gstatic)/, (rt) => rt.abort());
+  await fp.goto('file://' + require('path').resolve(__dirname, '../../index.html'));
+  await fp.waitForSelector('.card.wall', { timeout: 10000 }).catch(() => {});
+  const msg = await fp.textContent('.card.wall').catch(() => '');
+  check(/over HTTP/.test(msg || ''), 'file:// shows how to serve the page');
   await browser.close();
   await srv.close();
   console.log(fails.length ? '\n' + fails.length + ' FAILED' : '\nall passed (cold start ' + coldMs + ' ms)');

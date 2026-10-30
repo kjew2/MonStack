@@ -4,7 +4,7 @@
   "rows": [
     {
       "key": "hero.c_01.name",
-      "text": "Ash"
+      "text": "Pell the Farmhand"
     },
     {
       "key": "hero.c_01.desc",
@@ -12,7 +12,7 @@
     },
     {
       "key": "hero.c_02.name",
-      "text": "Bram"
+      "text": "Doss the Woodcutter"
     },
     {
       "key": "hero.c_02.desc",
@@ -20,7 +20,7 @@
     },
     {
       "key": "hero.c_03.name",
-      "text": "Cole"
+      "text": "Mira the Scout"
     },
     {
       "key": "hero.c_03.desc",
@@ -28,7 +28,7 @@
     },
     {
       "key": "hero.c_04.name",
-      "text": "Dara"
+      "text": "Tobb the Miller"
     },
     {
       "key": "hero.c_04.desc",
@@ -36,7 +36,7 @@
     },
     {
       "key": "hero.c_05.name",
-      "text": "Edda"
+      "text": "Kesh the Slinger"
     },
     {
       "key": "hero.c_05.desc",
@@ -44,7 +44,7 @@
     },
     {
       "key": "hero.c_06.name",
-      "text": "Finn"
+      "text": "Wren the Archer"
     },
     {
       "key": "hero.c_06.desc",
@@ -52,7 +52,7 @@
     },
     {
       "key": "hero.c_07.name",
-      "text": "Gale"
+      "text": "Hollis the Guard"
     },
     {
       "key": "hero.c_07.desc",
@@ -60,7 +60,7 @@
     },
     {
       "key": "hero.c_08.name",
-      "text": "Hale"
+      "text": "Bree the Herbalist"
     },
     {
       "key": "hero.c_08.desc",
@@ -68,7 +68,7 @@
     },
     {
       "key": "hero.c_09.name",
-      "text": "Ivo"
+      "text": "Garr the Smith"
     },
     {
       "key": "hero.c_09.desc",
@@ -76,7 +76,7 @@
     },
     {
       "key": "hero.c_10.name",
-      "text": "Jory"
+      "text": "Lio the Fisher"
     },
     {
       "key": "hero.c_10.desc",
@@ -84,7 +84,7 @@
     },
     {
       "key": "hero.c_11.name",
-      "text": "Kett"
+      "text": "Nim the Courier"
     },
     {
       "key": "hero.c_11.desc",
@@ -92,7 +92,7 @@
     },
     {
       "key": "hero.c_12.name",
-      "text": "Lark"
+      "text": "Osk the Porter"
     },
     {
       "key": "hero.c_12.desc",
@@ -100,7 +100,7 @@
     },
     {
       "key": "hero.c_13.name",
-      "text": "Moss"
+      "text": "Fen the Trapper"
     },
     {
       "key": "hero.c_13.desc",
@@ -108,7 +108,7 @@
     },
     {
       "key": "hero.c_14.name",
-      "text": "Nell"
+      "text": "Rook the Sentry"
     },
     {
       "key": "hero.c_14.desc",
@@ -116,7 +116,7 @@
     },
     {
       "key": "hero.c_15.name",
-      "text": "Orin"
+      "text": "Tamsin the Cook"
     },
     {
       "key": "hero.c_15.desc",
@@ -124,7 +124,7 @@
     },
     {
       "key": "hero.c_16.name",
-      "text": "Pip"
+      "text": "Ulf the Brawler"
     },
     {
       "key": "hero.c_16.desc",
@@ -132,7 +132,7 @@
     },
     {
       "key": "hero.c_17.name",
-      "text": "Quill"
+      "text": "Vesna the Spearmaiden"
     },
     {
       "key": "hero.c_17.desc",
@@ -140,7 +140,7 @@
     },
     {
       "key": "hero.c_18.name",
-      "text": "Rook"
+      "text": "Juno the Lamplighter"
     },
     {
       "key": "hero.c_18.desc",
@@ -148,7 +148,7 @@
     },
     {
       "key": "hero.c_19.name",
-      "text": "Sable"
+      "text": "Pip the Squire"
     },
     {
       "key": "hero.c_19.desc",
@@ -156,7 +156,7 @@
     },
     {
       "key": "hero.c_20.name",
-      "text": "Tamsin"
+      "text": "Corra the Shepherd"
     },
     {
       "key": "hero.c_20.desc",
@@ -164,7 +164,7 @@
     },
     {
       "key": "hero.r_01.name",
-      "text": "Aldric"
+      "text": "Alder the Ranger"
     },
     {
       "key": "hero.r_01.desc",
@@ -172,7 +172,7 @@
     },
     {
       "key": "hero.r_02.name",
-      "text": "Brienne"
+      "text": "Isolde the Duelist"
     },
     {
       "key": "hero.r_02.desc",
@@ -180,7 +180,7 @@
     },
     {
       "key": "hero.r_03.name",
-      "text": "Corvin"
+      "text": "Marek the Pikeman"
     },
     {
       "key": "hero.r_03.desc",
@@ -188,7 +188,7 @@
     },
     {
       "key": "hero.r_04.name",
-      "text": "Delphine"
+      "text": "Sable the Rogue"
     },
     {
       "key": "hero.r_04.desc",
@@ -196,7 +196,7 @@
     },
     {
       "key": "hero.r_05.name",
-      "text": "Emrys"
+      "text": "Thane the Berserker"
     },
     {
       "key": "hero.r_05.desc",
@@ -204,7 +204,7 @@
     },
     {
       "key": "hero.r_06.name",
-      "text": "Fenna"
+      "text": "Yara the Falconer"
     },
     {
       "key": "hero.r_06.desc",
@@ -212,7 +212,7 @@
     },
     {
       "key": "hero.r_07.name",
-      "text": "Gareth"
+      "text": "Brom the Shieldwall"
     },
     {
       "key": "hero.r_07.desc",
@@ -220,7 +220,7 @@
     },
     {
       "key": "hero.r_08.name",
-      "text": "Halvard"
+      "text": "Celes the Acolyte"
     },
     {
       "key": "hero.r_08.desc",
@@ -228,7 +228,7 @@
     },
     {
       "key": "hero.r_09.name",
-      "text": "Isolde"
+      "text": "Dax the Gunner"
     },
     {
       "key": "hero.r_09.desc",
@@ -236,7 +236,7 @@
     },
     {
       "key": "hero.r_10.name",
-      "text": "Jarek"
+      "text": "Elowen the Druid"
     },
     {
       "key": "hero.r_10.desc",
@@ -244,7 +244,7 @@
     },
     {
       "key": "hero.r_11.name",
-      "text": "Kestrel"
+      "text": "Faro the Lancer"
     },
     {
       "key": "hero.r_11.desc",
@@ -252,7 +252,7 @@
     },
     {
       "key": "hero.r_12.name",
-      "text": "Lysander"
+      "text": "Greta the Alchemist"
     },
     {
       "key": "hero.r_12.desc",
@@ -260,7 +260,7 @@
     },
     {
       "key": "hero.r_13.name",
-      "text": "Maren"
+      "text": "Hale the Monk"
     },
     {
       "key": "hero.r_13.desc",
@@ -268,7 +268,7 @@
     },
     {
       "key": "hero.r_14.name",
-      "text": "Nyx"
+      "text": "Ivo the Bard"
     },
     {
       "key": "hero.r_14.desc",
@@ -276,7 +276,7 @@
     },
     {
       "key": "hero.r_15.name",
-      "text": "Oswin"
+      "text": "Kaya the Huntress"
     },
     {
       "key": "hero.r_15.desc",
@@ -284,7 +284,7 @@
     },
     {
       "key": "hero.e_01.name",
-      "text": "Seraphine"
+      "text": "Seraphine the Spellblade"
     },
     {
       "key": "hero.e_01.desc",
@@ -292,7 +292,7 @@
     },
     {
       "key": "hero.e_02.name",
-      "text": "Thorne"
+      "text": "Vorn the Warlock"
     },
     {
       "key": "hero.e_02.desc",
@@ -300,7 +300,7 @@
     },
     {
       "key": "hero.e_03.name",
-      "text": "Ulric"
+      "text": "Lysa the Stormcaller"
     },
     {
       "key": "hero.e_03.desc",
@@ -308,7 +308,7 @@
     },
     {
       "key": "hero.e_04.name",
-      "text": "Vesper"
+      "text": "Orrin the Templar"
     },
     {
       "key": "hero.e_04.desc",
@@ -316,7 +316,7 @@
     },
     {
       "key": "hero.e_05.name",
-      "text": "Wren"
+      "text": "Nyx the Shadowdancer"
     },
     {
       "key": "hero.e_05.desc",
@@ -324,7 +324,7 @@
     },
     {
       "key": "hero.e_06.name",
-      "text": "Xanthe"
+      "text": "Calder the Frostknight"
     },
     {
       "key": "hero.e_06.desc",
@@ -332,7 +332,7 @@
     },
     {
       "key": "hero.e_07.name",
-      "text": "Yorick"
+      "text": "Mei the Sage"
     },
     {
       "key": "hero.e_07.desc",
@@ -340,7 +340,7 @@
     },
     {
       "key": "hero.e_08.name",
-      "text": "Zephyr"
+      "text": "Rhea the Valkyrie"
     },
     {
       "key": "hero.e_08.desc",
@@ -348,7 +348,7 @@
     },
     {
       "key": "hero.e_09.name",
-      "text": "Astrid"
+      "text": "Taro the Ronin"
     },
     {
       "key": "hero.e_09.desc",
@@ -356,7 +356,7 @@
     },
     {
       "key": "hero.e_10.name",
-      "text": "Bastian"
+      "text": "Zephyr the Windwalker"
     },
     {
       "key": "hero.e_10.desc",
@@ -364,7 +364,7 @@
     },
     {
       "key": "hero.l_01.name",
-      "text": "Caelum"
+      "text": "Aurelia the Sunblade"
     },
     {
       "key": "hero.l_01.desc",
@@ -372,7 +372,7 @@
     },
     {
       "key": "hero.l_02.name",
-      "text": "Drakon"
+      "text": "Morgrim the Dragonbane"
     },
     {
       "key": "hero.l_02.desc",
@@ -380,7 +380,7 @@
     },
     {
       "key": "hero.l_03.name",
-      "text": "Elowen"
+      "text": "Kael the Starforged"
     },
     {
       "key": "hero.l_03.desc",
@@ -388,7 +388,7 @@
     },
     {
       "key": "hero.l_04.name",
-      "text": "Fenrir"
+      "text": "Ishara the Oracle"
     },
     {
       "key": "hero.l_04.desc",
@@ -396,7 +396,7 @@
     },
     {
       "key": "hero.l_05.name",
-      "text": "Galadra"
+      "text": "Dravik the Bloodlord"
     },
     {
       "key": "hero.l_05.desc",
@@ -404,7 +404,7 @@
     },
     {
       "key": "hero.l_06.name",
-      "text": "Hyperion"
+      "text": "Solenne the Lightbringer"
     },
     {
       "key": "hero.l_06.desc",
@@ -412,7 +412,7 @@
     },
     {
       "key": "hero.m_01.name",
-      "text": "Ignis"
+      "text": "Eon the Timeless"
     },
     {
       "key": "hero.m_01.desc",
@@ -420,7 +420,7 @@
     },
     {
       "key": "hero.m_02.name",
-      "text": "Juno"
+      "text": "Vael the Void Empress"
     },
     {
       "key": "hero.m_02.desc",
@@ -428,7 +428,7 @@
     },
     {
       "key": "hero.m_03.name",
-      "text": "Kairos"
+      "text": "Ragnor the World-Ender"
     },
     {
       "key": "hero.m_03.desc",
@@ -501,6 +501,10 @@
     {
       "key": "banner.hero_standard.name",
       "text": "Standard Hero Banner"
+    },
+    {
+      "key": "class.base.name",
+      "text": "Recruit"
     },
     {
       "key": "class.class_1.name",
