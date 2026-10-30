@@ -46,12 +46,13 @@ namespace IdleRng.Bots
     public static class Program
     {
         const string Usage =
-            "usage: IdleRng.Bots <run|sweep|compare|acceptance|golden|bench> [options]\n" +
+            "usage: IdleRng.Bots <run|sweep|compare|acceptance|golden|gacha-vectors|bench> [options]\n" +
             "  run        --bot greedy-f2p|whale --seed N --days N --all-days --shares --format table|csv|json --out path --content dir\n" +
             "  sweep      --bot B --seeds 1-20 --days N --format table|csv|json --out path --parallel N --content dir\n" +
             "  compare    --seeds 1-20 --days N --content dir\n" +
             "  acceptance --seeds 1-20 --days N --time-budget-s 180 --targets path --verbose --content dir\n" +
             "  golden     --check|--update --golden-dir path --content dir\n" +
+            "  gacha-vectors --check|--update --out path --content dir\n" +
             "  bench      --ticks N --stage S --max-ms N\n";
 
         public static int Main(string[] argv)
@@ -67,6 +68,7 @@ namespace IdleRng.Bots
                     case "compare": return Compare(a);
                     case "acceptance": return AcceptanceCmd(a);
                     case "golden": return GoldenCmd(a);
+                    case "gacha-vectors": return GachaVectorsCmd(a);
                     case "bench": return Bench(a);
                     case "help": case "--help": Console.Out.Write(Usage); return 0;
                     default: Console.Error.Write($"unknown verb '{a.Verb}'\n" + Usage); return 2;
@@ -216,6 +218,24 @@ namespace IdleRng.Bots
                 else { Console.Out.Write("FAIL " + diff + "\n"); bad++; }
             }
             return bad == 0 ? 0 : 1;
+        }
+
+        /// <summary>Fixtures/Gacha/vectors.json: --update rewrites it, otherwise checks it byte for byte.</summary>
+        static int GachaVectorsCmd(CliArgs a)
+        {
+            var db = LoadContent(a);
+            string path = a.Str("out", GachaVectors.DefaultPath(ContentDir(a)));
+            string text = GachaVectors.Generate(db);
+            if (a.Has("update"))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllText(path, text, new UTF8Encoding(false));
+                Console.Out.Write($"wrote {path}\n");
+                return 0;
+            }
+            bool same = File.Exists(path) && File.ReadAllText(path).Replace("\r\n", "\n") == text;
+            Console.Out.Write(same ? $"OK   {path}\n" : $"FAIL {path} differs (regenerate: {GachaVectors.Regenerate})\n");
+            return same ? 0 : 1;
         }
 
         static int Bench(CliArgs a)

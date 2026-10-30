@@ -18,7 +18,7 @@ Ugly-UI Unity client for the idle RNG prototype (`specs/07`). It is a thin shell
 For a phone-like view, set the Game view to a portrait resolution such as 1080x1920. Landscape also works, with the
 layout centred.
 
-Content is read directly from the repo's `Content/` folder: the loader walks up from `Assets/`. Nothing is copied. Edit
+Content is read directly from the repo's `Content/` folder: the loader walks up from `Assets/`. Nothing is copied for Play. Edit
 `content_src/*.csv`, run `python3 tools/content_build.py`, then press Play again.
 
 **iOS player settings** (bundle ID, version, IL2CPP, .NET Standard 2.1, iOS 15 minimum, portrait only, Input
@@ -28,9 +28,17 @@ after the first open, restart the editor if it asks (Active Input Handling chang
 and `Assets/Settings/`. Re-running is safe. **Tools → IdleRng → Configure URP** does only the URP part. The bundle ID
 `com.kjew2.idlerng` is a placeholder (`Editor/ProjectSetup.cs`), and the signing team ID is left empty for the Mac.
 
-**Device builds** cannot see the repo. Copy the content in first with
-`python3 tools/content_build.py --copy-to unity/IdleRngClient/Assets/Resources/Content`. The loader falls back to
-`Resources/Content`.
+**Device builds** cannot see the repo, so every player build copies the content in for you.
+`Editor/ContentPreBuild.cs` (an `IPreprocessBuildWithReport`) checks the repo's `Content/` against its
+`manifest.json`, copies the `*.json` files into `Assets/Resources/Content`, and checks the copy. The loader falls back
+to `Resources/Content` on device. The build fails if `manifest.json` is missing or a hash doesn't match; fix that with
+`python3 tools/content_build.py`. The copy is git-ignored, so don't commit it or edit it. **Tools → IdleRng → Copy
+Content into Resources** runs the same step without building.
+
+**Code stripping.** `Assets/link.xml` keeps IL2CPP from stripping the Sim, Runtime and Newtonsoft.Json code that save
+serialization reaches only by reflection. At every launch `GameRoot` round-trips a sample save in memory
+(`SaveSelfCheck`) and logs `IdleRng: save self-check OK`, or an error starting `SAVES ARE BROKEN IN THIS BUILD`. Check the
+device log for it after each new build.
 
 ## What's there
 
@@ -48,7 +56,7 @@ The tabs are:
 | **Heroes** | Party of 6 (tap a slot to place the selected hero, or to unequip it), 54-hero inventory, auto-equip |
 | **Gacha** | Pity bar, pull x1 / x10, result cards, rates with pity-consolidated L+/M |
 | **Class** | Automatic advances at stages 50, 150, 300 and 500, with a progress bar |
-| **Debug** | Editor/Development builds or `IDLERNG_CHEATS`. Grant gold, gems or heroes; set stage; "Run N h" (real sim ticks); "Clock +N h" (offline earnings popup); x1/x5/x20 speed; save, validate, reset |
+| **Debug** | Editor, Development builds or `IDLERNG_CHEATS` only; compiled out of Release builds. Grant gold, gems or heroes; set stage; "Run N h" (real sim ticks); "Clock +N h" (offline earnings popup); x1/x5/x20 speed; save, validate, reset |
 
 Two popups appear in a modal: offline earnings ("Welcome back") and class advance. Toasts cover gear drops, rejects,
 quests and the day rollover.
@@ -60,6 +68,8 @@ Assets/IdleRng.Client/
   IdleRng.Client.asmdef        Unity side (UnityEngine, UI Toolkit, uGUI EventSystem, Input System)
   Boot/      GameRoot.cs (bootstrap + MonoBehaviour), ContentLocator.cs, InputSetup.cs
   Editor/    ProjectSetup.cs (Tools > IdleRng menu: player settings, URP asset)
+             BuildProfiles.cs (Tools > IdleRng > Build Profiles: Dev/Release defines, Release pre-build check)
+             ContentPreBuild.cs (copies Content/ into Resources/Content before each build)
   Art/       AppIcon.png (placeholder 1024x1024 icon)
   Screens/   Ui.cs (style kit), Shell.cs, HudAndStrip.cs, *Screen(s).cs, DebugScreen.cs
   Core/      IdleRng.Client.Core.asmdef (noEngineReferences: plain C#)
@@ -68,7 +78,27 @@ Assets/IdleRng.Client/
 Assets/Resources/IdleRngTheme.tss   imports Unity's default runtime theme (optional; styles are inline)
 ```
 
-## Saving
+## Build profiles (Dev and Release)
+
+`specs/07` section 13 wants a **Dev** and a **Release** Build Profile per platform. Dev defines `IDLERNG_CHEATS` and is a
+Development Build; Release has neither, so its build contains no Debug tab and no cheat code (everything cheat-related is
+under `#if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS`). Profile assets are Unity-generated, so create them once
+in the editor and commit them:
+
+1. **File > Build Profiles > Add Build Profile**, pick **iOS** (and/or **Android**). Rename it `iOS` (or `Android`).
+2. Select that profile asset in the Project window and run **Tools > IdleRng > Build Profiles > Create Dev + Release From Selected**.
+   This creates `Assets/Settings/BuildProfiles/iOS-Dev.asset` and `iOS-Release.asset`, adds `IDLERNG_CHEATS` to the Dev
+   profile's Scripting Defines and keeps it out of the Release profile and the iOS/Android Player Settings defines. You can
+   then delete the original `iOS` profile.
+3. In **iOS-Dev**, tick **Development Build**, **Autoconnect Profiler** and **Script Debugging**. Leave them off in
+   **iOS-Release**.
+4. Commit `Assets/Settings/BuildProfiles/` and the `.meta` files.
+
+**Tools > IdleRng > Build Profiles > Apply Cheat Defines** re-applies the defines after you rename or add profiles. A pre-build
+check fails a `*-Release` build marked Development, and any non-development build that still defines `IDLERNG_CHEATS`.
+To confirm a Release build has no Debug tab: activate `iOS-Release`, build, and check the tab bar ends at **Class**. Pressing
+Play in the Editor always shows the Debug tab, whichever profile is active.
+
 
 `Core/SaveBridge.cs` saves through `IdleRng.Runtime` (`specs/06`) to `<persistentDataPath>/saves/`: a CRC-checked
 file with a `.prev` backup. Bad files are quarantined and a new profile is created. Offline gold since the last save
@@ -83,5 +113,4 @@ These are not built yet:
 - Safe-area padding.
 - Android back button.
 - Perf overlay.
-- Build profiles.
 - PlayMode tests.

@@ -9,6 +9,9 @@ __pycache__/
 [Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
+# copy of Content/ made by the pre-build step (Assets/IdleRng.Client/Editor/ContentPreBuild.cs)
+unity/IdleRngClient/Assets/Resources/Content/
+unity/IdleRngClient/Assets/Resources/Content.meta
 .vs/
 .idea/
 

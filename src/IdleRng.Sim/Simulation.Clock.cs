@@ -28,12 +28,13 @@ namespace IdleRng.Sim
         /// </summary>
         public OfflineResult SyncWallClock(long nowServerSec, bool applyCatchUp = true)
         {
+            Log(CommandKind.SyncWallClock, nowServerSec, applyCatchUp ? 1 : 0);
             long nowMs = nowServerSec * 1000L;
             long gapMs = nowMs - NowServerMs;
             var result = new OfflineResult(0, 0, false, 0, State.Stage.Stage, 0);
             if (gapMs >= _k.OfflineMinGapS * 1000L)
             {
-                if (applyCatchUp) result = ApplyOfflineCatchUp(gapMs / 1000);
+                if (applyCatchUp) result = ApplyOfflineCatchUpCore(gapMs / 1000);
             }
             else if (gapMs < -1000)
             {
@@ -42,7 +43,7 @@ namespace IdleRng.Sim
             State.Clock.LastSyncServerMs = nowMs;
             State.Clock.TickAtLastSync = State.Tick;
             if (State.Progression.ChestTimerStart > nowServerSec) State.Progression.ChestTimerStart = nowServerSec;
-            EnsureDay(nowServerSec);
+            EnsureDayCore(nowServerSec);
             RecomputeNextDayTick();
             return result;
         }
@@ -54,6 +55,12 @@ namespace IdleRng.Sim
         /// with SyncWallClock(now, applyCatchUp: false) so the same window is not credited twice).
         /// </summary>
         public OfflineResult ApplyOfflineCatchUp(long elapsedSec)
+        {
+            Log(CommandKind.OfflineCatchUp, elapsedSec);
+            return ApplyOfflineCatchUpCore(elapsedSec);
+        }
+
+        OfflineResult ApplyOfflineCatchUpCore(long elapsedSec)
         {
             int stage = State.Stage.Stage;
             double k = Query.KillTimeSeconds(stage);
@@ -70,6 +77,12 @@ namespace IdleRng.Sim
 
         /// <summary>Roll the day forward if <paramref name="nowServerSec"/> is in a later day. Never re-grants (key &lt;= DayKey is a no-op).</summary>
         public void EnsureDay(long nowServerSec)
+        {
+            Log(CommandKind.EnsureDay, nowServerSec);
+            EnsureDayCore(nowServerSec);
+        }
+
+        void EnsureDayCore(long nowServerSec)
         {
             long key = FloorDiv(nowServerSec, _k.DaySeconds);
             if (key <= State.Daily.DayKey) return;

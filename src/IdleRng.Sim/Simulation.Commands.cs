@@ -91,6 +91,7 @@ namespace IdleRng.Sim
         /// <summary>All-or-nothing purchase of m levels. False (and no change) if unaffordable or m &lt;= 0.</summary>
         public bool BuyStatLevels(int m)
         {
+            Log(CommandKind.BuyStatLevels, m);
             if (m <= 0) return false;
             var p = State.Progression;
             double cost = Query.BulkStatCost(m);
@@ -114,6 +115,7 @@ namespace IdleRng.Sim
         public EnhanceResult Enhance(int slot)
         {
             CheckGearSlot(slot);
+            Log(CommandKind.Enhance, slot);
             var piece = State.Gear.Slots[slot];
             if (piece == null) return new EnhanceResult(Reject.EmptySlot, false, 0, 0);
             if (piece.Enhance >= _k.EnhMax) return new EnhanceResult(Reject.EnhanceMaxed, false, piece.Enhance, 0);
@@ -143,14 +145,22 @@ namespace IdleRng.Sim
         // ------------------------------------------------------------ gacha (specs/01, specs/04 section 7.5)
 
         /// <summary>One pull: daily free credit, else banked credit, else PULL_COST_GEMS.</summary>
-        public PullOutcome Pull() => PullBatch(1);
+        public PullOutcome Pull()
+        {
+            Log(CommandKind.Pull);
+            return PullBatch(1);
+        }
 
         /// <summary>A guaranteed batch (GuaranteeBatchSize, 10): banked credits if enough, else 10 * PULL_COST_GEMS.</summary>
-        public PullOutcome Pull10() => PullBatch(_banner.GuaranteeBatchSize);
+        public PullOutcome Pull10()
+        {
+            Log(CommandKind.Pull10);
+            return PullBatch(_banner.GuaranteeBatchSize);
+        }
 
         PullOutcome PullBatch(int count)
         {
-            EnsureDay(Query.NowServerSec);
+            EnsureDayCore(Query.NowServerSec);
             if (!_banner.Enabled) return new PullOutcome(Reject.BannerDisabled, Array.Empty<PullResult>(), PaidWith.None, 0);
             var cur = State.Currencies;
             PaidWith with;
@@ -186,6 +196,7 @@ namespace IdleRng.Sim
         {
             CheckHeroSlot(slot);
             if (heroId == null || !Content.Heroes.ContainsKey(heroId)) throw new ArgumentOutOfRangeException(nameof(heroId));
+            if (Logging) Log(CommandKind.EquipHero, slot, HeroIndexOf(heroId));
             if (!State.Heroes.Copies.TryGetValue(heroId, out int c) || c <= 0) return new CommandResult(Reject.HeroNotOwned);
             var eq = State.Heroes.Equipped;
             for (int i = 0; i < eq.Length; i++)
@@ -201,6 +212,7 @@ namespace IdleRng.Sim
         public CommandResult UnequipHero(int slot)
         {
             CheckHeroSlot(slot);
+            Log(CommandKind.UnequipHero, slot);
             State.Heroes.AutoEquipBest = false;
             var eq = State.Heroes.Equipped;
             if (eq[slot] == null) return CommandResult.Success;
@@ -213,15 +225,20 @@ namespace IdleRng.Sim
         /// <summary>Fill the party with the HERO_SLOTS best owned heroes (HeroPct desc, id ordinal). Turns AutoEquipBest on.</summary>
         public int AutoEquipBestHeroes()
         {
+            Log(CommandKind.AutoEquipBest, 1);
             State.Heroes.AutoEquipBest = true;
             return AutoEquipInternal();
         }
 
         public void SetAutoEquipHeroes(bool on)
         {
+            Log(CommandKind.AutoEquipBest, on ? 1 : 0);
             State.Heroes.AutoEquipBest = on;
             if (on) AutoEquipInternal();
         }
+
+        /// <summary>Re-pick the party without recording a command (callers already recorded theirs).</summary>
+        internal int AutoEquipUnlogged() => AutoEquipInternal();
 
         int AutoEquipInternal()
         {
@@ -255,6 +272,7 @@ namespace IdleRng.Sim
         /// <summary>Retry a walled boss: the current mob despawns (no gold/drop/credit), the next spawn is the boss.</summary>
         public CommandResult AttemptBoss()
         {
+            Log(CommandKind.AttemptBoss);
             var stg = State.Stage;
             if (stg.Boss == BossPhase.Pending) return new CommandResult(Reject.BossAlreadyPending);
             if (!_k.IsBossStage(stg.Stage) || stg.Boss != BossPhase.Walled) return new CommandResult(Reject.NoBossToAttempt);
@@ -272,8 +290,9 @@ namespace IdleRng.Sim
 
         public CommandResult ClaimIdleChest()
         {
+            Log(CommandKind.ClaimChest);
             long now = Query.NowServerSec;
-            EnsureDay(now);
+            EnsureDayCore(now);
             if (now < Query.ChestReadyAtServerSec) return new CommandResult(Reject.ChestNotReady);
             AddGems(_k.IdleChestGems);
             State.Progression.ChestTimerStart = now;
@@ -287,6 +306,7 @@ namespace IdleRng.Sim
         /// </summary>
         public bool ApplyTutorialGrants()
         {
+            Log(CommandKind.TutorialGrants);
             var p = State.Progression;
             if (p.TutorialGranted) return false;
             foreach (var g in Content.TutorialGrants)

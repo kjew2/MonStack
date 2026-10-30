@@ -117,9 +117,33 @@ namespace IdleRng.Client.Boot
                 Debug.LogException(e);
                 return;
             }
-            _save = SaveBridgeFactory.Create(Application.persistentDataPath);
-            _clock = new OffsetClock(new IdleRng.Sim.Time.SystemClock());
+            RunSaveSelfCheck();
+            // specs/08 section 1: the build-time BackendMode picks the service implementations. Gacha stays the
+            // sim's local roll in both modes until the server-rolled pull contract exists (RemoteGachaService).
+            var services = Backend.Create(Application.persistentDataPath);
+            Debug.Log("IdleRng: backend " + Backend.Mode);
+            _save = new RuntimeSaveBridge(services.SaveStore);
+            _clock = new OffsetClock(services.Clock);
             StartSession();
+        }
+
+        /// <summary>
+        /// Issue #8: IL2CPP stripping can break Newtonsoft silently (fields load back as defaults), and only on
+        /// device. Round-trip a sample state in memory at every launch; a failure is logged as an error, not hidden.
+        /// </summary>
+        void RunSaveSelfCheck()
+        {
+            try
+            {
+                if (SaveBridgeFactory.SelfCheck(_content, out var report)) Debug.Log("IdleRng: " + report);
+                else Debug.LogError("IdleRng: SAVES ARE BROKEN IN THIS BUILD. A save round trip lost data, most likely "
+                                    + "IL2CPP code stripping (check Assets/link.xml).\n" + report);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("IdleRng: SAVES ARE BROKEN IN THIS BUILD. The save self-check crashed.");
+                Debug.LogException(e);
+            }
         }
 
         void StartSession()
