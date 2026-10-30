@@ -4,38 +4,36 @@
   'use strict';
   const C = window.IdleContent;
   const SP = window.IdleSprites;
-  const { Sim, serialize, deserialize, formatShort: fmt, consolidatedRates } = window.IdleSim;
+  const IE = window.IdleEngine;
+  const { formatShort: fmt } = window.IdleSim;
   const R = C.rarities;
-  const SAVE_KEY = 'idle-rng-web-save-v1';
+  const TAB_KEY = 'idle-rng-web-save-v1-tab';      // UI preference, shared by both engines
+  const ENGINE_KEY = 'idle-rng-engine';
   const MAX_TICKS_PER_FRAME = 2000;
   const $ = (id) => document.getElementById(id);
   const int = (n) => Math.floor(n).toLocaleString('en-US');
   const pct = (x, d) => (x * 100).toFixed(d === undefined ? 1 : d) + '%';
 
   // ------------------------------------------------------------ boot, clock, persistence
-  let sim, clockOffsetMs = 0, speed = 1;
+  // `sim` is the engine facade (web/engine.js): the JS core (sim.js) or the C# core compiled to wasm. null until boot() finishes.
+  let sim = null, clockOffsetMs = 0, speed = 1, bootNotice = null;
   const gameNow = () => Date.now() + clockOffsetMs;
 
-  function randomSeed() {
-    const a = new Uint32Array(2);
-    try { crypto.getRandomValues(a); } catch (e) { a[0] = (Math.random() * 2 ** 32) >>> 0; a[1] = (Math.random() * 2 ** 32) >>> 0; }
-    return (BigInt(a[0]) << 32n) | BigInt(a[1]);
-  }
   function newGame() {
     clockOffsetMs = 0;
-    sim = Sim.newProfile(C, { profileSeed: randomSeed(), nowMs: gameNow(), profileId: 'web-' + Date.now().toString(36) });
+    sim.reload({ nowMs: gameNow(), profileId: 'web-' + Date.now().toString(36) });   // random profile seed
     sim.emitHits = true;
   }
-  function saveString() { return JSON.stringify({ v: 1, clockOffsetMs: clockOffsetMs, state: serialize(sim.state) }); }
-  function loadString(str) {
-    const w = JSON.parse(str);
-    const s = deserialize(C, w.state);
-    clockOffsetMs = w.clockOffsetMs || 0;
-    sim = s; sim.emitHits = true;
+  function saveString() { return IE.wrapSave(sim, clockOffsetMs); }
+  function loadString(str) {                       // throws (leaving the running game intact) on a bad or other-engine save
+    const u = IE.unwrapSave(str, sim.backend);
+    sim.reload({ saveString: u.saveString });
+    clockOffsetMs = u.clockOffsetMs;
+    sim.emitHits = true;
   }
-  function save() { try { localStorage.setItem(SAVE_KEY, saveString()); } catch (e) { /* storage blocked: play without saving */ } }
+  function save() { if (!sim) return; try { localStorage.setItem(sim.saveKey, saveString()); } catch (e) { /* storage blocked: play without saving */ } }
   function loadSaved() {
-    try { const s = localStorage.getItem(SAVE_KEY); if (s) { loadString(s); return true; } } catch (e) { console.warn('Save not loaded:', e); }
+    try { const s = localStorage.getItem(sim.saveKey); if (s) { loadString(s); return true; } } catch (e) { console.warn('Save not loaded:', e); }
     return false;
   }
 
@@ -273,7 +271,7 @@
   function selectTab(id) {
     currentTab = id;
     for (const t of TABS) { tabEls[t.id].hidden = t.id !== id; tabBtns[t.id].setAttribute('aria-selected', String(t.id === id)); }
-    try { localStorage.setItem(SAVE_KEY + '-tab', id); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(TAB_KEY, id); } catch (e) { /* ignore */ }
     $('panel').scrollTop = 0;
     refresh();
   }
@@ -287,7 +285,7 @@
       views[t.id] = BUILD[t.id](sec);
     }
     let saved = 'fight';
-    try { saved = localStorage.getItem(SAVE_KEY + '-tab') || 'fight'; } catch (e) { /* ignore */ }
+    try { saved = localStorage.getItem(TAB_KEY) || 'fight'; } catch (e) { /* ignore */ }
     selectTab(views[saved] ? saved : 'fight');
   }
   function refresh() {
@@ -670,7 +668,7 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
   function showRates() {
-    const cr = consolidatedRates(C);
+    const cr = sim.consolidatedRates();
     const b = C.banner;
     const rows = R.map((r, i) => h('tr', null, [h('td', { class: 'fg-r' + i, text: C.rarityNames[r] }), h('td', { class: 'num', text: pct(b.BASE_RATES[i], 2) }),
       h('td', { class: 'num', text: i === 3 ? pct(cr.l, 3) : i === 4 ? pct(cr.m, 3) : '-' })]));
@@ -710,6 +708,19 @@
   }
 
   // ---- Settings + debug (specs/07 section 11.8)
+  function engineLine() {
+    const isWasm = sim.backend === 'wasm', other = isWasm ? 'js' : 'wasm';
+    const kids = [h('span', { id: 'engineChip', text: 'Engine: ' + (isWasm ? 'C# (wasm)' : 'JS') + ' · ' + sim.version() })];
+    if (!window.claude) kids.push(' ', h('button', { type: 'button', class: 'btn small', onclick: () => switchEngine(other) }, ['Use ' + (isWasm ? 'JS' : 'C#') + ' engine']));
+    return h('div', { class: 'muted num' }, kids);
+  }
+  function switchEngine(to) {
+    save();
+    try { localStorage.setItem(ENGINE_KEY, to); } catch (e) { /* ignore */ }
+    const u = new URL(location.href);
+    if (u.searchParams.has('engine')) u.searchParams.set('engine', to);
+    if (u.href === location.href) location.reload(); else location.href = u.href;
+  }
   function showSettings() {
     let resetArmed = 0;
     const speedBtns = [1, 5, 20, 100].map((x) => h('button', { type: 'button', class: 'btn small', 'aria-pressed': String(speed === x), onclick: () => { speed = x; showSettings(); } }, ['x' + x]));
@@ -728,6 +739,7 @@
     openModal(h('div', { class: 'card' }, [
       h('div', { class: 'row between' }, [h('h2', { text: 'Settings' }), h('button', { type: 'button', class: 'btn small', onclick: closeModal }, ['Close'])]),
       h('div', { class: 'muted num', text: 'Content ' + C.version + ' · save schema v' + sim.state.schema + ' · profile ' + sim.state.profileId }),
+      engineLine(),
       h('div', { class: 'muted num', text: 'Game clock ' + new Date(gameNow()).toISOString().replace('T', ' ').slice(0, 16) + ' UTC' + (clockOffsetMs ? ' (ahead ' + hours(clockOffsetMs / 1000) + ')' : '') }),
       h('div', { class: 'muted', text: 'Invariants: ' + (errs.length ? errs.join('; ') : 'ok') }),
       resetBtn,
@@ -767,6 +779,7 @@
     buildPartyStrip();
     buildTabs();
     handleEvents();
+    if (bootNotice) toast(bootNotice, undefined, 4500);
     if (sim.state.life.kills === 0 && sim.state.banner.totalPulls === 0) {
       log('Welcome. You have ' + int(sim.state.cur.gems) + ' gems and ' + sim.state.cur.freePullsBanked + ' free summons: open Summon for your first x10.', 'gems');
     }
@@ -775,6 +788,7 @@
     requestAnimationFrame(frame);
   }
   document.addEventListener('visibilitychange', () => {
+    if (!sim) return;
     if (document.hidden) save();
     else { lastFrame = performance.now(); sim.syncWallClock(gameNow()); handleEvents(); }
   });
@@ -782,10 +796,22 @@
 
   // Keep the game running across artifact republishes (no-op outside the claude.ai viewer).
   const hot = window.claude && window.claude.hot;
-  if (hot && hot.snapshot) hot.snapshot(() => ({ save: saveString() }));
-  function boot(data) {
+  if (hot && hot.snapshot) hot.snapshot(() => (sim ? { save: saveString() } : {}));
+  async function boot(data) {
+    // First paint: the HUD and strip exist in the HTML; say what we are waiting for.
+    setText($('stageEl'), 'Loading engine...'); setText($('hpText'), 'Loading engine...');
+    const pick = IE.chooseBackend();
+    try {
+      sim = await IE.create({ backend: pick.backend, content: C, loadWasm: window.__idleLoadWasm,   // test seam, undefined in normal use
+         nowMs: gameNow(), profileId: 'web-' + Date.now().toString(36),
+        onNotice: (m) => { bootNotice = m; } });
+    } catch (err) {
+      setText($('stageEl'), 'Engine failed to load'); setText($('hpText'), String(err && err.message || err));
+      throw err;
+    }
+    sim.emitHits = true;
     let preloaded = false;
-    if (data && data.save) { try { loadString(data.save); preloaded = true; } catch (e) { /* fall back to storage */ } }
+    if (data && data.save) { try { loadString(data.save); preloaded = true; } catch (e) { /* other engine or bad: fall back to storage */ } }
     start(preloaded);
   }
   if (hot && hot.ready) hot.ready(boot); else boot(hot && hot.data || {});

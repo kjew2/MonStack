@@ -4,6 +4,8 @@
 #   ./check.sh            everything (what CI runs, see specs/09 section 13)
 #   ./check.sh --fast     inner loop: skips golden tests, the bench and the acceptance sweep
 #   ./check.sh --no-dotnet  only the Python and web checks (for machines without the .NET SDK)
+#   ./check.sh --no-wasm    skip the WebAssembly build and browser test (full mode runs them when the
+#                           wasm-tools workload is installed; see web/wasm/BRIDGE.md)
 #
 # Exits non-zero on the first failure.
 set -euo pipefail
@@ -11,11 +13,13 @@ cd "$(dirname "$0")"
 
 FAST=0
 DOTNET=1
+WASM=1
 for arg in "$@"; do
   case "$arg" in
     --fast) FAST=1 ;;
     --no-dotnet) DOTNET=0 ;;
-    -h|--help) sed -n 2,8p "$0"; exit 0 ;;
+    --no-wasm) WASM=0 ;;
+    -h|--help) sed -n 2,10p "$0"; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -27,6 +31,15 @@ python3 tools/content_build.py --check
 
 step "Web prototype: spec test vectors"
 node web/test.js
+
+step "Web prototype: content export matches web/content.js"
+node web/tools/check-content.js
+
+step "Web prototype: parity fixtures replay identically on the JS core"
+node web/tools/verify-parity.js
+
+step "Web prototype: engine facade (JS and mock-wasm backends)"
+node web/tools/engine-test.js
 
 if [ "$DOTNET" -eq 0 ]; then
   printf '\nSkipped .NET checks (--no-dotnet). Not a full pass.\n'
@@ -58,6 +71,16 @@ else
 
   step "Bots: golden files match"
   $BOTS golden --check
+
+  if [ "$WASM" -eq 1 ] && dotnet workload list 2>/dev/null | grep -q wasm-tools; then
+    step "Web: C# core builds to WebAssembly"
+    bash web/wasm/build.sh --fast
+
+    step "Web: page plays on the C# engine in headless Chromium"
+    node web/wasm/test/run-wasm.js
+  else
+    printf '\nSkipped WebAssembly checks (--no-wasm or wasm-tools workload not installed). Not a full pass.\n'
+  fi
 fi
 
 printf '\nAll checks passed.\n'

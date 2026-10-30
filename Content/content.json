@@ -1,0 +1,514 @@
+{
+  "version": "0.1.0-web",
+  "combat": {
+    "TICK_HZ": 10,
+    "BASE_ATK": 10,
+    "ATTACK_INTERVAL_TICKS": 10,
+    "HP0": 20,
+    "HP_G": 1.07,
+    "KILLS_PER_STAGE": 10,
+    "SPAWN_DELAY_TICKS": 5,
+    "BOSS_EVERY": 10,
+    "BOSS_HP_MULT": 10,
+    "BOSS_TIME_TICKS": 200,
+    "BOSS_GOLD_MULT": 3,
+    "STAGE_CAP": 9000
+  },
+  "economy": {
+    "GOLD0": 2,
+    "GOLD_G": 1.05,
+    "STAT_PER_LVL": 0.05,
+    "STAT_COST0": 50,
+    "STAT_COST_G": 1.07,
+    "STAT_BULK_STEPS": [
+      1,
+      10,
+      100
+    ],
+    "PULL_COST_GEMS": 100,
+    "FREE_PULLS_PER_DAY": 3,
+    "DAY_SECONDS": 86400,
+    "FIRST_CLEAR_GEMS": 10,
+    "IDLE_CHEST_HOURS": 4,
+    "IDLE_CHEST_GEMS": 50,
+    "TUTORIAL_GEMS": 1000,
+    "TUTORIAL_FREE_PULLS": 10,
+    "OFFLINE_RATE": 0.5,
+    "OFFLINE_CAP_H": 8,
+    "OFFLINE_MIN_GAP_S": 60
+  },
+  "quests": [
+    {
+      "id": "daily_login",
+      "kind": "login",
+      "target": 1,
+      "gems": 50,
+      "label": "Log in"
+    },
+    {
+      "id": "daily_kills",
+      "kind": "kills",
+      "target": 500,
+      "gems": 30,
+      "label": "Defeat 500 enemies"
+    },
+    {
+      "id": "daily_boss",
+      "kind": "bossAttempts",
+      "target": 1,
+      "gems": 30,
+      "label": "Challenge a boss"
+    },
+    {
+      "id": "daily_pulls",
+      "kind": "pulls",
+      "target": 3,
+      "gems": 30,
+      "label": "Summon 3 heroes"
+    }
+  ],
+  "rarities": [
+    "C",
+    "R",
+    "E",
+    "L",
+    "M"
+  ],
+  "rarityNames": {
+    "C": "Common",
+    "R": "Rare",
+    "E": "Epic",
+    "L": "Legendary",
+    "M": "Mythic"
+  },
+  "gear": {
+    "SLOTS": [
+      "Weapon",
+      "Helm",
+      "Chest",
+      "Gloves",
+      "Boots",
+      "Ring"
+    ],
+    "DROP_P": 0.005,
+    "BOSS_DROP_P": 0.1,
+    "BOSS_MIN_RARITY": 1,
+    "TIER_WIDTH": 10,
+    "SLOT_G": 1.0074,
+    "RARITY_W": [
+      0.6,
+      0.28,
+      0.09,
+      0.025,
+      0.005
+    ],
+    "RARITY_MULT": [
+      1,
+      1.2,
+      1.5,
+      2,
+      3
+    ],
+    "ENH_MAX": 15,
+    "ENH_PER_LVL": 0.05,
+    "ENH_SUCCESS_FLOOR": 0.3,
+    "ENH_SUCCESS_STEP": 0.05,
+    "ENH_COST_GOLD_MULT": 20
+  },
+  "banner": {
+    "BASE_RATES": [
+      0.6,
+      0.28,
+      0.09,
+      0.025,
+      0.005
+    ],
+    "BASE_LPLUS": 0.03,
+    "PITY_SOFT_START": 50,
+    "PITY_SOFT_STEP": 0.0325,
+    "PITY_HARD": 80,
+    "M_SHARE_OF_LPLUS": 0.16666666666666666,
+    "SHARD_VALUE": [
+      1,
+      5,
+      25,
+      100,
+      500
+    ]
+  },
+  "heroes": {
+    "SLOTS": 6,
+    "BASE_PCT": [
+      10,
+      20,
+      40,
+      80,
+      160
+    ],
+    "LVL_CUM": [
+      1,
+      3,
+      6,
+      10,
+      16,
+      25,
+      40,
+      64,
+      100,
+      160
+    ],
+    "LVL_BONUS": 0.2,
+    "pool": [
+      [
+        {
+          "id": "C01",
+          "tier": "C",
+          "name": "Pell the Farmhand",
+          "short": "Pell"
+        },
+        {
+          "id": "C02",
+          "tier": "C",
+          "name": "Doss the Woodcutter",
+          "short": "Doss"
+        },
+        {
+          "id": "C03",
+          "tier": "C",
+          "name": "Mira the Scout",
+          "short": "Mira"
+        },
+        {
+          "id": "C04",
+          "tier": "C",
+          "name": "Tobb the Miller",
+          "short": "Tobb"
+        },
+        {
+          "id": "C05",
+          "tier": "C",
+          "name": "Kesh the Slinger",
+          "short": "Kesh"
+        },
+        {
+          "id": "C06",
+          "tier": "C",
+          "name": "Wren the Archer",
+          "short": "Wren"
+        },
+        {
+          "id": "C07",
+          "tier": "C",
+          "name": "Hollis the Guard",
+          "short": "Hollis"
+        },
+        {
+          "id": "C08",
+          "tier": "C",
+          "name": "Bree the Herbalist",
+          "short": "Bree"
+        },
+        {
+          "id": "C09",
+          "tier": "C",
+          "name": "Garr the Smith",
+          "short": "Garr"
+        },
+        {
+          "id": "C10",
+          "tier": "C",
+          "name": "Lio the Fisher",
+          "short": "Lio"
+        },
+        {
+          "id": "C11",
+          "tier": "C",
+          "name": "Nim the Courier",
+          "short": "Nim"
+        },
+        {
+          "id": "C12",
+          "tier": "C",
+          "name": "Osk the Porter",
+          "short": "Osk"
+        },
+        {
+          "id": "C13",
+          "tier": "C",
+          "name": "Fen the Trapper",
+          "short": "Fen"
+        },
+        {
+          "id": "C14",
+          "tier": "C",
+          "name": "Rook the Sentry",
+          "short": "Rook"
+        },
+        {
+          "id": "C15",
+          "tier": "C",
+          "name": "Tamsin the Cook",
+          "short": "Tamsin"
+        },
+        {
+          "id": "C16",
+          "tier": "C",
+          "name": "Ulf the Brawler",
+          "short": "Ulf"
+        },
+        {
+          "id": "C17",
+          "tier": "C",
+          "name": "Vesna the Spearmaiden",
+          "short": "Vesna"
+        },
+        {
+          "id": "C18",
+          "tier": "C",
+          "name": "Juno the Lamplighter",
+          "short": "Juno"
+        },
+        {
+          "id": "C19",
+          "tier": "C",
+          "name": "Pip the Squire",
+          "short": "Pip"
+        },
+        {
+          "id": "C20",
+          "tier": "C",
+          "name": "Corra the Shepherd",
+          "short": "Corra"
+        }
+      ],
+      [
+        {
+          "id": "R01",
+          "tier": "R",
+          "name": "Alder the Ranger",
+          "short": "Alder"
+        },
+        {
+          "id": "R02",
+          "tier": "R",
+          "name": "Isolde the Duelist",
+          "short": "Isolde"
+        },
+        {
+          "id": "R03",
+          "tier": "R",
+          "name": "Marek the Pikeman",
+          "short": "Marek"
+        },
+        {
+          "id": "R04",
+          "tier": "R",
+          "name": "Sable the Rogue",
+          "short": "Sable"
+        },
+        {
+          "id": "R05",
+          "tier": "R",
+          "name": "Thane the Berserker",
+          "short": "Thane"
+        },
+        {
+          "id": "R06",
+          "tier": "R",
+          "name": "Yara the Falconer",
+          "short": "Yara"
+        },
+        {
+          "id": "R07",
+          "tier": "R",
+          "name": "Brom the Shieldwall",
+          "short": "Brom"
+        },
+        {
+          "id": "R08",
+          "tier": "R",
+          "name": "Celes the Acolyte",
+          "short": "Celes"
+        },
+        {
+          "id": "R09",
+          "tier": "R",
+          "name": "Dax the Gunner",
+          "short": "Dax"
+        },
+        {
+          "id": "R10",
+          "tier": "R",
+          "name": "Elowen the Druid",
+          "short": "Elowen"
+        },
+        {
+          "id": "R11",
+          "tier": "R",
+          "name": "Faro the Lancer",
+          "short": "Faro"
+        },
+        {
+          "id": "R12",
+          "tier": "R",
+          "name": "Greta the Alchemist",
+          "short": "Greta"
+        },
+        {
+          "id": "R13",
+          "tier": "R",
+          "name": "Hale the Monk",
+          "short": "Hale"
+        },
+        {
+          "id": "R14",
+          "tier": "R",
+          "name": "Ivo the Bard",
+          "short": "Ivo"
+        },
+        {
+          "id": "R15",
+          "tier": "R",
+          "name": "Kaya the Huntress",
+          "short": "Kaya"
+        }
+      ],
+      [
+        {
+          "id": "E01",
+          "tier": "E",
+          "name": "Seraphine the Spellblade",
+          "short": "Seraphine"
+        },
+        {
+          "id": "E02",
+          "tier": "E",
+          "name": "Vorn the Warlock",
+          "short": "Vorn"
+        },
+        {
+          "id": "E03",
+          "tier": "E",
+          "name": "Lysa the Stormcaller",
+          "short": "Lysa"
+        },
+        {
+          "id": "E04",
+          "tier": "E",
+          "name": "Orrin the Templar",
+          "short": "Orrin"
+        },
+        {
+          "id": "E05",
+          "tier": "E",
+          "name": "Nyx the Shadowdancer",
+          "short": "Nyx"
+        },
+        {
+          "id": "E06",
+          "tier": "E",
+          "name": "Calder the Frostknight",
+          "short": "Calder"
+        },
+        {
+          "id": "E07",
+          "tier": "E",
+          "name": "Mei the Sage",
+          "short": "Mei"
+        },
+        {
+          "id": "E08",
+          "tier": "E",
+          "name": "Rhea the Valkyrie",
+          "short": "Rhea"
+        },
+        {
+          "id": "E09",
+          "tier": "E",
+          "name": "Taro the Ronin",
+          "short": "Taro"
+        },
+        {
+          "id": "E10",
+          "tier": "E",
+          "name": "Zephyr the Windwalker",
+          "short": "Zephyr"
+        }
+      ],
+      [
+        {
+          "id": "L01",
+          "tier": "L",
+          "name": "Aurelia the Sunblade",
+          "short": "Aurelia"
+        },
+        {
+          "id": "L02",
+          "tier": "L",
+          "name": "Morgrim the Dragonbane",
+          "short": "Morgrim"
+        },
+        {
+          "id": "L03",
+          "tier": "L",
+          "name": "Kael the Starforged",
+          "short": "Kael"
+        },
+        {
+          "id": "L04",
+          "tier": "L",
+          "name": "Ishara the Oracle",
+          "short": "Ishara"
+        },
+        {
+          "id": "L05",
+          "tier": "L",
+          "name": "Dravik the Bloodlord",
+          "short": "Dravik"
+        },
+        {
+          "id": "L06",
+          "tier": "L",
+          "name": "Solenne the Lightbringer",
+          "short": "Solenne"
+        }
+      ],
+      [
+        {
+          "id": "M01",
+          "tier": "M",
+          "name": "Eon the Timeless",
+          "short": "Eon"
+        },
+        {
+          "id": "M02",
+          "tier": "M",
+          "name": "Vael the Void Empress",
+          "short": "Vael"
+        },
+        {
+          "id": "M03",
+          "tier": "M",
+          "name": "Ragnor the World-Ender",
+          "short": "Ragnor"
+        }
+      ]
+    ]
+  },
+  "class": {
+    "STAGES": [
+      50,
+      150,
+      300,
+      500
+    ],
+    "MULT": 1.5,
+    "NAMES": [
+      "Squire",
+      "Knight",
+      "Champion",
+      "Warlord",
+      "Paragon"
+    ]
+  }
+}
