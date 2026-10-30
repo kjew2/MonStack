@@ -27,21 +27,59 @@ Tools:
 
 Both run on Python 3.7+ with no dependencies.
 
-Browser prototype:
+## Running the web prototype
 
-- `web/` - playable phone-browser build of the P0 loop for feel and balance testing. Its game core (`web/sim.js`) mirrors the planned C# sim: seeded RNG streams, no clock reads, every number from `web/content.js`. It passes the spec test vectors (`node web/test.js`) and includes a 30-day bot (`node web/bot.js`). See `web/README.md`. The real product is still the Unity client in `specs/07`.
-- C# engine in the browser: `web/wasm/build.sh` compiles the real `IdleRng.Sim` to WebAssembly (`src/IdleRng.Web`); serve `web/` over HTTP and open it with `?engine=wasm` to play on the C# core, with `web/sim.js` as the fallback. The claude.ai artifact link always uses the JS engine. Contract and parity notes: `web/wasm/BRIDGE.md`, `web/wasm/test/parity-report.md`.
+Everything below runs on your own computer. No Claude session is needed; the only thing tied to Claude is the artifact link in option A.
 
-### Playing the prototype on a phone
+The page can play on two engines that run the same game:
 
-The repo is private, so GitHub cannot serve the page directly (raw file links show source text, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly). Use one of these:
+- **C# engine**: the real `IdleRng.Sim` (the code the Unity client and the bots use), compiled to WebAssembly by `src/IdleRng.Web`. Needs a one-time build.
+- **JS engine**: `web/sim.js`, a hand-written copy used as a fallback and for quick tests. No build. Its tuning differs slightly from the C# core (see `web/wasm/BRIDGE.md`).
 
-1. **Claude artifact link (easiest).** Open https://claude.ai/artifact/7mExS6YSTJpZMzFRbWDWHX in the phone's browser while signed in to claude.ai. It is private to the owner. It is a separate copy: changes in `web/` reach it only when Claude republishes it.
-2. **From a computer on the same Wi-Fi (always matches the repo).**
-   1. On the computer: `cd web && python3 -m http.server 8000`
+Settings (the cog, top right) shows which engine is running, and has a button to switch. Each engine keeps its own save.
+
+### A. Quickest: JS engine, nothing to install
+
+- Open https://claude.ai/artifact/7mExS6YSTJpZMzFRbWDWHX while signed in to claude.ai (private to the owner; a copy that changes only when Claude republishes it), or
+- open `web/index.html` straight from a clone in a desktop browser.
+
+### B. Play on the C# engine on your computer
+
+One-time setup:
+
+1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0), Node 18+ and Python 3.
+2. Install the WebAssembly build tools: `dotnet workload install wasm-tools` (may need `sudo` on Linux/macOS).
+
+Then, from the repo root:
+
+```
+web/wasm/build.sh                 # first build takes 1-3 minutes; later ones are faster
+cd web && python3 -m http.server 8000
+```
+
+Open http://localhost:8000 . With the bundle built, the page picks the C# engine by itself; Settings should say "Engine: C# (wasm)". Add `?engine=js` or `?engine=wasm` to force one. Rebuild with `web/wasm/build.sh` after pulling changes to `src/` or `Content/`.
+
+It must be served over HTTP: browsers refuse to load WebAssembly from a `file://` page, so opening `index.html` directly always gives the JS engine. On Windows, run `build.sh` from Git Bash or WSL.
+
+If you see "C# engine unavailable, using JS engine": the bundle is missing (run the build), the page was opened as a file, or the build failed (rerun it and read the error; the usual cause is the missing `wasm-tools` workload).
+
+### C. On a phone
+
+The repo is private, so GitHub cannot serve the page (raw links show source, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly).
+
+1. **Over Wi-Fi from your computer** (C# or JS engine, always matches your clone):
+   1. Do option B (or skip the build for the JS engine), and start the server with `cd web && python3 -m http.server 8000`.
    2. Find the computer's local IP: macOS `ipconfig getifaddr en0`, Linux `hostname -I`, Windows `ipconfig` (IPv4 Address).
-   3. On the phone, open `http://<that-ip>:8000` (for example `http://192.168.1.20:8000`). If it does not load, allow Python through the computer's firewall.
-   4. Optional: in the browser's share menu, choose Add to Home Screen for a full-screen icon.
-3. **Android only: open one file directly.** Run `node web/build.js` to make the single-file build `web/dist/idle-rng.html`, copy it to the phone, then open it from Files with Chrome. iPhone Safari and Files do not run scripts in local HTML files, so use option 1 or 2 there.
+   3. On the phone, on the same Wi-Fi, open `http://<that-ip>:8000` (for example `http://192.168.1.20:8000`). If it does not load, allow Python through the computer's firewall.
+   4. Optional: Add to Home Screen from the browser's share menu for a full-screen icon.
+2. **The artifact link** from option A (JS engine only).
+3. **Android only, one file:** `node web/build.js` makes `web/dist/idle-rng.html`; copy it to the phone and open it from Files with Chrome (JS engine only). iPhone Safari does not run scripts in local HTML files.
 
-Progress is saved in the browser, separately for each address, so the artifact link and the Wi-Fi address each keep their own save. Fonts load from Google Fonts; offline the page falls back to system fonts and still plays.
+Progress is saved in the browser, separately for each address and engine. Fonts load from Google Fonts; offline the page falls back to system fonts and still plays.
+
+### Tests for the web build
+
+- `node web/test.js`, `node web/bot.js 30 7`: JS engine spec vectors and 30-day bot.
+- `node web/tools/engine-test.js`: the engine switch layer.
+- `node web/wasm/test/run-wasm.js` (after `web/wasm/build.sh`): plays the page on the C# engine in headless Chromium.
+- `./check.sh` runs all of these plus the .NET checks.
