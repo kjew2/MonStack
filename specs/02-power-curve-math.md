@@ -42,6 +42,8 @@ When walled, the player farms stage `s` mobs (not `s-1`), earns `Gold(s)`, drops
 
 ## 4. The four layers
 
+> Overhaul (#60): the hero and class layers are replaced by the party term and per-companion promotion (`specs/11` sections 6-7). This section and the tuning below describe the pre-overhaul curve and stay as history until balance resumes.
+
 ```
 DPS(s) = 10 * Stat(n) * Gear(s') * Hero(t) * Class(s)
 ```

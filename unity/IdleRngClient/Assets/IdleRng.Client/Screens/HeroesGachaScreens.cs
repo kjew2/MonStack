@@ -4,12 +4,13 @@ using UnityEngine.UIElements;
 namespace IdleRng.Client.Screens
 {
     /// <summary>
-    /// Heroes tab (specs/07 section 11.5): party of 6 (tap a slot to place the selected hero there, or to unequip it
-    /// when nothing is selected), 54-hero inventory, auto-equip.
+    /// Heroes tab (specs/07 section 11.5, specs/11): party of HERO_SLOTS (tap a slot to place the selected companion there,
+    /// or to unequip it when nothing is selected), companion inventory with stats, promotion, auto-equip.
     /// </summary>
     public sealed class HeroesScreen : ScreenBase
     {
-        readonly Label _header, _detail;
+        readonly Label _header, _detail, _promo;
+        readonly Button _promote;
         readonly Button _auto;
         readonly Button[] _party;
         readonly VisualElement _grid;
@@ -26,7 +27,7 @@ namespace IdleRng.Client.Screens
 
             Root.Add(Ui.Text("Party (tap: place selected hero / unequip)", Ui.Small, Palette.Muted));
             var partyRow = Ui.Row();
-            _party = new Button[6];
+            _party = new Button[vm.PartySize];
             for (int i = 0; i < _party.Length; i++)
             {
                 int slot = i;
@@ -43,7 +44,11 @@ namespace IdleRng.Client.Screens
             var actions = Ui.Row();
             actions.Add(Ui.Btn("Equip to empty slot", vm.EquipSelectedToEmptySlot, Ui.Small));
             actions.Add(Ui.Btn("Unequip", vm.UnequipSelected, Ui.Small));
+            _promote = Ui.Btn("Promote", vm.PromoteSelected, Ui.Small);
+            actions.Add(_promote);
             p.Add(actions);
+            _promo = Ui.Text("", Ui.Small, Palette.Muted);
+            p.Add(_promo);
             Root.Add(p);
 
             Root.Add(Ui.Text("Inventory", Ui.Body, Palette.Muted));
@@ -56,7 +61,10 @@ namespace IdleRng.Client.Screens
         public override void Refresh()
         {
             var h = Vm.Heroes;
-            Ui.Set(_header, "Heroes " + TextFmt.Mult(h.HeroMult) + "  ");
+            Ui.Set(_header, "Party DPS " + TextFmt.Num(h.PartyDps) + "  ");
+            Ui.Set(_promo, h.SelectedPromoText);
+            _promote.style.display = h.SelectedCanEverPromote ? DisplayStyle.Flex : DisplayStyle.None;
+            _promote.SetEnabled(h.SelectedCanPromote);
             Ui.Set(_auto, h.AutoEquipOn ? "Auto-equip (on)" : "Auto-equip");
             if (_version == h.Version) return;
             _version = h.Version;
@@ -89,7 +97,7 @@ namespace IdleRng.Client.Screens
             for (int s = 0; s < _party.Length; s++)
             {
                 var r = s < h.Equipped.Length ? h.Equipped[s] : null;
-                Ui.Set(_party[s], r == null ? "( -- )\nempty" : r.Glyph + "\nLv" + r.Level + "  " + TextFmt.PctPoints(r.Pct));
+                Ui.Set(_party[s], r == null ? "( -- )\nempty" : r.Glyph + "\nLv" + r.Level + "  " + TextFmt.Num(r.FarmDps));
                 Ui.Bg(_party[s], r == null ? Ui.ButtonBg : Palette.RarityColor(r.Tier));
                 _party[s].style.color = Ui.C(r == null || !Palette.DarkTextOn(r.Tier) ? 0xFFFFFFu : 0x000000u);
             }
@@ -102,7 +110,11 @@ namespace IdleRng.Client.Screens
                 string copies = selRow.NextLevelCopies < 0 ? "Lv" + selRow.Level + " MAX (" + selRow.Copies + " copies)"
                               : "Lv" + selRow.Level + " (" + selRow.Copies + "/" + selRow.NextLevelCopies + " copies)";
                 Ui.Set(_detail, "Selected: " + selRow.Glyph + "  " + selRow.Name + "  " + TextFmt.Tier(selRow.Tier) + "\n" +
-                                (selRow.Owned ? copies + "   " + TextFmt.PctPoints(selRow.Pct) + " DPS" : "not owned") +
+                                selRow.Role + " / " + selRow.Element + "\n" +
+                                (selRow.Owned ? copies + "   " + TextFmt.Num(selRow.FarmDps) + " DPS\n" +
+                                    "HP " + TextFmt.Num(selRow.Hp) + "  ATK " + TextFmt.Num(selRow.Atk) + "  DEF " + TextFmt.Num(selRow.Def) +
+                                    "  SPD " + selRow.Spd + "  crit " + TextFmt.PctSigned(selRow.CritRate).TrimStart('+') + " x" + selRow.CritDmg.ToString("0.00")
+                                  : "not owned") +
                                 (selRow.EquippedSlot >= 0 ? "   equipped slot " + (selRow.EquippedSlot + 1) : ""));
             }
         }

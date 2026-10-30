@@ -20,7 +20,7 @@ namespace IdleRng.Bots
         public WallRecord[] Walls { get; set; }
         /// <summary>Clock (ms) at the end of each day, after its sync; index = day - 1. For wall checks at a given day.</summary>
         public long[] DayEndUtcMs { get; set; }
-        public double BaseAtk { get; set; }
+        public double BaseDps { get; set; }
     }
 
     /// <summary>Plays N bot days (specs/09 section 4): 120 active minutes in 60 s decisions, then one night sync.</summary>
@@ -88,7 +88,7 @@ namespace IdleRng.Bots
             return new RunResult
             {
                 Bot = policy.Name, Seed = seed, Days = days, ContentVersion = c.Version, ContentHash = c.ContentHash,
-                Rows = rows, Walls = sink.Walls.ToArray(), DayEndUtcMs = dayEnd, BaseAtk = k.BaseAtk,
+                Rows = rows, Walls = sink.Walls.ToArray(), DayEndUtcMs = dayEnd, BaseDps = sim.Query.BaseDps,
             };
         }
 
@@ -97,7 +97,7 @@ namespace IdleRng.Bots
             var q = sim.Query;
             var s = sim.State;
             double longest = sink.Walls.Count == 0 ? 0 : sink.Walls.Max(w => w.WallClockHours(nowUtcMs));
-            return new DayRow(day, s.Stage.Stage, q.Dps, s.Progression.StatLevel, q.StatMult, q.GearMult, q.HeroMult, q.ClassMult,
+            return new DayRow(day, s.Stage.Stage, q.Dps, s.Progression.StatLevel, q.StatMult, q.GearMult, q.HeroMult, q.PromoMult,
                               s.HeroBanner.TotalPulls, sink.LPlus, s.Lifetime.FirstWallStage, longest);
         }
     }

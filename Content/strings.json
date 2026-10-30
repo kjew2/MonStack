@@ -8,7 +8,7 @@
     },
     {
       "key": "hero.c_01.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+      "text": "Your first companion. Swings a pitchfork with more grit than skill."
     },
     {
       "key": "hero.c_02.name",
@@ -16,7 +16,7 @@
     },
     {
       "key": "hero.c_02.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+      "text": "Plants his feet and takes the hits so others don't have to."
     },
     {
       "key": "hero.c_03.name",
@@ -24,7 +24,7 @@
     },
     {
       "key": "hero.c_03.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+      "text": "Calls out weak spots, speeding up the whole party."
     },
     {
       "key": "hero.c_04.name",
@@ -32,7 +32,7 @@
     },
     {
       "key": "hero.c_04.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+      "text": "Patches up the party with flour-dusted bandages."
     },
     {
       "key": "hero.c_05.name",
@@ -40,135 +40,15 @@
     },
     {
       "key": "hero.c_05.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_06.name",
-      "text": "Wren the Archer"
-    },
-    {
-      "key": "hero.c_06.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_07.name",
-      "text": "Hollis the Guard"
-    },
-    {
-      "key": "hero.c_07.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_08.name",
-      "text": "Bree the Herbalist"
-    },
-    {
-      "key": "hero.c_08.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_09.name",
-      "text": "Garr the Smith"
-    },
-    {
-      "key": "hero.c_09.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_10.name",
-      "text": "Lio the Fisher"
-    },
-    {
-      "key": "hero.c_10.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_11.name",
-      "text": "Nim the Courier"
-    },
-    {
-      "key": "hero.c_11.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_12.name",
-      "text": "Osk the Porter"
-    },
-    {
-      "key": "hero.c_12.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_13.name",
-      "text": "Fen the Trapper"
-    },
-    {
-      "key": "hero.c_13.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_14.name",
-      "text": "Rook the Sentry"
-    },
-    {
-      "key": "hero.c_14.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_15.name",
-      "text": "Tamsin the Cook"
-    },
-    {
-      "key": "hero.c_15.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_16.name",
-      "text": "Ulf the Brawler"
-    },
-    {
-      "key": "hero.c_16.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_17.name",
-      "text": "Vesna the Spearmaiden"
-    },
-    {
-      "key": "hero.c_17.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_18.name",
-      "text": "Juno the Lamplighter"
-    },
-    {
-      "key": "hero.c_18.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_19.name",
-      "text": "Pip the Squire"
-    },
-    {
-      "key": "hero.c_19.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
-    },
-    {
-      "key": "hero.c_20.name",
-      "text": "Corra the Shepherd"
-    },
-    {
-      "key": "hero.c_20.desc",
-      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+      "text": "Lobs shadow-laced stones that splash nearby foes."
     },
     {
       "key": "hero.r_01.name",
-      "text": "Alder the Ranger"
+      "text": "Alder the Herbalist"
     },
     {
       "key": "hero.r_01.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+      "text": "Brews quick remedies from whatever grows nearby."
     },
     {
       "key": "hero.r_02.name",
@@ -176,7 +56,7 @@
     },
     {
       "key": "hero.r_02.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+      "text": "Fast, precise strikes against a single target."
     },
     {
       "key": "hero.r_03.name",
@@ -184,7 +64,7 @@
     },
     {
       "key": "hero.r_03.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+      "text": "Holds the line behind a long pike and a tower shield."
     },
     {
       "key": "hero.r_04.name",
@@ -192,7 +72,7 @@
     },
     {
       "key": "hero.r_04.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+      "text": "Weakens the enemy with poisons and dirty tricks."
     },
     {
       "key": "hero.r_05.name",
@@ -200,87 +80,7 @@
     },
     {
       "key": "hero.r_05.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_06.name",
-      "text": "Yara the Falconer"
-    },
-    {
-      "key": "hero.r_06.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_07.name",
-      "text": "Brom the Shieldwall"
-    },
-    {
-      "key": "hero.r_07.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_08.name",
-      "text": "Celes the Acolyte"
-    },
-    {
-      "key": "hero.r_08.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_09.name",
-      "text": "Dax the Gunner"
-    },
-    {
-      "key": "hero.r_09.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_10.name",
-      "text": "Elowen the Druid"
-    },
-    {
-      "key": "hero.r_10.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_11.name",
-      "text": "Faro the Lancer"
-    },
-    {
-      "key": "hero.r_11.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_12.name",
-      "text": "Greta the Alchemist"
-    },
-    {
-      "key": "hero.r_12.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_13.name",
-      "text": "Hale the Monk"
-    },
-    {
-      "key": "hero.r_13.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_14.name",
-      "text": "Ivo the Bard"
-    },
-    {
-      "key": "hero.r_14.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
-    },
-    {
-      "key": "hero.r_15.name",
-      "text": "Kaya the Huntress"
-    },
-    {
-      "key": "hero.r_15.desc",
-      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+      "text": "Hits harder the longer the fight goes on."
     },
     {
       "key": "hero.e_01.name",
@@ -288,7 +88,7 @@
     },
     {
       "key": "hero.e_01.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+      "text": "Blends sword and spell into rapid critical strikes."
     },
     {
       "key": "hero.e_02.name",
@@ -296,7 +96,7 @@
     },
     {
       "key": "hero.e_02.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+      "text": "Curses and dark bolts that hit the whole field."
     },
     {
       "key": "hero.e_03.name",
@@ -304,7 +104,7 @@
     },
     {
       "key": "hero.e_03.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+      "text": "Calls down storms that crash over every enemy."
     },
     {
       "key": "hero.e_04.name",
@@ -312,55 +112,7 @@
     },
     {
       "key": "hero.e_04.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
-    },
-    {
-      "key": "hero.e_05.name",
-      "text": "Nyx the Shadowdancer"
-    },
-    {
-      "key": "hero.e_05.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
-    },
-    {
-      "key": "hero.e_06.name",
-      "text": "Calder the Frostknight"
-    },
-    {
-      "key": "hero.e_06.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
-    },
-    {
-      "key": "hero.e_07.name",
-      "text": "Mei the Sage"
-    },
-    {
-      "key": "hero.e_07.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
-    },
-    {
-      "key": "hero.e_08.name",
-      "text": "Rhea the Valkyrie"
-    },
-    {
-      "key": "hero.e_08.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
-    },
-    {
-      "key": "hero.e_09.name",
-      "text": "Taro the Ronin"
-    },
-    {
-      "key": "hero.e_09.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
-    },
-    {
-      "key": "hero.e_10.name",
-      "text": "Zephyr the Windwalker"
-    },
-    {
-      "key": "hero.e_10.desc",
-      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+      "text": "A burning shield that punishes whoever strikes it."
     },
     {
       "key": "hero.l_01.name",
@@ -368,7 +120,7 @@
     },
     {
       "key": "hero.l_01.desc",
-      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+      "text": "A legendary blade of dawn. Built around crits and speed."
     },
     {
       "key": "hero.l_02.name",
@@ -376,7 +128,7 @@
     },
     {
       "key": "hero.l_02.desc",
-      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+      "text": "Wears dragon scale and fears nothing. Built around DEF."
     },
     {
       "key": "hero.l_03.name",
@@ -384,7 +136,7 @@
     },
     {
       "key": "hero.l_03.desc",
-      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+      "text": "Channels starlight through living wood. Built around skill damage."
     },
     {
       "key": "hero.l_04.name",
@@ -392,23 +144,7 @@
     },
     {
       "key": "hero.l_04.desc",
-      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
-    },
-    {
-      "key": "hero.l_05.name",
-      "text": "Dravik the Bloodlord"
-    },
-    {
-      "key": "hero.l_05.desc",
-      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
-    },
-    {
-      "key": "hero.l_06.name",
-      "text": "Solenne the Lightbringer"
-    },
-    {
-      "key": "hero.l_06.desc",
-      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+      "text": "Sees the next blow coming and heals before it lands."
     },
     {
       "key": "hero.m_01.name",
@@ -416,7 +152,7 @@
     },
     {
       "key": "hero.m_01.desc",
-      "text": "Placeholder Mythic hero. Passive +160% DPS at level 1."
+      "text": "Bends time so the party acts first and acts more."
     },
     {
       "key": "hero.m_02.name",
@@ -424,15 +160,7 @@
     },
     {
       "key": "hero.m_02.desc",
-      "text": "Placeholder Mythic hero. Passive +160% DPS at level 1."
-    },
-    {
-      "key": "hero.m_03.name",
-      "text": "Ragnor the World-Ender"
-    },
-    {
-      "key": "hero.m_03.desc",
-      "text": "Placeholder Mythic hero. Passive +160% DPS at level 1."
+      "text": "Tears open the void. Devastating, if she survives."
     },
     {
       "key": "hero_tier.c.name",
@@ -503,26 +231,6 @@
       "text": "Standard Hero Banner"
     },
     {
-      "key": "class.base.name",
-      "text": "Recruit"
-    },
-    {
-      "key": "class.class_1.name",
-      "text": "Squire"
-    },
-    {
-      "key": "class.class_2.name",
-      "text": "Knight"
-    },
-    {
-      "key": "class.class_3.name",
-      "text": "Champion"
-    },
-    {
-      "key": "class.class_4.name",
-      "text": "Paragon"
-    },
-    {
       "key": "quest.daily_login.name",
       "text": "Log in"
     },
@@ -536,7 +244,79 @@
     },
     {
       "key": "quest.daily_pulls.name",
-      "text": "Recruit 3 heroes"
+      "text": "Recruit 3 companions"
+    },
+    {
+      "key": "role.tank.name",
+      "text": "Tank"
+    },
+    {
+      "key": "role.tank.desc",
+      "text": "Soaks damage and protects the party."
+    },
+    {
+      "key": "role.striker.name",
+      "text": "Striker"
+    },
+    {
+      "key": "role.striker.desc",
+      "text": "Single-target burst damage."
+    },
+    {
+      "key": "role.caster.name",
+      "text": "Caster"
+    },
+    {
+      "key": "role.caster.desc",
+      "text": "Area and skill damage."
+    },
+    {
+      "key": "role.healer.name",
+      "text": "Healer"
+    },
+    {
+      "key": "role.healer.desc",
+      "text": "Heals and keeps the party standing."
+    },
+    {
+      "key": "role.support.name",
+      "text": "Support"
+    },
+    {
+      "key": "role.support.desc",
+      "text": "Buffs allies and weakens enemies."
+    },
+    {
+      "key": "element.fire.name",
+      "text": "Fire"
+    },
+    {
+      "key": "element.water.name",
+      "text": "Water"
+    },
+    {
+      "key": "element.nature.name",
+      "text": "Nature"
+    },
+    {
+      "key": "element.light.name",
+      "text": "Light"
+    },
+    {
+      "key": "element.dark.name",
+      "text": "Dark"
+    },
+    {
+      "key": "promotion.p1.name",
+      "text": "Promoted"
+    },
+    {
+      "key": "promotion.p2.name",
+      "text": "Elite"
+    },
+    {
+      "key": "promotion.p3.name",
+      "text": "Ascended"
     }
   ]
 }

@@ -40,6 +40,8 @@ namespace IdleRng.Sim
         OfflineCatchUp,
         /// <summary>EnsureDay(nowServerSec A) called directly.</summary>
         EnsureDay,
+        /// <summary>Promote(hero A = index in ContentDb.HeroList) (specs/11 section 6).</summary>
+        Promote,
     }
 
     /// <summary>Sub-command of <see cref="CommandKind.Debug"/>, in the low byte of A.</summary>

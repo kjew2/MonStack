@@ -17,14 +17,15 @@ P0 feature list:
 1. Auto-combat stage push with boss walls every 10 stages.
 2. Gold sink: ATK stat levels.
 3. Gear drops (main stat only) into 6 slots, with enhancement.
-4. Hero (character) gacha with pity, 10-pull guarantee, dupe-to-level, a 6-hero party.
-5. Class advance at fixed stage milestones.
+4. Companion (hero) gacha with pity, 10-pull guarantee, dupe-to-level, a 4-companion party. Companions have a stat sheet, role and element (`specs/11`).
+5. Per-companion promotion at stage milestones (replaces class advance; `specs/11` section 6).
 6. Idle earnings in-app, offline catch-up with cap, server-clock seam (local fake clock in prototype).
 7. Versioned local save with migrations.
 8. Headless bot harness that plays N days in seconds and emits the tuning table.
 9. Ugly-UI Unity client exposing all of the above.
 
-P1: gear substats and reroll/lock, pet banner, daily dungeon tickets, shard shop, rate-up banners, accounts, cloud save, receipt validation and IAP, rewarded ads, certified progress (server-verified), stage leaderboard, asynchronous PvP. The trust model that keeps these fair is `specs/10`; P0 builds only its cheap shapes (command log, state hash, schema fields).
+Gameplay overhaul in progress (#60, `specs/11`): 4v1 party battle for bosses, per-companion affix gear, daily dungeons with uniques. `specs/11` section 2 says which phase is live.
+P1: pet banner, shard shop, rate-up banners, accounts, cloud save, receipt validation and IAP, rewarded ads, certified progress (server-verified), stage leaderboard, asynchronous PvP. The trust model that keeps these fair is `specs/10`; P0 builds only its cheap shapes (command log, state hash, schema fields).
 P2: rebirth/prestige, guilds, real-time PvP.
 
 ## 2. Canonical constants
@@ -36,7 +37,7 @@ All constants below are validated by `tools/gacha_model.py` and `tools/power_cur
 | Name | Value | Notes |
 |---|---|---|
 | `TICK_HZ` | 10 | Fixed simulation tick. 1 tick = 100 ms. |
-| `BASE_ATK` | 10 | Player ATK at stat level 0, no multipliers. **POC content uses 20** (bot-harness tuning, specs/09: compensates the sim's discrete-hit kill time on day 1; Python model still uses 10). |
+| `SPD_REF` | 100 | Companion SPD that gives one hit per `ATTACK_INTERVAL_TICKS` in farming (`specs/11` section 7). Replaces `BASE_ATK`: there is no player character, so party DPS comes from companion stats. |
 | `ATTACK_INTERVAL_TICKS` | 10 | One hit per second. Sets the kill-time floor. |
 | `HP0`, `HP_G` | 20, 1.07 | Enemy HP at stage `s` = `HP0 * HP_G^s`. |
 | `KILLS_PER_STAGE` | 10 | Kills to advance a normal stage. |
@@ -98,19 +99,23 @@ All constants below are validated by `tools/gacha_model.py` and `tools/power_cur
 | `PITY_HARD` | 80 | Forced L+. Effectively never reached (P99 = 62). |
 | `M_SHARE_OF_LPLUS` | 1/6 | Given an L+ result, 1/6 are Mythic. |
 | 10-pull guarantee | at least one E+ | If the first 9 are below Epic, slot 10 rolls from the E+ sub-distribution. |
-| `HERO_SLOTS` | 6 | Party size. Heroes in the party contribute; the rest sit in the roster. |
-| Base DPS% by tier | C 10 / R 20 / E 40 / L 80 / M 160 | At level 1. |
+| `HERO_SLOTS` | 4 | Party size. Companions in the party contribute; the rest sit in the roster. |
+| Companion stats | per companion | HP, ATK, DEF, SPD, crit rate, crit damage, role, element in `heroes.csv` (`specs/11` sections 3-4). Placeholders. |
 | `HERO_LVL_CUM` | 1,3,6,10,16,25,40,64,100,160 | Total copies needed for level 1..10. |
-| `HERO_LVL_BONUS` | 0.20 | Each level past 1 adds 20% of the base DPS%. Level 10 = 2.8x base. |
-| Pool size | C 20 / R 15 / E 10 / L 6 / M 3 | 54 heroes. Prototype uses placeholder icons. |
+| `HERO_LVL_BONUS` | 0.20 | Each level past 1 adds 20% of the companion's base HP/ATK/DEF. Level 10 = 2.8x base. |
+| Pool size | C 5 / R 5 / E 4 / L 4 / M 2 | 20 companions (`specs/11` section 4.3). Prototype uses placeholder icons. |
 | Shard value of excess copy (P1) | C 1 / R 5 / E 25 / L 100 / M 500 | |
 
-### 2.5 Class
+### 2.5 Promotion (replaces class advance)
 
 | Name | Value |
 |---|---|
-| `CLASS_STAGES` | 50, 150, 300, 500 |
-| `CLASS_MULT` | 1.5 per advance (so x5.06 after all four) |
+| Promotion unlock stages | 50, 150, 300 |
+| Promotion mult | 1.5 per promotion on that companion's HP/ATK/DEF |
+| Max promotions | C 0 / R 1 / E 2 / L 3 / M 3 |
+| Promotion cost | `300 * GOLD(unlock_stage)` gold (placeholder; dungeon materials in a later phase) |
+
+Details in `specs/11` section 6.
 
 ### 2.6 Session model and targets
 
@@ -127,12 +132,12 @@ Assumed F2P player: 2 h active/day, offline the rest. Targets the bot must land 
 ## 3. The power formula
 
 ```
-DPS(s) = BASE_ATK
+DPS(s) = sum_{party} FarmDps(companion)          # party layer: stats x level x promotion x crit x speed (specs/11 section 7)
        * (1 + STAT_PER_LVL * statLevel)          # gold layer, log-growth in gold
        * prod_{slot} (1 + gearPct_slot * (1 + ENH_PER_LVL * enh_slot))   # gear layer, ~1.045^stage
-       * (1 + sum_{equipped} heroPct / 100)      # hero layer, stepwise via gacha
-       * CLASS_MULT ^ classAdvances                # milestone layer
 ```
+
+The overhaul (`specs/11`) replaced the fixed `BASE_ATK`, the hero DPS% sum and the class multiplier with the party term. The paragraph below describes the pre-overhaul tuning and is kept as history until balance resumes.
 
 Kill time = `max(ATTACK_INTERVAL, ceil(HP / hitDamage) * ATTACK_INTERVAL) + SPAWN_DELAY`.
 Wall condition (boss stage): `BOSS_HP_MULT * HP(s) / DPS(s) > 20 s`, i.e. the player walls when a normal mob takes more than 2 s.
@@ -149,8 +154,9 @@ Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, 
 | **Layer** | One multiplicative term in `DPS(s)`. |
 | **Sink** | Anything that consumes a currency. |
 | **Pull** | One gacha result. A 10-pull is 10 pulls with a batch guarantee. |
-| **Hero** | A named character pulled from the gacha. Has a tier, a portrait and a level from dupes. |
-| **Party** | The `HERO_SLOTS` heroes currently contributing to DPS. "Equip" in code means "put in the party". |
+| **Hero / Companion** | A named character pulled from the gacha. Has a tier, a stat sheet, a role, an element, a level from dupes and a promotion count. "Companion" is the player-facing word; code says hero. |
+| **Party** | The `HERO_SLOTS` companions currently contributing to DPS. "Equip" in code means "put in the party". |
+| **Promotion** | A per-companion upgrade unlocked at a stage milestone; multiplies HP/ATK/DEF and adds one kit skill. |
 | **Pity counter** | Pulls since the last L+ result on that banner. |
 | **Catch-up** | Computing progress for elapsed wall-clock time the sim did not tick through. |
 | **Server time** | The only clock the economy trusts. Prototype: `IClock` with a fake implementation. |
@@ -182,6 +188,7 @@ idle-rng-game/
     08-backend-seams.md
     09-test-harness-and-bots.md
     10-online-competitive.md
+    11-party-and-builds.md      overhaul (#60): party, companions, promotion, later battle/gear
   tools/
     gacha_model.py               exact pity math
     power_curve_model.py         greedy-bot 30-day model
@@ -214,3 +221,4 @@ These were open or contradictory across the subagent-written specs and are now s
 8. **Constant ownership.** Names introduced by `04`/`05`/`03` are now rows in section 2. Until `specs/05` section 12 is done (Python models reading the JSON), the Python tools remain the place to change a number first.
 9. **Hero gacha replaces skill gacha.** The gacha pulls heroes (characters) instead of skills. Every number is unchanged: rates, pity, pool sizes, base DPS% and dupe levels carry over one for one, so `tools/` output and the bot targets are identical. In P0 a hero is a passive party bonus plus a cosmetic sprite on the combat screen (`specs/01` section 7.1); hero roles and active abilities are P1 ideas, not commitments. Identifiers were renamed (`gacha_skill` -> `gacha_hero`, `SKILL_*` -> `HERO_*`, `SkillId` -> `HeroId`, and so on).
 10. **Online and competitive play is P1, built on server verification, not a server sim.** Leaderboards, async PvP and IAP move from P2/unscheduled to P1. The engine stays on the device; the server replays segments of the command log to certify progress, owns time, gacha, the gem ledger and receipts, and issues every ranked profile's stream seeds at genesis (`specs/10` sections 2 to 4). A profile created offline is permanently unranked.
+11. **Party and builds overhaul (#60).** No player character: the party is 4 companions with their own stat sheets, roles and elements; class advance became per-companion promotion; the pool shrank to 20 companions. Built in phases, numbers are placeholders until the systems are final. `specs/11` is the source of truth for the overhaul and wins over older sections that describe heroes as passive DPS% bonuses.

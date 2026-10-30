@@ -52,7 +52,6 @@ namespace IdleRng.Sim
 
             var p = s.Progression;
             w.I32(p.StatLevel);
-            w.I32(p.ClassAdvances);
             w.I32(p.HighestFirstClearBossStage);
             w.I64(p.ChestTimerStart);
             w.Bool(p.TutorialGranted);
@@ -94,6 +93,9 @@ namespace IdleRng.Sim
             foreach (var k in copies) { w.Str(k); w.I32(h.Copies[k]); }
             if (h.Equipped == null) w.I32(-1); else { w.I32(h.Equipped.Length); foreach (var e in h.Equipped) w.Str(e); }
             w.Bool(h.AutoEquipBest);
+            var promos = SortedKeys(h.Promotions);
+            w.I32(promos.Count);
+            foreach (var k in promos) { w.Str(k); w.I32(h.Promotions[k]); }
 
             w.I32(s.HeroBanner.PityCounter);
             w.I64(s.HeroBanner.TotalPulls);

@@ -53,12 +53,12 @@ The tabs are:
 | **Combat** | Wall card with "need ~N.Nx DPS", event feed, idle chest, lifetime stats |
 | **Stats** | Buy x1 / x10 / Max ATK levels |
 | **Gear** | 6 slots, selected detail, Enhance (and "enhance weakest") |
-| **Heroes** | Party of 6 (tap a slot to place the selected hero, or to unequip it), 54-hero inventory, auto-equip |
+| **Heroes** | Party of 4 (tap a slot to place the selected companion, or to unequip it), 20-companion inventory with role, element and stats, Promote, auto-equip (`specs/11`) |
 | **Gacha** | Pity bar, pull x1 / x10, result cards, rates with pity-consolidated L+/M |
-| **Class** | Automatic advances at stages 50, 150, 300 and 500, with a progress bar |
+| **Promotion** | Promotion milestones at stages 50, 150 and 300 (each unlocks the next per-companion promotion), with a progress bar |
 | **Debug** | Editor, Development builds or `IDLERNG_CHEATS` only; compiled out of Release builds. Grant gold, gems or heroes; set stage; "Run N h" (real sim ticks); "Clock +N h" (offline earnings popup); x1/x5/x20 speed; save, validate, reset |
 
-Two popups appear in a modal: offline earnings ("Welcome back") and class advance. Toasts cover gear drops, rejects,
+Two popups appear in a modal: offline earnings ("Welcome back") and companion promoted. Toasts cover gear drops, rejects,
 quests and the day rollover.
 
 ## Layout

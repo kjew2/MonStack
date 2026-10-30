@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using IdleRng.Runtime.Save;
@@ -45,7 +46,59 @@ namespace IdleRng.Runtime.Tests
             Assert.That(r.State.SchemaVersion, Is.EqualTo(SaveSchema.Current));
             Assert.That(TestContent.Dump(r.State), Is.EqualTo(expected));
             Assert.That(r.State.Rng.ProfileSeed, Is.EqualTo(0xFEDCBA9876543210UL));
-            Assert.That(analytics.Count("migration_applied"), Is.EqualTo(1));
+            Assert.That(analytics.Count("migration_applied"), Is.EqualTo(SaveSchema.Current - 0));   // one per step from v0
+        }
+
+        /// <summary>A hand-built v1 body: content 1.0 hero ids, a 6-slot party and two class advances.</summary>
+        static JObject FakeV1()
+        {
+            var sim = TestContent.PlayedSim(seed: 99);
+            var state = JObject.Parse(JsonConvert.SerializeObject(sim.State, new StringEnumConverter()));
+            state["SchemaVersion"] = 1;
+            state["ContentVersion"] = "1.0";
+            var heroes = (JObject)state["Heroes"];
+            heroes.Remove("Promotions");
+            heroes["Copies"] = new JObject { ["hero_c_01"] = 3, ["hero_c_17"] = 4, ["hero_r_02"] = 2, ["hero_l_06"] = 1, ["hero_e_03"] = 1 };
+            heroes["Equipped"] = new JArray("hero_l_06", "hero_r_02", null, "hero_c_17", "hero_e_03", "hero_c_01");
+            ((JObject)state["Progression"])["ClassAdvances"] = 2;
+            state["Currencies"]["Shards"] = 10;
+            return new JObject { ["SchemaVersion"] = 1, ["Meta"] = new JObject { ["LastSavedAtServerSec"] = 0 }, ["State"] = state };
+        }
+
+        [Test]
+        public void V1ToV2_RemovedHeroesBecomeShards_PartyCutToFour_ClassBecomesPromotions()
+        {
+            var v2 = SaveMigrations.Migrate(1, FakeV1());
+            var st = (JObject)v2["State"];
+            Assert.That((int)v2["SchemaVersion"], Is.EqualTo(2));
+            Assert.That((string)st["ContentVersion"], Is.EqualTo("2.0"));
+            var copies = (JObject)st["Heroes"]["Copies"];
+            Assert.That(copies.Properties().Select(p => p.Name), Is.EquivalentTo(new[] { "hero_c_01", "hero_r_02", "hero_e_03" }));
+            Assert.That((long)st["Currencies"]["Shards"], Is.EqualTo(10 + 4 * 1 + 1 * 100));
+            Assert.That(st["Heroes"]["Equipped"].Select(t => (string)t), Is.EqualTo(new[] { "hero_r_02", "hero_e_03", "hero_c_01", null }));
+            var promos = (JObject)st["Heroes"]["Promotions"];
+            Assert.That((int)promos["hero_r_02"], Is.EqualTo(1));   // capped at Rare's 1
+            Assert.That((int)promos["hero_e_03"], Is.EqualTo(2));
+            Assert.That(promos["hero_c_01"], Is.Null);               // Common cannot promote
+            Assert.That(st["Progression"]["ClassAdvances"], Is.Null);
+
+            // and it materialises into a valid sim
+            var state = st.ToObject<IdleRng.Sim.State.GameState>(JsonSerializer.Create(new JsonSerializerSettings { Converters = { new StringEnumConverter() } }));
+            var sim = new IdleRng.Sim.Simulation(TestContent.Db, state);
+            sim.Validate();
+            Assert.That(sim.Query.PromoMult, Is.GreaterThan(1.0));
+        }
+
+        [Test]
+        public void V1ToV2_NothingKept_GrantsTheStarter()
+        {
+            var v1 = FakeV1();
+            var heroes = (JObject)v1["State"]["Heroes"];
+            heroes["Copies"] = new JObject { ["hero_c_17"] = 1 };
+            heroes["Equipped"] = new JArray("hero_c_17", null, null, null, null, null);
+            var st = SaveMigrations.Migrate(1, v1)["State"];
+            Assert.That((int)st["Heroes"]["Copies"]["hero_c_01"], Is.EqualTo(1));
+            Assert.That(st["Heroes"]["Equipped"].Select(t => (string)t), Is.EqualTo(new[] { "hero_c_01", null, null, null }));
         }
 
         [Test]
@@ -54,7 +107,7 @@ namespace IdleRng.Runtime.Tests
             var (file, _) = FakeV0(lastSaved: 42);
             var (v, body) = SaveSerializer.Decode(file);
             Assert.That(v, Is.EqualTo(0));
-            var v1 = SaveMigrations.Migrate(v, body);
+            var v1 = SaveMigrations.Migrate(v, body, SaveMigrations.Steps.Take(1).ToList(), 0, 1);   // just the v0 -> v1 step
             Assert.That((int)v1["SchemaVersion"], Is.EqualTo(1));
             Assert.That((long)v1["Meta"]["LastSavedAtServerSec"], Is.EqualTo(42));
             Assert.That((string)v1["State"]["Rng"]["ProfileSeed"], Is.EqualTo("fedcba9876543210"));

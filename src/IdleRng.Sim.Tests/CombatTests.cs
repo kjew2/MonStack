@@ -28,7 +28,9 @@ namespace IdleRng.Sim.Tests
             // Stage 1: HP 21.4; ticks per kill = hits * ATTACK_INTERVAL_TICKS + SPAWN_DELAY_TICKS (derived from content).
             var k = db.Constants;
             int hits = sim.Query.HitsToKill(db.EnemyHp(1));
-            Assert.That(hits, Is.EqualTo((int)System.Math.Ceiling(db.EnemyHp(1) / k.BaseAtk)));
+            // A new profile's party is the starter alone: Dps = its FarmDps (specs/11 sections 4.5, 7).
+            Assert.That(sim.Query.Dps, Is.EqualTo(db.FarmDps(db.Heroes[db.StarterHeroId], 1, 0)).Within(1e-12));
+            Assert.That(hits, Is.EqualTo((int)System.Math.Ceiling(db.EnemyHp(1) / sim.Query.Dps)));
             long perKill = hits * k.AttackIntervalTicks + k.SpawnDelayTicks;
             sim.Advance(10 * perKill);
             var ev = box.Drain();
@@ -57,7 +59,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(sim.State.Lifetime.FirstWallStage, Is.EqualTo(S));
 
             double gold = sim.State.Currencies.Gold;
-            sim.Advance(500);
+            sim.Advance(3000);   // long enough for at least one normal kill at the starter's DPS
             Assert.That(sim.State.Stage.KillsInStage, Is.EqualTo(9));
             Assert.That(sim.State.Currencies.Gold, Is.GreaterThan(gold));
 
@@ -78,16 +80,16 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void ClassAdvance_OnReachingStage50()
+        public void ReachingAPromotionStage_DoesNotChangeDps()
         {
+            // Class advance is gone (specs/11 section 6): arriving at stage 50 unlocks promotion but grants nothing by itself.
             var sim = TestContent.NewSim();
             sim.Debug.SetStatLevel(100000);
             sim.Debug.SetStage(49);
             double dps = sim.Query.Dps;
             sim.Advance(200);
             Assert.That(sim.State.Stage.Stage, Is.GreaterThanOrEqualTo(50));
-            Assert.That(sim.State.Progression.ClassAdvances, Is.EqualTo(1));
-            Assert.That(sim.Query.Dps, Is.EqualTo(dps * 1.5).Within(1e-9).Percent);
+            Assert.That(sim.Query.Dps, Is.EqualTo(dps).Within(1e-12));
         }
 
         [Test]

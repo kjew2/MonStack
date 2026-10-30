@@ -102,6 +102,8 @@ Draws are consumed even when their outcome is predetermined (e.g. `u1` at hard p
 
 ## 7. Dupe economy
 
+> Overhaul (#60): dupes still level a companion, but a level now scales its HP/ATK/DEF instead of a DPS%, and the pool is 20 companions (C 5 / R 5 / E 4 / L 4 / M 2). See `specs/11` sections 3-4. Rates, pity and the guarantee are unchanged.
+
 A hero has `copies` (lifetime) and derived `level`:
 
 ```
@@ -117,6 +119,8 @@ Copies past 160 convert to shards at pull time (P1 shard shop: buy a chosen E fo
 Party: `HERO_SLOTS = 6`. The client offers "auto-equip best six" (sort by `heroPct`). `heroMult = 1 + sum(party heroPct) / 100`.
 
 ### 7.1 What a hero is in P0
+
+> Superseded by `specs/11` section 4: companions have a stat sheet, a role and an element.
 
 A hero is a content row (`specs/05` section 5.7) with a tier, a name, a portrait and a base DPS%. In P0 its only mechanical effect is the passive `heroPct` while it is in the party. On the combat screen the six party members stand behind the player as portraits and play an attack flash on each player hit (`specs/07` section 11.1). That animation is cosmetic: their damage is already inside `heroMult`, so the sim, the bot and the power curve in `specs/02` do not change.
 

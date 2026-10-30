@@ -77,6 +77,7 @@ namespace IdleRng.Sim
                     case CommandKind.TutorialGrants: ApplyTutorialGrants(); break;
                     case CommandKind.OfflineCatchUp: ApplyOfflineCatchUp(r.A); break;
                     case CommandKind.EnsureDay: EnsureDay(r.A); break;
+                    case CommandKind.Promote: Promote(HeroIdAt(r.A)); break;
                     case CommandKind.Debug: ApplyDebug(r); break;
                     default: throw new ReplayException($"record {r}: kind {r.Kind} cannot be replayed locally");
                 }

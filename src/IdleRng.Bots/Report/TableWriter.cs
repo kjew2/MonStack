@@ -19,10 +19,10 @@ namespace IdleRng.Bots.Report
         const string SharesFormat = " {0,6:0.000} {1,6:0.000} {2,6:0.000} {3,6:0.000}";
 
         static readonly string[] Columns =
-            { "day", "stage", "dps", "statLvl", "statMult", "gearMult", "heroMult", "classMult", "pulls", "L+", "firstWall", "longestWallH" };
+            { "day", "stage", "dps", "statLvl", "statMult", "gearMult", "heroMult", "promoMult", "pulls", "L+", "firstWall", "longestWallH" };
 
         static readonly string[] CsvColumns =
-            { "day", "stage", "dps", "statLvl", "statMult", "gearMult", "heroMult", "classMult", "pulls", "lPlus", "firstWallStage", "longestWallH" };
+            { "day", "stage", "dps", "statLvl", "statMult", "gearMult", "heroMult", "promoMult", "pulls", "lPlus", "firstWallStage", "longestWallH" };
 
         public static string ShortHash(string hash) => string.IsNullOrEmpty(hash) ? "-" : hash.Substring(0, Math.Min(8, hash.Length));
 
@@ -32,7 +32,7 @@ namespace IdleRng.Bots.Report
             string.Format(Inv, RowFormat.Replace(":0.00e+00", "").Replace(":0.00", ""), Columns.Cast<object>().ToArray());
 
         public static string FormatRow(DayRow r) =>
-            string.Format(Inv, RowFormat, r.Day, r.Stage, r.Dps, r.StatLvl, r.StatMult, r.GearMult, r.HeroMult, r.ClassMult,
+            string.Format(Inv, RowFormat, r.Day, r.Stage, r.Dps, r.StatLvl, r.StatMult, r.GearMult, r.HeroMult, r.PromoMult,
                           r.Pulls, r.LPlus, r.FirstWallStage == 0 ? "-" : r.FirstWallStage.ToString(Inv), r.LongestWallHours);
 
         public static IEnumerable<DayRow> SelectRows(RunResult run, bool allDays) =>
@@ -45,15 +45,15 @@ namespace IdleRng.Bots.Report
             sb.Append(string.Format(Inv, "# bot={0} seed={1} days={2} content={3}\n", run.Bot, run.Seed, run.Days,
                                     ContentTag(run.ContentVersion, run.ContentHash)));
             sb.Append(Header());
-            if (shares) sb.Append(string.Format(Inv, " {0,6} {1,6} {2,6} {3,6}", "shStat", "shGear", "shHero", "shCls"));
+            if (shares) sb.Append(string.Format(Inv, " {0,6} {1,6} {2,6} {3,6}", "shStat", "shGear", "shHero", "shPrm"));
             sb.Append('\n');
             foreach (var r in SelectRows(run, allDays))
             {
                 sb.Append(FormatRow(r));
                 if (shares)
                 {
-                    var s = LayerShares.Of(r, run.BaseAtk);
-                    sb.Append(string.Format(Inv, SharesFormat, s.Stat, s.Gear, s.Hero, s.Class));
+                    var s = LayerShares.Of(r, run.BaseDps);
+                    sb.Append(string.Format(Inv, SharesFormat, s.Stat, s.Gear, s.Hero, s.Promo));
                 }
                 sb.Append('\n');
             }
@@ -67,7 +67,7 @@ namespace IdleRng.Bots.Report
             foreach (var r in SelectRows(run, allDays))
             {
                 sb.Append(string.Format(Inv, "{0},{1},{2:0.00e+00},{3},{4:0.00},{5:0.00e+00},{6:0.00},{7:0.00},{8},{9},{10},{11:0.00}",
-                    r.Day, r.Stage, r.Dps, r.StatLvl, r.StatMult, r.GearMult, r.HeroMult, r.ClassMult, r.Pulls, r.LPlus,
+                    r.Day, r.Stage, r.Dps, r.StatLvl, r.StatMult, r.GearMult, r.HeroMult, r.PromoMult, r.Pulls, r.LPlus,
                     r.FirstWallStage, r.LongestWallHours));
                 sb.Append('\n');
             }

@@ -1,6 +1,6 @@
 key,type,value,#notes
 TICK_HZ,int,10,1 tick = 100 ms
-BASE_ATK,double,20,POC tuning: was 10 (specs/00); compensates discrete-hit kill time (specs/09 section 14)
+SPD_REF,double,100,companion SPD for one hit per ATTACK_INTERVAL_TICKS in farming (specs/11 section 7)
 ATTACK_INTERVAL_TICKS,int,10,one hit per second
 KILLS_PER_STAGE,int,10,
 SPAWN_DELAY_TICKS,int,5,
@@ -21,7 +21,7 @@ ENH_PER_LVL,double,0.05,
 ENH_SUCCESS_FLOOR,double,0.3,
 ENH_SUCCESS_STEP,double,0.05,
 ENH_COST_GOLD_MULT,double,20,
-HERO_SLOTS,int,6,
+HERO_SLOTS,int,4,party of 4 (specs/11 section 5)
 HERO_LVL_BONUS,double,0.2,
 IDLE_CHEST_HOURS,double,4,
 IDLE_CHEST_GEMS,int,50,

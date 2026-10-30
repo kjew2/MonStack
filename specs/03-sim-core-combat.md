@@ -444,6 +444,8 @@ While `Walled`, normal mobs of stage `s` spawn, pay `Gold(s)`, roll tier-`s` dro
 
 ## 8. Economy actions
 
+> Overhaul (#60): DPS (8.4) is now `PartyDps * StatMult * GearMult` from companion stats (`specs/11` section 7); `BASE_ATK`, `HeroMult` as a DPS% sum and `ClassMult` are gone.
+
 ### 8.1 Stat levels
 
 Cost of level `n -> n+1` is `StatCost(n)`. `BuyStatLevel()` rejects with `NotEnoughGold` when `Currencies.Gold < StatCost(Stat.Level)`; otherwise it deducts, increments, marks DPS dirty and publishes `StatLeveled`. `BuyStatLevelsMax()` repeats until rejected and returns the count bought (the client's "Max" button and the greedy bot use it).
@@ -502,6 +504,8 @@ HitDamage = Dps * ATTACK_INTERVAL_TICKS / TICK_HZ
 
 ## 9. Heroes and gacha
 
+> Overhaul (#60): party size is 4 and auto-equip ranks by companion `FarmDps`; `Promote(heroId)` is a new command (`specs/11` sections 5-6). A new profile starts with the starter companion in slot 0.
+
 The pull algorithm, pity, the 10-pull guarantee, the dupe economy and the test vectors are specified in `specs/01` sections 3, 4, 7, 8 and 9 and are not restated. This section fixes how they attach to the sim.
 
 ```csharp
@@ -525,6 +529,8 @@ namespace IdleRng.Sim.Gacha
 - `Rarity` is the enum used for hero tiers; `specs/01`'s sketches write `Tier.M`, which maps to `Rarity.M` here. "Tier" as an `int` keeps the `specs/00` meaning (`GEAR_TIER(s)`).
 
 ## 10. Class advances
+
+> Removed by the overhaul (#60). Replaced by per-companion promotion, `specs/11` section 6. The `ClassAdvanced` event's mask bit now belongs to `CompanionPromoted`.
 
 `Class.Advances` increments in `AdvanceStage` (section 7.4). `ClassMult(k)` comes from the geometric table. Class advances never decrease in P0 (P2 prestige would reset them with the stage).
 

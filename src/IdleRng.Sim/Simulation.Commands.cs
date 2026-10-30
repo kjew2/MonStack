@@ -12,6 +12,7 @@ namespace IdleRng.Sim
     {
         None = 0, NotEnoughGold, NotEnoughGems, EmptySlot, EnhanceMaxed, HeroNotOwned, HeroAlreadyEquipped,
         NoBossToAttempt, BossAlreadyPending, StageCap, ChestNotReady, BannerDisabled, InvalidCount,
+        PromotionMaxed, PromotionLocked,
     }
 
     public enum PaidWith { None, FreeDaily, FreeBanked, Gems }
@@ -184,7 +185,7 @@ namespace IdleRng.Sim
             if (Wants(EventKinds.HeroPulled))
                 foreach (var r in results) _sink.Publish(new HeroPulled(State.Tick, r, with != PaidWith.Gems));
             QuestProgress(QuestType.DoPulls, results.Length);
-            MarkDpsDirty();   // copy gain on an equipped hero changes HeroPct
+            MarkDpsDirty();   // copy gain on an equipped hero changes its FarmDps
             if (State.Heroes.AutoEquipBest) AutoEquipInternal();
             return new PullOutcome(Reject.None, results, with, gems);
         }
@@ -222,7 +223,7 @@ namespace IdleRng.Sim
             return CommandResult.Success;
         }
 
-        /// <summary>Fill the party with the HERO_SLOTS best owned heroes (HeroPct desc, id ordinal). Turns AutoEquipBest on.</summary>
+        /// <summary>Fill the party with the HERO_SLOTS best owned heroes (FarmDps desc, id ordinal). Turns AutoEquipBest on.</summary>
         public int AutoEquipBestHeroes()
         {
             Log(CommandKind.AutoEquipBest, 1);
@@ -244,7 +245,7 @@ namespace IdleRng.Sim
         {
             var best = State.Heroes.Copies.Where(kv => kv.Value > 0 && Content.Heroes.ContainsKey(kv.Key))
                 .Select(kv => kv.Key)
-                .OrderByDescending(id => HeroPct(id))
+                .OrderByDescending(id => HeroFarmDps(id))
                 .ThenBy(id => id, StringComparer.Ordinal)
                 .Take(_k.HeroSlots)
                 .ToList();
@@ -260,6 +261,30 @@ namespace IdleRng.Sim
             }
             if (changed > 0) MarkDpsDirty();
             return changed;
+        }
+
+        // ------------------------------------------------------------ promotion (specs/11 section 6)
+
+        /// <summary>
+        /// Promote an owned companion one step. Gold cost cost_kills * GOLD(unlock_stage); needs the current stage at
+        /// or past the step's unlock_stage and the companion below its rarity's cap. Benched companions can be promoted.
+        /// </summary>
+        public CommandResult Promote(string heroId)
+        {
+            if (heroId == null || !Content.Heroes.TryGetValue(heroId, out var def)) throw new ArgumentOutOfRangeException(nameof(heroId));
+            if (Logging) Log(CommandKind.Promote, HeroIndexOf(heroId));
+            if (!State.Heroes.Copies.TryGetValue(heroId, out int c) || c <= 0) return new CommandResult(Reject.HeroNotOwned);
+            int next = PromotionsOf(heroId) + 1;
+            if (next > Content.MaxPromotions(def)) return new CommandResult(Reject.PromotionMaxed);
+            if (State.Stage.Stage < Content.Promotions[next - 1].UnlockStage) return new CommandResult(Reject.PromotionLocked);
+            double cost = Content.PromotionCost(next);
+            if (State.Currencies.Gold < cost) return new CommandResult(Reject.NotEnoughGold);
+            State.Currencies.Gold -= cost;
+            State.Heroes.Promotions[heroId] = next;
+            MarkDpsDirty();
+            if (Wants(EventKinds.CompanionPromoted)) _sink.Publish(new CompanionPromoted(State.Tick, heroId, next, cost));
+            if (State.Heroes.AutoEquipBest) AutoEquipInternal();
+            return CommandResult.Success;
         }
 
         void CheckHeroSlot(int slot)
@@ -342,8 +367,10 @@ namespace IdleRng.Sim
             Check(s.Stage.KillsInStage >= 0 && s.Stage.KillsInStage < _k.KillsPerStage, "kills in stage range");
             Check(s.Stage.Boss == BossPhase.None || (_k.IsBossStage(s.Stage.Stage) && s.Stage.KillsInStage == _k.KillsPerStage - 1),
                   "boss phase only on boss stage at KILLS_PER_STAGE-1");
-            int expectedAdv = Content.ClassAdvances.Count(c => c.Stage <= s.Stage.Stage);
-            Check(s.Progression.ClassAdvances == expectedAdv, "class advances match stage");
+            foreach (var kv in s.Heroes.Promotions)
+                Check(kv.Value >= 0 && Content.Heroes.TryGetValue(kv.Key, out var hd) && kv.Value <= Content.MaxPromotions(hd)
+                      && (kv.Value == 0 || (s.Heroes.Copies.TryGetValue(kv.Key, out int pc) && pc > 0)),
+                      "promotions within rarity cap and owned");
             Check(s.Gear.Slots.Length == Content.GearSlotCount, "gear slot count");
             foreach (var p in s.Gear.Slots)
                 if (p != null) Check(p.Enhance >= 0 && p.Enhance <= _k.EnhMax && p.Tier % _k.TierWidth == 0, "gear piece valid");

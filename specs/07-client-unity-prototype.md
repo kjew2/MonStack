@@ -606,6 +606,8 @@ Lifetime line reads `State.Lifetime`. Nothing on this tab is interactive except 
 
 ### 11.5 Heroes tab
 
+> Overhaul (#60): the party is 4 slots, each companion shows role, element, stats and a Promote button (`specs/11` sections 4-6).
+
 ```
 +--------------------------------------------------+
 | Heroes x3.40   equipped +240%     [ Auto-equip ] |
@@ -687,6 +689,8 @@ consolidatedL     = consolidatedLplus - consolidatedM
 With the canonical table this yields 3.6567 percent and 0.6094 percent and `E = 27.35`, which the EditMode test in section 14 asserts against `specs/01` section 3.2 to two decimals. Base rates come from `content.HeroBanner.BaseRates`; the ramp rows print `Query.PityRate(n)` for `n` in {50, 55, 60, 65, 70, 75, 80}. Text is composed once; the screen allocates nothing after boot.
 
 ### 11.7 Class tab
+
+> Removed by the overhaul (#60): promotion lives on the Heroes tab (`specs/11` section 6).
 
 ```
 +--------------------------------------------------+

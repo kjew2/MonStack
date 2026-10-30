@@ -17,14 +17,15 @@ namespace IdleRng.Sim.Content
 
         static readonly string[] TableNames =
         {
-            "banners", "boss_rules", "class_advances", "constants", "curves", "daily_quests", "gear_rarity",
-            "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "tutorial_grants",
+            "banners", "boss_rules", "constants", "curves", "daily_quests", "elements", "gear_rarity",
+            "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles",
+            "tutorial_grants",
         };
 
         // Curves are precomputed to this many steps (covers STAGE_CAP); beyond it Eval keeps multiplying.
         const int CurvePrecompute = 10000;
 
-        double[] _classMult;     // [k] = product of the first k advance multipliers
+        double[] _promoMult;     // [k] = product of the first k promotion multipliers
         CurveDef _gearSlot;      // a = 1, g = GEAR_SLOT_G
 
         ContentDb() { }
@@ -59,7 +60,18 @@ namespace IdleRng.Sim.Content
         /// <summary>The P0 hero banner (first enabled banner of kind Hero).</summary>
         public BannerDef HeroBanner { get; private set; }
 
-        public IReadOnlyList<ClassAdvanceDef> ClassAdvances { get; private set; }
+        /// <summary>Promotion steps; [0] is promotion 1 (specs/11 section 6).</summary>
+        public IReadOnlyList<PromotionDef> Promotions { get; private set; }
+
+        public IReadOnlyDictionary<string, RoleDef> Roles { get; private set; }
+        public IReadOnlyDictionary<string, ElementDef> Elements { get; private set; }
+
+        /// <summary>Roles and elements in sort_order.</summary>
+        public IReadOnlyList<RoleDef> RoleList { get; private set; }
+        public IReadOnlyList<ElementDef> ElementList { get; private set; }
+
+        /// <summary>Id of the starter companion (specs/11 section 4.5).</summary>
+        public string StarterHeroId { get; private set; }
         public IReadOnlyList<DailyQuestDef> DailyQuests { get; private set; }
         public IReadOnlyList<TutorialGrantDef> TutorialGrants { get; private set; }
         public IReadOnlyList<ProgressTargetDef> ProgressTargets { get; private set; }
@@ -76,8 +88,19 @@ namespace IdleRng.Sim.Content
         /// <summary>GEAR_SLOT_G^tier - 1, before rarity. A fraction (0.5 = +50%).</summary>
         public double GearSlotPct(int tier) => _gearSlot.Eval(tier) - 1.0;
 
-        public double ClassMult(int advances) =>
-            _classMult[Math.Max(0, Math.Min(advances, _classMult.Length - 1))];
+        /// <summary>Product of the first <paramref name="promotions"/> promotion multipliers (1 at 0).</summary>
+        public double PromoMult(int promotions) =>
+            _promoMult[Math.Max(0, Math.Min(promotions, _promoMult.Length - 1))];
+
+        /// <summary>Promotion cap for a companion's rarity.</summary>
+        public int MaxPromotions(HeroDef hero) => HeroTiers[(int)hero.Tier].MaxPromotions;
+
+        /// <summary>Gold cost of promotion step <paramref name="index"/> (1-based): cost_kills * GOLD(unlock_stage).</summary>
+        public double PromotionCost(int index)
+        {
+            var p = Promotions[index - 1];
+            return p.CostKills * GoldPerKill(p.UnlockStage);
+        }
 
         public BossRuleDef BossRuleFor(int stage)
         {
@@ -96,9 +119,16 @@ namespace IdleRng.Sim.Content
             return lvl;
         }
 
-        /// <summary>Percentage points (40 = +40%).</summary>
-        public double HeroPct(HeroDef hero, int level) =>
-            level <= 0 ? 0.0 : hero.BasePct * (1.0 + Constants.HeroLvlBonus * (level - 1));
+        /// <summary>HP/ATK/DEF scale from dupes: 1 + HERO_LVL_BONUS * (level - 1); 0 when not owned (specs/11 section 3.1).</summary>
+        public double LevelMult(int level) => level <= 0 ? 0.0 : 1.0 + Constants.HeroLvlBonus * (level - 1);
+
+        /// <summary>Expected crit multiplier: 1 + clamp(rate, 0, 1) * (critDmg - 1) (specs/11 section 7).</summary>
+        public static double CritFactor(HeroDef hero) =>
+            1.0 + Math.Max(0.0, Math.Min(1.0, hero.CritRate)) * (hero.CritDmg - 1.0);
+
+        /// <summary>A companion's farming DPS at a level and promotion count (specs/11 section 7). 0 when level is 0.</summary>
+        public double FarmDps(HeroDef hero, int level, int promotions) =>
+            hero.Atk * LevelMult(level) * PromoMult(promotions) * CritFactor(hero) * hero.Spd / Constants.SpdRef;
 
         public string Text(string key) => Strings.TryGetValue(key, out var s) ? s : key;
 
@@ -203,7 +233,7 @@ namespace IdleRng.Sim.Content
             int I(string k) { if (kv.TryGetValue(k, out var r)) return r.Int("value"); errors.Add(new ContentError("E040", $"constants[{k}]", "required constant missing")); return 0; }
             Constants = new Constants
             {
-                TickHz = I("TICK_HZ"), BaseAtk = D("BASE_ATK"), AttackIntervalTicks = I("ATTACK_INTERVAL_TICKS"),
+                TickHz = I("TICK_HZ"), SpdRef = D("SPD_REF"), AttackIntervalTicks = I("ATTACK_INTERVAL_TICKS"),
                 KillsPerStage = I("KILLS_PER_STAGE"), SpawnDelayTicks = I("SPAWN_DELAY_TICKS"), BossEvery = I("BOSS_EVERY"),
                 StageCap = I("STAGE_CAP"), StatPerLvl = D("STAT_PER_LVL"), GemsPerDayF2p = I("GEMS_PER_DAY_F2P"),
                 OfflineRate = D("OFFLINE_RATE"), OfflineCapH = D("OFFLINE_CAP_H"), OfflineMinGapS = I("OFFLINE_MIN_GAP_S"),
@@ -258,14 +288,16 @@ namespace IdleRng.Sim.Content
             HeroTiers = t["hero_tiers"].Select(r => new HeroTierDef
             {
                 Tier = ParseRarity(r.Str("tier")), DisplayColor = r.Str("display_color"), NameKey = r.Str("name_key"),
-                ShardValue = r.Int("shard_value"),
+                ShardValue = r.Int("shard_value"), MaxPromotions = r.Int("max_promotions"),
             }).OrderBy(h => h.Tier).ToList().AsReadOnly();
             CheckFiveTiers(HeroTiers.Select(h => h.Tier), "hero_tiers", errors);
 
             var heroList = t["heroes"].Select(r => new HeroDef
             {
                 Id = r.Str("id"), Tier = ParseRarity(r.Str("tier")), PoolId = r.Str("pool_id"), NameKey = r.Str("name_key"),
-                DescKey = r.Str("desc_key"), IconId = r.Str("icon_id"), BasePct = r.Dbl("base_pct"),
+                DescKey = r.Str("desc_key"), IconId = r.Str("icon_id"), Role = r.Str("role"), Element = r.Str("element"),
+                Hp = r.Dbl("hp"), Atk = r.Dbl("atk"), Def = r.Dbl("def"), Spd = r.Dbl("spd"),
+                CritRate = r.Dbl("crit_rate"), CritDmg = r.Dbl("crit_dmg"), Starter = r.Bool("starter"),
             }).ToList();
             HeroList = heroList.AsReadOnly();
             var heroes = new Dictionary<string, HeroDef>(StringComparer.Ordinal);
@@ -275,6 +307,31 @@ namespace IdleRng.Sim.Content
                 heroes[h.Id] = h;
             }
             Heroes = new ReadOnlyDictionary<string, HeroDef>(heroes);
+            var starters = heroList.Where(h => h.Starter).ToList();
+            if (starters.Count != 1)
+                errors.Add(new ContentError("E062", "heroes", $"exactly one hero must have starter = true (found {starters.Count})"));
+            else StarterHeroId = starters[0].Id;
+
+            // roles and elements (specs/11 section 9)
+            RoleList = t["roles"].Select(r => new RoleDef
+            {
+                Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"), DescKey = r.Str("desc_key"),
+            }).OrderBy(x => x.SortOrder).ToList().AsReadOnly();
+            ElementList = t["elements"].Select(r => new ElementDef
+            {
+                Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"),
+                DisplayColor = r.Str("display_color"), StrongVs = r.Str("strong_vs"),
+            }).OrderBy(x => x.SortOrder).ToList().AsReadOnly();
+            Roles = new ReadOnlyDictionary<string, RoleDef>(RoleList.ToDictionary(x => x.Id, StringComparer.Ordinal));
+            Elements = new ReadOnlyDictionary<string, ElementDef>(ElementList.ToDictionary(x => x.Id, StringComparer.Ordinal));
+            foreach (var e in ElementList)
+                if (!Elements.ContainsKey(e.StrongVs))
+                    errors.Add(new ContentError("E023", $"elements[{e.Id}]", $"strong_vs '{e.StrongVs}' is not an element id"));
+            foreach (var h in heroList)
+            {
+                if (!Roles.ContainsKey(h.Role)) errors.Add(new ContentError("E023", $"heroes[{h.Id}]", $"role '{h.Role}' is not a role id"));
+                if (!Elements.ContainsKey(h.Element)) errors.Add(new ContentError("E023", $"heroes[{h.Id}]", $"element '{h.Element}' is not an element id"));
+            }
 
             var thresholds = t["hero_level_thresholds"].OrderBy(r => r.Int("level")).Select(r => r.Int("cum_copies")).ToList();
             for (int i = 1; i < thresholds.Count; i++)
@@ -319,20 +376,25 @@ namespace IdleRng.Sim.Content
             HeroBanner = banners.Values.FirstOrDefault(b => b.Enabled && b.Kind == BannerKind.Hero);
             if (HeroBanner == null) errors.Add(new ContentError("E022", "banners", "no enabled hero banner"));
 
-            // class advances
-            ClassAdvances = t["class_advances"].Select(r => new ClassAdvanceDef
+            // promotions (specs/11 section 6)
+            Promotions = t["promotions"].Select(r => new PromotionDef
             {
-                Id = r.Str("id"), Index = r.Int("index"), Stage = r.Int("stage"), Mult = r.Dbl("mult"),
-                NameKey = r.Str("name_key"), IconId = r.Str("icon_id"),
-            }).OrderBy(c => c.Index).ToList().AsReadOnly();
-            _classMult = new double[ClassAdvances.Count + 1];
-            _classMult[0] = 1.0;
-            for (int i = 0; i < ClassAdvances.Count; i++)
+                Index = r.Int("index"), UnlockStage = r.Int("unlock_stage"), Mult = r.Dbl("mult"),
+                CostKills = r.Dbl("cost_kills"), NameKey = r.Str("name_key"),
+            }).OrderBy(p => p.Index).ToList().AsReadOnly();
+            _promoMult = new double[Promotions.Count + 1];
+            _promoMult[0] = 1.0;
+            for (int i = 0; i < Promotions.Count; i++)
             {
-                _classMult[i + 1] = _classMult[i] * ClassAdvances[i].Mult;
-                if (i > 0 && ClassAdvances[i].Stage <= ClassAdvances[i - 1].Stage)
-                    errors.Add(new ContentError("E032", $"class_advances[{ClassAdvances[i].Id}]", "stage must strictly increase"));
+                _promoMult[i + 1] = _promoMult[i] * Promotions[i].Mult;
+                if (Promotions[i].Index != i + 1)
+                    errors.Add(new ContentError("E060", $"promotions[{Promotions[i].Index}]", "index must be 1..N contiguous"));
+                if (i > 0 && Promotions[i].UnlockStage <= Promotions[i - 1].UnlockStage)
+                    errors.Add(new ContentError("E032", $"promotions[{Promotions[i].Index}]", "unlock_stage must strictly increase"));
             }
+            foreach (var tierDef in HeroTiers)
+                if (tierDef.MaxPromotions < 0 || tierDef.MaxPromotions > Promotions.Count)
+                    errors.Add(new ContentError("E043", $"hero_tiers[{tierDef.Tier}]", $"max_promotions must be in 0..{Promotions.Count}"));
 
             DailyQuests = t["daily_quests"].Select(r => new DailyQuestDef
             {

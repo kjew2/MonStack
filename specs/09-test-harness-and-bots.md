@@ -116,6 +116,8 @@ Facts a developer can rely on:
 
 ## 5. Policies
 
+> Overhaul (#60): policies also promote party members (`specs/11` section 6, bot policy).
+
 ### 5.1 Interface
 
 ```csharp
@@ -252,6 +254,8 @@ public sealed record DayRow(
 `Snapshot(day, sim, sink)` reads `Query.Dps`, `Query.StatMult`, `Query.GearMult`, `Query.HeroMult`, `Query.ClassMult`, `State.Stat.Level`, `State.Stage.Stage`, `State.HeroBanner.TotalPulls`, `sink.LPlus`, `State.Lifetime.FirstWallStage`, and `LongestWallHours = max over sink.Walls of WallClockHours(nowUtcMs)` with `nowUtcMs` the clock after the day's sync (an open wall counts with its duration so far; 0 when there has been no wall).
 
 ### 6.3 Layer shares
+
+> Overhaul (#60): layers are base, hero (party), promo, stat and gear; definitions in `specs/11` section 7.1. The `class` column is now `promo`.
 
 For acceptance check 2 and the `--shares` option. From a `DayRow`, with `L = ln(Dps)`:
 

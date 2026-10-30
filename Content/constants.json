@@ -7,9 +7,9 @@
       "value": 10
     },
     {
-      "key": "BASE_ATK",
+      "key": "SPD_REF",
       "type": "double",
-      "value": 20.0
+      "value": 100.0
     },
     {
       "key": "ATTACK_INTERVAL_TICKS",
@@ -114,7 +114,7 @@
     {
       "key": "HERO_SLOTS",
       "type": "int",
-      "value": 6
+      "value": 4
     },
     {
       "key": "HERO_LVL_BONUS",

@@ -123,7 +123,7 @@ namespace IdleRng.Bots.Tests
         {
             var row = Row with { Dps = 10 * 16.0 * 6.18e8 * 3.4 * 3.375 };   // consistent with the multipliers
             var s = LayerShares.Of(row, 10);
-            Assert.That(s.Stat + s.Gear + s.Hero + s.Class + s.Base, Is.EqualTo(1.0).Within(1e-9));
+            Assert.That(s.Stat + s.Gear + s.Hero + s.Promo + s.Base, Is.EqualTo(1.0).Within(1e-9));
             Assert.That(s.Stat, Is.EqualTo(Math.Log(16.0) / Math.Log(row.Dps)).Within(1e-12));
         }
     }

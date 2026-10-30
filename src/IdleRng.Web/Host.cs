@@ -173,9 +173,12 @@ namespace IdleRng.Web
                 o.P(kv.Key, kv.Value);
             o.EndObj().Key("party").Arr();
             foreach (var id in s.Heroes.Equipped) o.Str(Br(id));
-            o.EndArr().EndObj();
+            o.EndArr().Key("promotions").Obj();
+            foreach (var kv in s.Heroes.Promotions.Where(kv => kv.Value > 0).Select(kv => new KeyValuePair<string, int>(Br(kv.Key), kv.Value))
+                         .OrderBy(kv => kv.Key, StringComparer.Ordinal))
+                o.P(kv.Key, kv.Value);
+            o.EndObj().EndObj();
             o.Key("banner").Obj().P("pity", s.HeroBanner.PityCounter).P("totalPulls", s.HeroBanner.TotalPulls).EndObj();
-            o.P("classAdvances", s.Progression.ClassAdvances);
             o.Key("daily").Obj().P("dayKey", s.Daily.DayKey).Key("progress").Arr();
             foreach (var v in s.Daily.Progress) o.Int(v);
             o.EndArr().Key("rewarded").Arr();
@@ -220,7 +223,7 @@ namespace IdleRng.Web
             public void Publish(SimEvent e) => _h.Convert(e);
         }
 
-        // Converts at publication time so derived fields (class advance dps) see the moment of the event.
+        // Converts at publication time so derived fields (dps after a promotion) see the moment of the event.
         private void Convert(SimEvent e)
         {
             var o = new JsonOut().Obj();
@@ -241,13 +244,10 @@ namespace IdleRng.Web
                     return;
                 case StageAdvanced x: o.P("type", "stageAdvanced").P("from", x.FromStage).P("to", x.ToStage).P("viaBoss", x.ViaBoss); break;
                 case StageCapReached _: o.P("type", "stageCap"); break;
-                case ClassAdvanced x:
-                {
-                    double after = _sim.Query.Dps;
-                    double stepMult = _db.ClassMult(x.Advances) / _db.ClassMult(x.Advances - 1);
-                    o.P("type", "classAdvanced").P("advances", x.Advances).P("stage", x.Stage).P("dpsBefore", after / stepMult).P("dpsAfter", after);
+                case CompanionPromoted x:
+                    o.P("type", "promoted").P("id", Br(x.Hero)).P("name", _db.Text(_db.Heroes[x.Hero].NameKey)).P("promotions", x.Promotions)
+                     .P("promotionName", _db.Text(_db.Promotions[x.Promotions - 1].NameKey)).P("cost", x.Cost).P("dpsAfter", _sim.Query.Dps);
                     break;
-                }
                 case GearDropped x:
                 {
                     o.P("type", "gearDropped").P("slot", x.Slot).Key("piece"); Piece(o, x.Piece);
@@ -309,7 +309,7 @@ namespace IdleRng.Web
         {
             var q = _sim.Query;
             return _st.Heroes.Copies.Where(kv => kv.Value > 0 && _db.Heroes.ContainsKey(kv.Key)).Select(kv => kv.Key)
-                .OrderByDescending(id => q.HeroPct(id)).ThenBy(id => id, StringComparer.Ordinal).Take(_k.HeroSlots).ToList();
+                .OrderByDescending(id => q.HeroFarmDps(id)).ThenBy(id => id, StringComparer.Ordinal).Take(_k.HeroSlots).ToList();
         }
 
         public string Query(string name, string argsJson)
@@ -329,9 +329,11 @@ namespace IdleRng.Web
                 case "gearSlotMult": return N(q.GearSlotMult(a.Int(0)));
                 case "gearMult": return N(q.GearMult);
                 case "heroLevel": return N(q.HeroLevel(a.Int(0)));
-                case "heroPct": return N(q.HeroPct(Cs(a.Str(0))));
+                case "heroFarmDps": return N(q.HeroFarmDps(Cs(a.Str(0))));
+                case "heroInfo": return HeroInfo(Cs(a.Str(0)));
                 case "heroMult": return N(q.HeroMult);
-                case "classMult": return N(a.Has(0) ? _db.ClassMult(a.Int(0)) : q.ClassMult);
+                case "promoMult": return N(a.Has(0) ? _db.PromoMult(a.Int(0)) : q.PromoMult);
+                case "partyDps": return N(q.PartyDps);
                 case "dps": return N(q.Dps);
                 case "hitDamage": return N(q.HitDamage);
                 case "hitsToKill": return N(q.HitsToKill(a.Num(0)));
@@ -358,8 +360,8 @@ namespace IdleRng.Web
                 case "autoEquipWouldChange":
                 {
                     double cur = 0, best = 0;
-                    foreach (var id in _st.Heroes.Equipped) if (id != null) cur += q.HeroPct(id);
-                    foreach (var id in BestParty()) best += q.HeroPct(id);
+                    foreach (var id in _st.Heroes.Equipped) if (id != null) cur += q.HeroFarmDps(id);
+                    foreach (var id in BestParty()) best += q.HeroFarmDps(id);
                     return B(best > cur + 1e-9);
                 }
                 case "nowMs": return N(NowMsVirtual());
@@ -372,6 +374,26 @@ namespace IdleRng.Web
                 case "consolidatedRates": return ConsolidatedRates();
                 default: return "null";
             }
+        }
+
+        /// <summary>Stat sheet and promotion state of one companion (specs/11 sections 3-6). Null for an unknown id.</summary>
+        private string HeroInfo(string id)
+        {
+            if (id == null || !_db.Heroes.TryGetValue(id, out var h)) return "null";
+            var q = _sim.Query;
+            bool owned = q.HeroCopies(id) > 0;
+            int lvl = Math.Max(1, q.HeroLevelOf(id));
+            double statMult = _db.LevelMult(lvl) * _db.PromoMult(q.Promotions(id));
+            var o = new JsonOut().Obj().P("id", Br(id)).P("role", h.Role).P("roleName", _db.Text(_db.Roles[h.Role].NameKey))
+                .P("element", h.Element).P("elementName", _db.Text(_db.Elements[h.Element].NameKey))
+                .P("elementColor", _db.Elements[h.Element].DisplayColor)
+                .P("hp", h.Hp * statMult).P("atk", h.Atk * statMult).P("def", h.Def * statMult).P("spd", h.Spd)
+                .P("critRate", h.CritRate).P("critDmg", h.CritDmg)
+                .P("farmDps", owned ? q.HeroFarmDps(id) : _db.FarmDps(h, 1, 0))
+                .P("promotions", q.Promotions(id)).P("maxPromotions", q.MaxPromotions(id))
+                .P("nextPromotionCost", q.NextPromotionCost(id)).P("nextPromotionStage", q.NextPromotionStage(id))
+                .P("farmDpsAfterPromotion", q.HeroFarmDpsAfterPromotion(id)).P("canPromote", q.CanPromote(id));
+            return o.EndObj().ToString();
         }
 
         private string PullPrice(int count)
@@ -426,6 +448,8 @@ namespace IdleRng.Web
                 case Reject.BossAlreadyPending: return "bossAlreadyPending";
                 case Reject.ChestNotReady: return "notReady";
                 case Reject.InvalidCount: return "invalid";
+                case Reject.PromotionMaxed: return "maxed";
+                case Reject.PromotionLocked: return "locked";
                 default: return r.ToString();
             }
         }
@@ -461,6 +485,13 @@ namespace IdleRng.Web
                 }
                 case "unequipHero": { var r = _sim.UnequipHero(a.Int(0)); return r.Ok ? Ok() : Fail(ReasonName(r.Reason)); }
                 case "autoEquip": return N(_sim.AutoEquipBestHeroes());
+                case "promote":
+                {
+                    string id = Cs(a.Str(0));
+                    if (!_db.Heroes.ContainsKey(id)) return Fail("heroNotOwned");
+                    var r = _sim.Promote(id);
+                    return r.Ok ? Ok() : Fail(ReasonName(r.Reason));
+                }
                 case "claimChest": { var r = _sim.ClaimIdleChest(); return r.Ok ? Ok() : Fail(ReasonName(r.Reason)); }
                 case "syncWallClock": _sim.SyncWallClock(FloorSec(a.Num(0))); return "null";
                 case "debugGrantGold": _sim.Debug.GrantGold(a.Num(0)); return "null";
@@ -549,16 +580,23 @@ namespace IdleRng.Web
                 {
                     string name = _db.Text(_db.Heroes[id].NameKey);
                     int sp = name.IndexOf(' ');
-                    o.Obj().P("id", Br(id)).P("tier", letters[t]).P("name", name).P("short", sp > 0 ? name.Substring(0, sp) : name).EndObj();
+                    var hd = _db.Heroes[id];
+                    o.Obj().P("id", Br(id)).P("tier", letters[t]).P("name", name).P("short", sp > 0 ? name.Substring(0, sp) : name)
+                     .P("role", hd.Role).P("element", hd.Element).EndObj();
                 }
                 o.EndArr();
             }
             o.EndArr().EndObj();
 
-            var adv = _db.ClassAdvances.OrderBy(a => a.Index).ToList();
-            o.Key("class").Obj().P("MULT", adv.Count > 0 ? adv[0].Mult : 1.0);
-            o.Key("STAGES").Arr(); foreach (var a in adv) o.Int(a.Stage); o.EndArr();
-            o.Key("NAMES").Arr().Str(_db.Text("class.base.name")); foreach (var a in adv) o.Str(_db.Text(a.NameKey)); o.EndArr();
+            o.Key("promotion").Obj();
+            o.Key("STAGES").Arr(); foreach (var p in _db.Promotions) o.Int(p.UnlockStage); o.EndArr();
+            o.Key("MULTS").Arr(); foreach (var p in _db.Promotions) o.Num(p.Mult); o.EndArr();
+            o.Key("NAMES").Arr(); foreach (var p in _db.Promotions) o.Str(_db.Text(p.NameKey)); o.EndArr();
+            o.Key("MAX").Obj(); foreach (var t in _db.HeroTiers) o.P(letters[(int)t.Tier], t.MaxPromotions); o.EndObj();
+            o.EndObj();
+            o.Key("roles").Obj(); foreach (var r in _db.RoleList) o.P(r.Id, _db.Text(r.NameKey)); o.EndObj();
+            o.Key("elements").Obj();
+            foreach (var e in _db.ElementList) o.Key(e.Id).Obj().P("name", _db.Text(e.NameKey)).P("color", e.DisplayColor).P("strongVs", e.StrongVs).EndObj();
             o.EndObj();
 
             return o.EndObj().ToString();

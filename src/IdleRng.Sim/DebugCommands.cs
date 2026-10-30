@@ -39,7 +39,7 @@ namespace IdleRng.Sim
             _sim.MarkDpsDirty();
         }
 
-        /// <summary>Jump to a stage: resets kills/boss, combat to Spawning, sets class advances to match.</summary>
+        /// <summary>Jump to a stage: resets kills/boss, combat to Spawning. Promotions are kept.</summary>
         public void SetStage(int stage)
         {
             _sim.Log(CommandKind.Debug, (long)DebugOp.SetStage, stage);
@@ -54,9 +54,6 @@ namespace IdleRng.Sim
             st.Combat.EnemyIsBoss = false;
             st.Combat.EnemyHp = 0;
             st.Combat.BossTimer = 0;
-            int adv = 0;
-            foreach (var c in _sim.Content.ClassAdvances) if (c.Stage <= st.Stage.Stage) adv++;
-            st.Progression.ClassAdvances = adv;
             _sim.MarkDpsDirty();
         }
     }

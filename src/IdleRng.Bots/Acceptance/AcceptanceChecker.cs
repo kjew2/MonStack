@@ -75,9 +75,9 @@ namespace IdleRng.Bots.Acceptance
                 foreach (var r in runs)
                     foreach (int day in days)
                     {
-                        var s = LayerShares.Of(r.Rows[day - 1], r.BaseAtk);
-                        details.Add(string.Format(Inv, "seed {0} day {1}: stat {2:0.000} gear {3:0.000} hero {4:0.000} class {5:0.000}",
-                                                  r.Seed, day, s.Stat, s.Gear, s.Hero, s.Class));
+                        var s = LayerShares.Of(r.Rows[day - 1], r.BaseDps);
+                        details.Add(string.Format(Inv, "seed {0} day {1}: stat {2:0.000} gear {3:0.000} hero {4:0.000} promo {5:0.000}",
+                                                  r.Seed, day, s.Stat, s.Gear, s.Hero, s.Promo));
                         foreach (var (layer, share) in s.Layers)
                             if (!(share >= t.ShareMin && share <= t.ShareMax))
                                 fails.Add(string.Format(Inv, "seed {0} day {1} {2} share {3:0.000}", r.Seed, day, layer, share));

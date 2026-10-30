@@ -73,7 +73,7 @@ namespace IdleRng.Bots.Report
 
         static readonly object[] Cols =
         {
-            "day", "stageP10", "stageMed", "stageP90", "dpsMed", "statLvlMed", "gearMultMed", "heroMultMed", "classMultMed",
+            "day", "stageP10", "stageMed", "stageP90", "dpsMed", "statLvlMed", "gearMultMed", "heroMultMed", "promoMultMed",
             "pullsMed", "L+Med", "firstWallMin", "firstWallMax", "longestWallHMax",
         };
 
@@ -86,7 +86,7 @@ namespace IdleRng.Bots.Report
             foreach (var a in Aggregate(sw))
             {
                 sb.Append(string.Format(Inv, Fmt, a.Day, a.StageP10, a.StageMed, a.StageP90, a.DpsMed, a.StatLvlMed, a.GearMultMed,
-                    a.HeroMultMed, a.ClassMultMed, a.PullsMed, a.LPlusMed,
+                    a.HeroMultMed, a.PromoMultMed, a.PullsMed, a.LPlusMed,
                     a.FirstWallMin == 0 ? "-" : a.FirstWallMin.ToString(Inv), a.FirstWallMax == 0 ? "-" : a.FirstWallMax.ToString(Inv),
                     a.LongestWallHMax)).Append('\n');
             }
@@ -94,7 +94,7 @@ namespace IdleRng.Bots.Report
         }
 
         public sealed record DayAggregate(int Day, int StageP10, int StageMed, int StageP90, double DpsMed, int StatLvlMed,
-            double GearMultMed, double HeroMultMed, double ClassMultMed, long PullsMed, int LPlusMed, int FirstWallMin,
+            double GearMultMed, double HeroMultMed, double PromoMultMed, long PullsMed, int LPlusMed, int FirstWallMin,
             int FirstWallMax, double LongestWallHMax);
 
         public static IEnumerable<DayAggregate> Aggregate(SweepResult sw)
@@ -109,7 +109,7 @@ namespace IdleRng.Bots.Report
                     d + 1, Percentile(stage, 0.1), Percentile(stage, 0.5), Percentile(stage, 0.9),
                     Percentile(Sorted(r => r.Dps), 0.5), Percentile(Sorted(r => r.StatLvl), 0.5),
                     Percentile(Sorted(r => r.GearMult), 0.5), Percentile(Sorted(r => r.HeroMult), 0.5),
-                    Percentile(Sorted(r => r.ClassMult), 0.5), Percentile(Sorted(r => r.Pulls), 0.5),
+                    Percentile(Sorted(r => r.PromoMult), 0.5), Percentile(Sorted(r => r.Pulls), 0.5),
                     Percentile(Sorted(r => r.LPlus), 0.5),
                     walls.Count == 0 ? 0 : walls.Min(), walls.Count == 0 ? 0 : walls.Max(),
                     rows.Max(r => r.LongestWallHours));
@@ -119,10 +119,10 @@ namespace IdleRng.Bots.Report
         public static string Csv(SweepResult sw)
         {
             var sb = new StringBuilder();
-            sb.Append("day,stageP10,stageMed,stageP90,dpsMed,statLvlMed,gearMultMed,heroMultMed,classMultMed,pullsMed,lPlusMed,firstWallMin,firstWallMax,longestWallHMax\n");
+            sb.Append("day,stageP10,stageMed,stageP90,dpsMed,statLvlMed,gearMultMed,heroMultMed,promoMultMed,pullsMed,lPlusMed,firstWallMin,firstWallMax,longestWallHMax\n");
             foreach (var a in Aggregate(sw))
                 sb.Append(string.Format(Inv, "{0},{1},{2},{3},{4:0.00e+00},{5},{6:0.00e+00},{7:0.00},{8:0.00},{9},{10},{11},{12},{13:0.00}\n",
-                    a.Day, a.StageP10, a.StageMed, a.StageP90, a.DpsMed, a.StatLvlMed, a.GearMultMed, a.HeroMultMed, a.ClassMultMed,
+                    a.Day, a.StageP10, a.StageMed, a.StageP90, a.DpsMed, a.StatLvlMed, a.GearMultMed, a.HeroMultMed, a.PromoMultMed,
                     a.PullsMed, a.LPlusMed, a.FirstWallMin, a.FirstWallMax, a.LongestWallHMax));
             return sb.ToString();
         }

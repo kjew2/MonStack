@@ -1,0 +1,6 @@
+id,sort_order,name_key,display_color,strong_vs
+fire,0,element.fire.name,#E8622C,nature
+water,1,element.water.name,#2D8FD5,fire
+nature,2,element.nature.name,#4CAF50,water
+light,3,element.light.name,#F2C94C,dark
+dark,4,element.dark.name,#7E57C2,light

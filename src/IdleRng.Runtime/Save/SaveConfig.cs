@@ -16,7 +16,7 @@ namespace IdleRng.Runtime.Save
     /// <summary>The save schema version (SAVE_SCHEMA_VERSION). Bump + add a step in SaveMigrations for every shape change after freeze.</summary>
     public static class SaveSchema
     {
-        public const int Current = 1;
+        public const int Current = 2;
 
         /// <summary>Oldest version SaveMigrations can lift to Current. v0 is the pre-envelope dev format (see SaveMigrations).</summary>
         public const int MinSupported = 0;
