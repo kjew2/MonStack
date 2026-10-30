@@ -117,7 +117,6 @@
       }
     }
   }
-  const needX = () => (Math.ceil(sim.needDps() / sim.dps() * 10) / 10).toFixed(1) + 'x';
   const hours = (s) => s >= 3600 ? (s / 3600).toFixed(1) + ' h' : Math.round(s / 60) + ' min';
 
   // ------------------------------------------------------------ main loop
@@ -259,7 +258,7 @@
     if (walled) {
       const clear = sim.bossClearable();
       toggle(bb, 'clearable', clear);
-      setText(bb, clear ? 'Boss: clearable' : 'Boss: need ~' + needX());
+      setText(bb, clear ? 'Boss: clearable' : 'Boss: not yet');
     }
   }
   $('bossBtn').addEventListener('click', () => { const r = sim.attemptBoss(); if (!r.ok) toast(r.reason === 'bossAlreadyPending' ? 'Boss is already coming' : 'No boss to fight'); });
@@ -334,9 +333,9 @@
         setHidden(wall, !walled);
         if (walled) {
           setText(wallTitle, 'Boss failed (attempt ' + st.bossFailsOnStage + ')');
-          setText(wallLine, 'Boss HP ' + fmt(sim.bossHp(st.stage)) + '  ·  your DPS ' + fmt(sim.dps()) + '  ·  need ' + fmt(sim.needDps()));
+          setText(wallLine, 'Boss HP ' + fmt(sim.bossHp(st.stage)) + '  ·  your DPS ' + fmt(sim.dps()) + '  ·  rough DPS guide ' + fmt(sim.needDps()));
           const clear = sim.bossClearable();
-          setText(wallNeed, clear ? 'You can beat it now.' : 'Need about ' + needX() + ' DPS. Buy ATK levels, enhance gear, summon or promote companions. Farming stage ' + st.stage + ' mobs meanwhile.');
+          setText(wallNeed, clear ? 'Your party can beat it now.' : 'Your party would still lose. Buy ATK levels, enhance gear, summon or promote companions, or bring a tank or healer. Farming stage ' + st.stage + ' mobs meanwhile.');
           setText(retry, clear ? 'Fight boss' : 'Retry boss');
         }
         C.quests.forEach((q, i) => {

@@ -124,6 +124,35 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void HitLanded_IsPublishedForBossDamage_WithoutOptingIntoBattleAction()
+        {
+            var box = new EventOutbox(EventKinds.Default | EventKinds.HitLanded);
+            var sim = TestContent.NewSim(sink: box);
+            sim.Debug.SetStatLevel(3000);
+            var ev = FightBoss(sim, box, 60);
+            Assert.That(ev.OfType<HitLanded>().Any(), Is.True);
+            Assert.That(ev.OfType<BattleAction>().Any(), Is.False);
+            Assert.That(ev.OfType<BossCleared>().Any(), Is.True);
+        }
+
+        [Test]
+        public void LoadedBossWithoutBattle_GetsFullTurnLimit()
+        {
+            var sim = TestContent.NewSim();
+            sim.Debug.SetStage(60);
+            sim.State.Stage.KillsInStage = Db.Constants.KillsPerStage - 1;
+            sim.State.Stage.Boss = BossPhase.Pending;
+            while (sim.State.Combat.Battle == null) sim.Tick();
+            var st = sim.State.DeepClone();
+            st.Combat.Battle = null;     // an older save
+            st.Combat.BossTimer = 3;
+            var loaded = new Simulation(Db, st);
+            Assert.That(st.Combat.Battle, Is.Not.Null);
+            Assert.That(st.Combat.BossTimer, Is.EqualTo(Db.BossRuleFor(60).TimeTicks));
+            loaded.Validate();
+        }
+
+        [Test]
         public void Passives_ApplyAtBattleStart()
         {
             string leg = Db.HeroList.First(h => h.Tier == Rarity.L && h.Role == "striker").Id;

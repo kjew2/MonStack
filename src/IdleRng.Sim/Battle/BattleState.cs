@@ -22,9 +22,14 @@ namespace IdleRng.Sim.Battle
 
         public BattleUnit Boss { get; set; }
 
+        /// <summary>Scratch list for trigger collection (not saved, not hashed).</summary>
+        internal List<TriggeredEffect> Scratch => _scratch ??= new List<TriggeredEffect>();
+        List<TriggeredEffect> _scratch;
+
         public BattleState Clone()
         {
             var c = (BattleState)MemberwiseClone();
+            c._scratch = null;
             c.Party = new BattleUnit[Party.Length];
             for (int i = 0; i < Party.Length; i++) c.Party[i] = Party[i]?.Clone();
             c.Boss = Boss?.Clone();

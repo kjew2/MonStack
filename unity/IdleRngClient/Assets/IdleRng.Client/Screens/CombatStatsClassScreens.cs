@@ -44,7 +44,7 @@ namespace IdleRng.Client.Screens
             if (c.IsWalled)
                 Ui.Set(_wallText, "BOSS FAILED (attempt " + c.BossFailsOnStage + ")\n" +
                                   "Your DPS " + TextFmt.Num(c.Dps) + "   Need " + TextFmt.Num(c.NeedDps) + "\n" +
-                                  "Need ~" + TextFmt.Ratio(c.NeedDpsRatio) + "x DPS" + (c.BossClearable ? "  (clearable now!)" : "") + "\n" +
+                                  (c.BossClearable ? "Your party can beat it now!" : "Your party would still lose: get stronger or bring a tank/healer") + "\n" +
                                   "Farming stage " + c.Stage + " mobs meanwhile.");
             if (_feedVersion != Vm.Feed.Version) { _feedVersion = Vm.Feed.Version; Ui.Set(_feed, Vm.Feed.Text()); }
             Ui.Set(_chest, c.ChestReady ? "Claim idle chest (+" + c.ChestGems + " gems)"

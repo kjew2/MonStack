@@ -457,6 +457,9 @@ namespace IdleRng.Sim.Content
                 kits[h.Id] = kit.AsReadOnly();
             }
             foreach (var x in skills)
+                if (x.Stat == "hp" && x.Kind != SkillKind.Passive)
+                    errors.Add(new ContentError("E054", $"skills[{x.Id}]", "stat hp is only allowed on passives"));
+            foreach (var x in skills)
                 if (!heroes.ContainsKey(x.HeroId)) errors.Add(new ContentError("E023", $"skills[{x.Id}]", $"hero_id '{x.HeroId}' is not a hero id"));
             Kits = new ReadOnlyDictionary<string, IReadOnlyList<SkillDef>>(kits);
 

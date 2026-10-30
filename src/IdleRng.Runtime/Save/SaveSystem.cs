@@ -126,7 +126,7 @@ namespace IdleRng.Runtime.Save
                 s.Combat == null || s.Gear == null || s.Heroes == null || s.HeroBanner == null || s.Rng == null ||
                 s.Rng.Streams == null || s.Lifetime == null)
                 throw new SaveInvalidException("a root section is null");
-            foreach (var name in StreamNames.All)
+            foreach (var name in StreamNames.Required)   // newer streams are backfilled by the Simulation constructor
                 if (!s.Rng.Streams.TryGetValue(name, out var st) || st == null)
                     throw new SaveInvalidException($"rng stream '{name}' missing");
             try

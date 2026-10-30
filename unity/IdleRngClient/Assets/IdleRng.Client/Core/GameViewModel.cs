@@ -253,7 +253,7 @@ namespace IdleRng.Client.Core
             c.HitsToKill = q.HitsToKill(c.EnemyIsBoss ? c.EnemyMaxHp : q.Hp(stage));
             c.KillTimeS = q.KillTimeSeconds(stage);
             c.IsWalled = q.IsWalled;
-            c.BossClearable = c.IsBossStage && q.BossClearable;
+            c.BossClearable = c.IsWalled && q.BossClearable;   // runs a whole battle (cached by the sim); only needed while walled
             c.NeedDps = q.BossHp(stage) * _k.TickHz / rule.TimeTicks;
             c.NeedDpsRatio = c.Dps > 0 ? c.NeedDps / c.Dps : 0;
             c.ShowBossButton = c.IsWalled;

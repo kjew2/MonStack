@@ -89,6 +89,7 @@ namespace IdleRng.Sim
                 s.Combat.Battle = NewBossBattle(s.Stage.Stage);
                 s.Combat.EnemyHp = s.Combat.Battle.Boss.Hp;
                 s.Combat.EnemyMaxHp = s.Combat.Battle.Boss.MaxHp;
+                s.Combat.BossTimer = Content.BossRuleFor(s.Stage.Stage).TimeTicks;   // a fresh fight gets the full turn limit
             }
             if (!(s.Combat.Phase == CombatPhase.Fighting && s.Combat.EnemyIsBoss)) s.Combat.Battle = null;
         }
@@ -122,7 +123,8 @@ namespace IdleRng.Sim
             if (cb.EnemyIsBoss)
             {
                 // 4v1 ATB battle (specs/11 section 8); the boss timer is the turn limit
-                var outcome = Battle.BattleEngine.Step(Content, cb.Battle, _battle, Wants(EventKinds.BattleAction) ? _onBattleAction : null);
+                var outcome = Battle.BattleEngine.Step(Content, cb.Battle, _battle,
+                    Wants(EventKinds.BattleAction) || Wants(EventKinds.HitLanded) ? _onBattleAction : null);
                 cb.EnemyHp = cb.Battle.Boss.Hp;
                 if (outcome == Battle.BattleOutcome.Won) { Kill(); return; }
                 if (outcome == Battle.BattleOutcome.Wiped) { BossFail(wiped: true); return; }
@@ -148,7 +150,8 @@ namespace IdleRng.Sim
 
         Action<Battle.BattleActionInfo> _onBattleAction => _onBattleActionField ??= a =>
         {
-            _sink.Publish(new BattleAction(State.Tick, a.Actor ?? Battle.BattleEngine.BossTarget, a.Skill?.Id, a.Target, a.Amount, a.Crit, a.Aoe));
+            if (Wants(EventKinds.BattleAction))
+                _sink.Publish(new BattleAction(State.Tick, a.Actor ?? Battle.BattleEngine.BossTarget, a.Skill?.Id, a.Target, a.Amount, a.Crit, a.Aoe));
             if (a.Actor != null && a.Target == Battle.BattleEngine.BossTarget && a.Amount > 0 && Wants(EventKinds.HitLanded))
                 _sink.Publish(new HitLanded(State.Tick, a.Amount, Math.Max(0, State.Combat.Battle.Boss.Hp)));
         };
@@ -177,6 +180,25 @@ namespace IdleRng.Sim
         internal bool SimulateBossWin()
         {
             int stage = State.Stage.Stage;
+            ulong counter = _battle.Counter;
+            if (_clearableKnown && _clearableBuild == _buildVersion && _clearableStage == stage && _clearableCounter == counter)
+                return _clearable;
+            _clearable = SimulateBossWinUncached(stage);
+            _clearableKnown = true;
+            _clearableBuild = _buildVersion;
+            _clearableStage = stage;
+            _clearableCounter = counter;
+            return _clearable;
+        }
+
+        // BossClearable cache: valid while the build (anything that marks DPS dirty), stage and battle stream are unchanged
+        bool _clearableKnown, _clearable;
+        long _clearableBuild, _buildVersion;
+        int _clearableStage;
+        ulong _clearableCounter;
+
+        bool SimulateBossWinUncached(int stage)
+        {
             var b = NewBossBattle(stage);
             var rng = _battle.Clone();
             int limit = Content.BossRuleFor(stage).TimeTicks;
@@ -395,7 +417,7 @@ namespace IdleRng.Sim
 
         // ================================================================ DPS (specs/11 section 7)
 
-        internal void MarkDpsDirty() => _dpsDirty = true;
+        internal void MarkDpsDirty() { _dpsDirty = true; _buildVersion++; }
 
         internal double HitDamageCached
         {

@@ -102,6 +102,20 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void V2SaveWithoutBattleStream_LoadsAndGetsTheStream()
+        {
+            // saves written before the battle stream existed (#61) have only the five original streams
+            var sim = TestContent.PlayedSim(seed: 5);
+            sim.State.Rng.Streams.Remove(IdleRng.Sim.Rng.StreamNames.Battle);
+            var store = new MemorySaveStore { Primary = SaveSerializer.Encode(sim.State, new SaveMeta { LastSavedAtServerSec = TestContent.T0 }) };
+            var r = SaveSystem.Load(store, TestContent.Db, TestContent.T0 + 10, new MemoryAnalytics());
+            Assert.That(r.Status, Is.EqualTo(LoadStatus.Loaded), string.Join("; ", r.Problems));
+            var loaded = new IdleRng.Sim.Simulation(TestContent.Db, r.State);
+            Assert.That(r.State.Rng.Streams.ContainsKey(IdleRng.Sim.Rng.StreamNames.Battle), Is.True);
+            loaded.Validate();
+        }
+
+        [Test]
         public void V0ToV1_ProducesV1Envelope_WithHexSeeds()
         {
             var (file, _) = FakeV0(lastSaved: 42);

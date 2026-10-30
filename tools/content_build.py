@@ -298,6 +298,8 @@ def validate(t, errs):
             errs.add("E054", loc, f"scales required for kind {kind}")
         if kind in ("buff", "debuff", "passive") and sk["stat"] is None:
             errs.add("E054", loc, f"stat required for kind {kind}")
+        if sk["stat"] == "hp" and kind != "passive":
+            errs.add("E054", loc, "stat hp is only allowed on passives (a timed HP change has no effect)")
         if (kind == "passive") != (sk["cooldown"] == 0):
             errs.add("E043", loc, "cooldown must be 0 for passives and >= 1 otherwise")
         if sk["power"] < 0 or sk["duration"] < 0:

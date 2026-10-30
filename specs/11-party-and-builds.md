@@ -231,8 +231,8 @@ K      = DEF_K_MULT * HP(s)
 ```
 
 - Heal: `scaled` to the weakest ally (by HP fraction) or all allies, capped at max HP. Shield: absorbs `scaled` for `duration` turns. Taunt: the boss must target this companion for `duration` turns.
-- Buff/debuff: `power` as a fraction of base for HP/ATK/DEF/SPD (floored at 10% of base), added directly for crit rate and crit damage; lasts `duration` turns.
-- Passive: the same effect, permanent, applied at battle start.
+- Buff/debuff: `power` as a fraction of base for ATK/DEF/SPD (floored at 10% of base), added directly for crit rate and crit damage; lasts `duration` turns.
+- Passive: the same effect, permanent, applied at battle start. An HP passive raises max and current HP together; HP is passive-only (`E054`).
 
 ### 8.5 Triggers (hook for uniques, #64)
 
@@ -241,7 +241,8 @@ Every effect goes through one function (`BattleEngine.Apply`) using the kit-skil
 ### 8.6 Determinism and queries
 
 - New RNG stream `battle` (added to `specs/00` section 5 contract 2). Crit rolls and boss targeting are its only draws; farming still draws nothing.
-- `SimQuery.BossClearable` runs the whole battle on copies (a cloned stream) and reports whether the current party would win; it changes no state. Bots retry a walled boss when it is true.
+- `SimQuery.BossClearable` runs the whole battle on copies (a cloned stream) and reports whether the current party would win; it changes no state and is cached until the build, stage or `battle` counter changes. Bots retry a walled boss when it is true.
+- Saves from before the `battle` stream existed stay valid: the save loader requires only the original five streams and the sim creates `battle` when missing. A boss with no saved battle starts a fresh battle with the full turn limit.
 - Event `BattleAction` (opt-in, like `HitLanded`) reports each action; damage to the boss also publishes `HitLanded` for damage floaters.
 
 ## 9. Save schema v2

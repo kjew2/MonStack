@@ -138,7 +138,7 @@ namespace IdleRng.Client.Screens
             Ui.Show(_boss, c.ShowBossButton);
             if (c.ShowBossButton)
             {
-                Ui.Set(_boss, c.BossClearable ? "Boss: clearable - retry now" : "Boss: need ~" + TextFmt.Ratio(c.NeedDpsRatio) + "x DPS (retry)");
+                Ui.Set(_boss, c.BossClearable ? "Boss: clearable - retry now" : "Boss: not yet (retry)");
                 Ui.Border(_boss, 3, c.BossClearable ? Palette.Ok : Ui.ButtonBorder);
             }
         }

@@ -101,10 +101,11 @@ namespace IdleRng.Sim.Battle
 
         static void Fire(ContentDb c, BattleState b, BattleUnit u, BattleTrigger trigger, Action<BattleActionInfo> onAction)
         {
-            var list = new List<TriggeredEffect>();
+            var list = b.Scratch;   // reused: Fire runs several times per action
+            list.Clear();
             CollectTriggers(c, u, list);
-            foreach (var t in list)
-                if (t.Trigger == trigger) Apply(c, b, u, t.Effect, null, onAction);
+            for (int i = 0; i < list.Count; i++)
+                if (list[i].Trigger == trigger) Apply(c, b, u, list[i].Effect, null, onAction);
         }
 
         // ------------------------------------------------------------------ one tick
@@ -291,13 +292,14 @@ namespace IdleRng.Sim.Battle
                 case SkillKind.Heal:
                 {
                     double amt = Scaled(src, sk), total = 0;
+                    string healed = sk.Target == SkillTarget.LowestAlly ? LowestAlly(b)?.HeroId : null;   // before the heal changes it
                     foreach (var t in Allies(b, src, sk.Target))
                     {
                         double before = t.Hp;
                         t.Hp = Math.Min(t.MaxHp, t.Hp + amt);
                         total += t.Hp - before;
                     }
-                    onAction?.Invoke(new BattleActionInfo(src.HeroId, sk, sk.Target == SkillTarget.LowestAlly ? LowestAlly(b)?.HeroId : null, total, false, sk.Target == SkillTarget.AllAllies));
+                    onAction?.Invoke(new BattleActionInfo(src.HeroId, sk, healed, total, false, sk.Target == SkillTarget.AllAllies));
                     break;
                 }
                 case SkillKind.Shield:
