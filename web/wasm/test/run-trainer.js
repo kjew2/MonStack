@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // End-to-end browser check of the monster-trainer page (web/index.html) on the C# (wasm) engine at 390x844: picks a species,
 // plays a whole run through the real buttons (drill, rest, rank fights, tree drafts, buying nodes), seals it, checks the grade
-// screen and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
+// screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
 'use strict';
@@ -103,8 +103,26 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await act('seal').isVisible(), 'the run reaches its end and offers to seal');
   await shot('04-end');
 
-  // ---- seal -> grade screen -> vault
+  // ---- seal -> gauntlet wheel -> grade screen -> vault
   await act('seal').click();
+  await page.locator('[data-id=climb-reel]').waitFor();
+  check(await act('climb-skip').isVisible(), 'sealing spins the gauntlet wheel, with a skip button');
+  await page.waitForTimeout(700);
+  await shot('05-wheel');
+  check(/^Floor \d+/.test(await text('[data-id=climb-now]')), 'the wheel shows the floor under the pointer: ' + (await text('[data-id=climb-now]')));
+  await page.locator('[data-id=climb-reel]').tap();                // tap the wheel to skip it
+  const legacy = await text('[data-id=climb-title]');
+  check(/^(Floor \d+|All \d+ floors): \S/.test(legacy), 'tapping lands the wheel on the Legacy Title: ' + legacy);
+  check((await act('climb-skip').count()) === 0 && (await page.locator('[data-id=climb-arena]').count()) === 1, 'the skip button goes and the defeat plays');
+  await page.waitForTimeout(1600);
+  await shot('05b-wheel-landed');
+  const sealedAcct = await readAccount();
+  const sealed = sealedAcct && sealedAcct.Account.Vault[0];
+  check(sealed && sealed.LegacyTitle && legacy.startsWith(sealed.GauntletCleared ? 'All ' : 'Floor ' + sealed.GauntletFloor + ':'), 'the title matches the floor stored on the Vault entry (' + (sealed && sealed.GauntletFloor) + ')');
+  check(sealed && (await page.locator('[data-id=climb-reel]').getAttribute('data-hash')) === sealed.GauntletHash, 'the wheel\'s replayed climb hashes the same as the sealed gauntlet');
+  const fell = page.locator('.floor.landed');
+  check((await fell.count()) === 1 && ((sealed && sealed.GauntletCleared) || /✗/.test(await fell.innerText())), 'the landed row marks the floor that beat it');
+  await act('climb-continue').click();
   const grade = await text('[data-id=grade]');
   check(/^[A-Z]$/.test(grade), 'grade screen shows the rank reached: ' + grade);
   const acct = await readAccount();
@@ -113,12 +131,22 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(entry && entry.Grade === grade.toLowerCase() && /^[0-9a-f]{64}$/.test(entry.RunHash), 'entry grade and run hash match');
   const payout = +(/\+(\d+) Training Shards/.exec(await text('[data-id=payout]')) || [])[1];
   check(payout > 0 && acct.Account.Shards === payout, 'the run paid ' + payout + ' shards into the account');
-  await shot('05-grade');
+  check((await text('[data-id=grade-title]')) === legacy, 'the grade screen shows the Legacy Title');
+  await shot('05c-grade');
+
+  // ---- reduced motion: the wheel replays already landed, no spin
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await act('climb-replay').click();
+  check((await act('climb-skip').count()) === 0 && (await text('[data-id=climb-title]')) === legacy, 'with reduced motion the wheel lands at once');
+  await act('climb-continue').click();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  check(/^[A-Z]$/.test(await text('[data-id=grade]')), 'and continues to the grade screen');
 
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'a reload after sealing keeps one Vault entry (no double seal)');
   check((await text('[data-id=shards]')).startsWith(payout + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
+  check((await text('[data-id=vault-title]')) === legacy, 'the Vault card shows the Legacy Title: ' + legacy);
   await shot('06-vault');
 
   // ---- talents: buy one, and it shapes the next run

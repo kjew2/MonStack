@@ -8,6 +8,7 @@ using IdleRng.Runtime.Save;
 using IdleRng.Sim.Account;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
+using IdleRng.Sim.Gauntlet;
 using IdleRng.Sim.Training;
 
 namespace IdleRng.Web
@@ -85,6 +86,11 @@ namespace IdleRng.Web
                 w.Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("desc", _db.Text(t.DescKey)).P("effect", t.Effect.ToString().ToLowerInvariant())
                     .P("maxRank", t.MaxRank).EndObj();
             w.EndArr();
+            w.Key("gauntlet").Obj().P("floors", k.GauntletFloors).P("bossEvery", k.GauntletBossEvery);
+            w.Key("enemies").Obj();
+            foreach (var g in _db.GauntletEnemies.Concat(_db.GauntletBosses))
+                w.Key(g.Id).Obj().P("name", _db.Text(g.NameKey)).P("element", g.Element).P("boss", g.Boss).EndObj();
+            w.EndObj().EndObj();
             return w.EndObj().ToString();
         }
 
@@ -225,6 +231,9 @@ namespace IdleRng.Web
                         w.EndArr();
                         break;
                     }
+                    case "gauntlet":
+                        Climb(w, a.Int(0));
+                        break;
                     case "buyTalent":
                         w.P("ok", true).P("cost", AccountOps.BuyTalent(_db, _acct, a.Str(0)));
                         break;
@@ -249,6 +258,21 @@ namespace IdleRng.Web
                 return Fail(e.Message);
             }
             return w.EndObj().ToString();
+        }
+
+        /// <summary>
+        /// The floors a Vault entry fought in its gauntlet, for the wheel (specs/19 section 7): GauntletSim.Run replayed with the
+        /// entry's fighter and seed. Read only. The hash equals the entry's stored gauntlet hash when the replay matches.
+        /// </summary>
+        private void Climb(JsonOut w, int index)
+        {
+            if (index < 0 || index >= _acct.Vault.Count) throw new ArgumentException("no Vault entry " + index);
+            var e = _acct.Vault[index];
+            var g = GauntletSim.Run(_db, e.Fighter(_db), e.Seed);
+            w.P("ok", true).P("floorReached", g.FloorReached).P("cleared", g.Cleared).P("killer", g.KillerId).P("hash", g.Hash);
+            w.Key("floors").Arr();
+            foreach (var f in g.Floors) w.Obj().P("floor", f.Floor).P("enemy", f.EnemyId).P("boss", f.Boss).P("won", f.Won).P("ticks", f.Ticks).EndObj();
+            w.EndArr();
         }
 
         private static List<string> BookList(JsonElement arr)
@@ -288,7 +312,7 @@ namespace IdleRng.Web
             return w.EndObj().ToString();
         }
 
-        private static void Entry(JsonOut w, VaultEntry e)
+        private void Entry(JsonOut w, VaultEntry e)
         {
             w.Obj().P("species", e.SpeciesId).P("seed", e.Seed.ToString("x16", CultureInfo.InvariantCulture))
                 .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
@@ -297,6 +321,17 @@ namespace IdleRng.Web
             w.Key("trees").Arr();
             foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).EndObj();
             w.EndArr();
+            w.Key("gauntlet");
+            if (e.LegacyTitle == null) w.Null();   // sealed before the gauntlet existed
+            else
+            {
+                string title = GauntletSim.TitleText(_db, e.LegacyTitle, e.GauntletKiller);
+                // "Floor 42: Professional Punching Bag" (specs/12 section 6); a cleared tower has no losing floor to name.
+                string label = (e.GauntletCleared ? "All " + (e.GauntletFloor - 1) + " floors" : "Floor " + e.GauntletFloor) + ": " + title;
+                w.Obj().P("floor", e.GauntletFloor).P("cleared", e.GauntletCleared).P("killer", e.GauntletKiller)
+                    .P("killerName", e.GauntletKiller == null ? null : GauntletSim.EnemyName(_db, e.GauntletKiller))
+                    .P("title", title).P("label", label).P("hash", e.GauntletHash).EndObj();
+            }
             w.EndObj();
         }
 

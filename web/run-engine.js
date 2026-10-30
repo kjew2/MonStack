@@ -52,6 +52,8 @@
         if (r.ok) run.persist();
         return r;
       },
+      // Read only: the floors Vault entry i fought in its gauntlet (the wheel replays them). Changes nothing, so no save.
+      gauntlet(i) { return parse(host.AccountCmd('gauntlet', JSON.stringify([i]))); },
       startRun(speciesId, books) { return run.acct('startRun', speciesId, books || []); },
       finishRun() { return run.acct('finishRun', Date.now()); },
       randomSeedHex: randomSeedHex,
