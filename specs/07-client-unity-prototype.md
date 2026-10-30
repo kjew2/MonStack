@@ -77,11 +77,11 @@ idle-rng-game/
         IdleRng.Client/
           IdleRng.Client.asmdef
           Boot/        GameRoot.cs, ContentBootstrap.cs, ResourcesContentSource.cs, SimRunner.cs, SafeAreaPadding.cs
-          ViewModels/  GameViewModel.cs, HudVm.cs, CombatVm.cs, StatsVm.cs, GearVm.cs, SkillsVm.cs, GachaVm.cs, ClassVm.cs,
+          ViewModels/  GameViewModel.cs, HudVm.cs, CombatVm.cs, StatsVm.cs, GearVm.cs, HeroesVm.cs, GachaVm.cs, ClassVm.cs,
                        SettingsVm.cs, RateTable.cs, Feedback/ToastQueue.cs, Feedback/RevealSequencer.cs, Feedback/EventFeed.cs
           Screens/     ScreenBase.cs, TabBar.cs, HudBar.cs, CombatStrip.cs, CombatScreen.cs, StatsScreen.cs, GearScreen.cs,
-                       SkillsScreen.cs, GachaScreen.cs, RateScreen.cs, ClassScreen.cs, SettingsScreen.cs, Modal.cs
-          Format/      NumberLabel.cs, PctText.cs, TimeText.cs, Palette.cs, SkillGlyph.cs
+                       HeroesScreen.cs, GachaScreen.cs, RateScreen.cs, ClassScreen.cs, SettingsScreen.cs, Modal.cs
+          Format/      NumberLabel.cs, PctText.cs, TimeText.cs, Palette.cs, HeroGlyph.cs
           Save/        SaveStoreFactory.cs            (adapter to the specs/06 store)
           Debug/       DebugPanel.cs, PerfOverlay.cs  (whole files inside #if IDLERNG_CHEATS, section 6.8)
           UI/          Root.uxml, *.uxml per screen, Theme.uss, Palette.uss, PanelSettings.asset, RuntimeTheme.tss
@@ -155,7 +155,7 @@ Vertical bands, in reference pixels, top to bottom:
 | Content panel          1040px+     |  the selected tab's screen (flex-grow: 1)
 |                                    |
 +------------------------------------+
-| Tab bar                      160px |  Combat | Stats | Gear | Skills | Gacha | Class
+| Tab bar                      160px |  Combat | Stats | Gear | Heroes | Gacha | Class
 +------------------------------------+
 ```
 
@@ -305,14 +305,14 @@ Unity 6's runtime data-binding system (`dataSource`, `[CreateProperty]`) is **no
 ### 7.2 Shape: sim -> `GameViewModel` -> screens
 
 ```
-Simulation.State / Simulation.Query  --Refresh()-->  GameViewModel { HudVm, CombatVm, StatsVm, GearVm, SkillsVm, GachaVm, ClassVm, SettingsVm }
+Simulation.State / Simulation.Query  --Refresh()-->  GameViewModel { HudVm, CombatVm, StatsVm, GearVm, HeroesVm, GachaVm, ClassVm, SettingsVm }
 EventOutbox  --Drain-->  GameViewModel.OnSimEvent(e)  -->  ToastQueue, EventFeed, RevealSequencer, Cards, badges
 Screens  --bind once-->  GameViewModel ; --tap-->  GameViewModel.Commands.* --> Simulation.<command>
 ```
 
 - **One `GameViewModel`**, constructed in `GameRoot`, holding one sub-view-model per screen plus the feedback queues. Screens receive it in `Bind(GameViewModel vm)` and never see `Simulation`.
 - **Pull for numbers, push for feedback.** `Refresh()` copies everything a screen displays into plain fields (`double`, `int`, `bool`, `string` only where the text is static). Events are converted to feedback items at the moment they arrive and never used to derive a displayed number (`specs/03` section 12: "the client reads state for numbers").
-- **Commands** are methods on `GameViewModel.Commands`: `BuyStat(int count)` (1, 10) and `BuyStatMax()`, `Enhance(int slot)`, `Pull()`, `Pull10()`, `EquipSkill(int slot, SkillId id)`, `UnequipSkill(int slot)`, `AutoEquipBest()`, `AttemptBoss()`. Each calls the sim, stores the result in the relevant sub-view-model (`LastReject`), sets `Dirty`, and for pulls sets `SaveRequested`. A `Reject` other than `None` becomes a 1.5 s toast with the reason text from a fixed table (`NotEnoughGold` -> "Not enough gold", and so on).
+- **Commands** are methods on `GameViewModel.Commands`: `BuyStat(int count)` (1, 10) and `BuyStatMax()`, `Enhance(int slot)`, `Pull()`, `Pull10()`, `EquipHero(int slot, HeroId id)`, `UnequipHero(int slot)`, `AutoEquipBest()`, `AttemptBoss()`. Each calls the sim, stores the result in the relevant sub-view-model (`LastReject`), sets `Dirty`, and for pulls sets `SaveRequested`. A `Reject` other than `None` becomes a 1.5 s toast with the reason text from a fixed table (`NotEnoughGold` -> "Not enough gold", and so on).
 - **`BuyStat(10)`** against the `specs/03` API: the view-model sums `Query.StatCost(n..n+9)`; if `Currencies.Gold` covers it, it calls `BuyStatLevel()` ten times (no tick can run in between, so all ten succeed); otherwise the button is disabled and the command is a no-op. This is the `specs/04` section 4.2 all-or-nothing rule implemented client-side; if the sim gains `BuyStatLevels(m)` the loop is replaced (section 17).
 - **Reentrancy rule**: `OnSimEvent` never calls a command. Anything a feedback item wants to do to the sim (there is nothing in P0) would be queued to the next `Update`.
 
@@ -324,7 +324,7 @@ Sub-view-model fields (the contract the screens bind to):
 | `CombatVm` | `Stage`, `KillsInStage`, `IsBossStage`, `BossPhase`, `Phase`, `EnemyIsBoss`, `EnemyHp`, `EnemyMaxHp`, `BossTimerS`, `Dps`, `HitDamage`, `HitsToKill`, `KillTimeS`, `IsWalled`, `BossClearable`, `NeedDpsRatio`, `NeedDps`, `BossFailsOnStage`, `ClassIndex`, `EnemyHue` |
 | `StatsVm` | `Level`, `StatMult`, `Gold`, per button: `Count`, `Cost`, `Affordable`, `DeltaPct`, `ResultMult`; `MaxCount` |
 | `GearVm` | per slot: `Name`, `IsEmpty`, `Tier`, `Rarity`, `Enhance`, `BasePct`, `EffPct`, `SlotMult`; `SelectedSlot`, `EnhanceCost`, `EnhanceSuccess`, `EnhanceAffordable`, `EnhanceMaxed`, `GearMult` |
-| `SkillsVm` | `Equipped[6]` (SkillRow or null), `All[54]` SkillRow { `Id`, `Tier`, `Glyph`, `Name`, `Owned`, `Copies`, `Level`, `NextLevelCopies`, `Pct`, `EquippedSlot` }, `SkillMult`, `SelectedSkill`, `AutoEquipWouldChange` |
+| `HeroesVm` | `Equipped[6]` (HeroRow or null), `All[54]` HeroRow { `Id`, `Tier`, `Glyph`, `Name`, `Owned`, `Copies`, `Level`, `NextLevelCopies`, `Pct`, `EquippedSlot` }, `HeroMult`, `SelectedHero`, `AutoEquipWouldChange` |
 | `GachaVm` | `PityCounter`, `PitySoftStart`, `PityHard`, `PullCostText`, `Pull10CostText`, `CanPull`, `CanPull10`, `FreePullsRemaining`, `TotalPulls`, `RateTable` (section 11.6), `Reveal` (section 8.3) |
 | `ClassVm` | `Advances`, `ClassName`, `ClassMult`, `NextStage` (0 if none), `Progress01`, `Milestones[]` { `Stage`, `Name`, `Reached` } |
 | `SettingsVm` | `AppVersion`, `ContentVersion`, `ContentHash`, `ProfileId`, `SchemaVersion`, `UnityVersion` |
@@ -363,8 +363,8 @@ The game's fun is in its random events, so the client spends its small budget on
 | `GearDropped` | drop toast (8.2) | Toast |
 | `StatLeveled` | "+5%" float above the ATK level (fades 0.5 s); only when 1-10 levels bought; Max shows one toast "Bought 37 levels" | Stats |
 | `EnhanceAttempted` | success: slot flashes green, "+4!" label; fail: slot flashes red, "Failed (gold spent)" | Gear |
-| `SkillPulled` | queued into `RevealSequencer` (8.3) | Gacha |
-| `SkillEquipped` | slot highlight 0.3 s | Skills |
+| `HeroPulled` | queued into `RevealSequencer` (8.3) | Gacha |
+| `HeroEquipped` | slot highlight 0.3 s | Heroes |
 | `ClassAdvanced` | full-width card (8.5) | Over the content panel |
 | `OfflineGoldCredited` | welcome-back card: "Away 5h 12m, credited 5h 12m (cap 8h): +1.84M gold" with an OK button | Modal, non-blocking for the sim |
 | `DayRolledOver` | toast "New day: 3 free pulls"; Gacha tab badge | Toast, tab bar |
@@ -386,7 +386,7 @@ Content from `GearDropped`: `Slot`, `Piece`, `Equipped`, `Replaced`; percentages
 
 ### 8.3 Pull reveal cadence
 
-`Feedback/RevealSequencer.cs` is plain C#: it is fed `PullResult`s and a `float now` and emits card states; `GachaScreen` renders them. The sim has already applied the pull when the first card is face down (gems are gone from the HUD, copies are in the Skills tab); the reveal is purely visual and can be skipped at any time.
+`Feedback/RevealSequencer.cs` is plain C#: it is fed `PullResult`s and a `float now` and emits card states; `GachaScreen` renders them. The sim has already applied the pull when the first card is face down (gems are gone from the HUD, copies are in the Heroes tab); the reveal is purely visual and can be skipped at any time.
 
 Single pull: one card, face down ("?" on a grey rectangle). Flip = scale X 1 -> 0 over 0.3 s, swap face (tier color, glyph, name, "NEW" or "Lv 2 -> 3", "+5 shards" if any), scale X 0 -> 1 over 0.3 s. **Total 0.6 s.** Tapping anywhere during the flip completes it instantly.
 
@@ -493,9 +493,9 @@ No artist, no texture files, no sprite atlas. Everything visible is a `VisualEle
 
 Rarity classes set `background-color`; the toast and card code picks black or white text per the table in 8.2. These are the only colors in the project.
 
-### 10.2 Skill glyphs: 54 icons without files
+### 10.2 Hero glyphs: 54 icons without files
 
-A skill icon is a 96 x 96 element with `border-radius: 48px`, background = tier color, containing a 40 px bold `Label` with the skill's glyph. The glyph is the tier letter plus the index within the pool, 1-based (`C01` .. `C20`, `R01` .. `R15`, `E01` .. `E10`, `L01` .. `L06`, `M01` .. `M03`), derived once at boot from `content.Skills.Pool` order. `Format/SkillGlyph.cs` returns the string; `SkillRow.Glyph` carries it. Unowned skills use the same element with the `unowned` class (30 percent opacity, glyph replaced by `?`). Level is a small badge in the corner (`Lv3`). Names come from `ContentDb.Text(nameKey)` and in P0 usually render as the key (`skill.c_01.name`), which is acceptable and greppable (`specs/05` section 11).
+A hero icon is a 96 x 96 element with `border-radius: 48px`, background = tier color, containing a 40 px bold `Label` with the hero's glyph. The glyph is the tier letter plus the index within the pool, 1-based (`C01` .. `C20`, `R01` .. `R15`, `E01` .. `E10`, `L01` .. `L06`, `M01` .. `M03`), derived once at boot from `content.Heroes.Pool` order. `Format/HeroGlyph.cs` returns the string; `HeroRow.Glyph` carries it. Unowned heroes use the same element with the `unowned` class (30 percent opacity, glyph replaced by `?`). Level is a small badge in the corner (`Lv3`). Names come from `ContentDb.Text(nameKey)` and in P0 usually render as the key (`hero.c_01.name`), which is acceptable and greppable (`specs/05` section 11).
 
 ### 10.3 Combat rectangles
 
@@ -519,7 +519,8 @@ Wireframes are at reference width; `[ ]` is a button, `( )` a toggle, `|====    
 +--------------------------------------------------+
 | Stage 100  BOSS           kills 9/10   WALL      |
 |                                                  |
-|   [YOU]                        [ BOSS 100 ]      |
+|  (E03)(R07)(R11)                                 |   party portraits, cosmetic
+|  (C02)(C15)( -- )  [YOU]       [ BOSS 100 ]      |
 |                                                  |
 | HP |===========================         | 1.2M   |
 | Boss time |==================           | 17.3 s |
@@ -530,6 +531,7 @@ Wireframes are at reference width; `[ ]` is a button, `( )` a toggle, `|====    
 
 - Line 1: stage number; `BOSS` tag on boss stages; kill progress `KillsInStage/KILLS_PER_STAGE`; `WALL` badge in `bad` while `IsWalled`.
 - The boss timer row is hidden unless `EnemyIsBoss`. While `BossPhase == Pending` and spawning, the enemy square reads "Boss incoming".
+- Party: the six party slots as small hero glyphs (10.2) behind `[YOU]`, empty slots as `( -- )`. Each flashes for 0.15 s on a player hit. Purely cosmetic; hero damage is already in `Query.Dps` (`specs/01` section 7.1). Tapping a portrait opens the Heroes tab.
 - DPS row: `Query.Dps`, `Query.HitDamage`, `HitsToKill(EnemyMaxHp)` and `KillTimeSeconds(Stage)`.
 - `[Boss]` button: visible only while walled; label "Boss: need ~2.3x" (muted) or "Boss: clearable" (`ok` border) per 8.4; calls `AttemptBoss`.
 
@@ -551,7 +553,7 @@ Wireframes are at reference width; `[ ]` is a button, `( )` a toggle, `|====    
 | Lifetime: kills 12,345  bosses 9  fails 2        |
 | drops 61  first wall: stage 100                  |
 +--------------------------------------------------+
-| [Combat] [Stats] [Gear] [Skills] [Gacha] [Class] |   tab bar, 160px
+| [Combat] [Stats] [Gear] [Heroes] [Gacha] [Class] |   tab bar, 160px
 +--------------------------------------------------+
 ```
 
@@ -601,13 +603,13 @@ Lifetime line reads `State.Lifetime`. Nothing on this tab is interactive except 
 - Tapping a tile selects it. The detail block shows `GearBasePct`, effective pct and `GearSlotMult(slot)`.
 - Enhance button: `Query.EnhanceCost` (`ENH_COST` at the current stage), `Query.EnhanceSuccess(piece.Enhance)` via `PctText.Chance`. Disabled when empty, maxed or unaffordable, with the reason as the label ("Empty slot", "Max level", "Need 5.26K gold"). Result feedback per 8.1. Tier 0 pieces show a muted "T0: enhancing adds nothing yet".
 
-### 11.5 Skills tab
+### 11.5 Heroes tab
 
 ```
 +--------------------------------------------------+
-| Skills x3.40   equipped +240%     [ Auto-equip ] |
+| Heroes x3.40   equipped +240%     [ Auto-equip ] |
 | Equipped                                         |
-|  (E03)  (R07)  (R11)  (C02)  (C15)  ( -- )       |   6 slots, tap to unequip or to place the selected skill
+|  (E03)  (R07)  (R11)  (C02)  (C15)  ( -- )       |   6 slots, tap to unequip or to place the selected hero
 |  Lv2    Lv3    Lv1    Lv4    Lv2    empty        |
 | Inventory  (54)                                  |
 |  (C01)(C02)(C03)(C04)(C05)(C06)                  |   6 per row, 9 rows
@@ -615,22 +617,22 @@ Lifetime line reads `State.Lifetime`. Nothing on this tab is interactive except 
 |  ...                                             |
 |  (M01)(M02)(M03)                                 |
 |  ?    ?    ?                                     |
-| Selected: R07  skill.r_07.name   Rare            |
+| Selected: R07  hero.r_07.name   Rare             |
 |  Lv3 (7/10 copies)  +28.0% DPS  equipped slot 2  |
 |  [ Equip to empty slot ]  [ Unequip ]            |
 +--------------------------------------------------+
 ```
 
-- Inventory is all 54 skills in pool order (C, R, E, L, M), owned ones at full opacity with `Lv`, unowned at 30 percent with `?`. Tapping any owned skill selects it; tapping an equipped slot while a skill is selected calls `EquipSkill(slot, id)` (replacing), tapping an equipped slot with nothing selected calls `UnequipSkill`.
-- `[Equip to empty slot]` picks the first null slot; disabled if none. `[Auto-equip]` calls `AutoEquipBestSkills` and toasts "Changed N slots"; the tab shows a badge dot while `AutoEquipWouldChange` (recomputed on `SkillPulled` and `SkillEquipped` only, by sorting a preallocated array of 54).
-- Copies display `Copies/NextLevelCopies` from `SKILL_LVL_CUM`; at level 10 it reads `Lv10 MAX (shards +5 per copy)`.
+- Inventory is all 54 heroes in pool order (C, R, E, L, M), owned ones at full opacity with `Lv`, unowned at 30 percent with `?`. Tapping any owned hero selects it; tapping an equipped slot while a hero is selected calls `EquipHero(slot, id)` (replacing), tapping an equipped slot with nothing selected calls `UnequipHero`.
+- `[Equip to empty slot]` picks the first null slot; disabled if none. `[Auto-equip]` calls `AutoEquipBestHeroes` and toasts "Changed N slots"; the tab shows a badge dot while `AutoEquipWouldChange` (recomputed on `HeroPulled` and `HeroEquipped` only, by sorting a preallocated array of 54).
+- Copies display `Copies/NextLevelCopies` from `HERO_LVL_CUM`; at level 10 it reads `Lv10 MAX (shards +5 per copy)`.
 - The inventory grid is 54 instantiated elements, never virtualised; it fits in the content panel with scrolling (`ScrollView`, vertical only, touch scrolling is UI Toolkit's built-in behaviour and is the one non-tap input allowed, section 11.9).
 
 ### 11.6 Gacha tab, rate screen and reveal
 
 ```
 +--------------------------------------------------+
-| Skill Banner                     [ Rates ]       |
+| Hero Banner                     [ Rates ]        |
 | Pity 23 / 80        soft pity from pull 51       |
 | |=====================                         | |   pity bar: PityCounter / PITY_HARD, marker at PITY_SOFT_START
 | Total pulls 61     Free pulls today 2 / 3        |
@@ -638,7 +640,7 @@ Lifetime line reads `State.Lifetime`. Nothing on this tab is interactive except 
 |   [ Pull x1          Free (2 left) ]             |
 |   [ Pull x10         1,000 gems ]                |
 |                                                  |
-|  Last result:  (E03) skill.e_03.name  NEW        |
+|  Last result:  (E03) hero.e_03.name  NEW         |
 +--------------------------------------------------+
 ```
 
@@ -681,7 +683,7 @@ consolidatedM     = consolidatedLplus * M_SHARE_OF_LPLUS
 consolidatedL     = consolidatedLplus - consolidatedM
 ```
 
-With the canonical table this yields 3.6567 percent and 0.6094 percent and `E = 27.35`, which the EditMode test in section 14 asserts against `specs/01` section 3.2 to two decimals. Base rates come from `content.SkillBanner.BaseRates`; the ramp rows print `Query.PityRate(n)` for `n` in {50, 55, 60, 65, 70, 75, 80}. Text is composed once; the screen allocates nothing after boot.
+With the canonical table this yields 3.6567 percent and 0.6094 percent and `E = 27.35`, which the EditMode test in section 14 asserts against `specs/01` section 3.2 to two decimals. Base rates come from `content.HeroBanner.BaseRates`; the ramp rows print `Query.PityRate(n)` for `n` in {50, 55, 60, 65, 70, 75, 80}. Text is composed once; the screen allocates nothing after boot.
 
 ### 11.7 Class tab
 
@@ -716,7 +718,7 @@ Milestones from `content.Class.ClassStages` and `Query.ClassMult(k)`; names from
 | ---- Debug (Dev builds only) -------------------  |
 | Gold  [ +1x cost ] [ +100x cost ] [ +1e6 ]       |
 | Gems  [ +1,000 ]  [ +10,000 ]                    |
-| Skill [ dropdown: C01..M03 ] copies [ 1 ] [ Add ]|
+| Hero [ dropdown: C01..M03 ] copies [ 1 ] [ Add ] |
 | Stage [ 49 ] [ Set ]   (resets fight)            |
 | Clock [ +1 h ] [ +8 h ] [ +1 day ]  offset 0h    |
 | Sim   [ Run 1 h ] [ Run 8 h ]   speed (x1)(x5)(x20)
@@ -732,7 +734,7 @@ Settings proper is one modal reachable from the HUD cog. The Debug section exist
 | Gold +1x / +100x cost | `Debug.GrantGold(Query.StatCost(Level) * k)` |
 | Gold +1e6 | `Debug.GrantGold(1e6)` |
 | Gems | `Debug.GrantGems(n)` |
-| Skill copies | `Debug.GrantSkillCopies(id, n)` |
+| Hero copies | `Debug.GrantHeroCopies(id, n)` |
 | Set stage | `Debug.SetStage(s)`; the view-model marks dirty and the feed logs it |
 | Clock | `OffsetClock.Offset += span`, then `SyncWallClock(clock.UtcNow)` immediately so the offline card shows |
 | Run N h | `Advance(N * 3600 * TICK_HZ)` synchronously with the view-model in "summary mode": events are counted, not toasted, and one toast prints "1h: 2,340 kills, 11 drops, stages 100 -> 118, 1 wall" |
@@ -744,7 +746,7 @@ Settings proper is one modal reachable from the HUD cog. The Debug section exist
 
 ### 11.9 Input and navigation
 
-- Tap only: `ClickEvent` on buttons and tiles. No long-press, no drag, no pinch, no swipe between tabs. The only non-tap gesture is UI Toolkit's built-in touch scroll on the Skills inventory `ScrollView` and the rate screen.
+- Tap only: `ClickEvent` on buttons and tiles. No long-press, no drag, no pinch, no swipe between tabs. The only non-tap gesture is UI Toolkit's built-in touch scroll on the Heroes inventory `ScrollView` and the rate screen.
 - Tabs are exclusive; the active tab's screen is `display: flex`, the others `display: none` (not destroyed, so bound labels keep their cached values).
 - Modals (rate screen, settings, welcome-back, class card, reveal) stack in a `#modal` layer over the content panel; the HUD and strip are never covered. Android back button (`Keyboard.current.escapeKey` through the Input System, which is how Unity maps Back) closes the top modal or, with none open, selects the Combat tab; it never quits.
 - Disabled buttons stay visible with their reason as label text; nothing is hidden for being unaffordable except the strip's Boss button, which is hidden when there is no boss to attempt.
@@ -875,15 +877,15 @@ Stats and gear
 13. Debug: Grant gold `+1e6` and run `Run 1 h`: at least one gear drop toast appears with the correct rarity color; a replaced piece shows the "was" clause.
 14. Enhance: success turns the tile green and increments `+N`; failure turns it red and gold is still deducted; at `+15` the button reads `Max level`; the shown chance equals `ENH_SUCCESS` for that level.
 
-Skills and gacha
+Heroes and gacha
 
 15. Single pull: card flips in about 0.6 s; tapping mid-flip completes it; gems or free pulls decrease before the flip starts.
 16. 10-pull: cards flip staggered; Skip reveals all instantly; the summary lists tier counts and the pity counter.
 17. Pity counter increments per pull and resets to 0 on an L or M (use Debug gems and pull until one appears, at most 80 pulls).
 18. Rate screen numbers match `specs/01` section 3.2: 3.657 percent, 0.609 percent, ramp values at 55, 60, 70, 80.
-19. Pulled skills appear in the inventory with `Lv`; a duplicate increments copies and the level changes at `SKILL_LVL_CUM` boundaries.
-20. `Auto-equip` fills six slots by `SkillPct`; the badge dot disappears; `Skills xN` on the tab equals `Query.SkillMult`.
-21. Manual equip and unequip work; equipping an already-equipped skill in a second slot is rejected with a toast.
+19. Pulled heroes appear in the inventory with `Lv`; a duplicate increments copies and the level changes at `HERO_LVL_CUM` boundaries.
+20. `Auto-equip` fills six slots by `HeroPct`; the badge dot disappears; `Heroes xN` on the tab equals `Query.HeroMult`.
+21. Manual equip and unequip work; equipping an already-equipped hero in a second slot is rejected with a toast.
 
 Class
 
@@ -893,7 +895,7 @@ Lifecycle, clock and save
 
 23. Background the app for 2 minutes, resume: welcome-back card with elapsed about 2 m and gold equal to `120 * OFFLINE_RATE * Gold(stage) / killTime` within rounding; the strip continues from the pre-pause fight state.
 24. Background for 10 s, resume: no card (below `OFFLINE_MIN_GAP_S`), no gold change.
-25. Swipe-kill the app mid-boss-fight, relaunch: stage, gold, gear, skills, pity and the fight (boss timer remaining) are restored.
+25. Swipe-kill the app mid-boss-fight, relaunch: stage, gold, gear, heroes, pity and the fight (boss timer remaining) are restored.
 26. Debug: Clock `+8 h` then `+1 day`: the first shows a capped `OFFLINE_CAP_H` credit; the second also toasts the day rollover and free pulls reset to `FREE_PULLS_PER_DAY`.
 27. Set the device clock back one hour (system settings), return: no crash, no gold change, Dev toast "Clock went back".
 28. `Export` then `Reset profile` then `Import`: the profile is back with the same profile id and pity counter.
@@ -942,6 +944,6 @@ Release build
 6. **UI Toolkit fallback to uGUI.** If after one week of implementation screen work is clearly slower in UI Toolkit, switch `Screens/` and `UI/` to uGUI with TextMesh Pro, keeping `ViewModels/` unchanged. Decide at the end of week one; do not run both.
 7. **Consolidated rate computation location.** `RateTable` lives in the client (11.6). It is a pure function of `BannerDef` and would be better placed next to `PityRate` in `IdleRng.Sim` so the server (`specs/08`) and tools share it. Propose moving it when `specs/03` is next revised.
 8. **Vulkan on Android.** P0 ships GLES3 only. Evaluate Vulkan on the test device set in P1 for battery.
-9. **Reveal versus state visibility.** In P0 the HUD and Skills tab update before the reveal finishes. If playtesters report it as spoiling, add a 'pending results' mask in `SkillsVm` that hides copies until the sequencer releases them; no sim change needed.
+9. **Reveal versus state visibility.** In P0 the HUD and Heroes tab update before the reveal finishes. If playtesters report it as spoiling, add a 'pending results' mask in `HeroesVm` that hides copies until the sequencer releases them; no sim change needed.
 10. **`OFFLINE_MIN_GAP_S` and `OffsetClock` in Release.** The client assumes `OFFLINE_MIN_GAP_S` is content (proposed 60 s in `specs/03` section 11). `specs/08` decides what Release does on `ClockWentBackwards`; the client currently does nothing.
 11. **Unity 6.3 patch pin and upgrade policy.** The pinned patch is chosen at project creation; decide who may bump it and when (recommendation: only between playtest rounds).

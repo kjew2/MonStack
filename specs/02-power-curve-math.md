@@ -43,7 +43,7 @@ When walled, the player farms stage `s` mobs (not `s-1`), earns `Gold(s)`, drops
 ## 4. The four layers
 
 ```
-DPS(s) = 10 * Stat(n) * Gear(s') * Skill(t) * Class(s)
+DPS(s) = 10 * Stat(n) * Gear(s') * Hero(t) * Class(s)
 ```
 
 ### 4.1 Stat layer (gold), log-growth
@@ -64,9 +64,9 @@ Enhancement adds up to +75% of the piece's base pct at level 15 with a declining
 
 Contribution: x31 on day 1, x6e8 on day 7, x1e13 on day 30. This is the layer that carries the exponential.
 
-### 4.3 Skill layer (gacha), stepwise in time
+### 4.3 Hero layer (gacha), stepwise in time
 
-`Skill = 1 + sum(top 6 skillPct) / 100`. It depends on pulls (time and money), not on stage. With 6 pulls/day the bot sits at x1.9 on day 1, x3.4 on day 7, x5.6 on day 30. A whale buying 100 pulls on day 1 would start near x4-5: roughly a two-week head start in this layer, which multiplies through to about 25-35 stages at the day-7 slope. That is the intended size of the pay-to-progress edge; if it feels too big, the lever is skill base pct, not rates.
+`Hero = 1 + sum(top 6 heroPct) / 100`. It depends on pulls (time and money), not on stage. With 6 pulls/day the bot sits at x1.9 on day 1, x3.4 on day 7, x5.6 on day 30. A whale buying 100 pulls on day 1 would start near x4-5: roughly a two-week head start in this layer, which multiplies through to about 25-35 stages at the day-7 slope. That is the intended size of the pay-to-progress edge; if it feels too big, the lever is hero base pct, not rates.
 
 ### 4.4 Class layer (milestones)
 
@@ -77,37 +77,37 @@ x1.5 at stages 50, 150, 300, 500. Each one is placed just past a region where th
 Taking logs of the wall condition at the frontier (`HP/DPS = 2 s`):
 
 ```
-s * ln 1.07 + ln 10 = ln 10 + ln Stat + ln Gear + ln Skill + ln Class     (approx: ignores the 2 s and tier flooring)
-s * ln 1.07           ~ ln Stat(n) + T * ln 1.045 + ln Skill + k * ln 1.5
+s * ln 1.07 + ln 10 = ln 10 + ln Stat + ln Gear + ln Hero + ln Class     (approx: ignores the 2 s and tier flooring)
+s * ln 1.07           ~ ln Stat(n) + T * ln 1.045 + ln Hero + k * ln 1.5
 ```
 
-With `T ~ s`, the residual per stage is `ln(1.07/1.045) = 0.0237`, so `0.0237 s ~ ln Stat + ln Skill + k ln 1.5`. At `s = 550` the left side is 13.0 (= x440,000). Bot at day 30: Stat 24 (3.2), Skill 5.6 (1.7), Class 5.06 (1.6) = 6.5, leaving 6.5 nats (x670) to be covered by gear rarity (average rarityMult of equipped gear > 1 pushes gear above the 1.045 line) and by gear tiers above Common. That matches the bot (gear x1.1e13 vs `1.045^550 = 3.3e10`, a x330 rarity surplus).
+With `T ~ s`, the residual per stage is `ln(1.07/1.045) = 0.0237`, so `0.0237 s ~ ln Stat + ln Hero + k ln 1.5`. At `s = 550` the left side is 13.0 (= x440,000). Bot at day 30: Stat 24 (3.2), Hero 5.6 (1.7), Class 5.06 (1.6) = 6.5, leaving 6.5 nats (x670) to be covered by gear rarity (average rarityMult of equipped gear > 1 pushes gear above the 1.045 line) and by gear tiers above Common. That matches the bot (gear x1.1e13 vs `1.045^550 = 3.3e10`, a x330 rarity surplus).
 
 Layer shares of `ln DPS` from the bot run:
 
-| Day | Stage | Stat | Gear | Skill | Class |
+| Day | Stage | Stat | Gear | Hero | Class |
 |---|---|---|---|---|---|
 | 1 | 90 | 17% | 42% | 8% | 5% |
 | 7 | 380 | 10% | 73% | 4% | 4% |
 | 30 | 547 | 8% | 77% | 4% | 4% |
 
-(The remainder is `BASE_ATK`.) Gear is slightly above the 70% goal from day 7 on. Acceptable for P0; if playtests say gear is the only thing that matters, raise skill base pct by 1.5x and lower `GEAR_SLOT_G` to 1.0070. Keep the *sum* of exponents constant, otherwise the day-30 stage moves.
+(The remainder is `BASE_ATK`.) Gear is slightly above the 70% goal from day 7 on. Acceptable for P0; if playtests say gear is the only thing that matters, raise hero base pct by 1.5x and lower `GEAR_SLOT_G` to 1.0070. Keep the *sum* of exponents constant, otherwise the day-30 stage moves.
 
 ## 6. Bot results (seed 7, `tools/power_curve_model.py`)
 
 ```
-day  1: stage   90  dps 3.72e+03  statLvl  64 (x 4.2)  gear x 31        skills x1.90  class x1.50  pulls   6 L+ 0
-day  2: stage  167  dps 5.17e+05  statLvl 123 (x 7.2)  gear x 1.24e+03  skills x2.60  class x2.25  pulls  12 L+ 0
-day  3: stage  240  dps 6.15e+07  statLvl 172 (x 9.6)  gear x 9.48e+04  skills x3.00  class x2.25  pulls  18 L+ 0
-day  5: stage  340  dps 5.24e+10  statLvl 249 (x13.5)  gear x 3.39e+07  skills x3.40  class x3.38  pulls  30 L+ 0
-day  7: stage  380  dps 1.14e+12  statLvl 300 (x16.0)  gear x 6.18e+08  skills x3.40  class x3.38  pulls  42 L+ 0
-day 10: stage  450  dps 4.54e+13  statLvl 358 (x18.9)  gear x 1.55e+10  skills x4.60  class x3.38  pulls  60 L+ 1
-day 14: stage  480  dps 7.04e+14  statLvl 396 (x20.8)  gear x 2.18e+11  skills x4.60  class x3.38  pulls  84 L+ 1
-day 21: stage  520  dps 1.35e+16  statLvl 436 (x22.8)  gear x 2.13e+12  skills x5.48  class x5.06  pulls 126 L+ 3
-day 30: stage  547  dps 7.47e+16  statLvl 461 (x24.1)  gear x 1.09e+13  skills x5.64  class x5.06  pulls 180 L+ 4
+day  1: stage   90  dps 3.72e+03  statLvl  64 (x 4.2)  gear x 31        heroes x1.90  class x1.50  pulls   6 L+ 0
+day  2: stage  167  dps 5.17e+05  statLvl 123 (x 7.2)  gear x 1.24e+03  heroes x2.60  class x2.25  pulls  12 L+ 0
+day  3: stage  240  dps 6.15e+07  statLvl 172 (x 9.6)  gear x 9.48e+04  heroes x3.00  class x2.25  pulls  18 L+ 0
+day  5: stage  340  dps 5.24e+10  statLvl 249 (x13.5)  gear x 3.39e+07  heroes x3.40  class x3.38  pulls  30 L+ 0
+day  7: stage  380  dps 1.14e+12  statLvl 300 (x16.0)  gear x 6.18e+08  heroes x3.40  class x3.38  pulls  42 L+ 0
+day 10: stage  450  dps 4.54e+13  statLvl 358 (x18.9)  gear x 1.55e+10  heroes x4.60  class x3.38  pulls  60 L+ 1
+day 14: stage  480  dps 7.04e+14  statLvl 396 (x20.8)  gear x 2.18e+11  heroes x4.60  class x3.38  pulls  84 L+ 1
+day 21: stage  520  dps 1.35e+16  statLvl 436 (x22.8)  gear x 2.13e+12  heroes x5.48  class x5.06  pulls 126 L+ 3
+day 30: stage  547  dps 7.47e+16  statLvl 461 (x24.1)  gear x 1.09e+13  heroes x5.64  class x5.06  pulls 180 L+ 4
 ```
 
-Pace: 90 stages day 1, ~75/day through day 5, ~20/day days 5-10, ~6/day days 14-30. Mid-game (days 3-7) is faster than the target table in `specs/00`; late game is on target. Known gap: this seed got 4 L+ in 180 pulls against an expectation of 6.6, so day-30 skill mult is a bit low. The harness in `specs/09` runs 20 seeds and reports the median.
+Pace: 90 stages day 1, ~75/day through day 5, ~20/day days 5-10, ~6/day days 14-30. Mid-game (days 3-7) is faster than the target table in `specs/00`; late game is on target. Known gap: this seed got 4 L+ in 180 pulls against an expectation of 6.6, so day-30 hero mult is a bit low. The harness in `specs/09` runs 20 seeds and reports the median.
 
 Model simplifications the real sim does not share: per-minute aggregation instead of ticks, greedy spending (buy every affordable stat level, one enhancement attempt per minute), no substats, no crit. Treat the bot's stage numbers as +/-15%.
 
@@ -134,7 +134,7 @@ In-app idle (phone on, app open) runs the real sim at full rate and does push st
 | Gold feels useless late | `GOLD_G` up toward 1.055, or `STAT_COST_G` down toward 1.065 | Stat layer share rises; also makes enhancement cheaper in relative terms. |
 | Walls too long | `BOSS_TIME_TICKS` 200 -> 250, or `BOSS_HP_MULT` 10 -> 8 | Fewer walls, flatter feel. Prefer this to touching HP_G. |
 | Walls too short | opposite | |
-| Gacha feels irrelevant | skill base pct x1.5 | Whale edge grows proportionally. |
+| Gacha feels irrelevant | hero base pct x1.5 | Whale edge grows proportionally. |
 | Everything scales but feels samey | add a class at 80 or spread class stages | Cheap, high perceived value. |
 
 Never change `HP_G` to fix a local problem; it moves every stage at once. Change the layer that is misbehaving.

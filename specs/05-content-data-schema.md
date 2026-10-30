@@ -39,7 +39,7 @@ The CSVs are committed as well as the JSON so that CI can rebuild `Content/` wit
 
 ### 3.1 Sheet and CSV layout
 
-- Tab name = table name = CSV file name = JSON file name (`skills` -> `content_src/skills.csv` -> `Content/skills.json`).
+- Tab name = table name = CSV file name = JSON file name (`heroes` -> `content_src/heroes.csv` -> `Content/heroes.json`).
 - Row 1 is the header. Column names are `snake_case`, must match the schema in section 5 exactly, and may appear in any order.
 - Any column whose header starts with `#` is a designer note and is ignored by the converter (`#notes`, `#todo`).
 - Blank rows (every cell empty) are skipped. A row with some cells empty is a data row and is validated.
@@ -54,10 +54,10 @@ The CSVs are committed as well as the JSON so that CI can rebuild `Content/` wit
 | `double` | `1.07`, `0.0325`, `10` | number | Parsed as IEEE double, emitted with Python `repr` (shortest round-trip). `10` is accepted and emitted as `10.0`. |
 | `bool` | `true` / `false` | boolean | Lowercase only. |
 | `string` | any text | string | Free text. Not used for anything the player sees (use `key`). |
-| `id` | `skill_c_01` | string | `^[a-z][a-z0-9_]{0,63}$`. Primary key of its table; stable forever once shipped. |
-| `ref(<table>)` | `skill_standard` | string | Must equal an `id` in the named table. |
+| `id` | `hero_c_01` | string | `^[a-z][a-z0-9_]{0,63}$`. Primary key of its table; stable forever once shipped. |
+| `ref(<table>)` | `hero_standard` | string | Must equal an `id` in the named table. |
 | `enum(<Name>)` | `E` | string | One of the values in section 3.3. Case-sensitive. |
-| `key` | `skill.c_01.name` | string | Localisation key, `^[a-z0-9_]+(\.[a-z0-9_]+)+$`. Section 11. |
+| `key` | `hero.c_01.name` | string | Localisation key, `^[a-z0-9_]+(\.[a-z0-9_]+)+$`. Section 11. |
 | `color` | `#9B59B6` | string | `#RRGGBB`, uppercase hex. Kept as a string in `ContentDb`; the client parses it. |
 
 Nullable columns are marked `?` in the schema tables (`icon_id?`). A nullable column accepts an empty cell and emits JSON `null`. Any other empty cell is error `E011`.
@@ -68,13 +68,13 @@ Enums are defined in C# (`IdleRng.Sim.Content.Enums`) and mirrored in the conver
 
 | Enum | Values (in order) | Used by |
 |---|---|---|
-| `Tier` | `C`, `R`, `E`, `L`, `M` | gear_rarity, skill_tiers, skills, banners, boss_rules |
-| `BannerKind` | `skill`, `pet` (P1) | banners |
-| `RngStream` | `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_skill`, `gacha_pet` (P1) | banners. Matches `specs/00` section 5 contract 2. |
+| `Tier` | `C`, `R`, `E`, `L`, `M` | gear_rarity, hero_tiers, heroes, banners, boss_rules |
+| `BannerKind` | `hero`, `pet` (P1) | banners |
+| `RngStream` | `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`, `gacha_pet` (P1) | banners. Matches `specs/00` section 5 contract 2. |
 | `CurveId` | `enemy_hp`, `gold_per_kill`, `stat_cost` | curves |
 | `QuestType` | `login`, `kill_mobs`, `clear_boss`, `do_pulls` | daily_quests |
 | `GrantTrigger` | `profile_created`, `stage_reached`, `first_boss_cleared` | tutorial_grants |
-| `GrantType` | `gems`, `free_pulls`, `gold`, `skill` | tutorial_grants |
+| `GrantType` | `gems`, `free_pulls`, `gold`, `hero` | tutorial_grants |
 | `ConstantType` | `int`, `double`, `bool` | constants |
 
 `Tier` order is load-bearing: the gacha renormalisation in `specs/01` section 3.1 and "E+" / "L+" comparisons rely on `C < R < E < L < M`.
@@ -82,8 +82,8 @@ Enums are defined in C# (`IdleRng.Sim.Content.Enums`) and mirrored in the conver
 ### 3.4 Ids and keys
 
 - Ids are never reused and never renamed after they have shipped in a `content_version`; saves reference them (`specs/06`). To retire content, add an `enabled` column where the table has one (banners) or leave the row in place and stop referencing it.
-- Skill ids follow `skill_<tier lowercase>_<nn>` in P0 (`skill_c_01` ... `skill_m_03`). The pattern is a convention, not a validation rule; the converter only enforces the `id` regex and uniqueness.
-- Localisation keys follow `<table singular>.<id without table prefix>.<field>`: `skill.c_01.name`, `banner.skill_standard.name`, `quest.kill_mobs_500.name`.
+- Hero ids follow `hero_<tier lowercase>_<nn>` in P0 (`hero_c_01` ... `hero_m_03`). The pattern is a convention, not a validation rule; the converter only enforces the `id` regex and uniqueness.
+- Localisation keys follow `<table singular>.<id without table prefix>.<field>`: `hero.c_01.name`, `banner.hero_standard.name`, `quest.kill_mobs_500.name`.
 
 ## 4. Where every `specs/00` section 2 entry lives
 
@@ -124,12 +124,12 @@ Not every entry in `specs/00` section 2 is a scalar, so not every one is a row i
 | `PITY_SOFT_START`, `PITY_SOFT_STEP`, `PITY_HARD` | `banners.pity_soft_start`, `.pity_soft_step`, `.pity_hard` | int, double, int |
 | `M_SHARE_OF_LPLUS` | `banners.mythic_share_of_lplus` | double |
 | 10-pull guarantee (at least one E+) | `banners.guarantee_batch_size`, `.guarantee_min_tier` | int, enum(Tier) |
-| `SKILL_SLOTS` | `constants` | int |
-| Base DPS% by tier | `skills.base_pct` (per skill row) | double |
-| `SKILL_LVL_CUM` | `skill_level_thresholds.cum_copies` | int per row |
-| `SKILL_LVL_BONUS` | `constants` | double |
-| Pool size by tier | derived: count of `skills` rows per `(pool_id, tier)` | - |
-| Shard value of excess copy (P1) | `skill_tiers.shard_value` | int |
+| `HERO_SLOTS` | `constants` | int |
+| Base DPS% by tier | `heroes.base_pct` (per hero row) | double |
+| `HERO_LVL_CUM` | `hero_level_thresholds.cum_copies` | int per row |
+| `HERO_LVL_BONUS` | `constants` | double |
+| Pool size by tier | derived: count of `heroes` rows per `(pool_id, tier)` | - |
+| Shard value of excess copy (P1) | `hero_tiers.shard_value` | int |
 | `CLASS_STAGES` | `class_advances.stage` | int per row |
 | `CLASS_MULT` | `class_advances.mult` (every P0 row carries the same value) | double |
 | Section 2.6 day/stage targets | `progress_targets` | int, int |
@@ -159,7 +159,7 @@ STAT_PER_LVL double    GEMS_PER_DAY_F2P int     OFFLINE_RATE double
 OFFLINE_CAP_H double   GEAR_DROP_P double       TIER_WIDTH int
 GEAR_SLOT_G double     ENH_MAX int              ENH_PER_LVL double
 ENH_SUCCESS_FLOOR double  ENH_SUCCESS_STEP double  ENH_COST_GOLD_MULT double
-SKILL_SLOTS int        SKILL_LVL_BONUS double
+HERO_SLOTS int        HERO_LVL_BONUS double
 ```
 
 JSON row shape: `{"key": "TICK_HZ", "type": "int", "value": 10}`. The loader maps rows onto the typed `Constants` class (section 9.2); it does not expose a dictionary, so a typo in C# is a compile error rather than a runtime miss.
@@ -216,9 +216,9 @@ The number of rows is `GEAR_SLOTS`. The loader exposes `GearSlots` as a list ord
 | `display_color` | color | |
 | `name_key` | key | |
 
-### 5.6 `skill_tiers`
+### 5.6 `hero_tiers`
 
-Per-tier skill facts that are not per-skill. Small, but it is where the P1 shard value and the tier colour belong, and it keeps `skills` free of repeated columns.
+Per-tier hero facts that are not per-hero. Small, but it is where the P1 shard value and the tier colour belong, and it keeps `heroes` free of repeated columns.
 
 | Column | Type | Constraint |
 |---|---|---|
@@ -227,39 +227,39 @@ Per-tier skill facts that are not per-skill. Small, but it is where the P1 shard
 | `name_key` | key | "Common", "Rare", ... |
 | `shard_value` | int | `>= 0`. **P1** consumer (shard shop). Present and populated in P0 data from `specs/00` section 2.4; P0 code tracks the shard counter and spends nothing. |
 
-### 5.7 `skills`
+### 5.7 `heroes`
 
 | Column | Type | Constraint |
 |---|---|---|
 | `id` | id | Key (`E020`). |
 | `tier` | enum(Tier) | |
-| `pool_id` | id | Groups skills into a gacha pool. `banners.pool_id` references this column (`E022`). Not a `ref` to another table; the pool is the set of skill rows sharing the value. |
+| `pool_id` | id | Groups heroes into a gacha pool. `banners.pool_id` references this column (`E022`). Not a `ref` to another table; the pool is the set of hero rows sharing the value. |
 | `name_key` | key | |
 | `desc_key` | key | |
-| `icon_id` | string | Placeholder sprite name. P0 uses one per tier (`icon_skill_placeholder_c` ...). |
-| `base_pct` | double | `> 0`. DPS% at level 1. P0 data uses the per-tier values from `specs/00` section 2.4 on every row; the column is per row so a future skill can deviate without a schema change. |
+| `icon_id` | string | Placeholder sprite name. P0 uses one per tier (`icon_hero_placeholder_c` ...). |
+| `base_pct` | double | `> 0`. DPS% at level 1. P0 data uses the per-tier values from `specs/00` section 2.4 on every row; the column is per row so a future hero can deviate without a schema change. |
 
-Pool ordering (load-bearing for RNG commitment, `specs/01` section 6): within a `(pool_id, tier)` the pool list is the skill ids sorted by ordinal string comparison. `u3 * pool.Count` indexes that list. Appending ids that sort after the existing ones leaves existing indices unchanged; inserting one that sorts earlier shifts them and changes what future pulls on an existing profile yield. That is not a correctness bug (past pulls are already in the save) but it is a MAJOR version bump by the rule in section 6.3 because it changes the meaning of a committed sequence.
+Pool ordering (load-bearing for RNG commitment, `specs/01` section 6): within a `(pool_id, tier)` the pool list is the hero ids sorted by ordinal string comparison. `u3 * pool.Count` indexes that list. Appending ids that sort after the existing ones leaves existing indices unchanged; inserting one that sorts earlier shifts them and changes what future pulls on an existing profile yield. That is not a correctness bug (past pulls are already in the save) but it is a MAJOR version bump by the rule in section 6.3 because it changes the meaning of a committed sequence.
 
-### 5.8 `skill_level_thresholds`
+### 5.8 `hero_level_thresholds`
 
 | Column | Type | Constraint |
 |---|---|---|
 | `level` | int | Key. Must be exactly `1..N` contiguous in row order (`E060`). |
 | `cum_copies` | int | Strictly increasing (`E031`). Row `level = 1` must have `cum_copies = 1` (`E061`). |
 
-P0 data is `SKILL_LVL_CUM` from `specs/00`, N = 10. `level(copies)` = number of rows with `cum_copies <= copies` (`specs/01` section 7). Loader exposes `IReadOnlyList<int> SkillLevelThresholds` with index 0 = level 1.
+P0 data is `HERO_LVL_CUM` from `specs/00`, N = 10. `level(copies)` = number of rows with `cum_copies <= copies` (`specs/01` section 7). Loader exposes `IReadOnlyList<int> HeroLevelThresholds` with index 0 = level 1.
 
 ### 5.9 `banners`
 
-One row per banner. P0 has one (`skill_standard`). Pity constants are per banner because `specs/01` section 11 leaves "shared vs per-banner pity" open; per-row columns support either answer.
+One row per banner. P0 has one (`hero_standard`). Pity constants are per banner because `specs/01` section 11 leaves "shared vs per-banner pity" open; per-row columns support either answer.
 
 | Column | Type | Constraint |
 |---|---|---|
 | `id` | id | Key. |
-| `kind` | enum(BannerKind) | P0: `skill` only. |
+| `kind` | enum(BannerKind) | P0: `hero` only. |
 | `name_key` | key | |
-| `pool_id` | id | Must match at least one `skills.pool_id` (`E022`); every `Tier` with a non-zero rate must have at least one skill in the pool (`E033`). |
+| `pool_id` | id | Must match at least one `heroes.pool_id` (`E022`); every `Tier` with a non-zero rate must have at least one hero in the pool (`E033`). |
 | `rate_c`, `rate_r`, `rate_e`, `rate_l`, `rate_m` | double x5 | Each `[0, 1]`; sum to 1 within 1e-9 (`E030`). Folded into a JSON object `rates` keyed by `Tier` (section 6.1). |
 | `pity_soft_start` | int | `>= 1`. |
 | `pity_soft_step` | double | `> 0`. |
@@ -309,7 +309,7 @@ One-time grants keyed on a trigger. P0 has the two from `specs/01` section 5.
 | `trigger_value` | int? | Required when `trigger = stage_reached` (the stage); must be empty otherwise (`E054`). |
 | `grant_type` | enum(GrantType) | |
 | `amount` | int | `>= 1`. |
-| `grant_ref` | ref(skills)? | Required when `grant_type = skill`; must be empty otherwise (`E054`). |
+| `grant_ref` | ref(heroes)? | Required when `grant_type = hero`; must be empty otherwise (`E054`). |
 | `sort_order` | int | Unique. Order in which grants with the same trigger are applied. |
 
 P0 rows: `tutorial_gems` (`profile_created`, `gems`, 1000) and `tutorial_pulls` (`profile_created`, `free_pulls`, 10).
@@ -383,9 +383,9 @@ Formatting rules (so output is byte-identical for identical input): UTF-8 withou
     "gear_rarity":            { "file": "gear_rarity.json",            "sha256": "..." },
     "gear_slots":             { "file": "gear_slots.json",             "sha256": "..." },
     "progress_targets":       { "file": "progress_targets.json",       "sha256": "..." },
-    "skill_level_thresholds": { "file": "skill_level_thresholds.json", "sha256": "..." },
-    "skill_tiers":            { "file": "skill_tiers.json",            "sha256": "..." },
-    "skills":                 { "file": "skills.json",                 "sha256": "..." },
+    "hero_level_thresholds": { "file": "hero_level_thresholds.json", "sha256": "..." },
+    "hero_tiers":            { "file": "hero_tiers.json",            "sha256": "..." },
+    "heroes":                 { "file": "heroes.json",                 "sha256": "..." },
     "strings":                { "file": "strings.json",                "sha256": "..." },
     "tutorial_grants":        { "file": "tutorial_grants.json",        "sha256": "..." }
   },
@@ -407,11 +407,11 @@ Format `MAJOR.MINOR`, both non-negative integers, no leading zeros. Rules for bu
 | Any value change (a rate, a threshold value, a colour) | MINOR | `E091` if the content differs and the version string is unchanged. |
 | New row, new enum value, new nullable column, new table | MINOR | same |
 | Removed or renamed id in any keyed table | MAJOR | `E090` if an id present in the previous build is missing and MAJOR did not increase. |
-| Changed number of rows in `skill_level_thresholds`, `gear_slots`, `class_advances` | MAJOR | `E090` |
-| Changed pool ordering of existing skills (section 5.7) | MAJOR | `E090` (detected as an index change in the derived pool list) |
+| Changed number of rows in `hero_level_thresholds`, `gear_slots`, `class_advances` | MAJOR | `E090` |
+| Changed pool ordering of existing heroes (section 5.7) | MAJOR | `E090` (detected as an index change in the derived pool list) |
 | Removed enum value, removed table, removed required column | MAJOR | `E090` |
 
-Coordination with `specs/06`: a save stores `content_version` and `content_hash` of the content it was last played on. On load, `specs/06` calls `db.IsCompatibleWith(save.ContentVersion)`, which is true when MAJOR matches. When it is false, `specs/06` owns what happens next; the P0 behaviour it should implement is `ContentReconcile.Run(save, db)`: drop owned-skill entries whose id is not in `db.Skills` (shards are not refunded in P0), truncate gear to `db.GearSlots.Count`, clamp skill levels to the threshold count, and log each change. Content migrations as data (a `content_migrations` table mapping old ids to new) are **P1**. A save from a *newer* content MAJOR than the running build is refused with an "update the app" message; the client never downgrades content.
+Coordination with `specs/06`: a save stores `content_version` and `content_hash` of the content it was last played on. On load, `specs/06` calls `db.IsCompatibleWith(save.ContentVersion)`, which is true when MAJOR matches. When it is false, `specs/06` owns what happens next; the P0 behaviour it should implement is `ContentReconcile.Run(save, db)`: drop owned-hero entries whose id is not in `db.Heroes` (shards are not refunded in P0), truncate gear to `db.GearSlots.Count`, clamp hero levels to the threshold count, and log each change. Content migrations as data (a `content_migrations` table mapping old ids to new) are **P1**. A save from a *newer* content MAJOR than the running build is refused with an "update the app" message; the client never downgrades content.
 
 ## 7. The converter: `tools/content_build.py`
 
@@ -497,17 +497,17 @@ Both the converter and the C# loader use these exact codes and messages. The loa
 | `E042` | Key not in required list | `unknown constant '{key}' (add it to REQUIRED_CONSTANTS and to ContentDb.Constants first)` |
 | `E043` | Range violated | `value {value} out of range ({rule})` |
 
-Range rules (`{rule}` text in parentheses): `TICK_HZ`, `ATTACK_INTERVAL_TICKS`, `KILLS_PER_STAGE`, `BOSS_EVERY`, `TIER_WIDTH`, `ENH_MAX`, `SKILL_SLOTS`, `GEMS_PER_DAY_F2P` are `> 0`; `SPAWN_DELAY_TICKS` is `>= 0`; `BASE_ATK`, `STAT_PER_LVL`, `ENH_PER_LVL`, `SKILL_LVL_BONUS`, `ENH_COST_GOLD_MULT`, `OFFLINE_CAP_H` are `> 0`; `GEAR_DROP_P`, `OFFLINE_RATE`, `ENH_SUCCESS_FLOOR`, `ENH_SUCCESS_STEP` are `in [0, 1]`; `GEAR_SLOT_G` is `> 1`. `curves.growth` uses `E043` with rule `> 1`, `curves.base` with `> 0`; every other `> 0` / `>= 0` / `[0, 1]` constraint in section 5 also reports as `E043` with the column's rule text.
+Range rules (`{rule}` text in parentheses): `TICK_HZ`, `ATTACK_INTERVAL_TICKS`, `KILLS_PER_STAGE`, `BOSS_EVERY`, `TIER_WIDTH`, `ENH_MAX`, `HERO_SLOTS`, `GEMS_PER_DAY_F2P` are `> 0`; `SPAWN_DELAY_TICKS` is `>= 0`; `BASE_ATK`, `STAT_PER_LVL`, `ENH_PER_LVL`, `HERO_LVL_BONUS`, `ENH_COST_GOLD_MULT`, `OFFLINE_CAP_H` are `> 0`; `GEAR_DROP_P`, `OFFLINE_RATE`, `ENH_SUCCESS_FLOOR`, `ENH_SUCCESS_STEP` are `in [0, 1]`; `GEAR_SLOT_G` is `> 1`. `curves.growth` uses `E043` with rule `> 1`, `curves.base` with `> 0`; every other `> 0` / `>= 0` / `[0, 1]` constraint in section 5 also reports as `E043` with the column's rule text.
 
 ### 8.4 Table rules
 
 | Code | Table(s) | Condition | Message |
 |---|---|---|---|
 | `E030` | banners, gear_rarity | Rates/weights do not sum to 1 within 1e-9 | `rates sum to {sum} (abs error {abs_error}), expected 1 within 1e-9` |
-| `E031` | skill_level_thresholds | `cum_copies` not strictly increasing | `cum_copies must be strictly increasing; level {level} has {value} <= previous {prev}` |
+| `E031` | hero_level_thresholds | `cum_copies` not strictly increasing | `cum_copies must be strictly increasing; level {level} has {value} <= previous {prev}` |
 | `E032` | boss_rules, class_advances, progress_targets | Ordered column not strictly increasing | `{column} must be strictly increasing; row {row} has {value} <= previous {prev}` |
-| `E033` | banners | A tier with rate `> 0` has no skill in the pool | `pool '{pool_id}' has no skills of tier {tier} but rate_{tier lowercase} is {rate}` |
-| `E044` | curves, gear_rarity, skill_tiers | An enum-keyed table is missing a value | `missing row for {enum} value '{value}'` |
+| `E033` | banners | A tier with rate `> 0` has no hero in the pool | `pool '{pool_id}' has no heroes of tier {tier} but rate_{tier lowercase} is {rate}` |
+| `E044` | curves, gear_rarity, hero_tiers | An enum-keyed table is missing a value | `missing row for {enum} value '{value}'` |
 | `E045` | boss_rules | First row's `from_stage` is not 1 | `first rule must have from_stage = 1, got {value}` |
 | `E046` | gear_slots, daily_quests, tutorial_grants | Duplicate `sort_order` | `duplicate sort_order {value} (also at row {other_row})` |
 | `E047` | gear_slots | `sort_order` not exactly `0..N-1` | `sort_order values must be exactly 0..{n_minus_1}, got {sorted values}` |
@@ -516,8 +516,8 @@ Range rules (`{rule}` text in parentheses): `TICK_HZ`, `ATTACK_INTERVAL_TICKS`, 
 | `E052` | banners | Guarantee tier unreachable | `guarantee_min_tier '{tier}' has zero combined rate for tiers >= {tier}` |
 | `E053` | banners | Two enabled banners share `rng_stream` | `rng_stream '{stream}' is also used by enabled banner '{other_id}'` |
 | `E054` | tutorial_grants | Conditional column wrong | `{column} must be {'set' or 'empty'} when {cond_column} = {cond_value}` |
-| `E060` | skill_level_thresholds, class_advances | Index column not `1..N` in row order | `{column} must be exactly 1..{n} in row order, got {values}` |
-| `E061` | skill_level_thresholds | Level 1 threshold not 1 | `cum_copies for level 1 must be 1 (one copy = level 1), got {value}` |
+| `E060` | hero_level_thresholds, class_advances | Index column not `1..N` in row order | `{column} must be exactly 1..{n} in row order, got {values}` |
+| `E061` | hero_level_thresholds | Level 1 threshold not 1 | `cum_copies for level 1 must be 1 (one copy = level 1), got {value}` |
 
 ### 8.5 Versioning and manifest
 
@@ -542,7 +542,7 @@ Namespace `IdleRng.Sim.Content`, inside the pure `IdleRng.Sim` assembly (no `Uni
 ```csharp
 public interface IContentSource
 {
-    bool Exists(string fileName);          // "manifest.json", "skills.json"
+    bool Exists(string fileName);          // "manifest.json", "heroes.json"
     string ReadText(string fileName);      // UTF-8 contents
 }
 
@@ -559,7 +559,7 @@ public sealed class ContentLoadException : Exception
 public readonly struct ContentError
 {
     public string Code { get; }        // "E030"
-    public string Location { get; }    // "banners[skill_standard]"
+    public string Location { get; }    // "banners[hero_standard]"
     public string Message { get; }
     public override string ToString() => $"CONTENT {Code} {Location}: {Message}";
 }
@@ -599,8 +599,8 @@ public sealed class Constants
     public double EnhSuccessFloor { get; }       // ENH_SUCCESS_FLOOR
     public double EnhSuccessStep { get; }        // ENH_SUCCESS_STEP
     public double EnhCostGoldMult { get; }       // ENH_COST_GOLD_MULT
-    public int    SkillSlots { get; }            // SKILL_SLOTS
-    public double SkillLvlBonus { get; }         // SKILL_LVL_BONUS
+    public int    HeroSlots { get; }            // HERO_SLOTS
+    public double HeroLvlBonus { get; }         // HERO_LVL_BONUS
 
     // Convenience, not stored:
     public int  TierOf(int stage) => (stage / TierWidth) * TierWidth;
@@ -641,11 +641,11 @@ Property names are the PascalCase form of the `specs/00` names; the comment on e
 
 ```csharp
 public enum Tier { C = 0, R = 1, E = 2, L = 3, M = 4 }
-public enum BannerKind { Skill, Pet }
-public enum RngStream { Combat, GearDrop, GearRarity, Enhance, GachaSkill, GachaPet }
+public enum BannerKind { Hero, Pet }
+public enum RngStream { Combat, GearDrop, GearRarity, Enhance, GachaHero, GachaPet }
 public enum QuestType { Login, KillMobs, ClearBoss, DoPulls }
 public enum GrantTrigger { ProfileCreated, StageReached, FirstBossCleared }
-public enum GrantType { Gems, FreePulls, Gold, Skill }
+public enum GrantType { Gems, FreePulls, Gold, Hero }
 
 public sealed class BossRuleDef
 {
@@ -661,9 +661,9 @@ public sealed class BossRuleDef
 
 public sealed class GearSlotDef   { public string Id; public int SortOrder; public string NameKey; public string IconId; }
 public sealed class GearRarityDef { public Tier Rarity; public double Weight; public double Mult; public string DisplayColor; public string NameKey; }
-public sealed class SkillTierDef  { public Tier Tier; public string DisplayColor; public string NameKey; public int ShardValue; }
+public sealed class HeroTierDef  { public Tier Tier; public string DisplayColor; public string NameKey; public int ShardValue; }
 
-public sealed class SkillDef
+public sealed class HeroDef
 {
     public string Id { get; }
     public Tier Tier { get; }
@@ -692,7 +692,7 @@ public sealed class BannerDef
     public int FreePullsPerDay { get; }
     public RngStream RngStream { get; }
     public bool Enabled { get; }
-    public IReadOnlyDictionary<Tier, IReadOnlyList<string>> Pool { get; }   // skill ids, ordinal-sorted, derived at load
+    public IReadOnlyDictionary<Tier, IReadOnlyList<string>> Pool { get; }   // hero ids, ordinal-sorted, derived at load
 
     public double PityRate(int n) =>
         n >= PityHard ? 1.0 : Math.Min(1.0, BaseLplus + PitySoftStep * Math.Max(0, n - PitySoftStart));
@@ -704,7 +704,7 @@ public sealed class TutorialGrantDef { public string Id; public GrantTrigger Tri
 public sealed class ProgressTargetDef{ public int Day; public int Stage; }
 ```
 
-(The one-line classes above are abbreviated; in code they follow the same get-only constructor pattern as `SkillDef`.)
+(The one-line classes above are abbreviated; in code they follow the same get-only constructor pattern as `HeroDef`.)
 
 ### 9.4 Table accessors
 
@@ -716,13 +716,13 @@ public sealed partial class ContentDb
 
     public IReadOnlyList<GearSlotDef> GearSlots { get; }               // index == SortOrder
     public IReadOnlyDictionary<Tier, GearRarityDef> GearRarity { get; }
-    public IReadOnlyDictionary<Tier, SkillTierDef> SkillTiers { get; }
+    public IReadOnlyDictionary<Tier, HeroTierDef> HeroTiers { get; }
 
-    public IReadOnlyDictionary<string, SkillDef> Skills { get; }
-    public IReadOnlyList<int> SkillLevelThresholds { get; }            // [0] is level 1
-    public int SkillLevel(int copies);                                  // count of thresholds <= copies, 0 if copies == 0
-    public double SkillPct(SkillDef skill, int level) =>
-        skill.BasePct * (1.0 + Constants.SkillLvlBonus * (level - 1));
+    public IReadOnlyDictionary<string, HeroDef> Heroes { get; }
+    public IReadOnlyList<int> HeroLevelThresholds { get; }            // [0] is level 1
+    public int HeroLevel(int copies);                                  // count of thresholds <= copies, 0 if copies == 0
+    public double HeroPct(HeroDef hero, int level) =>
+        hero.BasePct * (1.0 + Constants.HeroLvlBonus * (level - 1));
 
     public IReadOnlyDictionary<string, BannerDef> Banners { get; }
     public IReadOnlyList<ClassAdvanceDef> ClassAdvances { get; }       // by Index
@@ -741,7 +741,7 @@ Sim code takes `ContentDb` through its constructor (`new Simulation(db, save, cl
 
 ### 10.1 Where the files live
 
-`Content/` at the repository root is the build output. The Unity project reads a copy under `Assets/Resources/Content/` (so each table is a `TextAsset` and `Resources.Load<TextAsset>("Content/skills")` works on every platform without the StreamingAssets-on-Android detour). `content_build.py --copy-to <unity>/Assets/Resources/Content` keeps the copy current, and the `--check` run in CI fails if the two directories differ. Unity imports `.json` as `TextAsset` natively; no importer work.
+`Content/` at the repository root is the build output. The Unity project reads a copy under `Assets/Resources/Content/` (so each table is a `TextAsset` and `Resources.Load<TextAsset>("Content/heroes")` works on every platform without the StreamingAssets-on-Android detour). `content_build.py --copy-to <unity>/Assets/Resources/Content` keeps the copy current, and the `--check` run in CI fails if the two directories differ. Unity imports `.json` as `TextAsset` natively; no importer work.
 
 ```csharp
 public sealed class ResourcesContentSource : IContentSource      // Unity assembly, not Sim
@@ -763,7 +763,7 @@ The harness and tests use `FileContentSource(repoRoot + "/Content")`.
 
 Player-visible text is never an inline string in a content row. Every table that has a display name carries `name_key` (and `desc_key` where there is a description), type `key` (section 3.2). The client resolves keys through `ContentDb.Text(key)`.
 
-- **P0:** the `strings` tab is optional. If present, `Content/strings.json` holds English only and `Text` returns the English string. If absent, or a key is missing, `Text` returns the key itself (`skill.c_01.name`), which is ugly, visible and greppable, which is the point for an ugly-UI prototype. The converter emits warning `W001 {table}[{row}].{column}: key '{key}' has no entry in strings` when the tab exists and a key is missing; warnings do not fail the build in P0.
+- **P0:** the `strings` tab is optional. If present, `Content/strings.json` holds English only and `Text` returns the English string. If absent, or a key is missing, `Text` returns the key itself (`hero.c_01.name`), which is ugly, visible and greppable, which is the point for an ugly-UI prototype. The converter emits warning `W001 {table}[{row}].{column}: key '{key}' has no entry in strings` when the tab exists and a key is missing; warnings do not fail the build in P0.
 - **P1:** `strings` is required, one column per locale (`en`, `ja`, ...), emitted as `strings.<locale>.json`; `W001` becomes `E072` for the default locale; `ContentDb.Text` takes the active locale from a `ILocale` seam; placeholders in strings use `{0}`-style indices and the content schema records nothing about them.
 - **P2:** per-locale icon or layout overrides.
 
@@ -771,9 +771,9 @@ Player-visible text is never an inline string in a content row. Every table that
 
 Today `tools/gacha_model.py` and `tools/power_curve_model.py` each hold a block of module-level constants that duplicates `specs/00` section 2. After this change they read `Content/` so the sheet is the single source of truth and the models become validators of the shipped data. Describe only; do not implement in this spec.
 
-1. Add `tools/content.py` (stdlib only): `load(content_dir="Content") -> Content`, a small object with attributes `constants` (dict key -> value), `curves` (dict id -> `(base, growth)`), `banners`, `skills`, `skill_level_thresholds`, `gear_rarity`, `class_advances`, `boss_rules`, all as lists of dicts straight from the JSON `rows`. It imports `SCHEMA` from `content_build.py` for key names and verifies `manifest.json` hashes before returning, so a stale directory fails the same way the C# loader does (`E900` text).
-2. `gacha_model.py`: delete `BASE`, `L_PLUS`, `M_SHARE_OF_LPLUS`, `SOFT_START`, `SOFT_STEP`, `HARD`. In `main()`, `c = content.load(args.content)`, `b = next(r for r in c.banners if r["id"] == args.banner)` (default `skill_standard`), then `BASE = b["rates"]`, `L_PLUS = BASE["L"] + BASE["M"]`, `M_SHARE_OF_LPLUS = b["mythic_share_of_lplus"]`, `SOFT_START = b["pity_soft_start"]`, `SOFT_STEP = b["pity_soft_step"]`, `HARD = b["pity_hard"]`, and `GUARANTEE_N = b["guarantee_batch_size"]` replaces the literal 9 in `(1 - e_plus) ** 9` as `** (GUARANTEE_N - 1)`. `p_lplus` takes those as parameters instead of globals.
-3. `power_curve_model.py`: delete the constant block. Build it from content: `HP0, HP_G = curves["enemy_hp"]`; `GOLD0, GOLD_G = curves["gold_per_kill"]`; `STAT_COST0, STAT_COST_G = curves["stat_cost"]`; `BOSS_TIME_S = boss_rules[0]["time_ticks"] / constants["TICK_HZ"]`; `SPAWN_S = constants["SPAWN_DELAY_TICKS"] / constants["TICK_HZ"]`; `MIN_KILL_S = constants["ATTACK_INTERVAL_TICKS"] / constants["TICK_HZ"]`; `GEAR_RARITY = [(r["rarity"], r["weight"], r["mult"]) for r in gear_rarity]`; `SKILL_BASE_PCT` = per tier, taken from the first skill of each tier in the pool (and assert all skills of a tier agree, since the model has no per-skill notion); `SKILL_POOL` = count of skills per tier; `SKILL_LVL_CUM = [r["cum_copies"] for r in skill_level_thresholds]`; `CLASS_STAGES = [r["stage"] for r in class_advances]`, `CLASS_MULT = class_advances[0]["mult"]` (assert all equal); `PULL_COST`, `FREE_PULLS_PER_DAY`, pity values from the banner row; `GEMS_PER_DAY`, `OFFLINE_RATE`, `OFFLINE_CAP_H`, `GEAR_SLOTS` (= `len(gear_slots)`), `GEAR_DROP_P`, `GEAR_SLOT_G`, `ENH_MAX`, `ENH_PER_LVL`, `STAT_PER_LVL`, `BASE_ATK`, `KILLS_PER_STAGE`, `BOSS_EVERY`, `BOSS_HP_MULT` from `constants` and `boss_rules[0]`. The two literals in `spend()` (`20 * gold(...)` and `max(0.3, 1 - 0.05 * ...)`) become `constants["ENH_COST_GOLD_MULT"]`, `constants["ENH_SUCCESS_FLOOR"]`, `constants["ENH_SUCCESS_STEP"]`. The `random.random() * 0.97` renormalisation becomes `1 - L_PLUS` from the banner.
+1. Add `tools/content.py` (stdlib only): `load(content_dir="Content") -> Content`, a small object with attributes `constants` (dict key -> value), `curves` (dict id -> `(base, growth)`), `banners`, `heroes`, `hero_level_thresholds`, `gear_rarity`, `class_advances`, `boss_rules`, all as lists of dicts straight from the JSON `rows`. It imports `SCHEMA` from `content_build.py` for key names and verifies `manifest.json` hashes before returning, so a stale directory fails the same way the C# loader does (`E900` text).
+2. `gacha_model.py`: delete `BASE`, `L_PLUS`, `M_SHARE_OF_LPLUS`, `SOFT_START`, `SOFT_STEP`, `HARD`. In `main()`, `c = content.load(args.content)`, `b = next(r for r in c.banners if r["id"] == args.banner)` (default `hero_standard`), then `BASE = b["rates"]`, `L_PLUS = BASE["L"] + BASE["M"]`, `M_SHARE_OF_LPLUS = b["mythic_share_of_lplus"]`, `SOFT_START = b["pity_soft_start"]`, `SOFT_STEP = b["pity_soft_step"]`, `HARD = b["pity_hard"]`, and `GUARANTEE_N = b["guarantee_batch_size"]` replaces the literal 9 in `(1 - e_plus) ** 9` as `** (GUARANTEE_N - 1)`. `p_lplus` takes those as parameters instead of globals.
+3. `power_curve_model.py`: delete the constant block. Build it from content: `HP0, HP_G = curves["enemy_hp"]`; `GOLD0, GOLD_G = curves["gold_per_kill"]`; `STAT_COST0, STAT_COST_G = curves["stat_cost"]`; `BOSS_TIME_S = boss_rules[0]["time_ticks"] / constants["TICK_HZ"]`; `SPAWN_S = constants["SPAWN_DELAY_TICKS"] / constants["TICK_HZ"]`; `MIN_KILL_S = constants["ATTACK_INTERVAL_TICKS"] / constants["TICK_HZ"]`; `GEAR_RARITY = [(r["rarity"], r["weight"], r["mult"]) for r in gear_rarity]`; `HERO_BASE_PCT` = per tier, taken from the first hero of each tier in the pool (and assert all heroes of a tier agree, since the model has no per-hero notion); `HERO_POOL` = count of heroes per tier; `HERO_LVL_CUM = [r["cum_copies"] for r in hero_level_thresholds]`; `CLASS_STAGES = [r["stage"] for r in class_advances]`, `CLASS_MULT = class_advances[0]["mult"]` (assert all equal); `PULL_COST`, `FREE_PULLS_PER_DAY`, pity values from the banner row; `GEMS_PER_DAY`, `OFFLINE_RATE`, `OFFLINE_CAP_H`, `GEAR_SLOTS` (= `len(gear_slots)`), `GEAR_DROP_P`, `GEAR_SLOT_G`, `ENH_MAX`, `ENH_PER_LVL`, `STAT_PER_LVL`, `BASE_ATK`, `KILLS_PER_STAGE`, `BOSS_EVERY`, `BOSS_HP_MULT` from `constants` and `boss_rules[0]`. The two literals in `spend()` (`20 * gold(...)` and `max(0.3, 1 - 0.05 * ...)`) become `constants["ENH_COST_GOLD_MULT"]`, `constants["ENH_SUCCESS_FLOOR"]`, `constants["ENH_SUCCESS_STEP"]`. The `random.random() * 0.97` renormalisation becomes `1 - L_PLUS` from the banner.
 4. Both scripts gain `--content <dir>` (default `Content`) and keep their output format byte-identical for the current data, which is the acceptance test for the change: run before and after, diff the output, expect nothing.
 5. Update the docstrings and `specs/00` section 2's sentence "Change them there first" to "Change the sheet first, rebuild `Content/`, rerun the tools, then update this table" (open decision 1 covers the `specs/00` edit).
 
@@ -784,24 +784,24 @@ Today `tools/gacha_model.py` and `tools/power_curve_model.py` each hold a block 
 1. **Shipped content loads.** `Load(FileContentSource("Content"))` succeeds; `Version` equals `manifest.content_version`; `ContentHash` equals `manifest.content_hash`.
 2. **Constants complete.** Every public property of `Constants` is non-default after load, and the set of property names (snake-cased) equals the set of `key` values in `constants.json`. Catches a key added on one side only.
 3. **Missing table** (`bad_E001`): throws `ContentLoadException` whose single error matches `expected.txt`.
-4. **Hash mismatch** (`bad_E900`): one byte changed in `skills.json`; `E900` with the file name.
+4. **Hash mismatch** (`bad_E900`): one byte changed in `heroes.json`; `E900` with the file name.
 5. **Unlisted file** (`bad_E902`): extra `pets.json` present; `E902`.
-6. **Duplicate id** (`bad_E020`): two `skill_c_01` rows; `E020` names the first row.
+6. **Duplicate id** (`bad_E020`): two `hero_c_01` rows; `E020` names the first row.
 7. **Rates sum** (`bad_E030`): `rate_c` 0.599; `E030` with `abs error 0.001`.
 8. **Thresholds** (`bad_E031`): `cum_copies` 16, 25, 25; `E031` at level 7.
-9. **Pool reference** (`bad_E033`): banner `pool_id` with no Mythic skills; `E033` for tier `M`.
-10. **Enum** (`bad_E021`): skill tier `X`; `E021` lists `C, R, E, L, M`.
+9. **Pool reference** (`bad_E033`): banner `pool_id` with no Mythic heroes; `E033` for tier `M`.
+10. **Enum** (`bad_E021`): hero tier `X`; `E021` lists `C, R, E, L, M`.
 11. **Constant missing and mistyped** (`bad_E040`, `bad_E041`): `E040` for a removed `TIER_WIDTH`; `E041` when `TICK_HZ` is declared `double`.
 12. **All errors reported.** A fixture with three independent defects yields exactly three errors in table order, not one.
-13. **Pool ordering.** `Banners["skill_standard"].Pool[Tier.C]` equals the C-tier ids sorted with `StringComparer.Ordinal`; appending `skill_c_21` to a fixture leaves indices 0..19 unchanged.
+13. **Pool ordering.** `Banners["hero_standard"].Pool[Tier.C]` equals the C-tier ids sorted with `StringComparer.Ordinal`; appending `hero_c_21` to a fixture leaves indices 0..19 unchanged.
 14. **Immutable.** Casting any `IReadOnlyList`/`IReadOnlyDictionary` to its mutable interface and calling `Add` throws `NotSupportedException`; reflection finds no public setter on any type in `IdleRng.Sim.Content`.
 15. **IsCompatibleWith.** `("1.0" db, "1.7" save)` true; `("2.0", "1.7")` false; `("1.0", "")`, `("1.0", "1")`, `("1.0", "a.b")` false.
-16. **Pity rate from content.** `Banners["skill_standard"].PityRate(n)` for n in {1, 50, 51, 55, 60, 65, 70, 75, 79, 80, 81} equals the `specs/01` section 3.2 table. This is the bridge to `GachaTests`; it fails if the sheet drifts from `specs/01`.
+16. **Pity rate from content.** `Banners["hero_standard"].PityRate(n)` for n in {1, 50, 51, 55, 60, 65, 70, 75, 79, 80, 81} equals the `specs/01` section 3.2 table. This is the bridge to `GachaTests`; it fails if the sheet drifts from `specs/01`.
 17. **Converter parity.** For every `bad_*` fixture, the loader's first error line equals `expected.txt`. (The Python test asserts the same file, so both validators are pinned to one text.)
 18. **BossRuleFor.** Shipped content: `BossRuleFor(10)` and `BossRuleFor(550)` return `default`. Two-rule fixture (`from_stage` 1 and 300): `BossRuleFor(290)` is the first, `BossRuleFor(300)` the second.
-19. **Golden content.** Shipped content matches `specs/00`: skills per tier 20/15/10/6/3; `ClassAdvances` stages 50/150/300/500; `SkillLevelThresholds` equals `SKILL_LVL_CUM`; `GearSlots.Count` is 6; `GearRarity[Tier.M].Mult` is 3.0. Marked `[Category("Golden")]`; when `specs/00` changes this test is updated in the same commit as the sheet.
+19. **Golden content.** Shipped content matches `specs/00`: heroes per tier 20/15/10/6/3; `ClassAdvances` stages 50/150/300/500; `HeroLevelThresholds` equals `HERO_LVL_CUM`; `GearSlots.Count` is 6; `GearRarity[Tier.M].Mult` is 3.0. Marked `[Category("Golden")]`; when `specs/00` changes this test is updated in the same commit as the sheet.
 20. **Culture invariance.** Run `Load` with `CultureInfo.CurrentCulture = de-DE`; `Constants.HpG`-equivalent (`Curves[EnemyHp].Growth`) is still 1.07, not 107.
-21. **Text fallback.** With `strings.json` absent, `Text("skill.c_01.name")` returns the key; with the fixture present it returns the English string.
+21. **Text fallback.** With `strings.json` absent, `Text("hero.c_01.name")` returns the key; with the fixture present it returns the English string.
 22. **Load time.** Shipped content loads in under 50 ms on the CI runner (warm). The harness constructs one `ContentDb` per run, but the test suite constructs hundreds.
 23. **Determinism of the build.** Running `content_build.py --check` against the committed `Content/` exits 0 (this is a CI step rather than an NUnit test, listed here because it is the test that proves the committed JSON is what the CSVs say).
 
@@ -814,10 +814,10 @@ Real P0 values from `specs/00` section 2.4 and `specs/01` sections 2 to 5. `myth
   "table": "banners",
   "rows": [
     {
-      "id": "skill_standard",
-      "kind": "skill",
-      "name_key": "banner.skill_standard.name",
-      "pool_id": "skill_standard",
+      "id": "hero_standard",
+      "kind": "hero",
+      "name_key": "banner.hero_standard.name",
+      "pool_id": "hero_standard",
       "rates": {
         "C": 0.6,
         "R": 0.28,
@@ -833,66 +833,66 @@ Real P0 values from `specs/00` section 2.4 and `specs/01` sections 2 to 5. `myth
       "guarantee_min_tier": "E",
       "pull_cost_gems": 100,
       "free_pulls_per_day": 3,
-      "rng_stream": "gacha_skill",
+      "rng_stream": "gacha_hero",
       "enabled": true
     }
   ]
 }
 ```
 
-Loader-derived, not in the file: `BaseLplus = 0.03`; `Pool["C"]` = the 20 ids `skill_c_01` ... `skill_c_20` in ordinal order, and so on per tier.
+Loader-derived, not in the file: `BaseLplus = 0.03`; `Pool["C"]` = the 20 ids `hero_c_01` ... `hero_c_20` in ordinal order, and so on per tier.
 
-## 15. Example: `Content/skills.json` (first 5 of 54 rows)
+## 15. Example: `Content/heroes.json` (first 5 of 54 rows)
 
 The CSV is ordered C, R, E, L, M, so the first five rows are Common. Rows 6 to 54 have the same shape with `tier` R/E/L/M, `base_pct` 20.0/40.0/80.0/160.0 and 15/10/6/3 rows respectively, matching the pool sizes in `specs/00` section 2.4.
 
 ```json
 {
-  "table": "skills",
+  "table": "heroes",
   "rows": [
     {
-      "id": "skill_c_01",
+      "id": "hero_c_01",
       "tier": "C",
-      "pool_id": "skill_standard",
-      "name_key": "skill.c_01.name",
-      "desc_key": "skill.c_01.desc",
-      "icon_id": "icon_skill_placeholder_c",
+      "pool_id": "hero_standard",
+      "name_key": "hero.c_01.name",
+      "desc_key": "hero.c_01.desc",
+      "icon_id": "icon_hero_placeholder_c",
       "base_pct": 10.0
     },
     {
-      "id": "skill_c_02",
+      "id": "hero_c_02",
       "tier": "C",
-      "pool_id": "skill_standard",
-      "name_key": "skill.c_02.name",
-      "desc_key": "skill.c_02.desc",
-      "icon_id": "icon_skill_placeholder_c",
+      "pool_id": "hero_standard",
+      "name_key": "hero.c_02.name",
+      "desc_key": "hero.c_02.desc",
+      "icon_id": "icon_hero_placeholder_c",
       "base_pct": 10.0
     },
     {
-      "id": "skill_c_03",
+      "id": "hero_c_03",
       "tier": "C",
-      "pool_id": "skill_standard",
-      "name_key": "skill.c_03.name",
-      "desc_key": "skill.c_03.desc",
-      "icon_id": "icon_skill_placeholder_c",
+      "pool_id": "hero_standard",
+      "name_key": "hero.c_03.name",
+      "desc_key": "hero.c_03.desc",
+      "icon_id": "icon_hero_placeholder_c",
       "base_pct": 10.0
     },
     {
-      "id": "skill_c_04",
+      "id": "hero_c_04",
       "tier": "C",
-      "pool_id": "skill_standard",
-      "name_key": "skill.c_04.name",
-      "desc_key": "skill.c_04.desc",
-      "icon_id": "icon_skill_placeholder_c",
+      "pool_id": "hero_standard",
+      "name_key": "hero.c_04.name",
+      "desc_key": "hero.c_04.desc",
+      "icon_id": "icon_hero_placeholder_c",
       "base_pct": 10.0
     },
     {
-      "id": "skill_c_05",
+      "id": "hero_c_05",
       "tier": "C",
-      "pool_id": "skill_standard",
-      "name_key": "skill.c_05.name",
-      "desc_key": "skill.c_05.desc",
-      "icon_id": "icon_skill_placeholder_c",
+      "pool_id": "hero_standard",
+      "name_key": "hero.c_05.name",
+      "desc_key": "hero.c_05.desc",
+      "icon_id": "icon_hero_placeholder_c",
       "base_pct": 10.0
     }
   ]
@@ -905,7 +905,7 @@ The CSV is ordered C, R, E, L, M, so the first five rows are Common. Rows 6 to 5
 |---|---|---|
 | Scripted sheet export `content_pull.py` | P1 | 7.4 |
 | `pet` banner kind, `gacha_pet` stream | P1 | 3.3, 5.9 (schema already admits them) |
-| `skill_tiers.shard_value` consumer (shard shop) | P1 | 5.6 |
+| `hero_tiers.shard_value` consumer (shard shop) | P1 | 5.6 |
 | Required `strings` table, multiple locales, `E072` | P1 | 5.14, 11 |
 | `content_migrations` table (id remaps across MAJOR) | P1 | 6.3 |
 | Addressables remote content, per-table download | P1 | 10.2 |

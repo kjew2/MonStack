@@ -1,6 +1,6 @@
 # 01 - Gacha Math
 
-Scope: the P0 skill banner. Pet banner (P1) and rate-up banners (P1) reuse every mechanism here with a different table.
+Scope: the P0 hero banner. Pet banner (P1) and rate-up banners (P1) reuse every mechanism here with a different table.
 Numbers come from `tools/gacha_model.py`; rerun it after any change and paste the new output into section 3.
 
 ## 1. Design goals
@@ -8,7 +8,8 @@ Numbers come from `tools/gacha_model.py`; rerun it after any change and paste th
 1. A free player (6 pulls/day) sees a Legendary-or-better about every 4-5 days and never waits more than ~2 weeks.
 2. The displayed rates are honest and the "consolidated rate" (what players actually experience with pity) can be shown next to them.
 3. No result depends on anything the client controls. Reloading a save, changing the device clock, or killing the app mid-pull cannot change what the next pull gives.
-4. Dupes are never dead: every copy either levels the skill or becomes shards.
+4. Dupes are never dead: every copy either levels the hero or becomes shards.
+5. Pulls are characters the player can get attached to: every hero has a name, a portrait and a visible place in the fight, so a new Legendary is someone joining the party, not a number going up.
 
 ## 2. Rate table
 
@@ -21,7 +22,7 @@ Numbers come from `tools/gacha_model.py`; rerun it after any change and paste th
 | Mythic | M | 0.005 | 3 | 160 |
 
 `L+` means L or M. Base `P(L+) = 0.03`. Within an L+ result, `P(M | L+) = 1/6`.
-Within a tier, the specific skill is uniform over the pool (no per-skill weights in P0).
+Within a tier, the specific hero is uniform over the pool (no per-hero weights in P0).
 
 ## 3. Pity
 
@@ -66,7 +67,7 @@ With `q_n = P_Lplus(n)` and survival `S_n = prod_{k<n} (1 - q_k)`, the probabili
 
 ## 4. 10-pull guarantee
 
-A 10-pull executes 10 ordinary pulls in sequence (each advancing the pity counter and consuming one RNG draw as in section 6). After slot 9, if none of slots 1-9 is E+, slot 10 draws its tier from the E+ sub-distribution renormalised: E 0.09/0.12, L 0.025/0.12, M 0.005/0.12. The specific skill is then rolled as usual. If slot 10 lands L+ this way it resets pity like any other L+.
+A 10-pull executes 10 ordinary pulls in sequence (each advancing the pity counter and consuming one RNG draw as in section 6). After slot 9, if none of slots 1-9 is E+, slot 10 draws its tier from the E+ sub-distribution renormalised: E 0.09/0.12, L 0.025/0.12, M 0.005/0.12. The specific hero is then rolled as usual. If slot 10 lands L+ this way it resets pity like any other L+.
 
 Effect (from the model): `P(guarantee fires) = 0.88^9 = 0.316`; expected E+ per 10-pull rises from 1.20 to 1.48. The guarantee never *reduces* anyone's odds; it only upgrades slot 10 in the bad case.
 
@@ -86,7 +87,7 @@ Costs: 100 gems per pull, 1000 per 10-pull (no discount in P0; a 10-pull is a co
 
 ## 6. RNG commitment and anti-save-scum
 
-The gacha stream is `gacha_skill` (see `specs/03` for the generator). Its state is `(seed, counter)`:
+The gacha stream is `gacha_hero` (see `specs/03` for the generator). Its state is `(seed, counter)`:
 
 - `seed` is a 64-bit value assigned once when the profile is created. Prototype: derived from the profile GUID. Live: issued by the server and **never sent to the client in a form the client can use to peek ahead** (see `specs/08`; the server returns results, the client only displays them).
 - `counter` is the total number of pulls ever made on this banner. It is stored in the save.
@@ -95,25 +96,36 @@ The gacha stream is `gacha_skill` (see `specs/03` for the generator). Its state 
 Each pull consumes exactly three draws from the stream, in this order, so results are reproducible and auditable:
 1. `u1` -> L+ check against `P_Lplus(n)`.
 2. `u2` -> tier within the branch (M vs L, or C/R/E renormalised, or forced E).
-3. `u3` -> skill index within the tier's pool.
+3. `u3` -> hero index within the tier's pool.
 
 Draws are consumed even when their outcome is predetermined (e.g. `u1` at hard pity) so the counter arithmetic stays `3 * pulls`.
 
 ## 7. Dupe economy
 
-A skill has `copies` (lifetime) and derived `level`:
+A hero has `copies` (lifetime) and derived `level`:
 
 ```
-SKILL_LVL_CUM = [1, 3, 6, 10, 16, 25, 40, 64, 100, 160]
+HERO_LVL_CUM = [1, 3, 6, 10, 16, 25, 40, 64, 100, 160]
 level(copies) = count of thresholds <= copies          # 1..10
-skillPct(tier, level) = basePct[tier] * (1 + 0.20 * (level - 1))
+heroPct(tier, level) = basePct[tier] * (1 + 0.20 * (level - 1))
 ```
 
-Level 10 is 2.8x base. A level-10 Common (28%) is worth less than a level-1 Epic (40%), so collection matters, but a Common you pull 160 times is not nothing. Expected time to level a specific L skill to 5 (16 copies): 16 copies * 6 L skills in pool / (6 pulls/day * 0.0366 * 5/6) ~ 520 days. That is intentional: L/M leveling is the long tail, C/R/E leveling is the daily visible progress.
+Level 10 is 2.8x base. A level-10 Common (28%) is worth less than a level-1 Epic (40%), so collection matters, but a Common you pull 160 times is not nothing. Expected time to level a specific L hero to 5 (16 copies): 16 copies * 6 L heroes in pool / (6 pulls/day * 0.0366 * 5/6) ~ 520 days. That is intentional: L/M leveling is the long tail, C/R/E leveling is the daily visible progress.
 
 Copies past 160 convert to shards at pull time (P1 shard shop: buy a chosen E for 250 shards, L for 1500). In P0 the shard counter is tracked but nothing spends it.
 
-Equipping: `SKILL_SLOTS = 6`. The client offers "auto-equip best six" (sort by `skillPct`). `skillMult = 1 + sum(equipped skillPct) / 100`.
+Party: `HERO_SLOTS = 6`. The client offers "auto-equip best six" (sort by `heroPct`). `heroMult = 1 + sum(party heroPct) / 100`.
+
+### 7.1 What a hero is in P0
+
+A hero is a content row (`specs/05` section 5.7) with a tier, a name, a portrait and a base DPS%. In P0 its only mechanical effect is the passive `heroPct` while it is in the party. On the combat screen the six party members stand behind the player as portraits and play an attack flash on each player hit (`specs/07` section 11.1). That animation is cosmetic: their damage is already inside `heroMult`, so the sim, the bot and the power curve in `specs/02` do not change.
+
+Why passive only: it keeps the gacha a single multiplicative layer, which is what the power curve and the bot were tuned against. Anything that gives heroes their own behaviour (below) needs a bot rerun before it ships.
+
+P1 ideas, not commitments:
+- **Roles.** Each hero gets a role (striker, support, treasure hunter) that adds a small second bonus, for example boss damage, gold per kill or gear drop chance. Needs a `role` column and per-role caps so one role cannot dominate.
+- **Active abilities.** Legendary and Mythic heroes get an ultimate on a cooldown. This is the part of skill gacha worth keeping, attached to a character instead of a floating icon.
+- **Party synergy.** Small bonus for fielding several heroes of the same faction. Adds collection goals beyond raw tier.
 
 ## 8. Algorithms
 
@@ -136,15 +148,15 @@ public PullResult Pull(BannerDef banner, BannerState st, Currencies cur, RngStre
         tier = SampleRenormalised(banner.BaseRates, exclude: {L, M}, u2);
     }
     int idx = (int)(u3 * banner.Pool[tier].Count);
-    var skillId = banner.Pool[tier][idx];
+    var heroId = banner.Pool[tier][idx];
 
-    var owned = st.Owned.GetOrAdd(skillId);
+    var owned = st.Owned.GetOrAdd(heroId);
     int before = Level(owned.Copies);
     owned.Copies += 1;
     int after = Level(owned.Copies);
-    if (owned.Copies > SKILL_LVL_CUM.Last()) cur.Shards += ShardValue[tier];
+    if (owned.Copies > HERO_LVL_CUM.Last()) cur.Shards += ShardValue[tier];
 
-    return new PullResult(skillId, tier, isNew: owned.Copies == 1, levelBefore: before, levelAfter: after);
+    return new PullResult(heroId, tier, isNew: owned.Copies == 1, levelBefore: before, levelAfter: after);
 }
 
 public PullResult[] Pull10(BannerDef b, BannerState st, Currencies cur, RngStream rng)
@@ -186,6 +198,8 @@ Unit tests in `IdleRng.Sim.Tests/GachaTests.cs` must cover:
 | Monetisation pressure | do not touch rates. Adjust gem income (`specs/04`) or add a paid 10-pull discount. Rate changes after launch read as a bait-and-switch. |
 
 ## 11. Open decisions (not blocking P0)
+
+- Whether P1 hero roles (section 7.1) are worth the extra tuning surface, or whether heroes stay pure passive multipliers with richer art.
 
 - Whether pity carries across banners of the same type (industry norm: per banner for rate-ups, shared for standard). P0 has one banner so it is moot.
 - Whether to show the exact soft-pity ramp or just "rates increase after 50 pulls". Showing the ramp is friendlier and legally safer; it is what the rate screen in `specs/07` assumes.

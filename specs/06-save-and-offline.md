@@ -15,7 +15,7 @@ Assemblies: the catch-up arithmetic (`SyncWallClock(nowMs)`, section 7) and the 
 
 ## 2. Constants
 
-Constants used from 00 section 2 are referred to by name: `TICK_HZ`, `ATTACK_INTERVAL_TICKS`, `SPAWN_DELAY_TICKS`, `KILLS_PER_STAGE`, `BOSS_EVERY`, `GOLD0`, `GOLD_G`, `HP0`, `HP_G`, `OFFLINE_RATE`, `OFFLINE_CAP_H`, `GEAR_SLOTS`, `ENH_MAX`, `SKILL_SLOTS`, `PITY_HARD`, `CLASS_STAGES`, `FREE_PULLS_PER_DAY`. `DAY_SECONDS` and `IDLE_CHEST_HOURS` come from 04 section 2.
+Constants used from 00 section 2 are referred to by name: `TICK_HZ`, `ATTACK_INTERVAL_TICKS`, `SPAWN_DELAY_TICKS`, `KILLS_PER_STAGE`, `BOSS_EVERY`, `GOLD0`, `GOLD_G`, `HP0`, `HP_G`, `OFFLINE_RATE`, `OFFLINE_CAP_H`, `GEAR_SLOTS`, `ENH_MAX`, `HERO_SLOTS`, `PITY_HARD`, `CLASS_STAGES`, `FREE_PULLS_PER_DAY`. `DAY_SECONDS` and `IDLE_CHEST_HOURS` come from 04 section 2.
 
 Engineering constants introduced by this spec. They are not balance numbers, so they live in code (`SaveConfig`) and not in `ContentDb`; migrations in particular must not depend on content (section 8.2).
 
@@ -49,7 +49,7 @@ public sealed record GameState
     public Currencies        Currencies  { get; init; } = new();        // 04 section 3
     public ProgressionState  Progression { get; init; } = new();        // 04 section 10
     public GearState         Gear        { get; init; } = new();        // 04 section 5.1
-    public SkillState        Skills      { get; init; } = new();        // 04 section 10
+    public HeroState        Heroes      { get; init; } = new();        // 04 section 10
     public Dictionary<string, BannerState>    Banners { get; init; } = new();   // key: BannerDef.Id (P0: one banner)
     public Dictionary<string, RngStreamState> Rng     { get; init; } = new();   // key: stream name, 00 section 5.2
     public DailyState        Daily       { get; init; } = new();        // 04 section 7.1
@@ -73,12 +73,12 @@ public sealed record CombatState
     public int KillsInStage { get; set; }        // 0 .. KILLS_PER_STAGE - 1
 }
 
-// 01 section 8's BannerState is a runtime view over this record plus Skills.Copies and
+// 01 section 8's BannerState is a runtime view over this record plus Heroes.Copies and
 // Currencies.Shards (04 section 3 note). Only these two fields are persisted per banner.
 public sealed record BannerState
 {
     public int  PityCounter { get; set; }   // pulls since last L+, 0 .. PITY_HARD
-    public long TotalPulls  { get; set; }   // lifetime; invariant Rng["gacha_skill"].Counter == 3 * TotalPulls
+    public long TotalPulls  { get; set; }   // lifetime; invariant Rng["gacha_hero"].Counter == 3 * TotalPulls
 }
 
 public sealed record RngStreamState
@@ -113,15 +113,15 @@ Reused records, defined elsewhere and serialised as declared there:
 | `Currencies` | 04 section 3 | `Gold` (double), `Gems`, `FreePullsDaily`, `FreePullsBanked`, `Shards`, `EnhMaterials`, `DungeonTickets`. "Free pulls used today" is `FREE_PULLS_PER_DAY - FreePullsDaily`; the remaining count is what is stored. |
 | `ProgressionState` | 04 section 10 | `StatLevel`, `ClassAdvances`, `HighestFirstClearBossStage`, `ChestTimerStart` (server seconds), `TutorialGranted`. |
 | `GearState` / `GearPiece` | 04 section 5.1 | `Equipped`: array of exactly `GEAR_SLOTS` entries, each `null` or `{ Slot, Rarity, Tier, EnhLevel }`. `BasePct` is derived and never stored. |
-| `SkillState` / `SkillId` | 04 section 10 | `Copies`: map from skill id to copy count. `Equipped`: array of exactly `SKILL_SLOTS` entries, each `null` or a skill id. `AutoEquipBest`. |
+| `HeroState` / `HeroId` | 04 section 10 | `Copies`: map from hero id to copy count. `Equipped`: array of exactly `HERO_SLOTS` entries, each `null` or a hero id. `AutoEquipBest`. |
 | `DailyState` | 04 section 7.1 | `DayKey`, `Progress[]`, `Rewarded[]` (indexed like `ContentDb.Quests`), `DungeonTicketsUsed`. |
 
 ### 3.2 Field notes
 
-- **Skill ids in JSON.** `SkillId(Rarity Tier, int Index)` serialises as the string `{TierLetter}{Index:D2}`, for example `"E07"` or `"M00"`. `Copies` is a JSON object keyed by that string; `Equipped` is an array of those strings or `null`. One Json.NET converter handles both directions.
+- **Hero ids in JSON.** `HeroId(Rarity Tier, int Index)` serialises as the string `{TierLetter}{Index:D2}`, for example `"E07"` or `"M00"`. `Copies` is a JSON object keyed by that string; `Equipped` is an array of those strings or `null`. One Json.NET converter handles both directions.
 - **Enums** (`GearSlot`, `Rarity`) serialise as their member names (`"Weapon"`, `"L"`), not integers. Rule: a saved enum member is never renamed in place; a rename is a migration step that rewrites the string.
 - **Seeds.** `RngStreamState.Seed` is a hex string, not a JSON number, because numbers above 2^53 are not exact in every JSON parser the save may meet later (cloud save, tooling). `Counter` fits in a `long` (2^63 draws is unreachable).
-- **Seed derivation (prototype).** `seed(name) = first 8 bytes of SHA-256(ProfileId.ToByteArray() ++ UTF8(name))` as a little-endian ulong. All five streams of 00 section 5.2 (`combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_skill`) are created with `Counter = 0` at profile creation. 01 section 6 covers why the live `gacha_skill` seed moves server-side (`specs/08`).
+- **Seed derivation (prototype).** `seed(name) = first 8 bytes of SHA-256(ProfileId.ToByteArray() ++ UTF8(name))` as a little-endian ulong. All five streams of 00 section 5.2 (`combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`) are created with `Counter = 0` at profile creation. 01 section 6 covers why the live `gacha_hero` seed moves server-side (`specs/08`).
 - **Timestamps** are `long` unix seconds, UTC, read from `IClock` (section 11). Field names end in `ServerSec`.
 - **Gold is a `double`** (02 section 2). Json.NET writes doubles in round-trip form, so a value survives save/load bit-exactly.
 - **First clears** are the set `{BOSS_EVERY, 2 * BOSS_EVERY, ..., HighestFirstClearBossStage}` compressed to one integer because P0 stages are linear and monotone (04 section 7.3). If P1 stage select arrives, the migration replaces it with a bitset keyed by `stage / BOSS_EVERY`.
@@ -133,7 +133,7 @@ Reused records, defined elsewhere and serialised as declared there:
 
 - The current enemy's remaining HP, and an in-progress boss attempt (boss HP, timer). On load the player faces a fresh normal mob at `Combat.Stage`; an attempt that was in progress is abandoned at no cost, which matches 02 section 3 (a timed-out attempt costs nothing but the 20 s).
 - The `SimEvent` queue (04 section 10): a save mid-queue loses toasts, never state.
-- Derived values: `BasePct`, skill level, DPS, kill time, `ChestReadyAt`, class multiplier. All are recomputed from `ContentDb`, so retuning constants reflows every save with no migration.
+- Derived values: `BasePct`, hero level, DPS, kill time, `ChestReadyAt`, class multiplier. All are recomputed from `ContentDb`, so retuning constants reflows every save with no migration.
 - Content tables. The save stores ids and counters only; `ContentVersion` records which tables were active, for analytics and for the rules in 7.2 that handle removed ids.
 
 ### 3.4 Example (abbreviated)
@@ -151,14 +151,14 @@ Reused records, defined elsewhere and serialised as declared there:
                    "ChestTimerStart": 1793488000, "TutorialGranted": true },
   "Gear": { "Equipped": [ { "Slot": "Weapon", "Rarity": "E", "Tier": 170, "EnhLevel": 6 }, null,
                           { "Slot": "Chest", "Rarity": "C", "Tier": 160, "EnhLevel": 15 }, null, null, null ] },
-  "Skills": { "Copies": { "C03": 7, "R11": 2, "E07": 1 }, "Equipped": [ "E07", "R11", "C03", null, null, null ],
+  "Heroes": { "Copies": { "C03": 7, "R11": 2, "E07": 1 }, "Equipped": [ "E07", "R11", "C03", null, null, null ],
               "AutoEquipBest": true },
-  "Banners": { "skill_std": { "PityCounter": 23, "TotalPulls": 41 } },
+  "Banners": { "hero_std": { "PityCounter": 23, "TotalPulls": 41 } },
   "Rng": { "combat":      { "Seed": "9f86d081884c7d65", "Counter": 2210334 },
            "gear_drop":   { "Seed": "3a1c0b8e55f2d7aa", "Counter": 18502 },
            "gear_rarity": { "Seed": "0c7e2b9d4411fa63", "Counter": 184 },
            "enhance":     { "Seed": "d41d8cd98f00b204", "Counter": 97 },
-           "gacha_skill": { "Seed": "e3b0c44298fc1c14", "Counter": 123 } },
+           "gacha_hero": { "Seed": "e3b0c44298fc1c14", "Counter": 123 } },
   "Daily": { "DayKey": 20757, "Progress": [1, 312, 0, 1], "Rewarded": [true, false, false, false],
              "DungeonTicketsUsed": 0 },
   "Stats": { "Kills": 18502, "BossKills": 17, "GearDrops": 92, "EnhanceAttempts": 97, "ActiveSeconds": 26140 },
@@ -172,7 +172,7 @@ A save of this shape is 2 to 4 KB. There is no size concern at any stage count.
 
 ### 4.1 Decision: JSON for the prototype
 
-Use JSON through Newtonsoft.Json (Unity's `com.unity.nuget.newtonsoft-json` package; the same `Newtonsoft.Json` 13.x assembly from NuGet in the .NET test and bot projects). Settings: property names as declared (PascalCase), `NullValueHandling.Include` (empty gear and skill slots are explicit `null`s), `MissingMemberHandling.Ignore` on read, `Formatting.None` in release and `Indented` in development builds, UTF-8 without BOM.
+Use JSON through Newtonsoft.Json (Unity's `com.unity.nuget.newtonsoft-json` package; the same `Newtonsoft.Json` 13.x assembly from NuGet in the .NET test and bot projects). Settings: property names as declared (PascalCase), `NullValueHandling.Include` (empty gear and hero slots are explicit `null`s), `MissingMemberHandling.Ignore` on read, `Formatting.None` in release and `Indented` in development builds, UTF-8 without BOM.
 
 Why JSON:
 - Migrations operate on a JSON DOM (`JObject`) with no per-version C# types (section 8). With a binary schema every historical version would need its own generated classes.
@@ -331,7 +331,7 @@ Reject:
 | R2 | `SchemaVersion` missing or `< 1`. |
 | R3 | `Profile.ProfileId == Guid.Empty`. |
 | R4 | `Rng` lacks any of the five names in 00 section 5.2, or any `Seed` is not 16 hex chars, or any `Counter < 0`. Unknown extra stream names are dropped with a log, not rejected. |
-| R5 | Any root section is `null` after migration (`Profile`, `Combat`, `Currencies`, `Progression`, `Gear`, `Skills`, `Banners`, `Rng`, `Daily`, `Stats`). |
+| R5 | Any root section is `null` after migration (`Profile`, `Combat`, `Currencies`, `Progression`, `Gear`, `Heroes`, `Banners`, `Rng`, `Daily`, `Stats`). |
 
 Repair:
 
@@ -346,12 +346,12 @@ Repair:
 | P7a | `Gear.Equipped.Length != GEAR_SLOTS` | Pad with `null` / truncate. |
 | P7b | Piece whose `Slot` is not its index | Move to its own slot if empty, else drop. |
 | P7c | `EnhLevel` outside `[0, ENH_MAX]`; `Tier < 0` or not a multiple of 10; `Rarity` not a defined member | Clamp; floor to a multiple of 10 (min 0); drop the piece. |
-| P8a | `Skills.Equipped.Length != SKILL_SLOTS` | Pad / truncate. |
+| P8a | `Heroes.Equipped.Length != HERO_SLOTS` | Pad / truncate. |
 | P8b | Equipped id with no entry in `Copies`, unknown to `ContentDb`, or duplicated | Set that slot to `null` (keep the first of duplicates). |
 | P8c | `Copies` key unknown to `ContentDb`, or value `<= 0` | Remove the entry. Shard refund is open decision 5. |
 | P9a | `PityCounter` outside `[0, PITY_HARD]`; `TotalPulls < 0` | Clamp; set to 0. |
 | P9b | The P0 banner id missing from `Banners` | Add a default `BannerState`. Unknown banner ids are kept verbatim. |
-| P10 | Stream counters disagree with the facts: `gacha_skill.Counter != 3 * sum(TotalPulls)`, `gear_drop.Counter != Stats.Kills`, `gear_rarity.Counter != 2 * Stats.GearDrops`, `enhance.Counter != Stats.EnhanceAttempts` | Set the counter from the stat. The player-visible counts are the source of truth for "which draw are we on" (01 section 6: pull `k` is `Derive(seed, k)`). `combat` has no invariant. |
+| P10 | Stream counters disagree with the facts: `gacha_hero.Counter != 3 * sum(TotalPulls)`, `gear_drop.Counter != Stats.Kills`, `gear_rarity.Counter != 2 * Stats.GearDrops`, `enhance.Counter != Stats.EnhanceAttempts` | Set the counter from the stat. The player-visible counts are the source of truth for "which draw are we on" (01 section 6: pull `k` is `Derive(seed, k)`). `combat` has no invariant. |
 | P11 | `Daily.Progress.Length` or `Rewarded.Length != db.Quests.Count` | Pad with 0 / `false`, or truncate. |
 | P12 | `ContentVersion` empty | Set to `db.Version`. |
 
@@ -397,7 +397,7 @@ public static class SaveMigrations
 6. Renames are expressed as a rename, not drop-and-add, so a field keeps its history. A field may be dropped only when nothing in the current code can use it.
 7. Adding a new RNG stream (04 section 11.1's `gear_substat`, for instance) is a migration step that inserts `{ Seed: seed(name), Counter: 0 }`. The step cannot call the SHA-256 derivation (rule 1 forbids reaching into current code), so it writes a placeholder `Seed = ""` and the validator's R4 is relaxed for that one name to re-derive from `ProfileId` on first load. Record the exemption in the step's comment.
 
-What counts as a schema change (requires a bump and a step once frozen): adding, removing, renaming or retyping any serialised property; renaming an enum member; changing a dictionary key format; changing the set of required stream names; changing a field's meaning (seconds to milliseconds, remaining to used). What does not: content changes (`ContentVersion` is data), new keys in `Banners`, new skill or gear ids, new values in existing fields.
+What counts as a schema change (requires a bump and a step once frozen): adding, removing, renaming or retyping any serialised property; renaming an enum member; changing a dictionary key format; changing the set of required stream names; changing a field's meaning (seconds to milliseconds, remaining to used). What does not: content changes (`ContentVersion` is data), new keys in `Banners`, new hero or gear ids, new values in existing fields.
 
 Illustrative future step (P1 substats and the `gear_substat` stream), to fix the style:
 
@@ -615,7 +615,7 @@ Rule P10 in 7.2 keeps the counters tied to the visible counts, so even a hand-ed
 | Attack | Effect | Why accepted in P0 |
 |---|---|---|
 | Editing the JSON (rooted device, desktop copy). The CRC is recomputable. | Arbitrary gold, gems, stage, copies. | 00 section 1 and 5: P0 is client-authoritative and single-player. There is no leaderboard, PvP or guild until P2, so a cheater only cheats their own progression. The money-adjacent assets (gems, pulls, receipts) move server-side in P1 (08 sections 4 and 6). An HMAC would need a key in the client, which is extractable: obfuscation, not protection, and not worth the engineering before P1. |
-| Reading `gacha_skill.Seed` and computing future pulls with the public generator. | Decide whether to pull now or wait. | 01 section 6: live, the server owns the seed and returns results; the client never has it. In the prototype the seed is local and this is accepted. |
+| Reading `gacha_hero.Seed` and computing future pulls with the public generator. | Decide whether to pull now or wait. | 01 section 6: live, the server owns the seed and returns results; the client never has it. In the prototype the seed is local and this is accepted. |
 | Device clock jumps. | At most `OFFLINE_CAP_H` gold, one daily reset, one chest per jump (11.2 rule 5). | Bounded; `ServerClock` in P1 makes the device clock irrelevant. |
 | Speed hacks on the process clock or memory editing. | Faster ticks, edited values. | Same class as file editing; same reasoning. |
 | Modified builds (debug define forced on). | Debug panel in a release-shaped build. | Same class. Section 13's release assertion protects the team's own release pipeline, not the build from a determined attacker. |
@@ -643,7 +643,7 @@ public sealed class DebugCommands
                                                         // then runner.OnResume(), so the real catch-up and EnsureDay paths run.
                                                         // Without: just the offset; the next OnFrame's EnsureDay sees the new day.
     public void SetPity(string bannerId, int n);        // PityCounter = clamp(n, 0, PITY_HARD)
-    public void GrantSkillCopies(SkillId id, int copies);   // through the same dupe-to-level path as a pull, no stream draw, no quest progress
+    public void GrantHeroCopies(HeroId id, int copies);   // through the same dupe-to-level path as a pull, no stream draw, no quest progress
     public void GrantGear(GearSlot slot, Rarity rarity, int tier, int enh);   // through Economy.Receive (04 section 5.4)
     public void CompleteDailyQuests();                  // Progress[i] = Target for every quest; rewards through the normal path
     public void ResetDaily();                           // Daily.DayKey = -1; next EnsureDay rolls
@@ -670,7 +670,7 @@ Every command: sets `Profile.DebugTainted = true`, emits `debug_used{command}`, 
 Files: `IdleRng.Runtime.Tests/SaveSerializerTests.cs`, `SaveStoreTests.cs`, `SaveValidatorTests.cs`, `MigrationTests.cs`, `OfflineCatchUpTests.cs`, `ClockTests.cs`, `SessionRunnerTests.cs`. All use a test `ContentDb` from the P0 tables, `FakeClock`, and a temp directory per test.
 
 Serialisation (S):
-1. **S1 round trip.** A `GameState` with every field non-default (including `null` gear and skill slots, an empty `Copies`, a non-null `PendingPull`) encodes and decodes to a value-equal record.
+1. **S1 round trip.** A `GameState` with every field non-default (including `null` gear and hero slots, an empty `Copies`, a non-null `PendingPull`) encodes and decodes to a value-equal record.
 2. **S2 determinism after round trip.** For each of the five streams, the next draw after save/load equals the next draw of the un-restored copy (generalises 01 test 7).
 3. **S3 seeds.** `Seed` values `0`, `ulong.MaxValue` and a random value round-trip as 16 hex chars.
 4. **S4 header.** Each of: wrong CRC, `len` larger than the body, `len` smaller than the body, missing newline, body truncated by one byte, raises `SaveCorruptException`.
@@ -699,7 +699,7 @@ Migrations (M):
 Offline catch-up (O):
 20. **O1 exact value.** Stage 100, DPS chosen so `k = 2.0 s`, elapsed 3600: gold equals `3600 * OFFLINE_RATE * GOLD0 * GOLD_G^100 / 2.0` within 1e-9 relative.
 21. **O2 cap.** Elapsed `OFFLINE_CAP_H * 3600 + 1`: `CreditedSec == OFFLINE_CAP_H * 3600`, `Capped == true`, gold equals the cap value.
-22. **O3 nothing else moves.** Snapshot the state, apply 10 h of catch-up, and assert `Stage`, `KillsInStage`, all five counters, `Stats.*`, `Daily.*`, `Progression.*` and `Skills.*` are value-equal to the snapshot; only `Currencies.Gold` changed.
+22. **O3 nothing else moves.** Snapshot the state, apply 10 h of catch-up, and assert `Stage`, `KillsInStage`, all five counters, `Stats.*`, `Daily.*`, `Progression.*` and `Heroes.*` are value-equal to the snapshot; only `Currencies.Gold` changed.
 23. **O4 once.** Apply, `Write`, `Load`, apply again with the same `now`: second result credits 0.
 24. **O5 backwards clock.** `now < LastSavedAtServerSec`: `ElapsedSec == 0`, gold unchanged, no exception.
 25. **O6 walled boss stage.** Stage 200 with DPS below the wall: `k` uses normal `HP(200)` and gold uses `GoldPerKill(200)` with no `BOSS_GOLD_MULT`.
@@ -730,7 +730,7 @@ Debug (D):
 2. **Positional `Daily.Progress`.** 04 indexes quest progress by content order, which breaks silently if quests are reordered in content. Recommend keying by quest id before the v1 freeze; after the freeze it is a migration step.
 3. **`EnsureDay` comparison.** 04 section 7.1 should read `if key <= Daily.DayKey: return` (11.2 rule 4). Needs the 04 author to confirm and amend.
 4. **Idle-chest gems in catch-up.** 02 section 7 mentions "P1, idle-chest gems" in offline earnings; 04 section 7.4 already makes the chest timer run on server time whether or not the app is open, so nothing extra is needed. Confirm the two specs mean the same thing and strike the 02 parenthetical.
-5. **Shard refund on removed skills.** When rule P8c drops copies of a skill removed from content, whether to credit `Currencies.Shards` at 01 section 7 values. P0 shards are inert, so leaning yes once P1 spends them.
+5. **Shard refund on removed heroes.** When rule P8c drops copies of a hero removed from content, whether to credit `Currencies.Shards` at 01 section 7 values. P0 shards are inert, so leaning yes once P1 spends them.
 6. **Double-grant window** (9.4). Accepted for P0; closed by cloud save. Alternatively write a tiny anchor-only file before the full save; rejected for now as a second write path.
 7. **Multiple profiles or slots.** P2 at the earliest. The `slot0` prefix leaves room.
 8. **Protobuf cut-over trigger** (4.3). Revisit when the P1 backend is chosen (08 section 10).
