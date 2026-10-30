@@ -41,6 +41,17 @@ namespace IdleRng.Client.Core
         /// <param name="dataDir">Application.persistentDataPath.</param>
         public static ISaveBridge Create(string dataDir) =>
             new RuntimeSaveBridge(new FileSaveStore(System.IO.Path.Combine(dataDir, "saves")));
+
+        /// <summary>
+        /// In-memory save round trip (IdleRng.Runtime SaveSelfCheck). False means this build loses save data,
+        /// most likely IL2CPP stripping (see Assets/link.xml). Touches no files.
+        /// </summary>
+        public static bool SelfCheck(ContentDb content, out string report)
+        {
+            var r = SaveSelfCheck.Run(content);
+            report = r.ToString();
+            return r.Ok;
+        }
     }
 
     /// <summary>

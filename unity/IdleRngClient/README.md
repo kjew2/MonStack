@@ -32,6 +32,11 @@ and `Assets/Settings/`. Re-running is safe. **Tools → IdleRng → Configure UR
 `python3 tools/content_build.py --copy-to unity/IdleRngClient/Assets/Resources/Content`. The loader falls back to
 `Resources/Content`.
 
+**Code stripping.** `Assets/link.xml` keeps IL2CPP from stripping the Sim, Runtime and Newtonsoft.Json code that save
+serialization reaches only by reflection. At every launch `GameRoot` round-trips a sample save in memory
+(`SaveSelfCheck`) and logs `IdleRng: save self-check OK`, or an error starting `SAVES ARE BROKEN IN THIS BUILD`. Check the
+device log for it after each new build.
+
 ## What's there
 
 The HUD (gold, gems, free pulls, shards) and the combat strip are always visible. The strip shows the stage, kill
