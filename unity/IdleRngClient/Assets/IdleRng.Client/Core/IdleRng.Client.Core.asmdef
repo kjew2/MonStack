@@ -2,7 +2,8 @@
     "name": "IdleRng.Client.Core",
     "rootNamespace": "IdleRng.Client.Core",
     "references": [
-        "IdleRng.Sim"
+        "IdleRng.Sim",
+        "IdleRng.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

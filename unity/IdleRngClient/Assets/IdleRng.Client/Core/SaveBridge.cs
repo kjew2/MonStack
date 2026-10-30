@@ -4,6 +4,7 @@ using IdleRng.Sim.Content;
 using IdleRng.Sim.Events;
 using IdleRng.Sim.State;
 using IdleRng.Sim.Time;
+using IdleRng.Runtime.Save;
 
 // ============================================================================================================
 // SaveBridge: the ONLY file in the client that knows how a profile is created, loaded, saved or deleted.
@@ -37,8 +38,64 @@ namespace IdleRng.Client.Core
 
     public static class SaveBridgeFactory
     {
-        /// <param name="dataDir">Application.persistentDataPath (unused until the Runtime store is wired).</param>
-        public static ISaveBridge Create(string dataDir) => new EphemeralSaveBridge();
+        /// <param name="dataDir">Application.persistentDataPath.</param>
+        public static ISaveBridge Create(string dataDir) =>
+            new RuntimeSaveBridge(new FileSaveStore(System.IO.Path.Combine(dataDir, "saves")));
+    }
+
+    /// <summary>
+    /// Persists through IdleRng.Runtime (specs/06): CRC-checked save file, .prev backup, quarantine of bad files,
+    /// migrations. Offline catch-up is left to the caller's SyncWallClock: the restored sim's virtual time stops at
+    /// the save, so the gap to "now" is credited there.
+    /// </summary>
+    public sealed class RuntimeSaveBridge : ISaveBridge
+    {
+        readonly ISaveStore _store;
+        ContentDb _content;
+        IClock _clock;
+        SaveMeta _meta;
+
+        public RuntimeSaveBridge(ISaveStore store) { _store = store; }
+
+        public string Description { get; private set; } = "runtime (not opened yet)";
+
+        public Simulation Open(ContentDb content, IEventSink events, IClock clock)
+        {
+            _content = content;
+            _clock = clock;
+            long now = clock.NowServerSeconds;
+            LoadResult load;
+            try { load = SaveSystem.Load(_store, content, now); }
+            catch (SaveTooNewException) { throw; }   // a newer build wrote this save; never overwrite it
+            catch (Exception) { load = null; }
+
+            if (load != null && load.HasState)
+            {
+                _meta = load.Meta;
+                Description = "runtime save (" + load.Status + ")";
+                return new Simulation(content, load.State, events);
+            }
+
+            var state = GameState.NewProfile(content, Guid.NewGuid(), now);
+            var sim = new Simulation(content, state, events);
+            sim.ApplyTutorialGrants();
+            _meta = new SaveMeta { LastSavedAtServerSec = now, DeviceInstallId = Guid.NewGuid() };
+            Description = "runtime save (new profile" + (load != null ? ", " + load.Status : "") + ")";
+            Save(sim);
+            return sim;
+        }
+
+        public void Save(Simulation sim)
+        {
+            if (_content == null || _meta == null) return;
+            SaveSystem.Write(_store, sim.State, _meta, _clock.NowServerSeconds, _content.Version);
+        }
+
+        public void DeleteProfile()
+        {
+            _store.DeleteAll();
+            _meta = null;
+        }
     }
 
     /// <summary>POC placeholder: no persistence. Every launch (and every "Reset profile") starts a new profile.</summary>

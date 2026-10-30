@@ -61,9 +61,10 @@ Assets/Resources/IdleRngTheme.tss   imports Unity's default runtime theme (optio
 
 ## Saving
 
-`Core/SaveBridge.cs` currently creates a **new profile on every launch**, and its saves do nothing. To persist,
-implement `ISaveBridge` on top of `IdleRng.Runtime` and add that assembly to `IdleRng.Client.Core.asmdef`. No other
-file needs to change.
+`Core/SaveBridge.cs` saves through `IdleRng.Runtime` (`specs/06`) to `<persistentDataPath>/saves/`: a CRC-checked
+file with a `.prev` backup. Bad files are quarantined and a new profile is created. Offline gold since the last save
+is credited on launch. Debug > Reset profile deletes the save. `EphemeralSaveBridge` (no persistence) is still there
+for quick tests: return it from `SaveBridgeFactory.Create`.
 
 ## Not done (POC)
 
