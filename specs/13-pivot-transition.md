@@ -65,21 +65,29 @@ Deleted in T7 once the new loop is playable:
 
 New rules specs get written as phases start, one per system: `14-training-run`, `15-skill-trees`, `16-battle` (generalized), `17-gauntlet-and-vault`, `18-meta-progression`. Each says what is live, like `specs/11` does.
 
-## 5. Issue triage (proposed, applied once kj confirms)
+## 5. Priorities and issue triage (applied 2026-10-30 at kj's request)
 
-| Issue | Proposed |
+Priorities after the pivot, used by the `priority:` labels on GitHub issues:
+
+| Priority | Scope | Tracking issue |
+|---|---|---|
+| **P0** | The MVP: `specs/12` section 12.1, phases T0-T7 | #69 (T7: #71) |
+| **P1** | Toward 1.0 on Steam and the web: `specs/12` section 12.2, phases T8-T13, plus the launch goals | #70 (T8-T13: #72-#77) |
+| **P2** | After 1.0, or parked until a platform decision (iOS/TestFlight, Unity client, live ops) | none |
+
+Triage applied:
+
+| Issue | Result |
 |---|---|
-| #60 overhaul goal | Close as superseded by the pivot; open a new pivot goal issue. |
-| #55, #57 affix gear, slot enhancement | Close: no gear in the new design. |
-| #56 daily dungeons, #64 uniques | Close; the Daily Tower and Skill Books replace them. |
-| #58 stat upgrade overhaul | Close; training replaces gold stat levels. |
-| #59 multiplying stats | Fold into the training-run and battle specs. |
-| #63 companion stats, roles | Close; species and trees replace it. |
-| #41 AC4 walls, #66 power-curve model | Close: they measure the idle loop. |
-| #6, #10, #11 iOS / Unity | Park until platform is decided (section 9 item 3). |
-| #15, #17-#19, #21-#29, #32, #33 server and trust | Keep; re-scope when PvP is planned (T12). Most are game-agnostic. |
-| #38 CI workflow | Keep. |
-| #45-#54 launch goals | Keep; revisit names and monetization (#47, #49) against `specs/12`. |
+| #60 overhaul goal | Closed, superseded by #69 and #70 |
+| #55, #57 affix gear, slot enhancement; #56 daily dungeons, #64 uniques; #58 stat upgrades; #63 companion roles | Closed: no gear or companions in the new design; training, trees and the Daily Tower replace them |
+| #59 multiplying stats | Closed as folded into `specs/15` and `specs/16` |
+| #41 AC4 walls, #66 power-curve model | Closed: they measure the idle loop |
+| #54 App Store launch goal | Closed as a duplicate of #70; its launch goals #45-#53 moved under #70 |
+| #15, #17-#28, #32, #33 server and trust | P1, under T12 (#76); re-scope when PvP is planned |
+| #38 CI workflow | P1 |
+| #6, #10, #11 iOS / Unity, #23 Unity pending-pull flow, #52 live ops | P2 |
+| #29 remote config | P2 (unchanged) |
 
 ## 6. Phases
 
@@ -89,7 +97,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 - kj answers the blocking questions in section 9.
 - Stop work on idle systems (#55-#59, #64). Done in this change via `CLAUDE.md`.
-- Apply the issue triage (section 5) and open a pivot goal issue with one sub-issue per phase.
+- Apply the issue triage (section 5) and open a pivot goal issue with one sub-issue per phase. Done 2026-10-30 (#69, #70).
 
 ### T1 - Generalized battle core
 
@@ -184,6 +192,5 @@ Open, blocking first. Each has a recommendation.
 
 1. **What overwriting takes away** (`specs/15` section 4, agent decision): the overwritten tree's flat stat boosts are removed too. Not blocking; easy to change.
 2. **One energy meter** (`specs/12` section 13 item 16): drafts had energy plus fatigue; T2 uses energy only. Recommend keeping one meter. Not blocking.
-3. **Apply the issue triage** in section 5 (closing #55-#59, #63, #64, #41, #66, superseding #60). Not blocking.
-4. **Roles and elements.** The T3 placeholder content keeps the 5 elements and has no fixed roles (roles come from trees). Confirm. Not blocking.
-5. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T13.
+3. **Roles and elements.** The T3 placeholder content keeps the 5 elements and has no fixed roles (roles come from trees). Confirm. Not blocking.
+4. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T13.
