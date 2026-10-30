@@ -11,6 +11,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `format.js` | Big-number display (`1.23K`, `45.6M`, `123aa`); same output as the C# `BigNumber.Short`. |
 | `sprites.js` | Seeded 12x12 pixel sprites for heroes, player and enemies. Cosmetic only, never touches the game's RNG. |
 | `wasm/build.sh` | Builds `src/IdleRng.Web` and lays out `wasm/dist/` (gitignored). |
+| `wasm/artifact-files.py` | Prints the `files` map for republishing the phone artifact (root README, "On a phone"). |
 | `wasm/pack-content.js` | Bundles `Content/*.json` into the content pack the engine loads and hash-checks. |
 | `wasm/BRIDGE.md` | The JS <-> C# contract: exports, JSON shapes, events. |
 | `wasm/test/run-wasm.js` | Headless-Chromium end-to-end test on the built bundle. |
@@ -26,5 +27,5 @@ The cog opens playtest tools: speed x1/x5/x20/x100 (moves the game clock too, so
 ## Known limits
 
 - **Permanently unranked.** It creates its own random seeds, so it can never be certified for leaderboards or PvP (`specs/10` section 3). That is right for a playtest build; a ranked browser client needs a server genesis.
-- **Needs HTTP.** WebAssembly does not load from `file://`, and the claude.ai artifact page cannot host the .NET runtime, so there is no install-free way to play.
+- **Needs HTTP.** WebAssembly does not load from `file://`. The install-free way to play is the claude.ai artifact link in the root README ("On a phone"), published from `web/index.html` plus the files listed by `wasm/artifact-files.py`.
 - The core has the command log, `StateHash` and `Replay` (`specs/03` section 22, `specs/10` section 6), but the bridge does not expose them yet.
