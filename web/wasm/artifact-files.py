@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Print the `files` map for publishing web/ as the claude.ai phone artifact.
 
-Run web/wasm/build.sh first. Publish web/run.html (the monster trainer, the page kj opens) with this map as `files` and the repo root as `root`.
+Run web/wasm/build.sh first. Publish web/index.html (the monster trainer, the page kj opens) with this map as `files` and the repo root as `root`.
 Keys are the paths the pages load; values are the source files, relative to the repo root. Every other web/*.html page
-(index.html, the idle prototype, reached from the trainer's header) goes in as a further page, with the scripts all pages load.
+(idle.html, the idle prototype, reached from the trainer's header) goes in as a further page, with the scripts all pages load.
 """
 import json
 import os
@@ -12,7 +12,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WEB = os.path.join(ROOT, "web")
-ENTRY = "run.html"
+ENTRY = "index.html"
 DIST = os.path.join(WEB, "wasm", "dist")
 
 if not os.path.isfile(os.path.join(DIST, "_framework", "dotnet.js")):
