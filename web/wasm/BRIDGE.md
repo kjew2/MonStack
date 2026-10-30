@@ -1,5 +1,12 @@
 # Engine bridge contract (JS UI <-> C# core)
 
+> **REVISION (read first).** While this contract was being drafted, main gained a complete C# proof of concept (`src/IdleRng.Sim`, `IdleRng.Runtime`, `IdleRng.Bots`, tests, Unity client, `Content/*.json` tables). That code is the real backend and **the source of truth**. Everything below that says "WS-A writes the C# core" or "bit for bit identical to `web/sim.js`" is superseded:
+> - **No new C# sim.** The wasm host (`src/IdleRng.Web`) wraps the existing `Simulation`, `ContentDb` loader and `IdleRng.Runtime` types. Changes to existing projects must be additive (new public members, new files). Do not delete or rewrite existing files; `dotnet test` in `src/` must stay green.
+> - **`web/sim.js` is a fallback and a UI reference, not a spec.** It differs from the C# core on purpose (`BASE_ATK` 20 vs 10, the `intro` boss rule with 4x HP below stage 60, possibly more). Parity fixtures are therefore a **diff report**, not a pass/fail gate: generate it, list every divergence and classify it as an intentional tuning difference or a suspected bug in either side. Align `web/content.js`/`web/sim.js` to the C# tuning only if it is a small, clearly-correct change (report it; do not do it silently).
+> - `Content/content.json` (WS-B) is a JS-reference export only; the C# loader reads the existing `Content/*.json` tables. Do not feed `content.json` to C#.
+> - The host's job is an **adapter**: map the existing `Simulation` state, queries, commands and events onto the JS-shaped `UiState`, query names, command results and event objects defined below, so `web/engine.js` (WS-D) works unchanged.
+> - Additions from specs/03 section 22 and specs/10 (command log, `StateHash`, `Replay`) are out of scope for this pass unless already present; list what is missing.
+
 Goal: the browser UI plays through the real C# `IdleRng.Sim` compiled to WebAssembly, instead of `web/sim.js`. `web/sim.js` stays as a fallback and as the reference the C# core is tested against. This file is the contract all workstreams build to. If a workstream must change it, it edits this file and says so in its report; it does not diverge silently.
 
 ## Layout and ownership

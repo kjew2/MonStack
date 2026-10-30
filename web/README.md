@@ -10,6 +10,8 @@ A lightweight, playable build of the P0 loop for feel and balance testing on a p
 | `test.js` | Checks the core against the specs' published vectors (SplitMix64, FNV, pity table, consolidated rates, 10-pull guarantee, dupe levels, offline cap). |
 | `bot.js` | Greedy F2P bot (`specs/04` section 9) playing 30 days on the real core in under a second. |
 | `sprites.js` | Seeded 12x12 pixel sprites for heroes, player and enemies (ported from the earlier `web-proto` build). Cosmetic only. |
+| `engine.js` | Backend-agnostic facade the UI plays through: `js` (wraps `sim.js`) or `wasm` (the C# core via `IdleRng.Web.Engine`, contract in `wasm/BRIDGE.md`). |
+| `tools/engine-*.js` | Facade tests (`engine-test.js`, with `engine-mock.js` standing in for the wasm host) and a Playwright smoke test (`engine-smoke.js`). |
 | `build.js` | Bundles everything into one file, `dist/idle-rng.html`. |
 
 ## Run it
@@ -23,6 +25,18 @@ node web/build.js         # one-file build in web/dist/idle-rng.html
 To play, open `web/index.html` (or the built file) in a browser. No server or install needed. Progress saves to the browser's local storage.
 
 The cog opens playtest tools: speed x1/x5/x20/x100 (moves the game clock too, so chests, offline time and daily resets come faster), clock skips (+1 h, +8 h, +1 day), gold and gem grants, stage jump, save export/import, and reset.
+
+## Engine selection (JS or C#/wasm)
+
+`?engine=js|wasm` in the URL wins, then `localStorage['idle-rng-engine']` (the Settings button sets it), then auto: wasm only if `wasm/dist/_framework/dotnet.js` is served next to the page, else JS silently. An explicit wasm request that fails shows the toast "C# engine unavailable, using JS engine". Artifact pages (claude.ai origins) always use JS. Settings shows the active engine and its `Version()`. Saves are per engine (`idle-rng-web-save-v1` for JS, `idle-rng-wasm-save-v1` for wasm) and importing the other engine's save fails with a message.
+
+```
+node web/tools/engine-test.js            # facade: JS vs sim.js, mock-wasm vs JS, saves, fallback
+node web/build.js && node web/tools/engine-smoke.js   # headless Chromium (Playwright) on the built page
+node web/build.js --with-wasm            # also copies web/wasm/dist to web/dist/wasm/dist
+```
+
+The one-file build cannot contain the .NET runtime, so it always runs the JS engine. For wasm, serve `web/dist/` (or `web/` after `web/wasm/build.sh`) over HTTP, for example `python3 -m http.server -d web/dist`; `file://` cannot load wasm.
 
 ## Porting to the Unity build
 
