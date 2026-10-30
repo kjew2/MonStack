@@ -74,6 +74,21 @@ namespace IdleRng.Sim.Account
             return result;
         }
 
+        /// <summary>
+        /// Abandon the active run at any phase: no shards, no Vault entry; books brought into the run but not used go back to
+        /// the inventory (a misclick costs nothing). RunsStarted stays counted, so the next run gets a new seed. Returns the
+        /// books returned.
+        /// </summary>
+        public static List<string> AbandonRun(ContentDb c, AccountState a)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            var run = a.Active ?? throw new InvalidOperationException("no run in progress");
+            var returned = new List<string>(run.Books);
+            foreach (var b in returned) AddBooks(a, b, 1);
+            a.Active = null;
+            return returned;
+        }
+
         /// <summary>Training Shards for a finished run: SHARDS_PER_CYCLE per cycle played plus SHARDS_PER_RANK per rank reached.</summary>
         public static long Payout(ContentDb c, RunState run) =>
             (long)c.Constants.ShardsPerCycle * run.Cycle + (long)c.Constants.ShardsPerRank * run.Rank;

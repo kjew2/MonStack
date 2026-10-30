@@ -188,5 +188,23 @@ namespace IdleRng.Sim.Tests
                 "the modifiers are part of the run");
             Assert.Throws<ArgumentException>(() => TrainingRun.Start(Db, "sprite", 1, null, new RunModifiers { DrillCostMult = -1 }));
         }
-    }
+    
+        [Test]
+        public void AbandonRun_PaysNothing_SealsNothing_ReturnsUnusedBooks_KeepsTheSeedMoving()
+        {
+            var a = AccountOps.New(Db, 5);
+            AccountOps.GrantBooks(Db, a, "book_echoes", 2);
+            var run = AccountOps.StartRun(Db, a, "sprite", new[] { "book_echoes", "book_echoes" });
+            TrainingRun.UseBook(Db, run, "book_echoes");
+            Assert.That(run.Offers, Is.Not.Empty, "abandoning works with an offer pending");
+            Assert.That(AccountOps.AbandonRun(Db, a), Is.EqualTo(new[] { "book_echoes" }));
+            Assert.That(a.Active, Is.Null);
+            Assert.That(a.Shards, Is.EqualTo(0));
+            Assert.That(a.Vault, Is.Empty);
+            Assert.That(a.BookCount("book_echoes"), Is.EqualTo(1), "the used book stays used");
+            Assert.That(AccountOps.StartRun(Db, a, "sprite").Seed, Is.EqualTo(AccountOps.RunSeed(5, 1)), "no reroll of the same seed");
+            AccountOps.AbandonRun(Db, a);
+            Assert.Throws<InvalidOperationException>(() => AccountOps.AbandonRun(Db, a));
+        }
+}
 }
