@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdleRng.Sim", "src\IdleRng.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdleRng.Sim.Tests", "src\IdleRng.Sim.Tests\IdleRng.Sim.Tests.csproj", "{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdleRng.Bots", "src\IdleRng.Bots\IdleRng.Bots.csproj", "{831517FB-4AB0-43D2-B8A6-87CE4FE48DF1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +28,14 @@ Global
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{831517FB-4AB0-43D2-B8A6-87CE4FE48DF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{831517FB-4AB0-43D2-B8A6-87CE4FE48DF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{831517FB-4AB0-43D2-B8A6-87CE4FE48DF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{831517FB-4AB0-43D2-B8A6-87CE4FE48DF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9500CC25-6B38-4E1C-8442-E467BA09650C} = {22381BA7-608E-4B1D-B20B-29D71D1605AE}
 		{A8D5E1DA-2498-4BDC-B21F-32F88692BB0E} = {22381BA7-608E-4B1D-B20B-29D71D1605AE}
+		{831517FB-4AB0-43D2-B8A6-87CE4FE48DF1} = {22381BA7-608E-4B1D-B20B-29D71D1605AE}
 	EndGlobalSection
 EndGlobal
