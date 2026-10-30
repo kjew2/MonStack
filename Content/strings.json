@@ -973,6 +973,22 @@
     {
       "key": "book.book_echoes.name",
       "text": "Skill Book: Tome of Echoes"
+    },
+    {
+      "key": "rule.counter_mitigated.name",
+      "text": "Mitigation Counter"
+    },
+    {
+      "key": "rule.counter_mitigated.desc",
+      "text": "After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage)."
+    },
+    {
+      "key": "rule.echo_cast.name",
+      "text": "Echo Cast"
+    },
+    {
+      "key": "rule.echo_cast.desc",
+      "text": "Every active damage, heal or shield skill is cast a second time at once, at reduced power."
     }
   ]
 }

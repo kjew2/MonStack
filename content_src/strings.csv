@@ -242,3 +242,7 @@ tree.tome_of_echoes.name,Tome of Echoes
 tree.unbreakable_will.name,Unbreakable Will
 tree.arcane_overflow.name,Arcane Overflow
 book.book_echoes.name,Skill Book: Tome of Echoes
+rule.counter_mitigated.name,Mitigation Counter
+rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage).
+rule.echo_cast.name,Echo Cast
+rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at reduced power."

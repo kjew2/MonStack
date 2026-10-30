@@ -166,5 +166,5 @@
     return { clockOffsetMs: w.clockOffsetMs || 0, saveString: w.state };
   }
 
-  root.IdleEngine = { create: create, wrapSave: wrapSave, unwrapSave: unwrapSave, SAVE_KEY: SAVE_KEY, QUERIES: QUERIES, COMMANDS: COMMANDS };
+  root.IdleEngine = { create: create, loadWasm: loadWasm, wrapSave: wrapSave, unwrapSave: unwrapSave, SAVE_KEY: SAVE_KEY, QUERIES: QUERIES, COMMANDS: COMMANDS };
 })(typeof self !== 'undefined' ? self : this);

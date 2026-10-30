@@ -2,11 +2,13 @@
 
 A playable, phone-sized UI for feel and balance testing, running the **real C# game core** (`src/IdleRng.Sim`) compiled to WebAssembly. The native product is still the Unity client in `specs/07`; this page and Unity drive the same engine.
 
-To play: `./play.sh` from the repo root (details in the root README, "Running the web prototype").
+To play: `./play.sh` from the repo root (details in the root README, "Running the web prototype"). `index.html` is the idle prototype; `run.html` is the monster trainer (the game the project is moving to, `specs/13`), linked from the idle page's HUD.
 
 | File | What it is |
 |---|---|
 | `index.html`, `app.js` | UI shell: ticks the engine, sends commands, reads queries, drains events. No game rules. |
+| `run.html`, `run.js` | Monster trainer screens: species pick, Drill/Rest, rank fights with the battle log, tree drafts and buying, grade screen, Vault list. No game rules. |
+| `run-engine.js` | Facade over the C# run engine (`IdleRng.Web.Engine.Run*`): replay save, Vault storage. |
 | `engine.js` | Facade over the C# engine (`IdleRng.Web.Engine`): caches state per tick batch, memoises queries, wraps saves. |
 | `format.js` | Big-number display (`1.23K`, `45.6M`, `123aa`); same output as the C# `BigNumber.Short`. |
 | `sprites.js` | Seeded 12x12 pixel sprites for heroes, player and enemies. Cosmetic only, never touches the game's RNG. |
@@ -14,7 +16,8 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `wasm/artifact-files.py` | Prints the `files` map for republishing the phone artifact (root README, "On a phone"). |
 | `wasm/pack-content.js` | Bundles `Content/*.json` into the content pack the engine loads and hash-checks. |
 | `wasm/BRIDGE.md` | The JS <-> C# contract: exports, JSON shapes, events. |
-| `wasm/test/run-wasm.js` | Headless-Chromium end-to-end test on the built bundle. |
+| `wasm/test/run-wasm.js` | Headless-Chromium end-to-end test of the idle page on the built bundle. |
+| `wasm/test/run-trainer.js` | Headless-Chromium test that plays a full monster-trainer run through the buttons. |
 
 ## Where things come from
 

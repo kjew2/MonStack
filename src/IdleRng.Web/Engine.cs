@@ -54,6 +54,32 @@ namespace IdleRng.Web
         [JSExport]
         public static string Version() => VersionText + (_h != null ? " content " + _h.ContentVersion : "");
 
+        // ---- monster-trainer run (src/IdleRng.Web/RunHost.cs, contract in web/wasm/BRIDGE.md "Run bridge")
+        private static RunHost _run;
+
+        [JSExport]
+        public static void RunInit(string contentJson)
+        {
+            _run = null;
+            _run = new RunHost(contentJson);
+        }
+
+        [JSExport] public static string RunContent() => GuardRun(h => h.Content());
+        [JSExport] public static string RunStart(string speciesId, string seedHex, string booksJson) => GuardRun(h => h.Start(speciesId, seedHex, booksJson));
+        [JSExport] public static string RunLoad(string saveJson) => GuardRun(h => h.Load(saveJson));
+        [JSExport] public static string RunSave() => GuardRun(h => h.Save());
+        [JSExport] public static string RunState() => GuardRun(h => h.State());
+        [JSExport] public static string RunCmd(string name, string argsJson) => GuardRun(h => h.Cmd(name, argsJson));
+        [JSExport] public static string RunSeal(double utcMs) => GuardRun(h => h.Seal(utcMs));
+        [JSExport] public static void RunAbandon() { _run?.Abandon(); }
+
+        private static string GuardRun(Func<RunHost, string> f)
+        {
+            if (_run == null) return JsonOut.Error("run engine not initialised");
+            try { return f(_run); }
+            catch (Exception e) { return JsonOut.Error(e.GetType().Name + ": " + e.Message); }
+        }
+
         private static string Guard(Func<Host, string> f)
         {
             if (_h == null) return JsonOut.Error("not initialised");

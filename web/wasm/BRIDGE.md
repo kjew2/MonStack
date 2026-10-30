@@ -52,6 +52,30 @@ Labels and display numbers for the UI, from the same `ContentDb` (UPPER_SNAKE ke
 
 `IdleEngine.create(opts)` loads `wasm/dist/_framework/dotnet.js`, calls `Init` with `wasm/dist/content-pack.json`, and returns an object with `state`, `content` (from `UiContent()`), `heroById`, every query and command above as a method, `advance`, `drain`, `emitHits`, `reload`, `exportSave`, `version`. `state` is refreshed from `State()` at most once per `advance`/command batch; queries are memoised (content-only results forever, build-dependent ones until the build changes, the rest per state version). If loading fails, `create` rejects with a message the UI shows (bundle not built, page opened as a file, or the load error). Saves live in `localStorage['idle-rng-wasm-save-v1']` as `{v, backend:'wasm', clockOffsetMs, state}`.
 
+## Run bridge (monster trainer)
+
+The same `IdleRng.Web.Engine` class also exposes the training run (`specs/14`, `specs/15`) through `src/IdleRng.Web/RunHost.cs`. It is independent of the idle `Init`: call `RunInit` and play, or use both on one page. Same rules as above: strings, ints and doubles only, JSON text for structure, errors come back as `{"error":"..."}`, nothing throws across the boundary except `RunInit` (bad content).
+
+```
+RunInit(string contentJson) : void
+RunContent() : string                          // JSON labels and tables, never changes in a session (below)
+RunStart(string speciesId, string seedHex, string booksJson) : string   // RunState JSON; booksJson is a JSON array of book ids
+RunLoad(string saveJson) : string              // rebuilds the run by replaying the save; throws as {"error"} when it no longer replays
+RunSave() : string                             // {v, species, seed, books, log:[{k, stat?, choice?, slot?, book?}]} or "null"
+RunState() : string                            // RunState JSON, or "null" with no run
+RunCmd(string name, string argsJson) : string  // result object; {"ok":false,"reason"} when the engine refuses
+RunSeal(double utcMs) : string                 // {ok, entry} Vault entry of the finished run (idempotent); {ok:false,reason} before the end
+RunAbandon() : void
+```
+
+Commands: `drill(stat)` (tier, gain, new value, energy, injured, milestones), `rest`, `fight` (won, rank before/after, SP, units' final HP and tallies, the action log capped at 400), `take(choice, slot)`, `discard`, `spend(slot)`, `book(id)`. They map one to one onto `TrainingRun`.
+
+`RunContent()`: `{version, consts{runCycles, runAp, energyMax, fightEvery, statMax, treeSlots, drillEnergyCost, restEnergy, spPerCycle, spPerWin, superP}, stats[], milestones[], elements{id:{name,color}}, species[{id,name,element,base,growth,trees}], ranks[{id,name,letter,element,stats}], trees{id:{id,name,kind,nodes[{id,cost,kind,name,desc,last}],conditions[text]}}, books{id:{name,tree}}}`.
+
+`RunState()`: `{species, seed, phase (training|awaitfight|finished), end, cycle, ap, energy, sp, rank, fightsFought, fightsWon, drills, rests, fightDue, odds{fail,super,success,injury}, stats, growth, opponent{name,element,stats}, slots[null|{tree,bought}], offers[{source,stat,threshold,trees[]}], books[], chase[{tree,unlocked,met[]}], tally, milestonesHit[], hash}`. Odds, growth, chase conditions and every label come from the C# side; the UI computes nothing.
+
+The saved run is the command log, not a state dump: the engine replays it, so a save cannot drift from the rules. `web/run-engine.js` wraps this (`RunEngine.create`) and keeps the run in `localStorage['idle-rng-run-v1']` and sealed monsters in `localStorage['idle-rng-vault-v1']` until the account save (`specs/13` T5).
+
 ## Not exposed yet
 
 The core's command log, `StateHash()` and `Replay` (`specs/03` section 22, `specs/10` section 6) are not exposed through the bridge yet; they become relevant once the web client talks to a certifier (`specs/10` section 4).

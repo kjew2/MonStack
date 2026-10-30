@@ -78,6 +78,9 @@ else
 
     step "Web: page plays on the C# engine in headless Chromium"
     node web/wasm/test/run-wasm.js
+
+    step "Web: monster trainer plays a full run in headless Chromium"
+    node web/wasm/test/run-trainer.js
   else
     printf '\nSkipped WebAssembly checks (--no-wasm or wasm-tools workload not installed). Not a full pass.\n'
   fi
