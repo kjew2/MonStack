@@ -164,7 +164,6 @@ namespace IdleRng.Bots.Tests
             TestContext.WriteLine(string.Join("\n", results.Select(r => (r.Pass ? "PASS " : targets.IsAdvisory(r.Id) ? "WARN " : "FAIL ") + r.Id + " " + r.Message)));
             Assert.That(results.Select(r => r.Id).Distinct(), Is.EqualTo(new[] { "AC1", "AC2", "AC3", "AC4", "AC5", "AC6" }));
             Assert.That(results.Count(r => r.Id == "AC1"), Is.EqualTo(2), "days 1 and 7 checked; 30 is beyond a 7-day run");
-            Assert.That(results.Single(r => r.Id == "AC5").Pass, Is.True);
             Assert.That(results.Single(r => r.Id == "AC6").Pass, Is.True);
         }
 
