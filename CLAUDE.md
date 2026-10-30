@@ -1,8 +1,13 @@
 # Instructions for agents
 
-## Current focus: finalize systems, not balance
+## Current focus: pivot to the monster trainer, not balance
 
-The gameplay systems are being redesigned (4v1 party battle, companion builds, affix gear, uniques, daily dungeons; see issue #60). Until kj says otherwise:
+The game is pivoting to the monster-raising design in `specs/12`; `specs/13` is the transition plan and lists kj's open questions. Until kj says otherwise:
+
+- Do not build or extend idle-only systems (stage push, gold stat levels, gear, affixes, dungeons, uniques, promotion; #55-#59, #64). Keep them building and green until `specs/13` phase T7 removes them.
+- Build new systems in the order of `specs/13` section 6. Do not start a phase whose blocking question in `specs/13` section 9 is unanswered.
+
+Balance stays on hold while the systems change:
 
 - Do not spend effort on balance tuning: no retuning curves, constants or acceptance targets, no tuning passes on the power-curve model, no balance-only PRs. That work will be thrown away when the systems change.
 - Placeholder numbers in new systems are fine. Pick something reasonable and note it as a placeholder.

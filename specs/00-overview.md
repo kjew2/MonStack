@@ -24,7 +24,10 @@ P0 feature list:
 8. Headless bot harness that plays N days in seconds and emits the tuning table.
 9. Ugly-UI Unity client exposing all of the above.
 
-Gameplay overhaul in progress (#60, `specs/11`): 4v1 party battle for bosses, per-companion affix gear, daily dungeons with uniques. `specs/11` section 2 says which phase is live.
+Gameplay overhaul (#60, `specs/11`): 4v1 party battle for bosses is live; its later phases (affix gear, dungeons, uniques) are cancelled by the pivot below.
+
+**Pivot planned (kj, 2026-10-30):** the game becomes a monster-raising game with training runs, skill trees, towers and async PvP. Target design: `specs/12`. Transition plan: `specs/13`. This file keeps describing the idle game until `specs/13` phase T7 rewrites it.
+
 P1: pet banner, shard shop, rate-up banners, accounts, cloud save, receipt validation and IAP, rewarded ads, certified progress (server-verified), stage leaderboard, asynchronous PvP. The trust model that keeps these fair is `specs/10`; P0 builds only its cheap shapes (command log, state hash, schema fields).
 P2: rebirth/prestige, guilds, real-time PvP.
 
@@ -189,7 +192,9 @@ idle-rng-game/
     08-backend-seams.md
     09-test-harness-and-bots.md
     10-online-competitive.md
-    11-party-and-builds.md      overhaul (#60): party, companions, promotion, later battle/gear
+    11-party-and-builds.md      overhaul (#60): party, companions, promotion, 4v1 battle
+    12-monster-trainer-design.md  pivot target design (not built)
+    13-pivot-transition.md      pivot plan: carry-over, phases, open questions
   tools/
     gacha_model.py               exact pity math
     power_curve_model.py         greedy-bot 30-day model
