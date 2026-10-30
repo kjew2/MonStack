@@ -7,7 +7,7 @@ The gameplay systems are being redesigned (4v1 party battle, companion builds, a
 - Do not spend effort on balance tuning: no retuning curves, constants or acceptance targets, no tuning passes on the power-curve model, no balance-only PRs. That work will be thrown away when the systems change.
 - Placeholder numbers in new systems are fine. Pick something reasonable and note it as a placeholder.
 - **Do not run or read balance checks.** `./check.sh` skips the balance sweep (AC1-AC5) while `BALANCE_ON_HOLD=1` at its top. Do not run `./check.sh --balance`, the `acceptance`, `sweep` or `compare` bot verbs, or the `tools/` power-curve model unless kj asks. Do not report or analyze balance numbers (stage targets, shares, walls) in PRs or specs. Determinism (AC6: tests plus `golden --check`), the other tests and the bench still block.
-- If a system change moves the golden files, regenerate them (`golden --update`) and say so in the PR. That is expected, not a balance problem.
+- If a system change moves the golden files, regenerate them (`golden --update`) and say so in the merge commit. That is expected, not a balance problem.
 - When kj says balance work resumes: set `BALANCE_ON_HOLD=0` in `check.sh`, empty `advisory` in `src/IdleRng.Bots/Acceptance/acceptance-targets.json`, then fix or re-agree each failing criterion (#41 is the known AC4 one).
 
 ## Keep the specs current
@@ -49,7 +49,7 @@ Standing rule for every implementation task. Run it to the end without waiting f
 3. **Stop and ask kj only if:** checks still fail after three fix attempts; a merge conflict you can't resolve confidently; the change touches secrets, credentials or anything irreversible; or the review raises a design question that is kj's to decide (gap rule 3 above).
 4. **Report briefly:** what changed, what the review caught, and the merge commit hash.
 
-This path has no PR, so anything the rules above say to put in "the PR description" (gap decisions, notable WARN changes) goes in the merge commit message and the final report instead.
+This path has no PR, so anything the rules above say to put in "the PR description" (gap decisions, regenerated goldens) goes in the merge commit message and the final report instead.
 
 ## Learn from mistakes
 

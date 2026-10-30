@@ -486,6 +486,7 @@ steps:
   - run: dotnet run -c Release --no-build --project src/IdleRng.Bots -- bench --ticks 1000000 --max-ms 2000
     # 2x the local budget for CI hardware
   - run: timeout 300 dotnet run -c Release --no-build --project src/IdleRng.Bots -- acceptance --seeds 1-20 --days 30 --time-budget-s 180
+    # skipped by ./check.sh while BALANCE_ON_HOLD=1 (section 9); the bench step above still gates perf
   - run: dotnet run -c Release --no-build --project src/IdleRng.Bots -- golden --check
 ```
 
