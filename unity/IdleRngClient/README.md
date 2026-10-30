@@ -53,7 +53,7 @@ The tabs are:
 | **Heroes** | Party of 6 (tap a slot to place the selected hero, or to unequip it), 54-hero inventory, auto-equip |
 | **Gacha** | Pity bar, pull x1 / x10, result cards, rates with pity-consolidated L+/M |
 | **Class** | Automatic advances at stages 50, 150, 300 and 500, with a progress bar |
-| **Debug** | Editor/Development builds or `IDLERNG_CHEATS`. Grant gold, gems or heroes; set stage; "Run N h" (real sim ticks); "Clock +N h" (offline earnings popup); x1/x5/x20 speed; save, validate, reset |
+| **Debug** | Editor, Development builds or `IDLERNG_CHEATS` only; compiled out of Release builds. Grant gold, gems or heroes; set stage; "Run N h" (real sim ticks); "Clock +N h" (offline earnings popup); x1/x5/x20 speed; save, validate, reset |
 
 Two popups appear in a modal: offline earnings ("Welcome back") and class advance. Toasts cover gear drops, rejects,
 quests and the day rollover.
@@ -65,6 +65,7 @@ Assets/IdleRng.Client/
   IdleRng.Client.asmdef        Unity side (UnityEngine, UI Toolkit, uGUI EventSystem, Input System)
   Boot/      GameRoot.cs (bootstrap + MonoBehaviour), ContentLocator.cs, InputSetup.cs
   Editor/    ProjectSetup.cs (Tools > IdleRng menu: player settings, URP asset)
+             BuildProfiles.cs (Tools > IdleRng > Build Profiles: Dev/Release defines, Release pre-build check)
   Art/       AppIcon.png (placeholder 1024x1024 icon)
   Screens/   Ui.cs (style kit), Shell.cs, HudAndStrip.cs, *Screen(s).cs, DebugScreen.cs
   Core/      IdleRng.Client.Core.asmdef (noEngineReferences: plain C#)
@@ -73,7 +74,27 @@ Assets/IdleRng.Client/
 Assets/Resources/IdleRngTheme.tss   imports Unity's default runtime theme (optional; styles are inline)
 ```
 
-## Saving
+## Build profiles (Dev and Release)
+
+`specs/07` section 13 wants a **Dev** and a **Release** Build Profile per platform. Dev defines `IDLERNG_CHEATS` and is a
+Development Build; Release has neither, so its build contains no Debug tab and no cheat code (everything cheat-related is
+under `#if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS`). Profile assets are Unity-generated, so create them once
+in the editor and commit them:
+
+1. **File > Build Profiles > Add Build Profile**, pick **iOS** (and/or **Android**). Rename it `iOS` (or `Android`).
+2. Select that profile asset in the Project window and run **Tools > IdleRng > Build Profiles > Create Dev + Release From Selected**.
+   This creates `Assets/Settings/BuildProfiles/iOS-Dev.asset` and `iOS-Release.asset`, adds `IDLERNG_CHEATS` to the Dev
+   profile's Scripting Defines and keeps it out of the Release profile and the iOS/Android Player Settings defines. You can
+   then delete the original `iOS` profile.
+3. In **iOS-Dev**, tick **Development Build**, **Autoconnect Profiler** and **Script Debugging**. Leave them off in
+   **iOS-Release**.
+4. Commit `Assets/Settings/BuildProfiles/` and the `.meta` files.
+
+**Tools > IdleRng > Build Profiles > Apply Cheat Defines** re-applies the defines after you rename or add profiles. A pre-build
+check fails a `*-Release` build marked Development, and any non-development build that still defines `IDLERNG_CHEATS`.
+To confirm a Release build has no Debug tab: activate `iOS-Release`, build, and check the tab bar ends at **Class**. Pressing
+Play in the Editor always shows the Debug tab, whichever profile is active.
+
 
 `Core/SaveBridge.cs` saves through `IdleRng.Runtime` (`specs/06`) to `<persistentDataPath>/saves/`: a CRC-checked
 file with a `.prev` backup. Bad files are quarantined and a new profile is created. Offline gold since the last save
@@ -88,5 +109,4 @@ These are not built yet:
 - Safe-area padding.
 - Android back button.
 - Perf overlay.
-- Build profiles.
 - PlayMode tests.
