@@ -10,7 +10,7 @@
 
   let run = null, C = null;
   const ui = {
-    view: 'home',            // home | run | grade
+    view: 'home',            // home | run | climb | grade
     tab: 'train',            // train | trees | log
     pick: null,              // species chosen on the home screen
     book: false,             // test option: start with a skill book
@@ -21,6 +21,7 @@
     showAll: false,          // fight log expanded
     sealed: null,            // Vault entry of the finished run
     payout: 0,               // shards that run paid
+    climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf }
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -68,6 +69,7 @@
     if (ui.view === 'home') { tabs.hidden = true; modal.hidden = true; renderHome(main); return; }
     const s = run.state;
     if (ui.view === 'grade') { tabs.hidden = true; modal.hidden = true; renderGrade(main); return; }
+    if (ui.view === 'climb') { tabs.hidden = true; modal.hidden = true; renderClimb(main); return; }
     tabs.hidden = false;
     main.append(renderHud(s));
     if (ui.tab === 'train') renderTrain(main, s);
@@ -379,6 +381,7 @@
         h('div', { class: 'row' }, [h('span', { class: 'num', style: 'font-size:28px;font-weight:700', text: up(e.grade) }), h('div', null, [h('b', { text: sp.name }), h('div', { class: 'small muted', text: (e.end === 'injured' ? 'Injured' : 'Completed') + ' · cycle ' + e.cycles + ' · ' + e.fightsWon + ' wins' })])]),
         h('span', { class: 'small muted num', text: 'Σ ' + num(total) }),
       ]),
+      e.gauntlet ? h('div', { class: 'small gold', 'data-id': 'vault-title', text: e.gauntlet.label }) : null,
       h('div', { class: 'small muted', text: e.trees.map((t) => treeName(t.id) + ' ' + t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?')).join(' · ') }),
       e.sealedUtcMs ? h('div', { class: 'small muted', text: new Date(e.sealedUtcMs).toLocaleString() }) : null,
     ]);
@@ -391,6 +394,7 @@
       h('div', { class: 'center small muted', text: e.end === 'injured' ? 'Injured at cycle ' + e.cycles : 'Run complete' }),
       h('div', { class: 'grade ' + e.grade, 'data-id': 'grade', text: up(e.grade) }),
       h('div', { class: 'center' }, [h('b', { text: sp.name + ' reached ' + r.name })]),
+      e.gauntlet ? h('div', { class: 'legacy', 'data-id': 'grade-title', text: e.gauntlet.label }) : null,
       h('div', { class: 'center small muted', text: e.fightsWon + ' of ' + e.fightsFought + ' rank fights won. Sealed in the Vault.' }),
       h('div', { class: 'center gems num', 'data-id': 'payout', text: '+' + ui.payout + ' Training Shards' }),
     );
@@ -400,11 +404,114 @@
     main.append(h('div', { class: 'card' }, [h('h3', { text: 'Trees' }),
       ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
     main.append(h('div', { class: 'small muted center', text: 'Run hash ' + e.hash.slice(0, 16) }));
+    if (ui.climb) main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-replay', text: 'Watch the gauntlet again', onclick: () => openClimb(ui.climb.data) }));
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
   }
 
+  // ---- gauntlet wheel (specs/19, specs/12 section 6): a slowing reel of the floors climbed lands on the floor and the enemy
+  // that beat the monster, then a comic defeat. The floors come from the engine (run.gauntlet); this only animates them.
+  const POINTER_ROW = 2;   // the reel shows 5 rows; the pointer is on the middle one
+  const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const foeDef = (id) => C.gauntlet.enemies[id] || { name: id, boss: false };
+  function foeSprite(id, boss, cls) {
+    const cv = h('canvas', { class: cls || '', 'aria-hidden': 'true' });
+    SP.draw(cv, SP.enemy(hash('gauntlet-' + id) % 100000, boss, 0));
+    return cv;
+  }
+  function openClimb(data) {
+    stopClimb();
+    ui.climb = { data: data, t0: null, done: reducedMotion(), raf: 0 };
+    ui.view = 'climb';
+    render();
+  }
+  function stopClimb() { if (ui.climb && ui.climb.raf) { cancelAnimationFrame(ui.climb.raf); ui.climb.raf = 0; } }
+  function landClimb() { if (!ui.climb || ui.climb.done) return; stopClimb(); ui.climb.done = true; render(); }
+
+  // Reel rows from the top: up to two unfought floors above the fall (the summit when cleared), then the floors fought down to 1.
+  function climbRows(g) {
+    const rows = [];
+    if (g.cleared) rows.push({ summit: true });
+    else for (let f = Math.min(C.gauntlet.floors, g.floorReached + 2); f > g.floorReached; f--) rows.push({ floor: f, unfought: true });
+    for (let i = g.floors.length - 1; i >= 0; i--) rows.push(g.floors[i]);
+    return rows;
+  }
+  function climbRow(r) {
+    if (r.summit) return h('div', { class: 'floor summit' }, [h('span', { class: 'fl', text: 'TOP' }), h('span', { class: 'gold', text: '★' }), h('span', { class: 'nm', text: 'Tower cleared' }), h('span', { class: 'mk' })]);
+    if (r.unfought) return h('div', { class: 'floor unfought' }, [h('span', { class: 'fl', text: 'F' + r.floor }), h('span'), h('span', { class: 'nm', text: '?' }), h('span', { class: 'mk' })]);
+    const d = foeDef(r.enemy);
+    return h('div', { class: 'floor ' + (r.won ? 'won' : 'fell') + (r.boss ? ' boss' : '') }, [
+      h('span', { class: 'fl', text: 'F' + r.floor }), foeSprite(r.enemy, r.boss), h('span', { class: 'nm', text: d.name + (r.boss ? ' (boss)' : '') }),
+      h('span', { class: 'mk', text: r.won ? '✓' : '' }),
+    ]);
+  }
+  const rowLabel = (r) => (r.summit ? 'Tower cleared' : r.unfought ? 'Floor ' + r.floor : 'Floor ' + r.floor + ' · ' + foeDef(r.enemy).name);
+
+  function renderClimb(main) {
+    const cl = ui.climb, g = cl.data, e = ui.sealed, sp = speciesDef(e.species) || { name: e.species };
+    const rows = climbRows(g);
+    const start = rows.length - 1, end = rows.length - g.floors.length - (g.cleared ? 1 : 0);   // floor 1 -> where it stops
+    const els = rows.map(climbRow);
+    const strip = h('div', { class: 'strip' }, els);
+    const now = h('div', { class: 'climb-now', 'data-id': 'climb-now' });
+    let shown = -1;
+    const place = (idx) => {
+      strip.style.transform = 'translateY(calc(var(--row) * ' + (POINTER_ROW - idx).toFixed(3) + '))';
+      const i = Math.round(idx);
+      if (i !== shown) { shown = i; now.textContent = rowLabel(rows[i]); }
+    };
+    const reel = h('div', { class: 'reel', 'data-id': 'climb-reel', 'data-hash': g.hash, role: 'button', tabindex: '0',
+      'aria-label': cl.done ? rowLabel(rows[end]) : 'The wheel is spinning through the floors. Tap to skip.', onclick: landClimb,
+      onkeydown: (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); landClimb(); } } },
+    [strip, h('div', { class: 'pointer' })]);
+    main.append(
+      h('h2', { class: 'center', text: 'The Gauntlet' }),
+      h('div', { class: 'center small muted', text: sp.name + ' climbs a ' + C.gauntlet.floors + '-floor tower, a boss every ' + C.gauntlet.bossEvery + ' floors, until a floor beats it.' }),
+      now, reel,
+    );
+    if (!cl.done) {
+      stopClimb();   // a re-render mid-spin restarts the loop on the new elements (t0 is kept)
+      place(start);
+      main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-skip', text: 'Skip ▸▸', onclick: landClimb }));
+      // A slowing wheel: ease-out-quart from floor 1 to the landing row; longer climbs spin longer, up to about 5 s.
+      const dur = Math.min(5200, 1600 + 36 * (start - end));
+      const tick = (t) => {
+        if (ui.climb !== cl || cl.done) return;
+        if (cl.t0 === null) cl.t0 = t;
+        const k = Math.min(1, (t - cl.t0) / dur);
+        place(start + (end - start) * (1 - Math.pow(1 - k, 4)));
+        if (k >= 1) { landClimb(); return; }
+        cl.raf = requestAnimationFrame(tick);
+      };
+      cl.raf = requestAnimationFrame(tick);
+      return;
+    }
+    place(end);
+    els[end].classList.add('landed');
+    if (!g.cleared) els[end].querySelector('.mk').textContent = '✗';
+    main.append(climbArena(g, e, sp));
+    main.append(h('div', { class: 'card alert center' }, [
+      h('div', { class: 'small muted', text: g.cleared ? sp.name + ' cleared every floor. Legacy Title:' : sp.name + ' fell on floor ' + g.floorReached + ' to ' + foeDef(g.killer).name + '. Legacy Title:' }),
+      h('div', { class: 'legacy', 'data-id': 'climb-title', text: e.gauntlet.label }),
+    ]));
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'climb-continue', text: 'See the grade', onclick: () => { stopClimb(); ui.view = 'grade'; render(); } }));
+  }
+
+  // The comic defeat: the killer strikes and the monster is launched off screen or turned to ash (picked from the result hash,
+  // cosmetic only); a cleared tower gets a victory hop instead.
+  function climbArena(g, e, sp) {
+    const you = h('div', { class: 'fighter you' }, [sprite(e.species), h('span', { text: sp.name })]);
+    if (g.cleared) {
+      you.classList.add('hop');
+      return h('div', { class: 'arena', 'data-id': 'climb-arena' }, [you, h('div', { class: 'pow', style: 'left:auto;right:10%', text: '★ CLEARED ★' })]);
+    }
+    const d = foeDef(g.killer), boss = !!d.boss, ash = parseInt(g.hash.slice(-1), 16) % 2 === 1;
+    you.classList.add(ash ? 'ash' : 'launch');
+    const foe = h('div', { class: 'fighter foe strike' + (boss ? ' boss' : '') }, [foeSprite(g.killer, boss, 'sprite'), h('span', { text: d.name })]);
+    return h('div', { class: 'arena', 'data-id': 'climb-arena' }, [you, foe, h('div', { class: 'pow', text: ash ? 'FWOOSH!' : 'BONK!' })]);
+  }
+
   // ------------------------------------------------------------ actions
-  function resetRunUi() { ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
+  function resetRunUi() { stopClimb(); ui.climb = null; ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
   const log = (line) => { ui.feed.unshift(line); };
 
   function startRun() {
@@ -469,7 +576,15 @@
   function seal() {
     const r = run.finishRun();
     if (!r.ok) { toast(r.reason); return; }
-    ui.sealed = r.entry; ui.payout = r.shards; ui.view = 'grade'; render();
+    ui.sealed = r.entry; ui.payout = r.shards; ui.view = 'grade';
+    if (r.entry.gauntlet) {   // the wheel replays the new entry's climb (read only); without it the grade screen still works
+      try {
+        const g = run.gauntlet(run.account.vault.length - 1);
+        if (g.ok) { openClimb(g); return; }
+        console.warn('gauntlet replay refused:', g.reason);
+      } catch (err) { console.warn('gauntlet replay failed:', err); }
+    }
+    render();
   }
 
   // ------------------------------------------------------------ boot

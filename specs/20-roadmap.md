@@ -25,7 +25,7 @@ Order follows `specs/13` section 6. Each phase gets its own spec before building
 
 | # | Item | Kind | Size | Issues |
 |---|---|---|---|---|
-| R1.1 | **T8 gauntlet wheel screen and Legacy Titles** in the web client (engine done, `specs/19`). Also expose the gauntlet fields in the bridge. | Feature | S-M | #72 |
+| R1.1 | **Done.** **T8 gauntlet wheel screen and Legacy Titles** in the web client (engine done, `specs/19`). Also expose the gauntlet fields in the bridge. | Feature | S-M | #72 |
 | R1.2 | **T9 species gacha and aptitude ranks.** Engine and UI; the currency and gem-sale question (R1.9) blocks only the economy part. | Feature | M | #73 |
 | R1.3 | **First-time experience, rewritten for the trainer**: guided first run, real strings (species, trees, nodes), settings, accessibility basics, localisation decision. The existing issue is written for the idle game. | Feature | M | #48 (**re-scope**) |
 | R1.4 | **T10 Daily Tower** (4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button). | Feature | L | #74 |

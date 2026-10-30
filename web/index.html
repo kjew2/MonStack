@@ -112,6 +112,44 @@ small, .small { font-size: 12px; }
 .mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px 8px; font-size: 12px; color: var(--muted); }
 .mini b { color: var(--text); font-family: var(--font-display); }
 .err { color: var(--bad); white-space: pre-wrap; }
+/* Gauntlet wheel (specs/19): a slowing reel of the floors climbed, then a comic defeat */
+.reel { --row: 48px; position: relative; height: calc(var(--row) * 5); overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; touch-action: manipulation; user-select: none; }
+.reel::before, .reel::after { content: ''; position: absolute; left: 0; right: 0; height: calc(var(--row) * 1.6); z-index: 2; pointer-events: none; }
+.reel::before { top: 0; background: linear-gradient(var(--panel), rgba(30,30,30,0)); }
+.reel::after { bottom: 0; background: linear-gradient(rgba(30,30,30,0), var(--panel)); }
+.reel .pointer { position: absolute; left: 0; right: 0; top: calc(var(--row) * 2); height: var(--row); border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); z-index: 3; pointer-events: none; }
+.reel .pointer::before { content: '\25B6'; position: absolute; left: 5px; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: 11px; }
+.strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+.floor { height: var(--row); display: grid; grid-template-columns: 40px 32px 1fr auto; align-items: center; gap: 8px; padding: 0 12px 0 22px; border-bottom: 1px solid #2a2a2a; }
+.floor .fl { font: 700 13px var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; }
+.floor canvas { width: 32px; height: 32px; image-rendering: pixelated; image-rendering: crisp-edges; }
+.floor .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.floor.boss .nm { color: var(--warn); }
+.floor .mk { font: 700 14px var(--font-display); }
+.floor.won .mk { color: var(--ok); }
+.floor.fell.landed { background: rgba(239,83,80,.16); } .floor.fell.landed .mk { color: var(--bad); }
+.floor.summit .nm { color: var(--gold); }
+.floor.unfought { opacity: .35; }
+.climb-now { font: 700 22px var(--font-display); text-align: center; font-variant-numeric: tabular-nums; min-height: 30px; }
+.arena { position: relative; height: 124px; display: flex; justify-content: space-around; align-items: flex-end; padding-bottom: 10px; overflow: hidden; border-radius: 8px; border: 1px solid var(--line); background: linear-gradient(#1b1b2b, var(--panel)); }
+.arena .fighter { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.arena .sprite { width: 64px; height: 64px; background: none; padding: 0; }
+.arena .boss .sprite { width: 88px; height: 88px; }
+.arena .you.launch .sprite { animation: launch 1.1s cubic-bezier(.3,.1,.7,1) .45s forwards; }
+.arena .you.ash .sprite { animation: ash 1.4s ease-in .45s forwards; }
+.arena .you.hop .sprite { animation: hop .6s ease-out 3; }
+.arena .foe.strike .sprite { animation: lunge .55s ease-in-out .1s; }
+@keyframes launch { to { transform: translate(-150px, -230px) rotate(-900deg) scale(.4); opacity: 0; } }
+@keyframes ash { 25% { filter: grayscale(1) brightness(.5); } 100% { filter: grayscale(1) brightness(.35) blur(3px); transform: translateY(26px) scaleY(.12); opacity: 0; } }
+@keyframes hop { 50% { transform: translateY(-26px); } }
+@keyframes lunge { 45% { transform: translateX(-70px) rotate(-8deg); } }
+.pow { position: absolute; left: 22%; top: 14%; font: 700 30px var(--font-display); color: var(--gold); text-shadow: 2px 2px 0 #b71c1c; transform: rotate(-12deg); animation: pow 1s ease-out .4s both; pointer-events: none; }
+@keyframes pow { 0% { opacity: 0; transform: scale(.2) rotate(-12deg); } 30% { opacity: 1; transform: scale(1.3) rotate(-12deg); } 100% { opacity: 0; transform: scale(1) rotate(-12deg); } }
+.legacy { font: 700 20px/1.25 var(--font-display); color: var(--gold); text-align: center; text-wrap: balance; }
+@media (prefers-reduced-motion: reduce) {
+  .arena .sprite, .pow { animation: none !important; }
+  .arena .you.launch .sprite, .arena .you.ash .sprite { filter: grayscale(1); transform: rotate(90deg); }
+}
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; background: #333; box-shadow: 0 4px 12px rgba(0,0,0,.5); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }

@@ -6,7 +6,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 
 | File | What it is |
 |---|---|
-| `index.html`, `run.js` | The trainer screens: species pick, Drill and Rest with the odds shown, rank fights with the battle log, tree drafts and buying, the grade screen with shard payout, talents, the Vault list. No game rules. |
+| `index.html`, `run.js` | The trainer screens: species pick, Drill and Rest with the odds shown, rank fights with the battle log, tree drafts and buying, the gauntlet wheel after sealing (`specs/19` section 7), the grade screen with shard payout and Legacy Title, talents, the Vault list. No game rules. |
 | `run-engine.js` | Facade over the C# trainer bridge (`IdleRng.Web.Engine.Run*` / `Account*`): the account save (shards, talents, Vault, active run). |
 | `engine.js` | Loader for the .NET runtime and the content pack. |
 | `sprites.js` | Seeded 12x12 pixel sprites drawn on canvas. Cosmetic only, never touches the game's RNG. |
@@ -26,4 +26,3 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 
 - **Permanently unranked.** It creates its own random seeds, so it can never be certified for leaderboards or PvP (`specs/10` section 3). That is right for a playtest build; a ranked client needs a server genesis.
 - **Needs HTTP.** WebAssembly does not load from `file://`. The install-free way to play is the claude.ai artifact link in the root README ("On a phone"), published from `web/index.html` plus the files listed by `wasm/artifact-files.py`.
-- The gauntlet result (floor, killer, Legacy Title) is stored on each Vault entry but has no screen yet (`specs/19` section 7).

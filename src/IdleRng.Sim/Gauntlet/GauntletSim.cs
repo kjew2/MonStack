@@ -104,6 +104,25 @@ namespace IdleRng.Sim.Gauntlet
         }
 
         /// <summary>
+        /// A Legacy Title's display text: the title string with {killer} filled with the killer's name (specs/19 section 3).
+        /// <paramref name="killerId"/> is null for a cleared tower; a {killer} in that title then reads as empty.
+        /// </summary>
+        public static string TitleText(ContentDb c, string titleKey, string killerId)
+        {
+            if (c == null) throw new ArgumentNullException(nameof(c));
+            return c.Text(titleKey).Replace("{killer}", killerId == null ? "" : EnemyName(c, killerId)).Trim();
+        }
+
+        /// <summary>A gauntlet enemy's display name (normal or boss); the id itself when the content has no such enemy.</summary>
+        public static string EnemyName(ContentDb c, string enemyId)
+        {
+            if (c == null) throw new ArgumentNullException(nameof(c));
+            foreach (var e in c.GauntletEnemies) if (e.Id == enemyId) return c.Text(e.NameKey);
+            foreach (var e in c.GauntletBosses) if (e.Id == enemyId) return c.Text(e.NameKey);
+            return enemyId;
+        }
+
+        /// <summary>
         /// Climb the tower with <paramref name="monster"/> (for a vaulted monster, VaultEntry.Fighter; seed, the run seed).
         /// Every floor is a fresh 1v1 BattleSim fight; only a win (SideAWon) goes on to the next floor.
         /// </summary>
