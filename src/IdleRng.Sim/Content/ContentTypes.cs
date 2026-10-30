@@ -54,6 +54,20 @@ namespace IdleRng.Sim.Content
         public double AiHealBelow { get; internal set; }         // AI_HEAL_BELOW
         public double AiShieldBelow { get; internal set; }       // AI_SHIELD_BELOW
 
+        // Monster battle (specs/16 section 7). Placeholders.
+        public double MonHpPerPoint { get; internal set; }       // MON_HP_PER_POINT
+        public double MonDefK { get; internal set; }             // MON_DEF_K
+        public double MonEvadeBase { get; internal set; }        // MON_EVADE_BASE
+        public double MonEvadePerDex { get; internal set; }      // MON_EVADE_PER_DEX
+        public double MonEvadeCap { get; internal set; }         // MON_EVADE_CAP
+        public double MonCritBase { get; internal set; }         // MON_CRIT_BASE
+        public double MonCritPerLuk { get; internal set; }       // MON_CRIT_PER_LUK
+        public double MonCritCap { get; internal set; }          // MON_CRIT_CAP
+        public double MonCritDmg { get; internal set; }          // MON_CRIT_DMG
+        public double MonSpdMin { get; internal set; }           // MON_SPD_MIN
+        public int MonTimeLimitTicks { get; internal set; }      // MON_TIME_LIMIT_TICKS
+        public int MonSideSize { get; internal set; }            // MON_SIDE_SIZE
+
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
 

@@ -165,6 +165,66 @@
       "key": "AI_SHIELD_BELOW",
       "type": "double",
       "value": 0.7
+    },
+    {
+      "key": "MON_HP_PER_POINT",
+      "type": "double",
+      "value": 10.0
+    },
+    {
+      "key": "MON_DEF_K",
+      "type": "double",
+      "value": 300.0
+    },
+    {
+      "key": "MON_EVADE_BASE",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_EVADE_PER_DEX",
+      "type": "double",
+      "value": 0.0005
+    },
+    {
+      "key": "MON_EVADE_CAP",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "MON_CRIT_BASE",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_CRIT_PER_LUK",
+      "type": "double",
+      "value": 0.0005
+    },
+    {
+      "key": "MON_CRIT_CAP",
+      "type": "double",
+      "value": 0.75
+    },
+    {
+      "key": "MON_CRIT_DMG",
+      "type": "double",
+      "value": 1.5
+    },
+    {
+      "key": "MON_SPD_MIN",
+      "type": "double",
+      "value": 10.0
+    },
+    {
+      "key": "MON_TIME_LIMIT_TICKS",
+      "type": "int",
+      "value": 900
+    },
+    {
+      "key": "MON_SIDE_SIZE",
+      "type": "int",
+      "value": 4
     }
   ]
 }

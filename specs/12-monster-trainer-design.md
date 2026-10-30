@@ -64,33 +64,33 @@ The exact action list is open; the drafts name these three as examples.
 
 ### 4.3 Stats, energy, fatigue, injury
 
-- **Stats:** STR, INT, WIS, DEX, DEF, SPD (the six the drafts name). No draft names HP; battle needs one (section 13 item 4).
+- **Stats (kj, 2026-10-30):** eight trained stats: HP, STR, INT, WIS, DEX, DEF, SPD, LUK. The drafts named six; kj added HP and LUK. How each one works in battle is `specs/16` section 3.
 - **Energy** pays for actions. The talent tree reduces energy cost.
 - **Fatigue** builds with hard training. Training at high fatigue raises **injury risk** but gives the large gains needed to cross a milestone before epoch 12. This is the run's main risk-versus-reward decision.
 - **Skill points** are earned during the run and spent in trees. Saving them is a strategy (section 5.4). How points are earned is open (proposed: per epoch, plus extra from Tactical Challenges).
 
 ### 4.4 Attribute milestones and drafts
 
-When a stat crosses **300 / 500 / 700 / 900**, the run pauses for a **3-card tree draft** themed on that stat (example at 700 WIS: *Mind Warp*, *Overclock*, *Aether Conduit*). The picked tree takes the monster's draft slot (section 5.1). The talent tree can add draft slots or options.
+When a stat crosses **300 / 500 / 700 / 900**, the run pauses for a **3-card tree draft** themed on that stat (example at 700 WIS: *Mind Warp*, *Overclock*, *Aether Conduit*). The picked tree goes into a tree slot under the slot rule of section 5.1. Milestone drafts are one way to get a new tree, not the only one. The talent tree can add draft options.
 
 ### 4.5 End of run
 
 - After epoch 12 the monster goes to the gauntlet (section 6) and then into the Vault.
-- Both completed and failed runs pay Training Shards. What "failed" means (injury, collapse, retiring early) and whether a failed monster still enters the Vault is open (section 13 item 9).
+- **Failed runs (kj, 2026-10-30):** an injury at high fatigue ends the run early. The monster is still certified and vaulted (the gauntlet scores it low), and the run still pays Training Shards.
 
 ## 5. Skill trees
 
 Monsters are skill vessels. Trees do not hand out flat percentage boosts; they change combat mechanics and rules. (One draft says base trees "provide essential stats"; section 13 item 3.)
 
-### 5.1 Tree slots (proposed reconciliation, section 13 item 2)
+### 5.1 Tree slots (kj, 2026-10-30)
 
-Up to **4 trees** per monster per run:
+A monster has **4 tree slots**. A run starts with the species' 2 native trees in two slots (e.g. *Slime Fundamentals*, *Pyromancy*, *Pyre Core*, *Aether Striker*) and the other 2 slots empty.
 
-| Slot | Source | When |
-|---|---|---|
-| Native A, Native B | The species (e.g. *Slime Fundamentals*, *Pyromancy*, *Pyre Core*, *Aether Striker*) | From the start |
-| Draft | A milestone draft (section 4.4), a random mid-run offer, or a consumed Skill Book's tree (section 5.6) | Mid-run |
-| Chase | A chase tree whose unlock conditions were met (section 5.3) | Mid-to-late run |
+Every newly acquired tree, from any source, is offered the same way: put it in an empty slot, **overwrite any occupied slot** (native trees included), or discard it. Sources include a consumed Skill Book (section 5.6), a generic tree from stat growth (section 4.4), random mid-run offers, and chase trees (section 5.3).
+
+Example: the run starts with 2 native trees and 2 empty slots. The player uses a Skill Book and puts its tree in slot 3. Later a stat milestone offers a generic tree; it goes in slot 4. More generic trees arrive and are discarded in favour of the current four. Then a chase tree unlocks and overwrites the generic tree, or the weaker native tree.
+
+Open (section 13 item 15): what happens to skill points already spent in an overwritten tree, and whether a chase tree whose conditions used an overwritten tree stays unlocked.
 
 ### 5.2 Chase traits
 
@@ -220,16 +220,17 @@ Not in the MVP: multiplayer and database, gacha UI, Endless Tower scaling, PvP.
 Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeats the ones that block work.
 
 1. **Run length.** 12 epochs (four drafts) vs 12-15 (one). Proposed: 12, as a content constant.
-2. **Tree slots.** The drafts give four different layouts: 2 native + chase trees; 2 base + 2 chase (one in-run, one book-gated); 2 native + 1 flex/draft + 1 secret chase; 2 native + 1 flex + 1 generic milestone. Proposed: section 5.1 (2 native + 1 draft + 1 chase, with two routes into the chase slot, and the Book Tree competing for the draft slot), plus a chase trait at the top of every tree (section 5.2).
+2. **Tree slots.** Decided (kj, 2026-10-30): 4 slots, 2 native + 2 empty at the start, any new tree may fill an empty slot or overwrite any slot (section 5.1). Still proposed: a chase trait at the top of every tree (section 5.2).
 3. **What trees give.** "Trees do not provide passive percentage boosts" vs "base trees provide essential stats". Proposed: native trees may give stats and core skills; draft trees, chase trees and chase traits change rules.
-4. **HP.** The six named stats have no HP. Proposed: add HP as a seventh trained stat (*Monster Rancher*'s LIF), milestones on all seven.
+4. **Stats.** Decided (kj, 2026-10-30): HP, STR, INT, WIS, DEX, DEF, SPD, LUK. Proposed: milestones on all eight.
 5. **Duplicates.** "Raise chase-tree odds" (four drafts) vs "Hidden Aptitude Trees" (one). Proposed: odds only, no extra tree.
 6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode. Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.
 7. **Dodges in an auto-battle.** "Perfect dodges" implies action input. Proposed: combat stays automatic and the condition counts evasions.
 8. **Where in-run fights come from.** Playstyle conditions need fights during the run. Proposed: Tactical Challenge is that fight.
-9. **Failed runs.** What fails a run, and does the monster still enter the Vault? Proposed: an injury at high fatigue ends the run early; the monster is still certified and vaulted (the gauntlet scores it low), and the run still pays shards.
+9. **Failed runs.** Decided (kj, 2026-10-30): section 4.5.
 10. **Gem sales.** The drafts describe a gacha with premium currency but only an ad-removal pass as revenue. Proposed: no gem sales at launch; revenue is the pass and cosmetics. Monetization is kj's call.
-11. **Platform.** The drafts say Steam and web; the current repo targets iOS (issues #6, #10, #11). Open.
+11. **Platform.** Decided: web first (kj, 2026-10-30, with the client technology left to the agent). `specs/13` section 1 records the call.
 12. **Stamina.** "Quick stamina refills" implies an account stamina gate on runs; no draft describes it. Proposed: no stamina gate in the MVP.
 13. **Idle.** No draft has an idle or offline layer. Proposed: drop it (offline catch-up, idle chest, stage push).
 14. **Roles and elements.** No draft mentions the current game's 5 roles and 5 elements. Proposed: keep the 5 elements as species/skill types; roles come from trees, not fixed per species.
+15. **Overwritten trees.** Points spent in a tree that gets overwritten: lost, or refunded? Proposed: lost, so overwriting is a real cost and the point-dump timing matters. A chase tree that is already unlocked stays unlocked even if a tree its conditions used is overwritten. Blocks `specs/13` T3.

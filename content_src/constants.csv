@@ -32,3 +32,15 @@ ELEMENT_WEAK_MULT,double,0.8,damage when the defender's element beats the attack
 BASIC_ATTACK_POWER,double,1,basic attack = this x ATK
 AI_HEAL_BELOW,double,0.5,companion AI heals when an ally is below this HP fraction
 AI_SHIELD_BELOW,double,0.7,companion AI shields when an ally is below this HP fraction
+MON_HP_PER_POINT,double,10,monster battle (specs/16): max HP = HP stat x this. Placeholder
+MON_DEF_K,double,300,monster battle: damage x K/(K+DEF) physical or K/(K+WIS) magical. Placeholder
+MON_EVADE_BASE,double,0.05,monster battle: evade chance vs physical hits = base + (target DEX - attacker DEX) x per_dex. Placeholder
+MON_EVADE_PER_DEX,double,0.0005,Placeholder
+MON_EVADE_CAP,double,0.5,evade chance is clamped to [0; cap]. Placeholder
+MON_CRIT_BASE,double,0.05,monster battle: crit chance = base + LUK x per_luk + effects. Placeholder
+MON_CRIT_PER_LUK,double,0.0005,Placeholder
+MON_CRIT_CAP,double,0.75,crit chance is clamped to [0; cap]. Placeholder
+MON_CRIT_DMG,double,1.5,monster battle: crit damage multiplier before effects. Placeholder
+MON_SPD_MIN,double,10,monster battle: minimum ATB gauge fill per tick so SPD 0 still acts. Placeholder
+MON_TIME_LIMIT_TICKS,int,900,monster battle: turn limit (90 s); reaching it is a timeout. Placeholder
+MON_SIDE_SIZE,int,4,monster battle: most units per side

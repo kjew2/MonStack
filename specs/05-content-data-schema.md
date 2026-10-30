@@ -162,6 +162,8 @@ ENH_SUCCESS_FLOOR double  ENH_SUCCESS_STEP double  ENH_COST_GOLD_MULT double
 HERO_SLOTS int        HERO_LVL_BONUS double
 ```
 
+Later additions, with their range rules: the idle boss battle constants (`specs/11` section 10) and the monster battle `MON_*` constants (`specs/16` section 7). `REQUIRED_CONSTANTS` in `tools/content_build.py` is the complete list.
+
 JSON row shape: `{"key": "TICK_HZ", "type": "int", "value": 10}`. The loader maps rows onto the typed `Constants` class (section 9.2); it does not expose a dictionary, so a typo in C# is a compile error rather than a runtime miss.
 
 ### 5.2 `curves`

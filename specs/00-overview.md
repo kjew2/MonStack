@@ -121,6 +121,10 @@ All constants below are validated by `tools/gacha_model.py` and `tools/power_cur
 
 Details in `specs/11` section 6.
 
+### 2.6a Monster battle (pivot, `specs/16`)
+
+The `MON_*` constants of `specs/16` section 7 (content `2.3`): max HP per HP point, mitigation constant, evade and crit formulas, minimum speed, turn limit, side size. All placeholders. The engine also reads `BATTLE_GAUGE`, `SPD_REF`, the element multipliers, `BASIC_ATTACK_POWER` and the AI thresholds above.
+
 ### 2.6 Session model and targets
 
 Assumed F2P player: 2 h active/day, offline the rest. Targets the bot must land within +/-20%:
@@ -168,7 +172,7 @@ Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, 
 ## 5. Cross-spec contracts
 
 1. **Sim core is pure C#** (`IdleRng.Sim` assembly). No `UnityEngine` reference, no JSON library, no reflection, no clock reads, no `Math.Pow/Exp/Log` (`specs/03` section 4). The Unity client, the bot harness and the offline catch-up all call the same `Simulation.Tick()` / `Simulation.Advance(ticks)`. Code that needs IO, a real clock or a serializer lives in `IdleRng.Runtime` (plain C#, references `IdleRng.Sim` and Newtonsoft.Json, still no `UnityEngine`), which both the client and the bots reference.
-2. **Every RNG consumer gets its own named stream.** Streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`, and `battle` (the 4v1 boss battle, `specs/11` section 8). A stream is `(seed, counter)`; the counter persists in the save. See `specs/03` for the algorithm and `specs/01` for why the gacha stream is pre-committed.
+2. **Every RNG consumer gets its own named stream.** Streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`, and `battle` (the 4v1 boss battle, `specs/11` section 8). The monster battle (`specs/16`) runs on a `battle_sim` stream seeded per fight by its caller. A stream is `(seed, counter)`; the counter persists in the save. See `specs/03` for the algorithm and `specs/01` for why the gacha stream is pre-committed.
 3. **Content is data.** Every number in section 2 lives in a table defined by `specs/05`; code receives a `ContentDb` object and never a literal.
 4. **Save schema is versioned from v1** with forward-only migrations (`specs/06`).
 5. **Server-sensitive operations go through an interface** (`IGachaService`, `IClock`, `ISaveStore`) with a local implementation in the prototype and a documented remote contract (`specs/08`).
@@ -195,6 +199,7 @@ idle-rng-game/
     11-party-and-builds.md      overhaul (#60): party, companions, promotion, 4v1 battle
     12-monster-trainer-design.md  pivot target design (not built)
     13-pivot-transition.md      pivot plan: carry-over, phases, open questions
+    16-battle.md                monster battle engine: 1-4 vs 1-4, stat sheet, ATB, triggers (pivot T1)
   tools/
     gacha_model.py               exact pity math
     power_curve_model.py         greedy-bot 30-day model
