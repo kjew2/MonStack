@@ -2,6 +2,8 @@
 
 Mobile idle game in the Sword x Staff / Maple Idle mould: auto-combat pushes stages, stages drop currency, currency feeds parallel RNG upgrade systems, the player's job is deciding where to spend.
 
+**Pivot planned:** the project is moving to a fast monster-raising game (training runs, skill trees, towers). The target design is `specs/12`, the plan `specs/13`. The specs below still describe the code until each phase lands.
+
 Start with `specs/00-overview.md`. It holds the canonical constants and the contracts every other spec follows.
 
 | Spec | Covers |
@@ -17,7 +19,9 @@ Start with `specs/00-overview.md`. It holds the canonical constants and the cont
 | `specs/08-backend-seams.md` | `IClock` / `IGachaService` / `ISaveStore` contracts, local impls, future remote |
 | `specs/09-test-harness-and-bots.md` | Headless bot runner, acceptance table, determinism tests, CI |
 | `specs/10-online-competitive.md` | Trust model for accounts, IAP, leaderboards and async PvP: server-verified progress, genesis seeds, command log, fairness levers |
-| `specs/11-party-and-builds.md` | Gameplay overhaul (#60): 4-companion party, stat sheet, roles, elements, promotion; phased plan for 4v1 battle, affix gear, dungeons and uniques |
+| `specs/11-party-and-builds.md` | Gameplay overhaul (#60): 4-companion party, stat sheet, roles, elements, promotion, 4v1 battle (phases 3-5 cancelled by the pivot) |
+| `specs/12-monster-trainer-design.md` | Pivot target (not built): monster raising with 12-epoch training runs, skill trees and chase traits, gauntlet, towers, async PvP |
+| `specs/13-pivot-transition.md` | Plan for moving this repo from the idle game to `specs/12`: what carries over, phases, open questions |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.
 

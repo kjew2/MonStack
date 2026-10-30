@@ -2,7 +2,7 @@
 
 Scope: the gameplay overhaul tracked in issue #60. It turns the hero layer into a party of companions with their own stats, roles and elements, moves fights toward a 4v1 turn-based auto-battle, and replaces main-stat gear with affix gear and build-defining uniques.
 
-This spec is built in phases. Section 2 says which phase is live. Where a section here disagrees with an older spec, this spec wins and the older spec points here.
+This spec is built in phases. Section 2 says which phase is live. **Phases 3-5 are cancelled by the pivot** (`specs/12`, `specs/13`); phases 1-2 stay live until the idle loop is removed. Where a section here disagrees with an older spec, this spec wins and the older spec points here.
 
 > **Systems before balance.** Every number in this spec is a placeholder until the systems are finalized (`CLAUDE.md`, "Current focus"). Do not tune them; mark new ones as placeholders.
 
@@ -29,9 +29,9 @@ From #63:
 |---|---|---|---|
 | 1 | Party of 4, companion stat sheet, roles, elements, 20-companion pool, per-companion promotion, farming DPS from the stat sheet | #62, #63, part of #59 | **Live** |
 | 2 | 4v1 ATB battle for bosses (dungeons later); kits take effect; HP/DEF/SPD used in combat; crit rolled per hit | #61, rest of #59 | **Live** |
-| 3 | Per-companion gear slots, prefix/suffix affixes with roll ranges, slot-bound enhancement | #57, #55 | Planned |
-| 4 | Daily dungeons, build-defining uniques target-farmed there | #56, #64 | Planned |
-| 5 | Stat upgrade overhaul (multiple gold tracks, milestones, auto-buy) | #58 | Planned |
+| 3 | Per-companion gear slots, prefix/suffix affixes with roll ranges, slot-bound enhancement | #57, #55 | Cancelled (pivot, `specs/13`) |
+| 4 | Daily dungeons, build-defining uniques target-farmed there | #56, #64 | Cancelled (pivot, `specs/13`) |
+| 5 | Stat upgrade overhaul (multiple gold tracks, milestones, auto-buy) | #58 | Cancelled (pivot, `specs/13`) |
 
 While phases 1-2 are live and later phases are not:
 
@@ -284,7 +284,7 @@ Phase 2 adds constants `BATTLE_GAUGE`, `DEF_K_MULT`, `ELEMENT_STRONG_MULT`, `ELE
 
 `promotions` (replaces `class_advances`): `index` (key, `1..N` contiguous, `E060`), `unlock_stage` (int, strictly increasing, `E032`), `mult` (double, `> 0`), `cost_kills` (double, `>= 0`), `name_key`.
 
-## 11. Later phases (design so far)
+## 11. Later phases (cancelled by the pivot, kept for reference)
 
 - **Phase 3, gear (#57, #55).** Each companion gets its own slots (count open, 4-5 suggested). Pieces roll prefixes and suffixes with tiered roll ranges on a `gear_affix` stream. Enhancement belongs to the companion's slot, not the item.
 - **Phase 4, dungeons and uniques (#56, #64).** Daily tickets; each unique drops from one dungeon with bad-luck protection; dungeon materials replace gold for promotion and enhancement.
