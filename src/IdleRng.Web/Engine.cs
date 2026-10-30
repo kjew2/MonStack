@@ -65,13 +65,13 @@ namespace IdleRng.Web
         }
 
         [JSExport] public static string RunContent() => GuardRun(h => h.Content());
-        [JSExport] public static string RunStart(string speciesId, string seedHex, string booksJson) => GuardRun(h => h.Start(speciesId, seedHex, booksJson));
-        [JSExport] public static string RunLoad(string saveJson) => GuardRun(h => h.Load(saveJson));
-        [JSExport] public static string RunSave() => GuardRun(h => h.Save());
+        [JSExport] public static string AccountNew(string seedHex) => GuardRun(h => h.NewAccount(seedHex));
+        [JSExport] public static string AccountLoad(string saveText) => GuardRun(h => h.LoadAccount(saveText));
+        [JSExport] public static string AccountSave() => GuardRun(h => h.SaveAccount());
+        [JSExport] public static string AccountView() => GuardRun(h => h.AccountView());
+        [JSExport] public static string AccountCmd(string name, string argsJson) => GuardRun(h => h.AccountCmd(name, argsJson));
         [JSExport] public static string RunState() => GuardRun(h => h.State());
         [JSExport] public static string RunCmd(string name, string argsJson) => GuardRun(h => h.Cmd(name, argsJson));
-        [JSExport] public static string RunSeal(double utcMs) => GuardRun(h => h.Seal(utcMs));
-        [JSExport] public static void RunAbandon() { _run?.Abandon(); }
 
         private static string GuardRun(Func<RunHost, string> f)
         {

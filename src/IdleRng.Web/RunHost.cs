@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
+using IdleRng.Runtime.Save;
+using IdleRng.Sim.Account;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
 using IdleRng.Sim.Training;
@@ -10,17 +13,18 @@ using IdleRng.Sim.Training;
 namespace IdleRng.Web
 {
     /// <summary>
-    /// The adapter for the monster-trainer run (specs/14, 15, 13 T4/T6): one run at a time, driven by the same TrainingRun
-    /// commands the bots and tests use. It adds no rules; it maps RunState and ContentDb to JSON for web/run.js. A run saves as
-    /// species + seed + books + command log and loads by replay, so saves cannot drift from the engine.
+    /// The adapter for the monster trainer (specs/13 T4-T6, 14, 15, 18): holds the player's AccountState and its active run,
+    /// driven by the same AccountOps and TrainingRun commands the bots and tests use. It adds no rules; it maps AccountState,
+    /// RunState and ContentDb to JSON for web/run.js. The save is AccountSave (the active run as its replay recipe), so
+    /// saves cannot drift from the engine.
     /// </summary>
     internal sealed class RunHost
     {
         private const int MaxLoggedActions = 400;
 
         private readonly ContentDb _db;
-        private RunState _run;
-        private VaultEntry _sealed;
+        private AccountState _acct;
+        private RunState _run => _acct?.Active;
 
         public RunHost(string contentJson)
         {
@@ -41,6 +45,7 @@ namespace IdleRng.Web
                 .P("runCycles", k.RunCycles).P("runAp", k.RunAp).P("energyMax", k.RunEnergyMax).P("fightEvery", k.FightEvery)
                 .P("statMax", k.StatMax).P("treeSlots", k.TreeSlots).P("drillEnergyCost", k.DrillEnergyCost).P("restEnergy", k.RestEnergy)
                 .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("superP", k.DrillSuperP)
+                .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank)
                 .EndObj();
             w.Key("stats").Arr();
             foreach (var id in StatIds.Trained) w.Str(id);
@@ -75,6 +80,11 @@ namespace IdleRng.Web
             w.Key("books").Obj();
             foreach (var b in _db.SkillBooks.Values) w.Key(b.Id).Obj().P("name", _db.Text(b.NameKey)).P("tree", b.TreeId).EndObj();
             w.EndObj();
+            w.Key("talents").Arr();
+            foreach (var t in _db.TalentList)
+                w.Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("desc", _db.Text(t.DescKey)).P("effect", t.Effect.ToString().ToLowerInvariant())
+                    .P("maxRank", t.MaxRank).EndObj();
+            w.EndArr();
             return w.EndObj().ToString();
         }
 
@@ -142,81 +152,122 @@ namespace IdleRng.Web
             }
         }
 
-        // ------------------------------------------------------------------ run lifecycle
+        // ------------------------------------------------------------------ account lifecycle
 
-        public string Start(string speciesId, string seedHex, string booksJson)
+        public string NewAccount(string seedHex)
         {
             ulong seed = ulong.Parse(string.IsNullOrEmpty(seedHex) ? "0" : seedHex, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-            var books = ReadStrings(booksJson);
-            _run = TrainingRun.Start(_db, speciesId, seed, books);
-            _sealed = null;
-            return State();
+            _acct = AccountOps.New(_db, seed);
+            return AccountView();
         }
 
-        /// <summary>Saved form of the run: species, seed, books and command log. Null when no run.</summary>
-        public string Save()
+        /// <summary>Saved form (AccountSave text: a header line, then JSON). The active run is its replay recipe.</summary>
+        public string SaveAccount() => _acct == null ? "null" : Encoding.UTF8.GetString(AccountSave.Encode(_acct));
+
+        /// <summary>Rebuild the account from its save. Throws (returned as {"error"}) when the save is damaged or no longer replays.</summary>
+        public string LoadAccount(string saveText)
         {
-            if (_run == null) return "null";
-            var books = new List<string>(_run.Books);
-            foreach (var l in _run.Log) if (l.Kind == RunCommandKind.UseBook) books.Add(l.Book);
-            var w = new JsonOut().Obj().P("v", 1).P("species", _run.SpeciesId).P("seed", _run.Seed.ToString("x16", CultureInfo.InvariantCulture));
-            w.Key("books").Arr();
-            foreach (var b in books) w.Str(b);
-            w.EndArr();
-            w.Key("log"); Log(w, _run.Log);
+            _acct = AccountSave.Decode(_db, Encoding.UTF8.GetBytes(saveText));
+            return AccountView();
+        }
+
+        /// <summary>Account commands. Invalid ones return {ok:false,reason} and leave the account unchanged.</summary>
+        public string AccountCmd(string name, string argsJson)
+        {
+            if (_acct == null) return Fail("no account");
+            var a = new Args(argsJson);
+            var w = new JsonOut().Obj();
+            try
+            {
+                switch (name)
+                {
+                    case "startRun":
+                        AccountOps.StartRun(_db, _acct, a.Str(0), a.Has(1) ? BookList(a.El(1)) : null);
+                        w.P("ok", true);
+                        break;
+                    case "finishRun":
+                    {
+                        var r = AccountOps.FinishRun(_db, _acct, (long)a.Num(0));
+                        w.P("ok", true).P("shards", r.Shards);
+                        w.Key("entry"); Entry(w, r.Entry);
+                        w.Key("booksReturned").Arr();
+                        foreach (var b in r.BooksReturned) w.Str(b);
+                        w.EndArr();
+                        break;
+                    }
+                    case "buyTalent":
+                        w.P("ok", true).P("cost", AccountOps.BuyTalent(_db, _acct, a.Str(0)));
+                        break;
+                    case "abandon":
+                    {
+                        // Abandoning pays nothing and seals nothing; unused books go back to the inventory so a misclick costs none.
+                        var run = _acct.Active ?? throw new InvalidOperationException("no run in progress");
+                        foreach (var b in run.Books) AccountOps.GrantBooks(_db, _acct, b, 1);
+                        _acct.Active = null;
+                        w.P("ok", true);
+                        break;
+                    }
+                    case "debugGrantBook":
+                        AccountOps.GrantBooks(_db, _acct, a.Str(0), a.Has(1) ? a.Int(1) : 1);
+                        w.P("ok", true);
+                        break;
+                    default: return Fail("unknown command");
+                }
+            }
+            catch (Exception e) when (e is InvalidOperationException || e is ArgumentException)
+            {
+                return Fail(e.Message);
+            }
             return w.EndObj().ToString();
         }
 
-        public string Load(string saveJson)
-        {
-            using var doc = JsonDocument.Parse(saveJson);
-            var r = doc.RootElement;
-            ulong seed = ulong.Parse(r.GetProperty("seed").GetString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-            var books = r.GetProperty("books").EnumerateArray().Select(e => e.GetString()).ToList();
-            _run = TrainingRun.Replay(_db, r.GetProperty("species").GetString(), seed, ReadLog(r.GetProperty("log")), books);
-            _sealed = null;
-            return State();
-        }
-
-        public void Abandon() { _run = null; _sealed = null; }
-
-        private static List<string> ReadStrings(string json)
+        private static List<string> BookList(JsonElement arr)
         {
             var list = new List<string>();
-            if (string.IsNullOrWhiteSpace(json)) return list;
-            using var doc = JsonDocument.Parse(json);
-            foreach (var e in doc.RootElement.EnumerateArray()) list.Add(e.GetString());
+            foreach (var e in arr.EnumerateArray()) list.Add(e.GetString());
             return list;
         }
 
-        private static void Log(JsonOut w, List<RunCommand> log)
+        /// <summary>The account without the active run: shards, books, talents (with the next rank's cost), the Vault, the bonuses runs start with.</summary>
+        public string AccountView()
         {
-            w.Arr();
-            foreach (var l in log)
+            if (_acct == null) return "null";
+            var ac = _acct;
+            var m = AccountOps.Modifiers(_db, ac);
+            var w = new JsonOut().Obj();
+            w.P("seed", ac.Seed.ToString("x16", CultureInfo.InvariantCulture)).P("runsStarted", ac.RunsStarted).P("shards", ac.Shards).P("hasRun", ac.Active != null);
+            w.Key("owned").Arr();
+            foreach (var s in ac.OwnedSpecies) w.Str(s);
+            w.EndArr();
+            w.Key("books").Obj();
+            foreach (var kv in ac.Books) w.P(kv.Key, kv.Value);
+            w.EndObj();
+            w.Key("talents").Arr();
+            foreach (var t in _db.TalentList)
             {
-                w.Obj().P("k", l.Kind.ToString());
-                if (l.Stat != null) w.P("stat", l.Stat);
-                if (l.Kind == RunCommandKind.TakeTree) w.P("choice", l.Choice);
-                if (l.Kind == RunCommandKind.TakeTree || l.Kind == RunCommandKind.SpendPoint) w.P("slot", l.Slot);
-                if (l.Book != null) w.P("book", l.Book);
+                int rank = ac.TalentRank(t.Id);
+                w.Obj().P("id", t.Id).P("rank", rank);
+                if (rank < t.MaxRank) w.P("nextCost", AccountOps.TalentCost(t, rank)); else w.Key("nextCost").Null();
                 w.EndObj();
             }
             w.EndArr();
+            w.Key("mods").Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("draftSizeBonus", m.DraftSizeBonus).P("startSp", m.StartSp).EndObj();
+            w.Key("vault").Arr();
+            foreach (var e in ac.Vault) Entry(w, e);
+            w.EndArr();
+            return w.EndObj().ToString();
         }
 
-        private static List<RunCommand> ReadLog(JsonElement arr)
+        private static void Entry(JsonOut w, VaultEntry e)
         {
-            var log = new List<RunCommand>();
-            foreach (var e in arr.EnumerateArray())
-            {
-                var c = new RunCommand { Kind = (RunCommandKind)Enum.Parse(typeof(RunCommandKind), e.GetProperty("k").GetString()) };
-                if (e.TryGetProperty("stat", out var st)) c.Stat = st.GetString();
-                if (e.TryGetProperty("choice", out var ch)) c.Choice = ch.GetInt32();
-                if (e.TryGetProperty("slot", out var sl)) c.Slot = sl.GetInt32();
-                if (e.TryGetProperty("book", out var bk)) c.Book = bk.GetString();
-                log.Add(c);
-            }
-            return log;
+            w.Obj().P("species", e.SpeciesId).P("seed", e.Seed.ToString("x16", CultureInfo.InvariantCulture))
+                .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
+                .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("hash", e.RunHash).P("sealedUtcMs", e.SealedUtcMs);
+            w.Key("stats"); Stats(w, e.Stats);
+            w.Key("trees").Arr();
+            foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).EndObj();
+            w.EndArr();
+            w.EndObj();
         }
 
         // ------------------------------------------------------------------ commands
@@ -309,31 +360,6 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
-        // ------------------------------------------------------------------ vault
-
-        /// <summary>Freeze the finished run. Idempotent: the same entry comes back until a new run starts.</summary>
-        public string Seal(double utcMs)
-        {
-            if (_run == null) return Fail("no run");
-            if (_run.Phase != RunPhase.Finished) return Fail("the run is not finished");
-            _sealed ??= Vault.Seal(_db, _run, (long)utcMs);
-            var e = _sealed;
-            var w = new JsonOut().Obj().P("ok", true);
-            w.Key("entry").Obj().P("v", 1).P("species", e.SpeciesId).P("seed", e.Seed.ToString("x16", CultureInfo.InvariantCulture))
-                .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
-                .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("hash", e.RunHash).P("sealedUtcMs", e.SealedUtcMs);
-            w.Key("stats"); Stats(w, e.Stats);
-            w.Key("trees").Arr();
-            foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).EndObj();
-            w.EndArr();
-            w.Key("books").Arr();
-            foreach (var b in e.Books) w.Str(b);
-            w.EndArr();
-            w.Key("log"); Log(w, e.Log);
-            w.EndObj();
-            return w.EndObj().ToString();
-        }
-
         // ------------------------------------------------------------------ state
 
         public string State()
@@ -350,6 +376,7 @@ namespace IdleRng.Web
             w.P("cycle", s.Cycle).P("ap", s.ApLeft).P("energy", s.Energy).P("sp", s.Sp).P("rank", s.Rank);
             w.P("fightsFought", s.FightsFought).P("fightsWon", s.FightsWon).P("drills", s.Drills).P("rests", s.Rests);
             w.P("fightDue", s.Phase == RunPhase.AwaitFight);
+            w.P("drillCost", TrainingRun.DrillCost(_db, s));
             w.Key("odds").Obj().P("fail", fail).P("super", k.DrillSuperP).P("success", Math.Max(0, 1 - fail - k.DrillSuperP))
                 .P("injury", TrainingRun.InjuryChance(k, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);

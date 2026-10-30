@@ -1,73 +1,76 @@
-// Facade over the C# training-run engine (IdleRng.Web.Engine.Run*, contract in web/wasm/BRIDGE.md "Run bridge").
+// Facade over the C# monster-trainer engine (IdleRng.Web.Engine.Run*/Account*, contract in web/wasm/BRIDGE.md, "Run bridge").
 // RunEngine.create(opts) -> Promise<run>. No game rule lives here: every number and label comes from the C# engine.
-// The saved run is species + seed + books + command log (the C# side rebuilds it by replay); sealed monsters are kept
-// as Vault entries in their own key until the account save (specs/13 T5) takes them over.
+// The whole save is the C# AccountSave text (account, shards, talents, vault, and the active run as its replay recipe) in one
+// localStorage key. A save that no longer loads is kept under a backup key, never overwritten, and reported in `loadError`.
 (function (root) {
   'use strict';
 
-  const SAVE_KEY = 'idle-rng-run-v1';
-  const VAULT_KEY = 'idle-rng-vault-v1';
+  const SAVE_KEY = 'idle-rng-account-v1';
+  const BAD_KEY = 'idle-rng-account-v1-unloadable';
+  const OLD_KEYS = ['idle-rng-run-v1', 'idle-rng-vault-v1'];   // the first trainer slice's saves: clean save break (specs/13)
 
   function randomSeedHex() {
     const a = new Uint32Array(2);
     try { root.crypto.getRandomValues(a); } catch (e) { a[0] = (Math.random() * 2 ** 32) >>> 0; a[1] = (Math.random() * 2 ** 32) >>> 0; }
     return a[0].toString(16).padStart(8, '0') + a[1].toString(16).padStart(8, '0');
   }
-  function store(key) {
-    return {
-      get() { try { return root.localStorage.getItem(key); } catch (e) { return null; } },
-      set(v) { try { root.localStorage.setItem(key, v); } catch (e) { /* storage blocked: play without saving */ } },
-      del() { try { root.localStorage.removeItem(key); } catch (e) { /* ignore */ } },
-    };
-  }
+  const ls = {
+    get(k) { try { return root.localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { root.localStorage.setItem(k, v); } catch (e) { /* storage blocked: play without saving */ } },
+    del(k) { try { root.localStorage.removeItem(k); } catch (e) { /* ignore */ } },
+  };
+  const parse = (text) => {
+    const v = JSON.parse(text);
+    if (v && v.error) throw new Error(v.error);
+    return v;
+  };
 
   function wrap(host) {
-    const runStore = store(SAVE_KEY), vaultStore = store(VAULT_KEY);
-    const parse = (text) => {
-      const v = JSON.parse(text);
-      if (v && v.error) throw new Error(v.error);
-      return v;
-    };
     const content = parse(host.RunContent());
-    let cache = null;
+    let runCache, acctCache;
+    const dirty = () => { runCache = undefined; acctCache = undefined; };
 
     const run = {
       content: content,
       saveKey: SAVE_KEY,
+      loadError: null,           // set when a saved account could not be loaded (it is kept under BAD_KEY)
       version() { return host.Version(); },
-      get state() { if (cache === null) cache = parse(host.RunState()); return cache; },
-      hasSave() { return !!runStore.get(); },
-      start(speciesId, opts) {
-        opts = opts || {};
-        parse(host.RunStart(speciesId, opts.seedHex || randomSeedHex(), JSON.stringify(opts.books || [])));
-        cache = null; run.persist();
-      },
-      load() {                      // true when a saved run was restored; a save that no longer replays is dropped
-        const text = runStore.get();
-        if (!text) return false;
-        try { parse(host.RunLoad(text)); cache = null; return true; }
-        catch (e) { console.warn('Saved run not loaded:', e); runStore.del(); return false; }
-      },
-      persist() { const t = host.RunSave(); if (t && t !== 'null') runStore.set(t); },
-      // One command; returns the result object. The engine refusing a command (ok:false) is reported, never thrown.
-      cmd(name) {
-        const r = parse(host.RunCmd(name, JSON.stringify([].slice.call(arguments, 1))));
-        cache = null;
+      get account() { if (acctCache === undefined) acctCache = parse(host.AccountView()); return acctCache; },
+      get state() { if (runCache === undefined) runCache = parse(host.RunState()); return runCache; },   // the active run, or null
+      persist() { const t = host.AccountSave(); if (t && t !== 'null') ls.set(SAVE_KEY, t); },
+      // Account command (startRun, finishRun, buyTalent, abandon, debugGrantBook); returns the result, ok:false when refused.
+      acct(name) {
+        const r = parse(host.AccountCmd(name, JSON.stringify([].slice.call(arguments, 1))));
+        dirty();
         if (r.ok) run.persist();
         return r;
       },
-      // Freezes the finished run into a Vault entry and stores it (once per run hash).
-      seal() {
-        const r = parse(host.RunSeal(Date.now()));
-        if (!r.ok) return r;
-        const list = run.vault();
-        if (!list.some((e) => e.hash === r.entry.hash)) { list.unshift(r.entry); vaultStore.set(JSON.stringify(list)); }
+      // Run command (drill, rest, fight, take, discard, spend, book); returns the result, ok:false when refused.
+      cmd(name) {
+        const r = parse(host.RunCmd(name, JSON.stringify([].slice.call(arguments, 1))));
+        dirty();
+        if (r.ok) run.persist();
         return r;
       },
-      vault() { try { const v = JSON.parse(vaultStore.get() || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } },
-      abandon() { host.RunAbandon(); cache = null; runStore.del(); },
+      startRun(speciesId, books) { return run.acct('startRun', speciesId, books || []); },
+      finishRun() { return run.acct('finishRun', Date.now()); },
       randomSeedHex: randomSeedHex,
     };
+
+    OLD_KEYS.forEach(ls.del);
+    const saved = ls.get(SAVE_KEY);
+    let loaded = false;
+    if (saved) {
+      try { parse(host.AccountLoad(saved)); loaded = true; }
+      catch (e) {
+        run.loadError = e.message;
+        console.warn('Saved account not loaded:', e);
+        ls.set(BAD_KEY, saved);
+        ls.del(SAVE_KEY);
+      }
+    }
+    if (!loaded) { parse(host.AccountNew(randomSeedHex())); run.persist(); }
+    dirty();
     return run;
   }
 
@@ -77,5 +80,5 @@
     return wrap(loaded.host);
   }
 
-  root.RunEngine = { create: create, SAVE_KEY: SAVE_KEY, VAULT_KEY: VAULT_KEY };
+  root.RunEngine = { create: create, SAVE_KEY: SAVE_KEY, BAD_KEY: BAD_KEY };
 })(typeof self !== 'undefined' ? self : this);

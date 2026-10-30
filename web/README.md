@@ -7,8 +7,8 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | File | What it is |
 |---|---|
 | `idle.html`, `app.js` | Idle prototype UI shell: ticks the engine, sends commands, reads queries, drains events. No game rules. |
-| `index.html`, `run.js` | Monster trainer screens: species pick, Drill/Rest, rank fights with the battle log, tree drafts and buying, grade screen, Vault list. No game rules. |
-| `run-engine.js` | Facade over the C# run engine (`IdleRng.Web.Engine.Run*`): replay save, Vault storage. |
+| `index.html`, `run.js` | Monster trainer screens: species pick, Drill/Rest, rank fights with the battle log, tree drafts and buying, grade screen with shard payout, talents, Vault list. No game rules. |
+| `run-engine.js` | Facade over the C# trainer engine (`IdleRng.Web.Engine.Run*`/`Account*`): the account save (shards, talents, Vault, active run). |
 | `engine.js` | Facade over the C# engine (`IdleRng.Web.Engine`): caches state per tick batch, memoises queries, wraps saves. |
 | `format.js` | Big-number display (`1.23K`, `45.6M`, `123aa`); same output as the C# `BigNumber.Short`. |
 | `sprites.js` | Seeded 12x12 pixel sprites for heroes, player and enemies. Cosmetic only, never touches the game's RNG. |

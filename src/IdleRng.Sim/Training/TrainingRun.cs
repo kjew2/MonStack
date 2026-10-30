@@ -84,7 +84,7 @@ namespace IdleRng.Sim.Training
             double injuryP = InjuryChance(k, e);
             bool injured = injuryP > 0 && s.Training.NextDouble() < injuryP;
 
-            s.Energy = Math.Max(0, s.Energy - k.DrillEnergyCost * s.Mods.DrillCostMult);
+            s.Energy = Math.Max(0, s.Energy - DrillCost(c, s));
             s.Drills++;
             s.Log.Add(new RunCommand(RunCommandKind.Drill, stat));
             var result = new DrillResult { Stat = stat, Tier = tier, Gain = after - before, NewValue = after, EnergyAfter = s.Energy, Injured = injured };
@@ -308,6 +308,9 @@ namespace IdleRng.Sim.Training
             SplitMix64.Derive(StreamNames.StreamSeed(runSeed, FightStream), (ulong)index);
 
         // ------------------------------------------------------------------ odds (public for the UI and tests)
+
+        /// <summary>Energy one drill costs this run: DRILL_ENERGY_COST times the run's talent modifier.</summary>
+        public static double DrillCost(ContentDb c, RunState s) => c.Constants.DrillEnergyCost * s.Mods.DrillCostMult;
 
         public static double EnergyFraction(Constants k, double energy) => Clamp01(energy / k.RunEnergyMax);
 
