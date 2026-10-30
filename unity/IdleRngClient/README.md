@@ -22,10 +22,11 @@ Content is read directly from the repo's `Content/` folder: the loader walks up 
 `content_src/*.csv`, run `python3 tools/content_build.py`, then press Play again.
 
 **iOS player settings** (bundle ID, version, IL2CPP, .NET Standard 2.1, iOS 15 minimum, portrait only, Input
-System, app icon, plain launch screen) are applied by **Tools → IdleRng → Apply iOS Settings**. Run it once after the
-first open, restart the editor if it asks (Active Input Handling changed), and commit `ProjectSettings/*`. Re-running
-is safe. The bundle ID `com.kjew2.idlerng` is a placeholder (`Editor/ProjectSetup.cs`), and the signing team ID is
-left empty for the Mac.
+System, app icon, plain launch screen) and the URP asset (`Assets/Settings/IdleRng_URP.asset`: 2D Renderer; HDR, MSAA,
+post-processing, depth and opaque textures off) are applied by **Tools → IdleRng → Apply iOS Settings**. Run it once
+after the first open, restart the editor if it asks (Active Input Handling changed), and commit `ProjectSettings/*`
+and `Assets/Settings/`. Re-running is safe. **Tools → IdleRng → Configure URP** does only the URP part. The bundle ID
+`com.kjew2.idlerng` is a placeholder (`Editor/ProjectSetup.cs`), and the signing team ID is left empty for the Mac.
 
 **Device builds** cannot see the repo. Copy the content in first with
 `python3 tools/content_build.py --copy-to unity/IdleRngClient/Assets/Resources/Content`. The loader falls back to
@@ -58,7 +59,7 @@ quests and the day rollover.
 Assets/IdleRng.Client/
   IdleRng.Client.asmdef        Unity side (UnityEngine, UI Toolkit, uGUI EventSystem, Input System)
   Boot/      GameRoot.cs (bootstrap + MonoBehaviour), ContentLocator.cs, InputSetup.cs
-  Editor/    ProjectSetup.cs (Tools > IdleRng menu: player settings)
+  Editor/    ProjectSetup.cs (Tools > IdleRng menu: player settings, URP asset)
   Art/       AppIcon.png (placeholder 1024x1024 icon)
   Screens/   Ui.cs (style kit), Shell.cs, HudAndStrip.cs, *Screen(s).cs, DebugScreen.cs
   Core/      IdleRng.Client.Core.asmdef (noEngineReferences: plain C#)
@@ -84,5 +85,3 @@ These are not built yet:
 - Perf overlay.
 - Build profiles.
 - PlayMode tests.
-- URP asset configuration. URP is installed but no pipeline asset is assigned, so the built-in renderer draws the
-  camera clear. The UI is UI Toolkit either way.

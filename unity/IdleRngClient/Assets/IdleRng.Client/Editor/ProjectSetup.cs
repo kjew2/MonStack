@@ -1,6 +1,8 @@
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace IdleRng.Client.Editor
 {
@@ -19,6 +21,8 @@ namespace IdleRng.Client.Editor
         const string BuildNumber = "1";
         const string MinIosVersion = "15.0";
         const string IconPath = "Assets/IdleRng.Client/Art/AppIcon.png";
+        const string UrpAssetPath = "Assets/Settings/IdleRng_URP.asset";
+        const string Renderer2DPath = "Assets/Settings/IdleRng_2DRenderer.asset";
         static readonly Color SplashBackground = new Color32(0x12, 0x12, 0x12, 0xFF); // Palette.Background
 
         [MenuItem("Tools/IdleRng/Apply iOS Settings")]
@@ -27,6 +31,7 @@ namespace IdleRng.Client.Editor
             ApplyPlayerSettings();
             ApplyIcon();
             bool inputChanged = SetActiveInputHandlerToNew();
+            ConfigureUrp();
             AssetDatabase.SaveAssets();
 
             Debug.Log("[IdleRng] iOS player settings applied. Commit ProjectSettings/*.");
@@ -34,6 +39,63 @@ namespace IdleRng.Client.Editor
                 EditorUtility.DisplayDialog("IdleRng",
                     "Active Input Handling was switched to the Input System Package (New). Restart the editor for it to take effect.",
                     "OK");
+        }
+
+        /// <summary>
+        /// URP for the low-end target (specs/07 section 2): 2D Renderer, no HDR, no MSAA, render scale 1, no
+        /// post-processing, no depth or opaque texture, SRP Batcher on. Assigned in Graphics and every Quality level.
+        /// </summary>
+        [MenuItem("Tools/IdleRng/Configure URP")]
+        public static void ConfigureUrp()
+        {
+            var urp = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(UrpAssetPath);
+            if (urp == null)
+            {
+                if (!AssetDatabase.IsValidFolder("Assets/Settings")) AssetDatabase.CreateFolder("Assets", "Settings");
+                var renderer = AssetDatabase.LoadAssetAtPath<Renderer2DData>(Renderer2DPath);
+                if (renderer == null)
+                {
+                    renderer = ScriptableObject.CreateInstance<Renderer2DData>();
+                    AssetDatabase.CreateAsset(renderer, Renderer2DPath);
+                }
+                urp = UniversalRenderPipelineAsset.Create(renderer);
+                AssetDatabase.CreateAsset(urp, UrpAssetPath);
+            }
+
+            urp.supportsHDR = false;
+            urp.msaaSampleCount = 1;
+            urp.renderScale = 1f;
+            urp.supportsCameraDepthTexture = false;
+            urp.supportsCameraOpaqueTexture = false;
+            urp.useSRPBatcher = true;
+            EditorUtility.SetDirty(urp);
+            DisablePostProcessing(AssetDatabase.LoadAssetAtPath<Renderer2DData>(Renderer2DPath));
+
+            GraphicsSettings.defaultRenderPipeline = urp;
+            int current = QualitySettings.GetQualityLevel();
+            for (int i = 0; i < QualitySettings.names.Length; i++)
+            {
+                QualitySettings.SetQualityLevel(i, false);
+                QualitySettings.renderPipeline = urp;
+            }
+            QualitySettings.SetQualityLevel(current, false);
+
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[IdleRng] URP configured ({UrpAssetPath}). Commit Assets/Settings and ProjectSettings/*.");
+        }
+
+        /// <summary>
+        /// Same as unticking Post-processing on the renderer: clear its post-process data. Cameras created at runtime
+        /// also default to no post-processing.
+        /// </summary>
+        static void DisablePostProcessing(Renderer2DData renderer)
+        {
+            if (renderer == null) return;
+            var so = new SerializedObject(renderer);
+            var prop = so.FindProperty("m_PostProcessData");
+            if (prop == null || prop.objectReferenceValue == null) return;
+            prop.objectReferenceValue = null;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void ApplyPlayerSettings()
