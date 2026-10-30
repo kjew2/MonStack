@@ -65,7 +65,7 @@ public sealed class ServiceException : Exception
 | Interface | Local (P0) | Remote (P1) | Owns |
 |---|---|---|---|
 | `IClock` | `LocalClock`, `FakeClock` | `ServerClock` | Server time for the economy (06 section 11). |
-| `IGachaService` | `LocalGachaService` | `RemoteGachaService` | Who rolls, who holds the `gacha_skill` seed, who debits gems. |
+| `IGachaService` | `LocalGachaService` | `RemoteGachaService` | Who rolls, who holds the `gacha_hero` seed, who debits gems. |
 | `ISaveStore` | `FileSaveStore`, `MemorySaveStore` (tests) | `CloudSaveStore` | Where the save lives; conflict rule. |
 | `IReceiptValidator` | `DisabledReceiptValidator`, `FakeReceiptValidator` (debug) | `RemoteReceiptValidator` | IAP verification and gem grants. |
 | `IRemoteConfig` | `NoRemoteConfig`, `FileRemoteConfig` (testers) | `RemoteConfig` | Content table overlay by `content_version`. |
@@ -141,7 +141,7 @@ Both implementations own applying the result to the sim, so the caller (`PullFlo
 
 ### 4.2 `LocalGachaService` (P0)
 
-Runs 01 section 8 on the local `gacha_skill` stream, synchronously, inside a completed `Task`.
+Runs 01 section 8 on the local `gacha_hero` stream, synchronously, inside a completed `Task`.
 
 ```csharp
 public sealed class LocalGachaService : IGachaService
@@ -158,7 +158,7 @@ public sealed class LocalGachaService : IGachaService
         if (sim.Economy.PayForPulls(r.Count) == PullPayment.CannotAfford) throw new ServiceException(ServiceErrorKind.Rejected, "CannotAfford");
 
         var st  = sim.BannerView(r.BannerId);                        // 01's BannerState view over GameState (06 section 3.1)
-        var rng = sim.Rng["gacha_skill"];
+        var rng = sim.Rng["gacha_hero"];
         var results = r.Count == 10 ? Gacha.Pull10(banner, st, rng)
                                     : new[] { Gacha.Pull(banner, st, rng, forceEplus: false) };
         foreach (var _ in results) sim.Economy.Progress(QuestKind.Pulls, 1);   // 04 section 7.2
@@ -174,7 +174,7 @@ public sealed class LocalGachaService : IGachaService
 
 ### 4.3 Remote contract (P1)
 
-The server owns the `gacha_skill` seed and counter for each profile (01 section 6). The client never receives the seed.
+The server owns the `gacha_hero` seed and counter for each profile (01 section 6). The client never receives the seed.
 
 ```
 POST /v1/gacha/pull
@@ -182,7 +182,7 @@ Headers: Authorization (BaaS session), Idempotency-Key: <key>
 Body:    { bannerId, count, paymentKind, clientContentVersion }
 
 200 OK
-{ results: [ { skillId, tier, isNew, levelBefore, levelAfter } ],      // length == count
+{ results: [ { heroId, tier, isNew, levelBefore, levelAfter } ],      // length == count
   banner:  { pityCounter, totalPulls },
   balances:{ gems, freePullsDaily, freePullsBanked, shards },
   serverTimeSec }
@@ -198,9 +198,9 @@ Server rules:
 1. Per-profile mutex around the whole handler, so two requests cannot both roll against the same counter.
 2. Look up `Idempotency-Key` first. A hit returns the stored response unchanged, with no roll and no debit. Keys are stored for `IDEMPOTENCY_TTL_H = 48`.
 3. Run 04 section 7.5 `PayForPulls` against the server ledger; then 01 section 8 `Pull` / `Pull10` against the server-side `(seed, counter)`; persist ledger, banner state, counter and the response under the key in one transaction.
-4. The algorithm must be bit-identical with the client's `LocalGachaService` so that the bot harness, which runs locally, predicts live rates. Either the server runs .NET and compiles `IdleRng.Server` from the same sources, or the generator (`specs/03`) and `Pull` are ported and both sides pass `Fixtures/Gacha/vectors.json`: 20 seeds, 1000 pulls each, the expected `(tier, skillId, pityAfter)` sequence. A port that cannot pass that file is not acceptable. This is a selection criterion in section 10.
+4. The algorithm must be bit-identical with the client's `LocalGachaService` so that the bot harness, which runs locally, predicts live rates. Either the server runs .NET and compiles `IdleRng.Server` from the same sources, or the generator (`specs/03`) and `Pull` are ported and both sides pass `Fixtures/Gacha/vectors.json`: 20 seeds, 1000 pulls each, the expected `(tier, heroId, pityAfter)` sequence. A port that cannot pass that file is not acceptable. This is a selection criterion in section 10.
 
-Client-side application on 200: set `Banners[id] = banner`; set `Rng["gacha_skill"].Counter = 3 * totalPulls` (keeps 06 rule P10 true; the local seed is unused in remote mode); for each result add one copy through the same dupe-to-level path `Pull` uses, so levels and shards agree with the server; replace `Currencies.Gems`, `FreePullsDaily`, `FreePullsBanked`, `Shards` with `balances` (the server ledger wins); `Progress(Pulls, count)`; clear `PendingPull`.
+Client-side application on 200: set `Banners[id] = banner`; set `Rng["gacha_hero"].Counter = 3 * totalPulls` (keeps 06 rule P10 true; the local seed is unused in remote mode); for each result add one copy through the same dupe-to-level path `Pull` uses, so levels and shards agree with the server; replace `Currencies.Gems`, `FreePullsDaily`, `FreePullsBanked`, `Shards` with `balances` (the server ledger wins); `Progress(Pulls, count)`; clear `PendingPull`.
 
 ### 4.4 Idempotency and the pending pull
 
@@ -427,7 +427,7 @@ Client-authoritative in P0 and P1 (no server call, the save is the truth, cloud 
 | Stages | `Stage`, `KillsInStage`, first clears, class advances | Derived from combat. A plausibility check (8.2 `plausibility_flag`) is the only server-side interest until P2. |
 | Gold and gold sinks | Kill gold, offline catch-up, stat levels, enhancement | Gold buys nothing real and touches no other player. Its only value is to the player's own curve. |
 | Gear | Drops, rarity, equip, sell | Same. The `gear_drop`, `gear_rarity` and `enhance` streams stay local with their counters in the save. |
-| Skill levels and equips | `Copies`, `Equipped` | Derived from pulls. In remote mode the pulls come from the server and the client mirrors them. |
+| Hero levels and equips | `Copies`, `Equipped` | Derived from pulls. In remote mode the pulls come from the server and the client mirrors them. |
 | Daily quest progress and idle chest | Counters and timers | Driven by server time via `IClock`; the gems they grant are small and bounded per day. |
 
 Server-authoritative from P1 (the seams in sections 3 to 7):
@@ -435,7 +435,7 @@ Server-authoritative from P1 (the seams in sections 3 to 7):
 | Domain | Why it moves |
 |---|---|
 | Server time | Every daily and offline rule depends on it; the device clock is the one input a player can change for free. |
-| Gacha roll and the `gacha_skill` seed | 01 section 6: no result may depend on anything the client controls, and the seed must not be readable. |
+| Gacha roll and the `gacha_hero` seed | 01 section 6: no result may depend on anything the client controls, and the seed must not be readable. |
 | Gem and free-pull ledger | Gems are bought with money. Once receipts exist, the balance must be where the receipts are. |
 | Receipts | Store APIs require a server secret. |
 | Content overlay | Tuning without a build. |

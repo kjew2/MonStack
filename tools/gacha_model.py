@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exact math for the skill-banner gacha (no simulation; closed-form over the pity counter).
+"""Exact math for the hero-banner gacha (no simulation; closed-form over the pity counter).
 
 Rates and pity constants here are the source of truth for specs/02-gacha-math.md.
 """

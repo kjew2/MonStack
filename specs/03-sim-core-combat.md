@@ -51,7 +51,7 @@ Rules for the assembly:
 ```csharp
 namespace IdleRng.Sim.Content
 {
-    public enum Rarity { C = 0, R = 1, E = 2, L = 3, M = 4 }   // used for gear rarity and skill tier alike
+    public enum Rarity { C = 0, R = 1, E = 2, L = 3, M = 4 }   // used for gear rarity and hero tier alike
 
     public interface IContentDb
     {
@@ -64,8 +64,8 @@ namespace IdleRng.Sim.Content
                                          // PULL_COST_GEMS, FREE_PULLS_PER_DAY, OFFLINE_RATE, OFFLINE_CAP_H, OFFLINE_MIN_GAP_S
         GearContent Gear { get; }        // GEAR_SLOTS, GEAR_DROP_P, BOSS_GEAR_DROP_P, BOSS_GEAR_MIN_RARITY, GEAR_SLOT_G,
                                          // RarityWeights[5], RarityMult[5], ENH_MAX, ENH_PER_LVL, ENH_SUCCESS floor/step, ENH_COST gold mult
-        SkillContent Skills { get; }     // SKILL_SLOTS, BasePct[5], SKILL_LVL_CUM[10], SKILL_LVL_BONUS, ShardValue[5], Pool[5] of SkillId
-        BannerDef SkillBanner { get; }   // BaseRates[5], PITY_SOFT_START, PITY_SOFT_STEP, PITY_HARD, M_SHARE_OF_LPLUS
+        HeroContent Heroes { get; }     // HERO_SLOTS, BasePct[5], HERO_LVL_CUM[10], HERO_LVL_BONUS, ShardValue[5], Pool[5] of HeroId
+        BannerDef HeroBanner { get; }   // BaseRates[5], PITY_SOFT_START, PITY_SOFT_STEP, PITY_HARD, M_SHARE_OF_LPLUS
         ClassContent Class { get; }      // CLASS_STAGES[], CLASS_MULT
 
         // Derived tables, see section 4. Implemented once in IdleRng.Sim.Content.PowerTables, not by the loader.
@@ -76,11 +76,11 @@ namespace IdleRng.Sim.Content
         double ClassMult(int advances);
     }
 
-    public readonly record struct SkillId(string Value);
+    public readonly record struct HeroId(string Value);
 }
 ```
 
-Each content record is a plain C# record with `init` properties named after the constant in `specs/00` (`TickHz`, `BaseAtk`, `AttackIntervalTicks`, `Hp0`, `HpG`, and so on). Content validation (rates sum to 1, positive growth factors, `SKILL_LVL_CUM` strictly increasing) is `specs/05`'s job; the sim assumes valid content and asserts it only in `Validate()` (section 15).
+Each content record is a plain C# record with `init` properties named after the constant in `specs/00` (`TickHz`, `BaseAtk`, `AttackIntervalTicks`, `Hp0`, `HpG`, and so on). Content validation (rates sum to 1, positive growth factors, `HERO_LVL_CUM` strictly increasing) is `specs/05`'s job; the sim assumes valid content and asserts it only in `Validate()` (section 15).
 
 Two values the sim needs that `specs/00` section 2 describes in prose rather than naming: the boss gear drop chance (0.10) and the boss minimum rarity (Rare). This spec calls them `BOSS_GEAR_DROP_P` and `BOSS_GEAR_MIN_RARITY`; see Open decisions.
 
@@ -117,7 +117,7 @@ The tables are seeded to length 1000 at construction (enough for 30 days) and gr
 ### 5.1 Requirements
 
 1. Random access: result `k` of a stream is a pure function `Derive(seed, k)`. The commitment in `specs/01` section 6 depends on this: a restored save restores an older counter and re-receives the same results.
-2. Named, independent streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_skill` (`specs/00` section 5). Consuming draws on one stream never changes another.
+2. Named, independent streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero` (`specs/00` section 5). Consuming draws on one stream never changes another.
 3. 53-bit uniform doubles, so `(int)(u * n)` is unbiased for any pool size we have.
 4. Trivially reimplementable in Python (tools), Go or TypeScript (server), with published test vectors.
 
@@ -157,8 +157,8 @@ namespace IdleRng.Sim.Rng
     public static class StreamNames
     {
         public const string Combat = "combat", GearDrop = "gear_drop", GearRarity = "gear_rarity",
-                            Enhance = "enhance", GachaSkill = "gacha_skill";
-        public static readonly string[] All = { Combat, GearDrop, GearRarity, Enhance, GachaSkill };
+                            Enhance = "enhance", GachaHero = "gacha_hero";
+        public static readonly string[] All = { Combat, GearDrop, GearRarity, Enhance, GachaHero };
 
         /// Per-stream seed. profileSeed comes from the profile (section 6); the server may override one stream's seed (specs/08).
         public static ulong StreamSeed(ulong profileSeed, string name) => SplitMix64.Mix(unchecked(profileSeed + Fnv1a64.Hash(name)));
@@ -207,7 +207,7 @@ Fnv1a64("combat")      = 0xCA0BF97CCE717B21   StreamSeed(7, "combat")      = 0xD
 Fnv1a64("gear_drop")   = 0xC1A5A0EE94A0A3BA   StreamSeed(7, "gear_drop")   = 0xFB1D7F3436BC41A4
 Fnv1a64("gear_rarity") = 0x6AB86776709CD868   StreamSeed(7, "gear_rarity") = 0x9A1426458CA81741
 Fnv1a64("enhance")     = 0xDC465426329C1EE9   StreamSeed(7, "enhance")     = 0x84C074F86395F937
-Fnv1a64("gacha_skill") = 0xA03916975DF9B39F   StreamSeed(7, "gacha_skill") = 0x22B6956DE76E3F1E
+Fnv1a64("gacha_hero")  = 0x8C00A1F67FD04D96   StreamSeed(7, "gacha_hero")  = 0x9BB72FE2750126AC
 ```
 
 ### 5.4 Python reference (for `tools/` and server audits)
@@ -239,13 +239,13 @@ The counter of every stream is a known function of lifetime counters, which `Val
 | `gear_drop` | 1 per kill | `u < dropChance` | `== Lifetime.Kills` |
 | `gear_rarity` | 2 per drop | `u1` rarity, `u2` slot | `== 2 * Lifetime.GearDrops` |
 | `enhance` | 1 per attempt | `u < ENH_SUCCESS(l)` | `== Lifetime.EnhanceAttempts` |
-| `gacha_skill` | 3 per pull | `u1` L+ check, `u2` tier, `u3` skill index (`specs/01` section 6) | `== 3 * SkillBanner.TotalPulls` |
+| `gacha_hero` | 3 per pull | `u1` L+ check, `u2` tier, `u3` hero index (`specs/01` section 6) | `== 3 * HeroBanner.TotalPulls` |
 
 Draws are consumed even when the outcome is predetermined (hard pity, boss minimum rarity) so these equalities hold.
 
 ### 5.6 Profile seed
 
-`GameState.Rng.ProfileSeed` is a `ulong` assigned once at profile creation. Prototype: `SplitMix64.Mix(lo ^ hi)` where `lo` and `hi` are the two little-endian 64-bit halves of `ProfileId.ToByteArray()`. Bots and tests pass an explicit seed instead (`GameState.NewProfile(content, id, profileSeed, createdUtc)`); the harness's `--seed 7` means `ProfileSeed = 7`. Stream seeds are derived from it by `StreamNames.StreamSeed` at creation and persisted individually so that a server-issued `gacha_skill` seed (`specs/08`) is a per-stream override, not a schema change.
+`GameState.Rng.ProfileSeed` is a `ulong` assigned once at profile creation. Prototype: `SplitMix64.Mix(lo ^ hi)` where `lo` and `hi` are the two little-endian 64-bit halves of `ProfileId.ToByteArray()`. Bots and tests pass an explicit seed instead (`GameState.NewProfile(content, id, profileSeed, createdUtc)`); the harness's `--seed 7` means `ProfileSeed = 7`. Stream seeds are derived from it by `StreamNames.StreamSeed` at creation and persisted individually so that a server-issued `gacha_hero` seed (`specs/08`) is a per-stream override, not a schema change.
 
 ## 6. State object graph
 
@@ -266,8 +266,8 @@ namespace IdleRng.Sim.State
         public StageState Stage { get; set; }
         public CombatState Combat { get; set; }
         public GearState Gear { get; set; }
-        public SkillState Skills { get; set; }
-        public BannerState SkillBanner { get; set; }
+        public HeroState Heroes { get; set; }
+        public BannerState HeroBanner { get; set; }
         public ClassState Class { get; set; }
         public RngState Rng { get; set; }
         public LifetimeStats Lifetime { get; set; }
@@ -305,10 +305,10 @@ namespace IdleRng.Sim.State
     public sealed record GearPiece(int Tier, Rarity Rarity, int Enhance);   // BasePct is derived, never stored
     public sealed class GearState { public GearPiece?[] Slots; }           // length GEAR_SLOTS; null = empty slot
 
-    public sealed class SkillState
+    public sealed class HeroState
     {
-        public Dictionary<SkillId, int> Copies;   // lifetime copies per skill
-        public SkillId?[] Equipped;               // length SKILL_SLOTS; distinct, all owned
+        public Dictionary<HeroId, int> Copies;   // lifetime copies per hero
+        public HeroId?[] Equipped;               // length HERO_SLOTS; distinct, all owned
     }
     public sealed class BannerState { public int PityCounter; public int TotalPulls; }
     public sealed class ClassState  { public int Advances; }
@@ -330,7 +330,7 @@ namespace IdleRng.Sim.State
 
 `NewProfile` sets: `Tick = 0`, `Stage = 1`, `KillsInStage = 0`, `Boss = None`, `Combat.Phase = Spawning` with `SpawnTimer = SPAWN_DELAY_TICKS`, all wallets zero, all slots empty, `Daily.DayKey = DayKeyOf(createdUtc)`, `Clock.LastSyncUtcMs = createdUtc`, `Clock.TickAtLastSync = 0`, five streams with `Counter = 0`. Starter grants (tutorial gems and free pulls, `specs/01` section 5) are applied by the economy layer in `specs/04`, not by `NewProfile`.
 
-Units, to avoid a recurring confusion: a gear piece's `BasePct` is a fraction (`0.5` means +50%), matching `prod(1 + gearPct * ...)` in `specs/00` section 3. A skill's `skillPct` is in percentage points (`40` means +40%), matching `1 + sum(skillPct) / 100`.
+Units, to avoid a recurring confusion: a gear piece's `BasePct` is a fraction (`0.5` means +50%), matching `prod(1 + gearPct * ...)` in `specs/00` section 3. A hero's `heroPct` is in percentage points (`40` means +40%), matching `1 + sum(heroPct) / 100`.
 
 ## 7. Tick loop and combat resolution
 
@@ -492,37 +492,37 @@ Enhancement is allowed on tier-0 pieces (it does nothing useful; the UI may warn
 ```
 StatMult  = 1 + STAT_PER_LVL * Stat.Level
 GearMult  = prod over slots (piece == null ? 1 : 1 + BasePct(piece) * (1 + ENH_PER_LVL * piece.Enhance))
-SkillMult = 1 + sum over Equipped (SkillPct(skill)) / 100
+HeroMult = 1 + sum over Equipped (HeroPct(hero)) / 100
 ClassMult = ClassMult(Class.Advances)
-Dps       = BASE_ATK * StatMult * GearMult * SkillMult * ClassMult
+Dps       = BASE_ATK * StatMult * GearMult * HeroMult * ClassMult
 HitDamage = Dps * ATTACK_INTERVAL_TICKS / TICK_HZ
 ```
 
-`Dps` and `HitDamage` are cached in `Simulation` and recomputed lazily after any mutation that calls `MarkDpsDirty()` (stat buy, gear equip, enhancement success, skill equip or copy gain on an equipped skill, class advance). `Tick()` reads the cache; a stat bought mid-fight applies to the next hit.
+`Dps` and `HitDamage` are cached in `Simulation` and recomputed lazily after any mutation that calls `MarkDpsDirty()` (stat buy, gear equip, enhancement success, hero equip or copy gain on an equipped hero, class advance). `Tick()` reads the cache; a stat bought mid-fight applies to the next hit.
 
-## 9. Skills and gacha
+## 9. Heroes and gacha
 
 The pull algorithm, pity, the 10-pull guarantee, the dupe economy and the test vectors are specified in `specs/01` sections 3, 4, 7, 8 and 9 and are not restated. This section fixes how they attach to the sim.
 
 ```csharp
 namespace IdleRng.Sim.Gacha
 {
-    public readonly record struct PullResult(SkillId Skill, Rarity Tier, bool IsNew, int LevelBefore, int LevelAfter, int ShardsGained);
+    public readonly record struct PullResult(HeroId Hero, Rarity Tier, bool IsNew, int LevelBefore, int LevelAfter, int ShardsGained);
 
-    /// Server seam (specs/00 section 5). P0 ships LocalGachaService, which runs specs/01 section 8 on the gacha_skill stream.
+    /// Server seam (specs/00 section 5). P0 ships LocalGachaService, which runs specs/01 section 8 on the gacha_hero stream.
     /// The remote contract (specs/08) returns the same PullResult[]; the sim applies results the same way in both cases.
     public interface IGachaService
     {
-        PullResult[] Pull(BannerDef banner, BannerState bannerState, SkillState skills, RngStream gachaSkill, int count);  // count is 1 or 10
+        PullResult[] Pull(BannerDef banner, BannerState bannerState, HeroState heroes, RngStream gachaHero, int count);  // count is 1 or 10
     }
 }
 ```
 
 - `Pull()` (section 13) uses a free pull when `Daily.FreePullsUsed < FREE_PULLS_PER_DAY`, otherwise charges `PULL_COST_GEMS`. `Pull10()` always charges `10 * PULL_COST_GEMS`; free pulls are never spent on a 10-pull in P0.
-- Copies and shards are written into `SkillState` and `Currencies.Shards` by the service; the sim publishes one `SkillPulled` per result.
-- `SkillLevel(copies)` and `SkillPct(skill)` follow `specs/01` section 7 and are exposed on `SimQuery`.
-- `EquipSkill(slot, id)` requires the skill to be owned and not already equipped in another slot; `UnequipSkill(slot)` clears; `AutoEquipBestSkills()` fills `Equipped` with the `SKILL_SLOTS` highest `SkillPct` owned skills (ties broken by `SkillId.Value` ordinal) and returns how many slots changed. All three mark DPS dirty.
-- `Rarity` is the enum used for skill tiers; `specs/01`'s sketches write `Tier.M`, which maps to `Rarity.M` here. "Tier" as an `int` keeps the `specs/00` meaning (`GEAR_TIER(s)`).
+- Copies and shards are written into `HeroState` and `Currencies.Shards` by the service; the sim publishes one `HeroPulled` per result.
+- `HeroLevel(copies)` and `HeroPct(hero)` follow `specs/01` section 7 and are exposed on `SimQuery`.
+- `EquipHero(slot, id)` requires the hero to be owned and not already equipped in another slot; `UnequipHero(slot)` clears; `AutoEquipBestHeroes()` fills `Equipped` with the `HERO_SLOTS` highest `HeroPct` owned heroes (ties broken by `HeroId.Value` ordinal) and returns how many slots changed. All three mark DPS dirty.
+- `Rarity` is the enum used for hero tiers; `specs/01`'s sketches write `Tier.M`, which maps to `Rarity.M` here. "Tier" as an `int` keeps the `specs/00` meaning (`GEAR_TIER(s)`).
 
 ## 10. Class advances
 
@@ -584,8 +584,8 @@ namespace IdleRng.Sim.Events
     public sealed record GearDropped(long Tick, int Slot, GearPiece Piece, bool Equipped, GearPiece? Replaced) : SimEvent(Tick);
     public sealed record StatLeveled(long Tick, int NewLevel, double Cost) : SimEvent(Tick);
     public sealed record EnhanceAttempted(long Tick, int Slot, bool Success, int NewLevel, double Cost) : SimEvent(Tick);
-    public sealed record SkillPulled(long Tick, PullResult Result, bool Free) : SimEvent(Tick);
-    public sealed record SkillEquipped(long Tick, int Slot, SkillId? Skill) : SimEvent(Tick);      // Skill null = unequipped
+    public sealed record HeroPulled(long Tick, PullResult Result, bool Free) : SimEvent(Tick);
+    public sealed record HeroEquipped(long Tick, int Slot, HeroId? Hero) : SimEvent(Tick);      // Hero null = unequipped
     public sealed record ClassAdvanced(long Tick, int Advances, int Stage) : SimEvent(Tick);
     public sealed record OfflineGoldCredited(long Tick, long ElapsedMs, double CreditedSeconds, double Gold) : SimEvent(Tick);
     public sealed record DayRolledOver(long Tick, int DayKey) : SimEvent(Tick);
@@ -597,8 +597,8 @@ namespace IdleRng.Sim.Events
     {
         None = 0,
         EnemySpawned = 1 << 0, HitLanded = 1 << 1, EnemyKilled = 1 << 2, StageAdvanced = 1 << 3, BossFailed = 1 << 4,
-        BossCleared = 1 << 5, GearDropped = 1 << 6, StatLeveled = 1 << 7, EnhanceAttempted = 1 << 8, SkillPulled = 1 << 9,
-        SkillEquipped = 1 << 10, ClassAdvanced = 1 << 11, OfflineGoldCredited = 1 << 12, DayRolledOver = 1 << 13,
+        BossCleared = 1 << 5, GearDropped = 1 << 6, StatLeveled = 1 << 7, EnhanceAttempted = 1 << 8, HeroPulled = 1 << 9,
+        HeroEquipped = 1 << 10, ClassAdvanced = 1 << 11, OfflineGoldCredited = 1 << 12, DayRolledOver = 1 << 13,
         ClockWentBackwards = 1 << 14, StageCapReached = 1 << 15,
         All = 0xFFFF,
         Default = All & ~(HitLanded | EnemySpawned),     // the two per-enemy events are opt-in
@@ -629,12 +629,12 @@ P1: a replay log sink that records commands and tick counts for bug reports; `Si
 
 ## 13. Command API
 
-Commands are methods on `Simulation`. They validate, mutate, publish and return. They never throw for a rule violation; they throw `ArgumentOutOfRangeException` for malformed input (slot index outside `0..GEAR_SLOTS-1`, unknown `SkillId`), because that is a client bug, not a player action. Commands must not be called from inside an event handler during `Tick()`; the client drains the outbox after ticking and acts then.
+Commands are methods on `Simulation`. They validate, mutate, publish and return. They never throw for a rule violation; they throw `ArgumentOutOfRangeException` for malformed input (slot index outside `0..GEAR_SLOTS-1`, unknown `HeroId`), because that is a client bug, not a player action. Commands must not be called from inside an event handler during `Tick()`; the client drains the outbox after ticking and acts then.
 
 ```csharp
 public enum Reject
 {
-    None = 0, NotEnoughGold, NotEnoughGems, EmptySlot, EnhanceMaxed, SkillNotOwned, SkillAlreadyEquipped,
+    None = 0, NotEnoughGold, NotEnoughGems, EmptySlot, EnhanceMaxed, HeroNotOwned, HeroAlreadyEquipped,
     NoBossToAttempt, BossAlreadyPending, StageCap,
 }
 
@@ -649,9 +649,9 @@ public sealed partial class Simulation
     public EnhanceResult Enhance(int slot);
     public PullOutcome   Pull();                 // free pull if one remains today, else PULL_COST_GEMS
     public PullOutcome   Pull10();               // 10 * PULL_COST_GEMS, with the specs/01 section 4 guarantee
-    public CommandResult EquipSkill(int slot, SkillId skill);
-    public CommandResult UnequipSkill(int slot);
-    public int           AutoEquipBestSkills();  // returns slots changed
+    public CommandResult EquipHero(int slot, HeroId hero);
+    public CommandResult UnequipHero(int slot);
+    public int           AutoEquipBestHeroes();  // returns slots changed
     public CommandResult AttemptBoss();
     public DebugCommands Debug { get; }
 }
@@ -661,7 +661,7 @@ public sealed class DebugCommands
 {
     public void GrantGold(double amount);
     public void GrantGems(int amount);
-    public void GrantSkillCopies(SkillId skill, int copies);
+    public void GrantHeroCopies(HeroId hero, int copies);
     public void SetStage(int stage);     // resets KillsInStage, Boss, combat to Spawning; for tests and the client's stage jump
 }
 ```
@@ -690,7 +690,7 @@ public sealed class SimQuery
     public double HitDamage { get; }
     public double StatMult { get; }
     public double GearMult { get; }
-    public double SkillMult { get; }
+    public double HeroMult { get; }
     public double ClassMult { get; }
 
     public double Hp(int stage);                     // normal mob
@@ -707,8 +707,8 @@ public sealed class SimQuery
     public double GearBasePct(GearPiece piece);
     public double GearSlotMult(int slot);
 
-    public int    SkillLevel(int copies);
-    public double SkillPct(SkillId skill);            // 0 if not owned
+    public int    HeroLevel(int copies);
+    public double HeroPct(HeroId hero);            // 0 if not owned
     public int    FreePullsRemaining { get; }
     public double PityRate(int n);                    // specs/01 section 3.1
 }
@@ -721,7 +721,7 @@ public sealed class SimQuery
 Currencies and counters:
 1. `Currencies.Gold >= 0`, `Currencies.Gems >= 0`, `Currencies.Shards >= 0`, `Stat.Level >= 0`.
 2. `Daily.FreePullsUsed` in `0..FREE_PULLS_PER_DAY`.
-3. `0 <= SkillBanner.PityCounter < PITY_HARD`.
+3. `0 <= HeroBanner.PityCounter < PITY_HARD`.
 
 Stage and combat:
 4. `1 <= Stage.Stage <= STAGE_CAP`; `0 <= KillsInStage < KILLS_PER_STAGE`.
@@ -734,12 +734,12 @@ Stage and combat:
 
 Inventories:
 11. `Gear.Slots.Length == GEAR_SLOTS`; each piece has `0 <= Enhance <= ENH_MAX`, `Tier % BOSS_EVERY == 0`, `0 <= Tier <= GEAR_TIER(Stage.Stage)`.
-12. `Skills.Equipped.Length == SKILL_SLOTS`; non-null entries are distinct and present in `Copies` with `Copies > 0`.
-13. Every `SkillId` in `Copies` exists in the banner pool.
+12. `Heroes.Equipped.Length == HERO_SLOTS`; non-null entries are distinct and present in `Copies` with `Copies > 0`.
+13. Every `HeroId` in `Copies` exists in the banner pool.
 
 RNG (section 5.5):
 14. `Streams` contains exactly `StreamNames.All`; each `Seed == StreamSeed(ProfileSeed, Name)` unless flagged as server-issued (P1 field).
-15. `combat.Counter == 0`; `gear_drop.Counter == Lifetime.Kills`; `gear_rarity.Counter == 2 * Lifetime.GearDrops`; `enhance.Counter == Lifetime.EnhanceAttempts`; `gacha_skill.Counter == 3 * SkillBanner.TotalPulls`.
+15. `combat.Counter == 0`; `gear_drop.Counter == Lifetime.Kills`; `gear_rarity.Counter == 2 * Lifetime.GearDrops`; `enhance.Counter == Lifetime.EnhanceAttempts`; `gacha_hero.Counter == 3 * HeroBanner.TotalPulls`.
 
 Derived:
 16. `Query.Dps` is finite and `> 0`; the cached value equals a fresh recomputation.
@@ -778,7 +778,7 @@ Commands are issued from UI callbacks on the same thread, between `Advance` call
 | Bots, `Advance(1_000_000)` with `NullEventSink` | under 1 s in Release on a developer laptop (x64 or Apple ARM64) | 1 µs per tick budget; the per-tick work is a branch and a decrement, a kill costs one or three hash derives plus table lookups |
 | `BuyStatLevelsMax()` | O(levels bought) | each iteration is a table lookup and a subtraction |
 | `SyncWallClock` / `CatchUp` | O(1) | closed form |
-| `Validate()` | O(slots + skills) | not on the hot path |
+| `Validate()` | O(slots + heroes) | not on the hot path |
 
 Rules that keep the budget: no LINQ in `Tick()` or `Kill()`; no `string` operations; no dictionary lookups per tick (the five `RngStream` objects are held in fields after construction); `Dps` is recomputed only when dirty; `GeometricTable` grows by amortised append and is never rebuilt. The perf test in section 19 enforces the bot budget with a 2x margin so it does not flake on CI.
 
@@ -791,7 +791,7 @@ Rules that keep the budget: no LINQ in `Tick()` or `Kill()`; no `string` operati
 3. `Simulation` caches (`Dps`, `HitDamage`, stream field references) are rebuilt in the constructor from `GameState`; nothing else is held.
 4. `ulong` seeds and counters must round-trip exactly; `specs/06` must pick a serialiser that does (Unity `JsonUtility` does not handle `ulong` reliably; `System.Text.Json` in the bots does).
 5. `GearPiece.BasePct` and all multipliers are derived and not saved, so a content change rebalances existing saves automatically.
-6. Unknown stream names on load are created with `Counter = 0` (forward compatibility for P1 streams); unknown `SkillId`s are a `specs/06` migration concern.
+6. Unknown stream names on load are created with `Counter = 0` (forward compatibility for P1 streams); unknown `HeroId`s are a `specs/06` migration concern.
 
 ## 19. Unit tests (`IdleRng.Sim.Tests`)
 
@@ -819,7 +819,7 @@ Combat (`CombatTests.cs`):
 15. `AttemptBoss` while walled sets `Pending`, despawns the current mob without gold, and the next spawn is the boss; `AttemptBoss` on a normal stage and while `Pending` is rejected with the right reason.
 16. Clearing a walled boss publishes `BossCleared`, `StageAdvanced(10, 11, true)` and resets `BossFailsOnStage`.
 17. Reaching each stage in `CLASS_STAGES` increments `Class.Advances` exactly once and multiplies `Dps` by `CLASS_MULT`.
-18. `Query.Dps` equals a hand-computed value for a fixture with stat level 10, two gear pieces, three equipped skills and one class advance (compare within 1e-12 relative).
+18. `Query.Dps` equals a hand-computed value for a fixture with stat level 10, two gear pieces, three equipped heroes and one class advance (compare within 1e-12 relative).
 19. A stat level bought mid-fight changes the damage of the next hit, not the previous one.
 20. `Lifetime.FirstWallStage` is set by the first `BossFailed` and never changes afterwards.
 
@@ -834,8 +834,8 @@ Gear (`GearTests.cs`):
 
 Gacha (`GachaTests.cs`): the ten tests in `specs/01` section 9, plus:
 28. `Pull()` consumes free pulls first and charges gems only when `FreePullsRemaining == 0`; `Pull10()` never consumes a free pull and is rejected below `10 * PULL_COST_GEMS` with nothing changed.
-29. `AutoEquipBestSkills` picks the top `SKILL_SLOTS` by `SkillPct` with ordinal tie-break and marks DPS dirty.
-30. `EquipSkill` rejects unowned and already-equipped skills; `UnequipSkill` publishes `SkillEquipped(slot, null)`.
+29. `AutoEquipBestHeroes` picks the top `HERO_SLOTS` by `HeroPct` with ordinal tie-break and marks DPS dirty.
+30. `EquipHero` rejects unowned and already-equipped heroes; `UnequipHero` publishes `HeroEquipped(slot, null)`.
 
 Clock (`ClockTests.cs`):
 31. `SyncWallClock` after `Advance(600)` with the clock advanced 60 s credits nothing (gap 0).
@@ -865,7 +865,7 @@ Performance (`PerfTests.cs`, `[Category("Perf")]`, skipped in Debug configuratio
 | Pet banner, rate-up banners | P1 | `BannerDef`/`BannerState` are per banner; add a stream name per banner |
 | Daily quests, idle chest gem income | P1 (`specs/04`) | `Debug.GrantGems` is the harness stand-in until then |
 | Replay log of commands for bug reports | P1 | commands are methods with value-type arguments; wrap them in an `ICommand` record log |
-| Server-issued `gacha_skill` seed | P1 (`specs/08`) | per-stream `Seed` is persisted individually |
+| Server-issued `gacha_hero` seed | P1 (`specs/08`) | per-stream `Seed` is persisted individually |
 | Prestige / rebirth | P2 | would reset `Stage` and `Stat`; `Class.Advances` and a `MaxStage` field would need adding |
 | Mantissa/exponent number type | P2 | only if `STAGE_CAP` is ever approached |
 
@@ -873,7 +873,7 @@ Performance (`PerfTests.cs`, `[Category("Perf")]`, skipped in Debug configuratio
 
 1. `BOSS_GEAR_DROP_P` (0.10) and `BOSS_GEAR_MIN_RARITY` (Rare) are described in `specs/00` section 2.3 prose but not named, and `STAGE_CAP` (proposed 9000, from `specs/02` section 2) is not in `specs/00` at all. This spec names all three; `specs/00` should adopt the names or rename them, and `specs/05` must carry them.
 2. `OFFLINE_MIN_GAP_S` is proposed at 60 s and is not in `specs/00`. `specs/06` should own the value; it must exist in content.
-3. The C/R/E/L/M enum is `Rarity` for both gear and skills here; `specs/01` sketches say `Tier`. One name should win in `specs/05`'s content schema.
+3. The C/R/E/L/M enum is `Rarity` for both gear and heroes here; `specs/01` sketches say `Tier`. One name should win in `specs/05`'s content schema.
 4. The P0 equip rule compares `BasePct` and discards enhancement, matching the Python model. If playtests find auto-replacing a +15 piece painful before the P1 gear bag exists, the alternative is to compare effective multiplier instead; that would move the harness numbers slightly.
 5. The first boss attempt is automatic and `AttemptBoss` despawns the current mob. Both are choices, not derivations from `specs/00`; the client spec may prefer a confirm step.
 6. Target framework: `netstandard2.1` with C# 9 is the safe Unity 2022 LTS choice. If the client moves to Unity 6 (.NET Standard 2.1 still, but C# 9 remains the ceiling), nothing changes; if the bots want C# 12 features, multi-target `netstandard2.1;net8.0`.

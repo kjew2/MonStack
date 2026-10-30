@@ -74,7 +74,7 @@ public sealed class BotRunner
         var c = _content;
         var clock = new FakeClock { UtcNow = HarnessConstants.Epoch };
         var state = GameState.NewProfile(c, ProfileIdFor(seed), seed, clock.UtcNow);
-        var sink  = new BotEventSink(state);                        // Mask = BossFailed | BossCleared | StageAdvanced | SkillPulled | OfflineGoldCredited
+        var sink  = new BotEventSink(state);                        // Mask = BossFailed | BossCleared | StageAdvanced | HeroPulled | OfflineGoldCredited
         var sim   = new Simulation(c, state, sink);
         var ctx   = new BotContext(sim, state, c, clock, sink);
         var rows  = new DayRow[days];
@@ -150,7 +150,7 @@ public class GreedyF2PBot : IBotPolicy
     public virtual void OnDayStart(BotContext ctx)
     {
         for (int i = 0; i < ctx.Content.Economy.FreePullsPerDay; i++) ctx.Sim.Pull();   // consumes the day's free pulls, no gems
-        ctx.Sim.AutoEquipBestSkills();
+        ctx.Sim.AutoEquipBestHeroes();
     }
 
     public void Decide(BotContext ctx)
@@ -175,7 +175,7 @@ public class GreedyF2PBot : IBotPolicy
         bool pulled = false;
         if (UseTenPulls) while (w.Gems >= 10 * cost) { sim.Pull10(); pulled = true; }
         while (w.Gems >= cost) { sim.Pull(); pulled = true; }
-        if (pulled) sim.AutoEquipBestSkills();
+        if (pulled) sim.AutoEquipBestHeroes();
     }
 
     /// Lowest Enhance among occupied slots below ENH_MAX; lowest index on ties; -1 if none.
@@ -217,8 +217,8 @@ From day 2 the whale behaves like the F2P bot except that it keeps using `Pull10
 public sealed class BotEventSink : IEventSink
 {
     public EventKinds Mask => EventKinds.BossFailed | EventKinds.BossCleared | EventKinds.StageAdvanced
-                            | EventKinds.SkillPulled | EventKinds.OfflineGoldCredited;
-    public int LPlus { get; }                    // SkillPulled with Result.Tier >= Rarity.L
+                            | EventKinds.HeroPulled | EventKinds.OfflineGoldCredited;
+    public int LPlus { get; }                    // HeroPulled with Result.Tier >= Rarity.L
     public List<WallRecord> Walls { get; }
     public int OfflineCredits { get; }           // sanity: equals days completed
     public void Publish(SimEvent e) { ... }
@@ -245,11 +245,11 @@ Wall rules:
 
 ```csharp
 public sealed record DayRow(
-    int Day, int Stage, double Dps, int StatLvl, double StatMult, double GearMult, double SkillMult, double ClassMult,
+    int Day, int Stage, double Dps, int StatLvl, double StatMult, double GearMult, double HeroMult, double ClassMult,
     int Pulls, int LPlus, int FirstWallStage, double LongestWallHours);
 ```
 
-`Snapshot(day, sim, sink)` reads `Query.Dps`, `Query.StatMult`, `Query.GearMult`, `Query.SkillMult`, `Query.ClassMult`, `State.Stat.Level`, `State.Stage.Stage`, `State.SkillBanner.TotalPulls`, `sink.LPlus`, `State.Lifetime.FirstWallStage`, and `LongestWallHours = max over sink.Walls of WallClockHours(nowUtcMs)` with `nowUtcMs` the clock after the day's sync (an open wall counts with its duration so far; 0 when there has been no wall).
+`Snapshot(day, sim, sink)` reads `Query.Dps`, `Query.StatMult`, `Query.GearMult`, `Query.HeroMult`, `Query.ClassMult`, `State.Stat.Level`, `State.Stage.Stage`, `State.HeroBanner.TotalPulls`, `sink.LPlus`, `State.Lifetime.FirstWallStage`, and `LongestWallHours = max over sink.Walls of WallClockHours(nowUtcMs)` with `nowUtcMs` the clock after the day's sync (an open wall counts with its duration so far; 0 when there has been no wall).
 
 ### 6.3 Layer shares
 
@@ -258,7 +258,7 @@ For acceptance check 2 and the `--shares` option. From a `DayRow`, with `L = ln(
 ```
 statShare  = ln(StatMult)  / L
 gearShare  = ln(GearMult)  / L
-skillShare = ln(SkillMult) / L
+heroShare = ln(HeroMult) / L
 classShare = ln(ClassMult) / L
 baseShare  = ln(BASE_ATK)  / L        (the remainder; the five sum to 1)
 ```
@@ -281,7 +281,7 @@ Exactly twelve columns, in this order:
 | `statLvl` | `StatLvl` | `{3,7}` |
 | `statMult` | `StatMult` | `{4,8:0.00}` |
 | `gearMult` | `GearMult` | `{5,10:0.00e+00}` |
-| `skillMult` | `SkillMult` | `{6,9:0.00}` |
+| `heroMult` | `HeroMult` | `{6,9:0.00}` |
 | `classMult` | `ClassMult` | `{7,9:0.00}` |
 | `pulls` | `Pulls` | `{8,5}` |
 | `L+` | `LPlus` | `{9,3}` |
@@ -298,7 +298,7 @@ Illustrative output (numbers invented for shape, not golden values):
 ```
 # idle-rng run v1
 # bot=greedy-f2p seed=7 days=30 content=2026.10.30-a/3f9c1a2e
-day stage      dps statLvl statMult   gearMult skillMult classMult pulls  L+ firstWall longestWallH
+day stage      dps statLvl statMult   gearMult heroMult classMult pulls  L+ firstWall longestWallH
   1    88 3.10e+03      63     4.15   2.80e+01      1.90      1.50     6   0        70         0.25
   2   165 4.90e+05     122     7.10   1.20e+03      2.60      2.25    12   0        70         3.10
  ...
@@ -314,14 +314,14 @@ One row per day, aggregated over seeds (section 8):
 ```
 # idle-rng sweep v1
 # bot=greedy-f2p seeds=1-20 days=30 content=2026.10.30-a/3f9c1a2e
-day stageP10 stageMed stageP90   dpsMed statLvlMed gearMultMed skillMultMed classMultMed pullsMed L+Med firstWallMin firstWallMax longestWallHMax
+day stageP10 stageMed stageP90   dpsMed statLvlMed gearMultMed heroMultMed classMultMed pullsMed L+Med firstWallMin firstWallMax longestWallHMax
 ```
 
 Formats match the single-run columns they derive from. `firstWallMin`/`firstWallMax` ignore seeds with no wall yet and print `-` if none has walled.
 
 ### 7.3 CSV and JSON
 
-`--format csv` prints the same columns with the header `day,stage,dps,statLvl,statMult,gearMult,skillMult,classMult,pulls,lPlus,firstWallStage,longestWallH` and the same number formats as the table (so a spreadsheet import sees what the table shows). `--format json` prints `RunResult` (or the sweep's per-seed `RunResult[]`) with doubles in round-trip (`R`) precision, for tooling that wants full numbers. Golden files use the table format only.
+`--format csv` prints the same columns with the header `day,stage,dps,statLvl,statMult,gearMult,heroMult,classMult,pulls,lPlus,firstWallStage,longestWallH` and the same number formats as the table (so a spreadsheet import sees what the table shows). `--format json` prints `RunResult` (or the sweep's per-seed `RunResult[]`) with doubles in round-trip (`R`) precision, for tooling that wants full numbers. Golden files use the table format only.
 
 ## 8. Running many seeds
 
@@ -493,7 +493,7 @@ The harness is expected to land within the +/-15% that `specs/02` section 6 gran
 | Boss gear drop | plain `GEAR_DROP_P` | `BOSS_GEAR_DROP_P` and `BOSS_GEAR_MIN_RARITY` per `specs/00` | sim gear slightly stronger |
 | Enhancement target | any slot, including an empty one | occupied slots only | sim wastes slightly less gold before the first drops |
 | Offline gold | continuous kill time | discrete kill time via `Query.KillTimeSeconds` | sim slightly less offline gold |
-| Whale pulls | singles, no guarantee | `Pull10` with the E+ guarantee | whale skill layer slightly stronger |
+| Whale pulls | singles, no guarantee | `Pull10` with the E+ guarantee | whale hero layer slightly stronger |
 | RNG | Python `random` | SplitMix64 streams | different sequences; only distributions are comparable |
 
 ## 15. Unit tests (`IdleRng.Bots.Tests`)
@@ -508,11 +508,11 @@ GreedyF2PBot (`GreedyF2PBotTests.cs`):
 5. With slots at enhancement levels `[3, 1, 2, null, null, null]`, `Decide` attempts slot 1 (`enhance` counter +1); with all occupied slots at `ENH_MAX`, no attempt.
 6. `OnDayStart` leaves `FreePullsRemaining == 0` and `Currencies.Gems` unchanged.
 7. With `7 * PULL_COST_GEMS + PULL_COST_GEMS / 2` gems, `Decide` makes 7 single pulls, never a `Pull10`, and leaves `PULL_COST_GEMS / 2` gems.
-8. After pulls, `Equipped` equals the top `SKILL_SLOTS` by `SkillPct`.
+8. After pulls, `Equipped` equals the top `HERO_SLOTS` by `HeroPct`.
 9. Walled with `BossClearable == true`: `Decide` leaves `Stage.Boss == Pending`; with `false`: still `Walled`.
 
 WhaleBot (`WhaleBotTests.cs`):
-10. After day-1 `OnDayStart`, `TotalPulls == FREE_PULLS_PER_DAY + Day1ExtraPulls`, `gacha_skill.Counter == 3 * TotalPulls`, and gems below `10 * PULL_COST_GEMS`.
+10. After day-1 `OnDayStart`, `TotalPulls == FREE_PULLS_PER_DAY + Day1ExtraPulls`, `gacha_hero.Counter == 3 * TotalPulls`, and gems below `10 * PULL_COST_GEMS`.
 11. On day 2, `OnDayStart` grants nothing extra.
 
 Measurement (`WallTrackerTests.cs`, `LayerSharesTests.cs`):
@@ -553,7 +553,7 @@ Bench (`[Category("Perf")] BenchTests.cs`):
 
 1. Gem income is a flat `GEMS_PER_DAY_F2P` grant until `specs/04`'s quest system exists in the sim. When it does, decide whether the acceptance sweep uses `--gems content` (truer) or stays flat (comparable to the Python model).
 2. AC4 measures walls in wall-clock hours (a wall that spans one night is at least 22 h). `specs/02` section 1 talks about "hours of real time" and section 9 about "bot time"; if the intent is active play time, switch AC4 to `ActiveHours` and add a `longestWallActiveH` column. The record keeps both so the switch is a one-line change.
-3. AC2 is checked per seed. If a single low-L+ seed makes it flap, the alternative is checking the median seed's shares; the tuning answer in `specs/02` section 5 (raise skill base pct) is preferable to loosening the check.
+3. AC2 is checked per seed. If a single low-L+ seed makes it flap, the alternative is checking the median seed's shares; the tuning answer in `specs/02` section 5 (raise hero base pct) is preferable to loosening the check.
 4. Acceptance targets live in `acceptance-targets.json` in the bots project. If `specs/05` exposes `specs/00` section 2.6 as a content group, read them from `IContentDb` instead and delete the JSON.
 5. Decision cadence is 60 s to mirror the Python model. The 60 s boss-retry latency is the largest known deviation; an event-driven mode (P1) would remove it, but the parity mode should remain the one the goldens are generated from until the Python model is retired.
 6. The acceptance sweep runs twice in CI (inside `dotnet test` and as the CLI step with the time budget). Drop one once CI time matters; the CLI step is the one with the wall-time gate.

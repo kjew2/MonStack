@@ -17,7 +17,7 @@ P0 feature list:
 1. Auto-combat stage push with boss walls every 10 stages.
 2. Gold sink: ATK stat levels.
 3. Gear drops (main stat only) into 6 slots, with enhancement.
-4. Skill gacha with pity, 10-pull guarantee, dupe-to-level, 6 equip slots.
+4. Hero (character) gacha with pity, 10-pull guarantee, dupe-to-level, a 6-hero party.
 5. Class advance at fixed stage milestones.
 6. Idle earnings in-app, offline catch-up with cap, server-clock seam (local fake clock in prototype).
 7. Versioned local save with migrations.
@@ -88,7 +88,7 @@ All constants below are validated by `tools/gacha_model.py` and `tools/power_cur
 | `ENH_SUCCESS_FLOOR`, `ENH_SUCCESS_STEP` | 0.30, 0.05 | `ENH_SUCCESS(l) = max(FLOOR, 1 - STEP*l)`: chance to go from level `l` to `l+1`. Fail: cost consumed, nothing else. |
 | `ENH_COST_GOLD_MULT` | 20 | `ENH_COST(s) = 20 * GOLD(s)` gold, where `s` is the player's current stage. |
 
-### 2.4 Skills and gacha
+### 2.4 Heroes and gacha
 
 | Name | Value | Notes |
 |---|---|---|
@@ -98,11 +98,11 @@ All constants below are validated by `tools/gacha_model.py` and `tools/power_cur
 | `PITY_HARD` | 80 | Forced L+. Effectively never reached (P99 = 62). |
 | `M_SHARE_OF_LPLUS` | 1/6 | Given an L+ result, 1/6 are Mythic. |
 | 10-pull guarantee | at least one E+ | If the first 9 are below Epic, slot 10 rolls from the E+ sub-distribution. |
-| `SKILL_SLOTS` | 6 | Equipped skills contribute; the rest sit in inventory. |
+| `HERO_SLOTS` | 6 | Party size. Heroes in the party contribute; the rest sit in the roster. |
 | Base DPS% by tier | C 10 / R 20 / E 40 / L 80 / M 160 | At level 1. |
-| `SKILL_LVL_CUM` | 1,3,6,10,16,25,40,64,100,160 | Total copies needed for level 1..10. |
-| `SKILL_LVL_BONUS` | 0.20 | Each level past 1 adds 20% of the base DPS%. Level 10 = 2.8x base. |
-| Pool size | C 20 / R 15 / E 10 / L 6 / M 3 | 54 skills. Prototype uses placeholder icons. |
+| `HERO_LVL_CUM` | 1,3,6,10,16,25,40,64,100,160 | Total copies needed for level 1..10. |
+| `HERO_LVL_BONUS` | 0.20 | Each level past 1 adds 20% of the base DPS%. Level 10 = 2.8x base. |
+| Pool size | C 20 / R 15 / E 10 / L 6 / M 3 | 54 heroes. Prototype uses placeholder icons. |
 | Shard value of excess copy (P1) | C 1 / R 5 / E 25 / L 100 / M 500 | |
 
 ### 2.5 Class
@@ -130,14 +130,14 @@ Assumed F2P player: 2 h active/day, offline the rest. Targets the bot must land 
 DPS(s) = BASE_ATK
        * (1 + STAT_PER_LVL * statLevel)          # gold layer, log-growth in gold
        * prod_{slot} (1 + gearPct_slot * (1 + ENH_PER_LVL * enh_slot))   # gear layer, ~1.045^stage
-       * (1 + sum_{equipped} skillPct / 100)      # skill layer, stepwise via gacha
+       * (1 + sum_{equipped} heroPct / 100)      # hero layer, stepwise via gacha
        * CLASS_MULT ^ classAdvances                # milestone layer
 ```
 
 Kill time = `max(ATTACK_INTERVAL, ceil(HP / hitDamage) * ATTACK_INTERVAL) + SPAWN_DELAY`.
 Wall condition (boss stage): `BOSS_HP_MULT * HP(s) / DPS(s) > 20 s`, i.e. the player walls when a normal mob takes more than 2 s.
 
-Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, so the residual `1.0237^s` has to come from stat levels, skills and class. Over 550 stages that residual is about 390,000x. The run in `tools/power_curve_model.py` gets there with stats x24, skills x5.6, class x5.06 at day 30 (~680x) plus gear running a few tiers ahead of the 1.045 line thanks to rarity multipliers. The point of the split: gear carries most of the exponential so drops feel essential, stat levels give smooth minute-to-minute progress, gacha gives the spiky dopamine, class gives identity moments.
+Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, so the residual `1.0237^s` has to come from stat levels, heroes and class. Over 550 stages that residual is about 390,000x. The run in `tools/power_curve_model.py` gets there with stats x24, heroes x5.6, class x5.06 at day 30 (~680x) plus gear running a few tiers ahead of the 1.045 line thanks to rarity multipliers. The point of the split: gear carries most of the exponential so drops feel essential, stat levels give smooth minute-to-minute progress, gacha gives the spiky dopamine, class gives identity moments.
 
 ## 4. Shared vocabulary
 
@@ -149,6 +149,8 @@ Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, 
 | **Layer** | One multiplicative term in `DPS(s)`. |
 | **Sink** | Anything that consumes a currency. |
 | **Pull** | One gacha result. A 10-pull is 10 pulls with a batch guarantee. |
+| **Hero** | A named character pulled from the gacha. Has a tier, a portrait and a level from dupes. |
+| **Party** | The `HERO_SLOTS` heroes currently contributing to DPS. "Equip" in code means "put in the party". |
 | **Pity counter** | Pulls since the last L+ result on that banner. |
 | **Catch-up** | Computing progress for elapsed wall-clock time the sim did not tick through. |
 | **Server time** | The only clock the economy trusts. Prototype: `IClock` with a fake implementation. |
@@ -156,7 +158,7 @@ Why these exponents, in one paragraph: HP grows `1.07^s`, gear grows `1.045^s`, 
 ## 5. Cross-spec contracts
 
 1. **Sim core is pure C#** (`IdleRng.Sim` assembly). No `UnityEngine` reference, no JSON library, no reflection, no clock reads, no `Math.Pow/Exp/Log` (`specs/03` section 4). The Unity client, the bot harness and the offline catch-up all call the same `Simulation.Tick()` / `Simulation.Advance(ticks)`. Code that needs IO, a real clock or a serializer lives in `IdleRng.Runtime` (plain C#, references `IdleRng.Sim` and Newtonsoft.Json, still no `UnityEngine`), which both the client and the bots reference.
-2. **Every RNG consumer gets its own named stream.** Streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_skill`. A stream is `(seed, counter)`; the counter persists in the save. See `specs/03` for the algorithm and `specs/01` for why the gacha stream is pre-committed.
+2. **Every RNG consumer gets its own named stream.** Streams: `combat`, `gear_drop`, `gear_rarity`, `enhance`, `gacha_hero`. A stream is `(seed, counter)`; the counter persists in the save. See `specs/03` for the algorithm and `specs/01` for why the gacha stream is pre-committed.
 3. **Content is data.** Every number in section 2 lives in a table defined by `specs/05`; code receives a `ContentDb` object and never a literal.
 4. **Save schema is versioned from v1** with forward-only migrations (`specs/06`).
 5. **Server-sensitive operations go through an interface** (`IGachaService`, `IClock`, `ISaveStore`) with a local implementation in the prototype and a documented remote contract (`specs/08`).
@@ -207,3 +209,4 @@ These were open or contradictory across the subagent-written specs and are now s
 6. **Clock going backwards.** `EnsureDay` compares `key <= Daily.DayKey` (not `==`) so a day is never re-granted; offline catch-up credits zero for a negative gap.
 7. **Enhancement does not carry** to a replacing piece in P0 (matches the bot). Revisit after the first playtest; full carry is estimated at +30 stages by day 30 and would need a bot rerun.
 8. **Constant ownership.** Names introduced by `04`/`05`/`03` are now rows in section 2. Until `specs/05` section 12 is done (Python models reading the JSON), the Python tools remain the place to change a number first.
+9. **Hero gacha replaces skill gacha.** The gacha pulls heroes (characters) instead of skills. Every number is unchanged: rates, pity, pool sizes, base DPS% and dupe levels carry over one for one, so `tools/` output and the bot targets are identical. In P0 a hero is a passive party bonus plus a cosmetic sprite on the combat screen (`specs/01` section 7.1); hero roles and active abilities are P1 ideas, not commitments. Identifiers were renamed (`gacha_skill` -> `gacha_hero`, `SKILL_*` -> `HERO_*`, `SkillId` -> `HeroId`, and so on).

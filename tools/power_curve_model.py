@@ -4,7 +4,7 @@
 Model (per-minute aggregate, 30 days):
   * Player is ACTIVE for ACTIVE_MIN minutes/day (pushes stages, spends gold/gems).
   * Rest of the day is OFFLINE: gold accrues at OFFLINE_RATE up to OFFLINE_CAP_H hours at the current stage.
-  * DPS = BASE_ATK * statMult(n) * gearMult * skillMult * classMult
+  * DPS = BASE_ATK * statMult(n) * gearMult * heroMult * classMult
   * Normal stage: 10 kills to advance; always clears eventually.
   * Boss stage (every 10th): BOSS_HP_MULT x HP, must die within BOSS_TIME_S or the player stays farming.
 """
@@ -33,12 +33,12 @@ GEAR_SLOT_G = 1.0074              # piece pct = (GEAR_SLOT_G^tier - 1) * rarityM
 GEAR_RARITY = [("C", 0.60, 1.0), ("R", 0.28, 1.2), ("E", 0.09, 1.5), ("L", 0.025, 2.0), ("M", 0.005, 3.0)]
 ENH_MAX, ENH_PER_LVL = 15, 0.05   # enhancement: +5%/lvl of the piece's pct, up to +75%
 
-# ---------- skills (gacha) ----------
-SKILL_SLOTS = 6
-SKILL_BASE_PCT = {"C": 10, "R": 20, "E": 40, "L": 80, "M": 160}
-SKILL_POOL = {"C": 20, "R": 15, "E": 10, "L": 6, "M": 3}
-SKILL_LVL_CUM = [1, 3, 6, 10, 16, 25, 40, 64, 100, 160]   # copies needed for level 1..10
-SKILL_LVL_BONUS = 0.20                                     # +20% of base per level past 1
+# ---------- heroes (gacha) ----------
+HERO_SLOTS = 6
+HERO_BASE_PCT = {"C": 10, "R": 20, "E": 40, "L": 80, "M": 160}
+HERO_POOL = {"C": 20, "R": 15, "E": 10, "L": 6, "M": 3}
+HERO_LVL_CUM = [1, 3, 6, 10, 16, 25, 40, 64, 100, 160]   # copies needed for level 1..10
+HERO_LVL_BONUS = 0.20                                     # +20% of base per level past 1
 GEMS_PER_DAY, FREE_PULLS_PER_DAY, PULL_COST = 300, 3, 100
 PITY_SOFT, PITY_STEP, PITY_HARD = 50, 0.0325, 80
 
@@ -61,7 +61,7 @@ class Bot:
         self.n = 0; self.kills_in_stage = 0
         self.gear = [1.0] * GEAR_SLOTS           # (1+pct) per slot
         self.enh = [0] * GEAR_SLOTS
-        self.skills = {}                          # id -> copies
+        self.heroes = {}                          # id -> copies
         self.pity = 0
         self.pulls = 0; self.lplus = 0
         self.classes = 0
@@ -74,15 +74,15 @@ class Bot:
         for g, e in zip(self.gear, self.enh):
             m *= 1 + (g - 1) * (1 + ENH_PER_LVL * e)
         return m
-    def skill_mult(self):
+    def hero_mult(self):
         vals = []
-        for sid, copies in self.skills.items():
+        for sid, copies in self.heroes.items():
             tier = sid[0]
-            lvl = sum(1 for c in SKILL_LVL_CUM if copies >= c)
-            vals.append(SKILL_BASE_PCT[tier] * (1 + SKILL_LVL_BONUS * (lvl - 1)))
-        return 1 + sum(sorted(vals, reverse=True)[:SKILL_SLOTS]) / 100
+            lvl = sum(1 for c in HERO_LVL_CUM if copies >= c)
+            vals.append(HERO_BASE_PCT[tier] * (1 + HERO_LVL_BONUS * (lvl - 1)))
+        return 1 + sum(sorted(vals, reverse=True)[:HERO_SLOTS]) / 100
     def dps(self):
-        return BASE_ATK * (1 + STAT_PER_LVL * self.n) * self.gear_mult() * self.skill_mult() * self.class_mult()
+        return BASE_ATK * (1 + STAT_PER_LVL * self.n) * self.gear_mult() * self.hero_mult() * self.class_mult()
 
     # ----- gacha -----
     def pull(self):
@@ -94,8 +94,8 @@ class Bot:
         else:
             r2 = random.random() * 0.97
             tier = "C" if r2 < 0.60 else "R" if r2 < 0.88 else "E"
-        sid = f"{tier}{random.randrange(SKILL_POOL[tier])}"
-        self.skills[sid] = self.skills.get(sid, 0) + 1
+        sid = f"{tier}{random.randrange(HERO_POOL[tier])}"
+        self.heroes[sid] = self.heroes.get(sid, 0) + 1
 
     # ----- gear drop -----
     def drop(self):
@@ -162,11 +162,11 @@ def run(verbose=True):
         for _ in range(FREE_PULLS_PER_DAY): b.pull()
         for _ in range(ACTIVE_MIN): b.active_minute()
         b.offline()
-        rows.append((day, b.stage, b.dps(), b.n, b.gear_mult(), b.skill_mult(), b.class_mult(), b.pulls, b.lplus))
+        rows.append((day, b.stage, b.dps(), b.n, b.gear_mult(), b.hero_mult(), b.class_mult(), b.pulls, b.lplus))
         if verbose and (day in (1, 2, 3, 5, 7, 10, 14, 21, 30)):
             d, s, dps, n, gm, sm, cm, pulls, lp = rows[-1]
             print(f"day {d:>2}: stage {s:>4}  dps {dps:>12.3g}  statLvl {n:>4} (x{1+STAT_PER_LVL*n:>6.1f})  "
-                  f"gear x{gm:>9.3g}  skills x{sm:>5.2f}  class x{cm:>5.2f}  pulls {pulls:>3} L+ {lp}")
+                  f"gear x{gm:>9.3g}  heroes x{sm:>5.2f}  class x{cm:>5.2f}  pulls {pulls:>3} L+ {lp}")
     return rows
 
 

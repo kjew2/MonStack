@@ -46,7 +46,7 @@ The values in parentheses are the ones already published in `specs/00` and `spec
 | Gems | `long` | P0 | Daily login, three daily quests, first clears, idle chest (section 7). Tutorial grant (section 8). | Pulls (`specs/01`). | P1 sources: IAP, rewarded ads. P1 sinks: pet banner, rate-up banner. |
 | Free pull credits (daily) | `int` | P0 | Reset to `FREE_PULLS_PER_DAY` at rollover (section 7.1). | Single pulls (section 7.5). | Unused credits expire at rollover. |
 | Free pull credits (banked) | `int` | P0 | Tutorial grant (section 8). | Single pulls or one 10-pull (section 7.5). | Never expire. P1: event grants. |
-| Shards | `long` | P0 tracked, P1 spent | Excess skill copies (01 section 7). | Shard shop (section 11.3). | Nothing spends shards in P0; the counter is saved so P1 players keep what they earned. |
+| Shards | `long` | P0 tracked, P1 spent | Excess hero copies (01 section 7). | Shard shop (section 11.3). | Nothing spends shards in P0; the counter is saved so P1 players keep what they earned. |
 | Enhancement materials | `long` | P1 | Daily dungeon (section 11.2). | Enhancement attempts, replacing gold. | Field exists in the P0 save at 0 so the P1 migration is a no-op. |
 | Dungeon tickets | `int` | P1 | Daily reset. | Dungeon entry. | Same `DailyState` reset path as quests. |
 
@@ -497,13 +497,13 @@ public sealed record ProgressionState
     public bool TutorialGranted { get; set; }
 }
 
-// Skill-side state the economy touches. Pity, TotalPulls and the stream live on BannerState (specs/01).
-public readonly record struct SkillId(Rarity Tier, int Index);
-public sealed record SkillState
+// Hero-side state the economy touches. Pity, TotalPulls and the stream live on BannerState (specs/01).
+public readonly record struct HeroId(Rarity Tier, int Index);
+public sealed record HeroState
 {
-    public Dictionary<SkillId, int> Copies { get; init; } = new();       // level is derived via SKILL_LVL_CUM
-    public SkillId?[] Equipped { get; init; } = new SkillId?[6];         // SKILL_SLOTS
-    public bool AutoEquipBest { get; set; } = true;                      // sort by skillPct, top six
+    public Dictionary<HeroId, int> Copies { get; init; } = new();       // level is derived via HERO_LVL_CUM
+    public HeroId?[] Equipped { get; init; } = new HeroId?[6];         // HERO_SLOTS
+    public bool AutoEquipBest { get; set; } = true;                      // sort by heroPct, top six
 }
 
 // Events. The sim appends; the client drains once per frame; the bot counts or ignores.
@@ -533,7 +533,7 @@ Substat pool from 02 section 10: crit chance, crit damage, attack speed, gold fi
 
 ### 11.3 Shard shop (P1)
 
-Prices from 01 section 7: a chosen Epic for 250 shards, a chosen Legendary for 1500 shards. Common and Rare offers, and any Mythic offer, are undecided and listed in `specs/01` section 11. The shop is a content table `ShopOfferDef(Rarity Tier, long PriceShards, int DailyLimit)` plus a `BuySkillCopy(SkillId id)` call that debits `Currencies.Shards` and adds one copy through the same dupe-to-level path `specs/01`'s `Pull` uses, without touching the `gacha_skill` stream, the pity counter or the `Pulls` quest. Because P0 already accrues `Currencies.Shards`, P1 players open the shop with a balance.
+Prices from 01 section 7: a chosen Epic for 250 shards, a chosen Legendary for 1500 shards. Common and Rare offers, and any Mythic offer, are undecided and listed in `specs/01` section 11. The shop is a content table `ShopOfferDef(Rarity Tier, long PriceShards, int DailyLimit)` plus a `BuyHeroCopy(HeroId id)` call that debits `Currencies.Shards` and adds one copy through the same dupe-to-level path `specs/01`'s `Pull` uses, without touching the `gacha_hero` stream, the pity counter or the `Pulls` quest. Because P0 already accrues `Currencies.Shards`, P1 players open the shop with a balance.
 
 ### 11.4 Other hooks (P1, P2)
 
