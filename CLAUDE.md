@@ -6,8 +6,9 @@ The gameplay systems are being redesigned (4v1 party battle, companion builds, a
 
 - Do not spend effort on balance tuning: no retuning curves, constants or acceptance targets, no tuning passes on the power-curve model, no balance-only PRs. That work will be thrown away when the systems change.
 - Placeholder numbers in new systems are fine. Pick something reasonable and note it as a placeholder.
-- **Imbalance is fine in this phase and must not block work.** The balance criteria AC1-AC5 are report-only: `advisory` in `src/IdleRng.Bots/Acceptance/acceptance-targets.json` makes them print `WARN` instead of failing `./check.sh`. Do not tune numbers to clear a WARN, and do not stop to ask about one; mention notable changes in the PR. AC6 (determinism, golden), tests and the bench still block.
-- When kj says balance work resumes, empty the `advisory` list, then fix or re-agree each failing criterion (#41 is the known AC4 one).
+- **Do not run or read balance checks.** `./check.sh` skips the balance sweep (AC1-AC5) while `BALANCE_ON_HOLD=1` at its top. Do not run `./check.sh --balance`, the `acceptance`, `sweep` or `compare` bot verbs, or the `tools/` power-curve model unless kj asks. Do not report or analyze balance numbers (stage targets, shares, walls) in PRs or specs. Determinism (AC6: tests plus `golden --check`), the other tests and the bench still block.
+- If a system change moves the golden files, regenerate them (`golden --update`) and say so in the PR. That is expected, not a balance problem.
+- When kj says balance work resumes: set `BALANCE_ON_HOLD=0` in `check.sh`, empty `advisory` in `src/IdleRng.Bots/Acceptance/acceptance-targets.json`, then fix or re-agree each failing criterion (#41 is the known AC4 one).
 
 ## Keep the specs current
 
@@ -32,7 +33,7 @@ When unsure between 1 and 3, treat it as 3. Create issues with `gh api repos/kje
 
 ## Run every check before calling a change done
 
-`./check.sh` runs everything CI runs: content build drift, the web prototype's spec vectors, .NET build and tests, the tick benchmark, the 20-seed acceptance sweep and the golden-file check.
+`./check.sh` runs everything CI runs: content build drift, .NET build and tests, the tick benchmark, the golden-file check and the WebAssembly build (plus the 20-seed balance sweep once balance work resumes).
 
 - `./check.sh --fast` for the inner loop (skips golden tests, the bench and the acceptance sweep). Run the full `./check.sh` before you finish.
 - `./check.sh --no-dotnet` on a machine without the .NET SDK. It is a partial check: say so when you report results.
