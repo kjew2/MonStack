@@ -42,6 +42,17 @@ namespace IdleRng.Sim.Training
         /// <summary>Hash of the finished run (TrainingRun.StateHash): lets a server check the entry against its log.</summary>
         public string RunHash { get; set; }
 
+        /// <summary>
+        /// The end-of-run gauntlet (specs/19), run at sealing: the floor the monster fell on (GAUNTLET_FLOORS + 1 when it cleared
+        /// the tower), the gauntlet enemy that beat it (null when cleared), the Legacy Title's string key (its text may contain
+        /// {killer}) and the result hash. The wheel replays the floors with GauntletSim.Run(c, Fighter(c), Seed).
+        /// </summary>
+        public int GauntletFloor { get; set; }
+        public bool GauntletCleared { get; set; }
+        public string GauntletKiller { get; set; }
+        public string LegacyTitle { get; set; }
+        public string GauntletHash { get; set; }
+
         /// <summary>Wall-clock time the run was sealed. The sim has no clock: the caller supplies it (0 = not recorded).</summary>
         public long SealedUtcMs { get; set; }
 
@@ -51,7 +62,7 @@ namespace IdleRng.Sim.Training
 
     public static class Vault
     {
-        /// <summary>Freeze a finished run. Throws if the run is still going.</summary>
+        /// <summary>Freeze a finished run and send the monster up the gauntlet (specs/19). Throws if the run is still going.</summary>
         public static VaultEntry Seal(ContentDb c, RunState s, long sealedUtcMs = 0)
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
@@ -69,6 +80,12 @@ namespace IdleRng.Sim.Training
             e.Books.AddRange(s.Books);
             foreach (var l in s.Log) if (l.Kind == RunCommandKind.UseBook) e.Books.Add(l.Book);
             foreach (var slot in s.Slots) if (slot != null) e.Trees.Add(new VaultTree { TreeId = slot.TreeId, Bought = slot.Bought });
+            var g = Gauntlet.GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
+            e.GauntletFloor = g.FloorReached;
+            e.GauntletCleared = g.Cleared;
+            e.GauntletKiller = g.KillerId;
+            e.LegacyTitle = g.TitleKey;
+            e.GauntletHash = g.Hash;
             return e;
         }
     }

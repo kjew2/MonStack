@@ -85,5 +85,26 @@ namespace IdleRng.Sim.Tests
             Assert.That(e.Books, Is.EqualTo(new[] { book }));
             Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, e.SpeciesId, e.Seed, e.Log, e.Books)), Is.EqualTo(e.RunHash));
         }
-    }
+    
+        [Test]
+        public void Seal_RunsTheGauntlet_AndTheWheelCanReplayIt()
+        {
+            var db = TestContent.Db;
+            var s = TrainingRun.Start(db, "drake", 6);
+            while (s.Phase != RunPhase.Finished)
+            {
+                while (s.Offers.Count > 0) TrainingRun.DiscardOffer(db, s);
+                if (s.Phase == RunPhase.AwaitFight) TrainingRun.Fight(db, s);
+                else TrainingRun.Rest(db, s);
+            }
+            var e = Vault.Seal(db, s);
+            var g = IdleRng.Sim.Gauntlet.GauntletSim.Run(db, e.Fighter(db), e.Seed);
+            Assert.That(e.GauntletHash, Is.EqualTo(g.Hash));
+            Assert.That(e.GauntletFloor, Is.EqualTo(g.FloorReached));
+            Assert.That(e.GauntletCleared, Is.EqualTo(g.Cleared));
+            Assert.That(e.GauntletKiller, Is.EqualTo(g.KillerId));
+            Assert.That(e.LegacyTitle, Is.EqualTo(IdleRng.Sim.Gauntlet.GauntletSim.Title(db, e.GauntletFloor).TitleKey));
+            Assert.That(e.GauntletFloor, Is.GreaterThanOrEqualTo(1));
+        }
+}
 }

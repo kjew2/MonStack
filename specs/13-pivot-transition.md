@@ -156,7 +156,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 | Phase | Content |
 |---|---|
-| T8 | End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
+| T8 | **Engine done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title). Wheel UI next. End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
 | T9 | Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors) |
 | T10 | Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
 | T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |

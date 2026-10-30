@@ -1,6 +1,6 @@
 # 19 - End-of-Run Gauntlet
 
-Status: **engine live (T8 of `specs/13`)**, post-MVP. Not yet run by the account when a run ends, and no wheel UI yet (both are follow-ups, section 7). Code: `src/IdleRng.Sim/Gauntlet/GauntletSim.cs`. Tests: `src/IdleRng.Sim.Tests/GauntletTests.cs`. Golden: `golden/gauntlet-vectors.txt`.
+Status: **engine live (T8 of `specs/13`)**, post-MVP. `Vault.Seal` runs it for every sealed monster; no wheel UI yet (section 7). Code: `src/IdleRng.Sim/Gauntlet/GauntletSim.cs`. Tests: `src/IdleRng.Sim.Tests/GauntletTests.cs`. Golden: `golden/gauntlet-vectors.txt`.
 
 The design is `specs/12` section 6: the finished monster is simulated up a boss tower, a slowing wheel lands on the floor and the enemy that beat it, and the monster gets a Legacy Title (kj, 2026-10-30: the gauntlet and the wheel spin come after the MVP, where the rank is the grade).
 
@@ -54,6 +54,7 @@ Content table `legacy_titles`: `min_floor` (strictly increasing, first row 1) an
 
 ## 7. Follow-ups
 
-- Run the gauntlet when a run is sealed and store the result (floor, killer, title) on the Vault entry; pay shards by floor instead of by rank once the gauntlet replaces the rank as the grade.
+- Done: `Vault.Seal` runs the gauntlet with the run's final fighter and the run seed, and stores `GauntletFloor`, `GauntletCleared`, `GauntletKiller`, `LegacyTitle` (string key) and `GauntletHash` on the `VaultEntry`. The wheel gets the floor list by running `GauntletSim.Run(c, entry.Fighter(c), entry.Seed)` again; the result is identical.
+- Pay shards by floor instead of by rank once the gauntlet replaces the rank as the grade (kj's call; the rank stays the MVP grade).
 - The wheel spin and the comic defeat animation in the web client.
 - Enemy skills and boss phases (they share the Daily Tower work, `specs/13` T10).
