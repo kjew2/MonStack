@@ -14,6 +14,8 @@ namespace IdleRng.Client.Screens
     {
         const float RefreshPeriodS = 0.1f;
 
+        /// <summary>True when the Debug tab and the GameViewModel.Debug* cheats are compiled in. The same condition
+        /// guards DebugScreen.cs and the debug region of GameViewModel; keep them in sync.</summary>
         public static bool DebugEnabled =>
 #if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS
             true;
@@ -72,7 +74,9 @@ namespace IdleRng.Client.Screens
             _screens.Add(new HeroesScreen(vm));
             _screens.Add(new GachaScreen(vm));
             _screens.Add(new ClassScreen(vm));
-            if (DebugEnabled) _screens.Add(new DebugScreen(vm));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS
+            _screens.Add(new DebugScreen(vm));
+#endif
             for (int i = 0; i < _screens.Count; i++)
             {
                 int index = i;

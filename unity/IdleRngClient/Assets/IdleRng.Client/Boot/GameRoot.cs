@@ -140,8 +140,10 @@ namespace IdleRng.Client.Boot
         void Update()
         {
             float dt = Time.unscaledDeltaTime;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS
             _fpsAcc += dt; _fpsFrames++;
             if (_fpsAcc >= 0.5f) { DebugScreen.Fps = _fpsFrames / _fpsAcc; _fpsAcc = 0; _fpsFrames = 0; }
+#endif
 
             if (_runner == null) return;
             _runner.Frame(dt);

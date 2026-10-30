@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD || IDLERNG_CHEATS
 using System;
 using IdleRng.Client.Core;
 using UnityEngine.UIElements;
@@ -6,7 +7,7 @@ namespace IdleRng.Client.Screens
 {
     /// <summary>
     /// Debug panel (specs/07 section 11.8). Shown in the Editor and Development builds, or with IDLERNG_CHEATS
-    /// (see Shell.DebugEnabled). Everything goes through GameViewModel.Debug* which calls Simulation.Debug.
+    /// (see Shell.DebugEnabled). The whole file compiles out of Release builds (specs/07 section 13). Everything goes through GameViewModel.Debug* which calls Simulation.Debug.
     /// </summary>
     public sealed class DebugScreen : ScreenBase
     {
@@ -79,3 +80,4 @@ namespace IdleRng.Client.Screens
         }
     }
 }
+#endif
