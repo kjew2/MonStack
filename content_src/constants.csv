@@ -62,3 +62,5 @@ SP_PER_WIN,int,2,skill points for each rank fight win. Placeholder
 TREE_SLOTS,int,4,tree slots per monster: 2 native + 2 empty at the start (kj)
 DRAFT_SIZE,int,3,most trees offered by one milestone draft. Placeholder
 MON_ECHO_POWER,double,0.5,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder
+SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/18; injured runs pay too). Placeholder
+SHARDS_PER_RANK,int,10,training shards per rank index reached (E = 0). Placeholder

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2.5",
+  "content_version": "2.6",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "banners": {
@@ -17,7 +17,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "c828055af95f323cbe969e230be993486713c772d2218a5e687d04f8a51288ed"
+      "sha256": "1734ca431cfd8759ae147e1b942cefd239d74c8ac558b0cd439529397bd19289"
     },
     "curves": {
       "file": "curves.json",
@@ -93,7 +93,11 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "144174b355018ae1008e691faeac19a8a24fb729489be4c134d8559f351d4a30"
+      "sha256": "379c1f6aafd164b34cc964936af85009a7c95f545d21cd07a4894c8a09168690"
+    },
+    "talents": {
+      "file": "talents.json",
+      "sha256": "5670210b20e98d9d712a530dc0714c97555eb5709f88959fd337aa606d175446"
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
@@ -108,5 +112,5 @@
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "646f70b31bd7b8d99bf972dc3d0afb7478ec384b567b90706d5661826fa7e3a7"
+  "content_hash": "5533902d982555cd71be77b110e6f93048476fd0349811715a41e5a7369e6b6e"
 }

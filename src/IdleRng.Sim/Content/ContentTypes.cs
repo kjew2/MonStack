@@ -90,6 +90,10 @@ namespace IdleRng.Sim.Content
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
         public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
 
+        // Account and meta-progression (specs/18 section 5). Placeholders.
+        public int ShardsPerCycle { get; internal set; }         // SHARDS_PER_CYCLE
+        public int ShardsPerRank { get; internal set; }          // SHARDS_PER_RANK
+
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
 
@@ -478,5 +482,20 @@ namespace IdleRng.Sim.Content
         public string Id { get; internal set; }
         public string NameKey { get; internal set; }
         public string TreeId { get; internal set; }
+    }
+
+    public enum TalentEffect { DrillCost, StatFloor, DraftSize, StartSp }
+
+    /// <summary>An account talent (specs/18 section 4). Rank r+1 costs CostBase + CostStep * r shards; the effect is PerRank x rank.</summary>
+    public sealed class TalentDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string DescKey { get; internal set; }
+        public TalentEffect Effect { get; internal set; }
+        public double PerRank { get; internal set; }
+        public int MaxRank { get; internal set; }
+        public int CostBase { get; internal set; }
+        public int CostStep { get; internal set; }
     }
 }

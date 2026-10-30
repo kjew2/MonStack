@@ -20,7 +20,7 @@ namespace IdleRng.Sim.Content
             "banners", "boss_rules", "constants", "curves", "daily_quests", "elements", "gear_rarity",
             "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles", "skills",
             "tutorial_grants", "species", "drill_tiers", "fight_ranks", "stat_milestones",
-            "monster_skills", "trees", "tree_nodes", "chase_conditions", "skill_books",
+            "monster_skills", "trees", "tree_nodes", "chase_conditions", "skill_books", "talents",
         };
 
         // Curves are precomputed to this many steps (covers STAGE_CAP); beyond it Eval keeps multiplying.
@@ -107,6 +107,12 @@ namespace IdleRng.Sim.Content
         public IReadOnlyList<TreeDef> TreeList { get; private set; }
         public IReadOnlyDictionary<string, TreeNodeDef> TreeNodes { get; private set; }
         public IReadOnlyDictionary<string, SkillBookDef> SkillBooks { get; private set; }
+
+        // Account and meta-progression (specs/18)
+        public IReadOnlyDictionary<string, TalentDef> Talents { get; private set; }
+
+        /// <summary>Talents in CSV order.</summary>
+        public IReadOnlyList<TalentDef> TalentList { get; private set; }
 
         public int GearSlotCount => GearSlots.Count;
 
@@ -298,7 +304,7 @@ namespace IdleRng.Sim.Content
                 DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
-                MonEchoPower = D("MON_ECHO_POWER"),
+                MonEchoPower = D("MON_ECHO_POWER"), ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
             };
             if (errors.Count > 0) return;
 
@@ -543,7 +549,8 @@ namespace IdleRng.Sim.Content
                   && k.DrillEnergyCost >= 0 && k.RestEnergy >= 0 && In01(k.DrillFailMin) && In01(k.DrillFailMax)
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0
-                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)))
+                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)
+                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
 
             var trained = IdleRng.Sim.Combat.StatIds.Trained;
@@ -607,6 +614,7 @@ namespace IdleRng.Sim.Content
             }
 
             BuildTrees(t, errors);
+            BuildAccount(t, errors);
 
             StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
             for (int i = 0; i < StatMilestones.Count; i++)
@@ -770,6 +778,44 @@ namespace IdleRng.Sim.Content
             foreach (var b in SkillBooks.Values)
                 if (!Trees.TryGetValue(b.TreeId, out var bt) || bt.Kind != TreeKind.Book)
                     errors.Add(new ContentError("E023", $"skill_books[{b.Id}]", $"tree_id '{b.TreeId}' is not a book tree id"));
+        }
+
+        /// <summary>Account talent tree (specs/18 section 4). Mirrors validate_talents in tools/content_build.py.</summary>
+        void BuildAccount(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            TalentList = t["talents"].Select(r => new TalentDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), DescKey = r.Str("desc_key"), Effect = ParseTalentEffect(r.Str("effect")),
+                PerRank = r.Dbl("per_rank"), MaxRank = r.Int("max_rank"), CostBase = r.Int("cost_base"), CostStep = r.Int("cost_step"),
+            }).ToList().AsReadOnly();
+            Talents = new ReadOnlyDictionary<string, TalentDef>(TalentList.ToDictionary(x => x.Id, StringComparer.Ordinal));
+            foreach (var d in TalentList)
+            {
+                string loc = $"talents[{d.Id}]";
+                if (d.MaxRank < 1 || d.CostBase < 0 || d.CostStep < 0)
+                    errors.Add(new ContentError("E043", loc, "need max_rank >= 1, cost_base >= 0, cost_step >= 0"));
+                double p = d.PerRank;
+                bool ok;
+                switch (d.Effect)
+                {
+                    case TalentEffect.DrillCost: ok = p <= 0 && 1 + p * d.MaxRank >= 0; break;
+                    case TalentEffect.StatFloor: ok = p >= 0; break;
+                    default: ok = p >= 0 && p == Math.Floor(p); break;
+                }
+                if (!ok) errors.Add(new ContentError("E043", loc, $"per_rank {p} out of range for {d.Effect}"));
+            }
+        }
+
+        static TalentEffect ParseTalentEffect(string s)
+        {
+            switch (s)
+            {
+                case "drill_cost": return TalentEffect.DrillCost;
+                case "stat_floor": return TalentEffect.StatFloor;
+                case "draft_size": return TalentEffect.DraftSize;
+                case "start_sp": return TalentEffect.StartSp;
+                default: throw new FormatException($"unknown talent effect '{s}'");
+            }
         }
 
         static TreeKind ParseTreeKind(string s)

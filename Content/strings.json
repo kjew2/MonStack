@@ -989,6 +989,38 @@
     {
       "key": "rule.echo_cast.desc",
       "text": "Every active damage, heal or shield skill is cast a second time at once, at reduced power."
+    },
+    {
+      "key": "talent.frugal_drills.name",
+      "text": "Frugal Drills"
+    },
+    {
+      "key": "talent.frugal_drills.desc",
+      "text": "Drills cost 5% less energy per rank."
+    },
+    {
+      "key": "talent.strong_stock.name",
+      "text": "Strong Stock"
+    },
+    {
+      "key": "talent.strong_stock.desc",
+      "text": "Monsters start runs with 10% higher base stats per rank."
+    },
+    {
+      "key": "talent.wide_scouting.name",
+      "text": "Wide Scouting"
+    },
+    {
+      "key": "talent.wide_scouting.desc",
+      "text": "Milestone drafts offer one more tree per rank."
+    },
+    {
+      "key": "talent.head_start.name",
+      "text": "Head Start"
+    },
+    {
+      "key": "talent.head_start.desc",
+      "text": "Start each run with one extra skill point per rank."
     }
   ]
 }

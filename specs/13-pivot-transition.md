@@ -129,9 +129,13 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T5 - Account and meta-progression
 
-- `AccountState`: owned species, Vault, shards, gems, books, talents. New save lineage and save key.
-- Talent tree content and effects (energy cost, stat floors, draft slots).
-- Exit: run -> shards -> talent -> next run is measurably different, saved and reloaded.
+**Engine done** (`specs/18`). Built in parallel with the T6 web slice by a second session; the web page wires the account in next.
+
+- `AccountState` and `AccountOps`: owned species (all MVP species until the gacha), the Vault (`VaultEntry`, T4), Training Shards, skill books, talent ranks, the run in progress. Start and finish runs, shard payout (cycles played and rank reached), buy talents. Gems wait for the gacha (T9).
+- `RunModifiers` carry talent effects into a run (drill cost, base stats, draft size, starting SP), stored on the run and the Vault entry so replays match.
+- Content `2.6`: `talents` (4 placeholder talents) and shard constants.
+- `AccountSave`: a new save lineage in its own store slot; the active run is saved as its replay recipe.
+- Exit met in tests: run -> shards -> talent -> the next run differs, saved and reloaded (`AccountTests`, `AccountSaveTests`).
 
 ### T6 - Web prototype on the new loop
 
