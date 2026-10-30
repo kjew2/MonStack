@@ -2,7 +2,7 @@
 // it sends commands, reads the engine's state and labels, and draws them (specs/13 T6, specs/14, specs/15).
 (function () {
   'use strict';
-  const RE = window.RunEngine, SP = window.IdleSprites;
+  const RE = window.RunEngine, SP = window.IdleSprites, TIP = window.Tips;
   const $ = (id) => document.getElementById(id);
   const pct = (x) => Math.round(x * 100) + '%';
   const up = (s) => String(s).toUpperCase();
@@ -135,7 +135,7 @@
     const card = h('div', { class: 'card' });
     C.stats.forEach((st) => {
       const row = h('div', { class: 'stat' + (ui.flash === st ? ' flash' : '') }, [
-        h('span', { class: 'lbl', text: up(st) }),
+        h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }),
         h('div', { class: 'meta' }, [
           bar(s.stats[st], k.statMax, num(s.stats[st]) + ' / ' + k.statMax),
           h('small', { text: 'growth x' + s.growth[st].toFixed(2) + ' · ' + C.milestones.map((m) => (s.stats[st] >= m ? '✓' : '') + m).join(' ') }),
@@ -167,7 +167,7 @@
     const cmp = h('div', { class: 'mini' });
     C.stats.forEach((st) => {
       const diff = s.stats[st] - opp.stats[st];
-      cmp.append(h('span', null, [up(st) + ' ', h('b', { class: diff >= 0 ? 'ok' : 'bad', text: (diff >= 0 ? '+' : '') + num(diff) })]));
+      cmp.append(h('span', TIP.attrs('stat:' + st + ':vs'), [up(st) + ' ', h('b', { class: diff >= 0 ? 'ok' : 'bad', text: (diff >= 0 ? '+' : '') + num(diff) })]));
     });
     return h('div', { class: 'card alert' }, [
       h('div', { class: 'row' }, [sprite('rank-' + s.rank), h('div', null, [h('h2', { text: 'Rank fight: ' + opp.name }), elementTag(opp.element)])]),
@@ -180,7 +180,7 @@
   function nodeRow(n, state, buy) {
     return h('div', { class: 'node ' + state + (n.last ? ' last' : '') }, [
       h('span', { class: 'chk' }),
-      h('div', null, [h('div', { class: 'nm', text: n.name }), h('div', { class: 'ds', text: n.desc })]),
+      h('div', null, [h('div', { class: 'nm', text: n.name, ...TIP.attrs('node:' + n.id) }), h('div', { class: 'ds', text: n.desc })]),
       buy || h('span', { class: 'small muted num', text: n.cost + ' SP' }),
     ]);
   }
@@ -279,7 +279,7 @@
     else if (x.kind === 'shield') body = 'shields ' + Math.round(x.amount);
     else if (x.amount > 0) body = Math.round(x.amount) + ' dmg';
     else body = 'applied';
-    return { text: a + ' · ' + (x.skill || (x.counter ? 'Counter' : 'Attack')) + ' → ' + t + ': ' + body + (x.crit ? ' CRIT' : ''), you: x.actor === 'monster' };
+    return { text: a + ' · ' + (x.skill || (x.counter ? 'Counter' : 'Attack')) + ' → ' + t + ': ' + body + (x.crit ? ' CRIT' : ''), you: x.actor === 'monster', skillId: x.skillId };
   }
 
   function fightModal(modal, f, s) {
@@ -296,7 +296,7 @@
     );
     const lines = f.actions.map((x) => actionLine(x, foe, you));
     const shown = ui.showAll ? lines : lines.slice(0, 24);
-    modal.append(h('ul', { class: 'alog' }, shown.map((l) => h('li', { class: l.you ? 'you' : 'foe', text: l.text }))));
+    modal.append(h('ul', { class: 'alog' }, shown.map((l) => h('li', { class: l.you ? 'you' : 'foe', text: l.text, ...(l.skillId ? TIP.attrs('skill:' + l.skillId) : null) }))));
     if (lines.length > shown.length) modal.append(h('button', { class: 'btn small', type: 'button', text: 'Show all ' + f.actionCount + ' actions', onclick: () => { ui.showAll = true; render(); } }));
     if (f.actionCount > f.actions.length) modal.append(h('p', { class: 'small muted', text: 'Log capped at ' + f.actions.length + ' of ' + f.actionCount + ' actions.' }));
     modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'fight-continue', text: 'Continue', onclick: () => { ui.fight = null; ui.showAll = false; render(); } }));
@@ -395,7 +395,7 @@
       h('div', { class: 'center gems num', 'data-id': 'payout', text: '+' + ui.payout + ' Training Shards' }),
     );
     const card = h('div', { class: 'card' }, [h('h3', { text: 'Stat breakdown' })]);
-    C.stats.forEach((st) => card.append(h('div', { class: 'stat', style: 'grid-template-columns:38px 1fr' }, [h('span', { class: 'lbl', text: up(st) }), bar(e.stats[st], C.consts.statMax, num(e.stats[st]))])));
+    C.stats.forEach((st) => card.append(h('div', { class: 'stat', style: 'grid-template-columns:38px 1fr' }, [h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(e.stats[st], C.consts.statMax, num(e.stats[st]))])));
     main.append(card);
     main.append(h('div', { class: 'card' }, [h('h3', { text: 'Trees' }),
       ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
@@ -477,6 +477,7 @@
     try {
       run = await RE.create({});
       C = run.content;
+      TIP.init(() => C, () => run.state);
       ui.pick = C.species[0].id;
       if (run.state) ui.view = 'run';
       if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);

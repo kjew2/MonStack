@@ -7,6 +7,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | File | What it is |
 |---|---|
 | `index.html`, `run.js` | The trainer screens: species pick, Drill and Rest with the odds shown, rank fights with the battle log, tree drafts and buying, the grade screen with shard payout, talents, the Vault list. No game rules. |
+| `tooltips.js` | Tap-to-open tooltips for stats and abilities (`role="tooltip"`, long press, Escape). Text and numbers come from the engine (`wasm/BRIDGE.md`, "Tooltips"). |
 | `run-engine.js` | Facade over the C# trainer bridge (`IdleRng.Web.Engine.Run*` / `Account*`): the account save (shards, talents, Vault, active run). |
 | `engine.js` | Loader for the .NET runtime and the content pack. |
 | `sprites.js` | Seeded 12x12 pixel sprites drawn on canvas. Cosmetic only, never touches the game's RNG. |
@@ -19,7 +20,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 ## Where things come from
 
 - **Rules and numbers**: the C# core and `Content/*.json` (built from `content_src/` by `tools/content_build.py`). Change a number in `content_src/`, rebuild content and the bundle, reload.
-- **Names and descriptions**: `Content/strings.json` through the bridge. The UI never evaluates a game formula itself.
+- **Names and descriptions**: `Content/strings.json` through the bridge. The UI never evaluates a game formula itself: tooltip numbers (crit chance at this LUK, damage taken at this DEF) are computed by the C# battle formulas (`specs/16` section 9).
 - **Saves**: the account save (`specs/06`, `specs/18` section 6) as text in `localStorage['idle-rng-account-v1']`. A save that no longer loads is kept under `idle-rng-account-v1-unloadable`, never overwritten.
 
 ## Known limits

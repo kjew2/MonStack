@@ -85,6 +85,8 @@ namespace IdleRng.Web
                 w.Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("desc", _db.Text(t.DescKey)).P("effect", t.Effect.ToString().ToLowerInvariant())
                     .P("maxRank", t.MaxRank).EndObj();
             w.EndArr();
+            TipJson.StatInfo(w, _db);
+            TipJson.NodeTips(w, _db, NodeText);
             return w.EndObj().ToString();
         }
 
@@ -124,25 +126,11 @@ namespace IdleRng.Web
                 case NodeKind.Stat:
                     return ("+" + Num(n.Amount) + " " + n.Stat.ToUpperInvariant(), "A flat boost, lost if this tree is overwritten.");
                 case NodeKind.Skill:
-                    return (_db.Text("mskill." + n.Skill.Id + ".name"), _db.Text("mskill." + n.Skill.Id + ".desc"));
+                    return (_db.Text("mskill." + n.Skill.Id + ".name"), BattleText.SkillDesc(_db, n.Skill));
                 case NodeKind.Trigger:
-                    return (_db.Text("mskill." + n.Skill.Id + ".name") + " (" + TriggerText(n.Trigger) + ")", _db.Text("mskill." + n.Skill.Id + ".desc"));
+                    return (_db.Text("mskill." + n.Skill.Id + ".name") + " (" + BattleText.TriggerName(_db, n.Trigger.Value) + ")", BattleText.SkillDesc(_db, n.Skill));
                 default:
-                    return (_db.Text("rule." + n.RuleId + ".name"), _db.Text("rule." + n.RuleId + ".desc"));
-            }
-        }
-
-        private static string TriggerText(FightTrigger? t)
-        {
-            switch (t)
-            {
-                case FightTrigger.BattleStart: return "battle start";
-                case FightTrigger.OnAction: return "each action";
-                case FightTrigger.OnBasicAttack: return "on basic attack";
-                case FightTrigger.OnCrit: return "on crit";
-                case FightTrigger.OnHitTaken: return "when hit";
-                case FightTrigger.OnEvade: return "on evade";
-                default: return "trigger";
+                    return (_db.Text("rule." + n.RuleId + ".name"), BattleText.RuleDesc(_db, n.RuleId));
             }
         }
 
@@ -386,7 +374,7 @@ namespace IdleRng.Web
         private void Action(JsonOut w, FightAction x)
         {
             w.Obj().P("actor", x.Actor).P("target", x.Target).P("amount", x.Amount).P("crit", x.Crit).P("evaded", x.Evaded).P("aoe", x.Aoe).P("counter", x.Counter);
-            if (x.Skill != null) w.P("skill", _db.Text("mskill." + x.Skill.Id + ".name")).P("kind", x.Skill.Kind.ToString().ToLowerInvariant());
+            if (x.Skill != null) w.P("skill", _db.Text("mskill." + x.Skill.Id + ".name")).P("skillId", x.Skill.Id).P("kind", x.Skill.Kind.ToString().ToLowerInvariant());
             w.EndObj();
         }
 
@@ -410,12 +398,14 @@ namespace IdleRng.Web
             w.Key("odds").Obj().P("fail", fail).P("super", k.DrillSuperP).P("success", Math.Max(0, 1 - fail - k.DrillSuperP))
                 .P("injury", TrainingRun.InjuryChance(k, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);
+            var opp = _db.FightRanks[s.Rank];
+            TipJson.StatNow(w, _db, s.Stats, opp.Stats, _db.Text(opp.NameKey));
             w.Key("growth").Obj();
             foreach (var id in StatIds.Trained) w.P(id, TrainingRun.Growth(_db, s, id));
             w.EndObj();
-            var opp = _db.FightRanks[s.Rank];
             w.Key("opponent").Obj().P("name", _db.Text(opp.NameKey)).P("element", opp.Element);
             w.Key("stats"); Stats(w, opp.Stats);
+            TipJson.StatNow(w, _db, opp.Stats, s.Stats, _db.Text(sp.NameKey));
             w.EndObj();
             w.Key("slots").Arr();
             foreach (var t in s.Slots)

@@ -55,7 +55,7 @@ namespace IdleRng.Sim.Combat
                 var u = new FightUnit
                 {
                     Source = f, Side = sideIndex, Slot = i,
-                    MaxHp = Math.Max(1.0, f.Stats.Hp * rules.HpPerPoint),
+                    MaxHp = MaxHp(rules, f.Stats.Hp),
                     Cooldowns = new int[f.Skills.Count],
                 };
                 u.Hp = u.MaxHp;
@@ -125,7 +125,7 @@ namespace IdleRng.Sim.Combat
             }
             s.Ticks++;
             foreach (var u in s.Units)
-                if (u.Alive) u.Gauge += Math.Max(rules.SpdMin, Eff(u, StatIds.Spd));
+                if (u.Alive) u.Gauge += GaugeFill(rules, Eff(u, StatIds.Spd));
 
             for (int n = 0; n < MaxActionsPerTick; n++)
             {
@@ -233,8 +233,7 @@ namespace IdleRng.Sim.Combat
             var target = PickEnemy(s, u, rng);
             if (target == null) return;
             double str = Eff(u, StatIds.Str), intel = Eff(u, StatIds.Int);
-            bool magical = intel > str;
-            Hit(r, s, u, target, r.BasicAttackPower * Math.Max(str, intel), magical, u.Source.Element, null, false, rng, onAction);
+            Hit(r, s, u, target, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), u.Source.Element, null, false, rng, onAction);
         }
 
         /// <summary>Default AI (specs/16 section 5.2): the first ready skill, in list order, that would do something.</summary>
@@ -349,7 +348,7 @@ namespace IdleRng.Sim.Combat
         {
             if (!magical)
             {
-                double evade = Clamp(r.EvadeBase + (Eff(tgt, StatIds.Dex) - Eff(src, StatIds.Dex)) * r.EvadePerDex, 0, r.EvadeCap);
+                double evade = EvadeChance(r, Eff(tgt, StatIds.Dex), Eff(src, StatIds.Dex));
                 if (evade > 0 && Draw(rng) < evade)
                 {
                     tgt.Tally.Evades++;
@@ -360,10 +359,10 @@ namespace IdleRng.Sim.Combat
             }
 
             bool crit = false;
-            double rate = Clamp(r.CritBase + Eff(src, StatIds.Luk) * r.CritPerLuk + Bonus(src, StatIds.CritRate), 0, r.CritCap);
+            double rate = CritChance(r, Eff(src, StatIds.Luk), Bonus(src, StatIds.CritRate));
             if (rate > 0 && Draw(rng) < rate) { crit = true; raw *= Math.Max(1.0, r.CritDmg + Bonus(src, StatIds.CritDmg)); }
             raw *= r.ElementMult(element, tgt.Source.Element);
-            double after = raw * r.DefK / (r.DefK + Eff(tgt, magical ? StatIds.Wis : StatIds.Def));
+            double after = Mitigate(r, raw, Eff(tgt, magical ? StatIds.Wis : StatIds.Def));
             double mitigated = raw - after;
             double dealt = Absorb(src, tgt, after, element);
 
@@ -468,6 +467,32 @@ namespace IdleRng.Sim.Combat
         }
 
         static bool Has(FightUnit u, string rule) => u.Source.Rules.Contains(rule);
+
+        // ------------------------------------------------------------------ formulas (specs/16 sections 3 and 5.3)
+        // The fight uses these, and so do the stat tooltips (BattleText), so what the player reads is what the fight does.
+
+        /// <summary>Max HP from the HP stat: max(1, HP x MON_HP_PER_POINT).</summary>
+        public static double MaxHp(FightRules r, double hp) => Math.Max(1.0, hp * r.HpPerPoint);
+
+        /// <summary>ATB gauge fill per tick: max(MON_SPD_MIN, SPD).</summary>
+        public static double GaugeFill(FightRules r, double spd) => Math.Max(r.SpdMin, spd);
+
+        /// <summary>Basic attack before crit, element and mitigation: BASIC_ATTACK_POWER x max(STR, INT).</summary>
+        public static double BasicAttackRaw(FightRules r, double str, double intel) => r.BasicAttackPower * Math.Max(str, intel);
+
+        /// <summary>The basic attack is magical when INT is higher than STR.</summary>
+        public static bool BasicAttackMagical(double str, double intel) => intel > str;
+
+        /// <summary>Chance to evade a physical hit: clamp(base + (target DEX - attacker DEX) x per_dex, 0, cap).</summary>
+        public static double EvadeChance(FightRules r, double targetDex, double attackerDex) =>
+            Clamp(r.EvadeBase + (targetDex - attackerDex) * r.EvadePerDex, 0, r.EvadeCap);
+
+        /// <summary>Crit chance: clamp(base + LUK x per_luk + crit_rate effects, 0, cap).</summary>
+        public static double CritChance(FightRules r, double luk, double critRateBonus) =>
+            Clamp(r.CritBase + luk * r.CritPerLuk + critRateBonus, 0, r.CritCap);
+
+        /// <summary>Damage after mitigation: raw x K / (K + DEF), or WIS for magical damage.</summary>
+        public static double Mitigate(FightRules r, double raw, double defOrWis) => raw * r.DefK / (r.DefK + defOrWis);
 
         // ------------------------------------------------------------------ stats
 

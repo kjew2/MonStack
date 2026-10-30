@@ -31,6 +31,9 @@ namespace IdleRng.Sim.Content
 
         public Constants Constants { get; private set; }
 
+        /// <summary>Every numeric constant by its content key (MON_DEF_K -> 300): what text templates name (specs/05 section 5).</summary>
+        public IReadOnlyDictionary<string, double> ConstantValues { get; private set; }
+
         public IReadOnlyDictionary<string, ElementDef> Elements { get; private set; }
 
         /// <summary>Elements in sort_order.</summary>
@@ -211,6 +214,9 @@ namespace IdleRng.Sim.Content
                 GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
             };
             if (errors.Count > 0) return;
+            var values = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var r in t["constants"]) if (r.Str("type") != "bool") values[r.Str("key")] = r.Dbl("value");
+            ConstantValues = new ReadOnlyDictionary<string, double>(values);
 
             // elements (specs/16)
             ElementList = t["elements"].Select(r => new ElementDef

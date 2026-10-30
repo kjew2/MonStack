@@ -44,6 +44,8 @@ Eight trained stats (kj, 2026-10-30), on the 0-999 training scale:
 
 Effects can also add to `crit_rate` and `crit_dmg` directly. The current value of a trained stat is `base x max(0.1, 1 + sum of effect fractions)`.
 
+The player reads this table in each stat's tooltip (section 9).
+
 ## 4. Turn order
 
 Each tick:
@@ -71,6 +73,7 @@ A "turn" for durations is `BATTLE_GAUGE / SPD_REF` ticks (10 ticks, one action a
 Both sides use the same AI, so PvP stays symmetric. On its action a unit fires its `OnAction` triggers, ticks its cooldowns down by one, then uses the first skill in list order that is ready and would do something:
 
 - damage: an enemy is alive; heal: an ally is below `AI_HEAL_BELOW` of max HP; shield: below `AI_SHIELD_BELOW`; taunt: not already taunting; buff: the target lacks this skill's effect; debuff: a living enemy lacks it.
+- A skill used with `Cooldown` N is ready again on the Nth action after it (cooldown 0 or 1: every action).
 
 Otherwise it fires `OnBasicAttack` triggers and makes a basic attack: `BASIC_ATTACK_POWER x max(STR, INT)`, magical when INT is higher.
 
@@ -94,7 +97,7 @@ element = ELEMENT_STRONG_MULT if the attack's element beats the target's, ELEMEN
 
 ### 6.1 Triggers
 
-`FightTrigger`: `BattleStart`, `OnAction`, `OnBasicAttack`, `OnCrit`, `OnHitTaken`, `OnEvade`. A fighter's `Triggers` list pairs a trigger with a `CombatSkill`; when the trigger fires, the skill does what it would do as an action (a damage trigger hits, a buff trigger buffs). Passives in `Skills` count as `BattleStart` triggers. Tree nodes and chase traits (T3) will produce these entries. A dead unit's triggers do not fire.
+`FightTrigger`: `BattleStart`, `OnAction`, `OnBasicAttack`, `OnCrit`, `OnHitTaken`, `OnEvade`. A fighter's `Triggers` list pairs a trigger with a `CombatSkill`; when the trigger fires, the skill does what it would do as an action (a damage trigger hits, a buff trigger buffs). Passives in `Skills` count as `BattleStart` triggers. Tree nodes and chase traits (T3) will produce these entries. A dead unit's triggers do not fire. Triggered effects ignore cooldowns and the AI's conditions, so a triggered buff or debuff adds another stack each time it fires.
 
 ### 6.2 Rule modifiers
 
@@ -139,7 +142,18 @@ Range violations are `E043` in both `tools/content_build.py` and `ContentDb`.
 - `BattleSim.StateHash` is SHA-256 over a canonical encoding of the whole fight (`StateHasher` conventions; version `HashVersion` = 1). Changing the encoding bumps the version.
 - `golden/battle-sim-vectors.txt` resolves five fixed fights (1v1 twice, 4v1, 4v4, 2v3) with placeholder fighters defined in `src/IdleRng.Bots/Golden/BattleVectors.cs`, printing outcome, ticks, each unit's HP and tallies, and the hash. It covers every skill kind, a trigger and the counter rule. Any rule or content change that moves it is regenerated with `golden --update` and noted in the merge commit.
 
-## 9. Open
+## 9. Descriptions (tooltips)
+
+The web client explains stats and abilities in tooltips (issue #80). The words are content strings and every number comes from the data or formula it describes, so the text cannot drift from the fight. `BattleText` (`src/IdleRng.Sim/Combat/BattleText.cs`) builds them; `BattleTextTests` checks that every placeholder resolves.
+
+- **Formulas.** The fight's own formulas are public helpers on `BattleSim` (`MaxHp`, `GaugeFill`, `BasicAttackRaw`, `BasicAttackMagical`, `EvadeChance`, `CritChance`, `Mitigate`); the battle and the tooltips both call them.
+- **Stats.** `stat.<id>.name` ("Strength"), `stat.<id>.desc` (what the stat does, with constants such as `{MON_DEF_K}` filled in) and `stat.<id>.now` (what the current value does against the coming opponent: `{max_hp}`, `{basic}`, `{basic_type}`, `{def_taken}`, `{wis_taken}`, `{evade}`, `{foe_evade}`, `{acts}` actions per turn, `{crit}`, `{foe}`), under the heading `tip.now`. "Now" lines use the raw stat sheets: before buffs, debuffs and passives. `stat.<id>.label` names a stat inside a sentence where the upper-case id would read wrong (`hp`: "max HP", `crit_rate`, `crit_dmg`).
+- **Skills.** `mskill.<id>.desc` is a template over the skill's own row: `{power}` (or `{power:pct}`), `{scales}`, `{stat}`, `{cooldown}`, `{duration}`, `{ticks}`, `{element}`. A tree node's tooltip adds tags (kind, physical or magical, element, trigger, chase trait) and facts from the row and the rules above: effect, amount, damage type, element, target, duration, cooldown and the AI condition for active skills, when it fires for triggers and passives (`trigger.<id>.name`, `tip.fires.<id>`), stacking for triggered buffs, and the node's SP cost. The vocabulary is `tip.*`. Abilities have no energy cost: energy is a training resource (`specs/14`); a skill's cost is its node's SP.
+- **Rules.** `rule.<id>.desc`, with constants filled in (`echo_cast` names `{MON_ECHO_POWER:pct}`).
+
+Template syntax and the constant lookup are `specs/05` section 5.
+
+## 10. Open
 
 - What a timeout means per mode (proposed: the challenger loses; rank fights already treat it as a loss).
 - Gambit rulebooks replace the default AI (T11).
