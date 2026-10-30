@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// End-to-end browser check of the C# (wasm) backend: serves web/ over HTTP, loads index.html in headless Chromium at
+// End-to-end browser check of the C# (wasm) backend: serves web/ over HTTP, loads idle.html in headless Chromium at
 // 390x844, plays ~10 s, visits every tab, summons x10, checks the Settings engine chip, reloads and checks the save restored.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-wasm.js [--keep-open] [--shots dir]
@@ -37,7 +37,7 @@ function readSave(raw) {
   });
   const shot = async (n) => { if (shotsDir) { fs.mkdirSync(shotsDir, { recursive: true }); await page.screenshot({ path: path.join(shotsDir, n + '.png') }); } };
   const ready = () => page.waitForFunction(() => { const e = document.getElementById('stageEl'); return e && e.textContent && !/Loading|failed/.test(e.textContent) && document.querySelectorAll('#tabs button').length >= 5; }, null, { timeout: 90000 });
-  const url = srv.url + 'index.html';
+  const url = srv.url + 'idle.html';
 
   // ---- cold load
   const t0 = Date.now();
@@ -136,7 +136,7 @@ function readSave(raw) {
   // Opened as a file, the page must explain how to serve it instead of failing silently.
   const fp = await ctx.newPage();
   await fp.route(/fonts\.(googleapis|gstatic)/, (rt) => rt.abort());
-  await fp.goto('file://' + require('path').resolve(__dirname, '../../index.html'));
+  await fp.goto('file://' + require('path').resolve(__dirname, '../../idle.html'));
   await fp.waitForSelector('.card.wall', { timeout: 10000 }).catch(() => {});
   const msg = await fp.textContent('.card.wall').catch(() => '');
   check(/over HTTP/.test(msg || ''), 'file:// shows how to serve the page');

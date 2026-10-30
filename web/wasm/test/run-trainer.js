@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// End-to-end browser check of the monster-trainer page (web/run.html) on the C# (wasm) engine at 390x844: picks a species,
+// End-to-end browser check of the monster-trainer page (web/index.html) on the C# (wasm) engine at 390x844: picks a species,
 // plays a whole run through the real buttons (drill, rest, rank fights, tree drafts, buying nodes), seals it, checks the grade
 // screen and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
@@ -29,7 +29,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const shot = async (n) => { if (shotsDir) { fs.mkdirSync(shotsDir, { recursive: true }); await page.screenshot({ path: path.join(shotsDir, n + '.png') }); } };
   const act = (a) => page.locator('[data-act="' + a + '"]');
   const text = (sel) => page.locator(sel).first().innerText();
-  const url = srv.url + 'run.html';
+  const url = srv.url + 'index.html';
 
   // ---- home screen
   await page.goto(url);
@@ -134,9 +134,9 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-act^="book-"]:not([data-act="book-toggle"])').count()) === 0, 'the used book is gone');
 
   // ---- the idle page still loads and links here
-  await page.goto(srv.url + 'index.html');
+  await page.goto(srv.url + 'idle.html');
   await page.locator('#trainerLink').waitFor();
-  check(true, 'index.html has the Trainer link');
+  check((await page.locator('#trainerLink').getAttribute('href')) === 'index.html', 'idle.html links to the trainer');
 
   check(errors.length === 0, 'no page/console errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await browser.close();

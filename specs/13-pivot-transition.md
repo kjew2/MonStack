@@ -135,7 +135,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T6 - Web prototype on the new loop
 
-**First slice done, built ahead of T5 (kj, 2026-10-30) and kept as the real T6 work.** `web/run.html` plays a whole run on a phone: species pick, Drill and Rest with the odds shown, rank fights with the battle log, tree drafts into slots, the tree view with buying, the end screen with the grade and stat breakdown, the Vault list, and a replay save (species + seed + command log). The bridge is `IdleRng.Web.Engine.Run*` (`web/wasm/BRIDGE.md`, "Run bridge"). `index.html` links to it and the idle UI stays until T7. Not yet: account and shards, talent tree (T5).
+**First slice done, built ahead of T5 (kj, 2026-10-30) and kept as the real T6 work.** `web/index.html` plays a whole run on a phone: species pick, Drill and Rest with the odds shown, rank fights with the battle log, tree drafts into slots, the tree view with buying, the end screen with the grade and stat breakdown, the Vault list, and a replay save (species + seed + command log). The bridge is `IdleRng.Web.Engine.Run*` (`web/wasm/BRIDGE.md`, "Run bridge"). `idle.html` (the idle UI, linked from the trainer's header) stays until T7. Not yet: account and shards, talent tree (T5).
 
 - `src/IdleRng.Web` bridge exposes the run engine; `web/` gets the run screen, drafts, tree view, Tactical Challenge battle log, ladder/grade screen, Vault, talent tree.
 - The idle UI is removed from `web/` here.

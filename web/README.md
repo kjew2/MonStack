@@ -2,12 +2,12 @@
 
 A playable, phone-sized UI for feel and balance testing, running the **real C# game core** (`src/IdleRng.Sim`) compiled to WebAssembly. The native product is still the Unity client in `specs/07`; this page and Unity drive the same engine.
 
-To play: `./play.sh` from the repo root (details in the root README, "Running the web prototype"). `index.html` is the idle prototype; `run.html` is the monster trainer (the game the project is moving to, `specs/13`), linked from the idle page's HUD.
+To play: `./play.sh` from the repo root (details in the root README, "Running the web prototype"). `index.html` is the monster trainer (the game the project is moving to, `specs/13`); `idle.html` is the old idle prototype, reached from the trainer's header and removed at T7.
 
 | File | What it is |
 |---|---|
-| `index.html`, `app.js` | UI shell: ticks the engine, sends commands, reads queries, drains events. No game rules. |
-| `run.html`, `run.js` | Monster trainer screens: species pick, Drill/Rest, rank fights with the battle log, tree drafts and buying, grade screen, Vault list. No game rules. |
+| `idle.html`, `app.js` | Idle prototype UI shell: ticks the engine, sends commands, reads queries, drains events. No game rules. |
+| `index.html`, `run.js` | Monster trainer screens: species pick, Drill/Rest, rank fights with the battle log, tree drafts and buying, grade screen, Vault list. No game rules. |
 | `run-engine.js` | Facade over the C# run engine (`IdleRng.Web.Engine.Run*`): replay save, Vault storage. |
 | `engine.js` | Facade over the C# engine (`IdleRng.Web.Engine`): caches state per tick batch, memoises queries, wraps saves. |
 | `format.js` | Big-number display (`1.23K`, `45.6M`, `123aa`); same output as the C# `BigNumber.Short`. |
