@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Server only, never IdleRng.Sim: the linked Sim types live in IdleRng.Server.dll here. -->
+    <ProjectReference Include="../IdleRng.Server/IdleRng.Server.csproj" />
+    <Compile Include="../IdleRng.Sim.Tests/GachaVectorFile.cs" Link="GachaVectorFile.cs" />
+  </ItemGroup>
+</Project>

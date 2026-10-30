@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>IdleRng.Server</RootNamespace>
+    <AssemblyName>IdleRng.Server</AssemblyName>
+  </PropertyGroup>
+  <!--
+    specs/08 section 1 and section 4.3 rule 4: the server compiles the gacha from the SAME source files as the client.
+    The files are linked, never copied, and there is no reference to IdleRng.Sim.dll, so what this assembly contains is
+    exactly the list below plus the server-only code in this folder. No BaaS SDK: each backend wraps GachaHandlers with
+    its own storage and per-profile mutex.
+  -->
+  <ItemGroup>
+    <Compile Include="../IdleRng.Sim/Rng/SplitMix64.cs" Link="Sim/Rng/SplitMix64.cs" />
+    <Compile Include="../IdleRng.Sim/Gacha/Gacha.cs" Link="Sim/Gacha/Gacha.cs" />
+    <Compile Include="../IdleRng.Sim/Gacha/PullPayment.cs" Link="Sim/Gacha/PullPayment.cs" />
+    <Compile Include="../IdleRng.Sim/Content/ContentDb.cs" Link="Sim/Content/ContentDb.cs" />
+    <Compile Include="../IdleRng.Sim/Content/ContentTypes.cs" Link="Sim/Content/ContentTypes.cs" />
+    <Compile Include="../IdleRng.Sim/Content/MiniJson.cs" Link="Sim/Content/MiniJson.cs" />
+    <Compile Include="../IdleRng.Sim/State/GameState.cs" Link="Sim/State/GameState.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="IdleRng.Server.Tests" />
+  </ItemGroup>
+</Project>
