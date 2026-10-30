@@ -46,7 +46,7 @@ cp "$ROOT/build/content-pack.json" "$DIST/content.json"     # engine.js fetches 
 printf '%s\n' "{\"built\":\"$(date -u +%FT%TZ)\",\"aot\":$AOT}" > "$DIST/build-info.json"
 
 if ! $FAST; then
-  RAW=$(du -sb "$DIST" | cut -f1)
+  RAW=$(find "$DIST" -type f -exec cat {} + | wc -c | tr -d ' ')   # portable (macOS du has no -b)
   GZ=$(tar -C "$DIST" -cf - . | gzip -9 | wc -c)
   echo "dist: $RAW bytes raw, about $GZ bytes as a gzip -9 tar"
   ls -l "$DIST/_framework" | awk '{print $5, $9}' | sort -rn | head -8
