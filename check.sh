@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # Run every check in the repo. Agents and humans run this before calling a change done.
 #
-#   ./check.sh            everything (what CI runs, see specs/09 section 13)
+#   ./check.sh            everything (what CI runs, see specs/09 section 6)
 #   ./check.sh --fast     inner loop: skips the golden tests and the golden-file check
 #   ./check.sh --no-dotnet  only the content check (for machines without the .NET SDK; the web build needs .NET too)
 #   ./check.sh --no-wasm    skip the WebAssembly build and browser test (full mode runs them when the
 #                           wasm-tools workload is installed; see web/wasm/BRIDGE.md)
+#
+# CI (.github/workflows/check.yml) runs the full mode. When CI is set to anything but "" or "false"
+# (GitHub Actions sets CI=true), a missing wasm-tools workload is an error instead of a skip, so CI
+# cannot pass without the web steps. --no-wasm still skips them on purpose.
 #
 # Exits non-zero on the first failure.
 set -euo pipefail
@@ -19,7 +23,7 @@ for arg in "$@"; do
     --fast) FAST=1 ;;
     --no-dotnet) DOTNET=0 ;;
     --no-wasm) WASM=0 ;;
-    -h|--help) sed -n 2,9p "$0"; exit 0 ;;
+    -h|--help) sed -n 2,13p "$0"; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -39,6 +43,20 @@ if ! command -v dotnet >/dev/null 2>&1; then
   exit 1
 fi
 
+# Full mode runs the web steps when the wasm-tools workload is installed. In CI a missing workload fails here,
+# before the slow steps, instead of skipping them at the end.
+HAVE_WASM=0
+if [ "$FAST" -eq 0 ] && [ "$WASM" -eq 1 ]; then
+  WORKLOADS="$(dotnet workload list 2>/dev/null || true)"   # captured first: grep -q in a pipe can SIGPIPE dotnet under pipefail
+  if grep -q wasm-tools <<<"$WORKLOADS"; then
+    HAVE_WASM=1
+  elif [ -n "${CI:-}" ] && [ "${CI:-}" != "false" ]; then
+    echo "CI is set but the wasm-tools workload is not installed: CI may not skip the WebAssembly checks." >&2
+    echo "Install it with: dotnet workload install wasm-tools (or pass --no-wasm to skip them on purpose)." >&2
+    exit 1
+  fi
+fi
+
 step ".NET: build"
 dotnet build IdleRng.sln -c Release
 
@@ -54,7 +72,7 @@ else
   step "Bots: golden files match"
   $BOTS golden --check
 
-  if [ "$WASM" -eq 1 ] && dotnet workload list 2>/dev/null | grep -q wasm-tools; then
+  if [ "$HAVE_WASM" -eq 1 ]; then
     step "Web: C# core builds to WebAssembly"
     bash web/wasm/build.sh --fast
 

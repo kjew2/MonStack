@@ -23,7 +23,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
 | `specs/20-roadmap.md` | Proposed roadmap: fixes, features and tech by priority, every open issue mapped |
 
-Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.
+Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). CI (`.github/workflows/check.yml`) runs the full `./check.sh` on every pull request and push to `main`. Agent rules live in `CLAUDE.md`.
 
 Tools (Python 3.7+, no dependencies):
 
