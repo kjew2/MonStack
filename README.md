@@ -21,6 +21,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/16-battle.md` | Monster battle engine: sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
 | `specs/18-meta-progression.md` | Account: owned species, Vault, Training Shards, talents, run modifiers, abandon, account save |
 | `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
+| `specs/20-roadmap.md` | Proposed roadmap: fixes, features and tech by priority, every open issue mapped |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.
 
