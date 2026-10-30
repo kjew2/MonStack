@@ -2,7 +2,7 @@
 
 Status: **live (T1 of `specs/13`)**. Used by the training run's rank fights (`specs/14` section 5); the gauntlet (T4), towers and PvP will call it too. Code: `src/IdleRng.Sim/Combat`. Tests: `src/IdleRng.Sim.Tests/BattleSimTests.cs`. Golden: `golden/battle-sim-vectors.txt`.
 
-It replaces the idle 4v1 boss battle (`specs/11` section 8, `src/IdleRng.Sim/Battle`), which keeps running the idle game unchanged until `specs/13` T7 deletes it. The two engines share no code; this one was rebuilt from the same design (ATB gauge, kit vocabulary, damage formula, triggers).
+It replaced the idle game's 4v1 boss battle, which was removed with that game at `specs/13` T7; it was rebuilt from the same design (ATB gauge, kit vocabulary, damage formula, triggers).
 
 > **Numbers are placeholders.** Every formula constant here is a placeholder until balance resumes (`CLAUDE.md`).
 
@@ -60,7 +60,7 @@ A "turn" for durations is `BATTLE_GAUGE / SPD_REF` ticks (10 ticks, one action a
 
 ### 5.1 Skills
 
-`CombatSkill` uses the idle kit vocabulary: `Kind` (damage, heal, shield, taunt, buff, debuff, passive), `Target` (enemy, all_enemies, self, lowest_ally, all_allies), `Stat` (what a buff/debuff/passive changes), `Scales` (the trained stat that sets the amount; `hp` means max HP), `Power`, `Cooldown` (own actions), `Duration` (turns), and an optional `Element` (default: the user's).
+`CombatSkill` uses the kit vocabulary the idle game's battle introduced: `Kind` (damage, heal, shield, taunt, buff, debuff, passive), `Target` (enemy, all_enemies, self, lowest_ally, all_allies), `Stat` (what a buff/debuff/passive changes), `Scales` (the trained stat that sets the amount; `hp` means max HP), `Power`, `Cooldown` (own actions), `Duration` (turns), and an optional `Element` (default: the user's).
 
 - Damage scaled by INT or WIS is **magical**; everything else is **physical**.
 - Heal: `Scales x Power` to the target(s), capped at max HP. Shield: absorbs `Scales x Power` for `Duration` turns. Taunt: single-target enemy actions must target this unit for `Duration` turns.
@@ -113,7 +113,7 @@ Each unit records actions, damage dealt and taken, healing done, crits, evades (
 
 ## 7. Constants
 
-New in content `2.3`, all placeholders. Reused from the idle battle: `BATTLE_GAUGE`, `SPD_REF` (turn length), `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, and the `elements` wheel.
+All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14` to `19` exist). Also read by the battle: `BATTLE_GAUGE`, `SPD_REF` (turn length), `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, and the `elements` wheel.
 
 | Name | Value | Range | Use |
 |---|---|---|---|

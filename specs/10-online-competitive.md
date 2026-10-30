@@ -1,5 +1,8 @@
 # 10 - Online, Competitive and Paid Play: Trust Model
 
+> **Status after the pivot (`specs/13` T7):** the trust model (authoritative versus verified, provenance, segment certification, determinism) stands and fits the new game better: a run, a fight and a gauntlet already replay exactly from their inputs (`specs/03` section 1). The stage, gear and `GameState` parts of sections 4, 6, 9.2 and 12 describe the idle game; async 4v4 PvP will certify a **Vault entry** (its run recipe and hash, `specs/18`) and resolve battles with `BattleSim.Resolve` (`specs/16`). Rewrite those sections when T12 starts.
+
+
 Scope: what must be true in P0 so that accounts, IAP, leaderboards and asynchronous PvP can be added in P1 without migrating the engine or invalidating saves, and so that those features are fair. This spec fixes the trust model and the shapes. It does not design the PvP battle rules (section 9 is a sketch) or pick the backend vendor (`specs/08` section 10).
 
 Tags: **P0** = shapes that must exist in the first build (all cheap, none needs a server). **P1** = server features built on those shapes. **P2** = real-time PvP, guilds, anything needing live sessions.

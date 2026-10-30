@@ -4,7 +4,6 @@ using System.IO;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
-using IdleRng.Sim.State;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -13,14 +12,13 @@ using Newtonsoft.Json.Serialization;
 namespace IdleRng.Runtime.Save
 {
     /// <summary>
-    /// specs/06 section 4. A save file is one ASCII header line plus a UTF-8 JSON body:
+    /// The save file format (specs/06 section 4): one ASCII header line plus a UTF-8 JSON body:
     /// <code>
     /// IDLERNG-SAVE fmt=json crc32=1a2b3c4d len=3917\n
-    /// { "SchemaVersion": 1, "Meta": { ... }, "State": { ...GameState... } }
+    /// { "Kind": "monster_account", "SchemaVersion": 1, ... }
     /// </code>
-    /// The body is the sim's GameState serialised as-is (all of it, including the in-progress fight, so a reload
-    /// continues tick-for-tick). Enums are member names; ulong seeds are 16-char lowercase hex strings; doubles
-    /// round-trip exactly. Migrations run on the JObject between <see cref="Decode"/> and <see cref="Materialize"/>.
+    /// AccountSave builds the body. Enums are member names; ulong seeds are 16-char lowercase hex strings; doubles round-trip
+    /// exactly.
     /// </summary>
     public static class SaveSerializer
     {
@@ -46,10 +44,6 @@ namespace IdleRng.Runtime.Save
 
         // ------------------------------------------------------------------ encode
 
-        /// <summary>Header + body. Does not stamp anything; see SaveSystem.Write.</summary>
-        public static byte[] Encode(GameState state, SaveMeta meta) =>
-            EncodeBody(ToJson(state, meta).ToString(Indented ? Formatting.Indented : Formatting.None));
-
         /// <summary>Wrap an arbitrary JSON body in a valid header (fixtures, debug import, tests). No schema checks.</summary>
         public static byte[] EncodeBody(string bodyJson)
         {
@@ -61,21 +55,6 @@ namespace IdleRng.Runtime.Save
             Buffer.BlockCopy(body, 0, file, header.Length, body.Length);
             return file;
         }
-
-        /// <summary>The body document at the current schema version.</summary>
-        public static JObject ToJson(GameState state, SaveMeta meta)
-        {
-            if (state == null) throw new ArgumentNullException(nameof(state));
-            return new JObject
-            {
-                ["SchemaVersion"] = SaveSchema.Current,
-                ["Meta"] = JObject.FromObject(meta ?? new SaveMeta(), Serializer),
-                ["State"] = JObject.FromObject(state, Serializer),
-            };
-        }
-
-        /// <summary>Canonical JSON of a GameState alone. Handy for equality checks in tests and bots.</summary>
-        public static string StateToJson(GameState state) => JObject.FromObject(state, Serializer).ToString(Formatting.None);
 
         // ------------------------------------------------------------------ decode
 
@@ -134,25 +113,6 @@ namespace IdleRng.Runtime.Save
         }
 
         // ------------------------------------------------------------------ materialise
-
-        /// <summary>Body at the CURRENT schema version (run SaveMigrations first) to objects. Throws SaveInvalidException.</summary>
-        public static (GameState state, SaveMeta meta) Materialize(JObject body)
-        {
-            if (body == null) throw new SaveInvalidException("no body");
-            if ((int?)body["SchemaVersion"] != SaveSchema.Current)
-                throw new SaveInvalidException($"Materialize expects schema v{SaveSchema.Current}; migrate first");
-            if (!(body["State"] is JObject stateJson)) throw new SaveInvalidException("State section missing");
-            try
-            {
-                var state = stateJson.ToObject<GameState>(Serializer);
-                var meta = body["Meta"] is JObject m ? m.ToObject<SaveMeta>(Serializer) : new SaveMeta();
-                state.SchemaVersion = SaveSchema.Current;
-                return (state, meta);
-            }
-            catch (JsonException e) { throw new SaveInvalidException("State does not deserialise: " + e.Message, e); }
-            catch (FormatException e) { throw new SaveInvalidException("State does not deserialise: " + e.Message, e); }
-            catch (OverflowException e) { throw new SaveInvalidException("State does not deserialise: " + e.Message, e); }
-        }
 
         // ------------------------------------------------------------------ json plumbing
 

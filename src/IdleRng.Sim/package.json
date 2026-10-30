@@ -1,8 +1,0 @@
-{
-  "name": "com.idlerng.sim",
-  "version": "0.1.0",
-  "displayName": "IdleRng Sim",
-  "description": "Pure C# simulation core for the Idle RNG prototype (specs/03). No UnityEngine references.",
-  "unity": "2022.3",
-  "author": { "name": "IdleRng" }
-}

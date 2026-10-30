@@ -8,10 +8,6 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
-    <!-- specs/09 section 2 also lists IdleRng.Runtime (save round-trip); not referenced in the POC. -->
     <ProjectReference Include="../IdleRng.Sim/IdleRng.Sim.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Acceptance/acceptance-targets.json" LogicalName="acceptance-targets.json" />
   </ItemGroup>
 </Project>

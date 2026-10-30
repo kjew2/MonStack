@@ -1,31 +1,15 @@
 {
   "schema_version": 1,
-  "content_version": "2.7",
+  "content_version": "3.0",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
-    "banners": {
-      "file": "banners.json",
-      "sha256": "a78e2a216430016e8e8ce2fc91ec8a2cfca80ff0659fd83bcc7723d2dc7925a8"
-    },
-    "boss_rules": {
-      "file": "boss_rules.json",
-      "sha256": "a35692dab219728ebd14673518837f3af07ace220f1423ed335a37edd4b54930"
-    },
     "chase_conditions": {
       "file": "chase_conditions.json",
       "sha256": "ee6a2e9836e037b540f7a05ca2025673d208a877bd57abedba354481bc80c4c4"
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "e3fa17be4200a8eae8b647f05640f51e18e37f8432b5adc58c238eefe1c2af6d"
-    },
-    "curves": {
-      "file": "curves.json",
-      "sha256": "875108fdf0912e9ae96fd2805398eeaf0f39dc0a2beeeaaf414ed230acb1d7bd"
-    },
-    "daily_quests": {
-      "file": "daily_quests.json",
-      "sha256": "dba939ba5239c991dfd1f9d1680946bb14bab566a8df9b8d7bbc6361bbbbec1e"
+      "sha256": "f8aa83b73b139cef94559615feb0daaaaf810eb8fefd91596845b5d041c33281"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -43,26 +27,6 @@
       "file": "gauntlet_enemies.json",
       "sha256": "9c7a262dac6c01e53e6e2883df392372efb92099048d656ecbb876d357fa8de5"
     },
-    "gear_rarity": {
-      "file": "gear_rarity.json",
-      "sha256": "6f122fddf5720f3934e4fa33cb38639cf11d8311c245fcd41b2d6f291ba605e9"
-    },
-    "gear_slots": {
-      "file": "gear_slots.json",
-      "sha256": "2b59742376651d0e391bb2c6e06293a9c09fd6eac3a61d4eab48ef5e7962bf3c"
-    },
-    "hero_level_thresholds": {
-      "file": "hero_level_thresholds.json",
-      "sha256": "79e8d8cb1b90b2d2ba49ef7771f969642c1d52d69bfb9e4e6d73b8ecda29c355"
-    },
-    "hero_tiers": {
-      "file": "hero_tiers.json",
-      "sha256": "f3e94ac9cf87b779e0d369d26f975385625b7bb0ff0e65d183b98f8bdc438e1b"
-    },
-    "heroes": {
-      "file": "heroes.json",
-      "sha256": "9b79716ee5687c7b7d3b41ba949de9dd5d56128a40cbb8dc620ae082611a9749"
-    },
     "legacy_titles": {
       "file": "legacy_titles.json",
       "sha256": "7cdb979600267890bb1908c6021055155d4e19d6a7f3e288e436d1dbf96c1c4b"
@@ -71,25 +35,9 @@
       "file": "monster_skills.json",
       "sha256": "af5cc353414eb2f3884688864e4f6e213b478362cd0fa0cbc00024aef1ff4619"
     },
-    "progress_targets": {
-      "file": "progress_targets.json",
-      "sha256": "c947fa0265ac656ef89935de88b265e69bb849932c0ecc7dc16b6a4787011d99"
-    },
-    "promotions": {
-      "file": "promotions.json",
-      "sha256": "b89bfc5f8e9941c4c20f553554ef66b63cf9bbca4abc27eb543ae97c8948d7b9"
-    },
-    "roles": {
-      "file": "roles.json",
-      "sha256": "1017de3126a424837fbbb92a8993de2b5c264cae303a6c3a81d11ef0b939598c"
-    },
     "skill_books": {
       "file": "skill_books.json",
       "sha256": "878767de678ca926e1a609d9eef5ca33e3822f1e2da2a42a3fd23f1e20cd83d2"
-    },
-    "skills": {
-      "file": "skills.json",
-      "sha256": "047e85f46bcd851ded0a0a82529c03c93689af81da5857d91d3c1493a6d705f7"
     },
     "species": {
       "file": "species.json",
@@ -101,7 +49,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "6b7c1ca77d9053fbcd6ea1af34e130b1506eb2aa81aecc1d76bb5edfbb2dd3e2"
+      "sha256": "6b4514d8e367080703a509d5c5fc8be6886002db4cf9676c8ade95617abfe403"
     },
     "talents": {
       "file": "talents.json",
@@ -114,11 +62,7 @@
     "trees": {
       "file": "trees.json",
       "sha256": "3a3706172d7fb80dea79a6154b0b135e6a4b9600396de12549ae708f7bb46c72"
-    },
-    "tutorial_grants": {
-      "file": "tutorial_grants.json",
-      "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "c44347faeaf2791e47b58659f4d3cac9882669ef212592220b556c75a1a38992"
+  "content_hash": "b7ba908caad2d91c7dce22c9d9d54c968dc36c4695b48003e090a1ff237e668f"
 }

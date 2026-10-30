@@ -1,45 +1,37 @@
-# Idle RNG (working title) - prototype specs
+# Idle RNG (working title) - monster trainer
 
-Mobile idle game in the Sword x Staff / Maple Idle mould: auto-combat pushes stages, stages drop currency, currency feeds parallel RNG upgrade systems, the player's job is deciding where to spend.
+A fast, systems-driven monster-raising game (the working title is a leftover from the idle game this repo started as, which was removed on 2026-10-30). You train a monster in a 12-cycle run of Drill and Rest taps, fight rank fights, build four skill trees toward rule-breaking chase traits, then watch it climb the gauntlet tower. Finished monsters go into your Vault; runs pay Training Shards that buy permanent talents. No story, no cutscenes.
 
-**Pivot planned:** the project is moving to a fast monster-raising game (training runs, skill trees, towers). The target design is `specs/12`, the plan `specs/13`. The specs below still describe the code until each phase lands.
-
-Start with `specs/00-overview.md`. It holds the canonical constants and the contracts every other spec follows.
+The design is `specs/12`; the plan and what is built is `specs/13`. Start with `specs/00-overview.md`: it lists what exists and the contracts every spec follows.
 
 | Spec | Covers |
 |---|---|
-| `specs/00-overview.md` | Scope (P0/P1/P2), canonical constants, vocabulary, cross-spec contracts |
-| `specs/01-gacha-math.md` | Rates, pity, 10-pull guarantee, dupe economy, RNG commitment, test vectors |
-| `specs/02-power-curve-math.md` | Enemy/gold curves, the four power layers, wall condition, bot results, tuning levers |
-| `specs/03-sim-core-combat.md` | Pure-C# simulation assembly: tick loop, combat, RNG streams, public API |
-| `specs/04-economy-sinks.md` | Currencies, stat levels, gear drops/enhancement, daily sources (class advance replaced by promotion, `specs/11`) |
-| `specs/05-content-data-schema.md` | Table schemas, sheet-to-JSON pipeline, validation, `ContentDb` API |
-| `specs/06-save-and-offline.md` | Save schema v1, migrations, offline catch-up, clock seam, integrity |
-| `specs/07-client-unity-prototype.md` | Unity project layout, screens, view-models, event wiring, placeholder art |
-| `specs/08-backend-seams.md` | `IClock` / `IGachaService` / `ISaveStore` contracts, local impls, future remote |
-| `specs/09-test-harness-and-bots.md` | Headless bot runner, acceptance table, determinism tests, CI |
-| `specs/10-online-competitive.md` | Trust model for accounts, IAP, leaderboards and async PvP: server-verified progress, genesis seeds, command log, fairness levers |
-| `specs/11-party-and-builds.md` | Gameplay overhaul (#60): 4-companion party, stat sheet, roles, elements, promotion, 4v1 battle (phases 3-5 cancelled by the pivot) |
-| `specs/12-monster-trainer-design.md` | Pivot target (not built): monster raising with 12-epoch training runs, skill trees and chase traits, gauntlet, towers, async PvP |
-| `specs/13-pivot-transition.md` | Plan for moving this repo from the idle game to `specs/12`: what carries over, phases, open questions |
-| `specs/14-training-run.md` | Training run (pivot T2): AP cycles of Drill and Rest, drill rolls, energy and injury, rank fights, milestones |
-| `specs/15-skill-trees.md` | Skill trees (pivot T3): 4 slots, skill points, nodes with ~75% filler, milestone/book/chase offers, overwriting, chase unlock and re-lock |
-| `specs/18-meta-progression.md` | Account (pivot T5): owned species, Vault, Training Shards, talent tree, run modifiers, account save lineage |
-| `specs/19-gauntlet.md` | End-of-run gauntlet (pivot T8): the monster climbs 100 escalating floors; the floor and killer the wheel lands on; Legacy Titles |
-| `specs/16-battle.md` | Monster battle engine (pivot T1): sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
+| `specs/00-overview.md` | What exists, constant groups, vocabulary, cross-spec contracts, layout |
+| `specs/01-gacha-math.md` | Rates, pity, 10-pull guarantee: the math kept for the species gacha (T9) |
+| `specs/03-sim-core-combat.md` | Sim design rules, numeric model, RNG and the streams in use |
+| `specs/05-content-data-schema.md` | Content pipeline, conventions, error codes, `ContentDb` |
+| `specs/06-save-and-offline.md` | Save file format, stores, loading, schema versions |
+| `specs/08-backend-seams.md` | Backend interfaces for later (design only) |
+| `specs/09-test-harness-and-bots.md` | Run bots, golden files, `check.sh` |
+| `specs/10-online-competitive.md` | Trust model for accounts, leaderboards and async PvP (design only) |
+| `specs/12-monster-trainer-design.md` | The game design, merged from kj's drafts, with the decisions recorded |
+| `specs/13-pivot-transition.md` | The pivot plan: phases T1-T13, what carries over, status, open questions |
+| `specs/14-training-run.md` | Training run: AP cycles of Drill and Rest, drill rolls, energy and injury, rank fights, milestones |
+| `specs/15-skill-trees.md` | Skill trees: 4 slots, skill points, nodes with ~75% filler, milestone/book/chase offers, overwriting, chase unlock and re-lock |
+| `specs/16-battle.md` | Monster battle engine: sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
+| `specs/18-meta-progression.md` | Account: owned species, Vault, Training Shards, talents, run modifiers, abandon, account save |
+| `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.
 
-Tools:
+Tools (Python 3.7+, no dependencies):
 
-- `tools/gacha_model.py` - exact pity distribution and consolidated rates. `python3 tools/gacha_model.py`
-- `tools/power_curve_model.py` - greedy F2P bot, 30 days, prints the day table. `python3 tools/power_curve_model.py`
+- `tools/content_build.py` - builds `Content/` from `content_src/` and validates it (`--check` in `check.sh`).
+- `tools/gacha_model.py` - exact pity distribution and consolidated rates for the species gacha. `python3 tools/gacha_model.py`
 
-Both run on Python 3.7+ with no dependencies.
+## Running the web client
 
-## Running the web prototype
-
-The web prototype is the real C# game core (`src/IdleRng.Sim`, the code the Unity client and the bots use), compiled to WebAssembly by `src/IdleRng.Web` and played through the browser UI in `web/`. Everything runs on your own computer; no Claude session is needed.
+The web client is the real C# game core (`src/IdleRng.Sim`, the code the bots use), compiled to WebAssembly by `src/IdleRng.Web` and played through the browser UI in `web/`. Everything runs on your own computer; no Claude session is needed.
 
 ### One-time setup
 
@@ -71,13 +63,13 @@ From the repo root:
 ./play.sh
 ```
 
-It checks the prerequisites (and tells you the command to fix anything missing), builds the C# engine only when `src/` or `Content/` changed since the last build (the first build takes 1-3 minutes), starts a local server, prints the link for this computer and for your phone, and opens your browser. Stop it with Ctrl+C. Settings in the game (the cog, top right) shows "Engine: C# (wasm)" and the content version.
+It checks the prerequisites (and tells you the command to fix anything missing), builds the C# engine only when `src/` or `Content/` changed since the last build (the first build takes 1-3 minutes), starts a local server, prints the link for this computer and for your phone, and opens your browser. Stop it with Ctrl+C. 
 
 Options: `--rebuild` forces a build, `--port 8080` picks another port (it moves to the next free one if the port is taken), `--no-open` skips opening a browser, `--local` refuses connections from other devices. If `qrencode` is installed it also prints a QR code for the phone link.
 
 By hand, the same thing is `web/wasm/build.sh` then `cd web && python3 -m http.server 8000`.
 
-It must be served over HTTP: browsers refuse to load WebAssembly from a `file://` page, so opening `index.html` or `idle.html` directly shows an error telling you to start the server. On Windows, run `build.sh` from Git Bash or WSL.
+It must be served over HTTP: browsers refuse to load WebAssembly from a `file://` page, so opening `index.html` directly shows an error telling you to start the server. On Windows, run `build.sh` from Git Bash or WSL.
 
 If the page says "The C# engine did not load", it names the cause: the bundle is not built (run `./play.sh --rebuild`), the page was opened as a file, or loading failed (rerun the build and read its output; the usual cause is the missing `wasm-tools` workload).
 
@@ -85,7 +77,7 @@ If the page says "The C# engine did not load", it names the cause: the bundle is
 
 The repo is private, so GitHub cannot serve the page (raw links show source, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly). Two ways in:
 
-**Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It opens the monster trainer; "Idle prototype" in its header goes to the old idle game. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude rebuilds and republishes it (`web/wasm/build.sh`, then publish `web/index.html` with the file map from `web/wasm/artifact-files.py`, root = repo root, to that URL). The cog shows the content version, and `wasm/dist/build-info.json` in the artifact holds the build time.
+**Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It opens the monster trainer. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude rebuilds and republishes it (`web/wasm/build.sh`, then publish `web/index.html` with the file map from `web/wasm/artifact-files.py`, root = repo root, to that URL). `wasm/dist/build-info.json` in the artifact holds the build time.
 
 **From your computer, on the same Wi-Fi (always matches your checkout):**
 
@@ -97,6 +89,5 @@ Progress is saved in the browser, separately for each address, so the artifact l
 
 ### Tests for the web build
 
-- `node web/wasm/test/run-wasm.js` (after `web/wasm/build.sh`): plays the idle page on the C# engine in headless Chromium: ticks, tabs, a summon, save and reload, and the file:// error.
 - `node web/wasm/test/run-trainer.js`: plays a whole monster-trainer run on `index.html` through the real buttons (drill, rest, fights, drafts, buying), seals it, checks the grade and Vault, and reloads mid-run and after the end.
-- Game rules are tested in C# (`src/IdleRng.Sim.Tests`); `./check.sh` runs everything, including the web build and browser test in full mode.
+- Game rules are tested in C# (`src/IdleRng.Sim.Tests`); `./check.sh` runs everything, including the web build and the browser test in full mode.

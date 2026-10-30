@@ -152,11 +152,6 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-id^="slot-"]').count()) === 3, 'the book tree now fills slot 3');
   check((await page.locator('[data-act^="book-"]:not([data-act="book-toggle"])').count()) === 0, 'the used book is gone');
 
-  // ---- the idle page still loads and links here
-  await page.goto(srv.url + 'idle.html');
-  await page.locator('#trainerLink').waitFor();
-  check((await page.locator('#trainerLink').getAttribute('href')) === 'index.html', 'idle.html links to the trainer');
-
   check(errors.length === 0, 'no page/console errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await browser.close();
   await srv.close();

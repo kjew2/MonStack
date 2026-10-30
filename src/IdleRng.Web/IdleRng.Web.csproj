@@ -23,7 +23,7 @@
     <ProjectReference Include="../IdleRng.Runtime/IdleRng.Runtime.csproj" />
   </ItemGroup>
 
-  <!-- Newtonsoft.Json (save serializer) reflects over GameState; keep these assemblies whole instead of trimming members. -->
+  <!-- Newtonsoft.Json (save serializer) reflects over AccountState and RunState; keep these assemblies whole instead of trimming members. -->
   <ItemGroup>
     <TrimmerRootAssembly Include="IdleRng.Sim" />
     <TrimmerRootAssembly Include="IdleRng.Runtime" />

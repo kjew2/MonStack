@@ -2,7 +2,7 @@
 
 Status: **live as an engine (T5 of `specs/13`)**. Code: `src/IdleRng.Sim/Account` (account rules), `src/IdleRng.Sim/Training/RunState.cs` (`RunModifiers`), `src/IdleRng.Runtime/Save/AccountSave.cs` (save). Tests: `src/IdleRng.Sim.Tests/AccountTests.cs`, `src/IdleRng.Runtime.Tests/AccountSaveTests.cs`. The web client wires it in through its bridge (T6).
 
-The design is `specs/12` sections 7, 9 and 10. The idle game's `GameState` and save are untouched (it is removed at T7).
+The design is `specs/12` sections 7, 9 and 10.
 
 > **Numbers and content are placeholders.** Payouts, talents, ranks and costs are placeholders until balance resumes (`CLAUDE.md`).
 
@@ -72,7 +72,7 @@ A flat list for now; a branching talent tree is a later content change. Rules (`
 
 ## 6. Save
 
-A new save lineage (kj: clean break, `specs/13` section 1), in its own store slot (`AccountSave.SlotName` = `account`), using the idle save's file shape (header with CRC, JSON body) and its two-slot rotation:
+A new save lineage (kj: clean break, `specs/13` section 1), in its own store slot (`AccountSave.SlotName` = `account`), using the file shape of `specs/06` (header with CRC, JSON body) and its two-slot rotation:
 
 ```
 { "Kind": "monster_account", "SchemaVersion": 1,

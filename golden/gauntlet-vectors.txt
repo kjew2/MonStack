@@ -1,4 +1,4 @@
-# gauntlet vectors, hash v1 content=2.7/c44347fa
+# gauntlet vectors, hash v1 content=3.0/b7ba908c
 
 slime focus seed=7 rank=s
   floor=60 cleared=False killer=storm_titan title=title.food

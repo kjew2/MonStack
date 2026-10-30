@@ -3,7 +3,7 @@
 
 Run web/wasm/build.sh first. Publish web/index.html (the monster trainer, the page kj opens) with this map as `files` and the repo root as `root`.
 Keys are the paths the pages load; values are the source files, relative to the repo root. Every other web/*.html page
-(idle.html, the idle prototype, reached from the trainer's header) goes in as a further page, with the scripts all pages load.
+goes in as a further page, with the scripts all pages load (there are none besides index.html now).
 """
 import json
 import os

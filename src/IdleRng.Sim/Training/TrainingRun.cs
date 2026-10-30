@@ -524,7 +524,7 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        /// <summary>Lowercase hex SHA-256 over a canonical encoding of the run (StateHasher conventions). Bump HashVersion on change.</summary>
+        /// <summary>Lowercase hex SHA-256 over a canonical encoding of the run (specs/03 section 1). Bump HashVersion on change.</summary>
         public static string StateHash(RunState s)
         {
             var w = new CanonicalWriter(512);
