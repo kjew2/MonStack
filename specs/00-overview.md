@@ -20,6 +20,16 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 
 Not built yet (designed in `specs/12`, ordered in `specs/13`): the species gacha (`01` has the math), the Daily and Endless Towers, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
+## 1a. Scope
+
+| Tag | Meaning | Content |
+|---|---|---|
+| **P0** | The MVP, a single-player web demo (`specs/12` section 12.1): built and live | Phases T0 to T7 of `specs/13`: battle, training run, skill trees, Vault, account and talents, web client, idle game removed |
+| **P1** | Toward 1.0 on Steam and the web (`specs/12` section 12.2) | T8 gauntlet wheel screen (engine done), T9 species gacha, T10 Daily Tower, T11 Endless Tower and gambits, T12 async PvP and server, T13 monetization and platform builds |
+| **P2** | After 1.0, or parked until a platform decision | iOS and a native client, live operations |
+
+The priority labels on GitHub issues use the same tags (`specs/13` section 5).
+
 ## 2. Constants
 
 Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; code never holds a balance literal. All values are **placeholders** until balance resumes (`CLAUDE.md`). The groups and where each is specified:
