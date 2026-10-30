@@ -1,0 +1,2 @@
+id,from_stage,hp_mult,time_ticks,gold_mult,gear_drop_p,gear_min_rarity,first_clear_gems
+default,1,10,200,3,0.1,R,10

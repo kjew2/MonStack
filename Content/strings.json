@@ -1,0 +1,538 @@
+{
+  "table": "strings",
+  "locale": "en",
+  "rows": [
+    {
+      "key": "hero.c_01.name",
+      "text": "Ash"
+    },
+    {
+      "key": "hero.c_01.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_02.name",
+      "text": "Bram"
+    },
+    {
+      "key": "hero.c_02.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_03.name",
+      "text": "Cole"
+    },
+    {
+      "key": "hero.c_03.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_04.name",
+      "text": "Dara"
+    },
+    {
+      "key": "hero.c_04.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_05.name",
+      "text": "Edda"
+    },
+    {
+      "key": "hero.c_05.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_06.name",
+      "text": "Finn"
+    },
+    {
+      "key": "hero.c_06.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_07.name",
+      "text": "Gale"
+    },
+    {
+      "key": "hero.c_07.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_08.name",
+      "text": "Hale"
+    },
+    {
+      "key": "hero.c_08.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_09.name",
+      "text": "Ivo"
+    },
+    {
+      "key": "hero.c_09.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_10.name",
+      "text": "Jory"
+    },
+    {
+      "key": "hero.c_10.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_11.name",
+      "text": "Kett"
+    },
+    {
+      "key": "hero.c_11.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_12.name",
+      "text": "Lark"
+    },
+    {
+      "key": "hero.c_12.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_13.name",
+      "text": "Moss"
+    },
+    {
+      "key": "hero.c_13.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_14.name",
+      "text": "Nell"
+    },
+    {
+      "key": "hero.c_14.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_15.name",
+      "text": "Orin"
+    },
+    {
+      "key": "hero.c_15.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_16.name",
+      "text": "Pip"
+    },
+    {
+      "key": "hero.c_16.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_17.name",
+      "text": "Quill"
+    },
+    {
+      "key": "hero.c_17.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_18.name",
+      "text": "Rook"
+    },
+    {
+      "key": "hero.c_18.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_19.name",
+      "text": "Sable"
+    },
+    {
+      "key": "hero.c_19.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.c_20.name",
+      "text": "Tamsin"
+    },
+    {
+      "key": "hero.c_20.desc",
+      "text": "Placeholder Common hero. Passive +10% DPS at level 1."
+    },
+    {
+      "key": "hero.r_01.name",
+      "text": "Aldric"
+    },
+    {
+      "key": "hero.r_01.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_02.name",
+      "text": "Brienne"
+    },
+    {
+      "key": "hero.r_02.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_03.name",
+      "text": "Corvin"
+    },
+    {
+      "key": "hero.r_03.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_04.name",
+      "text": "Delphine"
+    },
+    {
+      "key": "hero.r_04.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_05.name",
+      "text": "Emrys"
+    },
+    {
+      "key": "hero.r_05.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_06.name",
+      "text": "Fenna"
+    },
+    {
+      "key": "hero.r_06.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_07.name",
+      "text": "Gareth"
+    },
+    {
+      "key": "hero.r_07.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_08.name",
+      "text": "Halvard"
+    },
+    {
+      "key": "hero.r_08.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_09.name",
+      "text": "Isolde"
+    },
+    {
+      "key": "hero.r_09.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_10.name",
+      "text": "Jarek"
+    },
+    {
+      "key": "hero.r_10.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_11.name",
+      "text": "Kestrel"
+    },
+    {
+      "key": "hero.r_11.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_12.name",
+      "text": "Lysander"
+    },
+    {
+      "key": "hero.r_12.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_13.name",
+      "text": "Maren"
+    },
+    {
+      "key": "hero.r_13.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_14.name",
+      "text": "Nyx"
+    },
+    {
+      "key": "hero.r_14.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.r_15.name",
+      "text": "Oswin"
+    },
+    {
+      "key": "hero.r_15.desc",
+      "text": "Placeholder Rare hero. Passive +20% DPS at level 1."
+    },
+    {
+      "key": "hero.e_01.name",
+      "text": "Seraphine"
+    },
+    {
+      "key": "hero.e_01.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_02.name",
+      "text": "Thorne"
+    },
+    {
+      "key": "hero.e_02.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_03.name",
+      "text": "Ulric"
+    },
+    {
+      "key": "hero.e_03.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_04.name",
+      "text": "Vesper"
+    },
+    {
+      "key": "hero.e_04.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_05.name",
+      "text": "Wren"
+    },
+    {
+      "key": "hero.e_05.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_06.name",
+      "text": "Xanthe"
+    },
+    {
+      "key": "hero.e_06.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_07.name",
+      "text": "Yorick"
+    },
+    {
+      "key": "hero.e_07.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_08.name",
+      "text": "Zephyr"
+    },
+    {
+      "key": "hero.e_08.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_09.name",
+      "text": "Astrid"
+    },
+    {
+      "key": "hero.e_09.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.e_10.name",
+      "text": "Bastian"
+    },
+    {
+      "key": "hero.e_10.desc",
+      "text": "Placeholder Epic hero. Passive +40% DPS at level 1."
+    },
+    {
+      "key": "hero.l_01.name",
+      "text": "Caelum"
+    },
+    {
+      "key": "hero.l_01.desc",
+      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+    },
+    {
+      "key": "hero.l_02.name",
+      "text": "Drakon"
+    },
+    {
+      "key": "hero.l_02.desc",
+      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+    },
+    {
+      "key": "hero.l_03.name",
+      "text": "Elowen"
+    },
+    {
+      "key": "hero.l_03.desc",
+      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+    },
+    {
+      "key": "hero.l_04.name",
+      "text": "Fenrir"
+    },
+    {
+      "key": "hero.l_04.desc",
+      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+    },
+    {
+      "key": "hero.l_05.name",
+      "text": "Galadra"
+    },
+    {
+      "key": "hero.l_05.desc",
+      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+    },
+    {
+      "key": "hero.l_06.name",
+      "text": "Hyperion"
+    },
+    {
+      "key": "hero.l_06.desc",
+      "text": "Placeholder Legendary hero. Passive +80% DPS at level 1."
+    },
+    {
+      "key": "hero.m_01.name",
+      "text": "Ignis"
+    },
+    {
+      "key": "hero.m_01.desc",
+      "text": "Placeholder Mythic hero. Passive +160% DPS at level 1."
+    },
+    {
+      "key": "hero.m_02.name",
+      "text": "Juno"
+    },
+    {
+      "key": "hero.m_02.desc",
+      "text": "Placeholder Mythic hero. Passive +160% DPS at level 1."
+    },
+    {
+      "key": "hero.m_03.name",
+      "text": "Kairos"
+    },
+    {
+      "key": "hero.m_03.desc",
+      "text": "Placeholder Mythic hero. Passive +160% DPS at level 1."
+    },
+    {
+      "key": "hero_tier.c.name",
+      "text": "Common"
+    },
+    {
+      "key": "rarity.c.name",
+      "text": "Common"
+    },
+    {
+      "key": "hero_tier.r.name",
+      "text": "Rare"
+    },
+    {
+      "key": "rarity.r.name",
+      "text": "Rare"
+    },
+    {
+      "key": "hero_tier.e.name",
+      "text": "Epic"
+    },
+    {
+      "key": "rarity.e.name",
+      "text": "Epic"
+    },
+    {
+      "key": "hero_tier.l.name",
+      "text": "Legendary"
+    },
+    {
+      "key": "rarity.l.name",
+      "text": "Legendary"
+    },
+    {
+      "key": "hero_tier.m.name",
+      "text": "Mythic"
+    },
+    {
+      "key": "rarity.m.name",
+      "text": "Mythic"
+    },
+    {
+      "key": "gear_slot.weapon.name",
+      "text": "Weapon"
+    },
+    {
+      "key": "gear_slot.helm.name",
+      "text": "Helm"
+    },
+    {
+      "key": "gear_slot.chest.name",
+      "text": "Chest"
+    },
+    {
+      "key": "gear_slot.gloves.name",
+      "text": "Gloves"
+    },
+    {
+      "key": "gear_slot.boots.name",
+      "text": "Boots"
+    },
+    {
+      "key": "gear_slot.ring.name",
+      "text": "Ring"
+    },
+    {
+      "key": "banner.hero_standard.name",
+      "text": "Standard Hero Banner"
+    },
+    {
+      "key": "class.class_1.name",
+      "text": "Squire"
+    },
+    {
+      "key": "class.class_2.name",
+      "text": "Knight"
+    },
+    {
+      "key": "class.class_3.name",
+      "text": "Champion"
+    },
+    {
+      "key": "class.class_4.name",
+      "text": "Paragon"
+    },
+    {
+      "key": "quest.daily_login.name",
+      "text": "Log in"
+    },
+    {
+      "key": "quest.daily_kills.name",
+      "text": "Defeat 500 enemies"
+    },
+    {
+      "key": "quest.daily_boss.name",
+      "text": "Challenge a boss"
+    },
+    {
+      "key": "quest.daily_pulls.name",
+      "text": "Recruit 3 heroes"
+    }
+  ]
+}
