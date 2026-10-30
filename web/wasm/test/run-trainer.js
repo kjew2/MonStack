@@ -30,6 +30,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const act = (a) => page.locator('[data-act="' + a + '"]');
   const text = (sel) => page.locator(sel).first().innerText();
   const url = srv.url + 'index.html';
+  // The account save is AccountSave text: a header line, then JSON.
+  const readAccount = () => page.evaluate(() => { const t = localStorage.getItem('idle-rng-account-v1'); return t ? JSON.parse(t.slice(t.indexOf('\n') + 1)) : null; });
 
   // ---- home screen
   await page.goto(url);
@@ -55,8 +57,9 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
 
   // ---- mid-run reload restores the same run (replay save)
   const before = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.stat .bar span')].map((e) => e.textContent).join('|') }));
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('idle-rng-run-v1')));
-  check(saved && saved.species === 'drake' && saved.log.length === 2 && saved.log[0].k === 'Drill', 'save is species + seed + command log (' + (saved && saved.log.length) + ' commands)');
+  const saved = await readAccount();
+  check(saved && saved.Kind === 'monster_account', 'the save is the C# account save');
+  check(saved && saved.ActiveRun && saved.ActiveRun.SpeciesId === 'drake' && saved.ActiveRun.Log.length === 2, 'the active run is stored as species + seed + command log (' + (saved && saved.ActiveRun && saved.ActiveRun.Log.length) + ' commands)');
   await page.reload();
   await act('drill-str').waitFor({ timeout: 90000 });
   const after = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.stat .bar span')].map((e) => e.textContent).join('|') }));
@@ -104,23 +107,39 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('seal').click();
   const grade = await text('[data-id=grade]');
   check(/^[A-Z]$/.test(grade), 'grade screen shows the rank reached: ' + grade);
-  const vault = await page.evaluate(() => JSON.parse(localStorage.getItem('idle-rng-vault-v1')));
-  check(vault && vault.length === 1 && vault[0].species === 'drake' && vault[0].log.length > 20, 'a Vault entry was stored with the run log');
-  check(vault && vault[0].grade === grade.toLowerCase() && /^[0-9a-f]{64}$/.test(vault[0].hash), 'entry grade and run hash match');
+  const acct = await readAccount();
+  const entry = acct && acct.Account.Vault[0];
+  check(acct && acct.Account.Vault.length === 1 && entry.SpeciesId === 'drake' && entry.Log.length > 20 && acct.ActiveRun === null, 'sealing stored a Vault entry with the run log and cleared the active run');
+  check(entry && entry.Grade === grade.toLowerCase() && /^[0-9a-f]{64}$/.test(entry.RunHash), 'entry grade and run hash match');
+  const payout = +(/\+(\d+) Training Shards/.exec(await text('[data-id=payout]')) || [])[1];
+  check(payout > 0 && acct.Account.Shards === payout, 'the run paid ' + payout + ' shards into the account');
   await shot('05-grade');
 
   await page.reload();
-  await page.locator('[data-id=grade]').waitFor({ timeout: 90000 });
-  check((await text('[data-id=grade]')) === grade, 'a reload after sealing shows the same grade');
-  const vaultAfter = await page.evaluate(() => JSON.parse(localStorage.getItem('idle-rng-vault-v1')).length);
-  check(vaultAfter === 1, 'reloading does not seal twice');
-
-  await act('new-run').click();
-  await act('start').waitFor();
-  check((await page.locator('[data-id=vault-entry]').count()) === 1, 'the home screen lists the vaulted monster');
+  await act('start').waitFor({ timeout: 90000 });
+  check((await page.locator('[data-id=vault-entry]').count()) === 1, 'a reload after sealing keeps one Vault entry (no double seal)');
+  check((await text('[data-id=shards]')).startsWith(payout + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
   await shot('06-vault');
 
+  // ---- talents: buy one, and it shapes the next run
+  const talent = page.locator('[data-act="talent-frugal_drills"]');
+  check(await talent.isEnabled(), 'the first talent is affordable with the payout');
+  const cost = +(/(\d+) shards/.exec(await talent.innerText()) || [])[1];
+  await talent.click();
+  check(/^(\d+) shards/.exec(await text('[data-id=shards]'))[1] == payout - cost, 'buying it spent ' + cost + ' shards');
+  check(/1\/5/.test(await text('[data-id=talent-frugal_drills]')), 'the talent shows rank 1');
+  await act('start').click();
+  await act('drill-str').waitFor();
+  check(/costs 19 energy/.test(await text('[data-id=odds]')), 'the talent cut the next run\'s drill cost: ' + (await text('[data-id=odds]')).slice(-26));
+  await act('tab-log').click();
+  page.once('dialog', (d) => d.accept());
+  await act('abandon').click();
+  await act('start').waitFor();
+  check(((await readAccount()).ActiveRun) === null, 'abandoning ends the run without sealing');
+  check((await page.locator('[data-id=vault-entry]').count()) === 1, 'and the Vault is unchanged');
+
   // ---- the book option and drafts
+  await act('grant-book').click();
   await act('book-toggle').check();
   await act('start').click();
   await act('tab-trees').click();

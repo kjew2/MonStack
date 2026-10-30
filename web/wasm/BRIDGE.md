@@ -54,27 +54,30 @@ Labels and display numbers for the UI, from the same `ContentDb` (UPPER_SNAKE ke
 
 ## Run bridge (monster trainer)
 
-The same `IdleRng.Web.Engine` class also exposes the training run (`specs/14`, `specs/15`) through `src/IdleRng.Web/RunHost.cs`. It is independent of the idle `Init`: call `RunInit` and play, or use both on one page. Same rules as above: strings, ints and doubles only, JSON text for structure, errors come back as `{"error":"..."}`, nothing throws across the boundary except `RunInit` (bad content).
+The same `IdleRng.Web.Engine` class also exposes the monster trainer (`specs/14`, `15`, `18`) through `src/IdleRng.Web/RunHost.cs`, which holds the player's `AccountState` and its active run. It is independent of the idle `Init`. Same rules as above: strings, ints and doubles only, JSON text for structure, errors come back as `{"error":"..."}`, nothing throws across the boundary except `RunInit` (bad content).
 
 ```
 RunInit(string contentJson) : void
 RunContent() : string                          // JSON labels and tables, never changes in a session (below)
-RunStart(string speciesId, string seedHex, string booksJson) : string   // RunState JSON; booksJson is a JSON array of book ids
-RunLoad(string saveJson) : string              // rebuilds the run by replaying the save; throws as {"error"} when it no longer replays
-RunSave() : string                             // {v, species, seed, books, log:[{k, stat?, choice?, slot?, book?}]} or "null"
-RunState() : string                            // RunState JSON, or "null" with no run
+AccountNew(string seedHex) : string            // a new account (every species owned, no shards); returns AccountView
+AccountLoad(string saveText) : string          // AccountSave text -> account; {"error"} when damaged or the active run no longer replays
+AccountSave() : string                         // AccountSave text (header line + JSON; the active run is its replay recipe)
+AccountView() : string                         // account JSON (below)
+AccountCmd(string name, string argsJson) : string
+RunState() : string                            // the active run's state, or "null"
 RunCmd(string name, string argsJson) : string  // result object; {"ok":false,"reason"} when the engine refuses
-RunSeal(double utcMs) : string                 // {ok, entry} Vault entry of the finished run (idempotent); {ok:false,reason} before the end
-RunAbandon() : void
 ```
 
-Commands: `drill(stat)` (tier, gain, new value, energy, injured, milestones), `rest`, `fight` (won, rank before/after, SP, units' final HP and tallies, the action log capped at 400), `take(choice, slot)`, `discard`, `spend(slot)`, `book(id)`. They map one to one onto `TrainingRun`.
+Account commands (`AccountOps`): `startRun(species, books[])`, `finishRun(utcMs)` (pays shards, seals the Vault entry, returns `{shards, entry, booksReturned}`), `buyTalent(id)`, `abandon` (pays and seals nothing; unused books return to the inventory), `debugGrantBook(id, n)`.
+Run commands (`TrainingRun`): `drill(stat)` (tier, gain, new value, energy, injured, milestones), `rest`, `fight` (won, rank before/after, SP, units' final HP and tallies, the action log capped at 400), `take(choice, slot)`, `discard`, `spend(slot)`, `book(id)`.
 
-`RunContent()`: `{version, consts{runCycles, runAp, energyMax, fightEvery, statMax, treeSlots, drillEnergyCost, restEnergy, spPerCycle, spPerWin, superP}, stats[], milestones[], elements{id:{name,color}}, species[{id,name,element,base,growth,trees}], ranks[{id,name,letter,element,stats}], trees{id:{id,name,kind,nodes[{id,cost,kind,name,desc,last}],conditions[text]}}, books{id:{name,tree}}}`.
+`RunContent()`: `{version, consts{runCycles, runAp, energyMax, fightEvery, statMax, treeSlots, drillEnergyCost, restEnergy, spPerCycle, spPerWin, superP, shardsPerCycle, shardsPerRank}, stats[], milestones[], elements{id:{name,color}}, species[{id,name,element,base,growth,trees}], ranks[{id,name,letter,element,stats}], trees{id:{id,name,kind,nodes[{id,cost,kind,name,desc,last}],conditions[text]}}, books{id:{name,tree}}, talents[{id,name,desc,effect,maxRank}]}`.
 
-`RunState()`: `{species, seed, phase (training|awaitfight|finished), end, cycle, ap, energy, sp, rank, fightsFought, fightsWon, drills, rests, fightDue, odds{fail,super,success,injury}, stats, growth, opponent{name,element,stats}, slots[null|{tree,bought}], offers[{source,stat,threshold,trees[]}], books[], chase[{tree,unlocked,met[]}], tally, milestonesHit[], hash}`. Odds, growth, chase conditions and every label come from the C# side; the UI computes nothing.
+`AccountView()`: `{seed, runsStarted, shards, hasRun, owned[], books{id:n}, talents[{id,rank,nextCost|null}], mods{drillCostMult,statFloorMult,draftSizeBonus,startSp}, vault[{species,seed,grade,rank,end,cycles,fightsFought,fightsWon,hash,sealedUtcMs,stats,trees[{id,bought}]}]}` (the replay log stays in the save, not the view).
 
-The saved run is the command log, not a state dump: the engine replays it, so a save cannot drift from the rules. `web/run-engine.js` wraps this (`RunEngine.create`) and keeps the run in `localStorage['idle-rng-run-v1']` and sealed monsters in `localStorage['idle-rng-vault-v1']` until the account save (`specs/13` T5).
+`RunState()`: `{species, seed, phase (training|awaitfight|finished), end, cycle, ap, energy, sp, rank, fightsFought, fightsWon, drills, rests, fightDue, drillCost, odds{fail,super,success,injury}, stats, growth, opponent{name,element,stats}, slots[null|{tree,bought}], offers[{source,stat,threshold,trees[]}], books[], chase[{tree,unlocked,met[]}], tally, milestonesHit[], hash}`. Odds, costs, growth, chase conditions and every label come from the C# side; the UI computes nothing.
+
+`web/run-engine.js` wraps this (`RunEngine.create`) and keeps the whole save in `localStorage['idle-rng-account-v1']`. A save that does not load is kept under `idle-rng-account-v1-unloadable`, never overwritten.
 
 ## Not exposed yet
 

@@ -20,6 +20,7 @@
     fight: null,             // fight result shown in the modal
     showAll: false,          // fight log expanded
     sealed: null,            // Vault entry of the finished run
+    payout: 0,               // shards that run paid
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -118,7 +119,7 @@
       main.append(h('div', { class: 'card alert' }, [
         h('h2', { text: s.end === 'injured' ? 'Injured: the run is over' : 'Run complete' }),
         h('p', { class: 'muted', text: s.end === 'injured'
-          ? 'A drill at low energy injured the monster. It is still sealed in the Vault and its shards still count.'
+          ? 'A drill at low energy injured the monster. Sealing still vaults it and pays its shards.'
           : 'All ' + k.runCycles + ' cycles are done.' }),
         s.sp > 0 ? h('p', { class: 'gems', text: s.sp + ' unspent skill points are lost when you seal. Spend them on the Trees tab first.' }) : null,
         h('button', { class: 'btn primary block', type: 'button', 'data-act': 'seal', text: 'Seal in the Vault', onclick: seal }),
@@ -130,7 +131,7 @@
     const o = s.odds;
     main.append(h('div', { class: 'odds', 'data-id': 'odds',
       text: 'Drill at this energy: fail ' + pct(o.fail) + ' · success ' + pct(o.success) + ' · super ' + pct(o.super) + ' · injury ' + pct(o.injury) +
-        '. Each drill costs ' + k.drillEnergyCost + ' energy.' }));
+        '. Each drill costs ' + num(s.drillCost) + ' energy.' }));
     const card = h('div', { class: 'card' });
     C.stats.forEach((st) => {
       const row = h('div', { class: 'stat' + (ui.flash === st ? ' flash' : '') }, [
@@ -238,7 +239,7 @@
       h('div', { text: 'Milestones: ' + (s.milestonesHit.map((m) => up(m.stat) + ' ' + m.threshold).join(', ') || 'none yet') }),
     ]));
     main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'abandon', text: 'Abandon this run', onclick: () => {
-      if (window.confirm('Abandon this run? Nothing is sealed in the Vault.')) { run.abandon(); resetRunUi(); ui.view = 'home'; render(); }
+      if (window.confirm('Abandon this run? Nothing is sealed and no shards are paid. Unused books come back.')) { run.acct('abandon'); resetRunUi(); ui.view = 'home'; render(); }
     } }));
   }
 
@@ -306,7 +307,9 @@
 
   // ---- home and grade
   function renderHome(main) {
-    main.append(h('h2', { text: 'Raise a monster' }),
+    const acct = run.account;
+    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Raise a monster' }),
+        h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
       h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up, spend skill points on trees, and avoid injury.' }));
     C.species.forEach((sp) => {
       const sel = ui.pick === sp.id;
@@ -319,14 +322,31 @@
       ]));
     });
     const bookIds = Object.keys(C.books);
-    if (bookIds.length) {
+    const owned = bookIds.filter((id) => (acct.books[id] || 0) > 0);
+    if (owned.length) {
       const cb = h('input', { type: 'checkbox', 'data-act': 'book-toggle', onchange: (e) => { ui.book = e.target.checked; } });
       cb.checked = ui.book;
-      main.append(h('label', { class: 'small muted row' }, [cb, h('span', { text: 'Test: start with ' + C.books[bookIds[0]].name })]));
+      main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[owned[0]].name + ' (you have ' + acct.books[owned[0]] + ')' })]));
     }
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'start', disabled: !ui.pick, text: ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
+    if (bookIds.length) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[bookIds[0]].name,
+      onclick: () => { const r = run.acct('debugGrantBook', bookIds[0], 1); if (!r.ok) toast(r.reason); render(); } }));
 
-    const vault = run.vault();
+    main.append(h('h3', { text: 'Talents' }));
+    const m = acct.mods;
+    main.append(h('p', { class: 'small muted', text: 'Bought with shards from finished runs. They apply from the next run on. Now: drills cost x' + m.drillCostMult.toFixed(2) + ', start stats x' + m.statFloorMult.toFixed(2) + ', +' + m.draftSizeBonus + ' draft size, +' + m.startSp + ' starting SP.' }));
+    acct.talents.forEach((t) => {
+      const def = C.talents.find((x) => x.id === t.id);
+      main.append(h('div', { class: 'card', 'data-id': 'talent-' + t.id }, [
+        h('div', { class: 'row between' }, [h('b', { text: def.name }), h('span', { class: 'tag num', text: t.rank + '/' + def.maxRank })]),
+        h('div', { class: 'small muted', text: def.desc }),
+        t.nextCost === null ? h('div', { class: 'small ok', text: 'Maxed' })
+          : h('button', { class: 'btn small gemsy', type: 'button', 'data-act': 'talent-' + t.id, disabled: acct.shards < t.nextCost, text: 'Buy rank ' + (t.rank + 1) + ' · ' + t.nextCost + ' shards',
+            onclick: () => { const r = run.acct('buyTalent', t.id); if (!r.ok) toast(r.reason); render(); } }),
+      ]));
+    });
+
+    const vault = acct.vault.slice().reverse();
     main.append(h('h3', { text: 'Vault (' + vault.length + ')' }));
     if (!vault.length) main.append(h('p', { class: 'small muted', text: 'Sealed monsters appear here.' }));
     vault.forEach((e) => main.append(vaultCard(e)));
@@ -353,6 +373,7 @@
       h('div', { class: 'grade ' + e.grade, 'data-id': 'grade', text: up(e.grade) }),
       h('div', { class: 'center' }, [h('b', { text: sp.name + ' reached ' + r.name })]),
       h('div', { class: 'center small muted', text: e.fightsWon + ' of ' + e.fightsFought + ' rank fights won. Sealed in the Vault.' }),
+      h('div', { class: 'center gems num', 'data-id': 'payout', text: '+' + ui.payout + ' Training Shards' }),
     );
     const card = h('div', { class: 'card' }, [h('h3', { text: 'Stat breakdown' })]);
     C.stats.forEach((st) => card.append(h('div', { class: 'stat', style: 'grid-template-columns:38px 1fr' }, [h('span', { class: 'lbl', text: up(st) }), bar(e.stats[st], C.consts.statMax, num(e.stats[st]))])));
@@ -360,17 +381,20 @@
     main.append(h('div', { class: 'card' }, [h('h3', { text: 'Trees' }),
       ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
     main.append(h('div', { class: 'small muted center', text: 'Run hash ' + e.hash.slice(0, 16) }));
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { run.abandon(); resetRunUi(); ui.view = 'home'; render(); } }));
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.tab = 'train'; ui.showAll = false; }
+  function resetRunUi() { ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
   const log = (line) => { ui.feed.unshift(line); };
 
   function startRun() {
     if (!ui.pick) return;
     resetRunUi();
-    run.start(ui.pick, { books: ui.book ? [Object.keys(C.books)[0]] : [] });
+    const owned = Object.keys(C.books).filter((id) => (run.account.books[id] || 0) > 0);
+    const r = run.startRun(ui.pick, ui.book && owned.length ? [owned[0]] : []);
+    if (!r.ok) { toast(r.reason); render(); return; }
+    ui.book = false;
     ui.view = 'run';
     render();
   }
@@ -424,9 +448,9 @@
   function useBook(id) { const r = run.cmd('book', id); if (r.ok) log('Used ' + C.books[id].name); after(r); }
 
   function seal() {
-    const r = run.seal();
+    const r = run.finishRun();
     if (!r.ok) { toast(r.reason); return; }
-    ui.sealed = r.entry; ui.view = 'grade'; render();
+    ui.sealed = r.entry; ui.payout = r.shards; ui.view = 'grade'; render();
   }
 
   // ------------------------------------------------------------ boot
@@ -435,11 +459,8 @@
       run = await RE.create({});
       C = run.content;
       ui.pick = C.species[0].id;
-      if (run.load()) {
-        const s = run.state;
-        const done = s.phase === 'finished' ? run.vault().find((e) => e.hash === s.hash) : null;
-        if (done) { ui.sealed = done; ui.view = 'grade'; } else ui.view = 'run';
-      }
+      if (run.state) ui.view = 'run';
+      if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
       render();
     } catch (e) {
       $('main').replaceChildren(h('h2', { text: 'The game did not load' }), h('p', { class: 'err', text: e && e.message ? e.message : String(e) }));
