@@ -101,6 +101,26 @@ small, .small { font-size: 12px; }
 .units { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .unit { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .unit .bar .fill { background: var(--ok); } .unit.foe .bar .fill { background: var(--bad); }
+/* Fight playback (issue #79): skill rows with cooldowns, the current action, the speed toggle */
+.unit .bar .fill { transition: width .25s ease-out; }
+.skills { display: flex; flex-direction: column; gap: 4px; }
+.skill { position: relative; display: flex; justify-content: space-between; gap: 6px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); font-size: 12px; overflow: hidden; }
+.skill .cdfill { position: absolute; inset: 0 auto 0 0; background: rgba(255,255,255,.09); transition: width .25s ease-out; }
+.skill span { position: relative; }
+.skill .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill .st { color: var(--muted); white-space: nowrap; }
+.skill.ready { border-color: #3d6b40; } .skill.ready .st { color: var(--ok); }
+.skill.used { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); animation: used .45s ease-out; }
+@keyframes used { from { background: #5a4d1c; } }
+.now { min-height: 72px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; }
+.now b { font: 700 20px var(--font-display); animation: pop .25s ease-out; }
+.now.you { border-color: var(--ok); } .now.you b { color: var(--ok); }
+.now.foe { border-color: var(--bad); } .now.foe b { color: #ef9a9a; }
+@keyframes pop { from { transform: scale(1.15); opacity: .5; } }
+.speed { display: flex; align-items: center; gap: 6px; }
+.speed > span { flex: 1; }
+.speed button { min-height: 44px; min-width: 56px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); font: 600 13px var(--font-display); color: var(--muted); }
+.speed button[aria-pressed="true"] { border-color: var(--gems); background: #1d3438; color: var(--text); }
 .alog { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
 .alog li { padding: 2px 0; border-bottom: 1px solid #222; }
 .alog .you { color: var(--ok); } .alog .foe { color: #ef9a9a; }
@@ -115,7 +135,7 @@ small, .small { font-size: 12px; }
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; background: #333; box-shadow: 0 4px 12px rgba(0,0,0,.5); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .flash, .toast { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .flash, .toast, .now b, .skill.used { animation: none !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
 </style>
 </head>
 <body>

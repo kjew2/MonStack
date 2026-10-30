@@ -18,6 +18,8 @@
     last: null,              // last drill/rest result, shown under the stats
     flash: null,             // stat to flash after a drill
     fight: null,             // fight result shown in the modal
+    play: null,              // fight playback in progress: {i: actions shown, timer, dom}; null when showing the result
+    speed: '1',              // fight playback speed: '1', '2' or 'skip' (remembered, see loadSpeed)
     showAll: false,          // fight log expanded
     sealed: null,            // Vault entry of the finished run
     payout: 0,               // shards that run paid
@@ -172,6 +174,7 @@
     return h('div', { class: 'card alert' }, [
       h('div', { class: 'row' }, [sprite('rank-' + s.rank), h('div', null, [h('h2', { text: 'Rank fight: ' + opp.name }), elementTag(opp.element)])]),
       h('div', { class: 'small muted', text: 'Your stats against theirs:' }), cmp,
+      speedToggle(),
       h('button', { class: 'btn warn block', type: 'button', 'data-act': 'fight', disabled: s.offers.length > 0, text: 'Fight', onclick: fight }),
     ]);
   }
@@ -265,6 +268,7 @@
   // ---- modal: fight result and tree drafts
   function renderModal(modal, s) {
     modal.replaceChildren();
+    if (ui.fight && ui.play) { modal.hidden = false; fightPlayView(modal, ui.fight, s); return; }
     if (ui.fight) { modal.hidden = false; fightModal(modal, ui.fight, s); return; }
     if (s.offers.length) { modal.hidden = false; offerModal(modal, s); return; }
     modal.hidden = true;
@@ -273,25 +277,25 @@
   function actionLine(x, foeName, youName) {
     const who = (id) => (id === 'monster' ? youName : foeName);
     const a = who(x.actor), t = x.target ? who(x.target) : 'all';
+    return { text: a + ' · ' + actionName(x) + ' → ' + t + ': ' + actionResult(x), you: x.actor === 'monster' };
+  }
+  const actionName = (x) => x.skill || (x.counter ? 'Counter' : 'Attack');
+  function actionResult(x) {
     let body;
     if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
     else if (x.kind === 'shield') body = 'shields ' + Math.round(x.amount);
     else if (x.amount > 0) body = Math.round(x.amount) + ' dmg';
     else body = 'applied';
-    return { text: a + ' · ' + (x.skill || (x.counter ? 'Counter' : 'Attack')) + ' → ' + t + ': ' + body + (x.crit ? ' CRIT' : ''), you: x.actor === 'monster' };
+    return body + (x.crit ? ' CRIT' : '');
   }
 
   function fightModal(modal, f, s) {
     const you = speciesDef(s.species).name, foe = rank(f.rankBefore).name;
-    const mine = f.units.find((u) => u.side === 0), theirs = f.units.find((u) => u.side === 1);
     modal.append(
       h('h2', { class: f.won ? 'ok' : 'bad', text: f.won ? 'Victory! Promoted to ' + rank(f.rankAfter).name : f.outcome === 'TimedOut' ? 'Time ran out: no promotion' : 'Defeat: no promotion', 'data-id': 'fight-title' }),
       f.won ? h('p', { class: 'gems', text: '+' + f.sp + ' skill points' }) : h('p', { class: 'muted', text: 'Train more and try again next cycle.' }),
-      h('div', { class: 'units' }, [
-        h('div', { class: 'unit' }, [h('b', { text: you }), bar(mine.hp, mine.maxHp, Math.round(mine.hp) + '/' + Math.round(mine.maxHp)), h('small', { class: 'muted', text: Math.round(mine.damage) + ' dmg · ' + mine.crits + ' crits · ' + mine.evades + ' dodges' })]),
-        h('div', { class: 'unit foe' }, [h('b', { text: foe }), bar(theirs.hp, theirs.maxHp, Math.round(theirs.hp) + '/' + Math.round(theirs.maxHp)), h('small', { class: 'muted', text: Math.round(theirs.damage) + ' dmg · ' + theirs.crits + ' crits · ' + theirs.evades + ' dodges' })]),
-      ]),
+      fightUnits(f, you, foe, null).root,
       h('h3', { text: 'Battle log' }),
     );
     const lines = f.actions.map((x) => actionLine(x, foe, you));
@@ -300,6 +304,130 @@
     if (lines.length > shown.length) modal.append(h('button', { class: 'btn small', type: 'button', text: 'Show all ' + f.actionCount + ' actions', onclick: () => { ui.showAll = true; render(); } }));
     if (f.actionCount > f.actions.length) modal.append(h('p', { class: 'small muted', text: 'Log capped at ' + f.actions.length + ' of ' + f.actionCount + ' actions.' }));
     modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'fight-continue', text: 'Continue', onclick: () => { ui.fight = null; ui.showAll = false; render(); } }));
+  }
+
+  // ------------------------------------------------------------ fight playback (issue #79): presentation only
+  // The engine has already resolved the fight; this replays its action log one action at a time so the player sees which ability
+  // each unit uses and every skill's cooldown. HP and cooldowns come from the engine's per-action snapshots (BRIDGE.md, fight),
+  // never computed here. Skip shows the result at once, as before.
+  const FIGHT_STEP_MS = 350;   // PLACEHOLDER: time per logged action at 1x (2x halves it). Presentation only, not a game rule.
+  const SPEED_KEY = 'idle-rng-fight-speed';
+  const SPEEDS = [['1', '1x'], ['2', '2x'], ['skip', 'Skip']];
+
+  function loadSpeed() {
+    let v = null;
+    try { v = localStorage.getItem(SPEED_KEY); } catch (e) { /* storage blocked: default speed */ }
+    return SPEEDS.some((x) => x[0] === v) ? v : '1';
+  }
+  function setSpeed(v) {
+    ui.speed = v;
+    try { localStorage.setItem(SPEED_KEY, v); } catch (e) { /* storage blocked: kept for this session only */ }
+    if (ui.play) {
+      clearTimeout(ui.play.timer);
+      if (v === 'skip') stopPlayback(); else schedulePlayback();
+    }
+    render();
+  }
+  function speedToggle() {
+    return h('div', { class: 'speed', role: 'group', 'aria-label': 'Fight playback speed' }, [
+      h('span', { class: 'small muted', text: 'Fight speed' }),
+      ...SPEEDS.map(([v, label]) => h('button', { type: 'button', 'data-act': 'speed-' + v, 'aria-pressed': String(ui.speed === v), text: label,
+        onclick: () => setSpeed(v) })),
+    ]);
+  }
+
+  function startPlayback() {
+    stopPlayback();
+    if (ui.speed !== 'skip' && ui.fight && ui.fight.actions.length) { ui.play = { i: 0, timer: null, dom: null }; schedulePlayback(); }
+  }
+  function stopPlayback() {
+    if (ui.play) clearTimeout(ui.play.timer);
+    ui.play = null;
+  }
+  function schedulePlayback() {
+    ui.play.timer = setTimeout(stepPlayback, FIGHT_STEP_MS / (Number(ui.speed) || 1));
+  }
+  function stepPlayback() {
+    const p = ui.play;
+    if (!p) return;
+    if (p.i >= ui.fight.actions.length) { stopPlayback(); render(); return; }   // the last action stays up for one step
+    p.i++;
+    if (p.dom && p.dom.root.isConnected) updatePlay(); else render();
+    schedulePlayback();
+  }
+
+  // Each unit's HP and cooldowns after the first `upto` logged actions (null: at the end of the fight).
+  function unitsAt(f, upto) {
+    return f.units.map((u, k) => {
+      if (upto === null) return { hp: u.hp, cd: u.cd };
+      let cd = [];                                 // no action yet: every skill starts ready
+      for (let j = upto - 1; j >= 0; j--) if (f.actions[j].actor === u.id) { cd = f.actions[j].cd; break; }
+      return { hp: upto ? f.actions[upto - 1].hp[k] : u.maxHp, cd: cd };
+    });
+  }
+
+  // The unit panels: name, HP bar, and one row per active skill with its cooldown. Returns the element and refs for repainting.
+  function fightUnits(f, you, foe, upto) {
+    const refs = [];
+    const root = h('div', { class: 'units' }, f.units.map((u) => {
+      const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + u.side + '-' + si }, [
+        h('div', { class: 'cdfill' }), h('span', { class: 'nm', text: sk.name }), h('span', { class: 'st num' }),
+      ])));
+      const hpBar = bar(0, 1, '', '');
+      refs.push({ u: u, hpBar: hpBar, chips: chips });
+      return h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + u.side }, [
+        h('b', { text: u.side ? foe : you }), hpBar,
+        upto === null ? h('small', { class: 'muted', text: Math.round(u.damage) + ' dmg · ' + u.crits + ' crits · ' + u.evades + ' dodges' }) : null,
+        h('div', { class: 'skills', 'data-id': 'skills-' + u.side }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]),
+      ]);
+    }));
+    paintUnits(refs, unitsAt(f, upto), null);
+    return { root: root, refs: refs };
+  }
+  function paintUnits(refs, now, x) {
+    refs.forEach((r, k) => {
+      const hp = now[k].hp, max = r.u.maxHp;
+      r.hpBar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (hp / max) * 100)) + '%';
+      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max);
+      r.chips.forEach((c, si) => {
+        if (!c) return;
+        const sk = r.u.skills[si], left = now[k].cd[si] || 0;
+        c.classList.toggle('ready', left === 0);
+        c.classList.toggle('used', !!x && x.actor === r.u.id && x.si === si);
+        c.querySelector('.cdfill').style.width = (sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0) + '%';
+        c.querySelector('.st').textContent = left ? left + (left === 1 ? ' turn' : ' turns') : 'Ready';
+        c.title = sk.name + ': ' + (left ? 'ready in ' + left + ' of its actions' : 'ready') + ', cooldown ' + sk.cooldown;
+      });
+    });
+  }
+
+  function fightPlayView(modal, f, s) {
+    const you = speciesDef(s.species).name, foe = rank(f.rankBefore).name;
+    const units = fightUnits(f, you, foe, ui.play.i);
+    const now = h('div', { class: 'now', 'data-id': 'fight-now' });
+    const progress = h('span', { class: 'small muted num', 'data-id': 'fight-progress' });
+    const recent = h('ul', { class: 'alog' });
+    modal.append(
+      h('div', { class: 'row between' }, [h('h2', { text: 'Rank fight: ' + foe, 'data-id': 'fight-play' }), progress]),
+      units.root, now, speedToggle(), h('h3', { text: 'Latest' }), recent,
+    );
+    ui.play.dom = { root: units.root, units: units, now: now, progress: progress, recent: recent, you: you, foe: foe };
+    updatePlay();
+  }
+  function updatePlay() {
+    const f = ui.fight, p = ui.play, d = p.dom;
+    const x = p.i ? f.actions[p.i - 1] : null;
+    paintUnits(d.units.refs, unitsAt(f, p.i), x);
+    d.progress.textContent = 'Action ' + p.i + ' of ' + f.actions.length;
+    const side = x && x.actor === 'monster' ? 'you' : 'foe';
+    d.now.className = 'now' + (x ? ' ' + side : '');
+    d.now.replaceChildren(...(x ? [
+      h('small', { text: side === 'you' ? d.you : d.foe }),
+      h('b', { text: actionName(x) }),
+      h('span', { text: (x.target ? '→ ' + (x.target === 'monster' ? d.you : d.foe) + ': ' : '') + actionResult(x) }),
+    ] : [h('b', { text: 'Fight!' })]));
+    const lines = f.actions.slice(Math.max(0, p.i - 5), p.i).reverse().map((a) => actionLine(a, d.foe, d.you));
+    d.recent.replaceChildren(...lines.map((l) => h('li', { class: l.you ? 'you' : 'foe', text: l.text })));
   }
 
   function offerModal(modal, s) {
@@ -404,7 +532,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
+  function resetRunUi() { stopPlayback(); ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
   const log = (line) => { ui.feed.unshift(line); };
 
   function startRun() {
@@ -445,6 +573,7 @@
     const r = run.cmd('fight');
     if (r.ok) {
       ui.fight = r; ui.last = null; ui.showAll = false;
+      startPlayback();
       log('Rank fight vs ' + rank(r.rankBefore).name + ': ' + (r.won ? 'won → ' + rank(r.rankAfter).name + ' (+' + r.sp + ' SP)' : 'lost'));
     }
     after(r);
@@ -478,6 +607,7 @@
       run = await RE.create({});
       C = run.content;
       ui.pick = C.species[0].id;
+      ui.speed = loadSpeed();
       if (run.state) ui.view = 'run';
       if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
       render();
