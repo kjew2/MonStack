@@ -30,6 +30,7 @@ Both run on Python 3.7+ with no dependencies.
 Browser prototype:
 
 - `web/` - playable phone-browser build of the P0 loop for feel and balance testing. Its game core (`web/sim.js`) mirrors the planned C# sim: seeded RNG streams, no clock reads, every number from `web/content.js`. It passes the spec test vectors (`node web/test.js`) and includes a 30-day bot (`node web/bot.js`). See `web/README.md`. The real product is still the Unity client in `specs/07`.
+- C# engine in the browser: `web/wasm/build.sh` compiles the real `IdleRng.Sim` to WebAssembly (`src/IdleRng.Web`); serve `web/` over HTTP and open it with `?engine=wasm` to play on the C# core, with `web/sim.js` as the fallback. The claude.ai artifact link always uses the JS engine. Contract and parity notes: `web/wasm/BRIDGE.md`, `web/wasm/test/parity-report.md`.
 
 ### Playing the prototype on a phone
 

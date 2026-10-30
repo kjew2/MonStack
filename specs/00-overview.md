@@ -195,6 +195,7 @@ src/IdleRng.Runtime/        serializer + migrations, file save store, LocalClock
 src/IdleRng.Sim.Tests/      
 src/IdleRng.Runtime.Tests/  
 src/IdleRng.Bots/           headless harness (specs/09)
+src/IdleRng.Web/            .NET 8 WebAssembly host: adapter exposing IdleRng.Sim to the browser UI (web/wasm/BRIDGE.md)
 unity/                      Unity project; Assets/IdleRng.Client references Sim + Runtime as local packages
 Content/                    JSON tables built from the sheet (specs/05)
 ```
