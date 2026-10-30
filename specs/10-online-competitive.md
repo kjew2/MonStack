@@ -51,7 +51,7 @@ Verification replays a segment from a known-good starting state. The chain of kn
 4. **Ranked eligibility** is a profile flag, `RankedLineage`, set only at genesis. A profile created offline in P0 gets local seeds and `RankedLineage = false`. It plays everything except ranked surfaces. It cannot be upgraded later, because its seeds were client-chosen. The player may start a ranked profile alongside it (losing nothing from the unranked one).
 5. **Offline first launch.** A ranked profile needs one successful genesis call. A player who launches offline for the first time gets an unranked profile and a prompt to start a ranked one when online. This is the only place ranked play requires a connection before the first tick.
 
-The browser prototype (`web/`) creates local seeds and is permanently unranked. That is correct for a playtest build and must be stated in its README.
+The browser prototype (`web/`, the C# core compiled to WebAssembly) creates local seeds and is permanently unranked until it gains a server genesis. That is correct for a playtest build and must be stated in its README.
 
 ## 4. Segment certification (P1 service, P0 shapes)
 
@@ -108,7 +108,7 @@ The server builds a `Simulation` from the certified state at `FromSeq`, applies 
 
 ### 4.5 Cost
 
-`specs/03` section 17 budgets 1 µs per tick. A day of play is about 72,000 ticks (`specs/09` section 4): tens of milliseconds. A 30-day history, 2.16 million ticks, is about 2 s. (The JavaScript prototype in `web/` replays the 30-day bot run in about 0.2 s.) Because every segment starts from a certified state, the server never replays history; it replays only what happened since the last certification. A worker pool sized for peak upload bursts is the whole infrastructure, and a rejected or throttled upload loses the player nothing but ranked freshness.
+`specs/03` section 17 budgets 1 µs per tick. A day of play is about 72,000 ticks (`specs/09` section 4): tens of milliseconds. A 30-day history, 2.16 million ticks, is about 2 s. Because every segment starts from a certified state, the server never replays history; it replays only what happened since the last certification. A worker pool sized for peak upload bursts is the whole infrastructure, and a rejected or throttled upload loses the player nothing but ranked freshness.
 
 ### 4.6 Failure and honesty
 

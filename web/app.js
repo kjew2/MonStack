@@ -1,21 +1,19 @@
-// Idle RNG browser prototype: the UI shell. No game rule lives here; it ticks the core (sim.js), sends it
-// commands, reads its queries and drains its events (the same split as specs/07's SimRunner + view-models).
+// Idle RNG browser prototype: the UI shell over the C# core compiled to WebAssembly (web/engine.js). No game rule
+// lives here; it ticks the engine, sends it commands, reads its queries and drains its events (specs/07's split).
 (function () {
   'use strict';
-  const C = window.IdleContent;
   const SP = window.IdleSprites;
   const IE = window.IdleEngine;
-  const { formatShort: fmt } = window.IdleSim;
-  const R = C.rarities;
-  const TAB_KEY = 'idle-rng-web-save-v1-tab';      // UI preference, shared by both engines
-  const ENGINE_KEY = 'idle-rng-engine';
+  const fmt = window.IdleFormat.formatShort;
+  let C = null, R = null;                           // UI content from the C# engine (engine.content), set at boot
+  const TAB_KEY = 'idle-rng-web-save-v1-tab';
   const MAX_TICKS_PER_FRAME = 2000;
   const $ = (id) => document.getElementById(id);
   const int = (n) => Math.floor(n).toLocaleString('en-US');
   const pct = (x, d) => (x * 100).toFixed(d === undefined ? 1 : d) + '%';
 
   // ------------------------------------------------------------ boot, clock, persistence
-  // `sim` is the engine facade (web/engine.js): the JS core (sim.js) or the C# core compiled to wasm. null until boot() finishes.
+  // `sim` is the engine facade (web/engine.js) over the C# core. null until boot() finishes.
   let sim = null, clockOffsetMs = 0, speed = 1, bootNotice = null;
   const gameNow = () => Date.now() + clockOffsetMs;
 
@@ -25,8 +23,8 @@
     sim.emitHits = true;
   }
   function saveString() { return IE.wrapSave(sim, clockOffsetMs); }
-  function loadString(str) {                       // throws (leaving the running game intact) on a bad or other-engine save
-    const u = IE.unwrapSave(str, sim.backend);
+  function loadString(str) {                       // throws (leaving the running game intact) on a bad or old-engine save
+    const u = IE.unwrapSave(str);
     sim.reload({ saveString: u.saveString });
     clockOffsetMs = u.clockOffsetMs;
     sim.emitHits = true;
@@ -709,17 +707,7 @@
 
   // ---- Settings + debug (specs/07 section 11.8)
   function engineLine() {
-    const isWasm = sim.backend === 'wasm', other = isWasm ? 'js' : 'wasm';
-    const kids = [h('span', { id: 'engineChip', text: 'Engine: ' + (isWasm ? 'C# (wasm)' : 'JS') + ' · ' + sim.version() })];
-    if (!window.claude) kids.push(' ', h('button', { type: 'button', class: 'btn small', onclick: () => switchEngine(other) }, ['Use ' + (isWasm ? 'JS' : 'C#') + ' engine']));
-    return h('div', { class: 'muted num' }, kids);
-  }
-  function switchEngine(to) {
-    save();
-    try { localStorage.setItem(ENGINE_KEY, to); } catch (e) { /* ignore */ }
-    const u = new URL(location.href);
-    if (u.searchParams.has('engine')) u.searchParams.set('engine', to);
-    if (u.href === location.href) location.reload(); else location.href = u.href;
+    return h('div', { class: 'muted num' }, [h('span', { id: 'engineChip', text: 'Engine: C# (wasm) · ' + sim.version() })]);
   }
   function showSettings() {
     let resetArmed = 0;
@@ -800,18 +788,20 @@
   async function boot(data) {
     // First paint: the HUD and strip exist in the HTML; say what we are waiting for.
     setText($('stageEl'), 'Loading engine...'); setText($('hpText'), 'Loading engine...');
-    const pick = IE.chooseBackend();
     try {
-      sim = await IE.create({ backend: pick.backend, content: C, loadWasm: window.__idleLoadWasm,   // test seam, undefined in normal use
-         nowMs: gameNow(), profileId: 'web-' + Date.now().toString(36),
-        onNotice: (m) => { bootNotice = m; } });
+      sim = await IE.create({ nowMs: gameNow(), profileId: 'web-' + Date.now().toString(36) });
     } catch (err) {
-      setText($('stageEl'), 'Engine failed to load'); setText($('hpText'), String(err && err.message || err));
+      const msg = String(err && err.message || err);
+      setText($('stageEl'), 'Engine failed to load'); setText($('hpText'), '-');
+      $('panel').append(h('div', { class: 'card wall' }, [h('h2', { class: 'bad', text: 'The C# engine did not load' }), h('p', { text: msg }),
+        h('p', { class: 'muted', text: 'Setup steps are in the README under "Running the web prototype".' })]));
       throw err;
     }
+    C = sim.content; R = C.rarities;
+    if (sim.saveError) bootNotice = 'Save could not be loaded: ' + sim.saveError;
     sim.emitHits = true;
     let preloaded = false;
-    if (data && data.save) { try { loadString(data.save); preloaded = true; } catch (e) { /* other engine or bad: fall back to storage */ } }
+    if (data && data.save) { try { loadString(data.save); preloaded = true; } catch (e) { /* bad save: fall back to storage */ } }
     start(preloaded);
   }
   if (hot && hot.ready) hot.ready(boot); else boot(hot && hot.data || {});

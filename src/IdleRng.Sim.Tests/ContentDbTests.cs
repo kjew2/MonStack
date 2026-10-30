@@ -26,7 +26,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(db.BossRuleFor(550).Id, Is.EqualTo("default"));
             Assert.That(b.BaseLplus, Is.EqualTo(0.03).Within(1e-15));
             Assert.That(b.Pool[0], Is.Ordered.Using((IComparer<string>)System.StringComparer.Ordinal));
-            Assert.That(db.Text("hero.c_01.name"), Is.EqualTo("Ash"));
+            Assert.That(db.Text("hero.c_01.name"), Is.EqualTo("Pell the Farmhand"));
             Assert.That(db.Text("no.such.key"), Is.EqualTo("no.such.key"));
         }
 

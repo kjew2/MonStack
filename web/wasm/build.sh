@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the C# engine for the browser and lays it out under web/wasm/dist/ the way web/engine.js expects:
-#   dist/_framework/dotnet.js (+ dotnet.native.wasm, IdleRng.Web.dll, ...), dist/content-pack.json, dist/content.json (same file)
+#   dist/_framework/dotnet.js (+ dotnet.native.wasm, IdleRng.Web.dll, ...) and dist/content-pack.json
 # Usage: web/wasm/build.sh [--fast] [--aot] [--clean]
 #   (default)  Release publish, interpreter (non-AOT), trimmed. About 3 minutes cold.
 #   --fast     incremental: keep obj/ between runs (the default also does; --fast just skips the final size report)
@@ -42,7 +42,6 @@ mkdir -p "$DIST"
 cp -r "$SRC/_framework" "$DIST/_framework"
 find "$DIST" \( -name '*.br' -o -name '*.gz' \) -delete
 cp "$ROOT/build/content-pack.json" "$DIST/content-pack.json"
-cp "$ROOT/build/content-pack.json" "$DIST/content.json"     # engine.js fetches dist/content.json
 printf '%s\n' "{\"built\":\"$(date -u +%FT%TZ)\",\"aot\":$AOT}" > "$DIST/build-info.json"
 
 if ! $FAST; then

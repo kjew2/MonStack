@@ -15,8 +15,6 @@ unity/IdleRngClient/Assets/Resources/Content.meta
 .vs/
 .idea/
 
-# browser prototype build output
-web/dist/
 
 # dotnet
 [Bb]in/

@@ -3,7 +3,7 @@
 #
 #   ./check.sh            everything (what CI runs, see specs/09 section 13)
 #   ./check.sh --fast     inner loop: skips golden tests, the bench and the acceptance sweep
-#   ./check.sh --no-dotnet  only the Python and web checks (for machines without the .NET SDK)
+#   ./check.sh --no-dotnet  only the content check (for machines without the .NET SDK; the web build needs .NET too)
 #   ./check.sh --no-wasm    skip the WebAssembly build and browser test (full mode runs them when the
 #                           wasm-tools workload is installed; see web/wasm/BRIDGE.md)
 #
@@ -28,18 +28,6 @@ step() { printf '\n== %s\n' "$1"; }
 
 step "Content: content_src builds to Content/ with no drift"
 python3 tools/content_build.py --check
-
-step "Web prototype: spec test vectors"
-node web/test.js
-
-step "Web prototype: content export matches web/content.js"
-node web/tools/check-content.js
-
-step "Web prototype: parity fixtures replay identically on the JS core"
-node web/tools/verify-parity.js
-
-step "Web prototype: engine facade (JS and mock-wasm backends)"
-node web/tools/engine-test.js
 
 if [ "$DOTNET" -eq 0 ]; then
   printf '\nSkipped .NET checks (--no-dotnet). Not a full pass.\n'

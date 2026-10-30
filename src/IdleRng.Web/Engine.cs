@@ -43,6 +43,9 @@ namespace IdleRng.Web
         public static string Export() => Guard(h => h.Export());
 
         [JSExport]
+        public static string UiContent() => Guard(h => h.UiContent());
+
+        [JSExport]
         public static void SetEmitHits(int on)
         {
             try { _h?.SetEmitHits(on != 0); } catch (Exception) { /* nothing to report to */ }

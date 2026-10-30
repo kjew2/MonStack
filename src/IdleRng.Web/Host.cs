@@ -91,7 +91,7 @@ namespace IdleRng.Web
                 _meta = new SaveMeta { DeviceInstallId = id, LastSavedAtServerSec = nowSec };
                 _sim = new Simulation(_db, _st, _sink);
                 _sim.ApplyTutorialGrants();
-                _sim.EnsureDay(nowSec);       // sim.js newProfile: first-day login and daily free pulls
+                _sim.EnsureDay(nowSec);       // new profile: first-day login and daily free pulls
             }
         }
 
@@ -230,7 +230,7 @@ namespace IdleRng.Web
                 case EnemySpawned x: o.P("type", "spawn").P("boss", x.IsBoss).P("stage", x.Stage); break;
                 case EnemyKilled x: o.P("type", "kill").P("stage", x.Stage).P("boss", x.IsBoss).P("gold", x.Gold); break;
                 case BossCleared x:
-                    // The core publishes FirstClear before BossCleared; sim.js (and the UI) order them bossCleared, firstClear.
+                    // The core publishes FirstClear before BossCleared; the UI feed expects bossCleared, then firstClear.
                     o.P("type", "bossCleared").P("stage", x.Stage).P("tick", e.Tick).EndObj();
                     Enqueue(o.ToString());
                     if (_pendingFirstClear != null) { Enqueue(_pendingFirstClear); _pendingFirstClear = null; }
@@ -499,6 +499,70 @@ namespace IdleRng.Web
         }
 
         // ------------------------------------------------------------------ save
+
+        // ------------------------------------------------------------------ UI content
+        // Labels and display numbers the browser UI needs, read from the same ContentDb the sim uses, in the shape the UI
+        // consumes (UPPER_SNAKE keys grouped like specs/00 section 2). Display only: no game rule is evaluated in JS from these.
+        public string UiContent()
+        {
+            var o = new JsonOut().Obj();
+            o.P("version", _db.Version);
+            string[] letters = { "C", "R", "E", "L", "M" };
+            o.Key("rarities").Arr(); foreach (var l in letters) o.Str(l); o.EndArr();
+            o.Key("rarityNames").Obj();
+            foreach (var t in _db.HeroTiers) o.P(letters[(int)t.Tier], _db.Text(t.NameKey));
+            o.EndObj();
+
+            BossRuleDef boss = _db.BossRules[_db.BossRules.Count - 1];   // the rule that applies from its stage onward
+            o.Key("combat").Obj().P("TICK_HZ", _k.TickHz).P("ATTACK_INTERVAL_TICKS", _k.AttackIntervalTicks)
+                .P("KILLS_PER_STAGE", _k.KillsPerStage).P("BOSS_EVERY", _k.BossEvery).P("BOSS_TIME_TICKS", boss.TimeTicks).EndObj();
+
+            var bn = _db.HeroBanner;
+            o.Key("economy").Obj().P("STAT_PER_LVL", _k.StatPerLvl).P("STAT_COST_G", _db.Curves[CurveId.StatCost].Growth)
+                .P("PULL_COST_GEMS", bn.PullCostGems).P("FREE_PULLS_PER_DAY", bn.FreePullsPerDay)
+                .P("IDLE_CHEST_GEMS", _k.IdleChestGems).P("IDLE_CHEST_HOURS", _k.IdleChestHours)
+                .P("OFFLINE_RATE", _k.OfflineRate).P("OFFLINE_CAP_H", _k.OfflineCapH).P("DAY_SECONDS", _k.DaySeconds);
+            o.Key("STAT_BULK_STEPS").Arr().Int(1).Int(10).Int(100).EndArr();      // specs/04 section 4.2 buttons; not a content table yet
+            o.EndObj();
+
+            o.Key("quests").Arr();
+            foreach (var q in _db.DailyQuests)
+                o.Obj().P("id", q.Id).P("kind", q.Type.ToString()).P("target", q.Target).P("gems", q.RewardGems).P("label", _db.Text(q.NameKey)).EndObj();
+            o.EndArr();
+
+            o.Key("gear").Obj();
+            o.Key("SLOTS").Arr(); foreach (var g in _db.GearSlots.OrderBy(x => x.SortOrder)) o.Str(_db.Text(g.NameKey)); o.EndArr();
+            o.P("DROP_P", _k.GearDropP).P("BOSS_DROP_P", boss.GearDropP).P("ENH_MAX", _k.EnhMax).EndObj();
+
+            o.Key("banner").Obj().P("PITY_HARD", bn.PityHard).P("PITY_SOFT_START", bn.PitySoftStart).P("PITY_SOFT_STEP", bn.PitySoftStep)
+                .P("BASE_LPLUS", bn.BaseLplus).P("M_SHARE_OF_LPLUS", bn.MythicShareOfLplus);
+            o.Key("BASE_RATES").Arr(); foreach (var r in bn.Rates) o.Num(r); o.EndArr();
+            o.EndObj();
+
+            o.Key("heroes").Obj().P("SLOTS", _k.HeroSlots);
+            o.Key("LVL_CUM").Arr(); foreach (var c in _db.HeroLevelThresholds) o.Int(c); o.EndArr();
+            o.Key("pool").Arr();
+            for (int t = 0; t < bn.Pool.Count; t++)
+            {
+                o.Arr();
+                foreach (var id in bn.Pool[t])
+                {
+                    string name = _db.Text(_db.Heroes[id].NameKey);
+                    int sp = name.IndexOf(' ');
+                    o.Obj().P("id", Br(id)).P("tier", letters[t]).P("name", name).P("short", sp > 0 ? name.Substring(0, sp) : name).EndObj();
+                }
+                o.EndArr();
+            }
+            o.EndArr().EndObj();
+
+            var adv = _db.ClassAdvances.OrderBy(a => a.Index).ToList();
+            o.Key("class").Obj().P("MULT", adv.Count > 0 ? adv[0].Mult : 1.0);
+            o.Key("STAGES").Arr(); foreach (var a in adv) o.Int(a.Stage); o.EndArr();
+            o.Key("NAMES").Arr().Str(_db.Text("class.base.name")); foreach (var a in adv) o.Str(_db.Text(a.NameKey)); o.EndArr();
+            o.EndObj();
+
+            return o.EndObj().ToString();
+        }
 
         public string Export()
         {

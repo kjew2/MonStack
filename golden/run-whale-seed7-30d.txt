@@ -1,5 +1,5 @@
 # idle-rng run v1
-# bot=whale seed=7 days=30 content=1.0/072e50cc
+# bot=whale seed=7 days=30 content=1.0/c370193e
 day stage      dps statLvl statMult   gearMult  heroMult classMult pulls  L+ firstWall longestWallH
   1   140 7.77e+04     103     6.15   6.23e+01      6.76      1.50   108   4       100        22.15
   2   250 1.51e+08     183    10.15   4.88e+04      6.76      2.25   117   5       100        22.33
