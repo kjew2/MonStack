@@ -23,3 +23,7 @@ Tools:
 - `tools/power_curve_model.py` - greedy F2P bot, 30 days, prints the day table. `python3 tools/power_curve_model.py`
 
 Both run on Python 3.7+ with no dependencies.
+
+Browser prototype:
+
+- `web/` - playable phone-browser build of the P0 loop for feel and balance testing, with a pure game core that mirrors the planned C# sim, spec test vectors and a 30-day bot. See `web/README.md`.
