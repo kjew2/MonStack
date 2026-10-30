@@ -1,6 +1,6 @@
 # 13 - Transition Plan: Idle RNG to Monster Trainer
 
-Status: **MVP done (T1-T7); T8 engine done.** The idle game is removed (T7, 2026-10-30). Sections 2 to 4 describe the plan as it was made and what carried over; section 6 has each phase's result. How the repo moved from the idle stage-push game to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
+Status: **MVP done (T1-T7); T8 done.** The idle game is removed (T7, 2026-10-30). Sections 2 to 4 describe the plan as it was made and what carried over; section 6 has each phase's result. How the repo moved from the idle stage-push game to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
 
 ## 1. Approach
 
@@ -149,7 +149,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T6 - Web prototype on the new loop
 
-**Done except the gauntlet wheel screen.** First built ahead of T5 at kj's request (2026-10-30), then moved onto the account (`specs/18`). `web/index.html` plays on a phone: species pick, Drill and Rest with the odds and drill cost shown, rank fights with the battle log, tree drafts into slots, the tree view with buying, the end screen with the grade, stat breakdown and shard payout, the talent shop, the skill book inventory and the Vault list. The save is the C# `AccountSave` (account, shards, talents, Vault and the active run as its replay recipe) in one browser key. The bridge is `IdleRng.Web.Engine.Run*`/`Account*` (`web/wasm/BRIDGE.md`). Abandoning a run pays and seals nothing and returns unused books (`AccountOps.AbandonRun`, `specs/18`). Not yet: the gauntlet wheel screen (`specs/19`).
+**Done.** First built ahead of T5 at kj's request (2026-10-30), then moved onto the account (`specs/18`). `web/index.html` plays on a phone: species pick, Drill and Rest with the odds and drill cost shown, rank fights played back action by action (the ability in use, each skill's cooldown and live HP; 1x, 2x or Skip, remembered on the device; issue #79) then the battle log, tree drafts into slots, the tree view with buying, the end screen with the grade, stat breakdown and shard payout, the talent shop, the skill book inventory and the Vault list; sealing a monster spins the gauntlet wheel (T8, `specs/19` section 7). The save is the C# `AccountSave` (account, shards, talents, Vault and the active run as its replay recipe) in one browser key. The bridge is `IdleRng.Web.Engine.Run*`/`Account*` (`web/wasm/BRIDGE.md`). Abandoning a run pays and seals nothing and returns unused books (`AccountOps.AbandonRun`, `specs/18`).
 
 - `src/IdleRng.Web` bridge exposes the run engine; `web/` gets the run screen, drafts, tree view, Tactical Challenge battle log, ladder/grade screen, Vault, talent tree.
 - The idle UI was removed from `web/` at T7.
@@ -171,7 +171,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 | Phase | Content |
 |---|---|
-| T8 | **Engine done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title). Wheel UI next. End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
+| T8 | **Done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title; the web client spins the wheel after sealing and shows "Floor N: title" on the grade screen and Vault cards). End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
 | T9 | Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors) |
 | T10 | Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
 | T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |

@@ -66,6 +66,23 @@ namespace IdleRng.Sim.Tests
             Assert.That(hashes.Count, Is.GreaterThan(1), "crits, evades and targeting draw from the seed");
         }
 
+        [Test]
+        public void OnStart_ExposesTheLiveState_WithoutChangingTheFight()
+        {
+            Fighter[] A() => Side(Mon("a1", 300, "fire", null, Strike(2, 3)));
+            Fighter[] B() => Side(Mon("b1", 280, "nature"));
+            var plain = Run(A(), B(), 7);
+            FightState live = null;
+            var seen = new List<(double hp, int cd)>();
+            var watched = BattleSim.Resolve(Rules, A(), B(), 7,
+                x => { if (x.Actor == "a1") seen.Add((live.Units[1].Hp, live.Units[0].Cooldowns[0])); },
+                s => { Assert.That(s.Ticks, Is.EqualTo(0), "before the first tick"); live = s; });
+            Assert.That(watched.Hash, Is.EqualTo(plain.Hash), "observing does not change the fight");
+            Assert.That(live, Is.SameAs(watched.Final), "onStart sees the state the fight runs on");
+            Assert.That(seen[0].cd, Is.EqualTo(3), "the actor's cooldown is already set when its skill's action is reported");
+            Assert.That(seen.Last().hp, Is.EqualTo(watched.Final.Units[1].Hp), "HP is read live");
+        }
+
         [TestCase(1, 1)]
         [TestCase(4, 1)]
         [TestCase(4, 4)]

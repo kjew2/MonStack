@@ -16,13 +16,14 @@ It replaced the idle game's 4v1 boss battle, which was removed with that game at
 
 ```csharp
 FightRules rules = FightRules.FromContent(contentDb);           // plain data; a server can hold its own copy
-FightResult r    = BattleSim.Resolve(rules, sideA, sideB, seed);   // whole fight on a fresh stream
+FightResult r    = BattleSim.Resolve(rules, sideA, sideB, seed, onAction, onStart);   // whole fight on a fresh stream
 FightState s     = BattleSim.Start(rules, sideA, sideB);           // or step it for animation:
 FightOutcome o   = BattleSim.Step(rules, s, rng, onAction);        // one tick
 string h         = BattleSim.StateHash(s);                         // canonical SHA-256 of the whole fight
 ```
 
 - `Fighter` is the input snapshot: `Id` (unique in the fight), `Element`, `Stats` (section 3), `Skills`, `Triggers`, `Rules`. A fight keeps a reference, so fighters must not change during it.
+- `onAction` (optional) is called with each `FightAction` as it happens; `onStart` (optional) gets the new `FightState` before the first tick, so an observer can read live HP and cooldowns inside `onAction`. Observers only read: watching a fight never changes it (`BattleSimTests.OnStart_ExposesTheLiveState_WithoutChangingTheFight`). The web bridge uses both to snapshot HP and cooldowns per action for playback (`web/wasm/BRIDGE.md`). How fast a client replays a fight is presentation, not a rule.
 - `Resolve` seeds a stream named `battle_sim` with `seed`. Callers derive the seed from their own stream (the run engine from `training`, a PvP server from the match), so a fight never advances a game stream by an unknown amount.
 - `FightState` is a plain mutable graph with `Clone()`; a clone plus the same draws continues identically, so a fight can be saved mid-way.
 - `Start` validates and throws `ArgumentException`: side sizes, unique non-empty ids, finite stats `>= 0`, known stat ids for skills, known rule modifier ids, non-negative power, cooldown and duration.

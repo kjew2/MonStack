@@ -73,6 +73,20 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void TitleText_FillsTheKillersName()
+        {
+            var food = Db.LegacyTitles.First(t => Db.Text(t.TitleKey).Contains("{killer}")).TitleKey;
+            var boss = Db.GauntletBosses[0];
+            Assert.That(GauntletSim.TitleText(Db, food, boss.Id), Is.EqualTo(Db.Text(food).Replace("{killer}", Db.Text(boss.NameKey))));
+            Assert.That(GauntletSim.TitleText(Db, food, Db.GauntletEnemies[0].Id), Does.StartWith(Db.Text(Db.GauntletEnemies[0].NameKey)));
+            Assert.That(GauntletSim.TitleText(Db, food, null), Does.Not.Contain("{killer}"));
+            var top = Db.LegacyTitles.Last().TitleKey;
+            Assert.That(GauntletSim.TitleText(Db, top, null), Is.EqualTo(Db.Text(top)));
+            Assert.That(GauntletSim.EnemyName(Db, boss.Id), Is.EqualTo(Db.Text(boss.NameKey)));
+            Assert.That(GauntletSim.EnemyName(Db, "no_such_enemy"), Is.EqualTo("no_such_enemy"));
+        }
+
+        [Test]
         public void ARunMonster_CanBeSentUpTheTower()
         {
             var s = TrainingRun.Start(Db, "drake", 4);

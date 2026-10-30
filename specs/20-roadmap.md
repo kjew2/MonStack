@@ -15,7 +15,7 @@ Status: **proposal** (agent draft, 2026-10-30; kj has not reviewed it). A high-l
 | # | Item | Kind | Size | Issues |
 |---|---|---|---|---|
 | R0.1 | **Close the MVP goal.** T0-T7 are done (`specs/13` section 6); the goal still lists T7 as in progress. Close it and point to #70. | Fix | S | #69 |
-| R0.2 | **CI workflow running `./check.sh`** on PRs and `main`. Everything else depends on the gates being enforced, and CI has never existed. | Tech | S | #38 |
+| R0.2 | **CI workflow running `./check.sh`** on PRs and `main`. Everything else depends on the gates being enforced. Done: `.github/workflows/check.yml` (`specs/09` section 6); making it a required check is kj's GitHub setting. | Tech | S | #38 |
 | R0.3 | **Pick the game's name**, then do the one mechanical `IdleRng` rename (`specs/13` section 1). Cheaper the earlier it happens; store listing, site and community channels wait on it. | Fix / Tech | S + decision | #47 (name part) |
 | R0.4 | **Answer the open design questions** in `specs/13` section 9 (what overwriting removes, one energy meter, roles and elements). Not blocking, but each is a rule the next specs build on. | Fix | decision | none |
 
@@ -25,7 +25,7 @@ Order follows `specs/13` section 6. Each phase gets its own spec before building
 
 | # | Item | Kind | Size | Issues |
 |---|---|---|---|---|
-| R1.1 | **T8 gauntlet wheel screen and Legacy Titles** in the web client (engine done, `specs/19`). Also expose the gauntlet fields in the bridge. | Feature | S-M | #72 |
+| R1.1 | **Done.** **T8 gauntlet wheel screen and Legacy Titles** in the web client (engine done, `specs/19`). Also expose the gauntlet fields in the bridge. | Feature | S-M | #72 |
 | R1.2 | **T9 species gacha and aptitude ranks.** Engine and UI; the currency and gem-sale question (R1.9) blocks only the economy part. | Feature | M | #73 |
 | R1.3 | **First-time experience, rewritten for the trainer**: guided first run, real strings (species, trees, nodes), settings, accessibility basics, localisation decision. The existing issue is written for the idle game. | Feature | M | #48 (**re-scope**) |
 | R1.4 | **T10 Daily Tower** (4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button). | Feature | L | #74 |

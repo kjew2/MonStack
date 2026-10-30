@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // End-to-end browser check of the monster-trainer page (web/index.html) on the C# (wasm) engine at 390x844: picks a species,
 // opens a stat and an ability tooltip, plays a whole run through the real buttons (drill, rest, rank fights, tree drafts, buying
-// nodes), seals it, checks the grade
-// screen and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
+// nodes), watches two rank fights play back (current ability, live HP, skill cooldowns, the remembered 1x/2x/Skip speed), seals
+// it, checks the grade
+// screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
 'use strict';
@@ -95,30 +96,81 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(!(await tip.isVisible()), 'Escape closes it');
   await act('tab-train').click();
 
-  // ---- play the whole run through the buttons
-  const played = await page.evaluate(() => {
-    const q = (s) => document.querySelector(s);
-    const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
-    const stats = { fights: 0, drafts: 0, bought: 0, takes: 0, steps: 0 };
-    for (let i = 0; i < 1500 && !q('[data-act="seal"]'); i++) {
-      stats.steps++;
-      if (click('[data-act="fight-continue"]')) continue;
-      if (q('[data-id=offer-title]')) {
-        stats.drafts++;
-        if (click('[data-act^="take-0-2"]') || click('[data-act^="take-0-3"]') || click('[data-act^="take-0-1"]')) stats.takes++; else click('[data-act="discard"]');
-        continue;
+  // ---- play through the buttons. stop: 'fight' returns when a rank fight is due, 'skill' when one is due and slot 1 has bought
+  // its skill node (node 5), 'end' at the seal button. A fight still playing back is skipped.
+  let played = { fights: 0, drafts: 0, bought: 0, takes: 0, steps: 0, slot0: 0, skillRows: 0 };
+  const playUntil = async (stop) => {
+    played = await page.evaluate(([stop, stats]) => {
+      const q = (s) => document.querySelector(s);
+      const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
+      for (let i = 0; i < 1500 && !q('[data-act="seal"]'); i++) {
+        stats.steps++;
+        if (q('[data-id=fight-play]')) { click('[data-act="speed-skip"]'); continue; }
+        if (q('[data-act="fight-continue"]')) stats.skillRows = Math.max(stats.skillRows, document.querySelectorAll('[data-id^="skill-0-"]').length);
+        if (click('[data-act="fight-continue"]')) continue;
+        if (q('[data-id=offer-title]')) {
+          stats.drafts++;
+          if (click('[data-act^="take-0-2"]') || click('[data-act^="take-0-3"]') || click('[data-act^="take-0-1"]')) stats.takes++; else click('[data-act="discard"]');
+          continue;
+        }
+        const f = q('[data-act="fight"]');
+        if (f && !f.disabled && (stop === 'fight' || (stop === 'skill' && stats.slot0 >= 5))) return stats;
+        if (click('[data-act="fight"]')) { stats.fights++; continue; }
+        click('[data-act="tab-trees"]');
+        while (click('[data-act^="buy-"]')) stats.bought++;
+        stats.slot0 = +((/(\d+)\//.exec((q('[data-id=slot-0] .num') || {}).textContent || '') || [])[1] || 0);
+        click('[data-act="tab-train"]');
+        const m = /Energy (\d+)/.exec((q('.bar.energy span') || {}).textContent || '');
+        const energy = m ? +m[1] : 100;
+        if (energy < 45) click('[data-act="rest"]');
+        else click('[data-act="drill-' + ['str', 'hp', 'def', 'spd', 'int', 'wis', 'dex', 'luk'][stats.steps % 8] + '"]');
       }
-      if (click('[data-act="fight"]')) { stats.fights++; continue; }
-      click('[data-act="tab-trees"]');
-      while (click('[data-act^="buy-"]')) stats.bought++;
-      click('[data-act="tab-train"]');
-      const m = /Energy (\d+)/.exec((q('.bar.energy span') || {}).textContent || '');
-      const energy = m ? +m[1] : 100;
-      if (energy < 45) click('[data-act="rest"]');
-      else click('[data-act="drill-' + ['str', 'hp', 'def', 'spd', 'int', 'wis', 'dex', 'luk'][stats.steps % 8] + '"]');
-    }
-    return stats;
-  });
+      return stats;
+    }, [stop, played]);
+  };
+  const speedSaved = () => page.evaluate(() => localStorage.getItem('idle-rng-fight-speed'));
+
+  // ---- the first rank fight plays back action by action (issue #79), then the speed toggle
+  await playUntil('fight');
+  check(await act('fight').isEnabled(), 'a rank fight is due after ' + played.steps + ' steps');
+  check((await act('speed-1').getAttribute('aria-pressed')) === 'true', 'fight speed defaults to 1x');
+  await act('fight').click();
+  check(await page.locator('[data-id=fight-play]').isVisible(), 'the fight plays back instead of showing the result at once');
+  check((await act('fight-continue').count()) === 0, 'no result while it plays');
+  await page.waitForFunction(() => /\S/.test((document.querySelector('[data-id=fight-now] small') || {}).textContent || ''), null, { timeout: 5000 });
+  const now1 = await text('[data-id=fight-now]');
+  check(/\S/.test(await text('[data-id=fight-now] b')) && !/Fight!/.test(now1), 'the current action is shown: ' + now1.replace(/\s+/g, ' '));
+  check((await page.locator('[data-id^="unit-"] .bar').count()) === 2, 'both units have live HP bars');
+  check(/^Action \d+ of \d+$/.test(await text('[data-id=fight-progress]')), 'playback progress: ' + (await text('[data-id=fight-progress]')));
+  await shot('04a-fight-play');
+  await act('speed-2').click();
+  check((await speedSaved()) === '2' && (await act('speed-2').getAttribute('aria-pressed')) === 'true', '2x is selected and remembered');
+  await act('speed-skip').click();
+  check(await page.locator('[data-id=fight-title]').isVisible(), 'Skip jumps to the result');
+  check((await speedSaved()) === 'skip', 'Skip is remembered');
+  check((await page.locator('[data-id^="unit-"] .bar').count()) === 2, 'the result shows both units\' final HP');
+  await act('fight-continue').click();
+
+  // ---- a fight with a bought skill: its row shows which ability is used and its cooldown
+  await playUntil('skill');
+  check(played.slot0 >= 5, 'slot 1 has its skill node before a later fight (' + played.slot0 + ' nodes, ' + played.fights + ' fights)');
+  await act('speed-2').click();
+  await act('fight').click();
+  check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the monster\'s skills are listed during the fight');
+  const used = await (await page.waitForFunction(() => {
+    const u = document.querySelector('.skill.used');
+    return u && { name: u.querySelector('.nm').textContent, st: u.querySelector('.st').textContent, title: u.title, now: document.querySelector('[data-id=fight-now] b').textContent };
+  }, null, { timeout: 15000 })).jsonValue();
+  check(used.name === used.now, 'the skill in use is highlighted and named in the banner: ' + used.now);
+  const cdLen = +((/cooldown (\d+)/.exec(used.title) || [])[1]);
+  check(used.st === (cdLen ? cdLen + (cdLen === 1 ? ' turn' : ' turns') : 'Ready'), 'a used skill shows its full cooldown (' + cdLen + '): ' + used.st);
+  await shot('04b-fight-skill');
+  await act('fight-continue').waitFor({ timeout: 60000 });                 // plays to the end at 2x
+  check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the result keeps the skill rows with their final cooldowns');
+  await shot('04c-fight-result');
+  await act('fight-continue').click();
+
+  await playUntil('end');                                                  // later fights: the loop taps Skip once, which sticks
   console.log('played: ' + JSON.stringify(played));
   check(played.fights >= 6, 'rank fights happened (' + played.fights + ')');
   check(played.bought >= 3, 'tree nodes were bought (' + played.bought + ')');
@@ -126,8 +178,26 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await act('seal').isVisible(), 'the run reaches its end and offers to seal');
   await shot('04-end');
 
-  // ---- seal -> grade screen -> vault
+  // ---- seal -> gauntlet wheel -> grade screen -> vault
   await act('seal').click();
+  await page.locator('[data-id=climb-reel]').waitFor();
+  check(await act('climb-skip').isVisible(), 'sealing spins the gauntlet wheel, with a skip button');
+  await page.waitForTimeout(700);
+  await shot('05-wheel');
+  check(/^Floor \d+/.test(await text('[data-id=climb-now]')), 'the wheel shows the floor under the pointer: ' + (await text('[data-id=climb-now]')));
+  await page.locator('[data-id=climb-reel]').tap();                // tap the wheel to skip it
+  const legacy = await text('[data-id=climb-title]');
+  check(/^(Floor \d+|All \d+ floors): \S/.test(legacy), 'tapping lands the wheel on the Legacy Title: ' + legacy);
+  check((await act('climb-skip').count()) === 0 && (await page.locator('[data-id=climb-arena]').count()) === 1, 'the skip button goes and the defeat plays');
+  await page.waitForTimeout(1600);
+  await shot('05b-wheel-landed');
+  const sealedAcct = await readAccount();
+  const sealed = sealedAcct && sealedAcct.Account.Vault[0];
+  check(sealed && sealed.LegacyTitle && legacy.startsWith(sealed.GauntletCleared ? 'All ' : 'Floor ' + sealed.GauntletFloor + ':'), 'the title matches the floor stored on the Vault entry (' + (sealed && sealed.GauntletFloor) + ')');
+  check(sealed && (await page.locator('[data-id=climb-reel]').getAttribute('data-hash')) === sealed.GauntletHash, 'the wheel\'s replayed climb hashes the same as the sealed gauntlet');
+  const fell = page.locator('.floor.landed');
+  check((await fell.count()) === 1 && ((sealed && sealed.GauntletCleared) || /✗/.test(await fell.innerText())), 'the landed row marks the floor that beat it');
+  await act('climb-continue').click();
   const grade = await text('[data-id=grade]');
   check(/^[A-Z]$/.test(grade), 'grade screen shows the rank reached: ' + grade);
   const acct = await readAccount();
@@ -136,12 +206,22 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(entry && entry.Grade === grade.toLowerCase() && /^[0-9a-f]{64}$/.test(entry.RunHash), 'entry grade and run hash match');
   const payout = +(/\+(\d+) Training Shards/.exec(await text('[data-id=payout]')) || [])[1];
   check(payout > 0 && acct.Account.Shards === payout, 'the run paid ' + payout + ' shards into the account');
-  await shot('05-grade');
+  check((await text('[data-id=grade-title]')) === legacy, 'the grade screen shows the Legacy Title');
+  await shot('05c-grade');
+
+  // ---- reduced motion: the wheel replays already landed, no spin
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await act('climb-replay').click();
+  check((await act('climb-skip').count()) === 0 && (await text('[data-id=climb-title]')) === legacy, 'with reduced motion the wheel lands at once');
+  await act('climb-continue').click();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  check(/^[A-Z]$/.test(await text('[data-id=grade]')), 'and continues to the grade screen');
 
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'a reload after sealing keeps one Vault entry (no double seal)');
   check((await text('[data-id=shards]')).startsWith(payout + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
+  check((await text('[data-id=vault-title]')) === legacy, 'the Vault card shows the Legacy Title: ' + legacy);
   await shot('06-vault');
 
   // ---- talents: buy one, and it shapes the next run
