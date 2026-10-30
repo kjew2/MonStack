@@ -80,13 +80,17 @@ If the page says "The C# engine did not load", it names the cause: the bundle is
 
 ### On a phone
 
-The repo is private, so GitHub cannot serve the page (raw links show source, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly). Serve it from your computer:
+The repo is private, so GitHub cannot serve the page (raw links show source, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly). Two ways in:
+
+**Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude rebuilds and republishes it (`web/wasm/build.sh`, then publish `web/index.html` with the file map from `web/wasm/artifact-files.py`, root = repo root, to that URL). The cog shows the content version, and `wasm/dist/build-info.json` in the artifact holds the build time.
+
+**From your computer, on the same Wi-Fi (always matches your checkout):**
 
 1. Run `./play.sh` on the computer. It prints an "On your phone" link such as `http://192.168.1.20:8000`.
 2. Open that link on the phone, on the same Wi-Fi. If it does not load, allow Python through the computer's firewall.
 3. Optional: Add to Home Screen from the browser's share menu for a full-screen icon.
 
-Progress is saved in the browser, separately for each address. Fonts load from Google Fonts; offline the page falls back to system fonts and still plays.
+Progress is saved in the browser, separately for each address, so the artifact link and the Wi-Fi address each keep their own save. Fonts load from Google Fonts; offline the page falls back to system fonts and still plays.
 
 ### Tests for the web build
 
