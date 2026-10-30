@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>IdleRng.Runtime</RootNamespace>
+    <AssemblyName>IdleRng.Runtime</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Unity provides Newtonsoft.Json via com.unity.nuget.newtonsoft-json (13.x); NuGet supplies it for dotnet. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../IdleRng.Sim/IdleRng.Sim.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Unity package metadata lives next to the sources; not part of the dotnet build. -->
+    <None Remove="package.json" />
+    <None Remove="IdleRng.Runtime.asmdef" />
+  </ItemGroup>
+</Project>
