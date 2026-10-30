@@ -989,6 +989,102 @@
     {
       "key": "rule.echo_cast.desc",
       "text": "Every active damage, heal or shield skill is cast a second time at once, at reduced power."
+    },
+    {
+      "key": "talent.frugal_drills.name",
+      "text": "Frugal Drills"
+    },
+    {
+      "key": "talent.frugal_drills.desc",
+      "text": "Drills cost 5% less energy per rank."
+    },
+    {
+      "key": "talent.strong_stock.name",
+      "text": "Strong Stock"
+    },
+    {
+      "key": "talent.strong_stock.desc",
+      "text": "Monsters start runs with 10% higher base stats per rank."
+    },
+    {
+      "key": "talent.wide_scouting.name",
+      "text": "Wide Scouting"
+    },
+    {
+      "key": "talent.wide_scouting.desc",
+      "text": "Milestone drafts offer one more tree per rank."
+    },
+    {
+      "key": "talent.head_start.name",
+      "text": "Head Start"
+    },
+    {
+      "key": "talent.head_start.desc",
+      "text": "Start each run with one extra skill point per rank."
+    },
+    {
+      "key": "gauntlet.slimeling.name",
+      "text": "Slimeling"
+    },
+    {
+      "key": "gauntlet.imp.name",
+      "text": "Imp"
+    },
+    {
+      "key": "gauntlet.golem.name",
+      "text": "Golem"
+    },
+    {
+      "key": "gauntlet.wisp.name",
+      "text": "Wisp"
+    },
+    {
+      "key": "gauntlet.shade.name",
+      "text": "Shade"
+    },
+    {
+      "key": "gauntlet.apex_chimera.name",
+      "text": "Apex Chimera"
+    },
+    {
+      "key": "gauntlet.void_hydra.name",
+      "text": "Void Hydra"
+    },
+    {
+      "key": "gauntlet.storm_titan.name",
+      "text": "Storm Titan"
+    },
+    {
+      "key": "title.punching_bag",
+      "text": "Punching Bag"
+    },
+    {
+      "key": "title.warm_up_act",
+      "text": "Warm-Up Act"
+    },
+    {
+      "key": "title.respectable_brawler",
+      "text": "Respectable Brawler"
+    },
+    {
+      "key": "title.professional_punching_bag",
+      "text": "Professional Punching Bag"
+    },
+    {
+      "key": "title.food",
+      "text": "{killer} Food"
+    },
+    {
+      "key": "title.nightmare",
+      "text": "{killer}'s Nightmare"
+    },
+    {
+      "key": "title.god_slayer",
+      "text": "God-Slayer"
+    },
+    {
+      "key": "title.tower_breaker",
+      "text": "Tower Breaker"
     }
   ]
 }

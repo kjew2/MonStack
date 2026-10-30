@@ -44,6 +44,27 @@ namespace IdleRng.Sim.Training
         public RunCommand Clone() => (RunCommand)MemberwiseClone();
     }
 
+    /// <summary>
+    /// Account bonuses a run starts with (specs/18 section 3): the talent tree's effects, captured at Start so a replay with the
+    /// same modifiers rebuilds the run exactly. The defaults change nothing.
+    /// </summary>
+    public sealed class RunModifiers
+    {
+        /// <summary>Multiplies DRILL_ENERGY_COST. 1 = no change.</summary>
+        public double DrillCostMult { get; set; } = 1;
+
+        /// <summary>Multiplies the species' base stats at the start (capped at STAT_MAX). 1 = no change.</summary>
+        public double StatFloorMult { get; set; } = 1;
+
+        /// <summary>Added to DRAFT_SIZE for milestone drafts.</summary>
+        public int DraftSizeBonus { get; set; }
+
+        /// <summary>Extra skill points at the start of the run.</summary>
+        public int StartSp { get; set; }
+
+        public RunModifiers Clone() => (RunModifiers)MemberwiseClone();
+    }
+
     /// <summary>A trained stat crossed a stat_milestones threshold (specs/14 section 6). Each pair is recorded once.</summary>
     public sealed class MilestoneHit
     {
@@ -117,6 +138,9 @@ namespace IdleRng.Sim.Training
     {
         public string SpeciesId { get; set; }
 
+        /// <summary>Account bonuses captured at Start (specs/18). Never null.</summary>
+        public RunModifiers Mods { get; set; } = new RunModifiers();
+
         /// <summary>Run seed; the training and draft streams and every fight seed derive from it.</summary>
         public ulong Seed { get; set; }
 
@@ -168,6 +192,7 @@ namespace IdleRng.Sim.Training
         {
             var c = (RunState)MemberwiseClone();
             c.Stats = Stats.Clone();
+            c.Mods = Mods.Clone();
             c.Training = Training.Clone();
             c.Draft = Draft.Clone();
             c.Slots = new TreeSlot[Slots.Length];

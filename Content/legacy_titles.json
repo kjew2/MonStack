@@ -1,0 +1,37 @@
+{
+  "table": "legacy_titles",
+  "rows": [
+    {
+      "min_floor": 1,
+      "title_key": "title.punching_bag"
+    },
+    {
+      "min_floor": 10,
+      "title_key": "title.warm_up_act"
+    },
+    {
+      "min_floor": 25,
+      "title_key": "title.respectable_brawler"
+    },
+    {
+      "min_floor": 42,
+      "title_key": "title.professional_punching_bag"
+    },
+    {
+      "min_floor": 60,
+      "title_key": "title.food"
+    },
+    {
+      "min_floor": 80,
+      "title_key": "title.nightmare"
+    },
+    {
+      "min_floor": 95,
+      "title_key": "title.god_slayer"
+    },
+    {
+      "min_floor": 101,
+      "title_key": "title.tower_breaker"
+    }
+  ]
+}

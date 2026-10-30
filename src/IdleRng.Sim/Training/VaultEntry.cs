@@ -24,6 +24,9 @@ namespace IdleRng.Sim.Training
         public List<string> Books { get; set; } = new List<string>();
         public List<RunCommand> Log { get; set; } = new List<RunCommand>();
 
+        /// <summary>The account's talent bonuses the run started with (specs/18 section 3); Replay needs them.</summary>
+        public RunModifiers Mods { get; set; } = new RunModifiers();
+
         /// <summary>The MVP grade: the rank the monster reached (a fight_ranks id, e.g. "c").</summary>
         public string Grade { get; set; }
         public int RankIndex { get; set; }
@@ -43,7 +46,7 @@ namespace IdleRng.Sim.Training
         public long SealedUtcMs { get; set; }
 
         /// <summary>The monster as a battle fighter, rebuilt by replaying the run.</summary>
-        public Fighter Fighter(ContentDb c) => TrainingRun.MonsterFighter(c, TrainingRun.Replay(c, SpeciesId, Seed, Log, Books));
+        public Fighter Fighter(ContentDb c) => TrainingRun.MonsterFighter(c, TrainingRun.Replay(c, SpeciesId, Seed, Log, Books, Mods));
     }
 
     public static class Vault
@@ -60,7 +63,7 @@ namespace IdleRng.Sim.Training
                 SpeciesId = s.SpeciesId, Seed = s.Seed, End = s.End, RankIndex = s.Rank, Grade = c.FightRanks[s.Rank].Id,
                 Cycles = s.Cycle, FightsFought = s.FightsFought, FightsWon = s.FightsWon, Stats = s.Stats.Clone(),
                 RunHash = TrainingRun.StateHash(s), SealedUtcMs = sealedUtcMs,
-                Log = s.Log.ConvertAll(l => l.Clone()),
+                Log = s.Log.ConvertAll(l => l.Clone()), Mods = s.Mods.Clone(),
             };
             // Books brought into the run = unused ones now + the ones the log used.
             e.Books.AddRange(s.Books);

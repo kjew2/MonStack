@@ -1,0 +1,45 @@
+{
+  "table": "talents",
+  "rows": [
+    {
+      "id": "frugal_drills",
+      "name_key": "talent.frugal_drills.name",
+      "desc_key": "talent.frugal_drills.desc",
+      "effect": "drill_cost",
+      "per_rank": -0.05,
+      "max_rank": 5,
+      "cost_base": 20,
+      "cost_step": 20
+    },
+    {
+      "id": "strong_stock",
+      "name_key": "talent.strong_stock.name",
+      "desc_key": "talent.strong_stock.desc",
+      "effect": "stat_floor",
+      "per_rank": 0.1,
+      "max_rank": 3,
+      "cost_base": 30,
+      "cost_step": 30
+    },
+    {
+      "id": "wide_scouting",
+      "name_key": "talent.wide_scouting.name",
+      "desc_key": "talent.wide_scouting.desc",
+      "effect": "draft_size",
+      "per_rank": 1.0,
+      "max_rank": 2,
+      "cost_base": 50,
+      "cost_step": 50
+    },
+    {
+      "id": "head_start",
+      "name_key": "talent.head_start.name",
+      "desc_key": "talent.head_start.desc",
+      "effect": "start_sp",
+      "per_rank": 1.0,
+      "max_rank": 3,
+      "cost_base": 25,
+      "cost_step": 25
+    }
+  ]
+}

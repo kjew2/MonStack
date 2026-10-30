@@ -315,6 +315,41 @@
       "key": "MON_ECHO_POWER",
       "type": "double",
       "value": 0.5
+    },
+    {
+      "key": "SHARDS_PER_CYCLE",
+      "type": "int",
+      "value": 5
+    },
+    {
+      "key": "SHARDS_PER_RANK",
+      "type": "int",
+      "value": 10
+    },
+    {
+      "key": "GAUNTLET_FLOORS",
+      "type": "int",
+      "value": 100
+    },
+    {
+      "key": "GAUNTLET_BASE",
+      "type": "double",
+      "value": 60.0
+    },
+    {
+      "key": "GAUNTLET_GROWTH",
+      "type": "double",
+      "value": 1.03
+    },
+    {
+      "key": "GAUNTLET_BOSS_EVERY",
+      "type": "int",
+      "value": 10
+    },
+    {
+      "key": "GAUNTLET_BOSS_MULT",
+      "type": "double",
+      "value": 1.2
     }
   ]
 }

@@ -32,6 +32,7 @@ ENUMS = {
     "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
+    "TalentEffect": ["drill_cost", "stat_floor", "draft_size", "start_sp"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
     "SkillStat": ["hp", "atk", "def", "spd", "crit_rate", "crit_dmg"],
@@ -61,6 +62,11 @@ REQUIRED_CONSTANTS = {
     "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
     # skill trees (specs/15)
     "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "MON_ECHO_POWER": "double",
+    # account and meta-progression (specs/18)
+    "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int",
+    # end-of-run gauntlet (specs/19)
+    "GAUNTLET_FLOORS": "int", "GAUNTLET_BASE": "double", "GAUNTLET_GROWTH": "double", "GAUNTLET_BOSS_EVERY": "int",
+    "GAUNTLET_BOSS_MULT": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -87,6 +93,10 @@ MON_RANGES = {
     "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
+    "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
+    "GAUNTLET_GROWTH": (">= 1", lambda v: v >= 1), "GAUNTLET_BOSS_EVERY": ("> 0", lambda v: v > 0),
+    "GAUNTLET_BOSS_MULT": ("> 0", lambda v: v > 0),
 }
 
 TIERS = ENUMS["Tier"]
@@ -150,6 +160,11 @@ SCHEMA = {
     "chase_conditions": T([c("id", "id"), c("tree_id", "id"), c("type", "enum:ConditionType"), c("ref", "string"),
                            c("amount", "double", True)], key="id"),
     "skill_books": T([c("id", "id"), c("name_key", "key"), c("tree_id", "id")], key="id"),
+    "gauntlet_enemies": T([c("id", "id"), c("name_key", "key"), c("element", "id"), c("boss", "bool")]
+                           + [c(s, "double") for s in STATS], key="id"),
+    "legacy_titles": T([c("min_floor", "int"), c("title_key", "key")], key="min_floor"),
+    "talents": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("effect", "enum:TalentEffect"),
+                  c("per_rank", "double"), c("max_rank", "int"), c("cost_base", "int"), c("cost_step", "int")], key="id"),
     "skills": T([c("id", "id"), c("hero_id", "id"), c("slot", "int"), c("unlock_promotion", "int"), c("name_key", "key"),
                  c("desc_key", "key"), c("kind", "enum:SkillKind"), c("target", "enum:SkillTarget"),
                  c("stat", "enum:SkillStat", True), c("scales", "enum:SkillStat", True), c("power", "double"),
@@ -341,6 +356,41 @@ def validate_trees(t, errs):
             errs.add("E023", f"skill_books[{b['id']}]", f"tree_id '{b['tree_id']}' is not a book tree id")
 
 
+def validate_gauntlet(t, errs):
+    """End-of-run gauntlet (specs/19 section 4). Mirrors ContentDb.BuildGauntlet."""
+    elements = {r["id"] for r in t["elements"]}
+    en = t["gauntlet_enemies"]
+    if not any(not r["boss"] for r in en) or not any(r["boss"] for r in en):
+        errs.add("E044", "gauntlet_enemies", "need at least one normal enemy and one boss")
+    for r in en:
+        loc = f"gauntlet_enemies[{r['id']}]"
+        if r["element"] not in elements:
+            errs.add("E023", loc, f"element '{r['element']}' is not an element id")
+        if any(r[s] < 0 for s in STATS):
+            errs.add("E043", loc, "stat weights must be >= 0")
+    ti = [r["min_floor"] for r in t["legacy_titles"]]
+    if not ti or ti[0] != 1:
+        errs.add("E045", "legacy_titles", "first row must have min_floor = 1")
+    for i, v in enumerate(ti):
+        if i > 0 and v <= ti[i - 1]:
+            errs.add("E032", f"legacy_titles[{v}]", "min_floor must strictly increase")
+
+
+def validate_talents(t, errs):
+    """Account talent tree (specs/18 section 4). Mirrors ContentDb.BuildAccount."""
+    for r in t["talents"]:
+        loc = f"talents[{r['id']}]"
+        if r["max_rank"] < 1 or r["cost_base"] < 0 or r["cost_step"] < 0:
+            errs.add("E043", loc, "need max_rank >= 1, cost_base >= 0, cost_step >= 0")
+        p, eff = r["per_rank"], r["effect"]
+        if eff == "drill_cost" and not (p <= 0 and 1 + p * r["max_rank"] >= 0):
+            errs.add("E043", loc, "drill_cost per_rank must be <= 0 and keep the multiplier >= 0 at max rank")
+        if eff == "stat_floor" and not p >= 0:
+            errs.add("E043", loc, "stat_floor per_rank must be >= 0")
+        if eff in ("draft_size", "start_sp") and not (p >= 0 and p == int(p)):
+            errs.add("E043", loc, f"{eff} per_rank must be a whole number >= 0")
+
+
 def validate_training(t, keys, errs):
     """Training run tables and constants (specs/14 section 8)."""
     kv = {k: keys[k]["value"] for k in keys}
@@ -381,6 +431,8 @@ def validate_training(t, keys, errs):
             if not 0 <= r[s] <= stat_max:
                 errs.add("E043", loc, f"{s} must be in [0, STAT_MAX]")
     validate_trees(t, errs)
+    validate_talents(t, errs)
+    validate_gauntlet(t, errs)
     ms = [r["threshold"] for r in t["stat_milestones"]]
     for i, v in enumerate(ms):
         if v <= 0 or (i > 0 and v <= ms[i - 1]):

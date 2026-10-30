@@ -20,7 +20,7 @@ namespace IdleRng.Sim.Content
             "banners", "boss_rules", "constants", "curves", "daily_quests", "elements", "gear_rarity",
             "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles", "skills",
             "tutorial_grants", "species", "drill_tiers", "fight_ranks", "stat_milestones",
-            "monster_skills", "trees", "tree_nodes", "chase_conditions", "skill_books",
+            "monster_skills", "trees", "tree_nodes", "chase_conditions", "skill_books", "talents", "gauntlet_enemies", "legacy_titles",
         };
 
         // Curves are precomputed to this many steps (covers STAGE_CAP); beyond it Eval keeps multiplying.
@@ -107,6 +107,22 @@ namespace IdleRng.Sim.Content
         public IReadOnlyList<TreeDef> TreeList { get; private set; }
         public IReadOnlyDictionary<string, TreeNodeDef> TreeNodes { get; private set; }
         public IReadOnlyDictionary<string, SkillBookDef> SkillBooks { get; private set; }
+
+        // Account and meta-progression (specs/18)
+        public IReadOnlyDictionary<string, TalentDef> Talents { get; private set; }
+
+        /// <summary>Talents in CSV order.</summary>
+        public IReadOnlyList<TalentDef> TalentList { get; private set; }
+
+        // End-of-run gauntlet (specs/19)
+        /// <summary>Normal gauntlet enemies in CSV order (floors rotate through them).</summary>
+        public IReadOnlyList<GauntletEnemyDef> GauntletEnemies { get; private set; }
+
+        /// <summary>Boss gauntlet enemies in CSV order (boss floors rotate through them).</summary>
+        public IReadOnlyList<GauntletEnemyDef> GauntletBosses { get; private set; }
+
+        /// <summary>Legacy titles by increasing MinFloor; the first has MinFloor 1.</summary>
+        public IReadOnlyList<LegacyTitleDef> LegacyTitles { get; private set; }
 
         public int GearSlotCount => GearSlots.Count;
 
@@ -298,7 +314,9 @@ namespace IdleRng.Sim.Content
                 DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
-                MonEchoPower = D("MON_ECHO_POWER"),
+                MonEchoPower = D("MON_ECHO_POWER"), ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
+                GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
+                GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
             };
             if (errors.Count > 0) return;
 
@@ -543,7 +561,9 @@ namespace IdleRng.Sim.Content
                   && k.DrillEnergyCost >= 0 && k.RestEnergy >= 0 && In01(k.DrillFailMin) && In01(k.DrillFailMax)
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0
-                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)))
+                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)
+                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
+                  && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
 
             var trained = IdleRng.Sim.Combat.StatIds.Trained;
@@ -607,6 +627,8 @@ namespace IdleRng.Sim.Content
             }
 
             BuildTrees(t, errors);
+            BuildAccount(t, errors);
+            BuildGauntlet(t, errors);
 
             StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
             for (int i = 0; i < StatMilestones.Count; i++)
@@ -770,6 +792,70 @@ namespace IdleRng.Sim.Content
             foreach (var b in SkillBooks.Values)
                 if (!Trees.TryGetValue(b.TreeId, out var bt) || bt.Kind != TreeKind.Book)
                     errors.Add(new ContentError("E023", $"skill_books[{b.Id}]", $"tree_id '{b.TreeId}' is not a book tree id"));
+        }
+
+        /// <summary>Account talent tree (specs/18 section 4). Mirrors validate_talents in tools/content_build.py.</summary>
+        void BuildAccount(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            TalentList = t["talents"].Select(r => new TalentDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), DescKey = r.Str("desc_key"), Effect = ParseTalentEffect(r.Str("effect")),
+                PerRank = r.Dbl("per_rank"), MaxRank = r.Int("max_rank"), CostBase = r.Int("cost_base"), CostStep = r.Int("cost_step"),
+            }).ToList().AsReadOnly();
+            Talents = new ReadOnlyDictionary<string, TalentDef>(TalentList.ToDictionary(x => x.Id, StringComparer.Ordinal));
+            foreach (var d in TalentList)
+            {
+                string loc = $"talents[{d.Id}]";
+                if (d.MaxRank < 1 || d.CostBase < 0 || d.CostStep < 0)
+                    errors.Add(new ContentError("E043", loc, "need max_rank >= 1, cost_base >= 0, cost_step >= 0"));
+                double p = d.PerRank;
+                bool ok;
+                switch (d.Effect)
+                {
+                    case TalentEffect.DrillCost: ok = p <= 0 && 1 + p * d.MaxRank >= 0; break;
+                    case TalentEffect.StatFloor: ok = p >= 0; break;
+                    default: ok = p >= 0 && p == Math.Floor(p); break;
+                }
+                if (!ok) errors.Add(new ContentError("E043", loc, $"per_rank {p} out of range for {d.Effect}"));
+            }
+        }
+
+        /// <summary>End-of-run gauntlet (specs/19 section 4). Mirrors validate_gauntlet in tools/content_build.py.</summary>
+        void BuildGauntlet(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            var all = t["gauntlet_enemies"].Select(r => new GauntletEnemyDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), Element = r.Str("element"), Boss = r.Bool("boss"), Weights = StatsFrom(r, ""),
+            }).ToList();
+            GauntletEnemies = all.Where(e => !e.Boss).ToList().AsReadOnly();
+            GauntletBosses = all.Where(e => e.Boss).ToList().AsReadOnly();
+            if (GauntletEnemies.Count == 0 || GauntletBosses.Count == 0)
+                errors.Add(new ContentError("E044", "gauntlet_enemies", "need at least one normal enemy and one boss"));
+            foreach (var e in all)
+            {
+                if (!Elements.ContainsKey(e.Element)) errors.Add(new ContentError("E023", $"gauntlet_enemies[{e.Id}]", $"element '{e.Element}' is not an element id"));
+                foreach (var id in IdleRng.Sim.Combat.StatIds.Trained)
+                    if (!(e.Weights.Get(id) >= 0)) { errors.Add(new ContentError("E043", $"gauntlet_enemies[{e.Id}]", "stat weights must be >= 0")); break; }
+            }
+            LegacyTitles = t["legacy_titles"].Select(r => new LegacyTitleDef { MinFloor = r.Int("min_floor"), TitleKey = r.Str("title_key") })
+                .ToList().AsReadOnly();
+            if (LegacyTitles.Count == 0 || LegacyTitles[0].MinFloor != 1)
+                errors.Add(new ContentError("E045", "legacy_titles", "first row must have min_floor = 1"));
+            for (int i = 1; i < LegacyTitles.Count; i++)
+                if (LegacyTitles[i].MinFloor <= LegacyTitles[i - 1].MinFloor)
+                    errors.Add(new ContentError("E032", $"legacy_titles[{LegacyTitles[i].MinFloor}]", "min_floor must strictly increase"));
+        }
+
+        static TalentEffect ParseTalentEffect(string s)
+        {
+            switch (s)
+            {
+                case "drill_cost": return TalentEffect.DrillCost;
+                case "stat_floor": return TalentEffect.StatFloor;
+                case "draft_size": return TalentEffect.DraftSize;
+                case "start_sp": return TalentEffect.StartSp;
+                default: throw new FormatException($"unknown talent effect '{s}'");
+            }
         }
 
         static TreeKind ParseTreeKind(string s)

@@ -17,28 +17,35 @@ namespace IdleRng.Sim.Training
     {
         public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight";
         public const string MonsterId = "monster";
-        public const int HashVersion = 2;
-        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v2");
+        public const int HashVersion = 3;
+        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v3");
 
         // ------------------------------------------------------------------ start
 
         /// <summary>
         /// A fresh run of <paramref name="speciesId"/>: species base stats, full start energy, cycle 1, lowest rank, the two
         /// native trees in slots 0 and 1, SP_PER_CYCLE skill points, and <paramref name="books"/> to use during the run.
+        /// <paramref name="mods"/> carries the account's talent bonuses (specs/18); null means none.
         /// </summary>
-        public static RunState Start(ContentDb c, string speciesId, ulong seed, IEnumerable<string> books = null)
+        public static RunState Start(ContentDb c, string speciesId, ulong seed, IEnumerable<string> books = null, RunModifiers mods = null)
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
             if (speciesId == null || !c.Species.TryGetValue(speciesId, out var sp))
                 throw new ArgumentException($"unknown species '{speciesId}'", nameof(speciesId));
             var k = c.Constants;
+            mods = mods?.Clone() ?? new RunModifiers();
+            if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.DraftSizeBonus < 0 || mods.StartSp < 0)
+                throw new ArgumentException("run modifiers must be >= 0", nameof(mods));
+            var stats = sp.Base.Clone();
+            if (mods.StatFloorMult != 1)
+                foreach (var id in StatIds.Trained) Set(stats, id, Math.Min(k.StatMax, Math.Floor(stats.Get(id) * mods.StatFloorMult)));
             var s = new RunState
             {
-                SpeciesId = speciesId, Seed = seed, Stats = sp.Base.Clone(),
+                SpeciesId = speciesId, Seed = seed, Stats = stats, Mods = mods,
                 Energy = k.RunEnergyStart, Cycle = 1, ApLeft = k.RunAp, Rank = 0, Phase = RunPhase.Training,
                 Training = new RngStream(TrainingStream, StreamNames.StreamSeed(seed, TrainingStream)),
                 Draft = new RngStream(DraftStream, StreamNames.StreamSeed(seed, DraftStream)),
-                Sp = k.SpPerCycle, Slots = new TreeSlot[k.TreeSlots],
+                Sp = k.SpPerCycle + mods.StartSp, Slots = new TreeSlot[k.TreeSlots],
             };
             s.Slots[0] = new TreeSlot { TreeId = sp.NativeTree1 };
             s.Slots[1] = new TreeSlot { TreeId = sp.NativeTree2 };
@@ -77,7 +84,7 @@ namespace IdleRng.Sim.Training
             double injuryP = InjuryChance(k, e);
             bool injured = injuryP > 0 && s.Training.NextDouble() < injuryP;
 
-            s.Energy = Math.Max(0, s.Energy - k.DrillEnergyCost);
+            s.Energy = Math.Max(0, s.Energy - k.DrillEnergyCost * s.Mods.DrillCostMult);
             s.Drills++;
             s.Log.Add(new RunCommand(RunCommandKind.Drill, stat));
             var result = new DrillResult { Stat = stat, Tier = tier, Gain = after - before, NewValue = after, EnergyAfter = s.Energy, Injured = injured };
@@ -372,7 +379,7 @@ namespace IdleRng.Sim.Training
                 if (t.Kind == TreeKind.Generic && (t.OfferStat == null || t.OfferStat == stat) && t.OfferThreshold <= threshold
                     && Slotted(s, t.Id) < 0 && !Pending(s, t.Id))
                     pool.Add(t.Id);
-            int n = Math.Min(c.Constants.DraftSize, pool.Count);
+            int n = Math.Min(c.Constants.DraftSize + s.Mods.DraftSizeBonus, pool.Count);
             if (n == 0) return;
             for (int i = 0; i < n; i++)
             {
@@ -489,10 +496,11 @@ namespace IdleRng.Sim.Training
 
         // ------------------------------------------------------------------ replay and hash
 
-        /// <summary>Rebuild a run from its species, seed, books and command log. Throws if a command is not valid at its point.</summary>
-        public static RunState Replay(ContentDb c, string speciesId, ulong seed, IEnumerable<RunCommand> log, IEnumerable<string> books = null)
+        /// <summary>Rebuild a run from its species, seed, books, modifiers and command log. Throws if a command is not valid at its point.</summary>
+        public static RunState Replay(ContentDb c, string speciesId, ulong seed, IEnumerable<RunCommand> log, IEnumerable<string> books = null,
+                                      RunModifiers mods = null)
         {
-            var s = Start(c, speciesId, seed, books);
+            var s = Start(c, speciesId, seed, books, mods);
             foreach (var cmd in log) Apply(c, s, cmd);
             return s;
         }
@@ -520,6 +528,7 @@ namespace IdleRng.Sim.Training
             w.Bytes(HashMagic);
             w.Str(s.SpeciesId);
             w.U64(s.Seed);
+            w.F64(s.Mods.DrillCostMult); w.F64(s.Mods.StatFloorMult); w.I32(s.Mods.DraftSizeBonus); w.I32(s.Mods.StartSp);
             foreach (var id in StatIds.Trained) w.F64(s.Stats.Get(id));
             w.F64(s.Energy);
             w.I32(s.Cycle); w.I32(s.ApLeft); w.I32(s.Rank);

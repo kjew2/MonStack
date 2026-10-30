@@ -246,3 +246,27 @@ rule.counter_mitigated.name,Mitigation Counter
 rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage).
 rule.echo_cast.name,Echo Cast
 rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at reduced power."
+talent.frugal_drills.name,Frugal Drills
+talent.frugal_drills.desc,Drills cost 5% less energy per rank.
+talent.strong_stock.name,Strong Stock
+talent.strong_stock.desc,Monsters start runs with 10% higher base stats per rank.
+talent.wide_scouting.name,Wide Scouting
+talent.wide_scouting.desc,Milestone drafts offer one more tree per rank.
+talent.head_start.name,Head Start
+talent.head_start.desc,Start each run with one extra skill point per rank.
+gauntlet.slimeling.name,Slimeling
+gauntlet.imp.name,Imp
+gauntlet.golem.name,Golem
+gauntlet.wisp.name,Wisp
+gauntlet.shade.name,Shade
+gauntlet.apex_chimera.name,Apex Chimera
+gauntlet.void_hydra.name,Void Hydra
+gauntlet.storm_titan.name,Storm Titan
+title.punching_bag,Punching Bag
+title.warm_up_act,Warm-Up Act
+title.respectable_brawler,Respectable Brawler
+title.professional_punching_bag,Professional Punching Bag
+title.food,{killer} Food
+title.nightmare,{killer}'s Nightmare
+title.god_slayer,God-Slayer
+title.tower_breaker,Tower Breaker

@@ -73,7 +73,7 @@ Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700,
 
 - Pure: no clock, IO or `Math.Pow`. All randomness is the `training` and `draft` streams plus derived fight seeds.
 - `TrainingRun.Replay(content, species, seed, log, books)` rebuilds a run from its command log; tests check it gives the same `StateHash` for every species, bot and book list.
-- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions, `HashVersion` 2 since skill trees).
+- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument).
 
 ## 8. Content
 

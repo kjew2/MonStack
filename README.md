@@ -24,6 +24,8 @@ Start with `specs/00-overview.md`. It holds the canonical constants and the cont
 | `specs/13-pivot-transition.md` | Plan for moving this repo from the idle game to `specs/12`: what carries over, phases, open questions |
 | `specs/14-training-run.md` | Training run (pivot T2): AP cycles of Drill and Rest, drill rolls, energy and injury, rank fights, milestones |
 | `specs/15-skill-trees.md` | Skill trees (pivot T3): 4 slots, skill points, nodes with ~75% filler, milestone/book/chase offers, overwriting, chase unlock and re-lock |
+| `specs/18-meta-progression.md` | Account (pivot T5): owned species, Vault, Training Shards, talent tree, run modifiers, account save lineage |
+| `specs/19-gauntlet.md` | End-of-run gauntlet (pivot T8): the monster climbs 100 escalating floors; the floor and killer the wheel lands on; Legacy Titles |
 | `specs/16-battle.md` | Monster battle engine (pivot T1): sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). Agent rules live in `CLAUDE.md`.
