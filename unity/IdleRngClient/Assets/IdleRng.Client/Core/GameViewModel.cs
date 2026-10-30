@@ -411,6 +411,11 @@ namespace IdleRng.Client.Core
                 row.Spd = def.Spd; row.CritRate = def.CritRate; row.CritDmg = def.CritDmg;
                 row.Promotions = q.Promotions(row.Id);
                 row.MaxPromotions = q.MaxPromotions(row.Id);
+                var kit = new System.Text.StringBuilder();
+                foreach (var sk in _c.Kits[row.Id])
+                    kit.Append(sk.UnlockPromotion <= row.Promotions ? "* " : "[P" + sk.UnlockPromotion + "] ")
+                       .Append(_c.Text(sk.NameKey)).Append(": ").Append(_c.Text(sk.DescKey)).Append('\n');
+                row.Kit = kit.ToString().TrimEnd('\n');
                 row.EquippedSlot = -1;
                 for (int s = 0; s < eq.Length; s++)
                     if (eq[s] == row.Id) { row.EquippedSlot = s; Heroes.Equipped[s] = row; }

@@ -317,6 +317,246 @@
     {
       "key": "promotion.p3.name",
       "text": "Ascended"
+    },
+    {
+      "key": "skill.heavy_strike.name",
+      "text": "Heavy Strike"
+    },
+    {
+      "key": "skill.heavy_strike.desc",
+      "text": "Deal 200% ATK damage to the enemy. Cooldown 3 turns."
+    },
+    {
+      "key": "skill.taunt.name",
+      "text": "Taunt"
+    },
+    {
+      "key": "skill.taunt.desc",
+      "text": "Force the enemy to attack this companion for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.rally.name",
+      "text": "Rally"
+    },
+    {
+      "key": "skill.rally.desc",
+      "text": "All allies: +20% ATK for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.mend.name",
+      "text": "Mend"
+    },
+    {
+      "key": "skill.mend.desc",
+      "text": "Heal the weakest ally for 150% ATK. Cooldown 3 turns."
+    },
+    {
+      "key": "skill.arc_burst.name",
+      "text": "Arc Burst"
+    },
+    {
+      "key": "skill.arc_burst.desc",
+      "text": "Deal 150% ATK damage to all enemies. Cooldown 3 turns."
+    },
+    {
+      "key": "skill.purify.name",
+      "text": "Purify"
+    },
+    {
+      "key": "skill.purify.desc",
+      "text": "Heal all allies for 80% ATK. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.focus.name",
+      "text": "Focus"
+    },
+    {
+      "key": "skill.focus.desc",
+      "text": "Self: +25% crit rate for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.shield_wall.name",
+      "text": "Shield Wall"
+    },
+    {
+      "key": "skill.shield_wall.desc",
+      "text": "Shield all allies for 100% DEF for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.haste.name",
+      "text": "Haste"
+    },
+    {
+      "key": "skill.haste.desc",
+      "text": "All allies: +20% SPD for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.execute.name",
+      "text": "Execute"
+    },
+    {
+      "key": "skill.execute.desc",
+      "text": "Deal 350% ATK damage to the enemy. Cooldown 5 turns."
+    },
+    {
+      "key": "skill.hex.name",
+      "text": "Hex"
+    },
+    {
+      "key": "skill.hex.desc",
+      "text": "The enemy: -20% DEF for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.meteor.name",
+      "text": "Meteor"
+    },
+    {
+      "key": "skill.meteor.desc",
+      "text": "Deal 300% ATK damage to all enemies. Cooldown 5 turns."
+    },
+    {
+      "key": "skill.counter_stance.name",
+      "text": "Counter Stance"
+    },
+    {
+      "key": "skill.counter_stance.desc",
+      "text": "Self: +40% DEF for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.radiant_beam.name",
+      "text": "Radiant Beam"
+    },
+    {
+      "key": "skill.radiant_beam.desc",
+      "text": "Deal 220% ATK damage to the enemy. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.killer_instinct.name",
+      "text": "Killer Instinct"
+    },
+    {
+      "key": "skill.killer_instinct.desc",
+      "text": "Passive: +10% crit rate."
+    },
+    {
+      "key": "skill.blade_flurry.name",
+      "text": "Blade Flurry"
+    },
+    {
+      "key": "skill.blade_flurry.desc",
+      "text": "Deal 250% ATK damage to the enemy. Cooldown 3 turns."
+    },
+    {
+      "key": "skill.flame_burst.name",
+      "text": "Flame Burst"
+    },
+    {
+      "key": "skill.flame_burst.desc",
+      "text": "Deal 220% ATK damage to the enemy. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.iron_skin.name",
+      "text": "Iron Skin"
+    },
+    {
+      "key": "skill.iron_skin.desc",
+      "text": "Passive: +20% DEF."
+    },
+    {
+      "key": "skill.bulwark.name",
+      "text": "Bulwark"
+    },
+    {
+      "key": "skill.bulwark.desc",
+      "text": "Shield all allies for 200% DEF for 2 turns. Cooldown 5 turns."
+    },
+    {
+      "key": "skill.thorn_lash.name",
+      "text": "Thorn Lash"
+    },
+    {
+      "key": "skill.thorn_lash.desc",
+      "text": "Deal 220% ATK damage to the enemy. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.arcane_mind.name",
+      "text": "Arcane Mind"
+    },
+    {
+      "key": "skill.arcane_mind.desc",
+      "text": "Passive: +15% ATK."
+    },
+    {
+      "key": "skill.overload.name",
+      "text": "Overload"
+    },
+    {
+      "key": "skill.overload.desc",
+      "text": "Self: +40% ATK for 2 turns. Cooldown 5 turns."
+    },
+    {
+      "key": "skill.tidal_crash.name",
+      "text": "Tidal Crash"
+    },
+    {
+      "key": "skill.tidal_crash.desc",
+      "text": "Deal 220% ATK damage to the enemy. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.grace.name",
+      "text": "Grace"
+    },
+    {
+      "key": "skill.grace.desc",
+      "text": "Passive: +15% HP."
+    },
+    {
+      "key": "skill.ward.name",
+      "text": "Ward"
+    },
+    {
+      "key": "skill.ward.desc",
+      "text": "Shield the weakest ally for 150% ATK for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.sanctuary.name",
+      "text": "Sanctuary"
+    },
+    {
+      "key": "skill.sanctuary.desc",
+      "text": "Heal all allies for 150% ATK. Cooldown 5 turns."
+    },
+    {
+      "key": "skill.swiftness.name",
+      "text": "Swiftness"
+    },
+    {
+      "key": "skill.swiftness.desc",
+      "text": "Passive: +10% SPD."
+    },
+    {
+      "key": "skill.weaken.name",
+      "text": "Weaken"
+    },
+    {
+      "key": "skill.weaken.desc",
+      "text": "The enemy: -20% ATK for 2 turns. Cooldown 4 turns."
+    },
+    {
+      "key": "skill.battle_hymn.name",
+      "text": "Battle Hymn"
+    },
+    {
+      "key": "skill.battle_hymn.desc",
+      "text": "All allies: +30% crit damage for 2 turns. Cooldown 5 turns."
+    },
+    {
+      "key": "skill.shadow_rend.name",
+      "text": "Shadow Rend"
+    },
+    {
+      "key": "skill.shadow_rend.desc",
+      "text": "Deal 220% ATK damage to the enemy. Cooldown 4 turns."
     }
   ]
 }

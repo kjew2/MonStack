@@ -69,6 +69,9 @@ namespace IdleRng.Client.Core
         public Rarity Tier;
         public int Copies, Level, NextLevelCopies, EquippedSlot = -1;
         public string Role, Element;
+
+        /// <summary>Kit as display lines; locked skills are marked (specs/11 section 4.4, skeleton).</summary>
+        public string Kit = "";
         public double FarmDps, Hp, Atk, Def, Spd, CritRate, CritDmg;
         public int Promotions, MaxPromotions;
         public bool Owned => Copies > 0;

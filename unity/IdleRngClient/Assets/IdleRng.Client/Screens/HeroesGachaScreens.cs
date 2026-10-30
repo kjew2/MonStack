@@ -115,7 +115,8 @@ namespace IdleRng.Client.Screens
                                     "HP " + TextFmt.Num(selRow.Hp) + "  ATK " + TextFmt.Num(selRow.Atk) + "  DEF " + TextFmt.Num(selRow.Def) +
                                     "  SPD " + selRow.Spd + "  crit " + TextFmt.PctSigned(selRow.CritRate).TrimStart('+') + " x" + selRow.CritDmg.ToString("0.00")
                                   : "not owned") +
-                                (selRow.EquippedSlot >= 0 ? "   equipped slot " + (selRow.EquippedSlot + 1) : ""));
+                                (selRow.EquippedSlot >= 0 ? "   equipped slot " + (selRow.EquippedSlot + 1) : "") +
+                                "\n" + selRow.Kit);
             }
         }
     }

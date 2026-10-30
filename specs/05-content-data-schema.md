@@ -523,6 +523,7 @@ Range rules (`{rule}` text in parentheses): `TICK_HZ`, `ATTACK_INTERVAL_TICKS`, 
 | `E060` | hero_level_thresholds, class_advances | Index column not `1..N` in row order | `{column} must be exactly 1..{n} in row order, got {values}` |
 | `E061` | hero_level_thresholds | Level 1 threshold not 1 | `cum_copies for level 1 must be 1 (one copy = level 1), got {value}` |
 | `E062` | heroes | Not exactly one starter (`specs/11` section 9) | `exactly one hero must have starter = true (found {n})` |
+| `E063` | skills | Kit shape wrong (`specs/11` section 9) | `needs a base skill and exactly one skill per promotion 1..{max}` |
 
 ### 8.5 Versioning and manifest
 

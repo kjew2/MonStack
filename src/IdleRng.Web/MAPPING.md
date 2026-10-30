@@ -28,7 +28,7 @@ Hero ids: `hero_c_01` <-> `C01` (tier letter upper-case + number), mapped both w
 | gearBasePct / gearEffPct (piece) | `SimQuery.GearBasePct/GearEffPct(new GearPiece(0, rarity, tier, enh))` | null piece -> 0 |
 | gearSlotMult, gearMult, heroMult, dps, hitDamage | `SimQuery.*` | |
 | heroLevel, heroFarmDps(id) | `SimQuery.HeroLevel/HeroFarmDps` | id mapped |
-| heroInfo(id) | derived: `HeroDef` stats x `LevelMult * PromoMult`, `SimQuery.Promotions/MaxPromotions/NextPromotionCost/NextPromotionStage/HeroFarmDpsAfterPromotion/CanPromote` | id mapped; role/element names from `ContentDb.Roles/Elements` |
+| heroInfo(id) | derived: `ContentDb.Kits[id]` (kit: name, desc, unlockPromotion, unlocked, passive), `HeroDef` stats x `LevelMult * PromoMult`, `SimQuery.Promotions/MaxPromotions/NextPromotionCost/NextPromotionStage/HeroFarmDpsAfterPromotion/CanPromote` | id mapped; role/element names from `ContentDb.Roles/Elements` |
 | partyDps | `SimQuery.PartyDps` | |
 | promoMult(k?) | `SimQuery.PromoMult`; with k: `ContentDb.PromoMult(k)` (clamps at the promotion count) | |
 | hitsToKill, killTimeSeconds, isBossStage, bossClearable | `SimQuery.*` | hitsToKill saturates at int.MaxValue |

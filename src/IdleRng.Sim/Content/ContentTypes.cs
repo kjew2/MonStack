@@ -144,6 +144,30 @@ namespace IdleRng.Sim.Content
         public string StrongVs { get; internal set; }
     }
 
+    public enum SkillKind { Damage, Heal, Shield, Taunt, Buff, Debuff, Passive }
+    public enum SkillTarget { Enemy, AllEnemies, Self, LowestAlly, AllAllies }
+
+    /// <summary>
+    /// One skill in a companion's kit (specs/11 section 4.4). Skeleton data: the battle (phase 2) gives it effect.
+    /// UnlockPromotion 0 = base kit; k = unlocked by promotion k. Stat/Scales are stat-sheet ids ("atk", "def", ...) or null.
+    /// </summary>
+    public sealed class SkillDef
+    {
+        public string Id { get; internal set; }
+        public string HeroId { get; internal set; }
+        public int Slot { get; internal set; }
+        public int UnlockPromotion { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string DescKey { get; internal set; }
+        public SkillKind Kind { get; internal set; }
+        public SkillTarget Target { get; internal set; }
+        public string Stat { get; internal set; }
+        public string Scales { get; internal set; }
+        public double Power { get; internal set; }
+        public int Cooldown { get; internal set; }
+        public int Duration { get; internal set; }
+    }
+
     /// <summary>One promotion step (specs/11 section 6). Index is 1-based.</summary>
     public sealed class PromotionDef
     {

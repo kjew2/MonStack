@@ -105,7 +105,20 @@ Kit size grows with rarity, and each promotion adds exactly one skill:
 | L | Basic attack + 2 skills + passive | 3 | Fully fleshed kit |
 | M | Basic attack + 2 skills + passive | 3 | Fully fleshed kit |
 
-Low-rarity skills are one simple effect each (e.g. "hit twice", "heal lowest ally"). Skill effects, the skill table and the trigger system arrive with the battle in phase 2. In phase 1 a promotion records that its skill slot is unlocked; the skill does nothing until phase 2.
+Low-rarity skills are one simple effect each (e.g. "hit twice", "heal lowest ally").
+
+**Skeleton kits (kj, 2026-10-30): don't overthink kits yet.** Every companion has a kit in `content_src/skills.csv` that roughly fits its role and element, so the battle has something to run. Kits are filled from templates:
+
+| Part | Who gets it | Template |
+|---|---|---|
+| Base skill | everyone | by role: Striker Heavy Strike, Tank Taunt, Caster Arc Burst, Healer Mend, Support Rally |
+| Element skill | L, M | by element: Flame Burst, Tidal Crash, Thorn Lash, Radiant Beam, Shadow Rend |
+| Passive | L, M | by role: Killer Instinct, Iron Skin, Arcane Mind, Grace, Swiftness |
+| Promotion skills 1-3 | up to the rarity cap | by role, e.g. Striker Focus / Execute / Blade Flurry |
+
+So kit sizes are C 1, R 2, E 3, L 6, M 6 skills (plus the basic attack every companion has). Names and numbers repeat across companions of the same role on purpose. Later passes overhaul kits one companion at a time, starting with L and M; a kit can change freely as long as the content rules in section 9 hold.
+
+Skill effects run in the battle (phase 2). In phase 1 kits are content and display only: the Party screen lists each skill and whether its promotion has unlocked it.
 
 ### 4.5 Starter companion
 
@@ -211,6 +224,8 @@ Changes to `specs/05` section 5. `content_version` goes to `2.0` (MAJOR: heroes 
 `roles`: `id` (key), `sort_order` (int, `0..N-1`), `name_key`, `desc_key`.
 
 `elements`: `id` (key), `sort_order` (int, `0..N-1`), `name_key`, `display_color` (color), `strong_vs` (ref(elements)).
+
+`skills` (skeleton kits, section 4.4): `id` (key), `hero_id` (ref(heroes), `E023`), `slot` (int, `0..N-1` contiguous per hero, `E060`), `unlock_promotion` (int; 0 = base kit), `name_key`, `desc_key`, `kind` (enum `damage`, `heal`, `shield`, `taunt`, `buff`, `debuff`, `passive`), `target` (enum `enemy`, `all_enemies`, `self`, `lowest_ally`, `all_allies`), `stat` (stat id, required for buff/debuff/passive), `scales` (stat id, required for damage/heal/shield), `power` (double `>= 0`: multiplier of `scales`, or the buff/debuff fraction), `cooldown` (int turns; 0 iff passive), `duration` (int turns). Each companion needs at least one base skill and exactly one skill per promotion `1..max_promotions` (`E063`). Adding the table took content to `2.1`.
 
 `promotions` (replaces `class_advances`): `index` (key, `1..N` contiguous, `E060`), `unlock_stage` (int, strictly increasing, `E032`), `mult` (double, `> 0`), `cost_kills` (double, `>= 0`), `name_key`.
 

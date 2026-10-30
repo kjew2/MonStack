@@ -27,7 +27,7 @@ UiContent() : string                           // JSON, UI labels and display nu
 
 ### Query names (name -> args -> result)
 
-`hp(stage)`, `bossHp(stage)`, `gold(stage)`, `statCost(n)`, `statMult(n?)`, `gearTier(stage)`, `gearBasePct(piece)`, `gearEffPct(piece)`, `gearSlotMult(slot)`, `gearMult()`, `heroLevel(copies)`, `heroFarmDps(id)`, `heroInfo(id)` (stat sheet, role, element and promotion state), `heroMult()`, `promoMult(k?)`, `partyDps()`, `dps()`, `hitDamage()`, `hitsToKill(hp)`, `killTimeSeconds(stage)`, `isBossStage()`, `bossClearable()`, `needDps()`, `enhanceCost()`, `enhanceSuccess(level)`, `pityRate(n)`, `freePullsRemaining()`, `chestReadyAtMs()`, `chestReady()`, `bulkCost(n, m)`, `maxAffordable(gold?)`, `pullPrice(count)`, `bestParty()`, `autoEquipWouldChange()`, `nowMs()`, `validate()` (array of error strings), `consolidatedRates()`.
+`hp(stage)`, `bossHp(stage)`, `gold(stage)`, `statCost(n)`, `statMult(n?)`, `gearTier(stage)`, `gearBasePct(piece)`, `gearEffPct(piece)`, `gearSlotMult(slot)`, `gearMult()`, `heroLevel(copies)`, `heroFarmDps(id)`, `heroInfo(id)` (stat sheet, role, element, promotion state and kit), `heroMult()`, `promoMult(k?)`, `partyDps()`, `dps()`, `hitDamage()`, `hitsToKill(hp)`, `killTimeSeconds(stage)`, `isBossStage()`, `bossClearable()`, `needDps()`, `enhanceCost()`, `enhanceSuccess(level)`, `pityRate(n)`, `freePullsRemaining()`, `chestReadyAtMs()`, `chestReady()`, `bulkCost(n, m)`, `maxAffordable(gold?)`, `pullPrice(count)`, `bestParty()`, `autoEquipWouldChange()`, `nowMs()`, `validate()` (array of error strings), `consolidatedRates()`.
 A `piece` argument is `{"tier":int,"rarity":int,"enh":int}`. Optional args may be omitted or `null`.
 
 ### Command names (name -> args -> result object)

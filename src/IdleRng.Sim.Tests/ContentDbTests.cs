@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndMatchesSpec00()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("2.0"));
+            Assert.That(db.Version, Is.EqualTo("2.1"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             var b = db.HeroBanner;
             Assert.That(Enumerable.Range(0, 5).Select(i => b.Pool[i].Count), Is.EqualTo(new[] { 5, 5, 4, 4, 2 }));
@@ -21,6 +21,15 @@ namespace IdleRng.Sim.Tests
             Assert.That(db.HeroTiers.Select(t => t.MaxPromotions), Is.EqualTo(new[] { 0, 1, 2, 3, 3 }));
             Assert.That(db.Constants.HeroSlots, Is.EqualTo(4));
             Assert.That(db.StarterHeroId, Is.EqualTo("hero_c_01"));
+            // skeleton kits: C 1, R 2, E 3, L/M 6 skills; one skill per promotion (specs/11 section 4.4)
+            var kitSize = new[] { 1, 2, 3, 6, 6 };
+            foreach (var h in db.HeroList)
+            {
+                var kit = db.Kits[h.Id];
+                Assert.That(kit.Count, Is.EqualTo(kitSize[(int)h.Tier]), h.Id);
+                Assert.That(kit.Where(k => k.UnlockPromotion > 0).Select(k => k.UnlockPromotion),
+                            Is.EqualTo(Enumerable.Range(1, db.MaxPromotions(h))), h.Id);
+            }
             Assert.That(db.RoleList.Select(r => r.Id), Is.EqualTo(new[] { "tank", "striker", "caster", "healer", "support" }));
             Assert.That(db.ElementList.Select(e => e.Id + ">" + e.StrongVs),
                         Is.EqualTo(new[] { "fire>nature", "water>fire", "nature>water", "light>dark", "dark>light" }));
@@ -74,7 +83,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void IsCompatibleWith()
         {
-            var db = TestContent.Db;   // 2.0
+            var db = TestContent.Db;   // 2.1
             Assert.That(db.IsCompatibleWith("2.7"), Is.True);
             Assert.That(db.IsCompatibleWith("1.0"), Is.False);
             Assert.That(db.IsCompatibleWith(""), Is.False);

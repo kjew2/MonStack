@@ -464,13 +464,14 @@
     const dKit = h('div', { class: 'muted num' });
     const dStats = h('div', { class: 'num' });
     const dPromo = h('div', { class: 'muted' });
+    const dSkills = h('ul', { class: 'kit' });
     const promoBtn = h('button', { type: 'button', class: 'btn small primary', onclick: () => {
       if (!selected) return;
       const r = sim.promote(selected);
       if (!r.ok) toast(r.reason === 'locked' ? 'Reach the unlock stage first' : r.reason === 'maxed' ? 'Already at max promotion' : 'Not enough gold');
       rebuild();
     } }, ['Promote']);
-    const detail = h('div', { class: 'card' }, [h('div', { class: 'hero-head' }, [dSprite, h('div', null, [dName, dLine, dKit])]), dStats, dPromo,
+    const detail = h('div', { class: 'card' }, [h('div', { class: 'hero-head' }, [dSprite, h('div', null, [dName, dLine, dKit])]), dStats, dSkills, dPromo,
       h('div', { class: 'row' }, [addBtn, remBtn, promoBtn])]);
     const countEl = h('span', { class: 'muted' });
     root.append(
@@ -524,7 +525,7 @@
         if (!selected) {
           setHidden(dSprite, true);
           setText(dName, 'No companion selected'); setText(dLine, 'Party DPS ' + fmt(sim.partyDps()) + ' from ' + s.heroes.party.filter(Boolean).length + ' companions.');
-          setText(dKit, ''); setText(dStats, ''); setText(dPromo, '');
+          setText(dKit, ''); setText(dStats, ''); setText(dPromo, ''); dSkills.textContent = '';
           setHidden(addBtn, true); setHidden(remBtn, true); setHidden(promoBtn, true); return;
         }
         const hero = sim.heroById[selected], copies = s.heroes.owned[selected], lvl = sim.heroLevel(copies);
@@ -537,6 +538,10 @@
         setText(dKit, info.roleName + ' · ' + info.elementName + ' · promotion ' + info.promotions + '/' + info.maxPromotions);
         setText(dStats, 'HP ' + fmt(info.hp) + ' · ATK ' + fmt(info.atk) + ' · DEF ' + fmt(info.def) + ' · SPD ' + info.spd +
           ' · Crit ' + pct(info.critRate, 0) + ' x' + info.critDmg.toFixed(2));
+        dSkills.textContent = '';
+        for (const sk of info.kit)
+          dSkills.append(h('li', { class: sk.unlocked ? '' : 'muted' }, [h('b', { text: sk.name + (sk.passive ? ' (passive)' : '') }),
+            h('span', { text: ' ' + sk.desc + (sk.unlocked ? '' : ' Unlocks at promotion ' + sk.unlockPromotion + '.') })]));
         if (info.maxPromotions === 0) setText(dPromo, C.rarityNames[R[hero.tier]] + ' companions cannot be promoted.');
         else if (info.promotions >= info.maxPromotions) setText(dPromo, 'Fully promoted.');
         else setText(dPromo, 'Next: ' + C.promotion.NAMES[info.promotions] + ' (unlocks a new skill, x' + C.promotion.MULTS[info.promotions] +

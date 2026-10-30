@@ -393,6 +393,11 @@ namespace IdleRng.Web
                 .P("promotions", q.Promotions(id)).P("maxPromotions", q.MaxPromotions(id))
                 .P("nextPromotionCost", q.NextPromotionCost(id)).P("nextPromotionStage", q.NextPromotionStage(id))
                 .P("farmDpsAfterPromotion", q.HeroFarmDpsAfterPromotion(id)).P("canPromote", q.CanPromote(id));
+            o.Key("kit").Arr();
+            foreach (var sk in _db.Kits[id])
+                o.Obj().P("name", _db.Text(sk.NameKey)).P("desc", _db.Text(sk.DescKey)).P("unlockPromotion", sk.UnlockPromotion)
+                 .P("unlocked", sk.UnlockPromotion <= q.Promotions(id)).P("passive", sk.Kind == SkillKind.Passive).EndObj();
+            o.EndArr();
             return o.EndObj().ToString();
         }
 

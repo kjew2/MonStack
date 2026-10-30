@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "2.0",
+  "content_version": "2.1",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "banners": {
@@ -59,14 +59,18 @@
       "file": "roles.json",
       "sha256": "1017de3126a424837fbbb92a8993de2b5c264cae303a6c3a81d11ef0b939598c"
     },
+    "skills": {
+      "file": "skills.json",
+      "sha256": "047e85f46bcd851ded0a0a82529c03c93689af81da5857d91d3c1493a6d705f7"
+    },
     "strings": {
       "file": "strings.json",
-      "sha256": "5037197f2651eff430408fea8198e7343dc88d74c41696d4db1b4c563811e481"
+      "sha256": "451ef95f54b65552e8bb581e6fb7ef5940492a68e7240a2adb1911bc181d11cb"
     },
     "tutorial_grants": {
       "file": "tutorial_grants.json",
       "sha256": "b8fd786ff1dbe8ae39e66404fe579a93b490673daba4754c7d44b84602bc8ae4"
     }
   },
-  "content_hash": "148f0a592bcbd6aa77d9d0f69c67388d050ca53e2cd0752adb9dc110be2b4644"
+  "content_hash": "f7c9b9d3e745bbf4563305876e578c6877badee547f5e03856188fd8daebbd30"
 }

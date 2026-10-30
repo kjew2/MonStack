@@ -18,7 +18,7 @@ namespace IdleRng.Sim.Content
         static readonly string[] TableNames =
         {
             "banners", "boss_rules", "constants", "curves", "daily_quests", "elements", "gear_rarity",
-            "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles",
+            "gear_slots", "hero_level_thresholds", "hero_tiers", "heroes", "progress_targets", "promotions", "roles", "skills",
             "tutorial_grants",
         };
 
@@ -69,6 +69,9 @@ namespace IdleRng.Sim.Content
         /// <summary>Roles and elements in sort_order.</summary>
         public IReadOnlyList<RoleDef> RoleList { get; private set; }
         public IReadOnlyList<ElementDef> ElementList { get; private set; }
+
+        /// <summary>Each companion's kit in slot order (specs/11 section 4.4). Every hero has an entry.</summary>
+        public IReadOnlyDictionary<string, IReadOnlyList<SkillDef>> Kits { get; private set; }
 
         /// <summary>Id of the starter companion (specs/11 section 4.5).</summary>
         public string StarterHeroId { get; private set; }
@@ -396,6 +399,30 @@ namespace IdleRng.Sim.Content
                 if (tierDef.MaxPromotions < 0 || tierDef.MaxPromotions > Promotions.Count)
                     errors.Add(new ContentError("E043", $"hero_tiers[{tierDef.Tier}]", $"max_promotions must be in 0..{Promotions.Count}"));
 
+            // skeleton kits (specs/11 section 4.4)
+            var skills = t["skills"].Select(r => new SkillDef
+            {
+                Id = r.Str("id"), HeroId = r.Str("hero_id"), Slot = r.Int("slot"), UnlockPromotion = r.Int("unlock_promotion"),
+                NameKey = r.Str("name_key"), DescKey = r.Str("desc_key"), Kind = ParseSkillKind(r.Str("kind")),
+                Target = ParseSkillTarget(r.Str("target")), Stat = r.NStr("stat"), Scales = r.NStr("scales"),
+                Power = r.Dbl("power"), Cooldown = r.Int("cooldown"), Duration = r.Int("duration"),
+            }).ToList();
+            var kits = new Dictionary<string, IReadOnlyList<SkillDef>>(StringComparer.Ordinal);
+            foreach (var h in heroList)
+            {
+                var kit = skills.Where(x => x.HeroId == h.Id).OrderBy(x => x.Slot).ToList();
+                for (int i = 0; i < kit.Count; i++)
+                    if (kit[i].Slot != i) errors.Add(new ContentError("E060", $"skills[{h.Id}]", "slots must be 0..N-1 contiguous per hero"));
+                int max = HeroTiers.Count == 5 ? HeroTiers[(int)h.Tier].MaxPromotions : 0;
+                var promos = kit.Where(x => x.UnlockPromotion > 0).Select(x => x.UnlockPromotion).OrderBy(x => x).ToList();
+                if (!kit.Any(x => x.UnlockPromotion == 0) || !promos.SequenceEqual(Enumerable.Range(1, max)))
+                    errors.Add(new ContentError("E063", $"skills[{h.Id}]", $"needs a base skill and exactly one skill per promotion 1..{max}"));
+                kits[h.Id] = kit.AsReadOnly();
+            }
+            foreach (var x in skills)
+                if (!heroes.ContainsKey(x.HeroId)) errors.Add(new ContentError("E023", $"skills[{x.Id}]", $"hero_id '{x.HeroId}' is not a hero id"));
+            Kits = new ReadOnlyDictionary<string, IReadOnlyList<SkillDef>>(kits);
+
             DailyQuests = t["daily_quests"].Select(r => new DailyQuestDef
             {
                 Id = r.Str("id"), Type = ParseQuestType(r.Str("type")), Target = r.Int("target"), RewardGems = r.Int("reward_gems"),
@@ -468,6 +495,34 @@ namespace IdleRng.Sim.Content
                 case "clear_boss": return QuestType.ClearBoss;
                 case "do_pulls": return QuestType.DoPulls;
                 default: throw new FormatException($"unknown quest type '{s}'");
+            }
+        }
+
+        static SkillKind ParseSkillKind(string s)
+        {
+            switch (s)
+            {
+                case "damage": return SkillKind.Damage;
+                case "heal": return SkillKind.Heal;
+                case "shield": return SkillKind.Shield;
+                case "taunt": return SkillKind.Taunt;
+                case "buff": return SkillKind.Buff;
+                case "debuff": return SkillKind.Debuff;
+                case "passive": return SkillKind.Passive;
+                default: throw new FormatException($"unknown skill kind '{s}'");
+            }
+        }
+
+        static SkillTarget ParseSkillTarget(string s)
+        {
+            switch (s)
+            {
+                case "enemy": return SkillTarget.Enemy;
+                case "all_enemies": return SkillTarget.AllEnemies;
+                case "self": return SkillTarget.Self;
+                case "lowest_ally": return SkillTarget.LowestAlly;
+                case "all_allies": return SkillTarget.AllAllies;
+                default: throw new FormatException($"unknown skill target '{s}'");
             }
         }
 

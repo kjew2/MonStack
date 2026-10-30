@@ -28,6 +28,9 @@ ENUMS = {
     "GrantTrigger": ["profile_created", "stage_reached", "first_boss_cleared"],
     "GrantType": ["gems", "free_pulls", "gold", "hero"],
     "ConstantType": ["int", "double", "bool"],
+    "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
+    "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
+    "SkillStat": ["hp", "atk", "def", "spd", "crit_rate", "crit_dmg"],
 }
 
 # key -> type. Mirrors IdleRng.Sim.Content.Constants. specs/05 section 5.1 plus the specs/00 names it
@@ -87,6 +90,10 @@ SCHEMA = {
     "progress_targets": T([c("day", "int"), c("stage", "int")], key="day"),
     "promotions": T([c("index", "int"), c("unlock_stage", "int"), c("mult", "double"), c("cost_kills", "double"),
                      c("name_key", "key")], key="index"),
+    "skills": T([c("id", "id"), c("hero_id", "id"), c("slot", "int"), c("unlock_promotion", "int"), c("name_key", "key"),
+                 c("desc_key", "key"), c("kind", "enum:SkillKind"), c("target", "enum:SkillTarget"),
+                 c("stat", "enum:SkillStat", True), c("scales", "enum:SkillStat", True), c("power", "double"),
+                 c("cooldown", "int"), c("duration", "int")], key="id"),
     "roles": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("desc_key", "key")], key="id"),
     "strings": T([c("key", "key"), c("en", "string")], key="key", required=False),
     "tutorial_grants": T([c("id", "id"), c("trigger", "enum:GrantTrigger"), c("trigger_value", "int", True),
@@ -267,6 +274,35 @@ def validate(t, errs):
         starters += 1 if h["starter"] else 0
     if starters != 1:
         errs.add("E062", "heroes", f"exactly one hero must have starter = true (found {starters})")
+    # skeleton kits (specs/11 section 4.4)
+    heroes_by_id = {h["id"]: h for h in t["heroes"]}
+    max_promo = {r["tier"]: r["max_promotions"] for r in t["hero_tiers"]}
+    kits = {}
+    for sk in t["skills"]:
+        loc = f"skills[{sk['id']}]"
+        if sk["hero_id"] not in heroes_by_id:
+            errs.add("E023", loc, f"hero_id '{sk['hero_id']}' is not a hero id")
+            continue
+        kits.setdefault(sk["hero_id"], []).append(sk)
+        kind = sk["kind"]
+        if kind in ("damage", "heal", "shield") and sk["scales"] is None:
+            errs.add("E054", loc, f"scales required for kind {kind}")
+        if kind in ("buff", "debuff", "passive") and sk["stat"] is None:
+            errs.add("E054", loc, f"stat required for kind {kind}")
+        if (kind == "passive") != (sk["cooldown"] == 0):
+            errs.add("E043", loc, "cooldown must be 0 for passives and >= 1 otherwise")
+        if sk["power"] < 0 or sk["duration"] < 0:
+            errs.add("E043", loc, "power and duration must be >= 0")
+    for hid, h in heroes_by_id.items():
+        kit = sorted(kits.get(hid, []), key=lambda r: r["slot"])
+        loc = f"skills[{hid}]"
+        if [r["slot"] for r in kit] != list(range(len(kit))):
+            errs.add("E060", loc, "slots must be 0..N-1 contiguous per hero")
+        if not any(r["unlock_promotion"] == 0 for r in kit):
+            errs.add("E063", loc, "a companion needs at least one base skill (unlock_promotion 0)")
+        promos = sorted(r["unlock_promotion"] for r in kit if r["unlock_promotion"] > 0)
+        if promos != list(range(1, max_promo[h["tier"]] + 1)):
+            errs.add("E063", loc, f"needs exactly one skill per promotion 1..{max_promo[h['tier']]} (specs/11 section 4.4)")
     # banners
     pools = {}
     for h in t["heroes"]:

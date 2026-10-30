@@ -78,3 +78,63 @@ element.dark.name,Dark
 promotion.p1.name,Promoted
 promotion.p2.name,Elite
 promotion.p3.name,Ascended
+skill.heavy_strike.name,Heavy Strike
+skill.heavy_strike.desc,Deal 200% ATK damage to the enemy. Cooldown 3 turns.
+skill.taunt.name,Taunt
+skill.taunt.desc,Force the enemy to attack this companion for 2 turns. Cooldown 4 turns.
+skill.rally.name,Rally
+skill.rally.desc,All allies: +20% ATK for 2 turns. Cooldown 4 turns.
+skill.mend.name,Mend
+skill.mend.desc,Heal the weakest ally for 150% ATK. Cooldown 3 turns.
+skill.arc_burst.name,Arc Burst
+skill.arc_burst.desc,Deal 150% ATK damage to all enemies. Cooldown 3 turns.
+skill.purify.name,Purify
+skill.purify.desc,Heal all allies for 80% ATK. Cooldown 4 turns.
+skill.focus.name,Focus
+skill.focus.desc,Self: +25% crit rate for 2 turns. Cooldown 4 turns.
+skill.shield_wall.name,Shield Wall
+skill.shield_wall.desc,Shield all allies for 100% DEF for 2 turns. Cooldown 4 turns.
+skill.haste.name,Haste
+skill.haste.desc,All allies: +20% SPD for 2 turns. Cooldown 4 turns.
+skill.execute.name,Execute
+skill.execute.desc,Deal 350% ATK damage to the enemy. Cooldown 5 turns.
+skill.hex.name,Hex
+skill.hex.desc,The enemy: -20% DEF for 2 turns. Cooldown 4 turns.
+skill.meteor.name,Meteor
+skill.meteor.desc,Deal 300% ATK damage to all enemies. Cooldown 5 turns.
+skill.counter_stance.name,Counter Stance
+skill.counter_stance.desc,Self: +40% DEF for 2 turns. Cooldown 4 turns.
+skill.radiant_beam.name,Radiant Beam
+skill.radiant_beam.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.killer_instinct.name,Killer Instinct
+skill.killer_instinct.desc,Passive: +10% crit rate.
+skill.blade_flurry.name,Blade Flurry
+skill.blade_flurry.desc,Deal 250% ATK damage to the enemy. Cooldown 3 turns.
+skill.flame_burst.name,Flame Burst
+skill.flame_burst.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.iron_skin.name,Iron Skin
+skill.iron_skin.desc,Passive: +20% DEF.
+skill.bulwark.name,Bulwark
+skill.bulwark.desc,Shield all allies for 200% DEF for 2 turns. Cooldown 5 turns.
+skill.thorn_lash.name,Thorn Lash
+skill.thorn_lash.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.arcane_mind.name,Arcane Mind
+skill.arcane_mind.desc,Passive: +15% ATK.
+skill.overload.name,Overload
+skill.overload.desc,Self: +40% ATK for 2 turns. Cooldown 5 turns.
+skill.tidal_crash.name,Tidal Crash
+skill.tidal_crash.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
+skill.grace.name,Grace
+skill.grace.desc,Passive: +15% HP.
+skill.ward.name,Ward
+skill.ward.desc,Shield the weakest ally for 150% ATK for 2 turns. Cooldown 4 turns.
+skill.sanctuary.name,Sanctuary
+skill.sanctuary.desc,Heal all allies for 150% ATK. Cooldown 5 turns.
+skill.swiftness.name,Swiftness
+skill.swiftness.desc,Passive: +10% SPD.
+skill.weaken.name,Weaken
+skill.weaken.desc,The enemy: -20% ATK for 2 turns. Cooldown 4 turns.
+skill.battle_hymn.name,Battle Hymn
+skill.battle_hymn.desc,All allies: +30% crit damage for 2 turns. Cooldown 5 turns.
+skill.shadow_rend.name,Shadow Rend
+skill.shadow_rend.desc,Deal 220% ATK damage to the enemy. Cooldown 4 turns.
