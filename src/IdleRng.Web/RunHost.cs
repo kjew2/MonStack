@@ -152,30 +152,7 @@ namespace IdleRng.Web
         private void Tree(JsonOut w, TreeDef t)
         {
             w.Key(t.Id).Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("kind", t.Kind.ToString().ToLowerInvariant());
-            w.Key("nodes").Arr();
-            for (int i = 0; i < t.Nodes.Count; i++)
-            {
-                var n = t.Nodes[i];
-                var (name, desc) = NodeText(n);
-                w.Obj().P("id", n.Id).P("cost", n.Cost).P("kind", n.Kind.ToString().ToLowerInvariant()).P("name", name).P("desc", desc)
-                    .P("last", i == t.Nodes.Count - 1);
-                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat) w.P("stat", n.Stat).P("amount", n.Amount);
-                w.EndObj();
-            }
-            w.EndArr();
-            // The tree's filler nodes summed per stat, in first-seen order, for the tree offer's summary chips.
-            var boosts = new List<(string stat, double growth, double flat)>();
-            foreach (var n in t.Nodes)
-            {
-                if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
-                int k = boosts.FindIndex(b => b.stat == n.Stat);
-                if (k < 0) { boosts.Add((n.Stat, 0, 0)); k = boosts.Count - 1; }
-                var b0 = boosts[k];
-                boosts[k] = n.Kind == NodeKind.Growth ? (b0.stat, b0.growth + n.Amount, b0.flat) : (b0.stat, b0.growth, b0.flat + n.Amount);
-            }
-            w.Key("boosts").Arr();
-            foreach (var b in boosts) w.Obj().P("stat", b.stat).P("growth", Math.Round(b.growth, 4)).P("flat", Math.Round(b.flat, 4)).EndObj();
-            w.EndArr();
+            NodesAndBoosts(w, t.Nodes, null);
             w.P("source", TreeSource(t));
             if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated).P("apexName", _db.Text(t.ApexNameKey));
             if (t.Kind == TreeKind.Fusion) w.P("fuseA", t.FuseA).P("fuseB", t.FuseB).P("apexName", _db.Text(t.ApexNameKey));
@@ -192,6 +169,67 @@ namespace IdleRng.Web
                     else if (cd.Type == ConditionType.NodeOwned) w.Str(_db.TreeNodes[cd.Ref].TreeId);
                 }
             w.EndArr();
+            w.EndObj();
+        }
+
+        /// <summary>
+        /// A tree's "nodes" and "boosts" (its filler nodes summed per stat, in first-seen order, for the offer card's chips). With
+        /// a rolled tree's <paramref name="roll"/> (specs/15 section 4.1), every node id gets a suffix that names its rolled content
+        /// and carries its own tooltip ("tip"), since the content tooltip (nodeTips) shows the unrolled node; the capstone's text
+        /// adds its growth bonus.
+        /// </summary>
+        private void NodesAndBoosts(JsonOut w, IReadOnlyList<TreeNodeDef> nodes, TreeRoll roll)
+        {
+            w.Key("nodes").Arr();
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var n = nodes[i];
+                bool last = i == nodes.Count - 1;
+                var (name, desc) = NodeText(n);
+                string id = n.Id;
+                if (roll != null && last)
+                {
+                    desc += " Also +" + Num(roll.CapGrowth) + " " + roll.Stat.ToUpperInvariant() + " growth.";
+                    id += "~cap~" + roll.Stat + "~" + Num(roll.CapGrowth);
+                }
+                else if (roll != null && roll.NodeStats[i] != null) id += "~" + n.Stat + "~" + Num(n.Amount);
+                w.Obj().P("id", id).P("cost", n.Cost).P("kind", n.Kind.ToString().ToLowerInvariant()).P("name", name).P("desc", desc).P("last", last);
+                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat) w.P("stat", n.Stat).P("amount", n.Amount);
+                if (roll != null)
+                {
+                    var tip = BattleText.NodeTip(_db, n, name, desc, last);
+                    if (last) tip.Fact("Rolled growth", "+" + Num(roll.CapGrowth) + " " + roll.Stat.ToUpperInvariant());
+                    w.Key("tip"); TipJson.Write(w, tip);
+                }
+                w.EndObj();
+            }
+            w.EndArr();
+            var boosts = new List<(string stat, double growth, double flat)>();
+            foreach (var n in nodes)
+            {
+                if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
+                int k = boosts.FindIndex(b => b.stat == n.Stat);
+                if (k < 0) { boosts.Add((n.Stat, 0, 0)); k = boosts.Count - 1; }
+                var b0 = boosts[k];
+                boosts[k] = n.Kind == NodeKind.Growth ? (b0.stat, b0.growth + n.Amount, b0.flat) : (b0.stat, b0.growth, b0.flat + n.Amount);
+            }
+            if (roll != null)
+            {
+                // The capstone's growth counts toward its stat's chip.
+                int k = boosts.FindIndex(b => b.stat == roll.Stat);
+                if (k < 0) boosts.Add((roll.Stat, roll.CapGrowth, 0)); else boosts[k] = (roll.Stat, boosts[k].growth + roll.CapGrowth, boosts[k].flat);
+            }
+            w.Key("boosts").Arr();
+            foreach (var b in boosts) w.Obj().P("stat", b.stat).P("growth", Math.Round(b.growth, 4)).P("flat", Math.Round(b.flat, 4)).EndObj();
+            w.EndArr();
+        }
+
+        /// <summary>A rolled tree as the client draws it (null when not rolled): its own stat, capstone growth, nodes and boosts.</summary>
+        private void Rolled(JsonOut w, string treeId, TreeRoll roll)
+        {
+            if (roll == null) { w.Null(); return; }
+            w.Obj().P("stat", roll.Stat).P("capGrowth", roll.CapGrowth);
+            NodesAndBoosts(w, TrainingRun.Nodes(_db, treeId, roll), roll);
             w.EndObj();
         }
 
@@ -223,7 +261,7 @@ namespace IdleRng.Web
                     return owners.Count == 0 ? "A native tree" : "Native tree of " + string.Join(" and ", owners) + " (the monster starts with it)";
                 }
                 case TreeKind.Generic:
-                    return "Offered as a draft when " + (t.OfferStat == null ? "any stat" : t.OfferStat.ToUpperInvariant()) + " first reaches " + t.OfferThreshold;
+                    return "Rolled in an Awakening when any stat first reaches " + t.OfferThreshold + " or more";
                 case TreeKind.Book:
                 {
                     var b = _db.SkillBooks.Values.FirstOrDefault(x => x.TreeId == t.Id);
@@ -635,7 +673,12 @@ namespace IdleRng.Web
             w.P("apex", apex).P("name", ApexForm.Name(_db, e.SpeciesId, apex));
             w.Key("stats"); Stats(w, e.Stats);
             w.Key("trees").Arr();
-            foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).P("fusedInto", t.FusedInto).EndObj();
+            foreach (var t in e.Trees)
+            {
+                w.Obj().P("id", t.TreeId).P("bought", t.Bought).P("fusedInto", t.FusedInto);
+                w.Key("rolled"); Rolled(w, t.TreeId, t.Roll);
+                w.EndObj();
+            }
             w.EndArr();
             w.Key("gauntlet");
             if (e.LegacyTitle == null) w.Null();   // sealed before the gauntlet existed
@@ -908,8 +951,9 @@ namespace IdleRng.Web
             {
                 if (t == null) { w.Null(); continue; }
                 w.Obj().P("tree", t.TreeId).P("bought", t.Bought);
+                w.Key("rolled"); Rolled(w, t.TreeId, t.Roll);
                 w.Key("absorbed").Arr();   // a fusion tree's parents (specs/15 section 5.6)
-                foreach (var a in t.Absorbed) w.Obj().P("tree", a.TreeId).P("bought", a.Bought).EndObj();
+                foreach (var a in t.Absorbed) { w.Obj().P("tree", a.TreeId).P("bought", a.Bought); w.Key("rolled"); Rolled(w, a.TreeId, a.Roll); w.EndObj(); }
                 w.EndArr().EndObj();
             }
             w.EndArr();
@@ -919,6 +963,9 @@ namespace IdleRng.Web
                 w.Obj().P("source", o.Source.ToString().ToLowerInvariant()).P("stat", o.Stat).P("threshold", o.Threshold);
                 w.Key("trees").Arr();
                 foreach (var t in o.Trees) w.Str(t);
+                w.EndArr();
+                w.Key("rolled").Arr();   // per tree: its rolls (specs/15 section 4.1), or null
+                for (int i = 0; i < o.Trees.Count; i++) Rolled(w, o.Trees[i], o.RollOf(i));
                 w.EndArr().EndObj();
             }
             w.EndArr();

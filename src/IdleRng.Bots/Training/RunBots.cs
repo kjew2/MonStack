@@ -129,9 +129,10 @@ namespace IdleRng.Bots.Training
                 return new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = Array.FindIndex(s.Slots, x => x != null && x.TreeId == fusion.FuseA) };
             }
             int empty = Array.IndexOf(s.Slots, null);
+            int pick = Preferred(c, s, offer);
             if (!_chase)
             {
-                if (empty >= 0) return new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = empty };
+                if (empty >= 0) return new RunCommand(RunCommandKind.TakeTree) { Choice = pick, Slot = empty };
                 if (offer.Source != OfferSource.Chase) return new RunCommand(RunCommandKind.DiscardOffer);
                 return Overwrite(c, s, 0, Prereqs(c, c.Trees[offer.Trees[0]]));
             }
@@ -142,12 +143,24 @@ namespace IdleRng.Bots.Training
             int wanted = offer.Trees.FindIndex(id => keep.Contains(id));
             if (wanted < 0 && offer.Source != OfferSource.Milestone) wanted = 0;
             if (wanted < 0)
-                return empty >= 0 ? new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = empty } : new RunCommand(RunCommandKind.DiscardOffer);
+                return empty >= 0 ? new RunCommand(RunCommandKind.TakeTree) { Choice = pick, Slot = empty } : new RunCommand(RunCommandKind.DiscardOffer);
             if (empty >= 0) return new RunCommand(RunCommandKind.TakeTree) { Choice = wanted, Slot = empty };
             var protect = new HashSet<string>(keep, StringComparer.Ordinal);
             var placed = c.Trees[offer.Trees[wanted]];
             if (placed.Kind == TreeKind.Chase) protect.UnionWith(Prereqs(c, placed));
             return Overwrite(c, s, wanted, protect);
+        }
+
+        /// <summary>
+        /// The tree to take from an Awakening of rolled trees (specs/15 section 4.1): the first whose own stat is the stat the
+        /// policy would drill now, as a player picks the tree for the stat they train; else the first tree.
+        /// </summary>
+        int Preferred(ContentDb c, RunState s, TreeOffer offer)
+        {
+            if (offer.Rolls.Count == 0) return 0;
+            string stat = _pick(c, s);
+            int i = offer.Rolls.FindIndex(r => r != null && r.Stat == stat);
+            return i < 0 ? 0 : i;
         }
 
         /// <summary>

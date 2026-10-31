@@ -305,6 +305,17 @@ const H = require('./harness.js');
     return null;
   });
   check(!!draft && draft.length > 0, 'an Awakening offers Second Look\'s reroll: ' + JSON.stringify(draft));
+  // Rolled Awakening trees (specs/15 section 4.1, issue #121): every card names its rolled stat, and a rolled node's tooltip
+  // shows its rolled amount.
+  const rolledChips = await page.locator('.tcard [data-id=rolled-stat]').count();
+  check(!!draft && rolledChips === draft.length, 'each Awakening card shows its rolled stat: ' + rolledChips + ' of ' + (draft || []).length);
+  const rolledTip = page.locator('.tcard [data-tip*="~"]').first();
+  const rolledRef = await rolledTip.getAttribute('data-tip');
+  await rolledTip.click();
+  const rolledText = await page.locator('#tip').innerText().catch(() => '');
+  const [rStat, rAmount] = (rolledRef || '').split('~').slice(-2);   // node:<id>~<stat>~<amount> (a capstone: ~cap~<stat>~<growth>)
+  check(!!rStat && rolledText.includes('+' + rAmount) && rolledText.toUpperCase().includes(rStat.toUpperCase()), 'a rolled node\'s tooltip shows its roll (' + rolledRef + '): ' + rolledText.replace(/\s+/g, ' ').slice(0, 60));
+  await page.keyboard.press('Escape');
   const toastsUp = await page.locator('#toasts .toast').allTextContents();
   check(toastsUp.length === 0, 'issue #115: no toast covers the Awakening (its milestone toast is skipped): ' + JSON.stringify(toastsUp));
   await t.layout('tree draft with a reroll');

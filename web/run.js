@@ -123,6 +123,14 @@
   const rank = (i) => C.ranks[i];
   const elementTag = (e) => h('span', { class: 'tag', text: (C.elements[e] || { name: e }).name, style: C.elements[e] && C.elements[e].color ? 'border-color:' + C.elements[e].color : '' });
   const treeName = (id) => (C.trees[id] ? C.trees[id].name : id);
+  // A tree as drawn: its content definition, or for a rolled Awakening tree (specs/15 section 4.1) its own nodes and boosts. A
+  // rolled node's id names its rolled content and its tooltip comes with it, so it is registered under that id.
+  function treeView(id, rolled) {
+    const t = C.trees[id];
+    if (!rolled || !t) return t;
+    rolled.nodes.forEach((n) => { if (n.tip && C.nodeTips) C.nodeTips[n.id] = n.tip; });
+    return Object.assign({}, t, { nodes: rolled.nodes, boosts: rolled.boosts, rolledStat: rolled.stat });
+  }
 
   // ------------------------------------------------------------ rendering
   function render() {
@@ -201,7 +209,7 @@
 
   function renderTabs(tabs, s) {
     tabs.replaceChildren();
-    const canBuy = s.slots.some((t) => t && C.trees[t.tree].nodes[t.bought] && C.trees[t.tree].nodes[t.bought].cost <= s.sp);
+    const canBuy = s.slots.some((t) => t && treeView(t.tree, t.rolled).nodes[t.bought] && treeView(t.tree, t.rolled).nodes[t.bought].cost <= s.sp);
     [['train', 'Train'], ['trees', 'Trees'], ['ladder', 'Ladder'], ['log', 'Log']].forEach(([id, label]) => {
       const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(ui.tab === id), 'data-act': 'tab-' + id, text: label,
         onclick: () => { ui.tab = id; render(); } });
@@ -457,11 +465,11 @@
         main.append(h('div', { class: 'card slotcard empty' }, [h('b', { text: 'Slot ' + (i + 1) + ': empty' }), h('small', { text: 'Fills from tree offers (Awakenings at stat milestones, books, chase unlocks).' })]));
         return;
       }
-      const t = C.trees[slot.tree];
+      const t = treeView(slot.tree, slot.rolled);
       const card = h('div', { class: 'card slotcard', 'data-id': 'slot-' + i }, [
         h('div', { class: 'row between' }, [
           h('b', { text: 'Slot ' + (i + 1) + ': ' + t.name }),
-          h('span', null, [h('span', { class: 'tag', text: t.kind }), ' ', h('span', { class: 'small muted num', text: slot.bought + '/' + t.nodes.length })]),
+          h('span', null, [rolledChip(t), ' ', h('span', { class: 'tag', text: t.kind }), ' ', h('span', { class: 'small muted num', text: slot.bought + '/' + t.nodes.length })]),
         ]),
         fusionLine(s, slot, t),
         nodePath(t, slot.bought),
@@ -860,7 +868,9 @@
   // A tree offer (Awakening, skill book or chase unlock) as a card pick: a banner, one compact card per tree (its node path,
   // its stat boosts summed and its skills and capstone in one line each), then big slot tiles on the picked card. Every node's full
   // text stays one tap away (the path tiles' tooltips, or "All nodes").
-  const offerKey = (o) => [o.source, o.stat, o.threshold].concat(o.trees).join('|');
+  const offerKey = (o) => [o.source, o.stat, o.threshold].concat(o.trees, (o.rolled || []).map((r) => (r ? r.nodes.map((n) => n.id).join(',') : ''))).join('|');
+  // A rolled tree's own stat (specs/15 section 4.1): most of its nodes and its capstone growth go to it.
+  const rolledChip = (t) => (t.rolledStat ? h('span', { class: 'stchip st-' + t.rolledStat, 'data-id': 'rolled-stat', title: 'Rolled ' + up(t.rolledStat) + ' tree', text: up(t.rolledStat) }) : null);
   const signed = (v) => (v > 0 ? '+' : '') + String(Math.round(v * 100) / 100);
   function offerModal(modal, s) {
     const o = s.offers[0], key = offerKey(o), fresh = ui.offer.key !== key;
@@ -878,17 +888,17 @@
       h('div', { class: 'sub' }, sub),
       s.offers.length > 1 ? h('span', { class: 'more', text: '+' + (s.offers.length - 1) + ' more' }) : null,
     ]));
-    o.trees.forEach((id, choice) => modal.append(offerCard(s, id, choice, choice === ui.offer.pick)));
+    o.trees.forEach((id, choice) => modal.append(offerCard(s, id, choice, choice === ui.offer.pick, o.rolled && o.rolled[choice])));
     if (s.canReroll) modal.append(h('button', { class: 'btn block gemsy', type: 'button', 'data-act': 'reroll',
       text: '🎲 Second Look: reroll, any stat (' + s.rerollsLeft + ' left)', onclick: reroll }));
     modal.append(h('button', { class: 'btn ghost block', type: 'button', 'data-act': 'discard',
       text: o.source === 'milestone' ? 'Skip — keep my trees' : 'Discard this offer', onclick: discard }));
   }
 
-  function offerCard(s, id, choice, sel) {
-    const t = C.trees[id];
+  function offerCard(s, id, choice, sel, rolled) {
+    const t = treeView(id, rolled);
     const card = h('div', { class: 'tcard k-' + t.kind + (sel ? ' sel' : ''), 'data-id': 'offer-' + id },
-      [h('div', { class: 'row between' }, [h('b', { class: 'tname', text: t.name }), h('span', { class: 'tag kind', text: t.kind })])]);
+      [h('div', { class: 'row between' }, [h('b', { class: 'tname', text: t.name }), h('span', null, [rolledChip(t), ' ', h('span', { class: 'tag kind', text: t.kind })])])]);
     if (!sel) {
       card.setAttribute('role', 'button'); card.setAttribute('tabindex', '0'); card.setAttribute('data-act', 'pick-' + choice);
       const pick = () => { ui.offer.pick = choice; ui.offer.open = false; render(); };
@@ -1350,7 +1360,7 @@
   }
 
   function vaultHelpers() {
-    return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, elementTag: elementTag, up: up, num: num, bar: bar, TIP: TIP };
+    return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, treeView: treeView, elementTag: elementTag, up: up, num: num, bar: bar, TIP: TIP };
   }
 
   // The grade screen's Dungeon ticket line: the pieces this grade earned, any whole ticket they made, and the progress after.

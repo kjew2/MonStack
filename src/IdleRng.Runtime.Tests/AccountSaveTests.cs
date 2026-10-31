@@ -276,6 +276,26 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void V7Save_MigratesToV8_SavedRunsDraftAsLegacy()
+        {
+            var db = TestContent.Db;
+            var a = SealedOnce();
+            AccountOps.StartRun(db, a, "slime");
+            Assume.That(a.Vault, Is.Not.Empty);
+            Assert.That(a.Active.Mods.LegacyDrafts, Is.False, "a new run rolls its Awakening trees");
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 7;
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct["SchemaVersion"] = 7;
+            ((Newtonsoft.Json.Linq.JObject)acct["Vault"][0]).Remove("Mods");   // an entry saved before talents
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.Active.Mods.LegacyDrafts, Is.True, "the run in progress replays its fixed drafts");
+            Assert.That(b.Vault.Select(e => e.Mods.LegacyDrafts), Is.All.True);
+            Assert.That(AccountSave.Decode(db, AccountSave.Encode(a)).Active.Mods.LegacyDrafts, Is.False, "a v8 save keeps a new run new");
+        }
+
+        [Test]
         public void TowerProgress_RoundTrips()
         {
             var db = TestContent.Db;

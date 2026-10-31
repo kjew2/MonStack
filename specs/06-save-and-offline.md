@@ -47,7 +47,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 ## 5. Schema versions
 
-`AccountState.CurrentSchemaVersion` is 7. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
+`AccountState.CurrentSchemaVersion` is 8. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
 
 | Step | Change |
 |---|---|
@@ -57,6 +57,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 | v4 -> v5 | `Tower` gains `Tickets` 0, `TicketPieces` 0 and `GrantDay` -1 (no tickets yet; the first free ticket is due on the next visit), `specs/21` section 7 |
 | v5 -> v6 | `Vendor` (when not null) gains `Rerolls` 0, issue #104 (`specs/18` section 4) |
 | v6 -> v7 | `TalentsOff` (empty: every owned talent on), issue #106 (`specs/18` section 4) |
+| v7 -> v8 | The run in progress and every Vault entry gain `Mods.LegacyDrafts` `true` (a missing `Mods` becomes `{ LegacyDrafts: true }`): they drafted fixed Awakening trees, so they replay that way; new runs roll them (issue #121, `specs/15` section 4.1) |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
 

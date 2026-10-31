@@ -59,6 +59,18 @@ namespace IdleRng.Sim.Content
         public int TreeSlots { get; internal set; }              // TREE_SLOTS
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
         public double TreeRefund { get; internal set; }          // TREE_REFUND
+        // Rolled Awakening trees (specs/15 section 4.1): the tree's own stat, and MIN/MAX ranges per filler kind.
+        public double RollOwnChance { get; internal set; }       // ROLL_OWN_CHANCE
+        public double RollGrowthOwnMin { get; internal set; }    // ROLL_GROWTH_OWN_MIN
+        public double RollGrowthOwnMax { get; internal set; }    // ROLL_GROWTH_OWN_MAX
+        public double RollGrowthOffMin { get; internal set; }    // ROLL_GROWTH_OFF_MIN
+        public double RollGrowthOffMax { get; internal set; }    // ROLL_GROWTH_OFF_MAX
+        public double RollFlatOwnMin { get; internal set; }      // ROLL_FLAT_OWN_MIN
+        public double RollFlatOwnMax { get; internal set; }      // ROLL_FLAT_OWN_MAX
+        public double RollFlatOffMin { get; internal set; }      // ROLL_FLAT_OFF_MIN
+        public double RollFlatOffMax { get; internal set; }      // ROLL_FLAT_OFF_MAX
+        public double RollCapGrowthMin { get; internal set; }    // ROLL_CAP_GROWTH_MIN
+        public double RollCapGrowthMax { get; internal set; }    // ROLL_CAP_GROWTH_MAX
         public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
         public double MonTideRegen { get; internal set; }        // MON_TIDE_REGEN
         public double MonTideShieldCap { get; internal set; }    // MON_TIDE_SHIELD_CAP

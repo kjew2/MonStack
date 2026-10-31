@@ -13,6 +13,9 @@ namespace IdleRng.Sim.Training
 
         /// <summary>The fusion tree this one was absorbed into (specs/15 section 5.6), or null for a slotted tree.</summary>
         public string FusedInto { get; set; }
+
+        /// <summary>A rolled Awakening tree's rolls (specs/15 section 4.1), or null. For display; the fighter comes from the replay.</summary>
+        public TreeRoll Roll { get; set; }
     }
 
     /// <summary>
@@ -99,8 +102,8 @@ namespace IdleRng.Sim.Training
             foreach (var slot in s.Slots)
             {
                 if (slot == null) continue;
-                foreach (var a in slot.Absorbed) e.Trees.Add(new VaultTree { TreeId = a.TreeId, Bought = a.Bought, FusedInto = slot.TreeId });
-                e.Trees.Add(new VaultTree { TreeId = slot.TreeId, Bought = slot.Bought });
+                foreach (var a in slot.Absorbed) e.Trees.Add(new VaultTree { TreeId = a.TreeId, Bought = a.Bought, FusedInto = slot.TreeId, Roll = a.Roll });
+                e.Trees.Add(new VaultTree { TreeId = slot.TreeId, Bought = slot.Bought, Roll = slot.Roll });
             }
             var g = Gauntlet.GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
             e.GauntletFloor = g.FloorReached;
