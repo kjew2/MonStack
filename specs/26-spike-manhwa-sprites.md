@@ -1,6 +1,6 @@
 # 26 - Spike: manhwa-style creature art
 
-Status: **spike report (agent, 2026-10-31).** Research only; nothing here is agreed design until kj answers section 6. kj asked for a spike on creature sprites in the style of widely known manhwa (Korean webtoons): (1) is it feasible, (2) which styles are the most popular, (3) a panel comparing some of our creatures in those styles.
+Status: **spike report (agent, 2026-10-31); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for a spike on creature sprites in the style of widely known manhwa (Korean webtoons): (1) is it feasible, (2) which styles are the most popular, (3) a panel comparing some of our creatures in those styles.
 
 The panel is the artifact https://claude.ai/artifact/6kuv4A2UWBV6sM6UVmizpo. Its 20 concept drawings are kept in `specs/assets/26/` (hand-written SVG, one file per style and species), so they survive without the artifact.
 
@@ -61,9 +61,9 @@ Palette tokens that line up with any of them: a background, a raised surface, in
 2. **Use the art for portraits first** (monster card, draft cards, apex reveal); keep the pixel sprites in battle until the portraits are settled.
 3. **Produce the final set by route D**: generate concepts with a commercially licensed model and style descriptions (no artist names), pick one per species, then have an artist (or an agent working from the picked concept) make the 15 looks consistent. Disclose AI use if it ships on Steam.
 
-## 6. Questions for kj
+## 6. Questions for kj (answered 2026-10-31)
 
-1. **Style:** which family (or mix, as in section 5.1) should the game use?
-2. **Route:** AI generation, a commissioned artist, or the hybrid? If AI: is it fine to add an image-API key to the cloud environment so an agent can generate drafts?
-3. **Where the art shows:** portraits on cards and reveals only, or redraw the battle sprites in the style too?
-4. **Chibi:** worth a second panel with a cute variant for the training screen?
+1. **Style:** **hunter / system dark action** (kj). It is the art direction for the creatures. Whether the UI chrome follows it (section 4.1) is for the UI overhaul, issue #115.
+2. **Route:** **AI generation** (kj). It needs an image-API key and network access in the cloud environment, which kj sets up; issue #116 has the steps and the generation plan. Prompts describe the style in words and never name an artist or series; a model licensed for commercial use only (section 2).
+3. **Where the art shows:** **both** (kj): portraits on the monster card, draft cards and apex reveals, and the battle sprites redrawn in the same style (bold outline, at most two tones, so they read at 48-64 px). The 12x12 pixel art in `web/sprites.js` stays until the generated set replaces it.
+4. **Chibi:** **not for now** (kj); maybe a later use case.
