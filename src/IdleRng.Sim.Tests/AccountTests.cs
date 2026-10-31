@@ -268,6 +268,83 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void RerollVendor_EscalatingPrice_ReplacesOnlyUnboughtOffers_Deterministic()
+        {
+            AccountState Sealed()
+            {
+                var acc = AccountOps.New(Db, 21);
+                PlayOut(AccountOps.StartRun(Db, acc, "slime"));
+                AccountOps.FinishRun(Db, acc);
+                acc.Shards = 10_000;
+                return acc;
+            }
+            var a = Sealed();
+            Assert.That(a.Vendor.Rerolls, Is.EqualTo(0));
+            Assert.That(AccountOps.RerollPrice(Db, a.Vendor), Is.EqualTo(K.RerollBase));
+            AccountOps.BuyOffer(Db, a, 1);
+            var kept = a.Vendor.Offers[1];
+            long before = a.Shards;
+
+            Assert.That(AccountOps.RerollVendor(Db, a), Is.EqualTo(K.RerollBase));
+            Assert.That(a.Shards, Is.EqualTo(before - K.RerollBase));
+            Assert.That(a.Vendor.Rerolls, Is.EqualTo(1));
+            Assert.That(a.Vendor.Offers, Has.Count.EqualTo(K.VendorOffers));
+            Assert.That(a.Vendor.Offers[1], Is.SameAs(kept), "a bought offer stays");
+            Assert.That(AccountOps.RerollPrice(Db, a.Vendor), Is.EqualTo(K.RerollBase + K.RerollStep), "REROLL_BASE + REROLL_STEP x n");
+
+            // Unbought offer i is the fresh roll's offer i, keyed by (run index, reroll count).
+            int g = Db.FightRanks.ToList().FindIndex(r => r.Id == a.Vendor.Grade);
+            var fresh = AccountOps.RollVendor(Db, a, g, 0, 1);
+            for (int i = 0; i < K.VendorOffers; i++)
+                if (i != 1) Assert.That(a.Vendor.Offers[i].Talent, Is.EqualTo(fresh.Offers[i].Talent));
+            Assert.That(AccountOps.RollVendor(Db, a, g, 0, 0).Offers.Select(o => o.Talent),
+                Is.EqualTo(AccountOps.RollVendor(Db, a, g, 0).Offers.Select(o => o.Talent)), "reroll 0 is the roll at seal time");
+
+            // The same account, played the same way, rerolls to the same offers.
+            var b = Sealed();
+            AccountOps.BuyOffer(Db, b, 1);
+            AccountOps.RerollVendor(Db, b);
+            Assert.That(b.Vendor.Offers.Select(o => o.Talent + "/" + o.Bought), Is.EqualTo(a.Vendor.Offers.Select(o => o.Talent + "/" + o.Bought)));
+
+            Assert.That(AccountOps.RerollVendor(Db, a), Is.EqualTo(K.RerollBase + K.RerollStep));
+            Assert.That(a.Vendor.Rerolls, Is.EqualTo(2));
+
+            // Not enough shards: refused, nothing changes.
+            a.Shards = AccountOps.RerollPrice(Db, a.Vendor) - 1;
+            var offers = a.Vendor.Offers.Select(o => o.Talent).ToList();
+            Assert.Throws<InvalidOperationException>(() => AccountOps.RerollVendor(Db, a));
+            Assert.That(a.Vendor.Rerolls, Is.EqualTo(2));
+            Assert.That(a.Vendor.Offers.Select(o => o.Talent), Is.EqualTo(offers));
+
+            // The count resets on the next sealed run.
+            PlayOut(AccountOps.StartRun(Db, a, "slime"));
+            AccountOps.FinishRun(Db, a);
+            Assert.That(a.Vendor.Rerolls, Is.EqualTo(0));
+            Assert.That(AccountOps.RerollPrice(Db, a.Vendor), Is.EqualTo(K.RerollBase));
+        }
+
+        [Test]
+        public void RerollVendor_Refused_WithNoVendor_AllSold_OrAllMaxed()
+        {
+            var a = AccountOps.New(Db, 5);
+            a.Shards = 10_000;
+            Assert.That(AccountOps.CanRerollVendor(Db, a), Is.False);
+            Assert.Throws<InvalidOperationException>(() => AccountOps.RerollVendor(Db, a), "no vendor");
+
+            var t = Db.TalentList.First(x => x.MaxRank >= 2);
+            a.Vendor = new VendorState { Grade = "e", Offers = { new VendorOffer { Talent = t.Id, Rarity = t.Rarity, Bought = true } } };
+            Assert.That(AccountOps.CanRerollVendor(Db, a), Is.False);
+            Assert.Throws<InvalidOperationException>(() => AccountOps.RerollVendor(Db, a), "every offer sold");
+
+            a.Vendor.Offers[0].Bought = false;
+            foreach (var x in Db.TalentList) a.Talents[x.Id] = x.MaxRank;
+            Assert.That(AccountOps.CanRerollVendor(Db, a), Is.False);
+            Assert.Throws<InvalidOperationException>(() => AccountOps.RerollVendor(Db, a), "every talent maxed");
+            Assert.That(a.Shards, Is.EqualTo(10_000));
+            Assert.That(a.Vendor.Rerolls, Is.EqualTo(0));
+        }
+
+        [Test]
         public void StartRun_DerivesSeeds_OneAtATime_ChecksSpeciesAndBooks()
         {
             var a = NewAll(5);

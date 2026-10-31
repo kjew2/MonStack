@@ -332,6 +332,16 @@
       "value": 5
     },
     {
+      "key": "REROLL_BASE",
+      "type": "int",
+      "value": 10
+    },
+    {
+      "key": "REROLL_STEP",
+      "type": "int",
+      "value": 10
+    },
+    {
       "key": "VAULT_CAP",
       "type": "int",
       "value": 50

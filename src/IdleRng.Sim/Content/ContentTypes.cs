@@ -84,6 +84,8 @@ namespace IdleRng.Sim.Content
         public int ShardsPerRank { get; internal set; }          // SHARDS_PER_RANK
         public int VaultCap { get; internal set; }               // VAULT_CAP
         public int VendorOffers { get; internal set; }           // VENDOR_OFFERS: offers the post-run vendor rolls (specs/18 section 4)
+        public int RerollBase { get; internal set; }             // REROLL_BASE: the first vendor reroll's price in a visit
+        public int RerollStep { get; internal set; }             // REROLL_STEP: added to the price per reroll already made in the visit
 
         // End-of-run gauntlet (specs/19 section 4). Placeholders.
         public int GauntletFloors { get; internal set; }         // GAUNTLET_FLOORS

@@ -211,6 +211,51 @@ namespace IdleRng.Runtime.Tests
             Assert.That(AccountOps.TowerTickets(db, b, 41), Is.EqualTo(db.Constants.TowerAttemptsPerDay), "the next day's free tickets are due");
         }
 
+        /// <summary>An account right after its first sealed run: no run in progress, the vendor's offers rolled.</summary>
+        static AccountState SealedOnce()
+        {
+            var db = TestContent.Db;
+            var a = AccountOps.New(db, 78);
+            var run = AccountOps.StartRun(db, a, "slime");
+            while (run.Phase != RunPhase.Finished)
+            {
+                while (run.Offers.Count > 0) TrainingRun.DiscardOffer(db, run);
+                if (run.Phase == RunPhase.AwaitFight) TrainingRun.Fight(db, run);
+                else TrainingRun.Rest(db, run);
+            }
+            AccountOps.FinishRun(db, a, 1000);
+            return a;
+        }
+
+        [Test]
+        public void V5Save_MigratesToV6_VendorWithNoRerolls()
+        {
+            var db = TestContent.Db;
+            var a = SealedOnce();
+            Assert.That(a.Vendor, Is.Not.Null);
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 5;
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct["SchemaVersion"] = 5;
+            ((Newtonsoft.Json.Linq.JObject)acct["Vendor"]).Remove("Rerolls");
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.Vendor.Rerolls, Is.EqualTo(0));
+            Assert.That(b.Vendor.Offers.Select(o => o.Talent), Is.EqualTo(a.Vendor.Offers.Select(o => o.Talent)), "the offers are kept");
+        }
+
+        [Test]
+        public void VendorRerolls_RoundTrip()
+        {
+            var db = TestContent.Db;
+            var a = SealedOnce();
+            a.Shards = 1000;
+            AccountOps.RerollVendor(db, a);
+            var b = AccountSave.Decode(db, AccountSave.Encode(a));
+            Assert.That(b.Vendor.Rerolls, Is.EqualTo(1));
+            Assert.That(b.Vendor.Offers.Select(o => o.Talent), Is.EqualTo(a.Vendor.Offers.Select(o => o.Talent)));
+        }
+
         [Test]
         public void TowerProgress_RoundTrips()
         {
