@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace IdleRng.Sim.Tests
 {
-    /// <summary>The Daily Tower sim and its content (specs/21 sections 2, 4, 5 and 7).</summary>
+    /// <summary>The Dungeon sim and its content (specs/21 sections 2, 4, 5 and 7).</summary>
     public class TowerTests
     {
         static ContentDb Db => TestContent.Db;
@@ -169,6 +169,28 @@ namespace IdleRng.Sim.Tests
                 }
             double expected = perDay * days;
             Assert.That(hits, Is.InRange(expected * 0.8, expected * 1.2), "the drop rate follows the constants");
+        }
+
+        [Test]
+        public void BookDrop_RollsAfreshForEachAttempt()
+        {
+            Assert.That(TowerSim.BookDrop(Db, 9, 3), Is.EqualTo(TowerSim.BookDrop(Db, 9, 3, 0)), "attempt 0 is the default");
+            // on the deepest floor, over enough days that attempts 0 and 1 drop about 100 books each, their drops differ
+            int floor = K.TowerFloors;
+            double chance = K.TowerBookChance + K.TowerBookChancePerFloor * (floor - 1);
+            int days = (int)Math.Ceiling(100 / chance);
+            int first = 0, second = 0, both = 0;
+            for (int day = 0; day < days; day++)
+            {
+                bool a = TowerSim.BookDrop(Db, day, floor, 0) != null, b = TowerSim.BookDrop(Db, day, floor, 1) != null;
+                Assert.That(TowerSim.BookDrop(Db, day, floor, 1) != null, Is.EqualTo(b), "fixed by (day, attempt, floor)");
+                if (a) first++;
+                if (b) second++;
+                if (a && b) both++;
+            }
+            Assert.That(second, Is.InRange(70, 130), "a later attempt drops at the same rate");
+            Assert.That(both, Is.LessThan(Math.Min(first, second) / 2), "a later attempt is not the first attempt's roll again");
+            Assert.Throws<ArgumentOutOfRangeException>(() => TowerSim.BookDrop(Db, 0, 1, -1));
         }
 
         [Test]

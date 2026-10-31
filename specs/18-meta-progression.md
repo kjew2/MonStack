@@ -6,7 +6,7 @@ The design is `specs/12` sections 7, 9 and 10.
 
 > **Numbers and content are placeholders.** Payouts, talents, ranks, costs, achievement thresholds, vendor rarities, odds and prices are placeholders until balance resumes (`CLAUDE.md`).
 
-**T9 re-scope (kj, 2026-10-30, issue #73):** "scrap the gacha for creatures. make them unlock through other random achievements. the skill book become the main premium gate since they are target farmed as rng drops from daily towers. we also update the meta progression upgrades to be a random vendor assortment of buyable after a given run, say 5 offered, with rarities tied to score of your run." So: no species gacha, no duplicates and no Genetic Aptitude; species unlock from account achievements (section 8); the talent shop is replaced by the post-run vendor (section 4). How skill books are sold stays open (#49, #77); the Daily Tower that drops them is T10 (#74).
+**T9 re-scope (kj, 2026-10-30, issue #73):** "scrap the gacha for creatures. make them unlock through other random achievements. the skill book become the main premium gate since they are target farmed as rng drops from daily towers. we also update the meta progression upgrades to be a random vendor assortment of buyable after a given run, say 5 offered, with rarities tied to score of your run." So: no species gacha, no duplicates and no Genetic Aptitude; species unlock from account achievements (section 8); the talent shop is replaced by the post-run vendor (section 4). How skill books are sold stays open (#49, #77); the Dungeon that drops them is T10 (#74).
 
 ## 1. Account
 
@@ -22,7 +22,7 @@ The design is `specs/12` sections 7, 9 and 10.
 | `Achievements`, `Records` | Achievement ids earned, in earn order, and the lifetime records they are checked against (section 8) |
 | `Vendor` | The post-run vendor's offers from the last sealed run, or null (section 4) |
 | `Vault` | Finished monsters (`VaultEntry`, `specs/13` T4), oldest first; each carries the player's `Locked` flag. At most `VAULT_CAP` before a new run (section 7) |
-| `Tower` | Daily Tower progress: the day of the last attempt, attempts used that day, most floors cleared that day and ever (`specs/21` section 7) |
+| `Tower` | Dungeon progress: tickets held, ticket pieces and the last free-ticket day; the day of the last attempt, attempts that day, most floors cleared that day and ever (`specs/21` section 7) |
 | `Active` | The run in progress, or null |
 
 There is no premium currency yet. Skill Books are the premium gate (kj, T9); whether and how they, or Star-Gems, are sold is the monetization call (#49, #77).
@@ -33,12 +33,12 @@ There is no premium currency yet. Skill Books are the premium gate (kj, T9); whe
 |---|---|
 | `New(seed)` | Owns only the starter species (`ContentDb.StarterSpecies`, section 8); no shards, books, talents, achievements or Vault entries |
 | `StartRun(species, books)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3). The vendor's unbought offers vanish (section 4) |
-| `FinishRun(sealedUtcMs)` | The active run is over (after its last cycle). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`), records it and checks achievements, which may unlock species (section 8), rolls the vendor's offers (section 4) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7). The result lists the achievements earned and the species unlocked |
+| `FinishRun(sealedUtcMs)` | The active run is over (after its last cycle). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`), records it and checks achievements, which may unlock species (section 8), adds the grade's Dungeon ticket pieces (`fight_ranks.ticket_pieces`, 4 make a ticket; `specs/21` section 7), rolls the vendor's offers (section 4) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7). The result lists the achievements earned, the species unlocked and the ticket pieces and tickets earned |
 | `AbandonRun()` | Ends the active run in any phase with no payout and no Vault entry; unused books return to the inventory (a misclick costs nothing). `RunsStarted` stays counted, so the next run gets a new seed and abandoning cannot reroll a run. (Agreed between the two building sessions, 2026-10-30; the web client's Abandon button calls it.) |
 | `BuyOffer(index)` | A vendor offer not yet bought, whose talent is not maxed; enough shards. Costs the offer's price, adds one rank (section 4). Applies from the next run: a run keeps the bonuses it started with. There is no other way to buy talents |
 | `Dismantle(index)` | Removes Vault entry `index` (oldest first) for good and pays its grade's refund (section 7). Refused for a locked entry. Allowed during a run |
 | `SetLocked(index, locked)` | Locks or unlocks Vault entry `index`. Account state only: not part of the sealed monster or its `RunHash` |
-| `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower adds its drops with `RunTower` (`specs/21` section 7); tests and debug use it now |
+| `GrantBooks(book, count)` | Adds (or removes) books. The Dungeon adds its drops with `RunTower` (`specs/21` section 7); tests and debug use it now |
 | `UnlockSpecies(species)` | Adds a species to `OwnedSpecies` in content order. Achievements call it; tests use it |
 
 Rejected commands throw and change nothing. The sim has no clock: the caller passes the seal time.
@@ -114,7 +114,7 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. If the replay fails or the stored hash differs (for example after a rules change), the run is dropped, its books return to the inventory and the rest of the account loads with a notice (`specs/06` section 5).
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
-- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
+- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves; v5 (`specs/21` section 7) adds the Dungeon tickets to it, none for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
 - On every load the account's achievements are checked again, so an achievement added to content later is granted when the records already meet it (section 8).
 
 ## 7. Vault cap and dismantling

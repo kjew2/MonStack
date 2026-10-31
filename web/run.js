@@ -24,11 +24,12 @@
     showAll: false,          // fight log expanded
     sealed: null,            // Vault entry of the finished run
     payout: 0,               // shards that run paid
+    ticketGain: null,        // Dungeon ticket pieces that run earned and the whole tickets they made ({pieces, tickets})
     climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf }
     spGains: [],             // skill point gains not yet shown by the HUD (issue #86): [{n, why, cycle}], shown once no modal covers it
     fightGains: [],          // the gains the shown fight brought, for its result badge
     earned: [],              // achievements the sealed run earned (specs/18 section 8), shown on the grade screen
-    towerTeam: [],           // Daily Tower team: Vault indices in slot order (specs/21 section 8)
+    towerTeam: [],           // Dungeon team: Vault indices in slot order (specs/21 section 8)
     towerResult: null,       // the last attempt's result from the engine (run.runTower) plus its day and team, shown on the tower screen
     towerFight: null,        // the tower floor fight shown in the playback modal (issue #98), or null
     reveal: null,            // the merchant's card reveal on the vendor screen (issue #108): {i, phase: 'hint'|'flip', timer}, or null
@@ -407,7 +408,7 @@
 
   // ------------------------------------------------------------ fight playback (issue #79): presentation only
   // The engine has already resolved the fight; this replays its action log one action at a time so the player sees which ability
-  // each unit uses and every skill's cooldown. HP, cooldowns and (in Daily Tower fights, issue #98) entropy, the next vent and the
+  // each unit uses and every skill's cooldown. HP, cooldowns and (in Dungeon fights, issue #98) entropy, the next vent and the
   // corruption level come from the engine's per-action snapshots (BRIDGE.md, fight), never computed here. Skip shows the result at
   // once, as before. The same view plays a rank fight (ui.fight) and a tower floor (ui.towerFight); ui.play.f is the one playing.
   const FIGHT_STEP_MS = 350;   // PLACEHOLDER: time per logged action at 1x (2x halves it). Presentation only, not a game rule.
@@ -482,7 +483,7 @@
     return (words.length > 1 ? words.slice(0, 3).map((w) => w[0]).join('') : (words[0] || '?').slice(0, 2)).toUpperCase();
   }
 
-  // A Daily Tower tooltip trigger (specs/21 section 8): text from BattleText through RunContent's towerTips (web/tooltips.js).
+  // A Dungeon tooltip trigger (specs/21 section 8): text from BattleText through RunContent's towerTips (web/tooltips.js).
   const towerTip = (key) => (C.towerTips && C.towerTips[key] ? TIP.attrs('tower:' + key) : null);
   const tipName = (key) => (C.towerTips && C.towerTips[key] ? C.towerTips[key].name : key);
 
@@ -679,7 +680,7 @@
       text: 'The Vault holds ' + acct.vault.length + ' of ' + acct.vaultCap + ' monsters. Dismantle ' + over + (over === 1 ? ' monster' : ' monsters') + ' in the Vault below to start a run.' }));
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
       text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
-    const grant = debugOn() ? speciesBook() || Object.keys(C.books)[0] : null;   // debug only: the Daily Tower drops books (specs/21 section 7)
+    const grant = debugOn() ? speciesBook() || Object.keys(C.books)[0] : null;   // debug only: the Dungeon drops books (specs/21 section 7)
     if (grant) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[grant].name,
       onclick: () => { const r = run.acct('debugGrantBook', grant, 1); if (!r.ok) toast(r.reason); render(); } }));
 
@@ -713,12 +714,12 @@
     main.append(al);
 
     const ti = run.towerInfo(run.towerDay());
-    main.append(h('h3', { text: 'Daily Tower' }));
+    main.append(h('h3', { text: 'Dungeon' }));
     main.append(h('div', { class: 'card' }, [
-      h('p', { class: 'small muted', text: 'Send a team of up to ' + ti.teamMax + ' Vault monsters up today\'s ' + ti.floors.length + ' boss floors. Each floor cleared pays shards and may drop a Skill Book, once a day.' }),
+      h('p', { class: 'small muted', text: 'Send a team of up to ' + ti.teamMax + ' Vault monsters through today\'s ' + ti.floors.length + ' boss floors. Each entry costs a ticket; every floor cleared pays shards and may drop a Skill Book. ' + ticketHelp(ti) }),
       h('div', { class: 'row between' }, [
-        h('span', { class: 'small num', 'data-id': 'tower-attempts', text: ti.attemptsLeft + '/' + ti.attemptsPerDay + ' attempts left today · best today ' + ti.clearedToday + ' floors' }),
-        h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Daily Tower',
+        h('span', { class: 'small num', 'data-id': 'tower-tickets', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday + ' floors' }),
+        h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Dungeon',
           onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); main.scrollTop = 0; } }),
       ]),
     ]));
@@ -726,22 +727,30 @@
     VAULT.render(main, $('modal'), vaultHelpers());   // the Vault list, its sort/filter/search, detail and compare (web/vault.js)
   }
 
-  // ---- Daily Tower (specs/21 section 8): today's lineup, a team of Vault monsters, one attempt at a time. The engine runs the
+  // ---- Dungeon (specs/21 section 8): today's lineup, a team of Vault monsters, one attempt at a time. The engine runs the
   // climb and pays the rewards (run.runTower); this screen only lays out what it returns. A floor's fight plays back in the rank
   // fight's view (issue #98): the last floor right after the climb (unless the speed is Skip), any floor fought from its Watch
   // button (run.towerFloor replays it, read only).
+  // "3 tickets · 2/4 pieces": tickets ready (held plus today's free one, from towerInfo) and pieces toward the next.
+  function ticketStatus(ti) {
+    return ti.tickets + (ti.tickets === 1 ? ' ticket' : ' tickets') + ' · ' + ti.ticketPieces + '/' + ti.piecesPerTicket + ' pieces';
+  }
+  function ticketHelp(ti) {
+    return ti.ticketsPerDay + (ti.ticketsPerDay === 1 ? ' free ticket' : ' free tickets') + ' a day (saved up to ' + ti.ticketCap + '); finished runs earn ticket pieces by grade, ' + ti.piecesPerTicket + ' pieces make a ticket.';
+  }
+
   function renderTower(main, modal) {
     const acct = run.account, day = run.towerDay(), ti = run.towerInfo(day);
-    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Daily Tower' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
-      h('p', { class: 'small muted', 'data-id': 'tower-status', text: ti.attemptsLeft + '/' + ti.attemptsPerDay + ' attempts left today · best today ' + ti.clearedToday +
+    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Dungeon' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
+      h('p', { class: 'small muted', 'data-id': 'tower-status', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday +
         ' of ' + ti.floors.length + ' floors · best ever ' + ti.clearedEver }));
     if (ui.towerResult) towerResult(main, ui.towerResult);
 
     main.append(h('h3', { text: 'Team' }));
     if (!acct.vault.length) main.append(h('p', { class: 'muted', text: 'Finish a run first: the team comes from your Vault.' }));
     else towerTeamPicker(main, ti.teamMax);
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-climb', disabled: !ui.towerTeam.length || ti.attemptsLeft <= 0,
-      text: ti.attemptsLeft <= 0 ? 'No attempts left today' : ui.towerTeam.length ? 'Climb with ' + ui.towerTeam.length + (ui.towerTeam.length === 1 ? ' monster' : ' monsters') : 'Pick up to ' + ti.teamMax + ' monsters',
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-climb', disabled: !ui.towerTeam.length || ti.tickets <= 0,
+      text: ti.tickets <= 0 ? 'No tickets: finish a run for pieces, or come back tomorrow' : ui.towerTeam.length ? 'Enter with ' + ui.towerTeam.length + (ui.towerTeam.length === 1 ? ' monster' : ' monsters') : 'Pick up to ' + ti.teamMax + ' monsters',
       onclick: () => {
         const r = run.runTower(day, ui.towerTeam.slice());
         if (!r.ok) { toast(r.reason); render(); return; }
@@ -817,7 +826,7 @@
     const last = r.floors[r.floors.length - 1];
     const card = h('div', { class: 'card alert', 'data-id': 'tower-result' }, [
       h('b', { text: r.cleared ? 'Cleared all ' + r.floorsCleared + ' floors!' : 'Fell on floor ' + r.floorReached + ' to ' + last.name + ' (' + r.floorsCleared + ' cleared)' }),
-      h('span', { class: 'gems num', 'data-id': 'tower-shards', text: r.shards ? '+' + r.shards + ' Training Shards' : 'No new floors cleared today: nothing more to pay' }),
+      h('span', { class: 'gems num', 'data-id': 'tower-shards', text: r.shards ? '+' + r.shards + ' Training Shards' : 'No floors cleared: nothing to pay' }),
       r.books.length ? h('span', { class: 'gold', 'data-id': 'tower-books', text: 'Skill Books: ' + r.books.map((b) => b.name + ' (F' + b.floor + ')').join(', ') }) : null,
       r.firstClears.length ? h('span', { class: 'small muted', text: 'First clears: floors ' + r.firstClears.join(', ') }) : null,
     ]);
@@ -885,6 +894,17 @@
     return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, elementTag: elementTag, up: up, num: num, bar: bar, TIP: TIP };
   }
 
+  // The grade screen's Dungeon ticket line: the pieces this grade earned, any whole ticket they made, and the progress after.
+  function ticketLine() {
+    const g = ui.ticketGain;
+    if (!g) return null;
+    const ti = run.towerInfo(run.towerDay());
+    const toward = ti.ticketPieces + '/' + ti.piecesPerTicket + ' toward the next';
+    return h('div', { class: 'center small num', 'data-id': 'grade-tickets', text: g.pieces
+      ? '+' + g.pieces + ' Dungeon ticket ' + (g.pieces === 1 ? 'piece' : 'pieces') + (g.tickets ? ' · +' + g.tickets + (g.tickets === 1 ? ' ticket!' : ' tickets!') : '') + ' · ' + toward
+      : 'No Dungeon ticket pieces at this grade · ' + toward });
+  }
+
   function renderGrade(main) {
     const e = ui.sealed, sp = speciesDef(e.species) || { name: e.species };
     const r = C.ranks[e.rank];
@@ -895,6 +915,7 @@
       e.gauntlet ? h('div', { class: 'legacy', 'data-id': 'grade-title', text: e.gauntlet.label }) : null,
       h('div', { class: 'center small muted', text: e.fightsWon + ' of ' + e.fightsFought + ' rank fights won. Sealed in the Vault.' }),
       h('div', { class: 'center gems num', 'data-id': 'payout', text: '+' + ui.payout + ' Training Shards' }),
+      ticketLine(),
     );
     const card = h('div', { class: 'card' }, [h('h3', { text: 'Stat breakdown' })]);
     C.stats.forEach((st) => card.append(h('div', { class: 'stat', style: 'grid-template-columns:38px 1fr' }, [h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(e.stats[st], C.consts.statMax, num(e.stats[st]))])));
@@ -1110,7 +1131,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; }
+  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.ticketGain = null; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
@@ -1207,7 +1228,7 @@
   function seal() {
     const r = run.finishRun();
     if (!r.ok) { toast(r.reason); return; }
-    ui.sealed = r.entry; ui.payout = r.shards; ui.view = 'grade'; ui.earned = r.achievements || [];
+    ui.sealed = r.entry; ui.payout = r.shards; ui.ticketGain = { pieces: r.ticketPieces, tickets: r.ticketsEarned }; ui.view = 'grade'; ui.earned = r.achievements || [];
     ui.earned.forEach((a) => toast('Achievement: ' + a.name + (a.species ? '. ' + a.speciesName + ' unlocked!' : '')));
     if (r.entry.gauntlet) {   // the wheel replays the new entry's climb (read only); without it the grade screen still works
       try {

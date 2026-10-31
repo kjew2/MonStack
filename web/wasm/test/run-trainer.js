@@ -9,7 +9,7 @@
 // Also checks the header build stamp from dist/build-info.json, and that a missing stamp shows "dev".
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
 // condition; the run is played on an account save that has drake unlocked; after the run the vendor offers 5 talent offers and
-// buying one spends shards. The Daily Tower: one climb, its result card, and floor playback (entropy gauges, the next vent, the
+// buying one spends shards. The Dungeon: ticket pieces on the grade screen, one ticket spent on a climb, its result card, and floor playback (entropy gauges, the next vent, the
 // corruption meter and their tooltips, an earlier floor replayed by towerFloor with the same fight hash; issue #98), and the
 // team picker over a varied Vault (the Vault's search, slot reordering); the test book button is debug only.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
@@ -60,7 +60,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^[0-9a-f]{4,}(\+dirty)? · \d{4}-\d\d-\d\d$/.test(stamp), 'the header shows the build stamp: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 4, 'a new account owns only the starter species (slime), schema v4');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 5, 'a new account owns only the starter species (slime), schema v5');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -279,6 +279,10 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const payout = +(/\+(\d+) Training Shards/.exec(await text('[data-id=payout]')) || [])[1];
   check(payout > 0 && acct.Account.Shards === SHARDS0 + payout, 'the run paid ' + payout + ' shards into the account');
   check((await text('[data-id=grade-title]')) === legacy, 'the grade screen shows the Legacy Title');
+  const gradeTickets = await text('[data-id=grade-tickets]');
+  const pieces = acct && acct.Account.Tower ? acct.Account.Tower.TicketPieces : -1;
+  check(/Dungeon ticket/.test(gradeTickets) && gradeTickets.indexOf(pieces + '/') >= 0,
+    'the grade screen shows the Dungeon ticket pieces the run earned (' + pieces + ' saved): ' + gradeTickets);
   await shot('05c-grade');
 
   // ---- reduced motion: the wheel replays already landed, no spin
@@ -329,16 +333,17 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await text('[data-id=vault-title]')) === legacy, 'the Vault card shows the Legacy Title: ' + legacy);
   await shot('06-vault');
 
-  // ---- the Daily Tower (specs/21 section 8): one attempt with the sealed monster, paid and saved by the engine
+  // ---- the Dungeon (specs/21 section 8): one attempt with the sealed monster, paid and saved by the engine
   const towerShards0 = (await readAccount()).Account.Shards;
-  const attemptsBefore = /^(\d+)\/(\d+) attempts left today/.exec(await text('[data-id=tower-attempts]'));
-  check(!!attemptsBefore && attemptsBefore[1] === attemptsBefore[2], 'home shows the Daily Tower card with every attempt left: ' + (await text('[data-id=tower-attempts]')));
+  const ticketsSaved = (await readAccount()).Account.Tower.Tickets;
+  const ticketsBefore = /^(\d+) tickets? · (\d+)\/(\d+) pieces/.exec(await text('[data-id=tower-tickets]'));
+  check(!!ticketsBefore && +ticketsBefore[1] === ticketsSaved + 1, 'home shows the Dungeon card with the tickets held plus today\'s free one: ' + (await text('[data-id=tower-tickets]')));
   await act('tower').click();
   await act('tower-climb').waitFor();
   check(await act('tower-climb').isDisabled(), 'the climb waits for a team');
   check((await page.locator('[data-id^=tower-floor-]').count()) > 0, "today's floors are listed");
   await act('tower-pick-0').check();
-  check(/Climb with 1 monster/.test(await act('tower-climb').innerText()), 'picking a Vault monster puts it on the team');
+  check(/Enter with 1 monster/.test(await act('tower-climb').innerText()), 'picking a Vault monster puts it on the team');
   await act('tower-climb').click();
   await page.locator('[data-id=tower-result]').waitFor();
   check(await page.locator('#modal').isHidden(), 'at Skip the climb shows the result at once, with no playback');
@@ -380,7 +385,9 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('tower-play-close').click();
   check(await page.locator('#modal').isHidden(), 'Close returns to the tower result');
   const tower = await readAccount();
-  check(tower.Account.Tower.AttemptsUsed === 1 && tower.Account.Tower.Day >= 0, 'the attempt is counted and saved (day ' + tower.Account.Tower.Day + ')');
+  check(tower.Account.Tower.AttemptsUsed === 1 && tower.Account.Tower.Day >= 0 && tower.Account.Tower.GrantDay === tower.Account.Tower.Day,
+    'the attempt is counted and saved (day ' + tower.Account.Tower.Day + ')');
+  check(tower.Account.Tower.Tickets === ticketsSaved, 'the free ticket was granted and one ticket spent (' + tower.Account.Tower.Tickets + ' left)');
   check((await text('[data-id=shards]')).startsWith(tower.Account.Shards + ' ') && tower.Account.Shards >= towerShards0,
     'the tower paid ' + (tower.Account.Shards - towerShards0) + ' shards: ' + (await text('[data-id=tower-shards]')));
   const shown = /^\+(\d+) Training Shards/.exec(await text('[data-id=tower-shards]'));
@@ -393,8 +400,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await shot('06b-tower');
   await act('tower-back').click();
   await act('start').waitFor();
-  const attemptsAfter = /^(\d+)\//.exec(await text('[data-id=tower-attempts]'));
-  check(!!attemptsAfter && +attemptsAfter[1] === +attemptsBefore[1] - 1, 'back home, the card shows one attempt used: ' + (await text('[data-id=tower-attempts]')));
+  const ticketsAfter = /^(\d+) ticket/.exec(await text('[data-id=tower-tickets]'));
+  check(!!ticketsAfter && +ticketsAfter[1] === +ticketsBefore[1] - 1, 'back home, the card shows one ticket used: ' + (await text('[data-id=tower-tickets]')));
 
   // ---- the next run: the vendor's offers go, and a bought Frugal Drills cuts the drill cost
   await act('start').click();
@@ -450,7 +457,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 4 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v4 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 5 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v5 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap && (await page.locator('[data-id=vault-over]').count()) === 0, 'back at the cap, the warning goes');
   check(await act('start').isEnabled(), 'and a run can start again at the cap');
@@ -593,7 +600,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   }
 
 
-  // ---- the Daily Tower team picker (issue #98) over the varied Vault: the Vault's search narrows the list, picks fill the slots
+  // ---- the Dungeon team picker (issue #98) over the varied Vault: the Vault's search narrows the list, picks fill the slots
   // in order, and a slot moves up or down or comes off; the picks address the real Vault index under a search
   {
     await act('tower').click();

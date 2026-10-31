@@ -104,7 +104,7 @@ namespace IdleRng.Bots.Balance
 
             if (o.Tower)
             {
-                sb.Append($"\n## Daily Tower: floors cleared of {r.TowerFloors}, first attempt, day {o.TowerDayBase} + seed index\n");
+                sb.Append($"\n## Dungeon: floors cleared of {r.TowerFloors}, first attempt, day {o.TowerDayBase} + seed index\n");
                 t = new Table(2);
                 t.Row("policy", "team", "mean", "sd", "p10/p50/p90", "max", "cleared%", "shards mean", "books mean");
                 foreach (var w in r.Tower)

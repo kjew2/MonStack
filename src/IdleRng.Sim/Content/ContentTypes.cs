@@ -74,10 +74,12 @@ namespace IdleRng.Sim.Content
         public int GauntletBossEvery { get; internal set; }      // GAUNTLET_BOSS_EVERY
         public double GauntletBossMult { get; internal set; }    // GAUNTLET_BOSS_MULT
 
-        // Daily Tower (specs/21 section 5). Placeholders.
+        // Dungeon (specs/21 section 5; "tower" in code). Placeholders.
         public int TowerSeed { get; internal set; }              // TOWER_SEED
         public int TowerFloors { get; internal set; }            // TOWER_FLOORS
-        public int TowerAttemptsPerDay { get; internal set; }    // TOWER_ATTEMPTS_PER_DAY
+        public int TowerAttemptsPerDay { get; internal set; }    // TOWER_ATTEMPTS_PER_DAY: free tickets per day
+        public int TowerTicketCap { get; internal set; }         // TOWER_TICKET_CAP
+        public int TowerTicketPieces { get; internal set; }      // TOWER_TICKET_PIECES
         public double TowerBase { get; internal set; }           // TOWER_BASE
         public double TowerGrowth { get; internal set; }         // TOWER_GROWTH
         public double TowerBossHpMult { get; internal set; }     // TOWER_BOSS_HP_MULT
@@ -229,6 +231,9 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Training Shards for dismantling a Vault entry of this grade (specs/18 section 7). Placeholder.</summary>
         public int DismantleShards { get; internal set; }
+
+        /// <summary>Dungeon ticket pieces a sealed run of this grade earns (specs/21 section 7). Placeholder.</summary>
+        public int TicketPieces { get; internal set; }
     }
 
     public enum TreeKind { Native, Generic, Chase, Book }
@@ -362,10 +367,10 @@ namespace IdleRng.Sim.Content
         public IdleRng.Sim.Combat.MonsterStats Weights { get; internal set; }
     }
 
-    /// <summary>Which Daily Tower pool a boss row belongs to (specs/21 section 4).</summary>
+    /// <summary>Which Dungeon pool a boss row belongs to (specs/21 section 4).</summary>
     public enum TowerRole { Regular, Marquee, Add }
 
-    /// <summary>A Daily Tower boss (specs/21 section 4): stats are Weights x the floor level (hp also x TOWER_BOSS_HP_MULT, not for adds).</summary>
+    /// <summary>A Dungeon boss (specs/21 section 4): stats are Weights x the floor level (hp also x TOWER_BOSS_HP_MULT, not for adds).</summary>
     public sealed class TowerBossDef
     {
         public string Id { get; internal set; }
@@ -402,7 +407,7 @@ namespace IdleRng.Sim.Content
         public IReadOnlyList<string> AddSkills { get; internal set; }
     }
 
-    /// <summary>A Skill Book the Daily Tower can drop from MinFloor on, by weight (specs/21 section 7).</summary>
+    /// <summary>A Skill Book the Dungeon can drop from MinFloor on, by weight (specs/21 section 7).</summary>
     public sealed class BookDropDef
     {
         public string BookId { get; internal set; }

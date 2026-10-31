@@ -171,7 +171,7 @@ namespace IdleRng.Sim.Combat
     }
 
     /// <summary>
-    /// The Daily Tower's extra rules (specs/21 section 3): the entropy gauge and the environmental clock. Null on
+    /// The Dungeon's extra rules (specs/21 section 3): the entropy gauge and the environmental clock. Null on
     /// <see cref="FightRules.Tower"/> turns all of it, and boss phases, off, and the fight (and its hash) is exactly as before.
     /// </summary>
     public sealed class TowerRules
@@ -273,10 +273,10 @@ namespace IdleRng.Sim.Combat
         /// <summary>double_turn_start: how many of the unit's first actions are each followed by an extra action.</summary>
         public int DoubleTurns { get; set; }
 
-        /// <summary>The Daily Tower's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
+        /// <summary>The Dungeon's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
         public TowerRules Tower { get; set; }
 
-        /// <summary>Fight rules from content; <paramref name="tower"/> adds the Daily Tower's rules (specs/21 section 3).</summary>
+        /// <summary>Fight rules from content; <paramref name="tower"/> adds the Dungeon's rules (specs/21 section 3).</summary>
         public static FightRules FromContent(ContentDb c, bool tower)
         {
             var r = FromContent(c);

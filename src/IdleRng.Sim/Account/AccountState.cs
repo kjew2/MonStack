@@ -13,9 +13,9 @@ namespace IdleRng.Sim.Account
     {
         /// <summary>
         /// The account save lineage (specs/18 section 6). v2: Vault entries carry Locked. v3: achievements, records and the post-run
-        /// vendor. v4: Daily Tower progress (AccountSave migrates v1 to v3).
+        /// vendor. v4: Dungeon progress. v5: Dungeon tickets (AccountSave migrates v1 to v5).
         /// </summary>
-        public const int CurrentSchemaVersion = 4;
+        public const int CurrentSchemaVersion = 5;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";
@@ -47,7 +47,7 @@ namespace IdleRng.Sim.Account
         /// <summary>The post-run vendor's offers from the last sealed run, or null (specs/18 section 4). Gone when the next run starts.</summary>
         public VendorState Vendor { get; set; }
 
-        /// <summary>Daily Tower attempts and bests (specs/21 section 7).</summary>
+        /// <summary>Dungeon tickets, attempts and bests (specs/21 section 7).</summary>
         public TowerProgress Tower { get; set; } = new TowerProgress();
 
         /// <summary>The run in progress, or null.</summary>
@@ -75,24 +75,34 @@ namespace IdleRng.Sim.Account
     }
 
     /// <summary>
-    /// Daily Tower progress (specs/21 section 7). Floors are counted as floors cleared; rewards for a floor are paid once a day,
-    /// the first time an attempt clears it, so a retry only pays for floors above ClearedToday.
+    /// Dungeon progress (specs/21 section 7; "tower" in code). Each attempt spends one ticket and pays every floor it clears.
+    /// Floors are counted as floors cleared.
     /// </summary>
     public sealed class TowerProgress
     {
         /// <summary>UTC day number of the last attempt; -1 before the first. A later day resets AttemptsUsed and ClearedToday.</summary>
         public int Day { get; set; } = -1;
 
+        /// <summary>Attempts made on Day. The next attempt's Skill Book rolls use it (TowerSim.BookDrop), so each ticket rolls afresh.</summary>
         public int AttemptsUsed { get; set; }
 
-        /// <summary>Most floors one attempt cleared on Day (all of them paid).</summary>
+        /// <summary>Most floors one attempt cleared on Day.</summary>
         public int ClearedToday { get; set; }
 
         /// <summary>Most floors one attempt ever cleared (a floor above it is a first clear).</summary>
         public int ClearedEver { get; set; }
+
+        /// <summary>Tickets held, not counting free daily tickets not yet granted (AccountOps.TowerTickets counts those too).</summary>
+        public int Tickets { get; set; }
+
+        /// <summary>Ticket pieces from sealed runs toward the next ticket, 0 to TOWER_TICKET_PIECES - 1.</summary>
+        public int TicketPieces { get; set; }
+
+        /// <summary>UTC day the free daily tickets were last granted up to; -1 before the first.</summary>
+        public int GrantDay { get; set; } = -1;
     }
 
-    /// <summary>What one Daily Tower attempt did and paid (AccountOps.RunTower).</summary>
+    /// <summary>What one Dungeon attempt did and paid (AccountOps.RunTower).</summary>
     public sealed class TowerRunResult
     {
         public IdleRng.Sim.Tower.TowerResult Result { get; set; }
@@ -104,7 +114,8 @@ namespace IdleRng.Sim.Account
         /// <summary>Floors cleared for the first time ever (they will pay Star-Gems once gems exist, specs/21 section 7).</summary>
         public List<int> FirstClears { get; set; } = new List<int>();
 
-        public int AttemptsLeft { get; set; }
+        /// <summary>Tickets left after this attempt.</summary>
+        public int TicketsLeft { get; set; }
     }
 
     /// <summary>The post-run vendor (specs/18 section 4): offers rolled when a run is sealed, rarity odds by its grade.</summary>
@@ -141,5 +152,11 @@ namespace IdleRng.Sim.Account
 
         /// <summary>Species those achievements unlocked.</summary>
         public List<string> SpeciesUnlocked { get; set; } = new List<string>();
+
+        /// <summary>Dungeon ticket pieces the run's grade earned (fight_ranks.ticket_pieces).</summary>
+        public int TicketPieces { get; set; }
+
+        /// <summary>Whole Dungeon tickets those pieces completed.</summary>
+        public int TicketsEarned { get; set; }
     }
 }

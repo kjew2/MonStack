@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace IdleRng.Sim.Tests
 {
-    /// <summary>Daily Tower attempts and rewards on the account (specs/21 section 7).</summary>
+    /// <summary>Dungeon attempts and rewards on the account (specs/21 section 7).</summary>
     public class TowerAccountTests
     {
         static ContentDb Db => TestContent.Db;
@@ -43,12 +43,21 @@ namespace IdleRng.Sim.Tests
             return -1;
         }
 
+        /// <summary>Set the account's ticket stock (the runs WithVault seals earn pieces and maybe tickets).</summary>
+        static void SetTickets(AccountState a, int tickets, int pieces = 0)
+        {
+            a.Tower.Tickets = tickets;
+            a.Tower.TicketPieces = pieces;
+        }
+
         [Test]
-        public void RunTower_PaysEachClearedFloorOnce_AndMatchesTheSim()
+        public void RunTower_PaysEveryClearedFloor_OnEveryTicket_AndMatchesTheSim()
         {
             var a = WithVault(2);
+            SetTickets(a, 3);
             var team = new[] { 0, 1 };
             int day = DayWithAClear(a, team);
+            int ticketsBefore = AccountOps.TowerTickets(Db, a, day);
             long before = a.Shards;
             var r = AccountOps.RunTower(Db, a, team, day);
             var expected = TowerSim.Run(Db, team.Select(i => a.Vault[i].Fighter(Db)).ToList(), day);
@@ -57,43 +66,101 @@ namespace IdleRng.Sim.Tests
             Assert.That(a.Shards, Is.EqualTo(before + r.Shards));
             Assert.That(r.FirstClears, Is.EqualTo(Enumerable.Range(1, expected.FloorsCleared)));
             Assert.That(r.Books.Select(b => b.Book), Is.EqualTo(Enumerable.Range(1, expected.FloorsCleared)
-                .Select(f => TowerSim.BookDrop(Db, day, f)).Where(b => b != null)));
+                .Select(f => TowerSim.BookDrop(Db, day, f, 0)).Where(b => b != null)));
             foreach (var g in r.Books.GroupBy(b => b.Book)) Assert.That(a.BookCount(g.Key), Is.EqualTo(g.Count()));
             Assert.That(a.Tower.Day, Is.EqualTo(day));
             Assert.That(a.Tower.AttemptsUsed, Is.EqualTo(1));
             Assert.That(a.Tower.ClearedToday, Is.EqualTo(expected.FloorsCleared));
             Assert.That(a.Tower.ClearedEver, Is.EqualTo(expected.FloorsCleared));
-            Assert.That(r.AttemptsLeft, Is.EqualTo(K.TowerAttemptsPerDay - 1));
+            Assert.That(r.TicketsLeft, Is.EqualTo(ticketsBefore - 1));
 
-            // the same team again the same day clears the same floors: nothing more to pay
+            // the same team again the same day clears the same floors and is paid again, with the second attempt's book rolls
             long shards = a.Shards;
             var again = AccountOps.RunTower(Db, a, team, day);
-            Assert.That(again.Shards, Is.EqualTo(0));
-            Assert.That(again.Books, Is.Empty);
-            Assert.That(again.FirstClears, Is.Empty);
-            Assert.That(a.Shards, Is.EqualTo(shards));
+            Assert.That(again.Shards, Is.EqualTo(r.Shards));
+            Assert.That(a.Shards, Is.EqualTo(shards + again.Shards));
+            Assert.That(again.Books.Select(b => b.Book), Is.EqualTo(Enumerable.Range(1, expected.FloorsCleared)
+                .Select(f => TowerSim.BookDrop(Db, day, f, 1)).Where(b => b != null)));
+            Assert.That(again.FirstClears, Is.Empty, "a floor is a first clear only once");
+            Assert.That(a.Tower.AttemptsUsed, Is.EqualTo(2));
+            Assert.That(again.TicketsLeft, Is.EqualTo(ticketsBefore - 2));
         }
 
         [Test]
-        public void RunTower_CapsAttemptsPerDay_AndANewDayResets()
+        public void FreeTickets_OnePerDay_BankUpToTheCap()
         {
             var a = WithVault(1);
+            SetTickets(a, 0);
+            Assert.That(AccountOps.TowerTickets(Db, a, 10), Is.EqualTo(K.TowerAttemptsPerDay), "the first visit has one day's free tickets");
             for (int i = 0; i < K.TowerAttemptsPerDay; i++) AccountOps.RunTower(Db, a, new[] { 0 }, 10);
-            Assert.That(AccountOps.TowerAttemptsLeft(Db, a, 10), Is.EqualTo(0));
-            var snapshot = (a.Shards, a.Tower.AttemptsUsed, a.Tower.ClearedToday);
+            Assert.That(AccountOps.TowerTickets(Db, a, 10), Is.EqualTo(0));
+            var snapshot = (a.Shards, a.Tower.AttemptsUsed, a.Tower.ClearedToday, a.Tower.Tickets, a.Tower.GrantDay);
             Assert.Throws<InvalidOperationException>(() => AccountOps.RunTower(Db, a, new[] { 0 }, 10));
-            Assert.That((a.Shards, a.Tower.AttemptsUsed, a.Tower.ClearedToday), Is.EqualTo(snapshot), "a refused attempt changes nothing");
+            Assert.That((a.Shards, a.Tower.AttemptsUsed, a.Tower.ClearedToday, a.Tower.Tickets, a.Tower.GrantDay), Is.EqualTo(snapshot),
+                "a refused attempt changes nothing");
 
-            Assert.That(AccountOps.TowerAttemptsLeft(Db, a, 11), Is.EqualTo(K.TowerAttemptsPerDay));
+            Assert.That(AccountOps.TowerTickets(Db, a, 11), Is.EqualTo(K.TowerAttemptsPerDay), "a new day grants the day's free tickets");
             AccountOps.RunTower(Db, a, new[] { 0 }, 11);
             Assert.That(a.Tower.Day, Is.EqualTo(11));
             Assert.That(a.Tower.AttemptsUsed, Is.EqualTo(1));
+            Assert.That(a.Tower.GrantDay, Is.EqualTo(11));
+
+            // missed days bank, up to the cap; reading does not grant
+            int held = a.Tower.Tickets;
+            Assert.That(AccountOps.TowerTickets(Db, a, 13), Is.EqualTo(Math.Min(K.TowerTicketCap, held + 2 * K.TowerAttemptsPerDay)));
+            Assert.That(AccountOps.TowerTickets(Db, a, 11 + 1000), Is.EqualTo(Math.Max(held, K.TowerTicketCap)));
+            Assert.That(a.Tower.Tickets, Is.EqualTo(held));
+            AccountOps.RunTower(Db, a, new[] { 0 }, 11 + 1000);
+            Assert.That(a.Tower.Tickets, Is.EqualTo(K.TowerTicketCap - 1), "granted up to the cap, then one spent");
+        }
+
+        [Test]
+        public void FreeTickets_DoNotCutTicketsFromRuns()
+        {
+            var a = WithVault(1);
+            SetTickets(a, K.TowerTicketCap + 3);
+            a.Tower.GrantDay = 5;
+            Assert.That(AccountOps.TowerTickets(Db, a, 6), Is.EqualTo(K.TowerTicketCap + 3), "over the cap: no free ticket, none lost");
+            AccountOps.RunTower(Db, a, new[] { 0 }, 6);
+            Assert.That(a.Tower.Tickets, Is.EqualTo(K.TowerTicketCap + 2));
+        }
+
+        [Test]
+        public void FinishRun_AddsTheGradesTicketPieces_AndMakesTickets()
+        {
+            var a = WithVault(0);
+            bool sawPieces = false;
+            for (int i = 0; i < 6; i++)
+            {
+                int ticketsBefore = a.Tower.Tickets;
+                int piecesBefore = i == 0 ? K.TowerTicketPieces - 1 : a.Tower.TicketPieces;   // one short of a ticket on the first run
+                a.Tower.TicketPieces = piecesBefore;
+                var s = AccountOps.StartRun(Db, a, Db.StarterSpecies.Id);
+                while (s.Phase != RunPhase.Finished)
+                {
+                    while (s.Offers.Count > 0) TrainingRun.DiscardOffer(Db, s);
+                    if (s.Phase == RunPhase.AwaitFight) TrainingRun.Fight(Db, s);
+                    else if (s.Energy < 40) TrainingRun.Rest(Db, s);
+                    else TrainingRun.Drill(Db, s, i % 2 == 0 ? StatIds.Str : StatIds.Hp);
+                }
+                var r = AccountOps.FinishRun(Db, a);
+                int pieces = Db.FightRanks.Single(x => x.Id == r.Entry.Grade).TicketPieces;
+                Assert.That(r.TicketPieces, Is.EqualTo(pieces));
+                int total = piecesBefore + pieces;
+                Assert.That(r.TicketsEarned, Is.EqualTo(total / K.TowerTicketPieces));
+                Assert.That(a.Tower.Tickets, Is.EqualTo(ticketsBefore + total / K.TowerTicketPieces));
+                Assert.That(a.Tower.TicketPieces, Is.EqualTo(total % K.TowerTicketPieces));
+                sawPieces |= pieces > 0;
+            }
+            if (!sawPieces) Assert.Inconclusive("no placeholder run earned ticket pieces");
+            Assert.That(Db.FightRanks.Select(x => x.TicketPieces), Is.Ordered, "placeholder pieces rise with the grade");
         }
 
         [Test]
         public void RunTower_RefusesAnEarlierDay_ABadTeam_AndANegativeDay()
         {
             var a = WithVault(2);
+            SetTickets(a, 5);
             AccountOps.RunTower(Db, a, new[] { 0 }, 50);
             Assert.Throws<InvalidOperationException>(() => AccountOps.RunTower(Db, a, new[] { 0 }, 49), "the clock went back");
             Assert.Throws<ArgumentException>(() => AccountOps.RunTower(Db, a, new int[0], 50));
@@ -116,12 +183,14 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void NewAccount_HasNoTowerProgress()
+        public void NewAccount_HasNoTowerProgress_AndADaysFreeTicketsDue()
         {
             var a = AccountOps.New(Db, 1);
             Assert.That(a.Tower.Day, Is.EqualTo(-1));
             Assert.That(a.Tower.ClearedEver, Is.EqualTo(0));
-            Assert.That(AccountOps.TowerAttemptsLeft(Db, a, 0), Is.EqualTo(K.TowerAttemptsPerDay));
+            Assert.That(a.Tower.Tickets, Is.EqualTo(0));
+            Assert.That(a.Tower.GrantDay, Is.EqualTo(-1));
+            Assert.That(AccountOps.TowerTickets(Db, a, 0), Is.EqualTo(K.TowerAttemptsPerDay));
         }
     }
 }

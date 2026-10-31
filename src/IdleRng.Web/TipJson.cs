@@ -43,7 +43,7 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
-        /// <summary>towerTips{key:{name,text}}: the Daily Tower playback's entropy, vent, corruption and phase tooltips (BattleText.TowerTips).</summary>
+        /// <summary>towerTips{key:{name,text}}: the Dungeon playback's entropy, vent, corruption and phase tooltips (BattleText.TowerTips).</summary>
         public static void TowerTips(JsonOut w, ContentDb db)
         {
             w.Key("towerTips").Obj();

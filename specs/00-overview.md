@@ -13,7 +13,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
 | Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
-| Daily Tower: daily lineup of 4v1 boss floors, attempts and rewards (shards, Skill Book drops, the premium gate), a first web screen | `src/IdleRng.Sim/Tower`, `AccountOps.RunTower`, `web/run.js` | `21` |
+| Dungeon (built as the Daily Tower): daily lineup of 4v1 boss floors, tickets (one free a day, pieces from sealed runs) and rewards (shards, Skill Book drops, the premium gate), a first web screen | `src/IdleRng.Sim/Tower`, `AccountOps.RunTower`, `web/run.js` | `21` |
 | Content database and pipeline | `content_src/` -> `Content/` -> `ContentDb` | `05` |
 | Account save lineage and stores | `src/IdleRng.Runtime/Save` | `06`, `18` |
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
@@ -25,7 +25,7 @@ Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower
 
 | Tag | Meaning | Content |
 |---|---|---|
-| **P0** | The MVP, a single-player web demo (`specs/12` section 12.1): T0 to T7 built and live, T9 done, T10 to build (T9 and T10 moved up from P1 by kj, 2026-10-31) | Phases T0 to T7 of `specs/13` (battle, training run, skill trees, Vault, account and talents, web client, idle game removed), plus T9 species unlocks by achievement and the post-run vendor (done; the species gacha was scrapped) and T10 Daily Tower |
+| **P0** | The MVP, a single-player web demo (`specs/12` section 12.1): T0 to T7 built and live, T9 done, T10 to build (T9 and T10 moved up from P1 by kj, 2026-10-31) | Phases T0 to T7 of `specs/13` (battle, training run, skill trees, Vault, account and talents, web client, idle game removed), plus T9 species unlocks by achievement and the post-run vendor (done; the species gacha was scrapped) and T10 Dungeon |
 | **P1** | Toward 1.0 on Steam and the web (`specs/12` section 12.2) | T8 gauntlet wheel screen (done), T11 Endless Tower and gambits, T12 async PvP and server, T13 monetization and platform builds |
 | **P2** | After 1.0, or parked until a platform decision | iOS and a native client, live operations |
 
@@ -40,9 +40,9 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*`, `STAT_FLOOR_FRAC`, `EFFECT_STACK_CAP` | `16` section 7 |
 | Training run | `RUN_CYCLES`, `RUN_AP`, `RUN_ENERGY_*`, `DRILL_*`, `REST_ENERGY`, `INJURY_*` (chance, cycles skipped, energy on return), `STAT_MAX`, `FIGHT_EVERY` | `14` section 8 |
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, the chase capstone constants `MON_ECHO_POWER`, `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE`, `MON_DOUBLE_TURNS` | `15` section 9 |
-| Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7), `VENDOR_OFFERS` and the `vendor_rarities` table (section 4), the `achievements` table (section 8) | `18` |
+| Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7) and `fight_ranks.ticket_pieces` (`specs/21` section 7), `VENDOR_OFFERS` and the `vendor_rarities` table (section 4), the `achievements` table (section 8) | `18` |
 | Gauntlet | `GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` | `19` section 4 |
-| Daily Tower | `TOWER_*`, `ENTROPY_*`, `CORRUPT_*` | `21` section 5 |
+| Dungeon | `TOWER_*`, `ENTROPY_*`, `CORRUPT_*` | `21` section 5 |
 
 ## 3. Vocabulary
 
@@ -59,7 +59,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | **Talent** | A permanent account upgrade that changes the next runs (`RunModifiers`) |
 | **Vendor** | The post-run shop: after each sealed run, `VENDOR_OFFERS` random talent offers whose rarity odds follow the run's grade |
 | **Achievement** | An account goal checked when a run is sealed; some unlock a species. A new account owns only the starter species |
-| **Skill Book** | An item that opens a book tree in a run; the premium gate, dropped by the Daily Tower (T10) |
+| **Skill Book** | An item that opens a book tree in a run; the premium gate, dropped by the Dungeon (T10) |
 | **Gauntlet** | The end-of-run tower the finished monster climbs; where it falls sets its Legacy Title |
 
 ## 4. Cross-spec contracts

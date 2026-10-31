@@ -69,8 +69,9 @@ namespace IdleRng.Sim.Account
         /// <summary>
         /// Finish the active run once it is over (after its last cycle): pay shards (<see cref="Payout"/>), return unused books,
         /// seal the monster into the Vault (Vault.Seal, specs/13 T4), record it and check achievements (which may unlock species),
-        /// roll the post-run vendor's offers (<see cref="RollVendor"/>) and clear the active run. It seals even when the Vault is
-        /// at or over VAULT_CAP (no monster is lost); the next StartRun waits until the player dismantles down to the cap.
+        /// add the grade's Dungeon ticket pieces (<see cref="AddTicketPieces"/>), roll the post-run vendor's offers
+        /// (<see cref="RollVendor"/>) and clear the active run. It seals even when the Vault is at or over VAULT_CAP (no monster
+        /// is lost); the next StartRun waits until the player dismantles down to the cap.
         /// </summary>
         public static FinishResult FinishRun(ContentDb c, AccountState a, long sealedUtcMs = 0)
         {
@@ -90,6 +91,7 @@ namespace IdleRng.Sim.Account
                 result.Achievements.Add(d.Id);
                 if (d.UnlocksSpecies != null && ownedBefore.Add(d.UnlocksSpecies)) result.SpeciesUnlocked.Add(d.UnlocksSpecies);
             }
+            AddTicketPieces(c, a, result.Entry, result);
             a.Vendor = RollVendor(c, a, result.Entry.RankIndex, Math.Max(0, a.RunsStarted - 1));
             return result;
         }
@@ -336,26 +338,36 @@ namespace IdleRng.Sim.Account
             return m;
         }
 
-        // ------------------------------------------------------------------ books
+        // ------------------------------------------------------------------ Dungeon (specs/21 section 7; "tower" in code)
 
-        /// <summary>Add (or with a negative count remove) skill books. The Daily Tower will grant books through this (specs/13 T10).</summary>
-        // ------------------------------------------------------------------ Daily Tower (specs/21 section 7)
+        /// <summary>
+        /// Free tickets due on <paramref name="day"/> and not yet granted: TOWER_ATTEMPTS_PER_DAY for each day since the last
+        /// grant (one day's worth on the first), filling the stock only up to TOWER_TICKET_CAP. Tickets from runs count toward
+        /// the cap but are never cut by it. 0 on a day at or before the last grant.
+        /// </summary>
+        static int TicketsDue(ContentDb c, TowerProgress t, int day)
+        {
+            if (day <= t.GrantDay) return 0;
+            long days = t.GrantDay < 0 ? 1 : (long)day - t.GrantDay;
+            long due = Math.Min(days * c.Constants.TowerAttemptsPerDay, (long)c.Constants.TowerTicketCap - t.Tickets);
+            return (int)Math.Max(0, due);
+        }
 
-        /// <summary>Attempts left on <paramref name="day"/> (all of them on a day after the last attempt).</summary>
-        public static int TowerAttemptsLeft(ContentDb c, AccountState a, int day)
+        /// <summary>Tickets the player can spend on <paramref name="day"/>: those held plus the free ones due (read only).</summary>
+        public static int TowerTickets(ContentDb c, AccountState a, int day)
         {
             if (a == null) throw new ArgumentNullException(nameof(a));
             var t = a.Tower ?? new TowerProgress();
-            int used = day > t.Day ? 0 : t.AttemptsUsed;
-            return Math.Max(0, c.Constants.TowerAttemptsPerDay - used);
+            return t.Tickets + TicketsDue(c, t, day);
         }
 
         /// <summary>
-        /// One Daily Tower attempt on <paramref name="day"/> (the caller's UTC day number) with the Vault entries at
-        /// <paramref name="vaultIndices"/> (oldest-first indices, in slot order, 1 to MON_SIDE_SIZE distinct). A run in progress
-        /// does not block it. Pays, for each floor cleared above today's best: TOWER_SHARDS_PER_FLOOR shards and that floor's
-        /// Skill Book drop, if any (TowerSim.BookDrop, fixed by day and floor). Rejected (throws, changes nothing) with no
-        /// attempts left, a bad team, or a day before the last attempt (the clock went back).
+        /// One Dungeon attempt on <paramref name="day"/> (the caller's UTC day number) with the Vault entries at
+        /// <paramref name="vaultIndices"/> (oldest-first indices, in slot order, 1 to MON_SIDE_SIZE distinct). Grants the free
+        /// tickets due, then spends one. A run in progress does not block it. Pays every floor cleared, on every attempt:
+        /// TOWER_SHARDS_PER_FLOOR shards and the floor's Skill Book roll (TowerSim.BookDrop, fixed by day, the day's attempt
+        /// number and floor, so each ticket rolls afresh). Rejected (throws, changes nothing) with no ticket, a bad team, or a
+        /// day before the last attempt (the clock went back).
         /// </summary>
         public static TowerRunResult RunTower(ContentDb c, AccountState a, IList<int> vaultIndices, int day)
         {
@@ -363,10 +375,10 @@ namespace IdleRng.Sim.Account
             if (vaultIndices == null) throw new ArgumentNullException(nameof(vaultIndices));
             if (day < 0) throw new ArgumentOutOfRangeException(nameof(day), "day must be >= 0");
             var t = a.Tower ?? new TowerProgress();
-            if (day < t.Day) throw new InvalidOperationException($"day {day} is before the last tower attempt (day {t.Day})");
-            if (TowerAttemptsLeft(c, a, day) <= 0) throw new InvalidOperationException("no tower attempts left today");
+            if (day < t.Day) throw new InvalidOperationException($"day {day} is before the last Dungeon attempt (day {t.Day})");
+            if (TowerTickets(c, a, day) <= 0) throw new InvalidOperationException("no Dungeon tickets left");
             if (vaultIndices.Count < 1 || vaultIndices.Count > c.Constants.MonSideSize)
-                throw new ArgumentException($"a tower team needs 1..{c.Constants.MonSideSize} monsters", nameof(vaultIndices));
+                throw new ArgumentException($"a Dungeon team needs 1..{c.Constants.MonSideSize} monsters", nameof(vaultIndices));
             var seen = new HashSet<int>();
             var team = new List<Fighter>(vaultIndices.Count);
             foreach (int i in vaultIndices)
@@ -378,28 +390,51 @@ namespace IdleRng.Sim.Account
 
             var result = IdleRng.Sim.Tower.TowerSim.Run(c, team, day);
             bool newDay = day > t.Day;
-            int paidUpTo = newDay ? 0 : t.ClearedToday;
+            int attempt = newDay ? 0 : t.AttemptsUsed;
             var r = new TowerRunResult { Result = result };
-            for (int f = paidUpTo + 1; f <= result.FloorsCleared; f++)
+            for (int f = 1; f <= result.FloorsCleared; f++)
             {
                 r.Shards += c.Constants.TowerShardsPerFloor;
-                var book = IdleRng.Sim.Tower.TowerSim.BookDrop(c, day, f);
+                var book = IdleRng.Sim.Tower.TowerSim.BookDrop(c, day, f, attempt);
                 if (book != null) r.Books.Add((f, book));
                 if (f > t.ClearedEver) r.FirstClears.Add(f);
             }
 
             // commit
             a.Tower = t;
+            t.Tickets += TicketsDue(c, t, day);
+            t.GrantDay = Math.Max(t.GrantDay, day);
+            t.Tickets--;
             if (newDay) { t.Day = day; t.AttemptsUsed = 0; t.ClearedToday = 0; }
             t.AttemptsUsed++;
             t.ClearedToday = Math.Max(t.ClearedToday, result.FloorsCleared);
             t.ClearedEver = Math.Max(t.ClearedEver, result.FloorsCleared);
             a.Shards += r.Shards;
             foreach (var (_, book) in r.Books) AddBooks(a, book, 1);
-            r.AttemptsLeft = TowerAttemptsLeft(c, a, day);
+            r.TicketsLeft = TowerTickets(c, a, day);
             return r;
         }
 
+        /// <summary>
+        /// Add a sealed run's ticket pieces (its grade's fight_ranks.ticket_pieces; 0 for a grade no longer in content) and turn
+        /// every TOWER_TICKET_PIECES of them into a ticket. Tickets from runs are not capped.
+        /// </summary>
+        static void AddTicketPieces(ContentDb c, AccountState a, VaultEntry e, FinishResult result)
+        {
+            int pieces = 0;
+            foreach (var r in c.FightRanks) if (r.Id == e.Grade) pieces = r.TicketPieces;
+            var t = a.Tower ?? (a.Tower = new TowerProgress());
+            int per = c.Constants.TowerTicketPieces;
+            int total = t.TicketPieces + pieces;
+            result.TicketPieces = pieces;
+            result.TicketsEarned = total / per;
+            t.Tickets += total / per;
+            t.TicketPieces = total % per;
+        }
+
+        // ------------------------------------------------------------------ books
+
+        /// <summary>Add (or with a negative count remove) skill books. The Dungeon grants its drops through AddBooks.</summary>
         public static void GrantBooks(ContentDb c, AccountState a, string bookId, int count)
         {
             if (bookId == null || !c.SkillBooks.ContainsKey(bookId)) throw new ArgumentException($"unknown skill book '{bookId}'", nameof(bookId));

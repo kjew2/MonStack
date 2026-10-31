@@ -288,7 +288,7 @@ mskill.boss_cleave.desc,Hit every enemy for {power:pct} of {scales}. Cooldown {c
 mskill.boss_roar.name,Shattering Roar
 mskill.boss_roar.desc,Lower every enemy's {stat} by {power:pct} for {duration} turns. Cooldown {cooldown}.
 rule.entropy_convert.name,Entropy Convert
-rule.entropy_convert.desc,"Daily Tower: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
+rule.entropy_convert.desc,"Dungeon: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
 phase.shield_check.name,Shield Check
 phase.shield_check.desc,"The boss raises a shield. Break it before it fades, or the boss heals and hits harder."
 phase.split.name,Split
@@ -298,7 +298,7 @@ phase.channel.desc,The boss charges a strike on your whole team. Deal enough dam
 phase.enrage.name,Enrage
 phase.enrage.desc,The boss hits harder every turn until the fight ends.
 tower.entropy.name,Entropy
-tower.entropy.desc,"Daily Tower: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
+tower.entropy.desc,"Dungeon: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
 vent.recoil.name,Recoil
 vent.recoil.desc,The unit takes {ENTROPY_RECOIL_FRAC:pct} of its max HP as true damage (a shield absorbs it).
 vent.stun.name,Stun
@@ -307,4 +307,4 @@ vent.enrage.name,Enrage
 vent.enrage.desc,Every enemy deals {ENTROPY_ENRAGE_FRAC:pct} more damage for {ENTROPY_ENRAGE_TURNS} turns.
 vent.convert.name,Shield
 tower.corruption.name,Corruption
-tower.corruption.desc,"Daily Tower: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
+tower.corruption.desc,"Dungeon: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
