@@ -1056,7 +1056,7 @@
     },
     {
       "key": "tip.priority",
-      "text": "Each action uses the first ready skill, in slot then node order, whose condition holds; otherwise a basic attack"
+      "text": "Each action uses the first ready heal or shield whose condition holds, else the first ready other skill, in slot then node order; otherwise a basic attack"
     },
     {
       "key": "tip.cost",

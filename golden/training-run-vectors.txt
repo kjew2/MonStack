@@ -1,16 +1,16 @@
-# training-run vectors, hash v3 content=3.5/096323d6
+# training-run vectors, hash v3 content=3.5/877d972a
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8
   stats hp 174 str 170 int 177 wis 173 dex 178 def 187 spd 170 luk 171
   trees slime_fundamentals:8/8 gel_armor:8/8 - -
-  hash 421d35222b17950ae0285d0ed11dbe264c50802b2d6202977eef6de31849351a
+  hash eec3eb3155f42c59d9d1d1d4a409699f1e43a5ed26ec08b1f8268fb1811c38e1
 
 slime focus seed=7
   end=Completed cycle=12 rank=s fights=6/12 drills=44 rests=16 energy=20 milestones=3 sp=0
-  stats hp 871 str 90 int 100 wis 145 dex 90 def 175 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:7/8 living_ocean:5/8
-  hash f00c95090342c20b70fd1402038b1eaf60c3d2305cb906f052a8fb4df43c1b96
+  stats hp 869 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:8/8 living_ocean:3/8
+  hash 59492fab53fb7272f4be3649e646da1da730a9073dad79a3915492b5a1513c3e
 
 slime reckless seed=7
   end=Injured cycle=2 rank=d fights=1/1 drills=6 rests=0 energy=0 milestones=0 sp=0
@@ -26,9 +26,9 @@ slime hoarder seed=7
 
 slime focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=3 sp=0
-  stats hp 832 str 90 int 115 wis 180 dex 90 def 140 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:7/8 living_ocean:4/8
-  hash 1e61e3940ae507d5ba4e0bab6917d9d80d2adc3de33a8c5a002383b775815cb1
+  stats hp 815 str 90 int 115 wis 180 dex 90 def 125 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:8/8 living_ocean:1/8
+  hash 41efcf15bb2e6071eeb33d1c04e1f7d16c488843ad4d7475860cd9e068c5272f
 
 drake balanced seed=7
   end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=0 sp=4

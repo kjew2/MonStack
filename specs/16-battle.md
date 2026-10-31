@@ -71,7 +71,7 @@ A "turn" for durations is `BATTLE_GAUGE / SPD_REF` ticks (10 ticks, one action a
 
 ### 5.2 Default AI
 
-Both sides use the same AI, so PvP stays symmetric. On its action a unit fires its `OnAction` triggers, ticks its cooldowns down by one, then uses the first skill in list order that is ready and would do something:
+Both sides use the same AI, so PvP stays symmetric. On its action a unit fires its `OnAction` triggers, ticks its cooldowns down by one, then uses the first skill that is ready and would do something. Rescue skills (heal, shield) are considered first, in list order, so a hurt ally is not left waiting behind a damage skill; then every other skill, in list order:
 
 - damage: an enemy is alive; heal: an ally is below `AI_HEAL_BELOW` of max HP; shield: below `AI_SHIELD_BELOW`; taunt: not already taunting; buff: the target lacks this skill's effect; debuff: a living enemy lacks it.
 - A skill used with `Cooldown` N is ready again on the Nth action after it (cooldown 0 or 1: every action).
