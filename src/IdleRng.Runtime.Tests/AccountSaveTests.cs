@@ -82,7 +82,7 @@ namespace IdleRng.Runtime.Tests
             Assert.That(b.Vault[0].Locked, Is.False);
             Assert.That(b.Vault[0].RunHash, Is.EqualTo(a.Vault[0].RunHash));
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)), "the active run still replays");
-            Assert.That(SaveBody(AccountSave.Encode(b)), Does.Contain("\"SchemaVersion\": 3"), "it saves back as the current version");
+            Assert.That(SaveBody(AccountSave.Encode(b)), Does.Contain("\"SchemaVersion\": " + AccountState.CurrentSchemaVersion), "it saves back as the current version");
         }
 
         /// <summary>A save body as the v2 code wrote it: no achievements, records or vendor; every species owned.</summary>
@@ -113,6 +113,39 @@ namespace IdleRng.Runtime.Tests
             foreach (var d in db.AchievementList)
                 Assert.That(b.Achievements.Contains(d.Id), Is.EqualTo(AccountOps.AchievementHolds(db, b, d)), d.Id + ": earned from the rebuilt records");
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)), "the active run still replays");
+        }
+
+        [Test]
+        public void V3Save_MigratesToV4_WithNoTowerProgress()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 3;
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct["SchemaVersion"] = 3;
+            acct.Remove("Tower");
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.Tower, Is.Not.Null);
+            Assert.That(b.Tower.Day, Is.EqualTo(-1));
+            Assert.That(b.Tower.ClearedEver, Is.EqualTo(0));
+            Assert.That(b.Vault.Count, Is.EqualTo(a.Vault.Count));
+            Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)), "the active run still replays");
+        }
+
+        [Test]
+        public void TowerProgress_RoundTrips()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            AccountOps.RunTower(db, a, new[] { 0 }, 123);
+            var b = AccountSave.Decode(db, AccountSave.Encode(a));
+            Assert.That(b.Tower.Day, Is.EqualTo(123));
+            Assert.That(b.Tower.AttemptsUsed, Is.EqualTo(1));
+            Assert.That(b.Tower.ClearedToday, Is.EqualTo(a.Tower.ClearedToday));
+            Assert.That(b.Tower.ClearedEver, Is.EqualTo(a.Tower.ClearedEver));
+            Assert.That(b.Shards, Is.EqualTo(a.Shards));
         }
 
         [Test]

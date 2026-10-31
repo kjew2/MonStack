@@ -12,7 +12,7 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 3, "Account": { ...AccountState without Active... },
+    /// { "Kind": "monster_account", "SchemaVersion": 4, "Account": { ...AccountState without Active... },
     ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
     /// </code>
     /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
@@ -65,6 +65,7 @@ namespace IdleRng.Runtime.Save
             if (savedVersion < 3) AccountOps.RebuildRecords(a);   // v2 -> v3: records did not exist; rebuilt from the Vault
             if (a.Achievements == null) a.Achievements = new List<string>();   // a null in the file reads as none
             if (a.Records == null) AccountOps.RebuildRecords(a);
+            if (a.Tower == null) a.Tower = new TowerProgress();   // a null in the file reads as no attempts yet
 
             if (body["ActiveRun"] is JObject run)
             {
@@ -117,6 +118,12 @@ namespace IdleRng.Runtime.Save
                 acct.Remove("Records");
                 acct["Vendor"] = JValue.CreateNull();
                 version = 3;
+            }
+            if (version == 3)
+            {
+                // v3 -> v4 (specs/21 section 7): Daily Tower progress, none yet.
+                acct["Tower"] = new JObject { ["Day"] = -1, ["AttemptsUsed"] = 0, ["ClearedToday"] = 0, ["ClearedEver"] = 0 };
+                version = 4;
             }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
