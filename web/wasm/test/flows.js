@@ -71,6 +71,8 @@ const H = require('./harness.js');
   // ---- first rank fight: playback screen, Skip, result
   let played = await t.playUntil('fight');
   check(await act('fight').isEnabled(), 'a rank fight is due after ' + played.steps + ' steps');
+  const clipped = await page.$eval('#main .card.stats', (c) => ({ card: Math.round(c.getBoundingClientRect().height), rows: c.scrollHeight }));
+  check(clipped.card >= clipped.rows - 1, 'issue #113: the stats card shows all its rows while a fight is due (card ' + clipped.card + 'px, rows ' + clipped.rows + 'px)');
   await act('fight').click();
   await page.locator('[data-id=fight-play]').waitFor();
   await page.waitForTimeout(600);

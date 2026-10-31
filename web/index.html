@@ -38,6 +38,7 @@ small, .small { font-size: 12px; }
 #top .title { font: 700 16px var(--font-display); flex: 1; }
 .link-btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 6px 10px; font-size: 13px; text-decoration: none; color: var(--text); white-space: nowrap; }
 #main { flex: 1; min-height: 0; overflow-y: auto; padding: 12px var(--gutter-r) 20px var(--gutter-l); -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 12px; }
+#main > * { flex-shrink: 0; }   /* scroll instead of squeezing a card: .card.stats has overflow:hidden, so a fight card above it left only the HP row (issue #113) */
 #tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding: 0 var(--gutter-r) env(safe-area-inset-bottom, 0px) var(--gutter-l); }
 #tabs button { position: relative; border: 0; background: none; padding: 12px 0 13px; font: 600 13px var(--font-display); letter-spacing: .04em; color: var(--muted); }
 #tabs button[aria-selected="true"] { color: var(--text); box-shadow: inset 0 3px 0 var(--gems); }
