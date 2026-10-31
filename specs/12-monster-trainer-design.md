@@ -98,6 +98,15 @@ Example: the run starts with 2 native trees and 2 empty slots. The player uses a
 
 Every tree has a hidden capstone, its **chase trait**, that breaks a standard rule (kj, 2026-10-30). Maxing the tree reveals and unlocks it. Example: *Omniscience*: ignores resistances and refunds 50% energy. **A chase tree's own capstone must be significantly more impactful and unique** than a normal tree's chase trait: it is the run's jackpot, not a bigger number.
 
+### 5.2.1 Higher-tier species and capstones (kj, 2026-10-31, #110)
+
+Agreed direction from the higher-tier spike (`specs/22` section 6); not built yet:
+- **Higher-tier species are later unlocks** (account achievements) and may be **stronger overall**, as in *Monster Rancher*. Mid-run evolution and breeding are much later on the roadmap.
+- **Chase capstones may carry drawbacks** (keystones that give something up, in the *Exiled Heavy Knight* shape).
+- **Some specific tree pairs may fuse** into one tree, and the UI must make each fusing pair clear. Fusion is not a general rule.
+- **Reachability targets:** the in-run chase capstone in about the top 10% of runs; the book chase capstone in about 50% of runs that bring the species' own book (`specs/15` section 10).
+- **Runs must diverge more** through skill expression or RNG; the skill point economy is the first place to look (spike #112).
+
 ### 5.3 Chase trees
 
 Rare trees unlocked mid-run by meeting conditions across trees and stats. **Each species has two chase trees of its own** (kj, 2026-10-30): one per unlock route below. Only that species can unlock them. Two unlock routes:

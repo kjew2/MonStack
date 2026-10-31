@@ -150,3 +150,8 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 
 - Genetic aptitude (`specs/12` section 5.7) was dropped with the species gacha at T9 (kj, 2026-10-30): nothing raises a species' draft or chase-tree odds.
 - Real tree content: names, skills and chase capstones beyond placeholders.
+- **Capstone reachability targets (kj, 2026-10-31, #110):**
+  - the in-run chase capstone is bought in about the top 10% of runs;
+  - the book chase capstone in about 50% of runs that bring the species' own book.
+  - **(agent)** Measured under the `focus` and `hoarder` policies. Today it is 0-69% for in-run and 0% for book (`specs/22` section 2), so content and the SP economy need retuning. The bots must first play toward their chase conditions (#111).
+- **Drawback capstones** and **fusion of specific tree pairs** are allowed (kj, 2026-10-31; `specs/12` section 5.2.1).
