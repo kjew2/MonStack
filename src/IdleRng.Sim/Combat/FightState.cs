@@ -106,6 +106,15 @@ namespace IdleRng.Sim.Combat
         /// <summary>enrage phase: damage buff added to the unit each turn.</summary>
         public double EnrageStep { get; set; }
 
+        /// <summary>root_rebirth: the fraction of max HP it comes back with; 0 = no rebirth left (used, or no rule).</summary>
+        public double RebirthHeal { get; set; }
+
+        /// <summary>root_rebirth fired in the last Absorb and its event is not out yet.</summary>
+        public bool RebornPending { get; set; }
+
+        /// <summary>night_feast: the STR bonus (a fraction of base) the unit has gained from its hits this fight.</summary>
+        public double FeastBonus { get; set; }
+
         public FightUnit Clone()
         {
             var c = (FightUnit)MemberwiseClone();
@@ -184,10 +193,16 @@ namespace IdleRng.Sim.Combat
         public const string DrainEvent = RulePrefix + RuleModifiers.AbyssalDrain;
         /// <summary>double_turn_start: the unit's extra action follows (Amount 0).</summary>
         public const string DoubleTurnEvent = RulePrefix + RuleModifiers.DoubleTurnStart;
+        /// <summary>root_rebirth: the unit survived a killing blow; Amount is the HP it came back with.</summary>
+        public const string RebirthEvent = RulePrefix + RuleModifiers.RootRebirth;
+        /// <summary>wail_stagger after a hit: Target lost Amount of ATB gauge.</summary>
+        public const string StaggerEvent = RulePrefix + RuleModifiers.WailStagger;
+        /// <summary>night_feast after a hit: Amount is the unit's STR bonus now (a fraction of base).</summary>
+        public const string FeastEvent = RulePrefix + RuleModifiers.NightFeast;
 
         /// <summary>
         /// Null for an ordinary action. Otherwise a rule modifier's event ("rule:&lt;id&gt;": <see cref="TideEvent"/>,
-        /// <see cref="DrainEvent"/>, <see cref="DoubleTurnEvent"/>) or a tower event: "phase:&lt;kind&gt;" (a boss entered a phase),
+        /// <see cref="DrainEvent"/>, <see cref="DoubleTurnEvent"/>, <see cref="RebirthEvent"/>, <see cref="StaggerEvent"/>, <see cref="FeastEvent"/>) or a tower event: "phase:&lt;kind&gt;" (a boss entered a phase),
         /// "vent:recoil|stun|enrage|convert" (a unit's entropy gauge vented), "check_failed" (a shield_check shield expired unbroken),
         /// "channel_broken" or "channel_strike" (a channel was interrupted or landed). Actor is the unit; Amount is damage, heal or
         /// shield where there is one.

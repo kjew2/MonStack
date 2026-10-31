@@ -1,5 +1,5 @@
 id,name_key,kind,ref,amount,unlocks_species,#notes
 rank_c,achievement.rank_c.name,rank_reached,c,,drake,"account achievements (specs/18 section 8): checked when a run is sealed. rank_reached: a run reaches rank ref. Placeholder condition and reward"
 stat_500,achievement.stat_500.name,stat_reached,,500,sprite,"stat_reached: a sealed monster has stat ref (empty = any stat) at least amount. Placeholder"
-veteran,achievement.veteran.name,runs_finished,,5,,"runs_finished: amount runs sealed (abandoned runs do not count). Placeholder; no reward yet"
-climber,achievement.climber.name,gauntlet_floors,,10,,"gauntlet_floors: a sealed monster clears at least amount gauntlet floors. Placeholder; no reward yet"
+veteran,achievement.veteran.name,runs_finished,,5,mandrake,"runs_finished: amount runs sealed (abandoned runs do not count). Placeholder"
+climber,achievement.climber.name,gauntlet_floors,,10,shade_hound,"gauntlet_floors: a sealed monster clears at least amount gauntlet floors. Placeholder"

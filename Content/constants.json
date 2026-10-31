@@ -237,6 +237,26 @@
       "value": 1
     },
     {
+      "key": "MON_REBIRTH_HEAL",
+      "type": "double",
+      "value": 0.4
+    },
+    {
+      "key": "MON_WAIL_STAGGER",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_VEIL_EVADE_CAP",
+      "type": "double",
+      "value": 0.65
+    },
+    {
+      "key": "MON_FEAST_STR",
+      "type": "double",
+      "value": 0.04
+    },
+    {
       "key": "SHARDS_PER_CYCLE",
       "type": "int",
       "value": 5

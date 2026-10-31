@@ -200,6 +200,86 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.starlit_ascension.apex"
+    },
+    {
+      "id": "rootbound",
+      "name_key": "tree.rootbound.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "mandrake_wail",
+      "name_key": "tree.mandrake_wail.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "umbral_step",
+      "name_key": "tree.umbral_step.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "shadow_harvest",
+      "name_key": "tree.shadow_harvest.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "verdant_herbarium",
+      "name_key": "tree.verdant_herbarium.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "umbral_grimoire",
+      "name_key": "tree.umbral_grimoire.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "world_root",
+      "name_key": "tree.world_root.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.world_root.apex"
+    },
+    {
+      "id": "mandragora_scream",
+      "name_key": "tree.mandragora_scream.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.mandragora_scream.apex"
+    },
+    {
+      "id": "umbral_veil",
+      "name_key": "tree.umbral_veil.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.umbral_veil.apex"
+    },
+    {
+      "id": "night_feast",
+      "name_key": "tree.night_feast.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.night_feast.apex"
     }
   ]
 }

@@ -34,7 +34,7 @@ Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` s
 
 ## 3. Species
 
-Content table `species`: `id`, `name_key`, `element`, `base_<stat>` and `grow_<stat>` for each of the eight stats. A run starts with the species' base stats. The growth multiplier scales every drill gain on that stat. Three placeholder species (slime, drake, sprite; named Coremote, Bastion Drake and Mirage Moth after the creature spike, `specs/24` section 6) match the MVP's three (`specs/12` section 12.1); their native trees arrive in T3.
+Content table `species`: `id`, `name_key`, `element`, `base_<stat>` and `grow_<stat>` for each of the eight stats. A run starts with the species' base stats. The growth multiplier scales every drill gain on that stat. Three placeholder species (slime, drake, sprite; named Coremote, Bastion Drake and Mirage Moth after the creature spike, `specs/24` section 6) match the MVP's three (`specs/12` section 12.1); their native trees arrive in T3. Content 4.2 added two more after the creature spike: the Mandrake (nature) and the Shade Hound (dark).
 
 ## 4. Drill and Rest
 

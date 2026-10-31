@@ -238,6 +238,8 @@ namespace IdleRng.Sim.Content
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"), TreeRefund = D("TREE_REFUND"), ChaseBaseChance = D("CHASE_BASE_CHANCE"),
                 MonEchoPower = D("MON_ECHO_POWER"), MonTideRegen = D("MON_TIDE_REGEN"), MonTideShieldCap = D("MON_TIDE_SHIELD_CAP"),
                 MonDrainFrac = D("MON_DRAIN_FRAC"), MonFirePierce = D("MON_FIRE_PIERCE"), MonDoubleTurns = I("MON_DOUBLE_TURNS"),
+                MonRebirthHeal = D("MON_REBIRTH_HEAL"), MonWailStagger = D("MON_WAIL_STAGGER"), MonVeilEvadeCap = D("MON_VEIL_EVADE_CAP"),
+                MonFeastStr = D("MON_FEAST_STR"),
                 ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
                 VaultCap = I("VAULT_CAP"), VendorOffers = I("VENDOR_OFFERS"),
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
@@ -308,6 +310,7 @@ namespace IdleRng.Sim.Content
                   && k.InjuryRecoverEnergy >= 0 && k.InjuryRecoverEnergy <= k.RunEnergyMax && k.StatMax > 0 && k.FightEvery > 0
                   && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.TreeRefund) && In01(k.ChaseBaseChance) && In01(k.MonEchoPower)
                   && In01(k.MonTideRegen) && In01(k.MonTideShieldCap) && In01(k.MonDrainFrac) && In01(k.MonFirePierce) && k.MonDoubleTurns >= 1
+                  && k.MonRebirthHeal > 0 && k.MonRebirthHeal <= 1 && In01(k.MonWailStagger) && In01(k.MonVeilEvadeCap) && k.MonFeastStr >= 0
                   && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.VendorOffers > 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
                   && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
