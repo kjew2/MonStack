@@ -32,6 +32,22 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void MonoPolicy_DrillsOnlyItsStat_UntilCapped()
+        {
+            var db = Content.Db;
+            foreach (var stat in IdleRng.Sim.Combat.StatIds.Trained)
+            {
+                var s = RunBot.Play(db, RunPolicies.Create(RunPolicies.MonoPrefix + stat), "drake", 3);
+                Assert.That(s.Phase, Is.EqualTo(RunPhase.Finished), stat);
+                var drilled = s.Log.Where(l => l.Kind == RunCommandKind.Drill).Select(l => l.Stat).ToList();
+                Assert.That(drilled, Is.Not.Empty, stat);
+                if (s.Stats.Get(stat) < db.Constants.StatMax) Assert.That(drilled, Is.All.EqualTo(stat), stat);
+            }
+            Assert.Throws<ArgumentException>(() => RunPolicies.Create("mono-xyz"));
+            Assert.That(RunPolicies.Names, Has.None.StartsWith(RunPolicies.MonoPrefix), "mono policies are opt-in");
+        }
+
+        [Test]
         public void Chaser_UsesOnlyItsOwnBook()
         {
             var db = Content.Db;
