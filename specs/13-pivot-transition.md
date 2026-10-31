@@ -125,7 +125,7 @@ MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were m
 
 - Content `2.5`: `monster_skills`, `trees`, `tree_nodes`, `chase_conditions`, `skill_books`, species native trees, SP and slot constants. Placeholder content: 3 species x 2 native trees, 10 generic trees, 1 book tree, 2 chase trees.
 - Run commands `SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; milestone drafts on a `draft` stream; chase unlock and re-lock; run tallies from rank fights; the monster's fight kit from its bought nodes.
-- New rule modifier `echo_cast` (Arcane Overflow's capstone).
+- New rule modifier `echo_cast` (Arcane Overflow's capstone). Each chase tree got a capstone of its own in content `3.6` (issue #92, `specs/15` section 2).
 - Books are passed into `TrainingRun.Start` until the Daily Tower drops them (T10).
 
 ### T4 - Run end: grade, Vault

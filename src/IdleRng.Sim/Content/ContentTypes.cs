@@ -52,6 +52,11 @@ namespace IdleRng.Sim.Content
         public int TreeSlots { get; internal set; }              // TREE_SLOTS
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
         public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
+        public double MonTideRegen { get; internal set; }        // MON_TIDE_REGEN
+        public double MonTideShieldCap { get; internal set; }    // MON_TIDE_SHIELD_CAP
+        public double MonDrainFrac { get; internal set; }        // MON_DRAIN_FRAC
+        public double MonFirePierce { get; internal set; }       // MON_FIRE_PIERCE
+        public int MonDoubleTurns { get; internal set; }         // MON_DOUBLE_TURNS
 
         // Account and meta-progression (specs/18 section 5). Placeholders.
         public int ShardsPerCycle { get; internal set; }         // SHARDS_PER_CYCLE

@@ -40,6 +40,8 @@ namespace IdleRng.Sim.Combat
             if (!(r.GaugeSize > 0 && r.TurnTicks > 0 && r.TimeLimitTicks > 0 && r.SideSize > 0 && r.HpPerPoint > 0 && r.DefK > 0
                   && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1))
                 throw new ArgumentException("fight rules out of range (specs/16 section 7)", nameof(r));
+            if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && In01(r.DrainFrac) && In01(r.FirePierce) && r.DoubleTurns >= 0))
+                throw new ArgumentException("rule modifier constants out of range (specs/16 section 7)", nameof(r));
             if (r.Tower != null && !r.Tower.Valid) throw new ArgumentException("tower rules out of range (specs/21 section 5)", nameof(r));
         }
 
@@ -175,10 +177,16 @@ namespace IdleRng.Sim.Combat
                 var actor = NextActor(s, rules.GaugeSize);
                 if (actor == null) break;
                 actor.Gauge -= rules.GaugeSize;
-                Act(rules, s, actor, rng, onAction);
-                CheckPhases(rules, s, rng, onAction);
-                var o = Decide(s, actor.Side);
-                if (o != FightOutcome.Ongoing) return s.Outcome = o;
+                bool extra = false;
+                do
+                {
+                    if (extra) onAction?.Invoke(new FightAction(actor.Id, FightAction.DoubleTurnEvent, actor.Id, 0));
+                    Act(rules, s, actor, rng, onAction);
+                    CheckPhases(rules, s, rng, onAction);
+                    var o = Decide(s, actor.Side);
+                    if (o != FightOutcome.Ongoing) return s.Outcome = o;
+                    extra = true;
+                } while (ExtraTurn(rules, actor));
             }
 
             int strikeSide = AgeAll(rules, s, onAction);
@@ -190,6 +198,10 @@ namespace IdleRng.Sim.Combat
             if (s.Ticks >= rules.TimeLimitTicks) s.Outcome = FightOutcome.TimedOut;
             return s.Outcome;
         }
+
+        /// <summary>double_turn_start: after each of the unit's first DoubleTurns actions (an odd action count) it acts again at once.</summary>
+        static bool ExtraTurn(FightRules r, FightUnit u) =>
+            u.Alive && u.Tally.Actions % 2 == 1 && u.Tally.Actions < 2 * r.DoubleTurns && Has(u, RuleModifiers.DoubleTurnStart);
 
         static FightUnit NextActor(FightState s, double gauge)
         {
@@ -314,6 +326,12 @@ namespace IdleRng.Sim.Combat
         {
             u.Tally.Actions++;
             if (r.Tower != null) u.Entropy = Math.Max(0, u.Entropy - r.Tower.EntropyDecay);
+            if (r.TideRegen > 0 && Has(u, RuleModifiers.TidalOverflow))
+            {
+                double shield = 0, healed = Heal(r, u, r.TideRegen * u.MaxHp * HealMult(r, s), ref shield);
+                u.Tally.HealingDone += healed;
+                if (healed + shield > 0) onAction?.Invoke(new FightAction(u.Id, FightAction.TideEvent, u.Id, healed + shield));
+            }
             Fire(r, s, u, FightTrigger.OnAction, rng, onAction);
             if (!u.Alive) return;
             for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
@@ -400,12 +418,8 @@ namespace IdleRng.Sim.Combat
                 {
                     double amt = Scaled(r, src, sk) * HealMult(r, s), total = 0;
                     var targets = Allies(s, src, sk.Target);
-                    foreach (var t in targets)
-                    {
-                        double before = t.Hp;
-                        t.Hp = Math.Min(t.MaxHp, t.Hp + amt);
-                        total += t.Hp - before;
-                    }
+                    double shield = 0;
+                    foreach (var t in targets) total += Heal(r, t, amt, ref shield);
                     src.Tally.HealingDone += total;
                     onAction?.Invoke(new FightAction(src.Id, sk, targets.Count == 1 ? targets[0].Id : null, total, false, false, aoe, false));
                     break;
@@ -474,10 +488,14 @@ namespace IdleRng.Sim.Combat
             bool crit = false;
             double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate));
             if (rate > 0 && Draw(rng) < rate) { crit = true; raw *= Math.Max(1.0, r.CritDmg + Bonus(src, StatIds.CritDmg)); }
-            raw *= r.ElementMult(element, tgt.Source.Element);
+            bool pierce = element == RuleModifiers.FireElement && Has(src, RuleModifiers.FirePierce);
+            double elementMult = r.ElementMult(element, tgt.Source.Element);
+            raw *= pierce ? Math.Max(1.0, elementMult) : elementMult;
             double dmgBonus = Bonus(src, StatIds.DmgDealt);
             if (dmgBonus != 0) raw *= Math.Max(0.0, 1 + dmgBonus);
-            double after = Mitigate(r, raw, Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def));
+            double mitStat = Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def);
+            if (pierce) mitStat *= 1 - r.FirePierce;
+            double after = Mitigate(r, raw, mitStat);
             double mitigated = raw - after;
             if (r.Tower != null)
             {
@@ -488,6 +506,12 @@ namespace IdleRng.Sim.Combat
 
             if (crit) src.Tally.Crits++;
             onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false));
+            if (dealt > 0 && r.DrainFrac > 0 && src.Alive && Has(src, RuleModifiers.AbyssalDrain))
+            {
+                double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealMult(r, s), ref shield);
+                src.Tally.HealingDone += healed;
+                if (healed + shield > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.DrainEvent, src.Id, healed + shield));
+            }
             Fire(r, s, tgt, FightTrigger.OnHitTaken, rng, onAction);
             if (crit) Fire(r, s, src, FightTrigger.OnCrit, rng, onAction);
 
@@ -499,6 +523,29 @@ namespace IdleRng.Sim.Combat
                 GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, onAction);
             }
             return dealt;
+        }
+
+        /// <summary>
+        /// Heal a unit by <paramref name="amount"/> (already scaled by HealMult), capped at max HP; returns the HP restored. With
+        /// tidal_overflow the overflow becomes shield, up to TideShieldCap of max HP (added to <paramref name="shield"/>). It joins the
+        /// unit's one shield pool, so a timed shield's expiry clears it too.
+        /// </summary>
+        static double Heal(FightRules r, FightUnit t, double amount, ref double shield)
+        {
+            double before = t.Hp, sum = t.Hp + amount;
+            t.Hp = Math.Min(t.MaxHp, sum);
+            double over = sum - t.MaxHp;
+            if (over > 0 && Has(t, RuleModifiers.TidalOverflow))
+            {
+                double cap = r.TideShieldCap * t.MaxHp;
+                if (t.Shield < cap)
+                {
+                    double add = Math.Min(cap - t.Shield, over);
+                    t.Shield += add;
+                    shield += add;
+                }
+            }
+            return t.Hp - before;
         }
 
         /// <summary>Shield first, then HP. Records damage and kills. Element null = no per-element tally.</summary>
@@ -813,6 +860,8 @@ namespace IdleRng.Sim.Combat
             foreach (var e in u.Effects) if (e.Stat == stat) sum += e.Frac;
             return sum;
         }
+
+        static bool In01(double v) => v >= 0 && v <= 1;
 
         static double Clamp(double v, double lo, double hi) => v < lo ? lo : v > hi ? hi : v;
 

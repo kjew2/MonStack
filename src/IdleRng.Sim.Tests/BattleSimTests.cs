@@ -324,6 +324,115 @@ namespace IdleRng.Sim.Tests
             Assert.That(s.Units[0].Tally.Actions, Is.EqualTo(1), "the echo is part of the same action");
         }
 
+        static Fighter With(Fighter f, string rule) { f.Rules.Add(rule); return f; }
+
+        /// <summary>A unit that deals no damage (STR and INT 0), so a fight with it only moves by the rule under test.</summary>
+        static Fighter Harmless(string id, double spd = 300) => Mon(id, 300, null, x => { x.Str = 0; x.Int = 0; x.Spd = spd; });
+
+        [Test]
+        public void TidalOverflow_RegeneratesEachAction_AndOverhealBecomesCappedShield()
+        {
+            var r = Rules;
+            Assert.That(r.TideRegen, Is.GreaterThan(0));
+            var s = BattleSim.Start(r, Side(With(Harmless("a", 900), RuleModifiers.TidalOverflow)), Side(Harmless("b", 10)));
+            var a = s.Units[0];
+            double missing = a.MaxHp * r.TideRegen / 2;
+            a.Hp -= missing;
+            var log = new List<FightAction>();
+            while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Event == FightAction.TideEvent)) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            var first = log.First(x => x.Event == FightAction.TideEvent);
+            Assert.That(first.Actor, Is.EqualTo("a"));
+            Assert.That(first.Amount, Is.EqualTo(r.TideRegen * a.MaxHp).Within(1e-9), "HP healed plus shield gained");
+            Assert.That(a.Hp, Is.EqualTo(a.MaxHp).Within(1e-9));
+            Assert.That(a.Shield, Is.EqualTo(r.TideRegen * a.MaxHp - missing).Within(1e-9), "the overflow became shield");
+            Assert.That(a.Tally.HealingDone, Is.EqualTo(missing).Within(1e-9), "only HP counts as healing");
+
+            int need = (int)(r.TideShieldCap / r.TideRegen) + 3;
+            while (a.Tally.Actions < need && s.Outcome == FightOutcome.Ongoing) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            Assert.That(a.Shield, Is.EqualTo(r.TideShieldCap * a.MaxHp).Within(1e-9), "the shield stops at the cap");
+            Assert.That(log.Count(x => x.Event == FightAction.TideEvent), Is.LessThan(need), "nothing left to restore: no event");
+
+            // a heal skill's overflow also becomes shield; without the rule it is lost
+            var mend = new CombatSkill { Id = "mend", Kind = SkillKind.Heal, Target = SkillTarget.Self, Scales = StatIds.Wis, Power = 20, Cooldown = 1 };
+            foreach (bool rule in new[] { true, false })
+            {
+                var healer = Mon("h", 300, null, x => { x.Str = 0; x.Int = 0; x.Spd = 900; }, mend);
+                if (rule) healer.Rules.Add(RuleModifiers.TidalOverflow);
+                var hs = BattleSim.Start(r, Side(healer), Side(Harmless("b", 10)));
+                hs.Units[0].Hp = hs.Units[0].MaxHp * r.AiHealBelow / 2;
+                var hl = new List<FightAction>();
+                while (hs.Outcome == FightOutcome.Ongoing && !hl.Any(x => x.Skill?.Id == "mend")) BattleSim.Step(r, hs, new Fixed(0.99), hl.Add);
+                Assert.That(hs.Units[0].Hp, Is.EqualTo(hs.Units[0].MaxHp).Within(1e-9));
+                Assert.That(hs.Units[0].Shield > 0, Is.EqualTo(rule));
+            }
+        }
+
+        [Test]
+        public void AbyssalDrain_HealsTheAttackerForAShareOfDamageDealt()
+        {
+            var r = Rules;
+            Assert.That(r.DrainFrac, Is.GreaterThan(0));
+            var s = BattleSim.Start(r, Side(With(Attacker(), RuleModifiers.AbyssalDrain)), Side(Mon("b", 999, null, x => x.Spd = 10)));
+            var a = s.Units[0];
+            a.Hp = a.MaxHp / 2;
+            var log = new List<FightAction>();
+            while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Event == FightAction.DrainEvent)) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            int i = log.FindIndex(x => x.Event == FightAction.DrainEvent);
+            var hit = log[i - 1];
+            Assert.That(hit.Actor, Is.EqualTo("a"));
+            Assert.That(hit.Target, Is.EqualTo("b"));
+            Assert.That(log[i].Amount, Is.EqualTo(r.DrainFrac * hit.Amount).Within(1e-9));
+            Assert.That(a.Hp, Is.EqualTo(a.MaxHp / 2 + r.DrainFrac * hit.Amount).Within(1e-9));
+            Assert.That(a.Tally.HealingDone, Is.EqualTo(r.DrainFrac * hit.Amount).Within(1e-9));
+
+            // a unit without the rule does not drain
+            var plain = BattleSim.Start(r, Side(Attacker()), Side(Mon("b", 999, null, x => x.Spd = 10)));
+            plain.Units[0].Hp = plain.Units[0].MaxHp / 2;
+            var pl = new List<FightAction>();
+            while (plain.Outcome == FightOutcome.Ongoing && !pl.Any(x => x.Actor == "a")) BattleSim.Step(r, plain, new Fixed(0.99), pl.Add);
+            Assert.That(plain.Units[0].Hp, Is.EqualTo(plain.Units[0].MaxHp / 2));
+            Assert.That(pl.Any(x => x.Event != null), Is.False);
+        }
+
+        [Test]
+        public void FirePierce_IgnoresPartOfDefense_AndElementResistance()
+        {
+            var r = Rules;
+            Assert.That(r.FirePierce, Is.GreaterThan(0));
+            Assert.That(r.ElementMult("fire", "water"), Is.LessThan(1.0), "water resists fire");
+            double raw = r.BasicAttackPower * 300;
+            double plain = OneHit(Attacker("fire"), Mon("b", 300, "water", x => x.Def = 600), 0.99);
+            Assert.That(plain, Is.EqualTo(raw * r.ElementWeakMult * r.DefK / (r.DefK + 600)).Within(1e-9));
+            double pierced = OneHit(With(Attacker("fire"), RuleModifiers.FirePierce), Mon("b", 300, "water", x => x.Def = 600), 0.99);
+            Assert.That(pierced, Is.EqualTo(raw * r.DefK / (r.DefK + 600 * (1 - r.FirePierce))).Within(1e-9));
+            // an element strong against the target is kept
+            double strong = OneHit(With(Attacker("fire"), RuleModifiers.FirePierce), Mon("b", 300, "nature", x => x.Def = 600), 0.99);
+            Assert.That(strong, Is.EqualTo(raw * r.ElementStrongMult * r.DefK / (r.DefK + 600 * (1 - r.FirePierce))).Within(1e-9));
+            // other elements are not pierced
+            double water = OneHit(Attacker("water"), Mon("b", 300, "light", x => x.Def = 600), 0.99);
+            Assert.That(OneHit(With(Attacker("water"), RuleModifiers.FirePierce), Mon("b", 300, "light", x => x.Def = 600), 0.99),
+                Is.EqualTo(water).Within(1e-12));
+        }
+
+        [Test]
+        public void DoubleTurnStart_FirstActionsAreEachFollowedByAnExtraAction()
+        {
+            var r = Rules;
+            Assert.That(r.DoubleTurns, Is.GreaterThanOrEqualTo(1));
+            var s = BattleSim.Start(r, Side(With(Harmless("a"), RuleModifiers.DoubleTurnStart)), Side(Harmless("b")));
+            var log = new List<FightAction>();
+            while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Actor == "b")) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            Assert.That(s.Units[0].Tally.Actions, Is.EqualTo(2), "a acted twice before b's first action");
+            Assert.That(log.Count(x => x.Event == FightAction.DoubleTurnEvent), Is.EqualTo(1));
+            for (int t = 0; t < 200; t++) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            Assert.That(s.Units[0].Tally.Actions, Is.EqualTo(s.Units[1].Tally.Actions + r.DoubleTurns), "same SPD: only the opening turns are doubled");
+            Assert.That(log.Count(x => x.Event == FightAction.DoubleTurnEvent), Is.EqualTo(r.DoubleTurns));
+
+            var plain = BattleSim.Start(r, Side(Harmless("a")), Side(Harmless("b")));
+            for (int t = 0; t < 200; t++) BattleSim.Step(r, plain, new Fixed(0.99));
+            Assert.That(plain.Units[0].Tally.Actions, Is.EqualTo(plain.Units[1].Tally.Actions));
+        }
+
         [Test]
         public void AoeDamage_HitsEveryLivingEnemy()
         {

@@ -52,6 +52,8 @@ REQUIRED_CONSTANTS = {
     "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
     # skill trees (specs/15)
     "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "MON_ECHO_POWER": "double",
+    "MON_TIDE_REGEN": "double", "MON_TIDE_SHIELD_CAP": "double", "MON_DRAIN_FRAC": "double", "MON_FIRE_PIERCE": "double",
+    "MON_DOUBLE_TURNS": "int",
     # account and meta-progression (specs/18)
     "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int",
     # end-of-run gauntlet (specs/19)
@@ -63,7 +65,8 @@ STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
 DRILL_TIERS = ["fail", "success", "super"]
 EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 # Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
-RULE_IDS = ["counter_mitigated", "echo_cast", "entropy_convert"]
+RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
+            "entropy_convert"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -84,6 +87,9 @@ MON_RANGES = {
     "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_TIDE_REGEN": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TIDE_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_DRAIN_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FIRE_PIERCE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_DOUBLE_TURNS": (">= 1", lambda v: v >= 1),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
     "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
     "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
@@ -273,6 +279,8 @@ def validate_trees(t, errs):
                 errs.add("E043", loc, "a trigger node cannot fire a passive")
         if k == "rule" and n["rule_id"] not in RULE_IDS:
             errs.add("E023", loc, f"rule_id '{n['rule_id']}' is not a known rule modifier")
+        if k == "rule" and n["rule_id"] == "fire_pierce" and "fire" not in elements:
+            errs.add("E023", loc, "fire_pierce works on the 'fire' element, which is not an element id")
     for tid in trees:
         ns = sorted(by_tree.get(tid, []), key=lambda n: n["index"])
         if len(ns) < 2:

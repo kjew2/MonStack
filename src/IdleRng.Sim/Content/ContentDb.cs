@@ -222,7 +222,9 @@ namespace IdleRng.Sim.Content
                 DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
-                MonEchoPower = D("MON_ECHO_POWER"), ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
+                MonEchoPower = D("MON_ECHO_POWER"), MonTideRegen = D("MON_TIDE_REGEN"), MonTideShieldCap = D("MON_TIDE_SHIELD_CAP"),
+                MonDrainFrac = D("MON_DRAIN_FRAC"), MonFirePierce = D("MON_FIRE_PIERCE"), MonDoubleTurns = I("MON_DOUBLE_TURNS"),
+                ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
                 VaultCap = I("VAULT_CAP"), VendorOffers = I("VENDOR_OFFERS"),
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
                 GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
@@ -278,6 +280,7 @@ namespace IdleRng.Sim.Content
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0
                   && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)
+                  && In01(k.MonTideRegen) && In01(k.MonTideShieldCap) && In01(k.MonDrainFrac) && In01(k.MonFirePierce) && k.MonDoubleTurns >= 1
                   && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.VendorOffers > 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
                   && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
@@ -417,6 +420,9 @@ namespace IdleRng.Sim.Content
                 }
                 if (n.Kind == NodeKind.Rule && !IdleRng.Sim.Combat.RuleModifiers.IsKnown(n.RuleId))
                     errors.Add(new ContentError("E023", loc, $"rule_id '{n.RuleId}' is not a known rule modifier"));
+                if (n.Kind == NodeKind.Rule && n.RuleId == IdleRng.Sim.Combat.RuleModifiers.FirePierce
+                    && !Elements.ContainsKey(IdleRng.Sim.Combat.RuleModifiers.FireElement))
+                    errors.Add(new ContentError("E023", loc, "fire_pierce works on the 'fire' element, which is not an element id"));
             }
             TreeNodes = new ReadOnlyDictionary<string, TreeNodeDef>(allNodes);
 

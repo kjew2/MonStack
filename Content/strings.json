@@ -551,6 +551,38 @@
       "text": "Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power."
     },
     {
+      "key": "rule.tidal_overflow.name",
+      "text": "Tidal Overflow"
+    },
+    {
+      "key": "rule.tidal_overflow.desc",
+      "text": "Heals {MON_TIDE_REGEN:pct} of max HP at the start of each of its actions. Healing beyond max HP becomes a shield, up to {MON_TIDE_SHIELD_CAP:pct} of max HP."
+    },
+    {
+      "key": "rule.abyssal_drain.name",
+      "text": "Abyssal Drain"
+    },
+    {
+      "key": "rule.abyssal_drain.desc",
+      "text": "Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt."
+    },
+    {
+      "key": "rule.fire_pierce.name",
+      "text": "Unquenchable Flame"
+    },
+    {
+      "key": "rule.fire_pierce.desc",
+      "text": "Its fire damage ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element."
+    },
+    {
+      "key": "rule.double_turn_start.name",
+      "text": "Starlit Haste"
+    },
+    {
+      "key": "rule.double_turn_start.desc",
+      "text": "Acts twice in a row on each of its first {MON_DOUBLE_TURNS} turn(s) of a fight."
+    },
+    {
       "key": "talent.frugal_drills.name",
       "text": "Frugal Drills"
     },

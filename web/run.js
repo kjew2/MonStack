@@ -316,10 +316,11 @@
     const a = who(x.actor), t = x.target ? who(x.target) : 'all';
     return { text: a + ' · ' + actionName(x) + ' → ' + t + ': ' + actionResult(x), you: x.actor === 'monster', skillId: x.skillId };
   }
-  const actionName = (x) => x.skill || (x.counter ? 'Counter' : 'Attack');
+  const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
   function actionResult(x) {
     let body;
-    if (x.evaded) body = 'dodged';
+    if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
+    else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
     else if (x.kind === 'shield') body = 'shields ' + Math.round(x.amount);
     else if (x.amount > 0) body = Math.round(x.amount) + ' dmg';

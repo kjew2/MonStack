@@ -163,17 +163,28 @@ namespace IdleRng.Sim.Combat
             Event = null;
         }
 
-        /// <summary>A tower event (specs/21 section 6): see <see cref="Event"/>.</summary>
+        /// <summary>A rule modifier or tower event (specs/16 section 6.2, specs/21 section 6): see <see cref="Event"/>.</summary>
         public FightAction(string actor, string evt, string target, double amount)
         {
             Actor = actor; Skill = null; Target = target; Amount = amount; Crit = false; Evaded = false; Aoe = false; Counter = false;
             Event = evt;
         }
 
+        /// <summary>A rule modifier's event: "rule:" + the rule id (specs/16 section 6.2).</summary>
+        public const string RulePrefix = "rule:";
+        /// <summary>tidal_overflow's regeneration: Amount is HP healed plus shield gained.</summary>
+        public const string TideEvent = RulePrefix + RuleModifiers.TidalOverflow;
+        /// <summary>abyssal_drain after a hit: Amount is HP healed plus shield gained.</summary>
+        public const string DrainEvent = RulePrefix + RuleModifiers.AbyssalDrain;
+        /// <summary>double_turn_start: the unit's extra action follows (Amount 0).</summary>
+        public const string DoubleTurnEvent = RulePrefix + RuleModifiers.DoubleTurnStart;
+
         /// <summary>
-        /// Null for an ordinary action. Otherwise a tower event: "phase:&lt;kind&gt;" (a boss entered a phase), "vent:recoil|stun|enrage|convert"
-        /// (a unit's entropy gauge vented), "check_failed" (a shield_check shield expired unbroken), "channel_broken" or
-        /// "channel_strike" (a channel was interrupted or landed). Actor is the unit; Amount is damage, heal or shield where there is one.
+        /// Null for an ordinary action. Otherwise a rule modifier's event ("rule:&lt;id&gt;": <see cref="TideEvent"/>,
+        /// <see cref="DrainEvent"/>, <see cref="DoubleTurnEvent"/>) or a tower event: "phase:&lt;kind&gt;" (a boss entered a phase),
+        /// "vent:recoil|stun|enrage|convert" (a unit's entropy gauge vented), "check_failed" (a shield_check shield expired unbroken),
+        /// "channel_broken" or "channel_strike" (a channel was interrupted or landed). Actor is the unit; Amount is damage, heal or
+        /// shield where there is one.
         /// </summary>
         public string Event { get; }
 

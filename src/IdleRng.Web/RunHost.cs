@@ -540,6 +540,12 @@ namespace IdleRng.Web
             var x = e.x;
             w.Obj().P("actor", x.Actor).P("target", x.Target).P("amount", x.Amount).P("crit", x.Crit).P("evaded", x.Evaded).P("aoe", x.Aoe).P("counter", x.Counter);
             if (x.Skill != null) w.P("skill", _db.Text("mskill." + x.Skill.Id + ".name")).P("skillId", x.Skill.Id).P("kind", x.Skill.Kind.ToString().ToLowerInvariant());
+            if (x.Event != null)
+            {
+                w.P("event", x.Event);
+                if (x.Event.StartsWith(FightAction.RulePrefix, StringComparison.Ordinal))
+                    w.P("skill", _db.Text("rule." + x.Event.Substring(FightAction.RulePrefix.Length) + ".name"));
+            }
             w.P("si", e.si);
             w.Key("hp").Arr();
             foreach (var v in e.hp) w.Num(v);

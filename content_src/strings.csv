@@ -136,6 +136,14 @@ rule.counter_mitigated.name,Mitigation Counter
 rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage).
 rule.echo_cast.name,Echo Cast
 rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power."
+rule.tidal_overflow.name,Tidal Overflow
+rule.tidal_overflow.desc,"Heals {MON_TIDE_REGEN:pct} of max HP at the start of each of its actions. Healing beyond max HP becomes a shield, up to {MON_TIDE_SHIELD_CAP:pct} of max HP."
+rule.abyssal_drain.name,Abyssal Drain
+rule.abyssal_drain.desc,Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt.
+rule.fire_pierce.name,Unquenchable Flame
+rule.fire_pierce.desc,Its fire damage ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element.
+rule.double_turn_start.name,Starlit Haste
+rule.double_turn_start.desc,Acts twice in a row on each of its first {MON_DOUBLE_TURNS} turn(s) of a fight.
 talent.frugal_drills.name,Frugal Drills
 talent.frugal_drills.desc,Drills cost 5% less energy per rank.
 talent.strong_stock.name,Strong Stock
