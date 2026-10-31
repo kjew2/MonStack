@@ -357,7 +357,7 @@ namespace IdleRng.Sim.Tests
             var m = AccountOps.Modifiers(Db, a);
             Assert.That(m.DrillCostMult, Is.EqualTo(1 + Talent(TalentEffect.DrillCost).PerRank).Within(1e-12));
             Assert.That(m.StatFloorMult, Is.EqualTo(1 + Talent(TalentEffect.StatFloor).PerRank).Within(1e-12));
-            Assert.That(m.DraftSizeBonus, Is.EqualTo((int)Talent(TalentEffect.DraftSize).PerRank));
+            Assert.That(m.ChaseChance, Is.EqualTo(K.ChaseBaseChance + Talent(TalentEffect.ChaseChance).PerRank).Within(1e-12));
             Assert.That(m.StartSp, Is.EqualTo((int)Talent(TalentEffect.StartSp).PerRank));
 
             var run = AccountOps.StartRun(Db, a, "drake");
@@ -380,31 +380,33 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void DraftSizeBonus_WidensMilestoneDrafts()
+        public void ChaseInstinct_MaxedGivesHalfTheRuns_NoTalentsGivesTheBase()
         {
-            int t = Db.StatMilestones[0];
-            int Draft(RunModifiers mods)
-            {
-                var s = TrainingRun.Start(Db, "drake", 3, null, mods);
-                s.Stats.Str = t - 1;
-                while (s.Offers.Count == 0) { s.Energy = K.RunEnergyMax; TrainingRun.Drill(Db, s, StatIds.Str); }
-                return s.Offers[0].Trees.Count;
-            }
-            int pool = Db.TreeList.Count(x => x.Kind == TreeKind.Generic && (x.OfferStat == null || x.OfferStat == StatIds.Str) && x.OfferThreshold <= t);
-            Assert.That(Draft(null), Is.EqualTo(Math.Min(K.DraftSize, pool)));
-            Assert.That(Draft(new RunModifiers { DraftSizeBonus = 5 }), Is.EqualTo(pool));
+            var t = Talent(TalentEffect.ChaseChance);
+            var a = NewAll(5);
+            Assert.That(AccountOps.Modifiers(Db, a).ChaseChance, Is.EqualTo(K.ChaseBaseChance), "no talents: the base odds");
+            Assert.That(K.ChaseBaseChance, Is.LessThan(0.5), "a new account must not get the in-run chase tree about every run (kj)");
+            a.Talents[t.Id] = t.MaxRank;
+            Assert.That(AccountOps.Modifiers(Db, a).ChaseChance, Is.EqualTo(0.5).Within(1e-12), "maxed meta progression: about half the runs (kj)");
+
+            int Attuned(double chance) => Enumerable.Range(0, 400).Count(i => TrainingRun.Start(Db, "drake", (ulong)i, null, new RunModifiers { ChaseChance = chance }).ChaseAttuned);
+            Assert.That(Attuned(0), Is.EqualTo(0));
+            Assert.That(Attuned(1), Is.EqualTo(400));
+            Assert.That(Attuned(0.5), Is.InRange(160, 240), "the roll follows the odds");
+            Assert.That(Attuned(K.ChaseBaseChance), Is.InRange(50, 110));
         }
 
         [Test]
         public void ModifiedRun_ReplaysWithItsModifiers()
         {
-            var mods = new RunModifiers { DrillCostMult = 0.8, StatFloorMult = 1.2, DraftSizeBonus = 1, StartSp = 2 };
+            var mods = new RunModifiers { DrillCostMult = 0.8, StatFloorMult = 1.2, ChaseChance = 0.5, StartSp = 2 };
             var s = TrainingRun.Start(Db, "sprite", 21, null, mods);
             for (int i = 0; i < 4; i++) TrainingRun.Drill(Db, s, StatIds.Int);
             Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, "sprite", 21, s.Log, null, mods)), Is.EqualTo(TrainingRun.StateHash(s)));
             Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, "sprite", 21, s.Log)), Is.Not.EqualTo(TrainingRun.StateHash(s)),
                 "the modifiers are part of the run");
             Assert.Throws<ArgumentException>(() => TrainingRun.Start(Db, "sprite", 1, null, new RunModifiers { DrillCostMult = -1 }));
+            Assert.Throws<ArgumentException>(() => TrainingRun.Start(Db, "sprite", 1, null, new RunModifiers { ChaseChance = 1.5 }));
         }
     
         [Test]

@@ -37,7 +37,7 @@ namespace IdleRng.Bots.Training
             ChaseTarget best = null;
             foreach (var t in c.TreeList)
             {
-                if (t.Kind != TreeKind.Chase || t.Species != s.SpeciesId) continue;
+                if (!TrainingRun.ChaseOpen(c, s, t)) continue;
                 var x = Build(c, s, t);
                 if (x == null) continue;
                 if (Slot(s, t.Id) >= 0) return x;

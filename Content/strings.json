@@ -599,12 +599,12 @@
       "text": "Monsters start runs with 10% higher base stats per rank."
     },
     {
-      "key": "talent.wide_scouting.name",
-      "text": "Wide Scouting"
+      "key": "talent.chase_instinct.name",
+      "text": "Chase Instinct"
     },
     {
-      "key": "talent.wide_scouting.desc",
-      "text": "Milestone drafts offer one more tree per rank."
+      "key": "talent.chase_instinct.desc",
+      "text": "+10% odds a run is attuned to its in-run chase tree."
     },
     {
       "key": "talent.head_start.name",

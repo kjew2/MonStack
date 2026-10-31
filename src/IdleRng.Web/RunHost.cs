@@ -537,7 +537,7 @@ namespace IdleRng.Web
                 }
                 w.EndArr().EndObj();
             }
-            w.Key("mods").Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("draftSizeBonus", m.DraftSizeBonus).P("startSp", m.StartSp).EndObj();
+            w.Key("mods").Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("chaseChance", m.ChaseChance).P("startSp", m.StartSp).EndObj();
             w.P("vaultCap", _db.Constants.VaultCap).P("vaultOver", AccountOps.VaultOver(_db, ac));
             w.Key("vault").Arr();
             foreach (var e in ac.Vault) Entry(w, e);
@@ -815,7 +815,7 @@ namespace IdleRng.Web
             w.Key("chase").Arr();   // the species' own chase trees (in-run, then book-gated) and which conditions hold
             foreach (var t in new[] { sp.ChaseTreeRun, sp.ChaseTreeBook }.Select(id => _db.Trees[id]))
             {
-                w.Obj().P("tree", t.Id).P("unlocked", TrainingRun.ChaseConditionsHold(_db, s, t));
+                w.Obj().P("tree", t.Id).P("open", TrainingRun.ChaseOpen(_db, s, t)).P("unlocked", TrainingRun.ChaseConditionsHold(_db, s, t));
                 w.Key("met").Arr();
                 foreach (var cd in t.Conditions) w.Bool(TrainingRun.ConditionHolds(_db, s, cd));
                 w.EndArr().EndObj();

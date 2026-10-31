@@ -235,6 +235,24 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void UnattunedRun_NeverOffersItsInRunChaseTree_ButStillOffersTheBookOne()
+        {
+            var off = new RunModifiers { ChaseChance = 0 };
+            var s = TrainingRun.Start(Db, "drake", 7, null, off);
+            Assert.That(s.ChaseAttuned, Is.False);
+            s.Stats.Def = 600;
+            s.FightsWon = 2;
+            Max(s, SlotOf(s, "heavy_armor"));
+            Assert.That(TrainingRun.ChaseConditionsHold(Db, s, Db.Trees["unbreakable_will"]), Is.True);
+            Assert.That(TrainingRun.ChaseOpen(Db, s, Db.Trees["unbreakable_will"]), Is.False);
+            Assert.That(s.Offers, Is.Empty, "dormant: the conditions hold but the run is not attuned");
+
+            var book = Db.Species["drake"].ChaseTreeBook;
+            Assert.That(TrainingRun.ChaseOpen(Db, s, Db.Trees[book]), Is.True, "the book-gated chase tree does not need attunement");
+            Assert.That(TrainingRun.ChaseOpen(Db, s, Db.Trees["arcane_overflow"]), Is.False, "another species' tree is never open");
+        }
+
+        [Test]
         public void ChaseTree_OffersWhenConditionsHold_AndLocksAgainWhenAPrerequisiteIsOverwritten()
         {
             var s = DrakeWithUnbreakableWillOffered();
