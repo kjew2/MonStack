@@ -55,6 +55,8 @@ Asked by the UI overhaul (issue #115): could a family dress the whole UI, not ju
 
 Palette tokens that line up with any of them: a background, a raised surface, ink (text), muted text, one accent, plus the existing per-stat and per-element colours, which every family keeps. Hunter-dark and flat both work with today's dark phone palette; ink and painterly want a light, paper-coloured base.
 
+**Live: the UI chrome is hunter / system dark (kj, 2026-10-31, matching the creature art; issue #115).** `web/index.html` carries it: the `:root` tokens hold the palette (near-black navy base, steel-blue lines, the system blue `--gems` as the accent, gold for rare things), the fonts (Black Han Sans for titles, Chakra Petch for labels and numbers, Barlow for body), the cut size and the inward glow; a skin block at the end of the sheet makes every panel a system window: a thin border in its colour (`--bc`) glowing inward, top-left and bottom-right corners cut with `clip-path` and the border redrawn along each cut, uppercase labels, a faint blue grid behind the page, and a "System message" alert for tree offers. Outer glows would be clipped by the cut, so windows glow inward; the vendor's offer cards keep their rounded corners so their reveal burst is not clipped.
+
 ## 5. Recommendation
 
 1. **Pick hunter/system dark action as the main style.** It is the most popular action look, matches the game's own vocabulary, and makes apex reveals feel like a jackpot. Use the **flat** family's rules (bold outline, at most two tones) for the small battle sprites so they stay readable.
@@ -86,7 +88,7 @@ Possible uses next to the abyss style, none decided: the field-guide style for a
 
 For issue #115, in the terms of section 4.1: mostly CSS, a few small assets. Panels read as deep layers: dark teal-to-ink backgrounds with a soft vertical depth gradient, thin sepia borders with a hand-drawn wobble (an SVG border image or `feTurbulence` displacement), paper grain at low opacity, and bioluminescent glows (teal, amber) on focus, rare events and capstones. Assets: a few hanging-root and glowing-flora corner ornaments as SVG. Fonts (Google Fonts): a hand-lettered display face such as Amatic SC or Caveat (already loaded), with a soft humanist body face such as Nunito or Gothic A1. It keeps a dark base, so today's dark palette and per-stat and per-element colours carry over.
 
-**Live (kj, 2026-10-31: the UI chrome follows the abyss style).** `web/index.html` carries it: the `:root` tokens hold the palette (teal-ink base, parchment text, sepia lines, teal and amber glows, watercolour-soft stat colours), the fonts (Nunito for labels, numbers and body; Caveat for titles and loud moments, which replaced Bangers), the glows, the paper grain and the root and flora ornaments (SVG data URIs, so their colours stay in `:root` too), and a skin block at the end of the sheet applies them: grained gradient panels, sepia borders with a faint second sketch line and uneven corners, light shafts and flora on the tree offer banner, soft glows instead of hard key shadows.
+**Was live briefly, then replaced (kj, 2026-10-31):** the UI wore this style for a while; when the creature art settled on hunter / system dark, kj moved the UI to hunter too (section 4.1).
 
 ## 8. Generation (issue #116)
 
