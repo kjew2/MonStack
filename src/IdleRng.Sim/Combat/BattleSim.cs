@@ -40,7 +40,8 @@ namespace IdleRng.Sim.Combat
             if (!(r.GaugeSize > 0 && r.TurnTicks > 0 && r.TimeLimitTicks > 0 && r.SideSize > 0 && r.HpPerPoint > 0 && r.DefK > 0
                   && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1 && r.StackCap >= 1))
                 throw new ArgumentException("fight rules out of range (specs/16 section 7)", nameof(r));
-            if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && In01(r.DrainFrac) && In01(r.FirePierce) && r.DoubleTurns >= 0))
+            if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && In01(r.DrainFrac) && In01(r.FirePierce) && r.DoubleTurns >= 0
+                  && In01(r.RebirthHeal) && In01(r.WailStagger) && In01(r.VeilEvadeCap) && r.FeastStr >= 0))
                 throw new ArgumentException("rule modifier constants out of range (specs/16 section 7)", nameof(r));
             if (r.Tower != null && !r.Tower.Valid) throw new ArgumentException("tower rules out of range (specs/21 section 5)", nameof(r));
         }
@@ -69,6 +70,7 @@ namespace IdleRng.Sim.Combat
             };
             u.BaseMaxHp = u.MaxHp;
             u.Hp = u.MaxHp;
+            if (Has(u, RuleModifiers.RootRebirth)) u.RebirthHeal = rules.RebirthHeal;
             return u;
         }
 
@@ -256,8 +258,10 @@ namespace IdleRng.Sim.Combat
                     else if (--u.ChannelTicks == 0)
                     {
                         double amt = u.ChannelStrike * Math.Max(Eff(r, u, StatIds.Str), Eff(r, u, StatIds.Int)), total = 0;
-                        foreach (var e in Enemies(s, u)) total += Absorb(u, e, amt, null);
+                        var hit = Enemies(s, u);
+                        foreach (var e in hit) total += Absorb(u, e, amt, null);
                         onAction?.Invoke(new FightAction(u.Id, "channel_strike", null, total));
+                        foreach (var e in hit) Reborn(e, onAction);
                         strikeSide = u.Side;
                     }
                 }
@@ -489,9 +493,10 @@ namespace IdleRng.Sim.Combat
         static double Hit(FightRules r, FightState s, FightUnit src, FightUnit tgt, double raw, bool magical, string element, CombatSkill sk,
                           bool aoe, IRandomSource rng, Action<FightAction> onAction)
         {
-            if (!magical)
+            bool veil = Has(tgt, RuleModifiers.UmbralVeil);
+            if (!magical || veil)
             {
-                double evade = EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
+                double evade = EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex), veil ? r.VeilEvadeCap : r.EvadeCap);
                 if (evade > 0 && Draw(rng) < evade)
                 {
                     tgt.Tally.Evades++;
@@ -528,6 +533,18 @@ namespace IdleRng.Sim.Combat
                 src.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.DrainEvent, src.Id, healed + shield));
             }
+            Reborn(tgt, onAction);
+            if (dealt > 0 && r.WailStagger > 0 && src.Alive && tgt.Alive && Has(src, RuleModifiers.WailStagger))
+            {
+                double lost = Math.Min(tgt.Gauge, r.WailStagger * r.GaugeSize);
+                tgt.Gauge -= lost;
+                if (lost > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.StaggerEvent, tgt.Id, lost));
+            }
+            if (dealt > 0 && r.FeastStr > 0 && src.Alive && Has(src, RuleModifiers.NightFeast))
+            {
+                src.FeastBonus += r.FeastStr;
+                onAction?.Invoke(new FightAction(src.Id, FightAction.FeastEvent, src.Id, src.FeastBonus));
+            }
             Fire(r, s, tgt, FightTrigger.OnHitTaken, rng, onAction);
             if (crit) Fire(r, s, src, FightTrigger.OnCrit, rng, onAction);
 
@@ -536,6 +553,7 @@ namespace IdleRng.Sim.Combat
                 tgt.Tally.Counters++;
                 double c = Absorb(tgt, src, mitigated, null);
                 onAction?.Invoke(new FightAction(tgt.Id, null, src.Id, c, false, false, false, true));
+                Reborn(src, onAction);
                 GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, onAction);
             }
             return dealt;
@@ -580,9 +598,26 @@ namespace IdleRng.Sim.Combat
                 src.Tally.DamageByElement.TryGetValue(element, out var prev);
                 src.Tally.DamageByElement[element] = prev + dealt;
             }
-            if (wasAlive && !tgt.Alive) src.Tally.Kills++;
             if (tgt.ChannelTicks > 0) tgt.ChannelDealt += absorbed + dealt;
+            if (wasAlive && !tgt.Alive)
+            {
+                if (tgt.RebirthHeal > 0)   // root_rebirth: it survives this one blow, once per fight
+                {
+                    tgt.Hp = tgt.RebirthHeal * tgt.MaxHp;
+                    tgt.RebirthHeal = 0;
+                    tgt.RebornPending = true;
+                }
+                else src.Tally.Kills++;
+            }
             return dealt;
+        }
+
+        /// <summary>Sends root_rebirth's event after the action that triggered it.</summary>
+        static void Reborn(FightUnit u, Action<FightAction> onAction)
+        {
+            if (!u.RebornPending) return;
+            u.RebornPending = false;
+            onAction?.Invoke(new FightAction(u.Id, FightAction.RebirthEvent, u.Id, u.Hp));
         }
 
         static double Draw(IRandomSource rng) => rng == null ? 1.0 : rng.NextDouble();
@@ -877,8 +912,11 @@ namespace IdleRng.Sim.Combat
         public static bool BasicAttackMagical(double str, double intel) => intel > str;
 
         /// <summary>Chance to evade a physical hit: clamp(base + (target DEX - attacker DEX) x per_dex, 0, cap).</summary>
-        public static double EvadeChance(FightRules r, double targetDex, double attackerDex) =>
-            Clamp(r.EvadeBase + (targetDex - attackerDex) * r.EvadePerDex, 0, r.EvadeCap);
+        public static double EvadeChance(FightRules r, double targetDex, double attackerDex) => EvadeChance(r, targetDex, attackerDex, r.EvadeCap);
+
+        /// <summary>Evade chance with an explicit cap (umbral_veil raises it).</summary>
+        public static double EvadeChance(FightRules r, double targetDex, double attackerDex, double cap) =>
+            Clamp(r.EvadeBase + (targetDex - attackerDex) * r.EvadePerDex, 0, cap);
 
         /// <summary>Crit chance: clamp(base + LUK x per_luk + crit_rate effects, 0, cap).</summary>
         public static double CritChance(FightRules r, double luk, double critRateBonus) =>
@@ -952,10 +990,10 @@ namespace IdleRng.Sim.Combat
             return u.Source.Stats.Get(stat) * Math.Max(r.StatFloor, 1 + Bonus(u, stat));
         }
 
-        /// <summary>Sum of effect values on <paramref name="stat"/> (the whole value for crit_rate and crit_dmg bonuses).</summary>
+        /// <summary>Sum of effect values (plus night_feast's STR) on <paramref name="stat"/> (the whole value for crit_rate and crit_dmg bonuses).</summary>
         static double Bonus(FightUnit u, string stat)
         {
-            double sum = 0;
+            double sum = stat == StatIds.Str ? u.FeastBonus : 0;   // night_feast's STR counts like a permanent effect
             foreach (var e in u.Effects) if (e.Stat == stat) sum += e.Frac;
             return sum;
         }
@@ -993,6 +1031,9 @@ namespace IdleRng.Sim.Combat
                 w.I32(t.Crits); w.I32(t.Evades); w.I32(t.Kills); w.I32(t.Counters);
                 w.I32(t.DamageByElement.Count);
                 foreach (var kv in t.DamageByElement) { w.Str(kv.Key); w.F64(kv.Value); }
+                // Rule state is hashed only for units that carry the rule, so every other fight keeps its hash.
+                if (Has(u, RuleModifiers.RootRebirth)) w.F64(u.RebirthHeal);
+                if (Has(u, RuleModifiers.NightFeast)) w.F64(u.FeastBonus);
                 if (s.Tower)   // only tower fights hash the tower fields, so every other fight keeps its hash
                 {
                     w.F64(u.Entropy); w.I32(u.Vents); w.I32(u.PhaseNext); w.Bool(u.IsAdd); w.I32(u.Spawned); w.F64(u.Guard);

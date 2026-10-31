@@ -86,11 +86,13 @@ namespace IdleRng.Sim.Tests
             AccountOps.Record(a, Sealed(c, stat.Amount, (int)floors.Amount));
             var got = AccountOps.CheckAchievements(Db, a).Select(d => d.Id).ToList();
             Assert.That(got, Is.EqualTo(new[] { rankC.Id, stat.Id, floors.Id }), "content order; runs_finished not yet");
-            Assert.That(a.OwnedSpecies, Is.EqualTo(Db.SpeciesList.Select(s => s.Id).Where(id => id == "slime" || id == rankC.UnlocksSpecies || id == stat.UnlocksSpecies)));
+            Assert.That(a.OwnedSpecies, Is.EqualTo(Db.SpeciesList.Select(s => s.Id)
+                .Where(id => id == "slime" || id == rankC.UnlocksSpecies || id == stat.UnlocksSpecies || id == floors.UnlocksSpecies)));
             Assert.That(AccountOps.CheckAchievements(Db, a), Is.Empty, "each achievement is earned once");
 
             for (int i = a.Records.RunsFinished; i < runs.Amount; i++) AccountOps.Record(a, Sealed(0));
             Assert.That(AccountOps.CheckAchievements(Db, a).Single().Id, Is.EqualTo(runs.Id));
+            Assert.That(a.OwnedSpecies, Does.Contain(runs.UnlocksSpecies), "Veteran unlocks the Mandrake (specs/18 section 8)");
             Assert.That(a.Records.BestRank, Is.EqualTo(c), "a worse run never lowers a best");
         }
 

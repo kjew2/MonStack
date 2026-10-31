@@ -141,6 +141,21 @@ namespace IdleRng.Bots.Golden
             return f;
         }
 
+        // The Mandrake's and Shade Hound's capstones, two per carrier (specs/24 section 5.1).
+        static Fighter Rootwood(string id) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(520, 140, 160, 360, 100, 320, 140, 140),
+            Skills = { Dmg("scream", StatIds.Wis, 1.1, 3, SkillTarget.AllEnemies, "nature") },
+            Rules = { RuleModifiers.RootRebirth, RuleModifiers.WailStagger },
+        };
+
+        static Fighter Shade(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(260, 360, 100, 140, 420, 160, 380, 260),
+            Skills = { Dmg("devour", StatIds.Str, 1.8, 3, SkillTarget.Enemy, "dark") },
+            Rules = { RuleModifiers.UmbralVeil, RuleModifiers.NightFeast },
+        };
+
         public static IEnumerable<Vector> Vectors()
         {
             yield return new Vector("1v1 brawler vs mage", 1, new[] { Brawler("brawler") }, new[] { Mage("mage") });
@@ -155,6 +170,8 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("1v1 tidal overflow vs fire pierce", 6, new[] { Tide("tide") }, new[] { Sovereign("sovereign") });
             yield return new Vector("2v2 drain and echo vs double turn", 7,
                 new[] { Bloom("a_bloom"), Echo("a_echo") }, new[] { Starlit("b_starlit"), Brawler("b_brawler") });
+            yield return new Vector("2v2 rebirth and stagger vs veil and feast", 8,
+                new[] { Rootwood("a_root"), Mage("a_mage") }, new[] { Shade("b_shade"), Healer("b_healer") });
         }
     }
 }

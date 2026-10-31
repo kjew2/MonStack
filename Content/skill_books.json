@@ -15,6 +15,16 @@
       "id": "book_embers",
       "name_key": "book.book_embers.name",
       "tree_id": "ember_codex"
+    },
+    {
+      "id": "book_roots",
+      "name_key": "book.book_roots.name",
+      "tree_id": "verdant_herbarium"
+    },
+    {
+      "id": "book_shadows",
+      "name_key": "book.book_shadows.name",
+      "tree_id": "umbral_grimoire"
     }
   ]
 }

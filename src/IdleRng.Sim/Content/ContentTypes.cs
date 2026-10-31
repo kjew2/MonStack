@@ -61,6 +61,10 @@ namespace IdleRng.Sim.Content
         public double MonTideShieldCap { get; internal set; }    // MON_TIDE_SHIELD_CAP
         public double MonDrainFrac { get; internal set; }        // MON_DRAIN_FRAC
         public double MonFirePierce { get; internal set; }       // MON_FIRE_PIERCE
+        public double MonRebirthHeal { get; internal set; }      // MON_REBIRTH_HEAL
+        public double MonWailStagger { get; internal set; }      // MON_WAIL_STAGGER
+        public double MonVeilEvadeCap { get; internal set; }     // MON_VEIL_EVADE_CAP
+        public double MonFeastStr { get; internal set; }         // MON_FEAST_STR
         public int MonDoubleTurns { get; internal set; }         // MON_DOUBLE_TURNS
 
         // Account and meta-progression (specs/18 section 5). Placeholders.

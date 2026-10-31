@@ -157,8 +157,8 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 |---|---|---|
 | Contender | Reach rank C in a run | drake (Bastion Drake) |
 | Prodigy | Finish a run with any stat at 500 or more | sprite (Mirage Moth) |
-| Veteran | Finish 5 runs | nothing yet |
-| Climber | Clear 10 gauntlet floors | nothing yet |
+| Veteran | Finish 5 runs | mandrake (Mandrake; kj, 2026-10-31, `specs/24` section 6) |
+| Climber | Clear 10 gauntlet floors | shade_hound (Shade Hound; kj, 2026-10-31) |
 
 Rules (both `tools/content_build.py` and `ContentDb`): `ref` and `amount` as in the table (`E023` for a bad reference, `E043` otherwise); `unlocks_species` is a species id (`E023`) and not the starter (`E043`); every species but the starter is unlocked by at least one achievement (`E044`), so none is unobtainable.
 

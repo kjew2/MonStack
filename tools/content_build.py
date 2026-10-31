@@ -57,7 +57,8 @@ REQUIRED_CONSTANTS = {
     "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "TREE_REFUND": "double", "CHASE_BASE_CHANCE": "double",
     "MON_ECHO_POWER": "double",
     "MON_TIDE_REGEN": "double", "MON_TIDE_SHIELD_CAP": "double", "MON_DRAIN_FRAC": "double", "MON_FIRE_PIERCE": "double",
-    "MON_DOUBLE_TURNS": "int",
+    "MON_DOUBLE_TURNS": "int", "MON_REBIRTH_HEAL": "double", "MON_WAIL_STAGGER": "double", "MON_VEIL_EVADE_CAP": "double",
+    "MON_FEAST_STR": "double",
     # account and meta-progression (specs/18)
     "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int",
     # end-of-run gauntlet (specs/19)
@@ -79,7 +80,7 @@ DRILL_TIERS = ["fail", "success", "super"]
 EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 # Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
 RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
-            "entropy_convert"]
+            "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -105,6 +106,8 @@ MON_RANGES = {
     "MON_TIDE_REGEN": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TIDE_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DRAIN_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FIRE_PIERCE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DOUBLE_TURNS": (">= 1", lambda v: v >= 1),
+    "MON_REBIRTH_HEAL": ("(0, 1]", lambda v: 0 < v <= 1), "MON_WAIL_STAGGER": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_VEIL_EVADE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FEAST_STR": (">= 0", lambda v: v >= 0),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
     "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
     "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
