@@ -109,7 +109,7 @@ A monster that owns a chase tree's capstone takes that tree's **apex form**: the
 
 - The apex form is the **first slotted chase tree, in slot order, with every node bought** (`ApexForm.TreeOf`). **(agent)** Slot order, rather than the last capstone bought, because a Vault entry keeps its trees but not the order they were maxed.
 - A run loses the form when the chase tree leaves its slot (overwritten, or locked again because a prerequisite was overwritten). A Vault entry keeps the form it was sealed with.
-- The web client toasts once when the run's monster takes the form ("Bastion Drake became the Aegis Wyrm!").
+- The web client plays an evolution once when the run's monster takes a new form, apex or fused look (kj, 2026-10-31; `playEvolve` in `web/run.js`, presentation only): the old form glows and shakes, white silhouettes of the old and new forms swap faster and faster, a white flash, then the new form in colour with sparkles and "Bastion Drake became the Aegis Wyrm!". A tap skips to the end, the next closes it; reduced motion shows the end at once. It does not play on a reload of a run already in the form. With the debug controls on, each chase card on the Trees tab has a "Test: preview evolution" button that plays its apex form's evolution and changes nothing.
 
 | Chase tree | Apex form |
 |---|---|

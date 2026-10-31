@@ -59,6 +59,9 @@
   --shadow-tip: 0 10px 28px rgba(40, 90, 160, .25);
   --shadow-key: 0 3px 0 var(--keycap); --shadow-key-down: 0 1px 0 var(--keycap);
   --text-shade: 0 1px 0 rgba(255, 255, 255, .7);
+  /* the evolution scene: a night sky whatever the theme, so the white silhouettes and the flash read */
+  --evo-bg: radial-gradient(circle at 50% 40%, #2b4a8a 0%, #121a3a 55%, #070a1a 100%); --evo-ink: #ffffff; --evo-glow: #9fd4ff;
+  --evo-ray: rgba(159, 212, 255, .16); --evo-spark: #ffe48a;
   /* motion (prefers-reduced-motion sets these to 0s at the end of the sheet) */
   --dur-fast: .12s; --dur: .25s; --dur-slow: .5s;
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
@@ -486,6 +489,41 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 
 @media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0s; --dur: 0s; --dur-slow: 0s; } .flash, .dtile.flash.t-super, .dtile.flash.t-fail, .stage-mon .sprite, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain, .dpop { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
 @keyframes spfade { to { opacity: 0; } }
+/* Evolution (run.js playEvolve): charge (the old form glows and shakes), morph (white silhouettes swap; .alt shows the new one),
+   flash (a white flash), done (the new form in colour, sparkles). */
+.evolve { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: 24px var(--gutter-r) 24px var(--gutter-l); background: var(--evo-bg); color: var(--evo-ink); text-align: center; cursor: pointer; overflow: hidden;
+  animation: tin var(--dur) ease-out; }
+.evo-mon { position: relative; width: 200px; height: 200px; max-width: 70vw; max-height: 70vw; }
+.evolve .evo-mon .sprite { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; background: none; border: 0; border-radius: 0; transition: opacity .06s; }
+.evolve .evo-new { opacity: 0; }
+.evolve.charge .evo-old { animation: evo-charge .9s ease-in both; }
+.evolve.morph .sprite { filter: brightness(0) invert(1) drop-shadow(0 0 10px var(--evo-glow)); animation: evo-pulse .5s ease-in-out infinite alternate; }
+.evolve.morph.alt .evo-old, .evolve.done .evo-old { opacity: 0; }
+.evolve.morph.alt .evo-new { opacity: 1; }
+.evolve.done .evo-new { opacity: 1; animation: evo-pop .7s cubic-bezier(.2, 1.6, .4, 1) both, bob 2.4s ease-in-out .7s infinite; }
+.evo-rays { position: absolute; inset: -60%; border-radius: 50%; opacity: 0; transition: opacity .6s;
+  background: repeating-conic-gradient(var(--evo-ray) 0 10deg, transparent 10deg 24deg); animation: evo-spin 14s linear infinite;
+  -webkit-mask: radial-gradient(circle, #000 25%, transparent 70%); mask: radial-gradient(circle, #000 25%, transparent 70%); }
+.evolve.morph .evo-rays, .evolve.done .evo-rays { opacity: 1; }
+.evo-sparks { position: absolute; left: 50%; top: 50%; pointer-events: none; }
+.evo-sparks i { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 2px; background: var(--evo-spark); opacity: 0;
+  box-shadow: 0 0 8px var(--evo-spark); transform: rotate(var(--a)) translateY(0) rotate(45deg); }
+.evolve.done .evo-sparks i { animation: evo-spark 1.1s ease-out both; }
+.evo-line { min-height: 2.6em; max-width: 320px; font: 600 18px/1.3 var(--font-title); text-wrap: balance; text-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
+.evolve.done .evo-line b { display: block; font-size: 24px; color: var(--evo-spark); animation: obig .6s ease-out both; }
+.evo-hint { opacity: .7; letter-spacing: .06em; }
+.evo-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.evolve.flash .evo-flash { animation: evo-flash .9s ease-out both; }
+@keyframes evo-charge { 0% { filter: none; } 60% { transform: translateX(-3px); } 70% { transform: translateX(3px); } 80% { transform: translateX(-3px); }
+  90% { transform: translateX(3px); } 100% { filter: brightness(1.8) drop-shadow(0 0 14px var(--evo-glow)); transform: none; } }
+@keyframes evo-pulse { from { transform: scale(.94); } to { transform: scale(1.06); } }
+@keyframes evo-pop { from { transform: scale(.6); filter: brightness(3); } 60% { filter: brightness(1.3); } to { transform: none; filter: none; } }
+@keyframes evo-spin { to { transform: rotate(360deg); } }
+@keyframes evo-spark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) rotate(45deg) scale(1.2); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) rotate(45deg) scale(.3); } }
+@keyframes evo-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .evolve, .evolve .sprite, .evo-rays, .evo-sparks i, .evo-flash, .evo-line b { animation: none !important; } }
 </style>
 </head>
 <body>
