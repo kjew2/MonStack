@@ -18,7 +18,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the species gacha (`01` has the math), the Daily and Endless Towers, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the species gacha (`01` has the math), the Daily Tower (rules written: `21`), the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 
@@ -41,6 +41,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, `MON_ECHO_POWER` | `15` section 9 |
 | Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7) | `18` |
 | Gauntlet | `GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` | `19` section 4 |
+| Daily Tower (designed, not built) | `TOWER_*`, `ENTROPY_*`, `CORRUPT_*` | `21` section 5 |
 
 ## 3. Vocabulary
 
@@ -92,4 +93,4 @@ Decisions made before the pivot that still shape the code:
 1. **Curves are evaluated by repeated multiplication**, never `Math.Pow`, so output is byte-identical across platforms.
 2. **The sim stays free of IO, clocks and JSON.** `IdleRng.Runtime` holds the serializer and stores.
 3. **Online play is built on server verification, not a server sim** (`specs/10`): the engine stays on the device; a server replays command logs to certify, and resolves PvP battles with the same `IdleRng.Sim` source.
-4. **Pivot decisions** (kj, 2026-10-30) are recorded where they apply: `specs/12` (design), `specs/13` (plan and answers), `specs/14` to `19` (rules).
+4. **Pivot decisions** (kj, 2026-10-30) are recorded where they apply: `specs/12` (design), `specs/13` (plan and answers), `specs/14` to `19` and `21` (rules).
