@@ -5,7 +5,7 @@ ELEMENT_STRONG_MULT,double,1.3,damage when the attacker's element beats the defe
 ELEMENT_WEAK_MULT,double,0.8,damage when the defender's element beats the attacker's
 BASIC_ATTACK_POWER,double,1,basic attack = this x ATK
 AI_HEAL_BELOW,double,0.25,"AI casts a heal once a target is missing the whole amount it restores (#94); a heal bigger than (1 - this) of max HP waits until the target is at or below this HP fraction"
-AI_SHIELD_BELOW,double,0.7,companion AI shields when an ally is below this HP fraction
+AI_SHIELD_BELOW,double,0.7,"unused since 2026-10-31: the AI casts a shield whenever it raises a target's shield (specs/16 5.2); kept because removing a constant needs a MAJOR content bump"
 MON_HP_PER_POINT,double,10,monster battle (specs/16): max HP = HP stat x this. Placeholder
 MON_DEF_K,double,300,monster battle: damage x K/(K+DEF) physical or K/(K+WIS) magical. Placeholder
 MON_EVADE_BASE,double,0.05,monster battle: evade chance (physical hits miss; magical hits graze) = base + (target DEX - attacker DEX) x per_dex. Placeholder

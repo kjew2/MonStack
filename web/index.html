@@ -26,7 +26,7 @@
   --toast-bg: #ffffff; --cd-veil: rgba(29, 53, 87, .55); --keycap: #c9daf0; --arena-top: #dcebff;
   /* accents: --gems is the one accent (focus, selection, skill points): sky blue; --gold for rare things. Text-strength shades, so
      they read on white; --gold-pop is the bright gold for big loud text with an outline. */
-  --gold: #b77b00; --gold-pop: #ffc23d; --gems: #2b6fd6; --ok: #1f9d5c; --bad: #e0384c; --warn: #e06a1b; --epic: #8a4fe0;
+  --gold: #b77b00; --gold-pop: #ffc23d; --gems: #2b6fd6; --shield: #6fd3ff; --ok: #1f9d5c; --bad: #e0384c; --warn: #e06a1b; --epic: #8a4fe0;
   --accent: var(--gems);
   /* accent tints for filled buttons, badges and flashes */
   --ok-bg: #e3f7ec; --ok-bg-2: #d3f1e1; --ok-flash: #c9f0da; --ok-keycap: #9fd9b8; --on-ok: #ffffff; --ok-pop: #1f9d5c;
@@ -123,6 +123,8 @@ small, .small { font-size: 12px; }
 .bar .fill { position: absolute; inset: 0 auto 0 0; background: var(--ok); }
 .bar.energy .fill { background: var(--gems); }
 .bar.low .fill { background: var(--bad); }
+.bar.hp .shield { position: absolute; left: 0; bottom: 0; height: 40%; width: 0; background: var(--shield); border-top: 1px solid rgba(255, 255, 255, .85); transition: width .2s; }
+.bar.hp.shielded { box-shadow: 0 0 0 1px var(--shield); }
 .bar span { position: relative; display: block; text-align: center; font: 600 11px/16px var(--font-display); text-shadow: var(--text-shade); }
 .pips { display: flex; gap: 5px; }
 .hud-meters { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }

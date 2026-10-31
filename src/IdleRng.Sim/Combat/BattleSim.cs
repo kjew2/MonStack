@@ -395,7 +395,8 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>
         /// Default AI (specs/16 section 5.2): the first ready skill that would do something: heal and shield first, then the rest,
-        /// each in list order. A heal waits until a target is missing the whole amount it restores (HealNeed).
+        /// each in list order. A heal waits until a target is missing the whole amount it restores (HealNeed); a shield is cast ahead
+        /// of damage, whenever it would leave a target with more shield than it has (WantsShield).
         /// </summary>
         static bool Useful(FightRules r, FightState s, FightUnit u, CombatSkill sk)
         {
@@ -409,7 +410,7 @@ namespace IdleRng.Sim.Combat
                     foreach (var a in s.Units) if (a.Side == u.Side && WantsHeal(r, a, amt)) return true;
                     return false;
                 }
-                case SkillKind.Shield: return AnyAllyBelow(s, u, r.AiShieldBelow);
+                case SkillKind.Shield: return AnyEnemy(s, u) && WantsShield(s, u, sk, Scaled(r, u, sk) * HealMult(r, s));
                 case SkillKind.Taunt: return u.TauntTicks == 0 && AnyOtherAlly(s, u);   // nobody to protect: a wasted action
                 case SkillKind.Buff:
                 {
@@ -462,12 +463,13 @@ namespace IdleRng.Sim.Combat
                 case SkillKind.Shield:
                 {
                     double amt = Scaled(r, src, sk) * HealMult(r, s);
-                    foreach (var t in Allies(s, src, sk.Target))
+                    var targets = Allies(s, src, sk.Target);
+                    foreach (var t in targets)
                     {
                         t.Shield = Math.Max(t.Shield, amt);
                         t.ShieldTicks = Math.Max(t.ShieldTicks, ticks);
                     }
-                    onAction?.Invoke(new FightAction(src.Id, sk, null, amt, false, false, aoe, false));
+                    onAction?.Invoke(new FightAction(src.Id, sk, targets.Count == 1 ? targets[0].Id : null, amt, false, false, aoe, false));
                     break;
                 }
                 case SkillKind.Taunt:
@@ -756,9 +758,16 @@ namespace IdleRng.Sim.Combat
             return false;
         }
 
-        static bool AnyAllyBelow(FightState s, FightUnit u, double frac)
+        /// <summary>
+        /// Whether a shield of <paramref name="amount"/> would raise one of the skill's targets' shield (specs/16 section 5.2). A
+        /// shield guards HP it has not lost yet, so unlike a heal it does not wait for damage: it only waits while the target's
+        /// shield is already at least this big (casting then would change nothing but the timer).
+        /// </summary>
+        static bool WantsShield(FightState s, FightUnit u, CombatSkill sk, double amount)
         {
-            foreach (var a in s.Units) if (a.Side == u.Side && a.Alive && a.Hp < frac * a.MaxHp) return true;
+            if (sk.Target == SkillTarget.Self) return u.Shield < amount;
+            if (sk.Target == SkillTarget.LowestAlly) { var t = LowestAlly(s, u); return t != null && t.Shield < amount; }
+            foreach (var a in s.Units) if (a.Side == u.Side && a.Alive && a.Shield < amount) return true;
             return false;
         }
 

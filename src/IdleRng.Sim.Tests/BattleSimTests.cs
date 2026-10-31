@@ -313,6 +313,72 @@ namespace IdleRng.Sim.Tests
             Assert.That(log.Any(a => a.Actor == "tank" && a.Skill?.Id == "taunt"), Is.True);
         }
 
+        static CombatSkill Guard(SkillTarget target = SkillTarget.Self, double power = 0.5, int cd = 3, int turns = 3) =>
+            new CombatSkill { Id = "guard", Kind = SkillKind.Shield, Target = target, Scales = StatIds.Def, Power = power, Cooldown = cd, Duration = turns };
+
+        [Test]
+        public void Shield_GoesUpBeforeTheFirstHit_NotAfterDamage()
+        {
+            // unlike a heal, a shield does not wait for lost HP: a full-HP unit opens with it, ahead of a damage skill listed first
+            var s = BattleSim.Start(Rules, Side(Mon("tank", 300, null, x => x.Spd = 900, Strike(), Guard())), Side(Mon("enemy", 300, null, x => x.Spd = 10)));
+            var rng = new RngStream(BattleSim.StreamName, 5);
+            var mine = new List<FightAction>();
+            while (mine.Count == 0 && BattleSim.Step(Rules, s, rng, a => { if (a.Actor == "tank") mine.Add(a); }) == FightOutcome.Ongoing) { }
+            var first = mine[0];
+            Assert.That(first.Skill?.Id, Is.EqualTo("guard"));
+            Assert.That(first.Target, Is.EqualTo("tank"), "a self shield logs its target");
+            Assert.That(s.Units[0].Hp, Is.EqualTo(s.Units[0].MaxHp), "cast at full HP");
+            Assert.That(s.Units[0].Shield, Is.EqualTo(150).Within(1e-9), "0.5 x DEF 300");
+        }
+
+        [Test]
+        public void Shield_IsNotRecast_WhileTheTargetHoldsOneAsBig()
+        {
+            // a harmless enemy never breaks it: the shield goes up once, then the unit attacks until it wears off
+            var log = new List<FightAction>();
+            var s = BattleSim.Start(Rules, Side(Mon("tank", 300, null, x => x.Spd = 900, Guard(cd: 1, turns: 1000))), Side(Harmless("enemy", 10)));
+            var rng = new RngStream(BattleSim.StreamName, 5);
+            for (int i = 0; i < 400 && BattleSim.Step(Rules, s, rng, log.Add) == FightOutcome.Ongoing; i++) { }
+            Assert.That(log.Count(a => a.Skill?.Id == "guard"), Is.EqualTo(1));
+            Assert.That(log.Count(a => a.Actor == "tank" && a.Skill == null && a.Event == null), Is.GreaterThan(1), "basic attacks instead");
+
+            // a bigger shield already up (from any source) holds the cast back too; a smaller one does not
+            var t = BattleSim.Start(Rules, Side(Mon("tank", 300, null, x => x.Spd = 900, Guard(cd: 1))), Side(Harmless("enemy", 10)));
+            t.Units[0].Shield = 151;
+            t.Units[0].ShieldTicks = 100000;
+            log.Clear();
+            for (int i = 0; i < 50 && !log.Any(a => a.Actor == "tank"); i++) BattleSim.Step(Rules, t, rng, log.Add);
+            Assert.That(log.First(a => a.Actor == "tank").Skill, Is.Null);
+            t.Units[0].Shield = 149;
+            log.Clear();
+            for (int i = 0; i < 50 && !log.Any(a => a.Actor == "tank"); i++) BattleSim.Step(Rules, t, rng, log.Add);
+            Assert.That(log.First(a => a.Actor == "tank").Skill?.Id, Is.EqualTo("guard"));
+        }
+
+        [Test]
+        public void Shield_ChecksTheSkillsOwnTargets()
+        {
+            // a self shield cares about the caster only: a shield-less ally does not make it cast again
+            var s = BattleSim.Start(Rules, Side(Mon("tank", 300, null, x => x.Spd = 900, Guard(cd: 1)), Mon("buddy", 300, null, x => x.Spd = 1)),
+                Side(Harmless("enemy", 1)));
+            s.Units[0].Shield = 1000;
+            s.Units[0].ShieldTicks = 100000;
+            var rng = new RngStream(BattleSim.StreamName, 5);
+            var log = new List<FightAction>();
+            for (int i = 0; i < 50 && !log.Any(a => a.Actor == "tank"); i++) BattleSim.Step(Rules, s, rng, log.Add);
+            Assert.That(log.First(a => a.Actor == "tank").Skill, Is.Null);
+
+            // an all-allies shield goes up while any living ally would gain from it
+            var w = BattleSim.Start(Rules, Side(Mon("tank", 300, null, x => x.Spd = 900, Guard(SkillTarget.AllAllies, cd: 1)), Mon("buddy", 300, null, x => x.Spd = 1)),
+                Side(Harmless("enemy", 1)));
+            w.Units[0].Shield = 1000;
+            w.Units[0].ShieldTicks = 100000;
+            log.Clear();
+            for (int i = 0; i < 50 && !log.Any(a => a.Actor == "tank"); i++) BattleSim.Step(Rules, w, rng, log.Add);
+            Assert.That(log.First(a => a.Actor == "tank").Skill?.Id, Is.EqualTo("guard"));
+            Assert.That(w.Units[1].Shield, Is.EqualTo(150).Within(1e-9));
+        }
+
         [Test]
         public void Healer_HealsOnlyWhenTheWholeHealLands()
         {

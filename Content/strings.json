@@ -1328,7 +1328,7 @@
     },
     {
       "key": "tip.ai.shield",
-      "text": "It or an ally is below {AI_SHIELD_BELOW:pct} of max HP"
+      "text": "An enemy is alive, and the target has less shield than this would give (it does not wait for damage)"
     },
     {
       "key": "tip.ai.taunt",
