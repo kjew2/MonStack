@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<linearGradient id="ik-mm-bg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#efe6d2"/><stop offset="1" stop-color="#e2d5b8"/></linearGradient>
+<filter id="ik-mm-fib" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.7 0.05" numOctaves="2" seed="8"/><feColorMatrix values="0 0 0 0 0.36 0 0 0 0 0.29 0 0 0 0 0.18 0 0 0 0.28 -0.09"/></filter>
+<filter id="ik-mm-ink" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="ik-mm-dry" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.7" numOctaves="2" seed="21" result="n"/><feColorMatrix in="n" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3 0 0 0 2.3" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>
+<filter id="ik-mm-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+<filter id="ik-mm-glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8"/></filter>
+<linearGradient id="ik-mm-wg" x1="1" y1="0.6" x2="0" y2="0.2"><stop offset="0" stop-color="#f2c94c" stop-opacity=".75"/><stop offset=".6" stop-color="#f2c94c" stop-opacity=".45"/><stop offset="1" stop-color="#8a6a2a" stop-opacity=".55"/></linearGradient>
+<g id="ik-mm-wing">
+<g filter="url(#ik-mm-ink)">
+<path d="M112 100 C92 70 56 42 28 50 C18 66 24 98 42 116 C62 132 92 130 112 124 Z" fill="url(#ik-mm-wg)"/>
+<path d="M112 128 C90 134 62 142 54 160 C50 180 68 198 88 192 C104 186 112 160 114 144 Z" fill="url(#ik-mm-wg)"/>
+<path d="M28 50 C18 66 24 98 42 116 C34 96 32 74 40 56 Z" fill="#1b1714" opacity=".35"/>
+<path d="M54 160 C50 180 68 198 88 192 C74 188 62 178 60 162 Z" fill="#1b1714" opacity=".35"/>
+<g fill="#1b1714">
+<path d="M114 102 C94 68 58 40 26 48 C58 48 90 72 110 106 Z"/>
+<path d="M26 50 C14 70 22 104 44 120 C30 100 26 76 30 54 Z"/>
+<path d="M44 118 C66 134 94 130 112 124 C92 128 66 130 44 118 Z"/>
+<path d="M112 130 C88 134 58 142 52 162 C62 146 88 138 112 134 Z"/>
+<path d="M52 160 C46 182 66 200 90 193 C70 194 56 182 56 162 Z"/>
+<path d="M88 194 C106 186 114 162 116 144 C110 162 102 182 86 192 Z"/>
+</g>
+<g fill="#1b1714" opacity=".7">
+<path d="M110 108 C90 96 62 74 38 62 C64 78 88 98 110 112 Z"/>
+<path d="M110 116 C88 114 62 108 34 96 C62 112 88 118 110 120 Z"/>
+<path d="M112 138 C96 150 80 166 66 184 C82 168 98 154 113 142 Z"/>
+</g>
+</g>
+<circle cx="66" cy="90" r="20" fill="#ff9f43" opacity=".35" filter="url(#ik-mm-glow)"/>
+<g filter="url(#ik-mm-ink)">
+<circle cx="66" cy="90" r="16" fill="#ff9f43" opacity=".9"/>
+<path d="M50 90 C50 78 60 72 68 74 C58 76 52 84 54 96 C56 104 64 108 72 106 C62 110 50 104 50 90 Z" fill="#1b1714"/>
+<circle cx="66" cy="90" r="10" fill="#3a2a5a"/>
+<circle cx="80" cy="166" r="11" fill="#ff9f43" opacity=".9"/>
+<circle cx="80" cy="166" r="6.5" fill="#3a2a5a"/>
+<path d="M69 166 C69 158 74 154 80 155 C74 157 71 162 72 168 Z" fill="#1b1714"/>
+</g>
+<circle cx="62" cy="86" r="3" fill="#fbf6ea"/><circle cx="78" cy="163.5" r="2" fill="#fbf6ea"/>
+<circle cx="40" cy="70" r="5" fill="#3a2a5a" opacity=".7"/><circle cx="44" cy="106" r="4" fill="#ff9f43" opacity=".8"/>
+</g>
+</defs>
+<rect width="240" height="240" fill="url(#ik-mm-bg)"/>
+<rect width="240" height="240" filter="url(#ik-mm-fib)"/>
+<path d="M0 158 C24 140 40 108 64 118 C84 126 96 92 122 100 C146 108 160 134 186 122 C206 113 224 126 240 132 L240 240 L0 240 Z" fill="#1b1714" opacity=".07" filter="url(#ik-mm-blur)"/>
+<!-- qi swirls -->
+<g filter="url(#ik-mm-ink)">
+<path d="M22 196 C40 214 84 216 104 206 C80 210 46 206 26 190 Z" fill="#1b1714" opacity=".5"/>
+<path d="M214 30 C232 46 230 76 210 84 C222 70 222 50 210 36 Z" fill="#f2c94c" opacity=".8"/>
+<path d="M140 210 C170 218 200 210 214 194 C196 206 168 210 142 206 Z" fill="#f2c94c" opacity=".7"/>
+</g>
+<g fill="#f2c94c" opacity=".85"><circle cx="30" cy="34" r="2"/><circle cx="198" cy="190" r="1.6"/><circle cx="18" cy="140" r="1.5"/><circle cx="224" cy="128" r="2"/><circle cx="120" cy="24" r="1.5"/></g>
+<use href="#ik-mm-wing"/>
+<use href="#ik-mm-wing" transform="translate(240 0) scale(-1 1)"/>
+<!-- antennae -->
+<g filter="url(#ik-mm-ink)">
+<path d="M116 82 C108 60 98 44 82 34" fill="none" stroke="#1b1714" stroke-width="10" stroke-dasharray="1.2 2.6" opacity=".55"/>
+<path d="M124 82 C132 60 142 44 158 34" fill="none" stroke="#1b1714" stroke-width="10" stroke-dasharray="1.2 2.6" opacity=".55"/>
+<path d="M117 84 C110 62 98 44 80 32 C100 42 114 60 120 84 Z" fill="#1b1714"/>
+<path d="M123 84 C130 62 142 44 160 32 C140 42 126 60 120 84 Z" fill="#1b1714"/>
+</g>
+<!-- body -->
+<g filter="url(#ik-mm-ink)">
+<ellipse cx="120" cy="148" rx="10" ry="26" fill="#1b1714" opacity=".7"/>
+<ellipse cx="120" cy="148" rx="12" ry="28" fill="none" stroke="#1b1714" stroke-width="4" stroke-dasharray="1 1.8" opacity=".7"/>
+<path d="M111 136 C116 139 124 139 129 136 M110 148 C116 151 124 151 130 148 M111 160 C116 163 124 163 129 160" stroke="#f2c94c" stroke-width="1.6" fill="none" opacity=".7"/>
+<ellipse cx="120" cy="110" rx="14" ry="17" fill="#1b1714" opacity=".85"/>
+<ellipse cx="120" cy="110" rx="16" ry="19" fill="none" stroke="#1b1714" stroke-width="5" stroke-dasharray="1 1.6" opacity=".6"/>
+<path d="M112 104 C116 98 124 98 128 104 C124 102 116 102 112 104 Z" fill="#f2c94c" opacity=".8"/>
+<ellipse cx="120" cy="88" rx="11" ry="9" fill="#1b1714"/>
+</g>
+<ellipse cx="113" cy="88" rx="4.5" ry="5.5" fill="#3a2a5a"/><ellipse cx="127" cy="88" rx="4.5" ry="5.5" fill="#3a2a5a"/>
+<circle cx="112" cy="86" r="1.6" fill="#fbf6ea"/><circle cx="126" cy="86" r="1.6" fill="#fbf6ea"/>
+<g transform="translate(207 205) rotate(-4)" filter="url(#ik-mm-ink)"><rect width="22" height="22" rx="1.5" fill="#b8322a" opacity=".92"/><path d="M5 7 Q11 3 17 8 M6 12 C9 10 13 15 17 12 M5 17 L10 15 L13 18 L17 16" stroke="#efe6d2" stroke-width="1.8" fill="none"/></g>
+</svg>

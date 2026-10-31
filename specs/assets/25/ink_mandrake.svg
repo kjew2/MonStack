@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<linearGradient id="ik-md-bg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#efe6d2"/><stop offset="1" stop-color="#e2d5b8"/></linearGradient>
+<filter id="ik-md-fib" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.7 0.05" numOctaves="2" seed="12"/><feColorMatrix values="0 0 0 0 0.36 0 0 0 0 0.29 0 0 0 0 0.18 0 0 0 0.28 -0.09"/></filter>
+<filter id="ik-md-ink" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="6" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="ik-md-dry" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.7" numOctaves="2" seed="17" result="n"/><feColorMatrix in="n" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3 0 0 0 2.3" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>
+<filter id="ik-md-blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+<linearGradient id="ik-md-root" x1="0" y1="0" x2="1" y2="0.3"><stop offset="0" stop-color="#e8c08a"/><stop offset=".55" stop-color="#d9a86c"/><stop offset="1" stop-color="#8a6036"/></linearGradient>
+</defs>
+<rect width="240" height="240" fill="url(#ik-md-bg)"/>
+<rect width="240" height="240" filter="url(#ik-md-fib)"/>
+<path d="M0 150 C24 130 42 100 66 110 C86 118 98 86 122 94 C146 102 160 128 186 116 C206 107 224 120 240 126 L240 240 L0 240 Z" fill="#1b1714" opacity=".07" filter="url(#ik-md-blur)"/>
+<!-- soil -->
+<g filter="url(#ik-md-ink)">
+<path d="M40 204 C70 196 170 194 204 204 C170 212 70 214 40 204 Z" fill="#1b1714" opacity=".35"/>
+<path d="M30 206 C60 200 90 199 110 201 C84 204 56 206 30 206 Z" fill="#1b1714" filter="url(#ik-md-dry)"/>
+<g fill="#1b1714" opacity=".6"><circle cx="66" cy="196" r="2.5"/><circle cx="176" cy="194" r="2"/><circle cx="186" cy="200" r="1.4"/><circle cx="56" cy="200" r="1.4"/><circle cx="160" cy="190" r="1.2"/></g>
+</g>
+<!-- scream qi -->
+<g fill="#1b1714" filter="url(#ik-md-ink)">
+<path d="M48 92 C36 104 34 124 42 140 C42 124 46 108 54 96 Z" opacity=".7"/>
+<path d="M32 82 C16 100 14 130 28 152 C26 130 28 104 38 86 Z" opacity=".45"/>
+<path d="M192 92 C204 104 206 124 198 140 C198 124 194 108 186 96 Z" opacity=".7"/>
+<path d="M208 82 C224 100 226 130 212 152 C214 130 212 104 202 86 Z" opacity=".45"/>
+</g>
+<!-- leaves -->
+<g filter="url(#ik-md-ink)">
+<path d="M118 66 C100 58 82 54 70 38 C90 34 112 44 120 64 Z" fill="#7ccf5a" opacity=".68"/>
+<path d="M122 64 C134 44 152 30 172 32 C164 50 144 60 122 66 Z" fill="#7ccf5a" opacity=".68"/>
+<path d="M120 64 C110 46 112 26 124 12 C134 28 130 50 120 64 Z" fill="#5aa53e" opacity=".72"/>
+<path d="M70 38 C90 34 112 44 120 64 C108 50 92 42 70 38 Z" fill="#1b1714" opacity=".35"/>
+<g fill="#1b1714">
+<path d="M120 66 C108 52 92 44 72 39 C94 40 110 50 122 64 Z"/>
+<path d="M120 66 C134 48 150 38 170 33 C150 42 136 52 122 68 Z"/>
+<path d="M121 66 C116 48 118 30 124 14 C122 32 122 48 123 64 Z"/>
+<path d="M68 38 C84 56 104 62 118 66 C100 64 80 56 68 38 Z" opacity=".8"/>
+<path d="M174 32 C164 52 146 62 124 67 C144 58 160 48 174 32 Z" opacity=".8"/>
+</g>
+</g>
+<!-- arms -->
+<g filter="url(#ik-md-ink)">
+<path d="M94 124 C80 120 66 110 60 94 C58 88 62 86 66 90 C70 102 82 112 96 116 Z" fill="url(#ik-md-root)"/>
+<path d="M146 124 C160 120 174 108 180 92 C182 86 178 84 174 88 C170 100 158 110 144 116 Z" fill="url(#ik-md-root)"/>
+<g fill="#1b1714">
+<path d="M96 126 C80 122 64 112 58 94 C66 108 80 116 96 120 Z"/>
+<path d="M144 126 C160 122 176 110 182 92 C174 106 160 114 144 120 Z"/>
+<path d="M60 92 C56 84 52 80 46 80 C52 84 56 88 58 94 Z"/>
+<path d="M62 92 C62 84 64 78 68 74 C66 80 66 86 64 92 Z"/>
+<path d="M180 90 C184 82 188 78 194 78 C188 82 184 86 182 92 Z"/>
+<path d="M178 90 C178 82 176 76 172 72 C174 78 174 84 176 90 Z"/>
+</g>
+</g>
+<!-- body -->
+<g filter="url(#ik-md-ink)">
+<path d="M120 64 C146 64 160 84 156 108 C154 124 146 134 144 146 C142 160 148 176 154 196 C148 201 140 197 138 190 C134 176 128 168 122 168 C116 168 110 178 104 192 C100 200 92 201 86 196 C96 178 100 160 98 146 C96 134 86 124 84 108 C80 84 94 64 120 64 Z" fill="url(#ik-md-root)"/>
+<path d="M140 70 C156 80 160 100 154 120 C150 132 144 140 144 152 C144 166 148 180 152 194 C144 182 138 164 138 150 C138 134 148 122 148 104 C148 90 146 78 140 70 Z" fill="#1b1714" opacity=".28"/>
+<g fill="#1b1714">
+<path d="M98 72 C84 84 80 104 86 122 C90 132 96 140 98 150 C94 136 86 126 86 108 C86 94 90 82 98 72 Z"/>
+<path d="M146 70 C160 84 162 104 154 124 C150 134 144 142 146 156 C148 168 152 180 156 196 C148 184 142 168 141 152 C141 138 150 126 152 110 C154 94 152 80 146 70 Z"/>
+<path d="M100 150 C100 170 94 186 86 196 C90 198 96 198 100 196 C98 192 104 176 102 150 Z" opacity=".9"/>
+<path d="M120 168 C112 168 106 180 102 194 C108 180 114 172 122 170 Z"/>
+<path d="M90 64 C100 60 112 60 120 63 C110 62 98 62 90 64 Z" opacity=".8"/>
+</g>
+<g fill="#1b1714" opacity=".55">
+<path d="M104 138 C112 136 120 136 126 138 C118 138 112 138 104 140 Z"/>
+<path d="M112 152 C120 150 128 150 134 152 C126 152 120 152 112 154 Z"/>
+<path d="M134 128 C140 126 146 126 150 128 C144 128 140 128 134 130 Z"/>
+<path d="M94 176 C90 182 84 184 78 184 C84 182 88 180 92 174 Z"/>
+<path d="M150 182 C156 186 162 186 166 184 C160 188 154 188 148 184 Z"/>
+</g>
+</g>
+<!-- face -->
+<g fill="#1b1714" filter="url(#ik-md-ink)">
+<path d="M96 84 C102 82 108 84 114 90 C106 88 100 88 96 84 Z"/>
+<path d="M146 84 C140 82 134 84 128 90 C136 88 142 88 146 84 Z"/>
+<path d="M100 94 C102 90 108 90 110 94 C108 98 102 98 100 94 Z"/>
+<path d="M132 94 C134 90 140 90 142 94 C140 98 134 98 132 94 Z"/>
+<path d="M108 112 C106 102 112 98 121 98 C130 98 136 102 134 112 C132 124 126 130 121 130 C115 130 110 124 108 112 Z"/>
+</g>
+<path d="M114 122 C116 116 126 116 128 122 C126 127 116 127 114 122 Z" fill="#b8322a" opacity=".8"/>
+<ellipse cx="98" cy="104" rx="6" ry="3" fill="#b8322a" opacity=".22"/>
+<ellipse cx="144" cy="104" rx="6" ry="3" fill="#b8322a" opacity=".22"/>
+<path d="M100 72 C106 66 114 66 118 68 C110 70 104 72 100 78 Z" fill="#fbf6ea" opacity=".6"/>
+<g transform="translate(207 205) rotate(-4)" filter="url(#ik-md-ink)"><rect width="22" height="22" rx="1.5" fill="#b8322a" opacity=".92"/><path d="M5 7 Q11 3 17 8 M6 12 C9 10 13 15 17 12 M5 17 L10 15 L13 18 L17 16" stroke="#efe6d2" stroke-width="1.8" fill="none"/></g>
+</svg>

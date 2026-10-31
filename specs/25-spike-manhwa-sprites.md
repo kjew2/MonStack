@@ -2,7 +2,7 @@
 
 Status: **spike report (agent, 2026-10-31).** Research only; nothing here is agreed design until kj answers section 6. kj asked for a spike on creature sprites in the style of widely known manhwa (Korean webtoons): (1) is it feasible, (2) which styles are the most popular, (3) a panel comparing some of our creatures in those styles.
 
-The panel is the comparison artifact linked in the merge report. Its 20 concept drawings are kept in `specs/assets/25/` (hand-written SVG, one file per style and species), so they survive without the artifact.
+The panel is the artifact https://claude.ai/artifact/6kuv4A2UWBV6sM6UVmizpo. Its 20 concept drawings are kept in `specs/assets/25/` (hand-written SVG, one file per style and species), so they survive without the artifact.
 
 ## 1. Where the art is today
 
@@ -18,7 +18,7 @@ The panel is the comparison artifact linked in the merge report. Its 20 concept 
 |---|---|---|---|
 | **A. AI image generation** (FLUX, SDXL, or a hosted model such as GPT-image or Imagen; a style LoRA or reference images to keep one look across creatures) | Can reach the manhwa look closely. Keeping the same creature recognisable across its base and two apex forms needs a reference image or a LoRA per species, plus a manual pick from several tries. | Cents per image; a day or two for 15 looks including cleanup (transparent background, crop, size). | Base-model licences differ (FLUX.1 [dev] is non-commercial; FLUX.1 [schnell], paid APIs and SDXL allow commercial use). Prompting with a living artist's name, or a LoRA trained on one artist's pages, is legally and ethically risky: describe the style instead. Steam has asked for a disclosure of AI content since January 2024, narrowed in January 2026 to content players see; a mobile store listing may raise the same question. |
 | **B. Commissioned artist** | Best consistency and full ownership; an artist can match a style family without copying anyone. | Weeks; a few hundred dollars per finished illustration is a common range, so a few thousand for 15 looks. | Schedule and budget. |
-| **C. Hand-written vector (SVG) by an agent** (what this spike did) | Works today with no keys or assets. Reaches the flat and ink styles convincingly, the dark-action style passably; the painterly style only roughly. Below real manhwa painting. | Hours; tiny files that scale to any size. | Quality ceiling; each new look is another hand drawing. |
+| **C. Hand-written vector (SVG) by an agent** (what this spike did) | Works today with no keys or assets. Reaches the flat, ink and dark-action styles convincingly; the painterly style only as clean vector shading, without real brushwork. Below real manhwa painting. | Hours; tiny files that scale to any size. | Quality ceiling; each new look is another hand drawing. |
 | **D. Hybrid** | AI or agent concepts, then an artist (or an agent with the chosen concept as reference) produces the final set. | Between A and B. | Same licence questions as A for the concept step. |
 
 What blocks route A **in this environment**: the cloud session has no image model and no image-API key, so an agent cannot generate raster art here. It would need an API key added to the environment's secrets (and the host on the network allow list), or kj generating images and committing them.

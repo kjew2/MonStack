@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<radialGradient id="hn-mm-bg" cx="50%" cy="50%" r="72%"><stop offset="0" stop-color="#1d1a40"/><stop offset=".45" stop-color="#0a0f1e"/><stop offset="1" stop-color="#02040a"/></radialGradient>
+<linearGradient id="hn-mm-st" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9b6bff" stop-opacity="0"/><stop offset=".55" stop-color="#9b6bff" stop-opacity=".45"/><stop offset="1" stop-color="#9b6bff" stop-opacity="0"/></linearGradient>
+<filter id="hn-mm-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="hn-mm-tint"><feColorMatrix type="matrix" values="0 0 0 0 .61  0 0 0 0 .42  0 0 0 0 1  0 0 0 1 0"/></filter>
+<filter id="hn-mm-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>
+<clipPath id="hn-mm-shard"><path d="M0 0H240V60L150 96L240 120V240H140L110 150L60 240H0V130L90 112L0 80Z"/></clipPath>
+<g id="hn-mm-wl">
+<path d="M116 112C100 80 70 46 26 40C18 62 24 92 44 112C62 128 92 128 116 120Z" fill="#f2c94c" stroke="#05070d" stroke-width="2" stroke-linejoin="round"/>
+<path d="M116 112C104 92 86 72 60 60L50 92C66 108 92 116 116 120Z" fill="#c8932c"/>
+<path d="M26 40C40 42 52 48 62 56L36 70C26 62 24 52 26 40Z" fill="#fff3c4"/>
+<path d="M116 128C96 132 70 148 60 182C76 196 104 182 118 140Z" fill="#f2c94c" stroke="#05070d" stroke-width="2" stroke-linejoin="round"/>
+<path d="M118 140C108 160 92 176 72 186C88 190 108 172 118 140Z" fill="#c8932c"/>
+<g fill="none" stroke="#7a5418" stroke-width="1" opacity=".8"><path d="M114 114C92 96 66 74 38 50"/><path d="M112 118C90 112 66 108 46 108"/><path d="M114 134C100 150 86 164 70 180"/></g>
+<circle cx="62" cy="84" r="17" fill="#ff9f43" stroke="#05070d" stroke-width="1.6"/>
+<circle cx="62" cy="84" r="12" fill="#3a2a5a"/>
+<path d="M62 72A12 12 0 0 1 74 84L62 84Z" fill="#5b4588"/>
+<circle cx="62" cy="84" r="5" fill="#ff9f43"/>
+<circle cx="62" cy="84" r="2.4" fill="#05070d"/>
+<circle cx="88" cy="160" r="9" fill="#ff9f43" stroke="#05070d" stroke-width="1.4"/>
+<circle cx="88" cy="160" r="6" fill="#3a2a5a"/>
+<circle cx="88" cy="160" r="2" fill="#ffe0b0"/>
+<circle cx="96" cy="108" r="5" fill="#3a2a5a" stroke="#ff9f43" stroke-width="1.6"/>
+</g>
+</defs>
+<rect width="240" height="240" fill="url(#hn-mm-bg)"/>
+<g fill="url(#hn-mm-st)"><rect x="18" y="0" width="1.5" height="170"/><rect x="44" y="40" width="1" height="150"/><rect x="198" y="0" width="2" height="150"/><rect x="224" y="20" width="1" height="170"/><rect x="160" y="0" width="1" height="60"/><rect x="80" y="0" width="1" height="50"/></g>
+<g fill="#fff3c4"><circle cx="30" cy="190" r="1.2"/><circle cx="60" cy="210" r=".9"/><circle cx="200" cy="200" r="1.1"/><circle cx="214" cy="90" r=".8"/><circle cx="174" cy="22" r="1"/><circle cx="54" cy="24" r=".8"/><circle cx="120" cy="226" r="1"/><circle cx="186" cy="176" r=".7"/></g>
+<ellipse cx="120" cy="118" rx="80" ry="64" fill="#f2c94c" opacity=".14" filter="url(#hn-mm-soft)"/>
+<!-- shattered after-image -->
+<g opacity=".38" clip-path="url(#hn-mm-shard)" transform="translate(14 -8)">
+<g filter="url(#hn-mm-tint)"><use href="#hn-mm-wl"/><use href="#hn-mm-wl" transform="matrix(-1 0 0 1 240 0)"/></g>
+</g>
+<g opacity=".3" transform="translate(14 -8)"><path d="M150 96L240 60M150 96L240 120M110 150L140 240M90 112L0 130" stroke="#c9b3ff" stroke-width=".8"/></g>
+<!-- wings -->
+<use href="#hn-mm-wl"/>
+<g transform="matrix(-1 0 0 1 240 0)"><use href="#hn-mm-wl"/></g>
+<!-- darker right side overlay for light from left -->
+<path d="M124 112C140 80 170 46 214 40C222 62 216 92 196 112C178 128 148 128 124 120Z" fill="#7a5418" opacity=".28"/>
+<!-- glowing eyespot pupils -->
+<g fill="#ffcf7a" filter="url(#hn-mm-glow)"><circle cx="62" cy="84" r="2"/><circle cx="178" cy="84" r="2"/></g>
+<!-- body -->
+<path d="M120 100C130 104 134 120 132 140C130 160 126 176 120 186C114 176 110 160 108 140C106 120 110 104 120 100Z" fill="#fff3c4" stroke="#05070d" stroke-width="2"/>
+<path d="M120 100C130 104 134 120 132 140C130 160 126 176 120 186Z" fill="#d9b874"/>
+<g stroke="#05070d" stroke-width="1.2" fill="none"><path d="M110 142Q120 146 130 142"/><path d="M111 156Q120 160 129 156"/><path d="M114 170Q120 173 126 170"/></g>
+<!-- fur ruff -->
+<path d="M104 106L100 100L108 100L106 92L114 96L116 88L120 94L124 88L126 96L134 92L132 100L140 100L136 106L140 112L130 114L126 120L120 116L114 120L110 114L100 112Z" fill="#fff3c4" stroke="#05070d" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M120 94L124 88L126 96L134 92L132 100L140 100L136 106L140 112L130 114L126 120L120 116Z" fill="#e6cc8c"/>
+<!-- head -->
+<path d="M108 86C108 74 132 74 132 86C132 96 126 102 120 102C114 102 108 96 108 86Z" fill="#fff3c4" stroke="#05070d" stroke-width="2"/>
+<path d="M120 76C128 76 132 80 132 86C132 96 126 102 120 102Z" fill="#e6cc8c"/>
+<!-- antennae -->
+<g fill="none" stroke="#05070d" stroke-width="1.8" stroke-linecap="round"><path d="M114 78C106 60 94 46 78 40"/><path d="M126 78C134 60 146 46 162 40"/></g>
+<g fill="none" stroke="#fff3c4" stroke-width="1.2" stroke-linecap="round"><path d="M108 66L100 66M104 58L96 60M98 52L90 54M92 47L84 50M110 72L104 74"/><path d="M106 64L110 58M100 56L104 50M94 50L96 44M86 45L88 40"/><path d="M132 66L140 66M136 58L144 60M142 52L150 54M148 47L156 50M130 72L136 74"/><path d="M134 64L130 58M140 56L136 50M146 50L144 44M154 45L152 40"/></g>
+<!-- eyes -->
+<g filter="url(#hn-mm-glow)"><path d="M110 86L118 84L117 92L111 91Z" fill="#ff9f43"/><path d="M130 86L122 84L123 92L129 91Z" fill="#ff9f43"/></g>
+<g fill="#fff"><circle cx="114" cy="87" r="1"/><circle cx="126" cy="87" r="1"/></g>
+<!-- rim light -->
+<g fill="none" stroke="#3ab8ff" stroke-linecap="round" filter="url(#hn-mm-glow)"><path d="M26 42C20 64 26 92 44 110" stroke-width="2.2"/><path d="M60 180C66 160 80 144 96 136" stroke-width="1.8"/><path d="M109 84C109 78 113 76 117 76" stroke-width="1.6"/></g>
+<!-- sparkles -->
+<g fill="#fff3c4" filter="url(#hn-mm-glow)"><path d="M196 166L198 172L204 174L198 176L196 182L194 176L188 174L194 172Z"/><path d="M40 156L41 160L45 161L41 162L40 166L39 162L35 161L39 160Z"/></g>
+</svg>

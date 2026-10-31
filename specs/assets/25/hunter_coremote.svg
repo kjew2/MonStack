@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<radialGradient id="hn-cm-bg" cx="50%" cy="58%" r="72%"><stop offset="0" stop-color="#16244a"/><stop offset=".45" stop-color="#0a0f1e"/><stop offset="1" stop-color="#02040a"/></radialGradient>
+<linearGradient id="hn-cm-st" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ab8ff" stop-opacity="0"/><stop offset=".55" stop-color="#3ab8ff" stop-opacity=".45"/><stop offset="1" stop-color="#3ab8ff" stop-opacity="0"/></linearGradient>
+<radialGradient id="hn-cm-nuc" cx="45%" cy="40%" r="60%"><stop offset="0" stop-color="#fff4c2"/><stop offset=".45" stop-color="#f2c14e"/><stop offset="1" stop-color="#c98a1a"/></radialGradient>
+<filter id="hn-cm-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="hn-cm-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+<clipPath id="hn-cm-clip"><path d="M40 180C34 132 64 70 120 58C176 70 206 132 200 180C178 192 62 192 40 180Z"/></clipPath>
+</defs>
+<rect width="240" height="240" fill="url(#hn-cm-bg)"/>
+<g fill="url(#hn-cm-st)">
+<rect x="22" y="0" width="1.5" height="170"/><rect x="48" y="30" width="1" height="140"/><rect x="78" y="0" width="2" height="110"/><rect x="168" y="10" width="1" height="150"/><rect x="194" y="0" width="2" height="130"/><rect x="216" y="40" width="1" height="160"/><rect x="134" y="0" width="1" height="70"/>
+</g>
+<g fill="#7fd0ff"><circle cx="30" cy="60" r="1"/><circle cx="62" cy="34" r=".8"/><circle cx="205" cy="70" r="1.2"/><circle cx="182" cy="40" r=".7"/><circle cx="214" cy="150" r=".9"/><circle cx="24" cy="140" r=".8"/><circle cx="150" cy="24" r=".7"/><circle cx="96" cy="20" r=".9"/></g>
+<!-- system ring on floor -->
+<ellipse cx="120" cy="190" rx="96" ry="18" fill="#3ab8ff" opacity=".18" filter="url(#hn-cm-soft)"/>
+<ellipse cx="120" cy="190" rx="88" ry="15" fill="none" stroke="#3ab8ff" stroke-width="1.2" opacity=".7"/>
+<ellipse cx="120" cy="190" rx="74" ry="11" fill="none" stroke="#3ab8ff" stroke-width=".7" stroke-dasharray="6 4" opacity=".5"/>
+<!-- aura wisps -->
+<g fill="none" stroke="#3ab8ff" stroke-linecap="round" opacity=".55" filter="url(#hn-cm-glow)">
+<path d="M58 120C46 96 58 78 50 56" stroke-width="1.5"/><path d="M186 126C200 100 186 82 196 60" stroke-width="1.5"/><path d="M120 50C112 36 126 26 118 12" stroke-width="1.2"/>
+</g>
+<!-- body base translucent -->
+<path d="M40 180C34 132 64 70 120 58C176 70 206 132 200 180C178 192 62 192 40 180Z" fill="#1d5f9e" opacity=".82"/>
+<g clip-path="url(#hn-cm-clip)">
+<!-- light step -->
+<path d="M30 60L120 50L104 70C80 84 66 112 64 150L30 170Z" fill="#4fb3e8" opacity=".75"/>
+<!-- shadow step, hard edge -->
+<path d="M210 60L210 200L30 200L40 176C90 184 150 176 172 150C188 128 186 96 160 70Z" fill="#0e3563" opacity=".85"/>
+<path d="M210 120L210 200L60 200C120 196 170 182 188 150Z" fill="#071d3a" opacity=".9"/>
+<!-- inner gel bubbles -->
+<circle cx="84" cy="150" r="4" fill="#4fb3e8" opacity=".6"/><circle cx="160" cy="112" r="3" fill="#4fb3e8" opacity=".5"/><circle cx="150" cy="168" r="2.5" fill="#4fb3e8" opacity=".5"/>
+</g>
+<!-- nucleus -->
+<circle cx="126" cy="152" r="24" fill="#f2c14e" opacity=".4" filter="url(#hn-cm-soft)"/>
+<circle cx="126" cy="152" r="15" fill="url(#hn-cm-nuc)" stroke="#05070d" stroke-width="1.6" filter="url(#hn-cm-glow)"/>
+<path d="M126 137A15 15 0 0 1 141 152L126 152Z" fill="#fff4c2" opacity=".85"/>
+<path d="M141 152A15 15 0 0 1 126 167A15 15 0 0 1 113 160L126 152Z" fill="#b37714" opacity=".8"/>
+<path d="M126 143L129 150L136 152L129 154L126 161L123 154L116 152L123 150Z" fill="#ffffff"/>
+<g stroke="#f2c14e" stroke-width="1" opacity=".6"><path d="M126 130V122"/><path d="M146 146L152 143"/><path d="M106 160L100 164"/></g>
+<!-- outline -->
+<path d="M40 180C34 132 64 70 120 58C176 70 206 132 200 180C178 192 62 192 40 180Z" fill="none" stroke="#05070d" stroke-width="2.4"/>
+<!-- rim light left -->
+<path d="M47 172C40 128 68 70 118 59" fill="none" stroke="#3ab8ff" stroke-width="3" stroke-linecap="round" filter="url(#hn-cm-glow)"/>
+<path d="M50 168C46 136 62 98 86 78" fill="none" stroke="#dff5ff" stroke-width="1.2" stroke-linecap="round"/>
+<!-- gloss highlight -->
+<path d="M72 112C76 92 92 76 108 72L100 82C90 88 82 100 78 114Z" fill="#ffffff" opacity=".9"/>
+<path d="M112 70L120 68L116 76Z" fill="#ffffff" opacity=".85"/>
+<!-- eyes: sharp almond, glowing -->
+<path d="M82 104C90 96 104 96 112 106C104 112 90 114 82 104Z" fill="#05070d"/>
+<path d="M158 104C150 96 136 96 128 106C136 112 150 114 158 104Z" fill="#05070d"/>
+<g filter="url(#hn-cm-glow)">
+<path d="M86 104C93 99 102 99 108 105C101 109 92 110 86 104Z" fill="#9fe4ff"/>
+<path d="M154 104C147 99 138 99 132 105C139 109 148 110 154 104Z" fill="#9fe4ff"/>
+</g>
+<path d="M98 101L101 104L98 108L95 104Z" fill="#ffffff"/>
+<path d="M142 101L145 104L142 108L139 104Z" fill="#ffffff"/>
+<path d="M80 98L106 102" stroke="#05070d" stroke-width="2" stroke-linecap="round"/>
+<path d="M160 98L134 102" stroke="#05070d" stroke-width="2" stroke-linecap="round"/>
+<!-- small fanged mouth -->
+<path d="M112 122Q120 126 128 122" fill="none" stroke="#05070d" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M114 123L116 128L118 124Z M122 124L124 128L126 123Z" fill="#e8fbff"/>
+<!-- drip feet -->
+<path d="M70 186C72 194 78 194 80 187" fill="#123e6c" stroke="#05070d" stroke-width="1.6"/>
+<path d="M160 187C163 196 170 195 171 186" fill="#0e3563" stroke="#05070d" stroke-width="1.6"/>
+</svg>

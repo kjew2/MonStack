@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<pattern id="fl-mm-dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6" fill="#c9b6e8"/></pattern>
+<g id="fl-mm-wing" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<path d="M112 120 C110 150 92 196 60 202 C36 206 28 186 40 168 C54 148 84 132 112 120 Z" fill="#f2c94c"/>
+<path d="M112 120 C110 150 92 196 60 202 C76 186 92 160 104 128 Z" fill="#d9a22e" stroke="none"/>
+<path d="M114 106 C96 60 60 28 30 38 C10 46 14 82 28 104 C44 126 82 128 114 114 Z" fill="#f2c94c"/>
+<path d="M104 104 C88 74 64 52 42 54 C30 58 30 80 40 96 C54 114 80 116 104 110 Z" fill="#fdf1cf" stroke="none"/>
+<path d="M114 114 C82 128 44 126 28 104 C46 114 82 116 112 104 Z" fill="#d9a22e" stroke="none"/>
+<circle cx="64" cy="82" r="19" fill="#ff9f43"/>
+<circle cx="64" cy="82" r="11" fill="#3a2a5a" stroke="none"/>
+<circle cx="60" cy="78" r="3.6" fill="#fff" stroke="none"/>
+<circle cx="66" cy="172" r="11" fill="#ff9f43" stroke-width="3.5"/>
+<circle cx="66" cy="172" r="6" fill="#3a2a5a" stroke="none"/>
+<circle cx="64" cy="170" r="2" fill="#fff" stroke="none"/>
+<path d="M36 52 Q30 60 32 70" fill="none" stroke-width="3"/>
+</g>
+</defs>
+<rect width="240" height="240" fill="#f6efe0"/>
+<circle cx="120" cy="118" r="100" fill="url(#fl-mm-dots)"/>
+<g stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".55">
+<path d="M120 4 v12"/><path d="M200 26 l-8 8"/><path d="M40 26 l8 8"/><path d="M224 130 h-10"/><path d="M16 130 h10"/>
+</g>
+<ellipse cx="120" cy="216" rx="56" ry="7" fill="#1a1a1a" opacity=".15"/>
+<use href="#fl-mm-wing"/>
+<use href="#fl-mm-wing" transform="translate(240 0) scale(-1 1)"/>
+<g stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<!-- antennae -->
+<g fill="none" stroke-width="3.5">
+<path d="M112 58 C104 40 92 30 80 26"/><path d="M128 58 C136 40 148 30 160 26"/>
+</g>
+<g fill="none" stroke-width="2.5">
+<path d="M104 46 l-8 2 M98 38 l-8 0 M90 32 l-6 -3 M103 44 l2 -8 M95 36 l1 -7 M87 30 l0 -6"/>
+<path d="M136 46 l8 2 M142 38 l8 0 M150 32 l6 -3 M137 44 l-2 -8 M145 36 l-1 -7 M153 30 l0 -6"/>
+</g>
+<!-- fuzzy body -->
+<path d="M120 92 C132 92 136 102 134 110 C140 116 138 126 132 130 C138 138 134 150 128 152 C132 162 126 176 120 180 C114 176 108 162 112 152 C106 150 102 138 108 130 C102 126 100 116 106 110 C104 102 108 92 120 92 Z" fill="#fdf1cf"/>
+<path d="M120 180 C126 176 132 162 128 152 C134 150 138 138 132 130 C138 126 140 116 134 110 C136 120 130 126 126 130 C130 140 126 150 122 152 C126 164 122 174 120 180 Z" fill="#e8c98a" stroke="none"/>
+<path d="M110 132 Q120 137 130 132 M112 152 Q120 157 128 152" fill="none" stroke-width="3"/>
+<!-- head -->
+<path d="M120 58 C136 58 146 70 144 82 C142 94 132 100 120 100 C108 100 98 94 96 82 C94 70 104 58 120 58 Z" fill="#fdf1cf"/>
+<path d="M144 82 C142 94 132 100 120 100 C130 94 138 84 138 70 C142 72 145 76 144 82 Z" fill="#e8c98a" stroke="none"/>
+<ellipse cx="108" cy="80" rx="7" ry="9" fill="#1a1a1a"/>
+<ellipse cx="132" cy="80" rx="7" ry="9" fill="#1a1a1a"/>
+<circle cx="110" cy="76" r="2.8" fill="#fff" stroke="none"/>
+<circle cx="134" cy="76" r="2.8" fill="#fff" stroke="none"/>
+<path d="M116 92 Q120 95 124 92" fill="none" stroke-width="3"/>
+</g>
+<!-- sparkles -->
+<g fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round">
+<path d="M200 140 l3 -8 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 Z"/>
+<path d="M28 140 l2 -6 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 Z"/>
+</g>
+</svg>

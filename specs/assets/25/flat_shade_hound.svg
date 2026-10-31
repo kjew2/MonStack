@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<pattern id="fl-sh-dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6" fill="#c7b6ea"/></pattern>
+<path id="fl-sh-fleg" d="M86 150 C92 168 92 184 88 196 C96 196 102 200 100 206 L70 206 C66 200 72 196 78 196 C80 182 78 168 74 156 Z"/>
+<path id="fl-sh-bleg" d="M150 146 C162 158 166 178 160 196 C168 196 172 202 170 206 L142 206 C140 200 144 196 150 196 C152 182 146 170 138 160 Z"/>
+</defs>
+<rect width="240" height="240" fill="#f6efe0"/>
+<circle cx="120" cy="118" r="98" fill="url(#fl-sh-dots)"/>
+<path d="M0 206 H240" stroke="#1a1a1a" stroke-width="2" opacity=".25"/>
+<ellipse cx="122" cy="208" rx="88" ry="8" fill="#4b3570" opacity=".35"/>
+<g stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<!-- smoke tail -->
+<path d="M180 126 C200 116 210 96 204 76 C216 82 224 100 218 118 C226 116 230 108 230 100 C238 118 228 140 206 146 C196 148 186 144 180 138 Z" fill="#4b3570"/>
+<path d="M204 76 C216 82 224 100 218 118 C212 108 212 92 204 76 Z" fill="#a98ae0" stroke="none"/>
+<circle cx="214" cy="58" r="6" fill="#4b3570" stroke-width="3"/>
+<circle cx="228" cy="80" r="4" fill="#4b3570" stroke-width="2.5"/>
+<circle cx="202" cy="46" r="3" fill="#4b3570" stroke-width="2"/>
+<!-- far legs (shade tone) -->
+<use href="#fl-sh-fleg" transform="translate(16 -2)" fill="#4b3570"/>
+<use href="#fl-sh-bleg" transform="translate(14 -2)" fill="#4b3570"/>
+<!-- body with smoky back tufts -->
+<path d="M64 128 C66 112 78 104 92 102 L98 92 L108 101 L118 88 L126 100 L138 90 L144 103 L156 95 L160 107 C180 110 194 124 190 142 C186 158 168 164 144 164 L100 164 C80 162 66 148 64 128 Z" fill="#1c1426"/>
+<path d="M72 118 C80 108 90 106 98 106 L108 104 L118 96 L126 104 L138 96 L144 106 L158 102 L162 110 C176 114 186 124 188 136 C176 124 150 116 120 116 C100 116 84 116 72 118 Z" fill="#4b3570" stroke="none"/>
+<path d="M78 156 C90 162 120 164 150 162" fill="none" stroke="#a98ae0" stroke-width="3"/>
+<!-- near legs -->
+<use href="#fl-sh-fleg" fill="#1c1426"/>
+<use href="#fl-sh-bleg" fill="#1c1426"/>
+<path d="M84 160 C88 172 88 184 86 192 M150 158 C158 170 158 182 156 192" fill="none" stroke="#a98ae0" stroke-width="2.5"/>
+<!-- smoke curls at paws -->
+<g fill="#4b3570" stroke-width="2.5">
+<path d="M66 206 C58 206 56 198 62 196 C64 200 66 202 70 202 Z"/>
+<path d="M174 206 C182 206 184 198 178 196 C176 200 174 202 170 202 Z"/>
+</g>
+<!-- ears -->
+<path d="M62 64 C58 48 60 30 70 18 C80 32 84 48 80 64 Z" fill="#1c1426"/>
+<path d="M80 66 C86 50 96 38 108 34 C108 50 102 64 92 74 Z" fill="#1c1426"/>
+<path d="M68 56 C68 44 70 34 70 28 M88 62 C92 54 98 46 102 42" fill="none" stroke="#a98ae0" stroke-width="2.5"/>
+<!-- mouth gap -->
+<path d="M14 102 L44 108 C52 114 60 122 66 128 L44 114 L18 110 Z" fill="#6b2457"/>
+<!-- lower jaw -->
+<path d="M18 110 L44 113 C52 118 60 124 68 128 C60 140 38 140 26 130 C18 124 16 116 18 110 Z" fill="#1c1426"/>
+<path d="M27 112 L30 104 L33 112 Z" fill="#fff" stroke-width="2.5"/>
+<!-- upper head -->
+<path d="M10 96 C6 88 12 82 22 80 L36 76 C42 62 58 54 76 58 C94 62 104 82 98 104 C94 118 82 128 68 128 C58 120 50 112 44 108 L14 102 C10 101 9 99 10 96 Z" fill="#1c1426"/>
+<path d="M76 58 C94 62 104 82 98 104 C95 114 88 122 78 126 C88 112 92 92 84 74 C82 68 78 62 76 58 Z" fill="#4b3570" stroke="none"/>
+<path d="M38 72 C46 62 58 58 70 60" fill="none" stroke="#a98ae0" stroke-width="2.5"/>
+<!-- fangs -->
+<path d="M19 103 L23 113 L27 104 Z M34 105.5 L38 115 L42 107 Z" fill="#fff" stroke-width="2.5"/>
+<!-- nose -->
+<ellipse cx="12" cy="90" rx="5" ry="4.5" fill="#1a1a1a"/>
+<!-- eye trail -->
+<path d="M76 84 C92 82 106 86 118 80" fill="none" stroke="#c6ff4d" stroke-width="4"/>
+<!-- eye -->
+<path d="M50 86 C54 76 70 74 76 84 C70 94 56 94 50 86 Z" fill="#c6ff4d" stroke-width="3"/>
+<ellipse cx="64" cy="85" rx="2.4" ry="5" fill="#1a1a1a" stroke="none"/>
+<circle cx="59" cy="82" r="2" fill="#fff" stroke="none"/>
+<path d="M44 76 L76 72" fill="none" stroke-width="4"/>
+</g>
+<!-- floating shadow motes -->
+<g fill="#4b3570" stroke="#1a1a1a" stroke-width="2"><circle cx="140" cy="70" r="4"/><circle cx="160" cy="80" r="2.6"/><circle cx="124" cy="62" r="2.4"/></g>
+</svg>
