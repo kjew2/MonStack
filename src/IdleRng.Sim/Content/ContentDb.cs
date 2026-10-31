@@ -235,7 +235,7 @@ namespace IdleRng.Sim.Content
                 DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"),
                 InjurySkipCycles = I("INJURY_SKIP_CYCLES"), InjuryRecoverEnergy = D("INJURY_RECOVER_ENERGY"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
-                SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
+                SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"), TreeRefund = D("TREE_REFUND"),
                 MonEchoPower = D("MON_ECHO_POWER"), MonTideRegen = D("MON_TIDE_REGEN"), MonTideShieldCap = D("MON_TIDE_SHIELD_CAP"),
                 MonDrainFrac = D("MON_DRAIN_FRAC"), MonFirePierce = D("MON_FIRE_PIERCE"), MonDoubleTurns = I("MON_DOUBLE_TURNS"),
                 ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
@@ -305,7 +305,7 @@ namespace IdleRng.Sim.Content
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.InjurySkipCycles >= 0
                   && k.InjuryRecoverEnergy >= 0 && k.InjuryRecoverEnergy <= k.RunEnergyMax && k.StatMax > 0 && k.FightEvery > 0
-                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)
+                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.TreeRefund) && In01(k.MonEchoPower)
                   && In01(k.MonTideRegen) && In01(k.MonTideShieldCap) && In01(k.MonDrainFrac) && In01(k.MonFirePierce) && k.MonDoubleTurns >= 1
                   && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.VendorOffers > 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
                   && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))

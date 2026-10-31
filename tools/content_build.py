@@ -54,7 +54,8 @@ REQUIRED_CONSTANTS = {
     "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "INJURY_SKIP_CYCLES": "int",
     "INJURY_RECOVER_ENERGY": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
     # skill trees (specs/15)
-    "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "MON_ECHO_POWER": "double",
+    "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "TREE_REFUND": "double",
+    "MON_ECHO_POWER": "double",
     "MON_TIDE_REGEN": "double", "MON_TIDE_SHIELD_CAP": "double", "MON_DRAIN_FRAC": "double", "MON_FIRE_PIERCE": "double",
     "MON_DOUBLE_TURNS": "int",
     # account and meta-progression (specs/18)
@@ -99,6 +100,7 @@ MON_RANGES = {
     "STAT_MAX": ("> 0", lambda v: v > 0), "FIGHT_EVERY": ("> 0", lambda v: v > 0),
     "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
+    "TREE_REFUND": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_TIDE_REGEN": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TIDE_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DRAIN_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FIRE_PIERCE": ("[0, 1]", lambda v: 0 <= v <= 1),

@@ -54,6 +54,7 @@ namespace IdleRng.Sim.Content
         public int SpPerWin { get; internal set; }               // SP_PER_WIN
         public int TreeSlots { get; internal set; }              // TREE_SLOTS
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
+        public double TreeRefund { get; internal set; }          // TREE_REFUND
         public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
         public double MonTideRegen { get; internal set; }        // MON_TIDE_REGEN
         public double MonTideShieldCap { get; internal set; }    // MON_TIDE_SHIELD_CAP

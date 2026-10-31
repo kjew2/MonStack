@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Browser checks of the monster-trainer page beyond the main run (web/wasm/test/run-trainer.js), at phone width 390x844:
 // - issue #87: each main screen (pick, run, fight playback, tree draft, end, gauntlet wheel, grade, vendor, Vault) has no horizontal scroll
-//   and no page/console error; a tree draft overwrites an occupied slot (specs/12 section 5.1: its spent points are lost).
+//   and no page/console error; a tree draft overwrites an occupied slot (specs/12 section 5.1: half its spent points come back).
 // - issue #88: save, reload and resume. A run reloaded mid-way (also with a draft waiting) comes back with the same state hash and
 //   is then finished; a save whose run in progress no longer replays drops only that run, with a notice, its books returned and
 //   the original kept aside (specs/06 section 5); a damaged save is kept aside next to it and the player gets a fresh, working
@@ -81,7 +81,7 @@ const H = require('./harness.js');
   await act('fight-continue').click();
   await reloadSame('reload after a rank fight');
 
-  // ---- buy nodes in slot 1, then a book draft overwrites it: the tree changes and its spent points are lost
+  // ---- buy nodes in slot 1, then a book draft overwrites it: the tree changes and half its spent points come back
   const slot0Bought = async () => { await act('tab-trees').click(); return +(/^(\d+)\//.exec(await text('[data-id=slot-0] .num')) || [])[1]; };
   let bought0 = 0;
   for (let i = 0; i < 4 && (bought0 = await slot0Bought()) < 1; i++) {   // a few more cycles, buying every node it can afford
@@ -111,8 +111,11 @@ const H = require('./harness.js');
   const slot0After = await text('[data-id=slot-0] b');
   check(slot0After === 'Slot 1: ' + drafted && drafted !== slot0Before, 'slot 1 now holds ' + drafted + ' instead of ' + slot0Before);
   check(/^0\//.test(await text('[data-id=slot-0] .num')), 'the new tree starts with no nodes bought');
-  check((await text('[data-id=sp2]')) === spBefore, 'the points spent in the overwritten tree are lost, not refunded (' + spBefore + ')');
+  const spAfter = await text('[data-id=sp2]');
+  const refunded = parseInt(spAfter, 10) - parseInt(spBefore, 10);   // half of the spent SP, rounded down: 0 for one 1-SP node
+  check(refunded >= (bought0 >= 2 ? 1 : 0), 'half the points spent in the overwritten tree come back: ' + spBefore + ' -> ' + spAfter);
   await act('tab-log').click();
+  if (refunded > 0) check((await text('[data-id=feed]')).includes('+' + refunded + ' SP refunded'), 'the log shows the refund (+' + refunded + ' SP)');
   check((await text('[data-id=feed]')).includes('Took ' + drafted + ' into slot 1 (replaced ' + slot0Before + ')'), 'the log says which tree was replaced');
   await act('tab-train').click();
   await reloadSame('reload after the overwrite');

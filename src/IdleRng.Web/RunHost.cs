@@ -46,7 +46,7 @@ namespace IdleRng.Web
             w.Key("consts").Obj()
                 .P("runCycles", k.RunCycles).P("runAp", k.RunAp).P("energyMax", k.RunEnergyMax).P("fightEvery", k.FightEvery)
                 .P("statMax", k.StatMax).P("treeSlots", k.TreeSlots).P("drillEnergyCost", k.DrillEnergyCost).P("restEnergy", k.RestEnergy)
-                .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("superP", k.DrillSuperP)
+                .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("treeRefund", k.TreeRefund).P("superP", k.DrillSuperP)
                 .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap).P("vendorOffers", k.VendorOffers)
                 .P("injurySkipCycles", k.InjurySkipCycles).P("injuryRecoverEnergy", k.InjuryRecoverEnergy)
                 .EndObj();
@@ -616,7 +616,7 @@ namespace IdleRng.Web
                     case "take":
                     {
                         var r = TrainingRun.TakeTree(_db, s, a.Int(0), a.Int(1));
-                        w.P("ok", true).P("kind", "take").P("placed", r.Placed);
+                        w.P("ok", true).P("kind", "take").P("placed", r.Placed).P("refunded", r.Refunded);
                         w.Key("removed").Arr();
                         foreach (var id in r.Removed) w.Str(id);
                         w.EndArr();

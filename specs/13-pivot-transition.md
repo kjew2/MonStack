@@ -121,7 +121,7 @@ MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were m
 
 ### T3 - Skill trees
 
-**Done** (`specs/15`). kj (2026-10-30): SP per cycle plus a bonus per rank fight win; trees are lines of nodes with about 75% filler and the chase trait last; points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; chase trees' capstones are much stronger and more unique.
+**Done** (`specs/15`). kj (2026-10-30): SP per cycle plus a bonus per rank fight win; trees are lines of nodes with about 75% filler and the chase trait last; points in an overwritten tree are lost (amended 2026-10-31: half come back, `specs/15` section 4) and a chase tree whose prerequisite is overwritten locks again; chase trees' capstones are much stronger and more unique.
 
 - Content `2.5`: `monster_skills`, `trees`, `tree_nodes`, `chase_conditions`, `skill_books`, species native trees, SP and slot constants. Placeholder content: 3 species x 2 native trees, 10 generic trees, 1 book tree, 2 chase trees.
 - Run commands `SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; milestone drafts on a `draft` stream; chase unlock and re-lock; run tallies from rank fights; the monster's fight kit from its bought nodes.

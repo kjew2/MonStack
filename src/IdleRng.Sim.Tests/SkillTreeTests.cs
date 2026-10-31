@@ -21,6 +21,9 @@ namespace IdleRng.Sim.Tests
 
         static int SlotOf(RunState s, string tree) => Array.FindIndex(s.Slots, x => x != null && x.TreeId == tree);
 
+        /// <summary>SP spent in the tree in <paramref name="slot"/>: the cost of its bought nodes.</summary>
+        static int Spent(RunState s, int slot) => Db.Trees[s.Slots[slot].TreeId].Nodes.Take(s.Slots[slot].Bought).Sum(n => n.Cost);
+
         static void Max(RunState s, int slot)
         {
             int n = Db.Trees[s.Slots[slot].TreeId].Nodes.Count;
@@ -179,7 +182,7 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void Overwrite_LosesPoints_RemovesFlatStats_AndGrowth()
+        public void Overwrite_RefundsPartOfThePoints_RemovesFlatStats_AndGrowth()
         {
             var s = Drake();
             var nodes = Db.Trees[s.Slots[0].TreeId].Nodes;
@@ -197,7 +200,11 @@ namespace IdleRng.Sim.Tests
             Assert.That(s.Slots[0].Bought, Is.EqualTo(0));
             Assert.That(s.Stats.Get(stat), Is.EqualTo(baseStat));
             Assert.That(TrainingRun.Growth(Db, s, nodes[0].Stat), Is.EqualTo(baseGrowth).Within(1e-12));
-            Assert.That(s.Sp, Is.EqualTo(10 - nodes[0].Cost - nodes[1].Cost), "points are lost, not refunded");
+            int spent = nodes[0].Cost + nodes[1].Cost;
+            int refund = (int)Math.Floor(spent * Db.Constants.TreeRefund);
+            Assert.That(Db.Constants.TreeRefund, Is.EqualTo(0.5), "kj: half comes back");
+            Assert.That(r.Refunded, Is.EqualTo(refund));
+            Assert.That(s.Sp, Is.EqualTo(10 - spent + refund), "TREE_REFUND of the spent points comes back, rounded down");
         }
 
         [Test]
@@ -240,8 +247,12 @@ namespace IdleRng.Sim.Tests
             Assert.That(TrainingRun.MonsterFighter(Db, s).Rules, Does.Contain(RuleModifiers.CounterMitigated), "the chase capstone");
 
             Offer(s, "vital_core");
+            int spentArmor = Spent(s, SlotOf(s, "heavy_armor")), spentWill = Spent(s, 2), sp0 = s.Sp;
             var r = TrainingRun.TakeTree(Db, s, 0, SlotOf(s, "heavy_armor"));
             Assert.That(r.Removed, Is.EquivalentTo(new[] { "heavy_armor", "unbreakable_will" }));
+            int expected = (int)Math.Floor(spentArmor * Db.Constants.TreeRefund) + (int)Math.Floor(spentWill * Db.Constants.TreeRefund);
+            Assert.That(r.Refunded, Is.EqualTo(expected), "the chase tree that locked again is refunded like the overwritten tree, each rounded down");
+            Assert.That(s.Sp, Is.EqualTo(sp0 + expected));
             Assert.That(SlotOf(s, "unbreakable_will"), Is.EqualTo(-1));
             Assert.That(s.Slots[2], Is.Null);
             Assert.That(s.ChaseOffered, Is.Empty, "it can be offered again once its conditions hold again");

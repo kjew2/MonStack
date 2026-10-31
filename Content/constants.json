@@ -197,6 +197,11 @@
       "value": 3
     },
     {
+      "key": "TREE_REFUND",
+      "type": "double",
+      "value": 0.5
+    },
+    {
       "key": "MON_ECHO_POWER",
       "type": "double",
       "value": 0.5

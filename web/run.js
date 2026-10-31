@@ -622,12 +622,13 @@
     return [h('small', { text: name(x.actor) }), h('b', { text: title, 'data-id': 'fight-event', ...(key ? towerTip(key) : null) }), h('span', { text: towerEventText(x, name(x.actor)) })];
   }
 
+  const refundShare = () => { const p = C.consts.treeRefund; return p === 0.5 ? 'half' : Math.round(p * 100) + '%'; };
   function offerModal(modal, s) {
     const o = s.offers[0];
     const why = o.source === 'milestone' ? up(o.stat) + ' reached ' + o.threshold + ': choose a tree'
       : o.source === 'book' ? 'Skill book: take its tree' : 'A chase tree unlocked';
     modal.append(h('h2', { text: why, 'data-id': 'offer-title' }),
-      h('p', { class: 'small muted', text: 'Put it in a slot. An occupied slot is overwritten: its points and flat boosts are lost, and a chase tree that depended on it locks again.' +
+      h('p', { class: 'small muted', text: 'Put it in a slot. An occupied slot is overwritten: ' + refundShare() + ' of the skill points spent in it come back, its flat boosts are lost, and a chase tree that depended on it locks again (refunded the same way).' +
         (s.offers.length > 1 ? ' (' + (s.offers.length - 1) + ' more waiting)' : '') }));
     o.trees.forEach((id, choice) => {
       const t = C.trees[id];
@@ -1191,7 +1192,7 @@
     const before = run.state.slots[slot];
     const r = run.cmd('take', choice, slot);
     if (r.ok) {
-      log('Took ' + treeName(r.placed) + ' into slot ' + (slot + 1) + (before ? ' (replaced ' + treeName(before.tree) + ')' : ''));
+      log('Took ' + treeName(r.placed) + ' into slot ' + (slot + 1) + (before ? ' (replaced ' + treeName(before.tree) + ')' : '') + (r.refunded ? ' · +' + r.refunded + ' SP refunded' : ''));
       r.removed.forEach((id) => { if (!before || id !== before.tree) toast(treeName(id) + ' left its slot'); });
     }
     after(r);

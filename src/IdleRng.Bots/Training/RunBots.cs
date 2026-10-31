@@ -232,7 +232,7 @@ namespace IdleRng.Bots.Training
                         var offer = s.Offers[0];
                         var r = TrainingRun.TakeTree(c, s, cmd.Choice, cmd.Slot);
                         line = string.Format(Inv, "c{0,2} take  {1} ({2} offer: {3}) -> slot {4}{5}", cycle, r.Placed, offer.Source,
-                            string.Join(" ", offer.Trees), cmd.Slot, r.Removed.Count > 0 ? " removed " + string.Join(" ", r.Removed) : "");
+                            string.Join(" ", offer.Trees), cmd.Slot, r.Removed.Count > 0 ? " removed " + string.Join(" ", r.Removed) + " refund " + r.Refunded : "");
                         break;
                     }
                     case RunCommandKind.DiscardOffer:
