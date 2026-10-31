@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // End-to-end browser check of the monster-trainer page (web/index.html) on the C# (wasm) engine at 390x844: picks a species,
 // opens a stat and an ability tooltip, plays a whole run through the real buttons (drill, rest, rank fights, tree drafts, buying
-// nodes), watches two rank fights play back (current ability, live HP, skill cooldowns, the remembered 1x/2x/Skip speed), seals
-// it, checks the grade
+// nodes), watches two rank fights play back (current ability, live HP, skill cooldown tiles, the remembered 1x/2x/Skip speed),
+// checks the skill point gain indicators (HUD float-up, fight badge, Trees tab count, log lines), seals it, checks the grade
 // screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
@@ -149,7 +149,21 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await page.locator('[data-id=fight-title]').isVisible(), 'Skip jumps to the result');
   check((await speedSaved()) === 'skip', 'Skip is remembered');
   check((await page.locator('[data-id^="unit-"] .bar').count()) === 2, 'the result shows both units\' final HP');
+  // ---- skill point gains (issue #86): the fight starts the next cycle, so it pays SP_PER_CYCLE (and SP_PER_WIN if won)
+  const badge = await text('[data-id=fight-sp]');
+  check(/^\+\d+ SP/.test(badge) && /skill points: new cycle/.test(badge), 'the fight result shows its SP reward as a badge: ' + badge.replace(/\s+/g, ' '));
   await act('fight-continue').click();
+  const gain = await page.evaluate(() => [...document.querySelectorAll('[data-id=sp-gain]')].map((e) => e.textContent));
+  check(gain.some((g) => /^\+\d+ SP \(new cycle\)$/.test(g)), 'closing it floats the gain up by the HUD SP count: ' + gain.join(', '));
+  check(await page.locator('[data-id=sp].pulse').count() === 1, 'and the SP count pulses');
+  await page.waitForTimeout(400);
+  await shot('04-sp-gain');
+  const spNow = +(/^(\d+) SP/.exec(await text('[data-id=sp]')) || [])[1];
+  check(spNow > 0 && (await text('[data-act=tab-trees]')).replace(/\s+/g, ' ') === 'Trees · ' + spNow, 'the Trees tab shows the unspent SP: ' + (await text('[data-act=tab-trees]')));
+  await act('tab-log').click();
+  const feed = await text('[data-id=feed]');
+  check(/Cycle \d+: \+\d+ SP \(new cycle\)/.test(feed), 'the log has a line per SP gain');   // the session log restarts on the reload above
+  await act('tab-train').click();
 
   // ---- a fight with a bought skill: its row shows which ability is used and its cooldown
   await playUntil('skill');
@@ -159,14 +173,23 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the monster\'s skills are listed during the fight');
   const used = await (await page.waitForFunction(() => {
     const u = document.querySelector('.skill.used');
-    return u && { name: u.querySelector('.nm').textContent, st: u.querySelector('.st').textContent, title: u.title, now: document.querySelector('[data-id=fight-now] b').textContent };
+    return u && { id: u.dataset.id, name: u.querySelector('.nm').textContent, st: u.querySelector('.st').textContent, title: u.title, fill: u.querySelector('.cdfill').style.height,
+      now: document.querySelector('[data-id=fight-now] b').textContent };
   }, null, { timeout: 15000 })).jsonValue();
   check(used.name === used.now, 'the skill in use is highlighted and named in the banner: ' + used.now);
   const cdLen = +((/cooldown (\d+)/.exec(used.title) || [])[1]);
-  check(used.st === (cdLen ? cdLen + (cdLen === 1 ? ' turn' : ' turns') : 'Ready'), 'a used skill shows its full cooldown (' + cdLen + '): ' + used.st);
+  check(used.st === (cdLen ? String(cdLen) : ''), 'a used skill\'s tile shows its full cooldown (' + cdLen + '): ' + used.st);
+  check(used.fill === (cdLen ? '100%' : '0%'), 'its grey overlay covers the whole tile: ' + used.fill);
   await shot('04b-fight-skill');
+  if (cdLen > 1) {
+    const fill2 = await (await page.waitForFunction((id) => {
+      const u = document.querySelector('[data-id="' + id + '"]'), hgt = parseFloat(u.querySelector('.cdfill').style.height);
+      return hgt < 100 && hgt > 0 && { hgt: hgt, st: u.querySelector('.st').textContent };
+    }, used.id, { timeout: 15000 })).jsonValue();
+    check(+fill2.st > 0 && +fill2.st < cdLen && Math.abs(fill2.hgt - (fill2.st / cdLen) * 100) < 0.01, 'as the cooldown runs down the overlay recedes (' + fill2.st + ' left, ' + fill2.hgt.toFixed(0) + '% high)');
+  }
   await act('fight-continue').waitFor({ timeout: 60000 });                 // plays to the end at 2x
-  check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the result keeps the skill rows with their final cooldowns');
+  check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the result keeps the skill tiles with their final cooldowns');
   await shot('04c-fight-result');
   await act('fight-continue').click();
 

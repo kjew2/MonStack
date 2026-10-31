@@ -24,6 +24,8 @@
     sealed: null,            // Vault entry of the finished run
     payout: 0,               // shards that run paid
     climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf }
+    spGains: [],             // skill point gains not yet shown by the HUD (issue #86): [{n, why, cycle}], shown once no modal covers it
+    fightGains: [],          // the gains the shown fight brought, for its result badge
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -68,6 +70,7 @@
     const main = $('main'), tabs = $('tabs'), modal = $('modal');
     const prevScroll = main.scrollTop;
     main.replaceChildren();
+    if (ui.view !== 'run') $('floats').replaceChildren();
     if (ui.view === 'home') { tabs.hidden = true; modal.hidden = true; renderHome(main); return; }
     const s = run.state;
     if (ui.view === 'grade') { tabs.hidden = true; modal.hidden = true; renderGrade(main); return; }
@@ -80,6 +83,25 @@
     renderTabs(tabs, s);
     renderModal(modal, s);
     main.scrollTop = prevScroll;
+    if (modal.hidden) showSpGains(); else $('floats').replaceChildren();
+  }
+
+  // ---- skill point gains (issue #86): a float-up next to the HUD's SP count and a pulse on it. Gains made behind a modal (a fight,
+  // a draft) wait until it closes. The floats live in a layer outside #main so a re-render does not cut them short.
+  function showSpGains() {
+    const gains = ui.spGains, at = document.querySelector('#main [data-id=sp]');
+    if (!gains.length || !at) return;
+    ui.spGains = [];
+    at.classList.add('pulse');
+    const layer = $('floats'), app = $('app').getBoundingClientRect(), mainTop = $('main').getBoundingClientRect().top;
+    const r = at.getBoundingClientRect();
+    gains.forEach((g, i) => {
+      const el = h('div', { class: 'spgain', 'data-id': 'sp-gain', text: '+' + g.n + ' SP (' + g.why + ')',
+        style: 'left:' + Math.max(8, r.left - app.left) + 'px;top:' + (Math.max(r.top, mainTop) - app.top + 18 + i * 22) + 'px;animation-delay:' + i * 0.15 + 's' });
+      while (layer.children.length >= 4) layer.firstChild.remove();
+      layer.append(el);
+      setTimeout(() => el.remove(), 2200);
+    });
   }
 
   function renderTabs(tabs, s) {
@@ -88,7 +110,11 @@
     [['train', 'Train'], ['trees', 'Trees'], ['log', 'Log']].forEach(([id, label]) => {
       const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(ui.tab === id), 'data-act': 'tab-' + id, text: label,
         onclick: () => { ui.tab = id; render(); } });
-      if (id === 'trees' && canBuy) b.append(h('span', { class: 'dot' }));
+      // Unspent skill points on the Trees tab ("Trees · 4"), bright when they can buy a node (issue #86).
+      if (id === 'trees' && s.sp > 0) {
+        b.append(h('span', { class: 'tabsp num' + (canBuy ? ' gems' : ''), 'data-id': 'tab-sp', text: ' · ' + s.sp }));
+        b.setAttribute('aria-label', 'Trees, ' + s.sp + ' unspent skill points');
+      }
       tabs.append(b);
     });
   }
@@ -106,7 +132,7 @@
         ]),
         h('div', { class: 'hud-line small muted' }, [
           h('span', { text: 'Cycle ' + s.cycle + '/' + k.runCycles, 'data-id': 'cycle' }),
-          h('span', { text: s.sp + ' SP', class: s.sp ? 'gems' : '', 'data-id': 'sp' }),
+          h('span', { text: s.sp + ' SP', class: 'spcount' + (s.sp ? ' gems' : ''), 'data-id': 'sp' }),
           h('span', { text: s.fightsWon + '/' + s.fightsFought + ' fights won' }),
         ]),
       ]),
@@ -296,7 +322,8 @@
     const you = speciesDef(s.species).name, foe = rank(f.rankBefore).name;
     modal.append(
       h('h2', { class: f.won ? 'ok' : 'bad', text: f.won ? 'Victory! Promoted to ' + rank(f.rankAfter).name : f.outcome === 'TimedOut' ? 'Time ran out: no promotion' : 'Defeat: no promotion', 'data-id': 'fight-title' }),
-      f.won ? h('p', { class: 'gems', text: '+' + f.sp + ' skill points' }) : h('p', { class: 'muted', text: 'Train more and try again next cycle.' }),
+      f.won ? null : h('p', { class: 'muted', text: 'Train more and try again next cycle.' }),
+      spBadge(ui.fightGains),
       fightUnits(f, you, foe, null).root,
       h('h3', { text: 'Battle log' }),
     );
@@ -306,6 +333,19 @@
     if (lines.length > shown.length) modal.append(h('button', { class: 'btn small', type: 'button', text: 'Show all ' + f.actionCount + ' actions', onclick: () => { ui.showAll = true; render(); } }));
     if (f.actionCount > f.actions.length) modal.append(h('p', { class: 'small muted', text: 'Log capped at ' + f.actions.length + ' of ' + f.actionCount + ' actions.' }));
     modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'fight-continue', text: 'Continue', onclick: () => { ui.fight = null; ui.showAll = false; render(); } }));
+  }
+
+  // The fight's skill point reward as a badge (issue #86): the total, and a line per source (rank win, the next cycle).
+  function spBadge(gains) {
+    if (!gains.length) return null;
+    const total = gains.reduce((a, g) => a + g.n, 0);
+    return h('div', { class: 'spbadge', 'data-id': 'fight-sp' }, [
+      h('b', { class: 'num', text: '+' + total + ' SP' }),
+      h('div', null, [
+        ...gains.map((g) => h('div', { text: '+' + g.n + ' skill points: ' + g.why })),
+        h('div', { class: 'small muted', text: 'Spend them on the Trees tab.' }),
+      ]),
+    ]);
   }
 
   // ------------------------------------------------------------ fight playback (issue #79): presentation only
@@ -368,12 +408,22 @@
     });
   }
 
-  // The unit panels: name, HP bar, and one row per active skill with its cooldown. Returns the element and refs for repainting.
+  // A skill tile's label: the initials of a multi-word name ("Flame Breath" -> FB), else its first two letters.
+  function skillAbbr(name) {
+    const words = String(name).split(/[\s-]+/).filter(Boolean);
+    return (words.length > 1 ? words.slice(0, 3).map((w) => w[0]).join('') : (words[0] || '?').slice(0, 2)).toUpperCase();
+  }
+
+  // The unit panels: name, HP bar, and a square tile per active skill (issue #85) whose grey overlay shows the cooldown left and
+  // recedes downward as it runs out. Returns the element and refs for repainting.
   function fightUnits(f, you, foe, upto) {
     const refs = [];
     const root = h('div', { class: 'units' }, f.units.map((u) => {
       const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + u.side + '-' + si }, [
-        h('div', { class: 'cdfill' }), h('span', { class: 'nm', text: sk.name }), h('span', { class: 'st num' }),
+        h('div', { class: 'tile', style: '--hue:' + (hash(sk.name) % 360) }, [
+          h('div', { class: 'cdfill' }), h('span', { class: 'ab', 'aria-hidden': 'true', text: skillAbbr(sk.name) }), h('span', { class: 'st num', 'aria-hidden': 'true' }),
+        ]),
+        h('span', { class: 'nm', text: sk.name }),
       ])));
       const hpBar = bar(0, 1, '', '');
       refs.push({ u: u, hpBar: hpBar, chips: chips });
@@ -396,8 +446,8 @@
         const sk = r.u.skills[si], left = now[k].cd[si] || 0;
         c.classList.toggle('ready', left === 0);
         c.classList.toggle('used', !!x && x.actor === r.u.id && x.si === si);
-        c.querySelector('.cdfill').style.width = (sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0) + '%';
-        c.querySelector('.st').textContent = left ? left + (left === 1 ? ' turn' : ' turns') : 'Ready';
+        c.querySelector('.cdfill').style.height = (sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0) + '%';
+        c.querySelector('.st').textContent = left ? String(left) : '';
         c.title = sk.name + ': ' + (left ? 'ready in ' + left + ' of its actions' : 'ready') + ', cooldown ' + sk.cooldown;
       });
     });
@@ -639,8 +689,21 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
+  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.fightGains = []; }
   const log = (line) => { ui.feed.unshift(line); };
+
+  // Skill points a command brought (issue #86), read from the state before and after it: a won fight's r.sp is the rank win, the
+  // rest arrived with a new cycle (SP_PER_CYCLE). Each gain is logged and queued for the HUD; returns them.
+  function spGained(sp0, cycle0, r) {
+    const s = run.state, total = s.sp - sp0;
+    if (!r.ok || total <= 0) return [];
+    const win = Math.min(total, r.won ? r.sp || 0 : 0);
+    const gains = [];
+    if (win > 0) gains.push({ n: win, why: 'rank win', cycle: cycle0 });
+    if (total > win) gains.push({ n: total - win, why: s.cycle > cycle0 ? 'new cycle' : 'gained', cycle: s.cycle });
+    gains.forEach((g) => { log('Cycle ' + g.cycle + ': +' + g.n + ' SP (' + g.why + ')'); ui.spGains.push(g); });
+    return gains;
+  }
 
   function startRun() {
     if (!ui.pick) return;
@@ -650,6 +713,7 @@
     if (!r.ok) { toast(r.reason); render(); return; }
     ui.book = false;
     ui.view = 'run';
+    if (run.state.sp > 0) log('Cycle 1: +' + run.state.sp + ' SP (run start)');
     render();
   }
 
@@ -662,26 +726,31 @@
   }
 
   function drill(stat) {
+    const sp0 = run.state.sp, cycle0 = run.state.cycle;
     const r = run.cmd('drill', stat);
     if (r.ok) {
       ui.last = r; ui.flash = stat;
       log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : ''));
       milestones(r);
       if (r.injured) toast('Injured! The run ends.');
+      spGained(sp0, cycle0, r);
     }
     after(r);
   }
   function rest() {
+    const sp0 = run.state.sp, cycle0 = run.state.cycle;
     const r = run.cmd('rest');
-    if (r.ok) { ui.last = r; log('Rest +' + num(r.restored) + ' energy'); }
+    if (r.ok) { ui.last = r; log('Rest +' + num(r.restored) + ' energy'); spGained(sp0, cycle0, r); }
     after(r);
   }
   function fight() {
+    const sp0 = run.state.sp, cycle0 = run.state.cycle;
     const r = run.cmd('fight');
     if (r.ok) {
       ui.fight = r; ui.last = null; ui.showAll = false;
       startPlayback();
       log('Rank fight vs ' + rank(r.rankBefore).name + ': ' + (r.won ? 'won → ' + rank(r.rankAfter).name + ' (+' + r.sp + ' SP)' : 'lost'));
+      ui.fightGains = spGained(sp0, cycle0, r);
     }
     after(r);
   }
