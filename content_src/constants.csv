@@ -43,8 +43,8 @@ SP_PER_WIN,int,2,skill points for each rank fight win. Placeholder
 TREE_SLOTS,int,4,tree slots per monster: 2 native + 2 empty at the start (kj)
 DRAFT_SIZE,int,3,most trees offered by one Awakening (the milestone tree offer). Placeholder
 TREE_REFUND,double,0.5,share of the SP spent in a tree that comes back when it leaves its slot (overwritten or a chase tree locking again; kj 2026-10-31: half); rounded down
-ROLL_OWN_CHANCE,double,0.7,rolled Awakening trees (specs/15 section 4.1): chance a filler node is on the tree's own stat; else a random other trained stat. Placeholder
-ROLL_GROWTH_OWN_MIN,double,0.2,rolled tree: a growth node on the tree's own stat adds between MIN and MAX growth (kj 2026-10-31: big; fixed trees gave 0.1). Placeholder
+ROLL_OWN_CHANCE,double,0.7,unused since content 5.3 (kj 2026-10-31: rolled trees keep their premade node stats; specs/15 section 4.1). Kept so the id is not removed (E090)
+ROLL_GROWTH_OWN_MIN,double,0.2,rolled Awakening trees (specs/15 section 4.1): a growth node on the tree's own stat adds between MIN and MAX growth (kj 2026-10-31: big; the content amount was 0.1). Placeholder
 ROLL_GROWTH_OWN_MAX,double,0.35,see ROLL_GROWTH_OWN_MIN. Placeholder
 ROLL_GROWTH_OFF_MIN,double,0.05,rolled tree: a growth node on another stat adds between MIN and MAX growth. Placeholder
 ROLL_GROWTH_OFF_MAX,double,0.15,see ROLL_GROWTH_OFF_MIN. Placeholder

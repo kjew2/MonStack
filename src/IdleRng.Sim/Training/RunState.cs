@@ -175,16 +175,16 @@ namespace IdleRng.Sim.Training
     }
 
     /// <summary>
-    /// A rolled Awakening tree (kj, 2026-10-31, issue #121; specs/15 section 4.1): a generic tree's skill, trigger and rule nodes
-    /// and costs stay as in content; each filler node's stat and amount, and a growth bonus its capstone adds to the tree's own
-    /// stat, are rolled when the tree is offered. Never changed once rolled.
+    /// A rolled Awakening tree (kj, 2026-10-31, issue #121; specs/15 section 4.1): a premade generic tree whose nodes, stats and
+    /// costs stay as in content; each filler node's amount, and a growth bonus its capstone adds to the tree's own stat, are
+    /// rolled when the tree is offered. Never changed once rolled.
     /// </summary>
     public sealed class TreeRoll
     {
-        /// <summary>The tree's own stat: its offer_stat, or a rolled trained stat for an any-stat tree.</summary>
+        /// <summary>The tree's own stat: its offer_stat, or for an any-stat tree the stat of its first filler node.</summary>
         public string Stat { get; set; }
 
-        /// <summary>Per node index: a filler node's rolled stat; null for a skill, trigger or rule node.</summary>
+        /// <summary>Per node index: a filler node's stat (its content stat); null for a skill, trigger or rule node.</summary>
         public string[] NodeStats { get; set; }
 
         /// <summary>Per node index: a filler node's rolled amount (growth, or whole flat points); 0 for the others.</summary>

@@ -610,26 +610,24 @@ namespace IdleRng.Sim.Training
             s.Mods.LegacyDrafts ? new List<TreeRoll>() : trees.ConvertAll(id => RollTree(c, s.Draft, c.Trees[id]));
 
         /// <summary>
-        /// Roll a generic tree (specs/15 section 4.1). Its own stat is its offer_stat, or for an any-stat tree one trained stat
-        /// drawn uniformly. Each filler node draws three numbers: whether it is on the own stat (ROLL_OWN_CHANCE), which other
-        /// trained stat it is on otherwise (uniform), and its amount, uniform in the own or other range of its kind (growth
-        /// rounded to 0.01, flat points to whole points). Then the capstone growth, uniform in ROLL_CAP_GROWTH. Skill, trigger
-        /// and rule nodes draw nothing.
+        /// Roll a premade generic tree (kj, 2026-10-31, issue #121; specs/15 section 4.1): its nodes and their stats stay as in
+        /// content, only the numbers are rolled. Its own stat is its offer_stat, or for an any-stat tree the stat of its first
+        /// filler node. Each filler node draws one number: its amount, uniform in the own range of its kind when the node is on
+        /// the own stat, else the other range (growth rounded to 0.01, flat points to whole points). Then the capstone growth on
+        /// the own stat, uniform in ROLL_CAP_GROWTH. Skill, trigger and rule nodes draw nothing.
         /// </summary>
         public static TreeRoll RollTree(ContentDb c, RngStream r, TreeDef t)
         {
             var k = c.Constants;
-            var trained = StatIds.Trained;
-            string own = t.OfferStat ?? trained[Pick(r, trained.Length)];
+            string own = t.OfferStat ?? t.Nodes.First(x => x.Kind == NodeKind.Growth || x.Kind == NodeKind.Stat).Stat;
             var roll = new TreeRoll { Stat = own, NodeStats = new string[t.Nodes.Count], Amounts = new double[t.Nodes.Count] };
             for (int i = 0; i < t.Nodes.Count; i++)
             {
                 var n = t.Nodes[i];
                 if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
-                bool isOwn = r.NextDouble() < k.RollOwnChance;
-                int other = Pick(r, trained.Length - 1);
+                bool isOwn = n.Stat == own;
                 double u = r.NextDouble();
-                roll.NodeStats[i] = isOwn ? own : trained.Where(x => x != own).ElementAt(other);
+                roll.NodeStats[i] = n.Stat;
                 roll.Amounts[i] = n.Kind == NodeKind.Growth
                     ? Math.Round(isOwn ? Lerp(k.RollGrowthOwnMin, k.RollGrowthOwnMax, u) : Lerp(k.RollGrowthOffMin, k.RollGrowthOffMax, u), 2, MidpointRounding.AwayFromZero)
                     : Math.Round(isOwn ? Lerp(k.RollFlatOwnMin, k.RollFlatOwnMax, u) : Lerp(k.RollFlatOffMin, k.RollFlatOffMax, u), MidpointRounding.AwayFromZero);
@@ -638,7 +636,6 @@ namespace IdleRng.Sim.Training
             return roll;
         }
 
-        static int Pick(RngStream r, int count) => Math.Min(count - 1, (int)(r.NextDouble() * count));
         static double Lerp(double lo, double hi, double u) => lo + (hi - lo) * u;
 
         /// <summary>The nodes of a slotted tree: its content nodes, with a rolled tree's rolls applied.</summary>

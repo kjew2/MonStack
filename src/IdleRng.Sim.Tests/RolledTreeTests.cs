@@ -20,33 +20,32 @@ namespace IdleRng.Sim.Tests
         static bool Filler(TreeNodeDef n) => n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat;
 
         [Test]
-        public void RollTree_StaysInItsRanges_AndKeepsSkillsAndCosts()
+        public void RollTree_KeepsThePremadeTree_AndRollsItsNumbersInRange()
         {
             var r = new RngStream("test", 42);
-            int own = 0, filler = 0;
             foreach (var t in Generic)
+            {
+                string own = t.OfferStat ?? t.Nodes.First(Filler).Stat;
+                var amounts = new HashSet<double>();
                 for (int k = 0; k < 200; k++)
                 {
                     var roll = TrainingRun.RollTree(Db, r, t);
-                    Assert.That(StatIds.Trained, Does.Contain(roll.Stat));
-                    if (t.OfferStat != null) Assert.That(roll.Stat, Is.EqualTo(t.OfferStat), "a stat's tree keeps its stat");
+                    Assert.That(roll.Stat, Is.EqualTo(own), "a stat's tree keeps its stat; an any-stat tree takes its first filler node's");
                     Assert.That(roll.CapGrowth, Is.InRange(K.RollCapGrowthMin, K.RollCapGrowthMax));
                     var nodes = TrainingRun.Nodes(Db, t.Id, roll);
                     Assert.That(nodes.Count, Is.EqualTo(t.Nodes.Count));
                     for (int i = 0; i < nodes.Count; i++)
                     {
                         var (n, c) = (nodes[i], t.Nodes[i]);
-                        Assert.That((n.Id, n.Cost, n.Kind, n.Index), Is.EqualTo((c.Id, c.Cost, c.Kind, c.Index)));
+                        Assert.That((n.Id, n.Cost, n.Kind, n.Index, n.Stat), Is.EqualTo((c.Id, c.Cost, c.Kind, c.Index, c.Stat)), "kj: premade trees, only the numbers roll");
                         if (!Filler(c))
                         {
                             Assert.That(roll.NodeStats[i], Is.Null);
                             Assert.That(n, Is.SameAs(c), "skill, trigger and rule nodes are not rolled");
                             continue;
                         }
-                        filler++;
-                        bool isOwn = n.Stat == roll.Stat;
-                        if (isOwn) own++;
-                        Assert.That(StatIds.Trained, Does.Contain(n.Stat));
+                        amounts.Add(n.Amount);
+                        bool isOwn = n.Stat == own;
                         if (n.Kind == NodeKind.Growth)
                             Assert.That(n.Amount, isOwn ? Is.InRange(K.RollGrowthOwnMin, K.RollGrowthOwnMax) : Is.InRange(K.RollGrowthOffMin, K.RollGrowthOffMax));
                         else
@@ -56,17 +55,8 @@ namespace IdleRng.Sim.Tests
                         }
                     }
                 }
-            Assert.That((double)own / filler, Is.EqualTo(K.RollOwnChance).Within(0.05), "about ROLL_OWN_CHANCE of filler nodes are on the own stat");
-        }
-
-        [Test]
-        public void AnyStatTree_RollsItsOwnStat()
-        {
-            var any = Generic.FirstOrDefault(t => t.OfferStat == null);
-            Assume.That(any, Is.Not.Null, "content has an any-stat generic tree");
-            var r = new RngStream("test", 9);
-            var stats = Enumerable.Range(0, 100).Select(_ => TrainingRun.RollTree(Db, r, any).Stat).Distinct().ToList();
-            Assert.That(stats.Count, Is.GreaterThan(4), "an any-stat tree's own stat is rolled");
+                Assert.That(amounts.Count, Is.GreaterThan(10), t.Id + ": the amounts vary from roll to roll");
+            }
         }
 
         /// <summary>Drill STR from just below the first milestone until the Awakening opens.</summary>
@@ -130,21 +120,22 @@ namespace IdleRng.Sim.Tests
         public void RolledTree_GivesItsRolledStats_AndCapstoneGrowthOnceMaxed()
         {
             var t = Db.Trees["fortune"];
-            var roll = new TreeRoll { Stat = StatIds.Luk, NodeStats = new string[t.Nodes.Count], Amounts = new double[t.Nodes.Count], CapGrowth = 0.5 };
-            for (int i = 0; i < t.Nodes.Count; i++)
-                if (Filler(t.Nodes[i])) { roll.NodeStats[i] = StatIds.Luk; roll.Amounts[i] = t.Nodes[i].Kind == NodeKind.Growth ? 0.3 : 25; }
+            var roll = TrainingRun.RollTree(Db, new RngStream("test", 3), t);
+            var nodes = TrainingRun.Nodes(Db, t.Id, roll);
+            double lukGrowth = nodes.Where(n => n.Kind == NodeKind.Growth && n.Stat == StatIds.Luk).Sum(n => n.Amount);
+            double lukFlat = nodes.Where(n => n.Kind == NodeKind.Stat && n.Stat == StatIds.Luk).Sum(n => n.Amount);
+            Assume.That(lukGrowth, Is.GreaterThan(0));
             var s = TrainingRun.Start(Db, "drake", 5);
             s.Stats.Luk = 100;   // far from a milestone, so no Awakening joins the queue
             s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { t.Id }, Rolls = { roll } });
             TrainingRun.TakeTree(Db, s, 0, 2);
             double g0 = TrainingRun.Growth(Db, s, StatIds.Luk);
-            int growth = t.Nodes.Count(n => n.Kind == NodeKind.Growth), flat = t.Nodes.Count(n => n.Kind == NodeKind.Stat);
             s.Sp = 100;
             for (int i = 0; i < t.Nodes.Count - 1; i++) TrainingRun.SpendPoint(Db, s, 2);
-            Assert.That(s.Stats.Luk, Is.EqualTo(100 + 25 * flat));
-            Assert.That(TrainingRun.Growth(Db, s, StatIds.Luk), Is.EqualTo(g0 + 0.3 * growth).Within(1e-9), "no capstone growth before the capstone");
+            Assert.That(s.Stats.Luk, Is.EqualTo(100 + lukFlat), "its rolled flat points");
+            Assert.That(TrainingRun.Growth(Db, s, StatIds.Luk), Is.EqualTo(g0 + lukGrowth).Within(1e-9), "its rolled growth, no capstone growth before the capstone");
             TrainingRun.SpendPoint(Db, s, 2);
-            Assert.That(TrainingRun.Growth(Db, s, StatIds.Luk), Is.EqualTo(g0 + 0.3 * growth + 0.5).Within(1e-9));
+            Assert.That(TrainingRun.Growth(Db, s, StatIds.Luk), Is.EqualTo(g0 + lukGrowth + roll.CapGrowth).Within(1e-9));
             // Overwritten, its flat points and growth go with it.
             s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { "vital_core" } });
             TrainingRun.TakeTree(Db, s, 0, 2);
