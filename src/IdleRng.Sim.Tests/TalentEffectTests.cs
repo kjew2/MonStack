@@ -82,6 +82,24 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void CatalogV2Talents_AreHashed_OnlyWhenUsed()
+        {
+            // a run without them hashes as before (version 6); one with any of them hashes them too (version 7)
+            string plain = TrainingRun.StateHash(Start(null));
+            Assert.That(TrainingRun.StateHash(Start(new RunModifiers())), Is.EqualTo(plain));
+            foreach (var m in new[]
+            {
+                new RunModifiers { RestEnergyBonus = 10 }, new RunModifiers { FailChanceDelta = -0.02 }, new RunModifiers { SuperChanceBonus = 0.03 },
+                new RunModifiers { ShardMult = 1.1 }, new RunModifiers { MomentumDrills = 1 }, new RunModifiers { LossSp = 1 },
+                new RunModifiers { SpecialistBonus = 0.15 }, new RunModifiers { InjuryShields = 1 }, new RunModifiers { LastCycleAp = 1 },
+                new RunModifiers { MilestoneMult = 0.9 }, new RunModifiers { DraftRerolls = 1 },
+            })
+                Assert.That(TrainingRun.StateHash(Start(m)), Is.Not.EqualTo(plain));
+            var a = TrainingRun.StateHash(Start(new RunModifiers { RestEnergyBonus = 10 }));
+            Assert.That(TrainingRun.StateHash(Start(new RunModifiers { RestEnergyBonus = 20 })), Is.Not.EqualTo(a), "the values are hashed, not only a flag");
+        }
+
+        [Test]
         public void Modifiers_ClampStackedTalents()
         {
             var a = AccountOps.New(Db, 1);

@@ -223,8 +223,8 @@ namespace IdleRng.Bots.Training
                     case RunCommandKind.Fight:
                     {
                         var r = TrainingRun.Fight(c, s);
-                        line = string.Format(Inv, "c{0,2} fight vs {1} {2} in {3} ticks -> rank {4}", cycle, c.FightRanks[r.RankBefore].Id,
-                            r.Won ? "WON" : "lost", r.Fight.Ticks, c.FightRanks[r.RankAfter].Id);
+                        line = string.Format(Inv, "c{0,2} fight vs {1} ({5}) {2} in {3} ticks -> rank {4}", cycle, c.FightRanks[r.RankBefore].Id,
+                            r.Won ? "WON" : "lost", r.Fight.Ticks, c.FightRanks[r.RankAfter].Id, r.OpponentId ?? "flat");
                         break;
                     }
                     case RunCommandKind.TakeTree:

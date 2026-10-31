@@ -11,7 +11,7 @@
   let run = null, C = null, shownView = null;   // shownView: the view the last render drew
   const ui = {
     view: 'home',            // home | run | climb | grade | vendor | tower
-    tab: 'train',            // train | trees | log
+    tab: 'train',            // train | trees | ladder | log
     pick: null,              // species chosen on the home screen
     book: false,             // test option: start with a skill book
     feed: [],                // newest first
@@ -53,6 +53,20 @@
     const cv = h('canvas', { class: 'sprite', 'aria-hidden': 'true' });
     SP.draw(cv, SP.species(key, apex) || SP.enemy(hash(key) % 100000, false, 0));   // hand-drawn species art (apex form), else a seeded sprite
     return cv;
+  }
+  // A rank opponent's sprite (a ladder step or a fight's opponent, BRIDGE.md): its own shape, the boss horns at the top rank, tinted
+  // by its element. A legacy run's flat rank (id null) keys on the rank.
+  function oppSprite(o, cls) {
+    const cv = h('canvas', { class: cls || 'sprite', 'aria-hidden': 'true' });
+    const el = C.elements[o.element];
+    SP.draw(cv, SP.monster(hash('rank-' + (o.id || o.rank)) % 100000, o.boss, el && el.color));
+    return cv;
+  }
+  // An opponent's skills as tags; tapping one opens the skill's tooltip (skillTips, from the engine).
+  function oppSkills(ids) {
+    if (!ids.length) return h('small', { class: 'muted', text: 'Basic attacks only' });
+    return h('div', { class: 'oppskills' }, ids.map((id) => h('span', { class: 'tag tipword', text: C.skillTips[id] ? C.skillTips[id].title : id,
+      'data-id': 'oppskill-' + id, ...TIP.attrs('mskill:' + id) })));
   }
   function toast(msg) {
     const t = h('div', { class: 'toast', text: msg });
@@ -97,6 +111,7 @@
     main.append(renderHud(s));
     if (ui.tab === 'train') renderTrain(main, s);
     else if (ui.tab === 'trees') renderTrees(main, s);
+    else if (ui.tab === 'ladder') renderLadder(main, s);
     else renderLog(main, s);
     renderTabs(tabs, s);
     renderModal(modal, s);
@@ -142,7 +157,7 @@
   function renderTabs(tabs, s) {
     tabs.replaceChildren();
     const canBuy = s.slots.some((t) => t && C.trees[t.tree].nodes[t.bought] && C.trees[t.tree].nodes[t.bought].cost <= s.sp);
-    [['train', 'Train'], ['trees', 'Trees'], ['log', 'Log']].forEach(([id, label]) => {
+    [['train', 'Train'], ['trees', 'Trees'], ['ladder', 'Ladder'], ['log', 'Log']].forEach(([id, label]) => {
       const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(ui.tab === id), 'data-act': 'tab-' + id, text: label,
         onclick: () => { ui.tab = id; render(); } });
       // Unspent skill points on the Trees tab ("Trees · 4"), bright when they can buy a node (issue #86).
@@ -171,7 +186,9 @@
       sprite(s.species, s.apex),
       h('div', null, [
         h('div', { class: 'hud-line' }, [
-          h('span', { text: s.name || sp.name, 'data-id': 'monster-name' }), elementTag(sp.element), h('span', { class: 'tag', text: r.name, 'data-id': 'rank' }),
+          h('span', { text: s.name || sp.name, 'data-id': 'monster-name' }), elementTag(sp.element),
+          h('button', { type: 'button', class: 'tag rankbtn', text: r.name, 'data-id': 'rank', 'aria-label': r.name + ': open the rank ladder',
+            onclick: () => { ui.tab = 'ladder'; render(); } }),
         ]),
         h('div', { class: 'hud-line small muted' }, [
           h('span', { text: 'Cycle ' + s.cycle + '/' + k.runCycles, 'data-id': 'cycle' }),
@@ -265,7 +282,8 @@
       cmp.append(h('span', TIP.attrs('stat:' + st + ':vs'), [up(st) + ' ', h('b', { class: diff >= 0 ? 'ok' : 'bad', text: (diff >= 0 ? '+' : '') + num(diff) })]));
     });
     return h('div', { class: 'card alert' }, [
-      h('div', { class: 'row' }, [sprite('rank-' + s.rank), h('div', null, [h('h2', { text: 'Rank fight: ' + opp.name }), elementTag(opp.element)])]),
+      h('div', { class: 'row' }, [oppSprite(opp), h('div', { class: 'grow' }, [
+        h('h2', { text: 'Rank ' + opp.letter + ' fight: ' + opp.name, 'data-id': 'fight-opp' }), elementTag(opp.element), oppSkills(opp.skills)])]),
       h('div', { class: 'small muted', text: 'Your stats against theirs:' }), cmp,
       speedToggle(),
       h('button', { class: 'btn warn block', type: 'button', 'data-act': 'fight', disabled: s.offers.length > 0, text: 'Fight', onclick: fight }),
@@ -335,6 +353,27 @@
     }
   }
 
+  // ---- the rank ladder (specs/14 section 5): one opponent per rank, rolled at the start of the run, all visible from the start.
+  // Top rank first, so the list reads as the climb; beaten and current come from the engine (RunState.ladder).
+  function renderLadder(main, s) {
+    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Rank ladder' }), h('span', { class: 'small muted', text: rank(s.rank).name })]),
+      h('p', { class: 'small muted', text: 'Rolled when this run started. Win a rank fight to climb to the next opponent; a loss means a rematch with the same one.' }));
+    const list = h('div', { class: 'ladder', 'data-id': 'ladder' });
+    s.ladder.slice().reverse().forEach((o) => {
+      const state = o.current ? 'current' : o.beaten ? 'beaten' : 'ahead';
+      list.append(h('div', { class: 'card rung ' + state + (o.boss ? ' boss' : ''), 'data-id': 'ladder-' + o.rank }, [
+        h('span', { class: 'letter', text: o.letter }),
+        oppSprite(o),
+        h('div', { class: 'grow' }, [
+          h('div', { class: 'row between' }, [h('b', { text: o.name }), h('span', { class: 'tag', text: o.current ? 'next fight' : o.beaten ? 'beaten ✓' : 'ahead' })]),
+          elementTag(o.element),
+          oppSkills(o.skills),
+        ]),
+      ]));
+    });
+    main.append(list);
+  }
+
   function renderLog(main, s) {
     main.append(h('h2', { text: 'Log' }));
     if (!ui.feed.length) main.append(h('p', { class: 'muted', text: 'Nothing yet this session.' }));
@@ -389,17 +428,18 @@
   }
 
   function fightModal(modal, f, s) {
-    const you = speciesDef(s.species).name, foe = rank(f.rankBefore).name;
+    const you = speciesDef(s.species).name, foe = f.opponent.name;
     modal.append(
       h('h2', { class: f.won ? 'ok' : 'bad', text: f.won ? 'Victory! Promoted to ' + rank(f.rankAfter).name : f.outcome === 'TimedOut' ? 'Time ran out: no promotion' : 'Defeat: no promotion', 'data-id': 'fight-title' }),
-      f.won ? null : h('p', { class: 'muted', text: 'Train more and try again next cycle.' }),
+      f.won ? null : h('p', { class: 'muted', text: 'Train more and try again next cycle: ' + foe + ' waits for the rematch.' }),
       spBadge(ui.fightGains),
-      fightUnits(f, you, foe, null).root,
+      fightUnits(f, you, foe, null, rankArt(f, s)).root,
       h('h3', { text: 'Battle log' }),
     );
     const lines = f.actions.map((x) => actionLine(x, foe, you));
     const shown = ui.showAll ? lines : lines.slice(0, 24);
-    modal.append(h('ul', { class: 'alog' }, shown.map((l) => h('li', { class: l.you ? 'you' : 'foe', text: l.text, ...(l.skillId ? TIP.attrs('skill:' + l.skillId) : null) }))));
+    modal.append(h('ul', { class: 'alog' }, shown.map((l) => h('li', { class: l.you ? 'you' : 'foe', text: l.text,
+      ...(l.skillId ? TIP.attrs((l.you ? 'skill:' : 'mskill:') + l.skillId) : null) }))));
     if (lines.length > shown.length) modal.append(h('button', { class: 'btn small', type: 'button', text: 'Show all ' + f.actionCount + ' actions', onclick: () => { ui.showAll = true; render(); } }));
     if (f.actionCount > f.actions.length) modal.append(h('p', { class: 'small muted', text: 'Log capped at ' + f.actions.length + ' of ' + f.actionCount + ' actions.' }));
     modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'fight-continue', text: 'Continue', onclick: () => { ui.fight = null; ui.showAll = false; render(); } }));
@@ -502,7 +542,7 @@
   // The unit panels: name, HP bar, and a square tile per active skill (issue #85) whose grey overlay shows the cooldown left and
   // recedes downward as it runs out; a tower fight adds each unit's entropy gauge and next vent. A unit's own `name` (tower
   // fights) wins over you/foe. Returns the element and refs for repainting.
-  function fightUnits(f, you, foe, upto) {
+  function fightUnits(f, you, foe, upto, art) {
     const refs = [], tower = f.entropyCap > 0;
     const root = h('div', { class: 'units' + (tower ? ' tower' : '') }, f.units.map((u, k) => {
       const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + (tower ? k : u.side) + '-' + si }, [
@@ -518,7 +558,8 @@
         entropy.row = h('div', { class: 'entrow', 'data-id': 'entropy-' + k }, [h('span', { class: 'small muted tipword', text: 'EN', ...towerTip('entropy') }), entropy.bar, entropy.vent]);
       }
       const el = h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + (tower ? k : u.side) }, [
-        h('b', { text: u.name || (u.side ? foe : you) }), hpBar, entropy ? entropy.row : null,
+        art ? h('div', { class: 'row unithead' }, [art(u), h('b', { text: u.name || (u.side ? foe : you) })]) : h('b', { text: u.name || (u.side ? foe : you) }),
+        hpBar, entropy ? entropy.row : null,
         upto === null ? h('small', { class: 'muted', text: Math.round(u.damage) + ' dmg · ' + u.crits + ' crits · ' + u.evades + ' dodges' }) : null,
         h('div', { class: 'skills', 'data-id': 'skills-' + (tower ? k : u.side) }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]),
       ]);
@@ -572,9 +613,19 @@
 
   // How a fight is labelled: the rank fight's monster and rank opponent, or a tower floor's units by their own names.
   function rankView(f, s) {
-    const you = speciesDef(s.species).name, foe = rank(f.rankBefore).name;
-    return { you: you, foe: foe, title: 'Rank fight: ' + foe, name: (id) => (id === 'monster' ? you : foe), ours: (id) => id === 'monster',
+    const you = speciesDef(s.species).name, foe = f.opponent.name;
+    return { you: you, foe: foe, title: 'Rank ' + f.opponent.letter + ' fight: ' + foe, art: rankArt(f, s),
+      name: (id) => (id === 'monster' ? you : foe), ours: (id) => id === 'monster',
       line: (x) => { const l = actionLine(x, foe, you); return { cls: l.you ? 'you' : 'foe', text: l.text }; } };
+  }
+  // The unit panels' sprites in a rank fight: the monster's and the opponent's (BRIDGE.md, fight.opponent).
+  function rankArt(f, s) {
+    return (u) => {
+      if (u.side) return oppSprite(f.opponent, 'sprite small');
+      const cv = sprite(s.species, s.apex);
+      cv.classList.add('small');
+      return cv;
+    };
   }
   function towerView(f) {
     const nameOf = {}, sideOf = {};
@@ -586,7 +637,7 @@
   // The playback view. While ui.play runs it shows the action reached; otherwise (Skip, or the tower floor once played) the end.
   function fightPlayView(modal, f, v, extra) {
     const playing = ui.play && ui.play.f === f;
-    const units = fightUnits(f, v.you, v.foe, playing ? ui.play.i : null);
+    const units = fightUnits(f, v.you, v.foe, playing ? ui.play.i : null, v.art);
     const now = h('div', { class: 'now', 'data-id': 'fight-now' });
     const progress = h('span', { class: 'small muted num', 'data-id': 'fight-progress' });
     const recent = h('ul', { class: 'alog' });
@@ -1243,7 +1294,7 @@
     if (r.ok) {
       ui.fight = r; ui.last = null; ui.showAll = false;
       startPlayback();
-      log('Rank fight vs ' + rank(r.rankBefore).name + ': ' + (r.won ? 'won → ' + rank(r.rankAfter).name + ' (+' + r.sp + ' SP)' : 'lost'));
+      log('Rank ' + r.opponent.letter + ' fight vs ' + r.opponent.name + ': ' + (r.won ? 'won → ' + rank(r.rankAfter).name + ' (+' + r.sp + ' SP)' : 'lost (rematch next time)'));
       ui.fightGains = spGained(sp0, cycle0, r);
     }
     after(r);

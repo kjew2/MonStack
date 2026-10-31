@@ -15,19 +15,30 @@ namespace IdleRng.Sim.Training
     /// </summary>
     public static class TrainingRun
     {
-        public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight", ChaseStream = "chase";
+        public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight", ChaseStream = "chase", LadderStream = "ladder";
         public const string MonsterId = "monster";
-        public const int HashVersion = 6;
-        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v6");
+
+        /// <summary>
+        /// Run hash version 7 (the talent catalog v2, specs/18 section 3; specs/14 section 7). Only a run with one of those talents
+        /// uses it: the talent fields and counters are appended after the ladder. Every other run hashes exactly as before, version
+        /// 6 (the rank ladder) or, for a legacy run with an empty Ladder, version 5, so saved runs and Vault entries keep their hashes.
+        /// </summary>
+        public const int HashVersion = 7;
+        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v7");
+        static readonly byte[] LadderHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v6");
+        static readonly byte[] LegacyHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v5");
 
         // ------------------------------------------------------------------ start
 
         /// <summary>
         /// A fresh run of <paramref name="speciesId"/>: species base stats, full start energy, cycle 1, lowest rank, the two
         /// native trees in slots 0 and 1, SP_PER_CYCLE skill points, and <paramref name="books"/> to use during the run.
-        /// <paramref name="mods"/> carries the account's talent bonuses (specs/18); null means none.
+        /// <paramref name="mods"/> carries the account's talent bonuses (specs/18); null means none. <paramref name="ladder"/>
+        /// null rolls the rank ladder from the seed (<see cref="RollLadder"/>); a saved ladder rebuilds that run (an empty one
+        /// is a legacy run: flat fight_ranks opponents); see <see cref="Replay"/>.
         /// </summary>
-        public static RunState Start(ContentDb c, string speciesId, ulong seed, IEnumerable<string> books = null, RunModifiers mods = null)
+        public static RunState Start(ContentDb c, string speciesId, ulong seed, IEnumerable<string> books = null, RunModifiers mods = null,
+                                     IReadOnlyList<string> ladder = null)
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
             if (speciesId == null || !c.Species.TryGetValue(speciesId, out var sp))
@@ -51,6 +62,7 @@ namespace IdleRng.Sim.Training
                 Draft = new RngStream(DraftStream, StreamNames.StreamSeed(seed, DraftStream)),
                 Sp = k.SpPerCycle + mods.StartSp, Slots = new TreeSlot[k.TreeSlots + mods.TreeSlotBonus],
                 ChaseAttuned = mods.ChaseChance >= 1 || new RngStream(ChaseStream, StreamNames.StreamSeed(seed, ChaseStream)).NextDouble() < mods.ChaseChance,
+                Ladder = ladder == null ? RollLadder(c, seed) : CheckLadder(c, ladder),
             };
             s.ApLeft = CycleAp(c, s);
             s.Slots[0] = new TreeSlot { TreeId = sp.NativeTree1 };
@@ -129,19 +141,21 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// The due rank fight (specs/14 section 5): the monster with its current stats and bought tree skills against the
-        /// current rank's opponent, 1v1. A win ranks up (the top rank stays) and pays SP_PER_WIN; a loss pays the Grudge Match
-        /// talent's SP (specs/18 section 3). The fight's tallies add to the
-        /// run tally. Then the next cycle starts, or the run completes. The observers are passed to BattleSim.Resolve.
+        /// current rank's opponent on the run's ladder, 1v1. A win ranks up (the top rank stays) and pays SP_PER_WIN; a loss is
+        /// a rematch with the same opponent next time and pays the Grudge Match talent's SP (specs/18 section 3). The fight's
+        /// tallies add to the run tally. Then the next cycle starts, or the run completes. The observers are passed to BattleSim.Resolve.
         /// </summary>
         public static RankFightResult Fight(ContentDb c, RunState s, Action<FightAction> onAction = null, Action<FightState> onStart = null)
         {
             RequirePhase(s, RunPhase.AwaitFight, "Fight");
-            var rank = c.FightRanks[s.Rank];
             var monster = MonsterFighter(c, s);
-            var opponent = new Fighter { Id = "rank_" + rank.Id, Element = rank.Element, Stats = rank.Stats.Clone() };
+            var opponent = OpponentFighter(c, s, s.Rank);
             var fight = BattleSim.Resolve(FightRules.FromContent(c), new[] { monster }, new[] { opponent }, FightSeed(s.Seed, s.FightsFought), onAction, onStart);
 
-            var result = new RankFightResult { RankBefore = s.Rank, Won = fight.Outcome == FightOutcome.SideAWon, Fight = fight };
+            var result = new RankFightResult
+            {
+                RankBefore = s.Rank, OpponentId = LadderEnemy(c, s, s.Rank)?.Id, Won = fight.Outcome == FightOutcome.SideAWon, Fight = fight,
+            };
             s.FightsFought++;
             AddTally(s.Tally, fight.Final.Units[0].Tally);
             if (result.Won)
@@ -292,6 +306,66 @@ namespace IdleRng.Sim.Training
                     }
                 }
             }
+            return f;
+        }
+
+        // ------------------------------------------------------------------ the rank ladder (specs/14 section 5)
+
+        /// <summary>
+        /// Roll a ladder for a run seed: for each rank in order, one draw on the run's "ladder" stream picks a pool monster by
+        /// weight (cumulative weights in CSV order; the draw times the pool's total weight). The training, draft and fight
+        /// streams are untouched. The same seed and content always give the same ladder.
+        /// </summary>
+        public static List<string> RollLadder(ContentDb c, ulong seed)
+        {
+            var rng = new RngStream(LadderStream, StreamNames.StreamSeed(seed, LadderStream));
+            var ladder = new List<string>(c.FightRanks.Count);
+            foreach (var rank in c.FightRanks)
+            {
+                double total = 0;
+                foreach (var e in rank.Pool) total += e.Weight;
+                double u = rng.NextDouble() * total;
+                var pick = rank.Pool[rank.Pool.Count - 1];   // rounding can leave u at the very top: the last one
+                foreach (var e in rank.Pool)
+                {
+                    if (u < e.Weight) { pick = e; break; }
+                    u -= e.Weight;
+                }
+                ladder.Add(pick.Id);
+            }
+            return ladder;
+        }
+
+        /// <summary>A saved ladder: empty (a legacy run), or one id per rank, each from that rank's pool. Throws otherwise.</summary>
+        static List<string> CheckLadder(ContentDb c, IReadOnlyList<string> ladder)
+        {
+            if (ladder.Count == 0) return new List<string>();
+            if (ladder.Count != c.FightRanks.Count)
+                throw new ArgumentException($"the ladder has {ladder.Count} ranks, content has {c.FightRanks.Count}", nameof(ladder));
+            for (int i = 0; i < ladder.Count; i++)
+                if (ladder[i] == null || !c.RankEnemies.TryGetValue(ladder[i], out var e) || e.RankIndex != i)
+                    throw new ArgumentException($"'{ladder[i]}' is not in the pool of rank {c.FightRanks[i].Id}", nameof(ladder));
+            return new List<string>(ladder);
+        }
+
+        /// <summary>The pool monster the run fights at rank <paramref name="rank"/>, or null in a legacy run (flat fight_ranks opponent).</summary>
+        public static RankEnemyDef LadderEnemy(ContentDb c, RunState s, int rank) =>
+            s.Ladder.Count == 0 ? null : c.RankEnemies[s.Ladder[rank]];
+
+        /// <summary>
+        /// The opponent at rank <paramref name="rank"/> as a battle fighter: the ladder's pool monster (its element, stats and
+        /// skills in content order, which is the AI's priority), or in a legacy run the rank's flat fight_ranks row with no skills.
+        /// </summary>
+        public static Fighter OpponentFighter(ContentDb c, RunState s, int rank)
+        {
+            var e = LadderEnemy(c, s, rank);
+            if (e == null)
+            {
+                var r = c.FightRanks[rank];
+                return new Fighter { Id = "rank_" + r.Id, Element = r.Element, Stats = r.Stats.Clone() };
+            }
+            var f = new Fighter { Id = "rank_" + e.Id, Element = e.Element, Stats = e.Stats.Clone() };
+            foreach (var sk in e.Skills) f.Skills.Add(c.MonsterSkills[sk]);
             return f;
         }
 
@@ -629,11 +703,15 @@ namespace IdleRng.Sim.Training
 
         // ------------------------------------------------------------------ replay and hash
 
-        /// <summary>Rebuild a run from its species, seed, books, modifiers and command log. Throws if a command is not valid at its point.</summary>
+        /// <summary>
+        /// Rebuild a run from its species, seed, books, modifiers, ladder and command log. Throws if a command is not valid at its
+        /// point. A saved run passes its stored ladder (an empty one for a legacy run, which fights the flat fight_ranks
+        /// opponents as it did); null rolls it from the seed again, which gives the same ladder while the pools are unchanged.
+        /// </summary>
         public static RunState Replay(ContentDb c, string speciesId, ulong seed, IEnumerable<RunCommand> log, IEnumerable<string> books = null,
-                                      RunModifiers mods = null)
+                                      RunModifiers mods = null, IReadOnlyList<string> ladder = null)
         {
-            var s = Start(c, speciesId, seed, books, mods);
+            var s = Start(c, speciesId, seed, books, mods, ladder);
             foreach (var cmd in log) Apply(c, s, cmd);
             return s;
         }
@@ -655,18 +733,18 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        /// <summary>Lowercase hex SHA-256 over a canonical encoding of the run (specs/03 section 1). Bump HashVersion on change.</summary>
+        /// <summary>
+        /// Lowercase hex SHA-256 over a canonical encoding of the run (specs/03 section 1). Bump HashVersion on change. Version 6
+        /// is version 5 plus the ladder at the end; a legacy run (empty ladder) keeps the exact version 5 bytes.
+        /// </summary>
         public static string StateHash(RunState s)
         {
+            bool legacy = s.Ladder.Count == 0, talents = UsesCatalogV2(s.Mods);
             var w = new CanonicalWriter(512);
-            w.Bytes(HashMagic);
+            w.Bytes(talents ? HashMagic : legacy ? LegacyHashMagic : LadderHashMagic);
             w.Str(s.SpeciesId);
             w.U64(s.Seed);
-            var mo = s.Mods;
-            w.F64(mo.DrillCostMult); w.F64(mo.StatFloorMult); w.F64(mo.ChaseChance); w.I32(mo.StartSp);
-            w.F64(mo.RestEnergyBonus); w.F64(mo.FailChanceDelta); w.F64(mo.SuperChanceBonus); w.F64(mo.ShardMult); w.I32(mo.MomentumDrills);
-            w.I32(mo.LossSp); w.F64(mo.SpecialistBonus); w.I32(mo.TreeSlotBonus); w.I32(mo.InjuryShields); w.I32(mo.LastCycleAp);
-            w.F64(mo.MilestoneMult); w.I32(mo.DraftRerolls);
+            w.F64(s.Mods.DrillCostMult); w.F64(s.Mods.StatFloorMult); w.F64(s.Mods.ChaseChance); w.I32(s.Mods.StartSp);
             foreach (var id in StatIds.Trained) w.F64(s.Stats.Get(id));
             w.F64(s.Energy);
             w.I32(s.Cycle); w.I32(s.ApLeft); w.I32(s.Rank);
@@ -675,7 +753,6 @@ namespace IdleRng.Sim.Training
             Stream(w, s.Draft);
             w.I32(s.FightsFought); w.I32(s.FightsWon); w.I32(s.Drills); w.I32(s.Rests);
             w.I32(s.Sp);
-            w.I32(s.FreeDrills); w.I32(s.ShieldsUsed); w.I32(s.RerollsUsed);
             w.I32(s.Slots.Length);
             foreach (var ts in s.Slots)
             {
@@ -704,8 +781,30 @@ namespace IdleRng.Sim.Training
             foreach (var i in s.Injuries) { w.I32(i.Cycle); w.I32(i.BackCycle); w.I32(i.CyclesLost); }
             w.I32(s.Log.Count);
             foreach (var l in s.Log) { w.I32((int)l.Kind); w.Str(l.Stat); w.I32(l.Choice); w.I32(l.Slot); w.Str(l.Book); }
+            if (!legacy)
+            {
+                w.I32(s.Ladder.Count);
+                foreach (var id in s.Ladder) w.Str(id);
+            }
+            if (talents)
+            {
+                var m = s.Mods;
+                w.F64(m.RestEnergyBonus); w.F64(m.FailChanceDelta); w.F64(m.SuperChanceBonus); w.F64(m.ShardMult); w.I32(m.MomentumDrills);
+                w.I32(m.LossSp); w.F64(m.SpecialistBonus); w.I32(m.TreeSlotBonus); w.I32(m.InjuryShields); w.I32(m.LastCycleAp);
+                w.F64(m.MilestoneMult); w.I32(m.DraftRerolls);
+                w.I32(s.FreeDrills); w.I32(s.ShieldsUsed); w.I32(s.RerollsUsed);
+            }
             return Sha256.Hex(Sha256.Compute(w.ToArray()));
         }
+
+        /// <summary>
+        /// Whether a run uses any talent of the catalog v2 (specs/18 section 3): those fields are hashed (version 7) only then. The
+        /// counters and the RerollDraft command need one of them, so a run without them hashes exactly as before.
+        /// </summary>
+        static bool UsesCatalogV2(RunModifiers m) =>
+            m.RestEnergyBonus != 0 || m.FailChanceDelta != 0 || m.SuperChanceBonus != 0 || m.ShardMult != 1 || m.MomentumDrills != 0
+            || m.LossSp != 0 || m.SpecialistBonus != 0 || m.TreeSlotBonus != 0 || m.InjuryShields != 0 || m.LastCycleAp != 0
+            || m.MilestoneMult != 1 || m.DraftRerolls != 0;
 
         static void Stream(CanonicalWriter w, RngStream r) { w.Str(r.Name); w.U64(r.Seed); w.U64(r.Counter); }
     }

@@ -63,8 +63,9 @@ function playerSprite(cls) {
   if (cls >= 3) { g[0][5] = "B"; g[0][6] = "B"; }
   return (SPR[key] = paint(g, pal));
 }
-function enemySprite(seed, boss) {
-  const key = "en" + seed + (boss ? "b" : ""); if (SPR[key]) return SPR[key];
+// hue (0-359) tints the body, e.g. a rank opponent in its element's colour; omitted, the seed picks it.
+function enemySprite(seed, boss, hue) {
+  const key = "en" + seed + (boss ? "b" : "") + (hue === undefined ? "" : "h" + hue); if (SPR[key]) return SPR[key];
   const r = rng(seed * 7919 + 13);
   const W = 12, Hh = 12; const g = Array.from({ length: Hh }, () => Array(W).fill("."));
   for (let y = 2; y < Hh; y++) for (let x = 0; x < W / 2; x++) {
@@ -75,9 +76,19 @@ function enemySprite(seed, boss) {
   const ey = 5 + Math.floor(r() * 2); g[ey][3] = "E"; g[ey][8] = "E"; g[ey][4] = "W"; g[ey][7] = "W";
   if (r() < .5) { g[ey + 2][4] = "E"; g[ey + 2][5] = "E"; g[ey + 2][6] = "E"; g[ey + 2][7] = "E"; }
   if (boss) { g[0][2] = "H"; g[1][2] = "H"; g[1][3] = "H"; g[0][9] = "H"; g[1][9] = "H"; g[1][8] = "H"; g[2][4] = "H"; g[2][7] = "H"; }
-  const hue = Math.floor(r() * 360);
+  const rolled = Math.floor(r() * 360);
+  if (hue === undefined) hue = rolled;
   const pal = { A: `hsl(${hue} 45% 45%)`, B: `hsl(${hue} 50% 32%)`, E: "#120d1c", W: "#fff4d6", H: boss ? "#f2c14e" : "#ddd" };
   return (SPR[key] = paint(g, pal));
+}
+// Hue of a #RRGGBB colour (0-359), for tinting a sprite in an element's display colour.
+function hueOf(hex) {
+  const n = parseInt(String(hex).slice(1), 16);
+  const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  if (!d) return 0;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return Math.round(h * 60 + 360) % 360;
 }
 // Hand-drawn species art (specs/24 section 6): 12x12 rows, one palette letter per pixel, "." is empty.
 const SPECIES_ART = {
@@ -148,6 +159,8 @@ function paint(g, pal) {
     species: speciesSprite,
     player: playerSprite,
     enemy: function (stage, boss, variant) { return enemySprite(stage * 31 + (boss ? 999 : (variant || 0) % 4), boss); },
+    // A rank opponent (specs/14 section 5): its own shape from seed, the boss horns at the top rank, tinted by colour (#RRGGBB).
+    monster: function (seed, boss, color) { return enemySprite(seed, boss, color ? hueOf(color) : undefined); },
     enemyName: enemyName,
     draw: draw,
   };

@@ -71,6 +71,98 @@
       "text": "Rank S"
     },
     {
+      "key": "rank_enemy.mossling.name",
+      "text": "Mossling"
+    },
+    {
+      "key": "rank_enemy.puddle_pup.name",
+      "text": "Puddle Pup"
+    },
+    {
+      "key": "rank_enemy.ember_rat.name",
+      "text": "Ember Rat"
+    },
+    {
+      "key": "rank_enemy.dusk_bat.name",
+      "text": "Dusk Bat"
+    },
+    {
+      "key": "rank_enemy.scorch_boar.name",
+      "text": "Scorchback Boar"
+    },
+    {
+      "key": "rank_enemy.brine_crab.name",
+      "text": "Brine Crab"
+    },
+    {
+      "key": "rank_enemy.spark_imp.name",
+      "text": "Spark Imp"
+    },
+    {
+      "key": "rank_enemy.gloom_moth.name",
+      "text": "Gloom Moth"
+    },
+    {
+      "key": "rank_enemy.cinder_hound.name",
+      "text": "Cinder Hound"
+    },
+    {
+      "key": "rank_enemy.tidecaller.name",
+      "text": "Tidecaller Naiad"
+    },
+    {
+      "key": "rank_enemy.ironbark.name",
+      "text": "Ironbark Sentinel"
+    },
+    {
+      "key": "rank_enemy.hex_wisp.name",
+      "text": "Hex Wisp"
+    },
+    {
+      "key": "rank_enemy.storm_roc.name",
+      "text": "Storm Roc"
+    },
+    {
+      "key": "rank_enemy.grave_knight.name",
+      "text": "Grave Knight"
+    },
+    {
+      "key": "rank_enemy.coral_hydra.name",
+      "text": "Coral Hydra"
+    },
+    {
+      "key": "rank_enemy.magma_ogre.name",
+      "text": "Magma Ogre"
+    },
+    {
+      "key": "rank_enemy.hollow_lich.name",
+      "text": "Hollow Lich"
+    },
+    {
+      "key": "rank_enemy.sunfire_phoenix.name",
+      "text": "Sunfire Phoenix"
+    },
+    {
+      "key": "rank_enemy.elder_treant.name",
+      "text": "Elder Treant"
+    },
+    {
+      "key": "rank_enemy.shade_stalker.name",
+      "text": "Shade Stalker"
+    },
+    {
+      "key": "rank_enemy.vorthak.name",
+      "text": "Vorthak the Undying"
+    },
+    {
+      "key": "rank_enemy.leviathan.name",
+      "text": "Abyssal Leviathan"
+    },
+    {
+      "key": "rank_enemy.solaris.name",
+      "text": "Solaris the Dawn Tyrant"
+    },
+    {
       "key": "mskill.gel_mend.name",
       "text": "Gel Mend"
     },
@@ -1273,6 +1365,46 @@
     {
       "key": "mskill.boss_roar.desc",
       "text": "Lower every enemy's {stat} by {power:pct} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.blur.name",
+      "text": "Blur"
+    },
+    {
+      "key": "mskill.blur.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
+    },
+    {
+      "key": "mskill.keen_eye.name",
+      "text": "Keen Eye"
+    },
+    {
+      "key": "mskill.keen_eye.desc",
+      "text": "Permanent +{power:pct} {stat}."
+    },
+    {
+      "key": "mskill.stoke.name",
+      "text": "Stoke"
+    },
+    {
+      "key": "mskill.stoke.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
+    },
+    {
+      "key": "mskill.focus_mind.name",
+      "text": "Focus Mind"
+    },
+    {
+      "key": "mskill.focus_mind.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
+    },
+    {
+      "key": "mskill.tailwind.name",
+      "text": "Tailwind"
+    },
+    {
+      "key": "mskill.tailwind.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
     },
     {
       "key": "rule.entropy_convert.name",

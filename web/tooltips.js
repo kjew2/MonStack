@@ -1,11 +1,12 @@
 // Tap-to-open tooltips ("toggletips") for stats and skill-tree abilities. No game rule lives here: every word and number comes
-// from the C# engine (RunContent: statInfo, nodeTips, skillNode, towerTips; RunState: statNow, nowTitle), see web/wasm/BRIDGE.md, "Tooltips".
+// from the C# engine (RunContent: statInfo, nodeTips, skillNode, skillTips, towerTips; RunState: statNow, nowTitle), see web/wasm/BRIDGE.md, "Tooltips".
 //
 //   Tips.init(() => content, () => runState)       once, after the engine loaded
 //   h('span', { text: 'STR', ...Tips.attrs('stat:str') })
 //
 // Refs: 'stat:<id>' (the stat, with the monster's "now" line), 'stat:<id>:vs' (also the rank opponent's), 'node:<nodeId>',
-// 'skill:<skillId>' (the tree node that grants the skill), 'tower:<key>' (a Dungeon playback tip: entropy, vent.<kind>,
+// 'skill:<skillId>' (the tree node that grants the skill, else the skill alone from skillTips), 'mskill:<skillId>' (the skill alone
+// as a rank opponent uses it, from skillTips: no trigger or SP cost), 'tower:<key>' (a Dungeon playback tip: entropy, vent.<kind>,
 // corruption, phase.<kind>). Tap, Enter or Space opens one; a long press opens it too; tapping
 // elsewhere, Escape, scrolling or resizing closes it. One shared role="tooltip" element; the open trigger gets aria-describedby.
 (function (root) {
@@ -48,8 +49,10 @@
     return f;
   }
 
-  function nodeContent(C, nodeId) {
-    const t = C.nodeTips && C.nodeTips[nodeId];
+  function nodeContent(C, nodeId) { return tipContent(C.nodeTips && C.nodeTips[nodeId]); }
+
+  // A {title, text, tags[], facts[[label, value]]} tip: a tree node's (nodeTips) or a rank opponent's skill (skillTips).
+  function tipContent(t) {
     if (!t) return null;
     const f = document.createDocumentFragment();
     f.append(el('div', 'tip-title', t.title));
@@ -82,7 +85,8 @@
     const [kind, id, mode] = String(ref).split(':');
     if (kind === 'stat') return statContent(C, getState(), id, mode === 'vs');
     if (kind === 'node') return nodeContent(C, id);
-    if (kind === 'skill') return C.skillNode && C.skillNode[id] ? nodeContent(C, C.skillNode[id]) : null;
+    if (kind === 'skill') return C.skillNode && C.skillNode[id] ? nodeContent(C, C.skillNode[id]) : tipContent(C.skillTips && C.skillTips[id]);
+    if (kind === 'mskill') return tipContent(C.skillTips && C.skillTips[id]);
     if (kind === 'tower') return towerContent(C, id);
     return null;
   }

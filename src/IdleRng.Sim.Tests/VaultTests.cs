@@ -70,6 +70,30 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Seal_KeepsTheLadder_AndAPrePoolEntryReplaysAgainstTheFlatRanks()
+        {
+            var s = Play(Db.SpeciesList[0].Id, 31);
+            var e = Vault.Seal(Db, s);
+            Assert.That(e.Ladder, Is.EqualTo(s.Ladder));
+            Assert.That(e.Ladder, Is.Not.SameAs(s.Ladder));
+            Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, e.SpeciesId, e.Seed, e.Log, e.Books, e.Mods, e.Ladder)), Is.EqualTo(e.RunHash));
+
+            // An entry sealed before the pools has no ladder (empty after loading): its run fought the flat fight_ranks rows.
+            var legacy = TrainingRun.Start(Db, Db.SpeciesList[0].Id, 31, null, null, new System.Collections.Generic.List<string>());
+            while (legacy.Phase != RunPhase.Finished)
+            {
+                while (legacy.Offers.Count > 0) TrainingRun.DiscardOffer(Db, legacy);
+                if (legacy.Phase == RunPhase.AwaitFight) TrainingRun.Fight(Db, legacy); else TrainingRun.Rest(Db, legacy);
+            }
+            var old = Vault.Seal(Db, legacy);
+            Assert.That(old.Ladder, Is.Empty);
+            var f = old.Fighter(Db);
+            Assert.That(f.Stats.Get(StatIds.Hp), Is.EqualTo(legacy.Stats.Get(StatIds.Hp)));
+            old.Ladder = null;   // a hand-edited save could carry null: still the flat ranks
+            Assert.That(old.Fighter(Db).Stats.Get(StatIds.Hp), Is.EqualTo(legacy.Stats.Get(StatIds.Hp)));
+        }
+
+        [Test]
         public void Seal_KeepsBooksUsedAndUnused()
         {
             var book = Db.SkillBooks.Keys.First();
