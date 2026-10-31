@@ -210,7 +210,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await shot('03-trees');
   await page.locator('[data-tip="node:pyromancy_n4"]').click();
   const abTip = await tip.innerText();
-  check(/Flame Breath/.test(abTip) && /90% of STR/.test(abTip) && /once every 4/.test(abTip) && /Physical/.test(abTip) && /2 SP/.test(abTip) && !/[{}]/.test(abTip),
+  check(/Flame Breath/.test(abTip) && /90% of STR/.test(abTip) && /once every 4/i.test(abTip) && /Physical/.test(abTip) && /2 SP/.test(abTip) && !/[{}]/.test(abTip),
     'an ability tooltip shows effect, scaling, cooldown, tags and cost: ' + abTip.replace(/\s+/g, ' ').slice(0, 70));
   check(await fits(), 'the ability tooltip fits the screen');
   await shot('03b-ability-tip');

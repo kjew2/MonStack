@@ -672,7 +672,7 @@
     },
     {
       "key": "rule.counter_mitigated.desc",
-      "text": "After surviving a single-target physical hit it counterattacks at once for {MON_COUNTER_MULT:pct} of the damage DEF mitigated (true damage)."
+      "text": "When it survives a single-target physical hit, it strikes back for {MON_COUNTER_MULT:pct} of the damage its DEF blocked (true damage)."
     },
     {
       "key": "rule.echo_cast.name",
@@ -680,7 +680,7 @@
     },
     {
       "key": "rule.echo_cast.desc",
-      "text": "Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power. Its mirror twin takes the first {MON_ECHO_DECOYS} hit(s) aimed at it each fight."
+      "text": "Active damage, heal and shield skills cast again at once at {MON_ECHO_POWER:pct} power. A mirror twin takes the first {MON_ECHO_DECOYS} hit(s) aimed at it each fight."
     },
     {
       "key": "rule.tidal_overflow.name",
@@ -688,7 +688,7 @@
     },
     {
       "key": "rule.tidal_overflow.desc",
-      "text": "Heals {MON_TIDE_REGEN:pct} of max HP at the start of each of its actions. Healing beyond max HP becomes a shield, up to {MON_TIDE_SHIELD_CAP:pct} of max HP."
+      "text": "Heals {MON_TIDE_REGEN:pct} of max HP at the start of each action. Overheal becomes a shield (up to {MON_TIDE_SHIELD_CAP:pct} of max HP)."
     },
     {
       "key": "rule.abyssal_drain.name",
@@ -696,7 +696,7 @@
     },
     {
       "key": "rule.abyssal_drain.desc",
-      "text": "Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt. Draining beyond max HP becomes a shield, up to {MON_DRAIN_SHIELD_CAP:pct} of max HP."
+      "text": "Heals for {MON_DRAIN_FRAC:pct} of the damage it deals. Overheal becomes a shield (up to {MON_DRAIN_SHIELD_CAP:pct} of max HP)."
     },
     {
       "key": "rule.fire_pierce.name",
@@ -704,7 +704,7 @@
     },
     {
       "key": "rule.fire_pierce.desc",
-      "text": "Its fire damage is {MON_FIRE_BONUS:pct} stronger, ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element."
+      "text": "Fire damage +{MON_FIRE_BONUS:pct}. It ignores {MON_FIRE_PIERCE:pct} of DEF or WIS and is never resisted by element."
     },
     {
       "key": "rule.double_turn_start.name",
@@ -712,7 +712,7 @@
     },
     {
       "key": "rule.double_turn_start.desc",
-      "text": "Acts twice in a row on each of its first {MON_DOUBLE_TURNS} turn(s) of a fight."
+      "text": "Acts twice in a row on its first {MON_DOUBLE_TURNS} turn(s) of each fight."
     },
     {
       "key": "talent.frugal_drills.name",
@@ -972,7 +972,7 @@
     },
     {
       "key": "stat.hp.desc",
-      "text": "Max HP in battle is HP x {MON_HP_PER_POINT}. Skills that scale with HP use max HP."
+      "text": "Max HP = HP x {MON_HP_PER_POINT}. HP-scaled skills use max HP."
     },
     {
       "key": "stat.hp.now",
@@ -984,11 +984,11 @@
     },
     {
       "key": "stat.str.desc",
-      "text": "Physical damage. The basic attack hits for {BASIC_ATTACK_POWER} x the higher of STR and INT, and STR-scaled skills deal physical damage. Physical hits can be dodged (DEX) and the target's DEF reduces them."
+      "text": "Physical power. Basic attack = {BASIC_ATTACK_POWER} x STR (or INT, if higher). STR skills deal physical damage."
     },
     {
       "key": "stat.str.now",
-      "text": "Basic attack: {basic} damage before defences ({basic_type})"
+      "text": "Basic attack: {basic} damage ({basic_type}, before defence)"
     },
     {
       "key": "stat.int.name",
@@ -996,11 +996,11 @@
     },
     {
       "key": "stat.int.desc",
-      "text": "Magical damage. INT-scaled skills deal magical damage, which can be grazed but not dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
+      "text": "Magic power. INT skills deal magical damage. The basic attack uses INT if it beats STR."
     },
     {
       "key": "stat.int.now",
-      "text": "Basic attack: {basic} damage before defences ({basic_type})"
+      "text": "Basic attack: {basic} damage ({basic_type}, before defence)"
     },
     {
       "key": "stat.wis.name",
@@ -1008,7 +1008,7 @@
     },
     {
       "key": "stat.wis.desc",
-      "text": "Magic defence: magical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + WIS), so {MON_DEF_K} WIS halves it. WIS also sets the amount of WIS-scaled heals and shields."
+      "text": "Magic defence. {MON_DEF_K} WIS halves magical damage taken. Also powers WIS heals and shields."
     },
     {
       "key": "stat.wis.now",
@@ -1020,11 +1020,11 @@
     },
     {
       "key": "stat.dex.desc",
-      "text": "Dodging and precision. Evade chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. A physical hit that rolls under it misses; a magical hit is grazed instead: it deals {MON_GRAZE_MULT:pct} of its damage and cannot crit. DEX also makes the unit's own hits harder to evade, and each point adds {MON_CRIT_DMG_PER_DEX:pct} to its crit damage (a x{MON_CRIT_DMG} crit deals {MON_CRIT_DMG:pct})."
+      "text": "Dodge and precision. Evade chance: {MON_EVADE_BASE:pct}, +{MON_EVADE_PER_DEX:pct} per DEX above the attacker's (less if below), max {MON_EVADE_CAP:pct}. Spells are grazed instead ({MON_GRAZE_MULT:pct} damage, no crit). DEX also makes its own hits harder to dodge and adds {MON_CRIT_DMG_PER_DEX:pct} crit damage per point."
     },
     {
       "key": "stat.dex.now",
-      "text": "Evades {evade:pct} of {foe}'s hits (spells are grazed); {foe} evades {foe_evade:pct} of the hits it takes; crits deal x{crit_dmg}"
+      "text": "Dodges {evade:pct} of {foe}'s hits; {foe} dodges {foe_evade:pct}; crits deal x{crit_dmg}"
     },
     {
       "key": "stat.def.name",
@@ -1032,7 +1032,7 @@
     },
     {
       "key": "stat.def.desc",
-      "text": "Physical defence: physical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + DEF), so {MON_DEF_K} DEF halves it."
+      "text": "Physical defence. {MON_DEF_K} DEF halves physical damage taken."
     },
     {
       "key": "stat.def.now",
@@ -1044,7 +1044,7 @@
     },
     {
       "key": "stat.spd.desc",
-      "text": "Turn speed. Each tick the action gauge fills by SPD (at least {MON_SPD_MIN}) and the unit acts each time it reaches {BATTLE_GAUGE}. SPD {SPD_REF} acts once per turn; twice the SPD acts twice as often."
+      "text": "Turn speed. SPD {SPD_REF} acts once per turn; double SPD acts twice as often."
     },
     {
       "key": "stat.spd.now",
@@ -1056,7 +1056,7 @@
     },
     {
       "key": "stat.luk.desc",
-      "text": "Critical hits and fortune. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage plus the attacker's DEX bonus (and crit damage effects). Fortune is LUK / (LUK + {MON_FORTUNE_K}), up to {MON_FORTUNE_CAP:pct}: the chance to reroll the unit's own failed evade or failed crit, and to make a crit against it roll again."
+      "text": "Crits and fortune. Crit chance: {MON_CRIT_BASE:pct} + {MON_CRIT_PER_LUK:pct} per LUK, max {MON_CRIT_CAP:pct}. Crits deal x{MON_CRIT_DMG} (more with DEX). Fortune (max {MON_FORTUNE_CAP:pct}) gives a chance to reroll a failed dodge or crit, and to make an enemy crit on it roll again."
     },
     {
       "key": "stat.luk.now",
@@ -1096,7 +1096,7 @@
     },
     {
       "key": "tip.now",
-      "text": "Now vs {foe}, before buffs and passives"
+      "text": "Now vs {foe}, before buffs"
     },
     {
       "key": "tip.label.effect",
@@ -1200,43 +1200,43 @@
     },
     {
       "key": "tip.physical",
-      "text": "Physical: DEX can dodge it, the target's DEF reduces it"
+      "text": "Physical: can be dodged. DEF reduces it."
     },
     {
       "key": "tip.magical",
-      "text": "Magical: grazed instead of dodged, the target's WIS reduces it"
+      "text": "Magical: can't be dodged, only grazed. WIS reduces it."
     },
     {
       "key": "tip.element.own",
-      "text": "The user's element"
+      "text": "Its own element"
     },
     {
       "key": "tip.effect.damage",
-      "text": "Hits for the amount; then a crit (LUK), the element (x{ELEMENT_STRONG_MULT} when strong, x{ELEMENT_WEAK_MULT} when weak) and the target's defence apply. Shields absorb it first."
+      "text": "Deals damage and can crit. x{ELEMENT_STRONG_MULT} if its element is strong vs the target, x{ELEMENT_WEAK_MULT} if weak. Defence reduces it; shields absorb it first."
     },
     {
       "key": "tip.effect.heal",
-      "text": "Restores HP, never above max HP."
+      "text": "Restores HP, up to max HP."
     },
     {
       "key": "tip.effect.shield",
-      "text": "Absorbs damage before HP while it lasts. A new shield replaces a smaller one; shields do not add up."
+      "text": "Blocks damage before HP. Shields don't stack: the bigger one stays."
     },
     {
       "key": "tip.effect.taunt",
-      "text": "Single-target enemy actions must target this unit while it lasts."
+      "text": "Enemies must aim single-target moves at it."
     },
     {
       "key": "tip.effect.buff",
-      "text": "Raises a stat while it lasts: a trained stat by a share of its base value, crit chance and crit damage by the amount itself."
+      "text": "Raises a stat by a share of its base value. Crit chance and crit damage rise by the amount itself."
     },
     {
       "key": "tip.effect.debuff",
-      "text": "Lowers a stat while it lasts, by a share of its base value. A stat never drops below {STAT_FLOOR_FRAC:pct} of its base."
+      "text": "Lowers a stat by a share of its base value. Never below {STAT_FLOOR_FRAC:pct} of its base."
     },
     {
       "key": "tip.effect.passive",
-      "text": "Raises a stat for the whole fight: a trained stat by a share of its base value (max HP raises current HP too), crit chance and crit damage by the amount itself."
+      "text": "Raises a stat for the whole fight, by a share of its base value. Crit chance and crit damage rise by the amount itself. Extra max HP is added to current HP too."
     },
     {
       "key": "tip.amount.scaled",
@@ -1252,7 +1252,7 @@
     },
     {
       "key": "tip.target.enemy",
-      "text": "One enemy: a taunting enemy if there is one, else a random one"
+      "text": "One enemy (a taunter first, else random)"
     },
     {
       "key": "tip.target.all_enemies",
@@ -1264,7 +1264,7 @@
     },
     {
       "key": "tip.target.lowest_ally",
-      "text": "The ally with the lowest share of max HP"
+      "text": "The most hurt ally (lowest % HP)"
     },
     {
       "key": "tip.target.all_allies",
@@ -1272,7 +1272,7 @@
     },
     {
       "key": "tip.duration",
-      "text": "{duration} turns ({ticks} ticks)"
+      "text": "{duration} turns"
     },
     {
       "key": "tip.duration.permanent",
@@ -1280,7 +1280,7 @@
     },
     {
       "key": "tip.fires.battle_start",
-      "text": "At battle start, before anyone acts"
+      "text": "At battle start"
     },
     {
       "key": "tip.fires.on_action",
@@ -1288,35 +1288,35 @@
     },
     {
       "key": "tip.fires.on_basic_attack",
-      "text": "Before each of its basic attacks"
+      "text": "Before each basic attack"
     },
     {
       "key": "tip.fires.on_crit",
-      "text": "Each time it lands a critical hit"
+      "text": "Each time it crits"
     },
     {
       "key": "tip.fires.on_hit_taken",
-      "text": "Each time it is hit and survives, after the damage"
+      "text": "Each time it survives a hit"
     },
     {
       "key": "tip.fires.on_evade",
-      "text": "Each time it dodges a hit"
+      "text": "Each time it dodges"
     },
     {
       "key": "tip.cooldown.none",
-      "text": "None: usable on every action"
+      "text": "None"
     },
     {
       "key": "tip.cooldown.n",
-      "text": "At most once every {cooldown} of its own actions"
+      "text": "Once every {cooldown} actions"
     },
     {
       "key": "tip.cooldown.triggered",
-      "text": "None: fires every time"
+      "text": "None"
     },
     {
       "key": "tip.stacks.triggered",
-      "text": "Each trigger adds a stack, up to {EFFECT_STACK_CAP}; at the cap it renews the stack with the least time left instead"
+      "text": "Up to {EFFECT_STACK_CAP} stacks; at max, renews the one closest to running out"
     },
     {
       "key": "tip.ai.damage",
@@ -1324,27 +1324,27 @@
     },
     {
       "key": "tip.ai.heal",
-      "text": "It or an ally is missing at least the HP it restores, so none is wasted (a heal too big for that: at or below {AI_HEAL_BELOW:pct} of max HP)"
+      "text": "A target is missing the full heal (big heals: at {AI_HEAL_BELOW:pct} HP or less)"
     },
     {
       "key": "tip.ai.shield",
-      "text": "An enemy is alive, and the target has less shield than this would give (it does not wait for damage)"
+      "text": "The target's shield is smaller than this one (it doesn't wait for damage)"
     },
     {
       "key": "tip.ai.taunt",
-      "text": "It is not taunting already, and an ally is alive for it to protect"
+      "text": "Not taunting yet, and an ally is alive to protect"
     },
     {
       "key": "tip.ai.buff",
-      "text": "The target does not have this buff"
+      "text": "The target lacks this buff"
     },
     {
       "key": "tip.ai.debuff",
-      "text": "An enemy does not have this debuff, and it lands on one that does not"
+      "text": "An enemy lacks this debuff (it targets that one)"
     },
     {
       "key": "tip.priority",
-      "text": "Each action uses the first ready heal or shield whose condition holds, else the first ready other skill, in slot then node order; otherwise a basic attack"
+      "text": "Ready heals and shields first, then other ready skills (slot order), else a basic attack"
     },
     {
       "key": "tip.cost",
@@ -1456,7 +1456,7 @@
     },
     {
       "key": "rule.entropy_convert.desc",
-      "text": "Dungeon: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
+      "text": "Dungeon: instead of venting, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns."
     },
     {
       "key": "phase.shield_check.name",
@@ -1496,7 +1496,7 @@
     },
     {
       "key": "tower.entropy.desc",
-      "text": "Dungeon: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
+      "text": "Dungeon: fills as free extra effects fire (+{ENTROPY_PER_TRIGGER} per trigger, +{ENTROPY_PER_ECHO} per echo, +{ENTROPY_PER_COUNTER} per counter) and drains {ENTROPY_DECAY} at the start of the unit's action. At {ENTROPY_CAP} it vents and empties: recoil, then stun, then enrage, in turn."
     },
     {
       "key": "vent.recoil.name",
@@ -1504,7 +1504,7 @@
     },
     {
       "key": "vent.recoil.desc",
-      "text": "The unit takes {ENTROPY_RECOIL_FRAC:pct} of its max HP as true damage (a shield absorbs it)."
+      "text": "The unit takes {ENTROPY_RECOIL_FRAC:pct} of its max HP as true damage (shields absorb it)."
     },
     {
       "key": "vent.stun.name",
@@ -1512,7 +1512,7 @@
     },
     {
       "key": "vent.stun.desc",
-      "text": "The unit loses {ENTROPY_STUN_GAUGE} of its action gauge and acts later."
+      "text": "The unit loses {ENTROPY_STUN_GAUGE} action gauge and acts later."
     },
     {
       "key": "vent.enrage.name",
@@ -1532,7 +1532,7 @@
     },
     {
       "key": "tower.corruption.desc",
-      "text": "Dungeon: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
+      "text": "Dungeon: from turn {start_turns} the arena gains a corruption level every {every_turns} turns, for both sides. Each level: +{CORRUPT_DMG_PER_LEVEL:pct} damage, -{CORRUPT_HEAL_PER_LEVEL:pct} healing and shields (down to {CORRUPT_HEAL_FLOOR:pct})."
     },
     {
       "key": "species.mandrake.name",
@@ -1740,7 +1740,7 @@
     },
     {
       "key": "rule.root_rebirth.desc",
-      "text": "Once per fight, a blow that would fell it leaves it standing at {MON_REBIRTH_HEAL:pct} of max HP instead."
+      "text": "Once per fight, it survives a killing blow at {MON_REBIRTH_HEAL:pct} of max HP."
     },
     {
       "key": "rule.wail_stagger.name",
@@ -1748,7 +1748,7 @@
     },
     {
       "key": "rule.wail_stagger.desc",
-      "text": "Each of its actions pushes every enemy's next turn back by {MON_WAIL_STAGGER:pct} of a turn and withers it for {MON_WAIL_WITHER:pct} of its max HP (true damage)."
+      "text": "Each action delays every enemy's next turn by {MON_WAIL_STAGGER:pct} of a turn and hits them for {MON_WAIL_WITHER:pct} of their max HP (true damage)."
     },
     {
       "key": "rule.umbral_veil.name",
@@ -1756,7 +1756,7 @@
     },
     {
       "key": "rule.umbral_veil.desc",
-      "text": "Spells that roll under its evade chance miss instead of grazing; it gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+      "text": "Spells that would graze it miss instead. +{MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade cap is {MON_VEIL_EVADE_CAP:pct} (not {MON_EVADE_CAP:pct})."
     },
     {
       "key": "rule.night_feast.name",
@@ -1764,7 +1764,7 @@
     },
     {
       "key": "rule.night_feast.desc",
-      "text": "It starts every fight with {MON_FEAST_START:pct} more damage. Every hit it lands adds {MON_FEAST_DMG:pct} more damage and {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
+      "text": "Starts each fight with +{MON_FEAST_START:pct} damage. Each hit it lands adds +{MON_FEAST_DMG:pct} damage and {MON_FEAST_STR:pct} of its base STR, with no limit."
     },
     {
       "key": "tree.geyser_heart.name",
