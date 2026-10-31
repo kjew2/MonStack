@@ -102,6 +102,11 @@ namespace IdleRng.Bots.Training
         RunCommand ResolveOffer(ContentDb c, RunState s)
         {
             var offer = s.Offers[0];
+            if (offer.Source == OfferSource.Fusion)   // fusing frees a slot and keeps both parents: always take it
+            {
+                var fusion = c.Trees[offer.Trees[0]];
+                return new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = Array.FindIndex(s.Slots, x => x != null && x.TreeId == fusion.FuseA) };
+            }
             int empty = Array.IndexOf(s.Slots, null);
             if (!_chase)
             {

@@ -16,7 +16,7 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 
 ## 2. Trees and nodes
 
-Content table `trees`: `id`, `name_key`, `kind` (`native`, `generic`, `chase`, `book`), for generic trees `offer_stat` (a trained stat, or empty for any stat) and `offer_threshold`, and for chase trees `apex_name_key`, the name of the apex form the tree's capstone gives (section 5.3).
+Content table `trees`: `id`, `name_key`, `kind` (`native`, `generic`, `chase`, `book`), for generic trees `offer_stat` (a trained stat, or empty for any stat) and `offer_threshold`, for chase and fusion trees `apex_name_key`, the name of the apex form the tree gives (section 5.3), and for fusion trees `fuse_a` and `fuse_b`, the two trees that fuse into it (section 5.6). `kind` may also be `fusion`.
 
 Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree), `cost` (SP, `>= 1`), `kind` and its arguments:
 
@@ -134,12 +134,33 @@ Where each kind of capstone lands, weakest and commonest first. **The book-gated
 | Tier | How it is reached | Target: gauntlet floors the whole tree adds |
 |---|---|---|
 | Ordinary tree capstone | max any native or generic tree | (no target) |
-| Fusion capstone | max both trees of a fusing pair (`specs/12` section 5.2.1) | +3 to +5 (not built yet) |
+| Fusion capstone | max both trees of a fusing pair (section 5.6) | +3 to +5 |
 | In-run chase tree | attunement roll plus its conditions (section 5.4) | +5 to +8 |
 | Book chase tree | the species' own Skill Book plus its conditions | +10 to +15 |
 
 - **Measured** by the `balance` report's chase power section (`specs/09` section 7): each run's monster with its chase trees taken out, then with one chase tree bought in full on top, up the gauntlet on the same seed. The targets hold for each species averaged over the `focus`, `hoarder`, `balanced` and `chaser` policies; single cells may stray. The `capstone-ladder` sanity check WARNs when a species' book chase tree does not beat its in-run one under `focus`.
 - **Retune at content 4.4 (agent, to kj's targets):** in-run trees add 5.6-7.7 floors and book trees 10.8-12.0. Survival dominates the gauntlet (a focus-trained monster dies in one or two hits), so three book capstones gained a second part to reach the band: *Arcane Overflow*'s mirror twin takes the first hits (`MON_ECHO_DECOYS`), *Mandragora Scream* works on every action and withers (`MON_WAIL_WITHER`), *Night Feast* starts fed and feeds damage, not only STR (`MON_FEAST_START`, `MON_FEAST_DMG`); *Abyssal Bloom*'s overheal becomes shield (`MON_DRAIN_SHIELD_CAP`). Rules: `specs/16` section 6.2.
+- **Fusion at content 4.5:** a fused tree adds 3.4-5.2 floors on top of both parents maxed, averaged over the pairs each species can hold.
+
+### 5.6 Fusion (kj, 2026-10-31)
+
+Only four pairs fuse (kj chose them from `specs/24` section 5.2), and the UI names each pair: a fusable tree's card says which tree it fuses with and into what.
+
+| Fusion tree (`kind` `fusion`) | Parents (`fuse_a`, `fuse_b`) | Fused look | Duo capstone |
+|---|---|---|---|
+| *Geyser Heart* | *Pyromancy* + *Codex of Tides* | Geyser Wyrm | *Steam Burst*: when hit, fire damage to all enemies |
+| *Living Fortress* | *Heavy Armor* + *Bulwark* | Fortress Drake | *Siege Return*: when hit, strike back off DEF |
+| *Hall of Mirrors* | *Mind Warp* + *Nimble Feet* | Mirrorwing | *Shatter*: when hit, the mirror strikes back off INT |
+| *Arcana Deck* | *Fortune* + *Spellcraft* | Tarot Mimic | *The Star*: when hit, heal 1% of max HP |
+
+- **Offer.** When both parents sit in slots with every node bought, the run offers the fusion tree (offer source `Fusion`), once; a pending offer is withdrawn if a parent stops being ready, and a discarded one comes back only after that (`RunState.FusionOffered`).
+- **Taking it.** `TakeTree` must name one of the two parents' slots. The fusion tree goes there with no node bought and **absorbs** both parents (`TreeSlot.Absorbed`); the other parent's slot comes free. Nothing is refunded or lost: the parents' bought nodes still give their skills to the fighter (absorbed parents first, then the fusion tree's nodes), their flat stats stay, and they still count for chase conditions (`TreeMaxed`, `NodeOwned`). An absorbed tree is never drafted again.
+- **Leaving.** Overwriting a fusion tree (or losing it any other way) takes its parents with it: `TREE_REFUND` of the SP spent in each of the three comes back, each rounded down, and all their flat stats come off.
+- **Fused look.** A fusion tree's `apex_name_key` names the monster as soon as the trees fuse (section 5.3); a chase tree's apex form, once its capstone is bought, wins over it.
+- **Vault.** `Vault.Seal` lists absorbed parents as trees with `FusedInto` set, before the fusion tree.
+- **Hash.** A run's fusion state (fusions offered, absorbed parents) is hashed only when it has any, so every other run keeps its hash.
+- **Bots** always take a fusion, into the first parent's slot.
+- Content rules: a fusion tree names two different parents that exist and are native, generic or book trees, each parent fuses into at most one tree, and only fusion trees name parents (`E023`, `E043`). Chase and fusion trees, and only they, have an `apex_name_key`.
 
 ## 6. Run tally
 
@@ -192,7 +213,7 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | Table | Rules |
 |---|---|
 | `monster_skills` | effect stat for buff/debuff/passive, trained `scales` for damage/heal/shield (`E023`); power, cooldown, duration `>= 0` (`E043`); element id or empty (`E023`) |
-| `trees` | generic trees need `offer_threshold > 0` and a trained or empty `offer_stat`; other kinds have neither (`E043`, `E023`). Chase trees, and only chase trees, have an `apex_name_key` (`E043`) |
+| `trees` | generic trees need `offer_threshold > 0` and a trained or empty `offer_stat`; other kinds have neither (`E043`, `E023`). Chase and fusion trees, and only they, have an `apex_name_key`; fusion trees, and only they, name `fuse_a` and `fuse_b` (section 5.6; `E023`, `E043`) |
 | `tree_nodes` | known tree (`E023`); index `0..N-1` (`E060`); at least 2 nodes (`E044`); cost `>= 1`; growth/stat need a trained stat and `amount > 0`; skill/trigger need a monster skill; trigger nodes need a trigger and cannot fire a passive; rule nodes need a known rule id, and a `fire_pierce` node needs the `fire` element (`E023`); last node skill/trigger/rule (`E064`) |
 | `species` | `native_tree_1`, `native_tree_2`: two different native trees (`E023`, `E043`); `chase_tree_run`, `chase_tree_book`: two different chase trees (`E023`, `E043`); the in-run one names no book tree in its conditions, the book-gated one names at least one (`E043`); no chase tree belongs to two species and every chase tree belongs to one (`E043`) |
 | `chase_conditions` | a chase tree (`E023`); refs by type (`E023`); `amount >= 0` for stat and tally (`E043`); every chase tree has a condition (`E065`) |

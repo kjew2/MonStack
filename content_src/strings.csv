@@ -429,3 +429,27 @@ rule.umbral_veil.name,Umbral Veil
 rule.umbral_veil.desc,"It can evade spells as well as physical hits, gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
 rule.night_feast.name,Night Feast
 rule.night_feast.desc,"It starts every fight with {MON_FEAST_START:pct} more damage. Every hit it lands adds {MON_FEAST_DMG:pct} more damage and {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
+tree.geyser_heart.name,Geyser Heart
+tree.living_fortress.name,Living Fortress
+tree.hall_of_mirrors.name,Hall of Mirrors
+tree.arcana_deck.name,Arcana Deck
+tree.geyser_heart.apex,Geyser Wyrm
+tree.living_fortress.apex,Fortress Drake
+tree.hall_of_mirrors.apex,Mirrorwing
+tree.arcana_deck.apex,Tarot Mimic
+mskill.scald.name,Scald
+mskill.scald.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.steam_burst.name,Steam Burst
+mskill.steam_burst.desc,Duo capstone. When hit: {element} damage to all enemies for {power:pct} {scales}.
+mskill.rampart.name,Rampart
+mskill.rampart.desc,Shield all allies for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.siege_return.name,Siege Return
+mskill.siege_return.desc,Duo capstone. When hit: strike back for {power:pct} {scales}.
+mskill.mirror_feint.name,Mirror Feint
+mskill.mirror_feint.desc,+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
+mskill.shatter.name,Shatter
+mskill.shatter.desc,Duo capstone. When hit: its mirror strikes back for {power:pct} {scales}.
+mskill.draw_card.name,Draw a Card
+mskill.draw_card.desc,"Draws a lucky card: +{power:pct} damage dealt for {duration} turns. Cooldown {cooldown}."
+mskill.major_arcana.name,The Star
+mskill.major_arcana.desc,Duo capstone. When hit: heal self for {power:pct} of max HP.

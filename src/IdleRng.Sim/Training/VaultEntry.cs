@@ -10,6 +10,9 @@ namespace IdleRng.Sim.Training
     {
         public string TreeId { get; set; }
         public int Bought { get; set; }
+
+        /// <summary>The fusion tree this one was absorbed into (specs/15 section 5.6), or null for a slotted tree.</summary>
+        public string FusedInto { get; set; }
     }
 
     /// <summary>
@@ -93,7 +96,12 @@ namespace IdleRng.Sim.Training
             // Books brought into the run = unused ones now + the ones the log used.
             e.Books.AddRange(s.Books);
             foreach (var l in s.Log) if (l.Kind == RunCommandKind.UseBook) e.Books.Add(l.Book);
-            foreach (var slot in s.Slots) if (slot != null) e.Trees.Add(new VaultTree { TreeId = slot.TreeId, Bought = slot.Bought });
+            foreach (var slot in s.Slots)
+            {
+                if (slot == null) continue;
+                foreach (var a in slot.Absorbed) e.Trees.Add(new VaultTree { TreeId = a.TreeId, Bought = a.Bought, FusedInto = slot.TreeId });
+                e.Trees.Add(new VaultTree { TreeId = slot.TreeId, Bought = slot.Bought });
+            }
             var g = Gauntlet.GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
             e.GauntletFloor = g.FloorReached;
             e.GauntletCleared = g.Cleared;

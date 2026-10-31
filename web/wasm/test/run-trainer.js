@@ -132,6 +132,9 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('tab-trees').click();
   check((await page.locator('[data-id^="slot-"]').count()) === 2, 'two native trees slotted at the start');
   check(/SP/.test(await text('[data-id=sp2]')), 'skill points shown');
+  const fuses = await page.$$eval('[data-id=fuses-with]', (els) => els.map((e) => e.textContent));
+  check(fuses.length === 2 && fuses.some((t) => /Codex of Tides.*Geyser Heart/.test(t)) && fuses.some((t) => /Bulwark.*Living Fortress/.test(t)),
+    'each fusable native tree names its fusing partner and the fused tree (specs/15 section 5.6): ' + fuses.join(' | '));
   await shot('03-trees');
   await page.locator('[data-tip="node:pyromancy_n4"]').click();
   const abTip = await tip.innerText();

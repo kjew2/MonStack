@@ -81,6 +81,12 @@ namespace IdleRng.Bots.Balance
         public int CapstoneRunFloor { get; set; }
         public int CapstoneBookFloor { get; set; }
 
+        /// <summary>
+        /// Fusion power (specs/15 section 5.5): per fusing pair the species can hold (no parent is another species' native tree),
+        /// the floors the fused tree adds on top of both parents maxed (no chase trees); the mean over those pairs. NaN when none.
+        /// </summary>
+        public double FusionGain { get; set; } = double.NaN;
+
         /// <summary>The species' chase trees in content order: conditions held, unlocked, capstone and its cycle (ChaseTracker).</summary>
         public List<ChaseOutcome> Chase { get; set; } = new List<ChaseOutcome>();
 
@@ -217,6 +223,9 @@ namespace IdleRng.Bots.Balance
         public Distribution CapstoneGainRun { get; set; }
         public Distribution CapstoneGainBook { get; set; }
 
+        /// <summary>Fusion power: the floors a fused tree adds (runs of a species with no fusing pair are left out).</summary>
+        public Distribution FusionGain { get; set; }
+
         /// <summary>Per chase tree of the species, in the order the runs list them (content order).</summary>
         public List<ChaseSummary> Chase { get; set; }
 
@@ -259,6 +268,7 @@ namespace IdleRng.Bots.Balance
             s.CapstoneBase = Distribution.Of(runs.Select(r => r.CapstoneBaseFloor));
             s.CapstoneGainRun = Distribution.Of(runs.Select(r => r.CapstoneRunFloor - r.CapstoneBaseFloor));
             s.CapstoneGainBook = Distribution.Of(runs.Select(r => r.CapstoneBookFloor - r.CapstoneBaseFloor));
+            s.FusionGain = Distribution.Of(runs.Where(r => !double.IsNaN(r.FusionGain)).Select(r => r.FusionGain));
             s.Chase = SummariseChase(runs);
             s.Opponents = SummariseOpponents(runs);
             return s;
@@ -474,6 +484,7 @@ namespace IdleRng.Bots.Balance
                 CapstoneBaseFloor = GauntletSim.Run(c, ChaseFighter(c, s, null), s.Seed).FloorReached,
                 CapstoneRunFloor = GauntletSim.Run(c, ChaseFighter(c, s, sp.ChaseTreeRun), s.Seed).FloorReached,
                 CapstoneBookFloor = GauntletSim.Run(c, ChaseFighter(c, s, sp.ChaseTreeBook), s.Seed).FloorReached,
+                FusionGain = FusionGainOf(c, s),
                 Species = species, Policy = policy, Seed = seed, RankIndex = s.Rank, End = s.End, Cycles = s.Cycle,
                 FightsFought = s.FightsFought, FightsWon = s.FightsWon, Drills = s.Drills, Rests = s.Rests,
                 Milestones = s.Milestones.Count, Shards = AccountOps.Payout(c, s),
@@ -488,22 +499,38 @@ namespace IdleRng.Bots.Balance
         /// The run's monster (TrainingRun.MonsterFighter) without its slotted chase trees, their flat stats taken back out, plus
         /// <paramref name="chaseTree"/> fully bought on top (null = none): its flat stats (capped at STAT_MAX), skills, triggers and rule.
         /// </summary>
-        public static Fighter ChaseFighter(ContentDb c, RunState s, string chaseTree)
+        public static Fighter ChaseFighter(ContentDb c, RunState s, string chaseTree) =>
+            BuildFighter(c, s, chaseTree == null ? Array.Empty<string>() : new[] { chaseTree });
+
+        /// <summary>
+        /// The run's monster without its chase trees (their flat stats taken back out), with each of <paramref name="maxed"/> bought in
+        /// full on top: a tree it already holds (slotted or absorbed) gets its missing nodes, any other tree is added (flat stats capped
+        /// at STAT_MAX).
+        /// </summary>
+        public static Fighter BuildFighter(ContentDb c, RunState s, IEnumerable<string> maxed)
         {
             var stats = s.Stats.Clone();
-            var slots = s.Slots.Where(t => t != null && c.Trees[t.TreeId].Kind != TreeKind.Chase).Select(t => (t.TreeId, t.Bought)).ToList();
-            foreach (var t in s.Slots)
-                if (t != null && c.Trees[t.TreeId].Kind == TreeKind.Chase)
-                    for (int i = 0; i < StatIds.Trained.Length; i++) AddStat(stats, StatIds.Trained[i], -t.FlatAdded[i]);
-            if (chaseTree != null)
+            var held = new List<(string TreeId, int Bought)>();
+            foreach (var t in TrainingRun.AllTrees(s))
             {
-                var tree = c.Trees[chaseTree];
-                foreach (var n in tree.Nodes)
+                if (c.Trees[t.TreeId].Kind == TreeKind.Chase)
+                    for (int i = 0; i < StatIds.Trained.Length; i++) AddStat(stats, StatIds.Trained[i], -t.FlatAdded[i]);
+                else held.Add((t.TreeId, t.Bought));
+            }
+            foreach (var id in maxed)
+            {
+                var tree = c.Trees[id];
+                int k = held.FindIndex(x => x.TreeId == id);
+                int from = k < 0 ? 0 : held[k].Bought;
+                for (int i = from; i < tree.Nodes.Count; i++)
+                {
+                    var n = tree.Nodes[i];
                     if (n.Kind == NodeKind.Stat) AddStat(stats, n.Stat, Math.Max(0, Math.Min(n.Amount, c.Constants.StatMax - stats.Get(n.Stat))));
-                slots.Add((chaseTree, tree.Nodes.Count));
+                }
+                if (k < 0) held.Add((id, tree.Nodes.Count)); else held[k] = (id, tree.Nodes.Count);
             }
             var f = new Fighter { Id = TrainingRun.MonsterId, Element = c.Species[s.SpeciesId].Element, Stats = stats };
-            foreach (var (id, bought) in slots)
+            foreach (var (id, bought) in held)
             {
                 var nodes = c.Trees[id].Nodes;
                 for (int i = 0; i < bought; i++)
@@ -515,6 +542,27 @@ namespace IdleRng.Bots.Balance
                 }
             }
             return f;
+        }
+
+        /// <summary>The fusing pairs a species can hold: neither parent is another species' native tree.</summary>
+        public static List<TreeDef> FusionsFor(ContentDb c, string species)
+        {
+            bool OthersNative(string id) => c.SpeciesList.Any(sp => sp.Id != species && (sp.NativeTree1 == id || sp.NativeTree2 == id));
+            return c.TreeList.Where(t => t.Kind == TreeKind.Fusion && !OthersNative(t.FuseA) && !OthersNative(t.FuseB)).ToList();
+        }
+
+        static double FusionGainOf(ContentDb c, RunState s)
+        {
+            var pairs = FusionsFor(c, s.SpeciesId);
+            if (pairs.Count == 0) return double.NaN;
+            double sum = 0;
+            foreach (var t in pairs)
+            {
+                int without = GauntletSim.Run(c, BuildFighter(c, s, new[] { t.FuseA, t.FuseB }), s.Seed).FloorReached;
+                int with = GauntletSim.Run(c, BuildFighter(c, s, new[] { t.FuseA, t.FuseB, t.Id }), s.Seed).FloorReached;
+                sum += with - without;
+            }
+            return sum / pairs.Count;
         }
 
         static void AddStat(MonsterStats st, string id, double v)

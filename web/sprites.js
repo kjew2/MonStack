@@ -131,6 +131,16 @@ const APEX_ART = {
     over: ["G.G.........", ".G.G........"] },
   night_feast: { pal: { K: "#2a0a10", P: "#3a1428", V: "#ff5a6b", E: "#ffcf3f", T: "#ffcf3f", O: "#ffcf3f" },   // Eclipse Hound
     over: ["........OOO.", ".......O...O"] },
+  // Fusion looks (specs/15 section 5.6): shown as soon as two trees fuse. Arcana Deck can fuse on any species, so its overlay
+  // uses only its own letters.
+  geyser_heart: { pal: { P: "#2f5f7a", M: "#9fd8f0", O: "#e0f7ff", R: "#c2452e", S: "#e0f7ff" },   // Geyser Wyrm
+    over: [".S..S.......", "S..S..S....."] },
+  living_fortress: { pal: { P: "#5a5a64", M: "#c8c8d0", O: "#ffb347", G: "#8a8a96" },   // Fortress Drake
+    over: ["G.G.G.......", "GGGGG......."] },
+  hall_of_mirrors: { pal: { Y: "#cfd8e6", W: "#ffffff", O: "#8fa8c8", K: "#3a4a6a", B: "#e6ecf5" },   // Mirrorwing
+    over: [BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, "W..W....W..W"] },
+  arcana_deck: { pal: { Q: "#f2e6c8", Z: "#b33a5a" },   // Tarot Mimic
+    over: ["QZ........ZQ", "QQ........QQ", BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, "QZ........ZQ", "QQ........QQ"] },
 };
 // The species' hand-drawn art, in its apex form when apex (a chase tree id) has one; null for a species without art.
 function speciesSprite(id, apex) {

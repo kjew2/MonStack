@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
@@ -194,8 +195,23 @@ namespace IdleRng.Sim.Training
             int already = Slotted(s, tree);
             if (already >= 0 && already != slot) throw new InvalidOperationException($"{tree} is already in slot {already}");
             var result = new TakeResult { Placed = tree };
-            if (s.Slots[slot] != null) RemoveSlot(c, s, slot, result);
-            s.Slots[slot] = new TreeSlot { TreeId = tree };
+            if (offer.Source == OfferSource.Fusion)
+            {
+                // The fused tree takes one parent's slot and absorbs both; the other parent's slot comes free (specs/15 section 5.6).
+                var def = c.Trees[tree];
+                int a = Slotted(s, def.FuseA), b = Slotted(s, def.FuseB);
+                if (a < 0 || b < 0) throw new InvalidOperationException($"{tree} needs {def.FuseA} and {def.FuseB} in slots");
+                if (slot != a && slot != b) throw new InvalidOperationException($"{tree} fuses into the slot of {def.FuseA} or {def.FuseB}");
+                var fused = new TreeSlot { TreeId = tree, Absorbed = { s.Slots[a], s.Slots[b] } };
+                s.Slots[a] = null;
+                s.Slots[b] = null;
+                s.Slots[slot] = fused;
+            }
+            else
+            {
+                if (s.Slots[slot] != null) RemoveSlot(c, s, slot, result);
+                s.Slots[slot] = new TreeSlot { TreeId = tree };
+            }
             s.Offers.RemoveAt(0);
             s.Log.Add(new RunCommand(RunCommandKind.TakeTree) { Choice = choice, Slot = slot });
             Reconcile(c, s, result);
@@ -275,7 +291,7 @@ namespace IdleRng.Sim.Training
             int i = s.Books.IndexOf(bookId);
             if (i < 0) throw new InvalidOperationException($"no skill book '{bookId}' in this run");
             string tree = c.SkillBooks[bookId].TreeId;
-            if (Slotted(s, tree) >= 0 || Pending(s, tree)) throw new InvalidOperationException($"{tree} is already slotted or offered");
+            if (Held(s, tree) || Pending(s, tree)) throw new InvalidOperationException($"{tree} is already slotted or offered");
             s.Books.RemoveAt(i);
             s.Offers.Add(new TreeOffer { Source = OfferSource.Book, Trees = { tree } });
             s.Log.Add(new RunCommand(RunCommandKind.UseBook) { Book = bookId });
@@ -291,9 +307,8 @@ namespace IdleRng.Sim.Training
         public static Fighter MonsterFighter(ContentDb c, RunState s)
         {
             var f = new Fighter { Id = MonsterId, Element = c.Species[s.SpeciesId].Element, Stats = s.Stats.Clone() };
-            foreach (var ts in s.Slots)
+            foreach (var ts in AllTrees(s))
             {
-                if (ts == null) continue;
                 var nodes = c.Trees[ts.TreeId].Nodes;
                 for (int i = 0; i < ts.Bought; i++)
                 {
@@ -409,14 +424,14 @@ namespace IdleRng.Sim.Training
             {
                 case ConditionType.TreeMaxed:
                 {
-                    int i = Slotted(s, cd.Ref);
-                    return i >= 0 && s.Slots[i].Bought >= c.Trees[cd.Ref].Nodes.Count;
+                    var ts = Owned(s, cd.Ref);
+                    return ts != null && ts.Bought >= c.Trees[cd.Ref].Nodes.Count;
                 }
                 case ConditionType.NodeOwned:
                 {
                     var n = c.TreeNodes[cd.Ref];
-                    int i = Slotted(s, n.TreeId);
-                    return i >= 0 && s.Slots[i].Bought > n.Index;
+                    var ts = Owned(s, n.TreeId);
+                    return ts != null && ts.Bought > n.Index;
                 }
                 case ConditionType.StatAtLeast: return s.Stats.Get(cd.Ref) >= cd.Amount;
                 case ConditionType.TallyAtLeast: return TallyValue(s, cd.Ref) >= cd.Amount;
@@ -583,7 +598,7 @@ namespace IdleRng.Sim.Training
         /// <summary>A generic tree for <paramref name="stat"/> (or any stat; null = every stat) at or below the threshold, not slotted, not offered.</summary>
         static bool DraftEligible(RunState s, TreeDef t, string stat, int threshold) =>
             t.Kind == TreeKind.Generic && (stat == null || t.OfferStat == null || t.OfferStat == stat) && t.OfferThreshold <= threshold
-            && Slotted(s, t.Id) < 0 && !Pending(s, t.Id);
+            && !Held(s, t.Id) && !Pending(s, t.Id);
 
         /// <summary>
         /// Keep chase trees consistent with their conditions (specs/15 section 5): a slotted chase tree whose conditions fail
@@ -619,6 +634,23 @@ namespace IdleRng.Sim.Training
                 s.Offers.Add(new TreeOffer { Source = OfferSource.Chase, Trees = { t.Id } });
                 s.ChaseOffered.Add(t.Id);
             }
+            // Fusion (specs/15 section 5.6): offered once while both parents sit in slots, maxed; withdrawn when that breaks.
+            s.Offers.RemoveAll(o => o.Source == OfferSource.Fusion && !FusionReady(c, s, c.Trees[o.Trees[0]]));
+            s.FusionOffered.RemoveAll(id => !FusionReady(c, s, c.Trees[id]) && Slotted(s, id) < 0);
+            foreach (var t in c.TreeList)
+            {
+                if (t.Kind != TreeKind.Fusion || s.FusionOffered.Contains(t.Id) || Slotted(s, t.Id) >= 0 || !FusionReady(c, s, t)) continue;
+                s.Offers.Add(new TreeOffer { Source = OfferSource.Fusion, Trees = { t.Id } });
+                s.FusionOffered.Add(t.Id);
+            }
+        }
+
+        /// <summary>Whether fusion tree <paramref name="t"/>'s two parents both sit in slots with every node bought.</summary>
+        public static bool FusionReady(ContentDb c, RunState s, TreeDef t)
+        {
+            if (t.Kind != TreeKind.Fusion) return false;
+            int a = Slotted(s, t.FuseA), b = Slotted(s, t.FuseB);
+            return a >= 0 && b >= 0 && s.Slots[a].Bought >= c.Trees[t.FuseA].Nodes.Count && s.Slots[b].Bought >= c.Trees[t.FuseB].Nodes.Count;
         }
 
         /// <summary>
@@ -628,22 +660,46 @@ namespace IdleRng.Sim.Training
         static void RemoveSlot(ContentDb c, RunState s, int slot, TakeResult result)
         {
             var ts = s.Slots[slot];
-            var nodes = c.Trees[ts.TreeId].Nodes;
-            int spent = 0;
-            for (int i = 0; i < ts.Bought; i++) spent += nodes[i].Cost;
-            int refund = (int)Math.Floor(spent * c.Constants.TreeRefund);
-            s.Sp += refund;
-            for (int i = 0; i < StatIds.Trained.Length; i++)
+            int refund = 0;
+            foreach (var part in new[] { ts }.Concat(ts.Absorbed))   // a fused tree takes its absorbed parents with it
             {
-                if (ts.FlatAdded[i] == 0) continue;
-                string id = StatIds.Trained[i];
-                Set(s.Stats, id, Math.Max(0, s.Stats.Get(id) - ts.FlatAdded[i]));
+                var nodes = c.Trees[part.TreeId].Nodes;
+                int spent = 0;
+                for (int i = 0; i < part.Bought; i++) spent += nodes[i].Cost;
+                refund += (int)Math.Floor(spent * c.Constants.TreeRefund);
+                for (int i = 0; i < StatIds.Trained.Length; i++)
+                {
+                    if (part.FlatAdded[i] == 0) continue;
+                    string id = StatIds.Trained[i];
+                    Set(s.Stats, id, Math.Max(0, s.Stats.Get(id) - part.FlatAdded[i]));
+                }
             }
+            s.Sp += refund;
             s.Slots[slot] = null;
             if (result == null) return;
             result.Removed.Add(ts.TreeId);
             result.Refunded += refund;
         }
+
+        /// <summary>Every tree the monster holds: each slotted tree, a fused tree's absorbed parents first.</summary>
+        public static IEnumerable<TreeSlot> AllTrees(RunState s)
+        {
+            foreach (var ts in s.Slots)
+            {
+                if (ts == null) continue;
+                foreach (var a in ts.Absorbed) yield return a;
+                yield return ts;
+            }
+        }
+
+        /// <summary>The slotted or absorbed tree <paramref name="treeId"/>, or null.</summary>
+        static TreeSlot Owned(RunState s, string treeId)
+        {
+            foreach (var ts in AllTrees(s)) if (ts.TreeId == treeId) return ts;
+            return null;
+        }
+
+        static bool Held(RunState s, string treeId) => Owned(s, treeId) != null;
 
         static int Slotted(RunState s, string treeId)
         {
@@ -785,6 +841,19 @@ namespace IdleRng.Sim.Training
             {
                 w.I32(s.Ladder.Count);
                 foreach (var id in s.Ladder) w.Str(id);
+            }
+            if (s.FusionOffered.Count > 0 || s.Slots.Any(x => x != null && x.Absorbed.Count > 0))
+            {
+                // Fusion state (specs/15 section 5.6), hashed only when a run has any, so every other run keeps its hash.
+                w.Str("fusion");
+                w.I32(s.FusionOffered.Count);
+                foreach (var id in s.FusionOffered) w.Str(id);
+                foreach (var ts in s.Slots)
+                {
+                    w.I32(ts == null ? 0 : ts.Absorbed.Count);
+                    if (ts == null) continue;
+                    foreach (var a in ts.Absorbed) { w.Str(a.TreeId); w.I32(a.Bought); foreach (var v in a.FlatAdded) w.F64(v); }
+                }
             }
             if (talents)
             {

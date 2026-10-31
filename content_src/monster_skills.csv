@@ -66,3 +66,11 @@ keen_eye,mskill.keen_eye.name,passive,self,crit_rate,,0.15,0,0,
 stoke,mskill.stoke.name,buff,self,str,,0.15,0,2,
 focus_mind,mskill.focus_mind.name,buff,self,int,,0.3,0,2,
 tailwind,mskill.tailwind.name,buff,self,spd,,0.1,0,2,
+scald,mskill.scald.name,damage,all_enemies,,str,0.7,3,0,water
+steam_burst,mskill.steam_burst.name,damage,all_enemies,,str,0.1,0,0,fire
+rampart,mskill.rampart.name,shield,all_allies,,def,0.8,4,3,
+siege_return,mskill.siege_return.name,damage,enemy,,def,0.15,0,0,
+mirror_feint,mskill.mirror_feint.name,buff,self,dex,,0.4,4,3,
+shatter,mskill.shatter.name,damage,enemy,,int,1.0,0,0,
+draw_card,mskill.draw_card.name,buff,self,dmg_dealt,,0.2,3,3,
+major_arcana,mskill.major_arcana.name,heal,self,,hp,0.01,0,0,

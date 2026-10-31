@@ -178,6 +178,9 @@ namespace IdleRng.Web
             w.EndArr();
             w.P("source", TreeSource(t));
             if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated).P("apexName", _db.Text(t.ApexNameKey));
+            if (t.Kind == TreeKind.Fusion) w.P("fuseA", t.FuseA).P("fuseB", t.FuseB).P("apexName", _db.Text(t.ApexNameKey));
+            if (t.FusesInto != null)   // the fusing pair, so the UI can show it (kj: each fusing pair must be clear)
+                w.P("fusesInto", t.FusesInto).P("fusesWith", _db.Trees[t.FusesInto].FuseA == t.Id ? _db.Trees[t.FusesInto].FuseB : _db.Trees[t.FusesInto].FuseA);
             w.Key("conditions").Arr();
             if (t.Conditions != null) foreach (var cd in t.Conditions) w.Str(ConditionText(cd));
             w.EndArr();
@@ -226,6 +229,9 @@ namespace IdleRng.Web
                     var b = _db.SkillBooks.Values.FirstOrDefault(x => x.TreeId == t.Id);
                     return b == null ? "From a skill book" : "From the skill book " + _db.Text(b.NameKey) + " (bring it into a run)";
                 }
+                case TreeKind.Fusion:
+                    return "Fusion of " + _db.Text(_db.Trees[t.FuseA].NameKey) + " and " + _db.Text(_db.Trees[t.FuseB].NameKey)
+                        + ": offered when both are slotted and maxed; it takes one of their slots, frees the other and keeps both";
                 default:
                 {
                     string owner = t.Species != null && _db.Species.TryGetValue(t.Species, out var sp) ? _db.Text(sp.NameKey) : "its species";
@@ -616,7 +622,7 @@ namespace IdleRng.Web
             w.P("apex", apex).P("name", ApexForm.Name(_db, e.SpeciesId, apex));
             w.Key("stats"); Stats(w, e.Stats);
             w.Key("trees").Arr();
-            foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).EndObj();
+            foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).P("fusedInto", t.FusedInto).EndObj();
             w.EndArr();
             w.Key("gauntlet");
             if (e.LegacyTitle == null) w.Null();   // sealed before the gauntlet existed
@@ -882,7 +888,10 @@ namespace IdleRng.Web
             foreach (var t in s.Slots)
             {
                 if (t == null) { w.Null(); continue; }
-                w.Obj().P("tree", t.TreeId).P("bought", t.Bought).EndObj();
+                w.Obj().P("tree", t.TreeId).P("bought", t.Bought);
+                w.Key("absorbed").Arr();   // a fusion tree's parents (specs/15 section 5.6)
+                foreach (var a in t.Absorbed) w.Obj().P("tree", a.TreeId).P("bought", a.Bought).EndObj();
+                w.EndArr().EndObj();
             }
             w.EndArr();
             w.Key("offers").Arr();

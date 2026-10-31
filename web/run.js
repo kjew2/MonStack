@@ -320,6 +320,7 @@
           h('b', { text: 'Slot ' + (i + 1) + ': ' + t.name }),
           h('span', null, [h('span', { class: 'tag', text: t.kind }), ' ', h('span', { class: 'small muted num', text: slot.bought + '/' + t.nodes.length })]),
         ]),
+        fusionLine(s, slot, t),
       ]);
       t.nodes.forEach((n, j) => {
         if (j < slot.bought) card.append(nodeRow(n, 'got'));
@@ -352,6 +353,18 @@
           h('button', { class: 'btn small gemsy', type: 'button', 'data-act': 'book-' + id, text: 'Use', onclick: () => useBook(id) })]),
       ])));
     }
+  }
+
+  // Fusion (specs/15 section 5.6; kj: each fusing pair must be clear): a fused tree names its parents, a tree that can fuse names
+  // its partner and the fused tree, with a check once the partner is slotted and maxed too.
+  function fusionLine(s, slot, t) {
+    if (slot.absorbed && slot.absorbed.length)
+      return h('small', { class: 'gold', 'data-id': 'fused-from' }, 'Fused from ' + slot.absorbed.map((a) => treeName(a.tree)).join(' + ') + ': their nodes still count');
+    if (!t.fusesInto) return null;
+    const partner = s.slots.find((x) => x && x.tree === t.fusesWith);
+    const ready = partner && partner.bought >= C.trees[t.fusesWith].nodes.length;
+    return h('small', { class: ready ? 'ok' : 'muted', 'data-id': 'fuses-with' },
+      '⚭ Max this and ' + treeName(t.fusesWith) + ' to fuse them into ' + treeName(t.fusesInto) + (partner ? (ready ? ' (partner ready ✓)' : ' (partner slotted)') : ''));
   }
 
   // ---- the rank ladder (specs/14 section 5): one opponent per rank, rolled at the start of the run, all visible from the start.
@@ -697,9 +710,11 @@
     const o = s.offers[0], key = offerKey(o), fresh = ui.offer.key !== key;
     if (fresh) ui.offer = { key, pick: 0, open: false };   // the banner pops once per offer, not on every re-render
     const banner = o.source === 'milestone' ? { cls: 'milestone', big: 'Awakening!' }
-      : o.source === 'book' ? { cls: 'book', big: 'Skill book!' } : { cls: 'chase', big: 'Chase unlocked!' };
+      : o.source === 'book' ? { cls: 'book', big: 'Skill book!' } : o.source === 'fusion' ? { cls: 'chase', big: 'Fusion!' } : { cls: 'chase', big: 'Chase unlocked!' };
+    const ft = o.source === 'fusion' ? C.trees[o.trees[0]] : null;
     const sub = o.source === 'milestone'
       ? [h('span', { class: 'stchip st-' + o.stat, text: up(o.stat) }), ' reached ', h('b', { class: 'num', text: String(o.threshold) })]
+      : ft ? [treeName(ft.fuseA) + ' + ' + treeName(ft.fuseB) + ' can fuse into one tree']
       : [o.source === 'book' ? 'Its tree is yours to slot' : 'A chase tree is ready'];
     if (o.trees.length > 1) sub.push(' · pick 1 of ' + o.trees.length);
     modal.append(h('div', { class: 'obanner ' + banner.cls + (fresh && !reducedMotion() ? ' anim' : '') }, [
@@ -741,6 +756,21 @@
     // Warn on a slot whose tree a chase tree needs (specs/15 section 5.2): the offered chase tree itself, which would lock at once,
     // or a slotted chase tree, which would lock again.
     const needs = (chaseId, treeId) => (C.trees[chaseId].conditionTrees || []).indexOf(treeId) >= 0;
+    // A fusion goes into one of its parents' slots; the other parent's slot comes free (specs/15 section 5.6).
+    const parentSlots = t.kind === 'fusion' ? s.slots.map((x, i) => (x && (x.tree === t.fuseA || x.tree === t.fuseB) ? i : -1)).filter((i) => i >= 0) : null;
+    if (parentSlots) {
+      parentSlots.forEach((i) => {
+        const other = parentSlots.find((j) => j !== i);
+        grid.append(h('button', { class: 'stile full', type: 'button', 'data-act': 'take-' + choice + '-' + i,
+          'aria-label': 'Fuse into slot ' + (i + 1) + ', freeing slot ' + (other + 1), onclick: () => take(choice, i) }, [
+          h('span', { class: 'sn num', text: String(i + 1) }),
+          h('span', { class: 'sl', text: treeName(s.slots[i].tree) }),
+          h('span', { class: 'sw', text: '⚭ Fuse here, frees ' + (other + 1) }),
+        ]));
+      });
+      card.append(h('div', { class: 'small muted', text: 'Fuse into either parent\'s slot. Both parents\' nodes and stats stay; the other slot comes free.' }), grid);
+      return card;
+    }
     s.slots.forEach((slot, i) => {
       const warn = !slot ? null : needs(id, slot.tree) ? 'Locks it!'
         : s.slots.some((x) => x && x !== slot && C.trees[x.tree].kind === 'chase' && needs(x.tree, slot.tree)) ? 'Chase needs it' : null;

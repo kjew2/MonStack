@@ -75,10 +75,10 @@ namespace IdleRng.Bots.Balance
 
             sb.Append("\n## Chase power: gauntlet floors a whole chase tree adds, capstone included (specs/15 section 5.5)\n");
             t = new Table(2);
-            t.Row("species", "policy", "base floor", "in-run +", "in-run p10/p50/p90", "book +", "book p10/p50/p90");
+            t.Row("species", "policy", "base floor", "fusion +", "in-run +", "in-run p10/p50/p90", "book +", "book p10/p50/p90");
             foreach (var c in r.Cells)
-                t.Row(c.Species, c.Policy, Num(c.CapstoneBase.Mean), Num(c.CapstoneGainRun.Mean), Pcts(c.CapstoneGainRun),
-                      Num(c.CapstoneGainBook.Mean), Pcts(c.CapstoneGainBook));
+                t.Row(c.Species, c.Policy, Num(c.CapstoneBase.Mean), c.FusionGain.N == 0 ? "-" : Num(c.FusionGain.Mean), Num(c.CapstoneGainRun.Mean),
+                      Pcts(c.CapstoneGainRun), Num(c.CapstoneGainBook.Mean), Pcts(c.CapstoneGainBook));
             t.AppendTo(sb);
 
             if (r.GauntletBossEvery > 0)
@@ -261,6 +261,7 @@ namespace IdleRng.Bots.Balance
                 j.Key("capstoneBase"); Dist(j, c.CapstoneBase);
                 j.Key("capstoneGainRun"); Dist(j, c.CapstoneGainRun);
                 j.Key("capstoneGainBook"); Dist(j, c.CapstoneGainBook);
+                j.Key("fusionGain"); Dist(j, c.FusionGain);
                 j.Key("gauntletBossStalls").Num(c.GauntletBossStalls).Key("gauntletBossStallRate").Num(c.GauntletBossStallRate);
                 j.Key("gauntletStallMod").Open('[');
                 foreach (var k in c.GauntletStallMod) j.Num(k);
@@ -400,6 +401,7 @@ namespace IdleRng.Bots.Balance
                 Row(sb, "capstone", c.Species, c.Policy, "", "base_floor", c.CapstoneBase);
                 Row(sb, "capstone", c.Species, c.Policy, "", "gain_run", c.CapstoneGainRun);
                 Row(sb, "capstone", c.Species, c.Policy, "", "gain_book", c.CapstoneGainBook);
+                Row(sb, "capstone", c.Species, c.Policy, "", "gain_fusion", c.FusionGain);
                 foreach (var k in c.Killers) Rate(sb, "gauntlet", c.Species, c.Policy, "", "killer_" + k.Key, c.N, c.N == 0 ? 0 : (double)k.Count / c.N);
                 ChaseCsv(sb, "chase", c);
                 foreach (var x in c.Opponents)
