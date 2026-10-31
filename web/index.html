@@ -22,7 +22,7 @@
   --text: #1d3557; --muted: #5f7896; --shade: #ffffff;   /* --shade is the halo behind text drawn over fills (light here) */
   --track: #e3ecf7;                 /* an empty bar */
   --tile: #f1f6fc; --tile-mix: #ffffff;   /* a node tile, and the white a stat tint is mixed into */
-  --scrim: rgba(226, 238, 252, .97); /* behind the modal */
+  --scrim: rgba(236, 244, 253, .99); /* behind the modal */
   --toast-bg: #ffffff; --cd-veil: rgba(29, 53, 87, .55); --keycap: #c9daf0; --arena-top: #dcebff;
   /* accents: --gems is the one accent (focus, selection, skill points): sky blue; --gold for rare things. Text-strength shades, so
      they read on white; --gold-pop is the bright gold for big loud text with an outline. */
@@ -454,8 +454,8 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 /* loud text: bright gold with a dark outline so it pops on a light page */
 .dpop.super, .obanner .big, .pow { color: var(--gold-pop); -webkit-text-stroke: 1.5px var(--gold-stroke); }
 .obanner .big { font: 700 38px/1.05 var(--font-title); letter-spacing: .02em; text-shadow: 3px 3px 0 var(--pop-red); }
-.obanner.book .big { color: var(--gems-light); -webkit-text-stroke-color: var(--gems-stroke); text-shadow: 3px 3px 0 var(--gems); }
-.obanner.chase .big { color: var(--epic-light); -webkit-text-stroke-color: var(--epic-stroke); text-shadow: 3px 3px 0 var(--epic); }
+.obanner.book .big { color: var(--gems); -webkit-text-stroke: 0; text-shadow: 3px 3px 0 var(--gems-shadow); }
+.obanner.chase .big { color: var(--epic); -webkit-text-stroke: 0; text-shadow: 3px 3px 0 var(--epic-shadow); }
 .obanner .more { background: var(--panel); }
 .tcard .tname { font: 700 19px/1.1 var(--font-title); }
 .legacy, .climb-now { font-family: var(--font-title); }
