@@ -306,7 +306,12 @@ namespace IdleRng.Sim.Content
         public string TreeId { get; internal set; }
     }
 
-    public enum TalentEffect { DrillCost, StatFloor, DraftSize, StartSp }
+    /// <summary>What a talent changes (specs/18 sections 3 and 4); each maps to one RunModifiers field.</summary>
+    public enum TalentEffect
+    {
+        DrillCost, StatFloor, DraftSize, StartSp, RestEnergy, FailChance, SuperChance, ShardMult, Momentum, LossSp, Specialist,
+        TreeSlots, InjuryShield, LastCycleAp, MilestoneMult, DraftRerolls,
+    }
 
     /// <summary>An account talent (specs/18 section 4). Rank r+1 costs CostBase + CostStep * r shards; the effect is PerRank x rank.</summary>
     public sealed class TalentDef

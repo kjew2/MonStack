@@ -17,8 +17,8 @@ namespace IdleRng.Sim.Training
     {
         public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight";
         public const string MonsterId = "monster";
-        public const int HashVersion = 4;
-        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v4");
+        public const int HashVersion = 5;
+        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v5");
 
         // ------------------------------------------------------------------ start
 
@@ -34,19 +34,23 @@ namespace IdleRng.Sim.Training
                 throw new ArgumentException($"unknown species '{speciesId}'", nameof(speciesId));
             var k = c.Constants;
             mods = mods?.Clone() ?? new RunModifiers();
-            if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.DraftSizeBonus < 0 || mods.StartSp < 0)
-                throw new ArgumentException("run modifiers must be >= 0", nameof(mods));
+            if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.DraftSizeBonus < 0 || mods.StartSp < 0
+                || !(mods.RestEnergyBonus >= 0) || !(mods.FailChanceDelta <= 0) || !(mods.SuperChanceBonus >= 0) || !(mods.ShardMult >= 0)
+                || mods.MomentumDrills < 0 || mods.LossSp < 0 || !(mods.SpecialistBonus >= 0 && mods.SpecialistBonus <= 2)
+                || mods.TreeSlotBonus < 0 || mods.InjuryShields < 0 || mods.LastCycleAp < 0 || !(mods.MilestoneMult > 0) || mods.DraftRerolls < 0)
+                throw new ArgumentException("run modifiers out of range (specs/18 section 3)", nameof(mods));
             var stats = sp.Base.Clone();
             if (mods.StatFloorMult != 1)
                 foreach (var id in StatIds.Trained) Set(stats, id, Math.Min(k.StatMax, Math.Floor(stats.Get(id) * mods.StatFloorMult)));
             var s = new RunState
             {
                 SpeciesId = speciesId, Seed = seed, Stats = stats, Mods = mods,
-                Energy = k.RunEnergyStart, Cycle = 1, ApLeft = k.RunAp, Rank = 0, Phase = RunPhase.Training,
+                Energy = k.RunEnergyStart, Cycle = 1, Rank = 0, Phase = RunPhase.Training,
                 Training = new RngStream(TrainingStream, StreamNames.StreamSeed(seed, TrainingStream)),
                 Draft = new RngStream(DraftStream, StreamNames.StreamSeed(seed, DraftStream)),
-                Sp = k.SpPerCycle + mods.StartSp, Slots = new TreeSlot[k.TreeSlots],
+                Sp = k.SpPerCycle + mods.StartSp, Slots = new TreeSlot[k.TreeSlots + mods.TreeSlotBonus],
             };
+            s.ApLeft = CycleAp(c, s);
             s.Slots[0] = new TreeSlot { TreeId = sp.NativeTree1 };
             s.Slots[1] = new TreeSlot { TreeId = sp.NativeTree2 };
             if (books != null)
@@ -65,7 +69,8 @@ namespace IdleRng.Sim.Training
         /// Drill one trained stat (specs/14 section 4). Rolls the tier (fail/success/super, odds from current energy), then the
         /// gain inside the tier's range, then injury when energy is low. Costs 1 AP and DRILL_ENERGY_COST energy. Growth is the
         /// species' plus the bought growth nodes of the slotted trees. An injury keeps the gain, then costs the rest of the cycle
-        /// and its fight plus INJURY_SKIP_CYCLES whole cycles (<see cref="Injure"/>); the run goes on after that.
+        /// and its fight plus INJURY_SKIP_CYCLES whole cycles (<see cref="Injure"/>); the run goes on after that. Talents (specs/18
+        /// section 3) shift the fail and super odds, make drills after a Super free (Momentum) and can prevent an injury (Second Wind).
         /// </summary>
         public static DrillResult Drill(ContentDb c, RunState s, string stat)
         {
@@ -74,7 +79,7 @@ namespace IdleRng.Sim.Training
             var k = c.Constants;
             double e = EnergyFraction(k, s.Energy);
 
-            var tier = RollTier(k, e, s.Training.NextDouble());
+            var tier = RollTier(RunFailChance(c, s, e), RunSuperChance(c, s, e), s.Training.NextDouble());
             var def = c.DrillTiers[(int)tier];
             int span = def.GainMax - def.GainMin + 1;
             int raw = def.GainMin + Math.Min(span - 1, (int)(s.Training.NextDouble() * span));
@@ -84,11 +89,19 @@ namespace IdleRng.Sim.Training
 
             double injuryP = InjuryChance(k, e);
             bool injured = injuryP > 0 && s.Training.NextDouble() < injuryP;
+            bool shielded = injured && s.ShieldsUsed < s.Mods.InjuryShields;
+            if (shielded) { injured = false; s.ShieldsUsed++; }
 
-            s.Energy = Math.Max(0, s.Energy - DrillCost(c, s));
+            bool free = s.FreeDrills > 0;
+            s.Energy = shielded ? 0 : Math.Max(0, s.Energy - DrillCost(c, s));
+            if (free) s.FreeDrills--;
+            if (tier == DrillTier.Super && s.Mods.MomentumDrills > 0) s.FreeDrills = Math.Max(s.FreeDrills, s.Mods.MomentumDrills);
             s.Drills++;
             s.Log.Add(new RunCommand(RunCommandKind.Drill, stat));
-            var result = new DrillResult { Stat = stat, Tier = tier, Gain = after - before, NewValue = after, EnergyAfter = s.Energy, Injured = injured };
+            var result = new DrillResult
+            {
+                Stat = stat, Tier = tier, Gain = after - before, NewValue = after, EnergyAfter = s.Energy, Injured = injured, Shielded = shielded, Free = free,
+            };
             CrossMilestones(c, s, stat, before, after, result.Milestones);
 
             if (injured) result.Injury = Injure(c, s);
@@ -97,13 +110,13 @@ namespace IdleRng.Sim.Training
             return result;
         }
 
-        /// <summary>Rest: restore REST_ENERGY (capped at max). Costs 1 AP. No roll.</summary>
+        /// <summary>Rest: restore REST_ENERGY plus the Deep Rest bonus (capped at max). Costs 1 AP. No roll.</summary>
         public static RestResult Rest(ContentDb c, RunState s)
         {
             RequirePhase(s, RunPhase.Training, "Rest");
             var k = c.Constants;
             double before = s.Energy;
-            s.Energy = Math.Min(k.RunEnergyMax, s.Energy + k.RestEnergy);
+            s.Energy = Math.Min(k.RunEnergyMax, s.Energy + RestEnergy(c, s));
             s.Rests++;
             s.Log.Add(new RunCommand(RunCommandKind.Rest));
             var result = new RestResult { Restored = s.Energy - before, EnergyAfter = s.Energy };
@@ -114,7 +127,8 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// The due rank fight (specs/14 section 5): the monster with its current stats and bought tree skills against the
-        /// current rank's opponent, 1v1. A win ranks up (the top rank stays) and pays SP_PER_WIN. The fight's tallies add to the
+        /// current rank's opponent, 1v1. A win ranks up (the top rank stays) and pays SP_PER_WIN; a loss pays the Grudge Match
+        /// talent's SP (specs/18 section 3). The fight's tallies add to the
         /// run tally. Then the next cycle starts, or the run completes. The observers are passed to BattleSim.Resolve.
         /// </summary>
         public static RankFightResult Fight(ContentDb c, RunState s, Action<FightAction> onAction = null, Action<FightState> onStart = null)
@@ -134,6 +148,11 @@ namespace IdleRng.Sim.Training
                 s.Sp += c.Constants.SpPerWin;
                 result.SpGained = c.Constants.SpPerWin;
                 if (s.Rank < c.FightRanks.Count - 1) s.Rank++;
+            }
+            else if (s.Mods.LossSp > 0)
+            {
+                s.Sp += s.Mods.LossSp;
+                result.SpGained = s.Mods.LossSp;
             }
             result.RankAfter = s.Rank;
             s.Log.Add(new RunCommand(RunCommandKind.Fight));
@@ -174,6 +193,35 @@ namespace IdleRng.Sim.Training
             s.Offers.RemoveAt(0);
             s.Log.Add(new RunCommand(RunCommandKind.DiscardOffer));
             Reconcile(c, s, null);
+        }
+
+        /// <summary>
+        /// Second Look (specs/18 section 3): redraw the oldest offer, a milestone draft, once per Mods.DraftRerolls. The new trees
+        /// are generic trees at or below the draft's threshold for <b>any</b> stat (agent: a stat's own pool is rarely bigger than
+        /// one draft), not slotted and not in a pending offer (so none it offered), by the same partial shuffle on the draft
+        /// stream. Refused when no such tree is left (<see cref="CanRerollDraft"/>).
+        /// </summary>
+        public static void RerollDraft(ContentDb c, RunState s)
+        {
+            RequireOffer(s);
+            var offer = s.Offers[0];
+            if (offer.Source != OfferSource.Milestone) throw new InvalidOperationException("only a milestone draft can be rerolled");
+            if (s.RerollsUsed >= s.Mods.DraftRerolls) throw new InvalidOperationException("no draft rerolls left this run");
+            var trees = DraftPicks(c, s, null, offer.Threshold);
+            if (trees.Count == 0) throw new InvalidOperationException("no other tree can be drawn for this draft");
+            offer.Trees = trees;
+            s.RerollsUsed++;
+            s.Log.Add(new RunCommand(RunCommandKind.RerollDraft));
+            Reconcile(c, s, null);
+        }
+
+        /// <summary>Whether <see cref="RerollDraft"/> would be accepted now (a reroll left, the oldest offer a milestone draft, a tree to draw).</summary>
+        public static bool CanRerollDraft(ContentDb c, RunState s)
+        {
+            if (s.Offers.Count == 0 || s.Offers[0].Source != OfferSource.Milestone || s.RerollsUsed >= s.Mods.DraftRerolls) return false;
+            foreach (var t in c.TreeList)
+                if (DraftEligible(s, t, null, s.Offers[0].Threshold)) return true;
+            return false;
         }
 
         /// <summary>Buy the next node of the tree in <paramref name="slot"/> (nodes are bought in order) for its cost in SP.</summary>
@@ -245,7 +293,10 @@ namespace IdleRng.Sim.Training
             return f;
         }
 
-        /// <summary>Drill growth for <paramref name="stat"/>: species growth plus the bought growth nodes of the slotted trees.</summary>
+        /// <summary>
+        /// Drill growth for <paramref name="stat"/>: species growth plus the bought growth nodes of the slotted trees, times the
+        /// Specialist talent's factor when it is on (x(1 + b) on the highest trained stat, ties included, else x(1 - b / 2)).
+        /// </summary>
         public static double Growth(ContentDb c, RunState s, string stat)
         {
             double g = c.Species[s.SpeciesId].Growth.Get(stat);
@@ -256,7 +307,11 @@ namespace IdleRng.Sim.Training
                 for (int i = 0; i < ts.Bought; i++)
                     if (nodes[i].Kind == NodeKind.Growth && nodes[i].Stat == stat) g += nodes[i].Amount;
             }
-            return g;
+            double b = s.Mods.SpecialistBonus;
+            if (b == 0) return g;
+            double top = 0;
+            foreach (var id in StatIds.Trained) top = Math.Max(top, s.Stats.Get(id));
+            return g * (s.Stats.Get(stat) >= top ? 1 + b : 1 - b / 2);
         }
 
         /// <summary>Whether every condition of chase tree <paramref name="tree"/> holds now (specs/15 section 5).</summary>
@@ -310,8 +365,25 @@ namespace IdleRng.Sim.Training
 
         // ------------------------------------------------------------------ odds (public for the UI and tests)
 
-        /// <summary>Energy one drill costs this run: DRILL_ENERGY_COST times the run's talent modifier.</summary>
-        public static double DrillCost(ContentDb c, RunState s) => c.Constants.DrillEnergyCost * s.Mods.DrillCostMult;
+        /// <summary>Energy the next drill costs: DRILL_ENERGY_COST times the run's talent modifier, or 0 while Momentum has a free drill.</summary>
+        public static double DrillCost(ContentDb c, RunState s) => s.FreeDrills > 0 ? 0 : c.Constants.DrillEnergyCost * s.Mods.DrillCostMult;
+
+        /// <summary>Energy a rest restores this run before the cap: REST_ENERGY plus the Deep Rest bonus.</summary>
+        public static double RestEnergy(ContentDb c, RunState s) => c.Constants.RestEnergy + s.Mods.RestEnergyBonus;
+
+        /// <summary>The run's fail chance at energy fraction e: <see cref="FailChance"/> plus the Steady Hands delta, not below 0.</summary>
+        public static double RunFailChance(ContentDb c, RunState s, double e) => Math.Max(0, FailChance(c.Constants, e) + s.Mods.FailChanceDelta);
+
+        /// <summary>The run's super chance at energy fraction e: DRILL_SUPER_P plus Super Set, at most what the fail chance leaves.</summary>
+        public static double RunSuperChance(ContentDb c, RunState s, double e) =>
+            Math.Max(0, Math.Min(c.Constants.DrillSuperP + s.Mods.SuperChanceBonus, 1 - RunFailChance(c, s, e)));
+
+        /// <summary>Action points cycle <c>s.Cycle</c> starts with: RUN_AP, plus Overtime's in the last cycle.</summary>
+        public static int CycleAp(ContentDb c, RunState s) => c.Constants.RunAp + (s.Cycle == c.Constants.RunCycles ? s.Mods.LastCycleAp : 0);
+
+        /// <summary>The value a stat must reach to cross milestone <paramref name="threshold"/> this run (Early Bloom scales it, rounded).</summary>
+        public static double MilestoneAt(RunState s, int threshold) =>
+            s.Mods.MilestoneMult == 1 ? threshold : Math.Round(threshold * s.Mods.MilestoneMult, MidpointRounding.AwayFromZero);
 
         public static double EnergyFraction(Constants k, double energy) => Clamp01(energy / k.RunEnergyMax);
 
@@ -326,10 +398,13 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>Tier from one draw u: [0, fail) fail, [fail, 1 - super) success, [1 - super, 1) super.</summary>
-        public static DrillTier RollTier(Constants k, double e, double u)
+        public static DrillTier RollTier(Constants k, double e, double u) => RollTier(FailChance(k, e), k.DrillSuperP, u);
+
+        /// <summary>Tier from one draw u with these chances: [0, fail) fail, [fail, 1 - super) success, [1 - super, 1) super.</summary>
+        public static DrillTier RollTier(double fail, double super, double u)
         {
-            if (u < FailChance(k, e)) return DrillTier.Fail;
-            if (u < 1 - k.DrillSuperP) return DrillTier.Success;
+            if (u < fail) return DrillTier.Fail;
+            if (u < 1 - super) return DrillTier.Success;
             return DrillTier.Super;
         }
 
@@ -373,17 +448,21 @@ namespace IdleRng.Sim.Training
                 return;
             }
             s.Cycle++;
-            s.ApLeft = c.Constants.RunAp;
+            s.ApLeft = CycleAp(c, s);
             s.Sp += c.Constants.SpPerCycle;
             s.Phase = RunPhase.Training;
         }
 
-        /// <summary>Record each threshold crossed upward (once per stat and threshold) and open a milestone draft for it.</summary>
+        /// <summary>
+        /// Record each threshold crossed upward (once per stat and threshold) and open a milestone draft for it. A stat crosses
+        /// threshold t at <see cref="MilestoneAt"/> (t unless Early Bloom); the hit and the draft still name t.
+        /// </summary>
         static void CrossMilestones(ContentDb c, RunState s, string stat, double before, double after, List<MilestoneHit> into)
         {
             foreach (int t in c.StatMilestones)
             {
-                if (!(before < t && after >= t) || s.Milestones.Exists(m => m.Stat == stat && m.Threshold == t)) continue;
+                double at = MilestoneAt(s, t);
+                if (!(before < at && after >= at) || s.Milestones.Exists(m => m.Stat == stat && m.Threshold == t)) continue;
                 var hit = new MilestoneHit { Stat = stat, Threshold = t, Cycle = s.Cycle };
                 s.Milestones.Add(hit);
                 into.Add(hit);
@@ -398,20 +477,33 @@ namespace IdleRng.Sim.Training
         /// </summary>
         static void Draft(ContentDb c, RunState s, string stat, int threshold)
         {
+            var trees = DraftPicks(c, s, stat, threshold);
+            if (trees.Count == 0) return;
+            s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = stat, Threshold = threshold, Trees = trees });
+        }
+
+        /// <summary>
+        /// A draft's picks: eligible generic trees (<see cref="DraftEligible"/>; <paramref name="stat"/> null = any stat), partial
+        /// shuffle on the draft stream.
+        /// </summary>
+        static List<string> DraftPicks(ContentDb c, RunState s, string stat, int threshold)
+        {
             var pool = new List<string>();
             foreach (var t in c.TreeList)
-                if (t.Kind == TreeKind.Generic && (t.OfferStat == null || t.OfferStat == stat) && t.OfferThreshold <= threshold
-                    && Slotted(s, t.Id) < 0 && !Pending(s, t.Id))
-                    pool.Add(t.Id);
+                if (DraftEligible(s, t, stat, threshold)) pool.Add(t.Id);
             int n = Math.Min(c.Constants.DraftSize + s.Mods.DraftSizeBonus, pool.Count);
-            if (n == 0) return;
             for (int i = 0; i < n; i++)
             {
                 int j = i + Math.Min(pool.Count - i - 1, (int)(s.Draft.NextDouble() * (pool.Count - i)));
                 var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
             }
-            s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = stat, Threshold = threshold, Trees = pool.GetRange(0, n) });
+            return pool.GetRange(0, n);
         }
+
+        /// <summary>A generic tree for <paramref name="stat"/> (or any stat; null = every stat) at or below the threshold, not slotted, not offered.</summary>
+        static bool DraftEligible(RunState s, TreeDef t, string stat, int threshold) =>
+            t.Kind == TreeKind.Generic && (stat == null || t.OfferStat == null || t.OfferStat == stat) && t.OfferThreshold <= threshold
+            && Slotted(s, t.Id) < 0 && !Pending(s, t.Id);
 
         /// <summary>
         /// Keep chase trees consistent with their conditions (specs/15 section 5): a slotted chase tree whose conditions fail
@@ -551,6 +643,7 @@ namespace IdleRng.Sim.Training
                 case RunCommandKind.DiscardOffer: DiscardOffer(c, s); break;
                 case RunCommandKind.SpendPoint: SpendPoint(c, s, cmd.Slot); break;
                 case RunCommandKind.UseBook: UseBook(c, s, cmd.Book); break;
+                case RunCommandKind.RerollDraft: RerollDraft(c, s); break;
                 default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd.Kind, "unknown command");
             }
         }
@@ -562,7 +655,11 @@ namespace IdleRng.Sim.Training
             w.Bytes(HashMagic);
             w.Str(s.SpeciesId);
             w.U64(s.Seed);
-            w.F64(s.Mods.DrillCostMult); w.F64(s.Mods.StatFloorMult); w.I32(s.Mods.DraftSizeBonus); w.I32(s.Mods.StartSp);
+            var mo = s.Mods;
+            w.F64(mo.DrillCostMult); w.F64(mo.StatFloorMult); w.I32(mo.DraftSizeBonus); w.I32(mo.StartSp);
+            w.F64(mo.RestEnergyBonus); w.F64(mo.FailChanceDelta); w.F64(mo.SuperChanceBonus); w.F64(mo.ShardMult); w.I32(mo.MomentumDrills);
+            w.I32(mo.LossSp); w.F64(mo.SpecialistBonus); w.I32(mo.TreeSlotBonus); w.I32(mo.InjuryShields); w.I32(mo.LastCycleAp);
+            w.F64(mo.MilestoneMult); w.I32(mo.DraftRerolls);
             foreach (var id in StatIds.Trained) w.F64(s.Stats.Get(id));
             w.F64(s.Energy);
             w.I32(s.Cycle); w.I32(s.ApLeft); w.I32(s.Rank);
@@ -571,6 +668,7 @@ namespace IdleRng.Sim.Training
             Stream(w, s.Draft);
             w.I32(s.FightsFought); w.I32(s.FightsWon); w.I32(s.Drills); w.I32(s.Rests);
             w.I32(s.Sp);
+            w.I32(s.FreeDrills); w.I32(s.ShieldsUsed); w.I32(s.RerollsUsed);
             w.I32(s.Slots.Length);
             foreach (var ts in s.Slots)
             {

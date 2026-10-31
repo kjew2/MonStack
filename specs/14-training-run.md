@@ -30,7 +30,7 @@ Every tap gives instant feedback (the command's result object). Fights are resol
 | `AwaitFight` | `Fight` |
 | `Finished` | none (`End` is `Completed`; `Injured` only on Vault entries sealed before issue #89, section 4.1) |
 
-Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` section 3) work in every phase. `Drill`, `Rest` and `Fight` also wait until no tree offer is pending. A command that is not allowed throws `InvalidOperationException`; an unknown stat throws `ArgumentException`. Only accepted commands enter the log.
+Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` section 3; and `RerollDraft` with the Second Look talent, `specs/18` section 3) work in every phase. `Drill`, `Rest` and `Fight` also wait until no tree offer is pending. A command that is not allowed throws `InvalidOperationException`; an unknown stat throws `ArgumentException`. Only accepted commands enter the log.
 
 ## 3. Species
 
@@ -55,6 +55,8 @@ energy = max(0, energy - DRILL_ENERGY_COST)
 
 **Rest:** `energy = min(RUN_ENERGY_MAX, energy + REST_ENERGY)`. No draw.
 
+**Talents** (`specs/18` section 3) change these rules for a run: the fail and super chances, the drill cost (a free drill after a Super), the rest amount, an injury prevented, the action points of the last cycle and the value a milestone is crossed at. Without talents the rules here are exact.
+
 Both cost 1 AP. When AP reach 0 the run goes to `AwaitFight` if a fight is due, else straight to the next cycle (or `Finished` after the last cycle).
 
 ### 4.1 Injury (kj, 2026-10-31, issue #89)
@@ -77,20 +79,20 @@ Why: one tap still costs a fight and up to `RUN_AP - 1 + RUN_AP * INJURY_SKIP_CY
 
 - Content table `fight_ranks`: `id`, `sort_order` (0 = lowest, contiguous), `name_key`, `element` and the eight stats of the opponent at that rank. Placeholder ranks E, D, C, B, A, S.
 - `Fight` builds the monster as a `Fighter` (species element, current stats, and the skills of its bought tree nodes, `specs/15` section 2) and the rank's opponent, and resolves a 1v1 `BattleSim` fight (`specs/16`).
-- A win (`SideAWon`) promotes the monster one rank and pays `SP_PER_WIN`; at the top rank it stays. A loss or a timeout changes nothing (placeholder; no penalty yet). The fight's tallies add to the run tally (`specs/15` section 6).
+- A win (`SideAWon`) promotes the monster one rank and pays `SP_PER_WIN`; at the top rank it stays. A loss or a timeout changes nothing (placeholder; no penalty yet), except that it pays the Grudge Match talent's SP (`specs/18` section 3). The fight's tallies add to the run tally (`specs/15` section 6).
 - Fight seed: `SplitMix64.Derive(StreamSeed(runSeed, "fight"), fightIndex)`, where `fightIndex` is the number of fights fought before it. Fights never advance the `training` stream.
 - `FIGHT_EVERY` (placeholder 1) sets how often fights come; kj suggested every other cycle if every cycle feels too frequent.
 - A rank up is called "promotion" in the drafts; code and specs say `Rank`.
 
 ## 6. Milestones
 
-Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it, the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens a milestone draft (`specs/15` section 4).
+Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it (the Early Bloom talent lowers the value it is crossed at, `specs/18` section 3), the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens a milestone draft (`specs/15` section 4).
 
 ## 7. Determinism, replay, hash
 
 - Pure: no clock, IO or `Math.Pow`. All randomness is the `training` and `draft` streams plus derived fight seeds.
 - `TrainingRun.Replay(content, species, seed, log, books)` rebuilds a run from its command log; tests check it gives the same `StateHash` for every species, bot and book list.
-- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 4 since the injuries of section 4.1, 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument). A hash version bump means a saved run in progress no longer matches its stored hash: it is dropped on load with the notice of `specs/06` section 5 and its books are returned.
+- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 5 since the talent catalog v2 of `specs/18` section 3 (issue #105: more modifier fields, the Momentum, Second Wind and Second Look counters, the `RerollDraft` command), 4 since the injuries of section 4.1, 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument). A hash version bump means a saved run in progress no longer matches its stored hash: it is dropped on load with the notice of `specs/06` section 5 and its books are returned.
 
 ## 8. Content
 

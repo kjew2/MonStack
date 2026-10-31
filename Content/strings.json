@@ -615,6 +615,102 @@
       "text": "Start each run with one extra skill point per rank."
     },
     {
+      "key": "talent.deep_rest.name",
+      "text": "Deep Rest"
+    },
+    {
+      "key": "talent.deep_rest.desc",
+      "text": "Rest restores 10 more energy per rank."
+    },
+    {
+      "key": "talent.steady_hands.name",
+      "text": "Steady Hands"
+    },
+    {
+      "key": "talent.steady_hands.desc",
+      "text": "Drills fail 2 percentage points less often per rank."
+    },
+    {
+      "key": "talent.scavenger.name",
+      "text": "Scavenger"
+    },
+    {
+      "key": "talent.scavenger.desc",
+      "text": "Runs pay 10% more Training Shards per rank."
+    },
+    {
+      "key": "talent.super_set.name",
+      "text": "Super Set"
+    },
+    {
+      "key": "talent.super_set.desc",
+      "text": "Drills roll Super 3 percentage points more often per rank."
+    },
+    {
+      "key": "talent.momentum.name",
+      "text": "Momentum"
+    },
+    {
+      "key": "talent.momentum.desc",
+      "text": "After a Super drill"
+    },
+    {
+      "key": "talent.grudge_match.name",
+      "text": "Grudge Match"
+    },
+    {
+      "key": "talent.grudge_match.desc",
+      "text": "A lost rank fight still pays one skill point per rank."
+    },
+    {
+      "key": "talent.specialist.name",
+      "text": "Specialist"
+    },
+    {
+      "key": "talent.specialist.desc",
+      "text": "Drills on your highest stat grow 15% more per rank, every other stat 7.5% less per rank."
+    },
+    {
+      "key": "talent.fifth_slot.name",
+      "text": "Fifth Slot"
+    },
+    {
+      "key": "talent.fifth_slot.desc",
+      "text": "Monsters get one more tree slot."
+    },
+    {
+      "key": "talent.second_wind.name",
+      "text": "Second Wind"
+    },
+    {
+      "key": "talent.second_wind.desc",
+      "text": "The first injury of each run is prevented: the monster drops to 0 energy instead."
+    },
+    {
+      "key": "talent.overtime.name",
+      "text": "Overtime"
+    },
+    {
+      "key": "talent.overtime.desc",
+      "text": "The last cycle of a run has one more action per rank."
+    },
+    {
+      "key": "talent.early_bloom.name",
+      "text": "Early Bloom"
+    },
+    {
+      "key": "talent.early_bloom.desc",
+      "text": "Stat milestones are reached 10% sooner per rank."
+    },
+    {
+      "key": "talent.second_look.name",
+      "text": "Second Look"
+    },
+    {
+      "key": "talent.second_look.desc",
+      "text": "Reroll one milestone draft per run for new trees."
+    },
+    {
       "key": "achievement.rank_c.name",
       "text": "Contender"
     },

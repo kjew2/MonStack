@@ -111,9 +111,16 @@ namespace IdleRng.Sim.Account
             return returned;
         }
 
-        /// <summary>Training Shards for a finished run: SHARDS_PER_CYCLE per cycle played plus SHARDS_PER_RANK per rank reached.</summary>
-        public static long Payout(ContentDb c, RunState run) =>
-            (long)c.Constants.ShardsPerCycle * run.Cycle + (long)c.Constants.ShardsPerRank * run.Rank;
+        /// <summary>
+        /// Training Shards for a finished run: SHARDS_PER_CYCLE per cycle played plus SHARDS_PER_RANK per rank reached, times the
+        /// run's Scavenger multiplier (rounded down).
+        /// </summary>
+        public static long Payout(ContentDb c, RunState run)
+        {
+            long basePay = (long)c.Constants.ShardsPerCycle * run.Cycle + (long)c.Constants.ShardsPerRank * run.Rank;
+            double mult = run.Mods.ShardMult;
+            return mult == 1 ? basePay : (long)Math.Floor(basePay * mult);
+        }
 
         // ------------------------------------------------------------------ Vault (specs/18 section 7)
 
@@ -318,7 +325,15 @@ namespace IdleRng.Sim.Account
             return price;
         }
 
-        /// <summary>The run bonuses the account's talents give (specs/18 section 4).</summary>
+        /// <summary>Lowest milestone threshold multiplier talents can sum to (agent: keeps a stack of Early Bloom talents sane).</summary>
+        public const double MinMilestoneMult = 0.1;
+
+        /// <summary>
+        /// The run bonuses the account's talents give (specs/18 sections 3 and 4): each talent adds per_rank x rank to its effect's
+        /// field. Sums of several talents are clamped to what a run accepts (multipliers at or above 0, Specialist at most 2,
+        /// Early Bloom's threshold multiplier at least MinMilestoneMult).
+        /// </summary>
+
         public static RunModifiers Modifiers(ContentDb c, AccountState a)
         {
             var m = new RunModifiers();
@@ -333,6 +348,18 @@ namespace IdleRng.Sim.Account
                     case TalentEffect.StatFloor: m.StatFloorMult += v; break;
                     case TalentEffect.DraftSize: m.DraftSizeBonus += (int)v; break;
                     case TalentEffect.StartSp: m.StartSp += (int)v; break;
+                    case TalentEffect.RestEnergy: m.RestEnergyBonus += v; break;
+                    case TalentEffect.FailChance: m.FailChanceDelta += v; break;
+                    case TalentEffect.SuperChance: m.SuperChanceBonus += v; break;
+                    case TalentEffect.ShardMult: m.ShardMult += v; break;
+                    case TalentEffect.Momentum: m.MomentumDrills += (int)v; break;
+                    case TalentEffect.LossSp: m.LossSp += (int)v; break;
+                    case TalentEffect.Specialist: m.SpecialistBonus = Math.Min(2, m.SpecialistBonus + v); break;
+                    case TalentEffect.TreeSlots: m.TreeSlotBonus += (int)v; break;
+                    case TalentEffect.InjuryShield: m.InjuryShields += (int)v; break;
+                    case TalentEffect.LastCycleAp: m.LastCycleAp += (int)v; break;
+                    case TalentEffect.MilestoneMult: m.MilestoneMult = Math.Max(MinMilestoneMult, m.MilestoneMult + v); break;
+                    case TalentEffect.DraftRerolls: m.DraftRerolls += (int)v; break;
                 }
             }
             return m;

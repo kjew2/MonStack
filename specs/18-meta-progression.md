@@ -45,18 +45,32 @@ Rejected commands throw and change nothing. The sim has no clock: the caller pas
 
 ## 3. Run modifiers
 
-`TrainingRun.Start(content, species, seed, books, mods)` takes a `RunModifiers` (null = none). It is stored on `RunState.Mods`, hashed into `StateHash` (run hash version 3), and must be passed to `Replay` again; the account save does that (section 6).
+`TrainingRun.Start(content, species, seed, books, mods)` takes a `RunModifiers` (null = none). It is stored on `RunState.Mods`, hashed into `StateHash` (run hash version 5 since the talent catalog v2, issue #105; `specs/14` section 7), and must be passed to `Replay` again; the account save does that (section 6). `Start` refuses values outside the ranges below. Every default changes nothing, so runs and Vault entries from before replay as they were.
 
-| Field | Effect | Default |
-|---|---|---|
-| `DrillCostMult` | Multiplies `DRILL_ENERGY_COST` (`TrainingRun.DrillCost(c, run)` gives the run's cost, for the UI) | 1 |
-| `StatFloorMult` | Multiplies the species' base stats at the start (floored, capped at `STAT_MAX`) | 1 |
-| `DraftSizeBonus` | Added to `DRAFT_SIZE` | 0 |
-| `StartSp` | Extra skill points at the start | 0 |
+| Field | Talent effect | Effect | Default | Range |
+|---|---|---|---|---|
+| `DrillCostMult` | `drill_cost` | Multiplies `DRILL_ENERGY_COST` (`TrainingRun.DrillCost(c, run)` gives the next drill's cost, for the UI) | 1 | `>= 0` |
+| `StatFloorMult` | `stat_floor` | Multiplies the species' base stats at the start (floored, capped at `STAT_MAX`) | 1 | `>= 0` |
+| `DraftSizeBonus` | `draft_size` | Added to `DRAFT_SIZE` | 0 | `>= 0` |
+| `StartSp` | `start_sp` | Extra skill points at the start | 0 | `>= 0` |
+| `RestEnergyBonus` | `rest_energy` | Added to `REST_ENERGY` (`TrainingRun.RestEnergy`) | 0 | `>= 0` |
+| `FailChanceDelta` | `fail_chance` | Added to the drill fail chance, which never drops below 0 (`RunFailChance`) | 0 | `<= 0` |
+| `SuperChanceBonus` | `super_chance` | Added to `DRILL_SUPER_P`; the super chance never exceeds `1 - fail` (`RunSuperChance`) | 0 | `>= 0` |
+| `ShardMult` | `shard_mult` | Multiplies the run's shard payout, rounded down (section 5) | 1 | `>= 0` |
+| `MomentumDrills` | `momentum` | A Super drill makes the next this-many drills cost no energy (`RunState.FreeDrills`; another Super resets it to this, it does not stack). The Super drill itself costs as usual | 0 | `>= 0` |
+| `LossSp` | `loss_sp` | Skill points a lost rank fight pays | 0 | `>= 0` |
+| `SpecialistBonus` | `specialist` | Drill growth on the highest trained stat (current value, ties all count) `x (1 + b)`, on every other stat `x (1 - b / 2)` (`TrainingRun.Growth`, so the UI's growth shows it) | 0 | `[0, 2]` |
+| `TreeSlotBonus` | `tree_slots` | Added to `TREE_SLOTS`; the extra slots start empty | 0 | `>= 0` |
+| `InjuryShields` | `injury_shield` | Injuries prevented per run: a drill that rolls an injury does not injure; the monster drops to 0 energy instead (`RunState.ShieldsUsed`, `DrillResult.Shielded`). The gain stays, the AP is spent as usual | 0 | `>= 0` |
+| `LastCycleAp` | `last_cycle_ap` | Extra action points in the last cycle (`TrainingRun.CycleAp`) | 0 | `>= 0` |
+| `MilestoneMult` | `milestone_mult` | A stat crosses milestone threshold `t` at `round(t x m)` (half away from zero; `TrainingRun.MilestoneAt`). The hit and its draft still name `t`, so the draft pool is the same | 1 | `> 0` |
+| `DraftRerolls` | `draft_rerolls` | Milestone drafts the run may reroll (`RerollDraft`, below; `RunState.RerollsUsed`) | 0 | `>= 0` |
+
+**`RerollDraft` (Second Look; a run command, logged like the others):** allowed while rerolls are left and the oldest pending offer is a milestone draft. It redraws that offer's trees with the draft's partial shuffle on the `draft` stream, from the generic trees at or below the draft's threshold **for any stat (agent: a stat's own pool is never bigger than one draft in today's content, so a same-stat reroll could draw nothing new)**, that are not slotted and not in a pending offer, so none of the trees it replaces. Up to `DRAFT_SIZE + DraftSizeBonus` trees. Refused when no such tree is left; `CanRerollDraft` tells the UI whether it would be accepted.
 
 ## 4. Talents and the post-run vendor
 
-Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarities` id: the talent's tier), `effect` (`drill_cost`, `stat_floor`, `draft_size`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
+Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarities` id: the talent's tier), `effect` (one of the talent effects of section 3), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost`, `fail_chance` and `milestone_mult` are negative). Several talents with one effect add up (`AccountOps.Modifiers`); the sum is clamped to what `Start` accepts: `DrillCostMult >= 0`, `SpecialistBonus <= 2`, `MilestoneMult >= 0.1` (`MinMilestoneMult`, **agent**).
 
 **The post-run vendor** (kj, T9) replaces the always-on talent shop. Code: `AccountOps.RollVendor`, `OfferOpen`, `OfferPrice`, `BuyOffer`. The talents overhaul is tracked in #100.
 
@@ -81,20 +95,34 @@ Placeholder tiers: `vendor_rarities.csv`. Odds at grade E and S follow from the 
 
 Rules (`E023`, `E043`, `E044`, `E047`, both `tools/content_build.py` and `ContentDb`): at least one rarity; `sort_order` exactly `0..N-1`; at every grade index the weights do not all come to 0; every talent's `rarity` is a `vendor_rarities` id (`E023`).
 
-Placeholder talents (the drafts' examples, `specs/12` section 9):
+Placeholder talents: the drafts' four examples (`specs/12` section 9) and the talent catalog v2 (kj, 2026-10-31: "build them all"; issue #105, from the spike #101). Numbers are placeholders.
 
 | Talent | Rarity | Effect per rank | Max | Normal cost |
 |---|---|---|---|---|
 | Frugal Drills | Common | drills cost 5% less energy | 5 | 20, 40, 60, ... |
-| Strong Stock | Rare | base stats +10% | 3 | 30, 60, 90 |
-| Wide Scouting | Epic | +1 tree per milestone draft | 2 | 50, 100 |
 | Head Start | Common | +1 starting skill point | 3 | 25, 50, 75 |
+| Deep Rest | Common | rests restore +10 energy | 3 | 20, 40, 60 |
+| Steady Hands | Common | drill fail chance -2 points | 3 | 20, 40, 60 |
+| Scavenger | Common | +10% shard payout | 5 | 15, 30, 45, ... |
+| Strong Stock | Rare | base stats +10% | 3 | 30, 60, 90 |
+| Super Set | Rare | drill super chance +3 points | 3 | 30, 60, 90 |
+| Momentum | Rare | after a Super drill, the next drill is free | 1 | 60 |
+| Grudge Match | Rare | +1 SP per lost rank fight | 2 | 40, 80 |
+| Specialist | Rare | highest stat grows +15%, the others -7.5% (a trade-off) | 2 | 40, 80 |
+| Wide Scouting | Epic | +1 tree per milestone draft | 2 | 50, 100 |
+| Fifth Slot | Epic | +1 tree slot | 1 | 120 |
+| Second Wind | Epic | the first injury of a run is prevented (energy drops to 0) | 1 | 80 |
+| Overtime | Epic | +1 action point in the last cycle | 2 | 60, 120 |
+| Early Bloom | Epic | milestone thresholds -10% | 2 | 70, 140 |
+| Second Look | Epic | reroll one milestone draft per run | 1 | 70 |
 
-A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor` per rank `>= 0`; `draft_size` and `start_sp` per rank a whole number `>= 0`.
+Every owned talent applies to every run: a talent loadout (switching talents off, #106), legendary talents (#103), the vendor reroll and the vendor talents of the spike (Haggler, Extra Shelf; #104) are not built. The bot `balance` verb plays runs without talents, so these numbers are untested by it.
+
+A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor`, `rest_energy` and `shard_mult` per rank `>= 0`; `fail_chance` per rank `<= 0`; `super_chance` per rank `>= 0` and at most 1 at max rank; `specialist` per rank `>= 0` and at most 2 at max rank; `milestone_mult` per rank `<= 0` and the multiplier stays `> 0` at max rank; `draft_size`, `start_sp`, `momentum`, `loss_sp`, `tree_slots`, `injury_shield`, `last_cycle_ap` and `draft_rerolls` per rank a whole number `>= 0`.
 
 ## 5. Shard payout
 
-`Payout = SHARDS_PER_CYCLE x cycles played + SHARDS_PER_RANK x rank index reached` (E = 0). Cycles sat out after an injury count as played (`specs/14` section 4.1), so every finished run pays for `RUN_CYCLES` cycles; old Vault entries that ended `Injured` were paid for the cycles they reached.
+`Payout = floor((SHARDS_PER_CYCLE x cycles played + SHARDS_PER_RANK x rank index reached) x ShardMult)` (E = 0; `ShardMult` is the run's Scavenger multiplier, 1 without it, section 3). Cycles sat out after an injury count as played (`specs/14` section 4.1), so every finished run pays for `RUN_CYCLES` cycles; old Vault entries that ended `Injured` were paid for the cycles they reached.
 
 | Constant | Value | Range |
 |---|---|---|

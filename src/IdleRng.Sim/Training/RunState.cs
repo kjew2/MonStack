@@ -23,7 +23,7 @@ namespace IdleRng.Sim.Training
     /// </summary>
     public enum RunEnd { None, Completed, Injured }
 
-    public enum RunCommandKind { Drill, Rest, Fight, TakeTree, DiscardOffer, SpendPoint, UseBook }
+    public enum RunCommandKind { Drill, Rest, Fight, TakeTree, DiscardOffer, SpendPoint, UseBook, RerollDraft }
 
     /// <summary>One accepted command, with only the arguments its kind uses.</summary>
     public sealed class RunCommand
@@ -65,6 +65,45 @@ namespace IdleRng.Sim.Training
 
         /// <summary>Extra skill points at the start of the run.</summary>
         public int StartSp { get; set; }
+
+        /// <summary>Added to REST_ENERGY (Deep Rest).</summary>
+        public double RestEnergyBonus { get; set; }
+
+        /// <summary>Added to the drill fail chance, never below 0 (Steady Hands; negative).</summary>
+        public double FailChanceDelta { get; set; }
+
+        /// <summary>Added to DRILL_SUPER_P (Super Set).</summary>
+        public double SuperChanceBonus { get; set; }
+
+        /// <summary>Multiplies the run's shard payout, rounded down (Scavenger). 1 = no change.</summary>
+        public double ShardMult { get; set; } = 1;
+
+        /// <summary>After a Super drill, this many following drills cost no energy (Momentum).</summary>
+        public int MomentumDrills { get; set; }
+
+        /// <summary>Skill points a lost rank fight pays (Grudge Match).</summary>
+        public int LossSp { get; set; }
+
+        /// <summary>
+        /// Drills on the run's highest trained stat (ties all count) grow x(1 + this); every other stat grows x(1 - this / 2)
+        /// (Specialist). 0 = off.
+        /// </summary>
+        public double SpecialistBonus { get; set; }
+
+        /// <summary>Added to TREE_SLOTS (Fifth Slot).</summary>
+        public int TreeSlotBonus { get; set; }
+
+        /// <summary>Injuries prevented per run: the drill leaves the monster at 0 energy instead (Second Wind).</summary>
+        public int InjuryShields { get; set; }
+
+        /// <summary>Extra action points in the last cycle (Overtime).</summary>
+        public int LastCycleAp { get; set; }
+
+        /// <summary>Multiplies the stat milestone thresholds a stat must reach, rounded (Early Bloom). 1 = no change.</summary>
+        public double MilestoneMult { get; set; } = 1;
+
+        /// <summary>Milestone drafts the run may reroll (Second Look).</summary>
+        public int DraftRerolls { get; set; }
 
         public RunModifiers Clone() => (RunModifiers)MemberwiseClone();
     }
@@ -191,6 +230,15 @@ namespace IdleRng.Sim.Training
         /// <summary>Unspent skill points.</summary>
         public int Sp { get; set; }
 
+        /// <summary>Drills left that cost no energy (Momentum, specs/18 section 3).</summary>
+        public int FreeDrills { get; set; }
+
+        /// <summary>Injuries prevented so far (Second Wind; at most Mods.InjuryShields).</summary>
+        public int ShieldsUsed { get; set; }
+
+        /// <summary>Milestone drafts rerolled so far (Second Look; at most Mods.DraftRerolls).</summary>
+        public int RerollsUsed { get; set; }
+
         /// <summary>Length TREE_SLOTS; null = empty.</summary>
         public TreeSlot[] Slots { get; set; } = new TreeSlot[0];
 
@@ -242,6 +290,12 @@ namespace IdleRng.Sim.Training
         public double NewValue { get; set; }
         public double EnergyAfter { get; set; }
         public bool Injured { get; set; }
+
+        /// <summary>The drill rolled an injury that Second Wind prevented: no injury, energy left at 0.</summary>
+        public bool Shielded { get; set; }
+
+        /// <summary>The drill cost no energy (Momentum).</summary>
+        public bool Free { get; set; }
 
         /// <summary>The injury this drill caused (also the last entry of RunState.Injuries); null when not injured.</summary>
         public InjuryHit Injury { get; set; }

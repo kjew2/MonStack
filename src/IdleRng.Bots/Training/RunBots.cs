@@ -249,6 +249,13 @@ namespace IdleRng.Bots.Training
                             string.Concat(r.Milestones.Select(m => $" milestone {m.Stat}>={m.Threshold}")));
                         break;
                     }
+                    case RunCommandKind.RerollDraft:
+                    {
+                        var before = string.Join(" ", s.Offers[0].Trees);
+                        TrainingRun.RerollDraft(c, s);
+                        line = string.Format(Inv, "c{0,2} reroll draft: {1} -> {2}", cycle, before, string.Join(" ", s.Offers[0].Trees));
+                        break;
+                    }
                     default:
                     {
                         TrainingRun.UseBook(c, s, cmd.Book);

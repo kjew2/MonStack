@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.16",
+  "content_version": "3.17",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -61,11 +61,11 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "85b4764e3879940f18e7dad7e6b9e415364355b08175734b45b05803725c3d36"
+      "sha256": "f13f316b760cd7a6c775af078e6b2baad402edf81da7e474b8393c8b0ede11eb"
     },
     "talents": {
       "file": "talents.json",
-      "sha256": "0e590049c6a8fb2a3f7b71522c3aef6cc5537ec806a46113dc2db42af2214870"
+      "sha256": "d12c8fe0cb8e47013735051c70e7e97c3c0a20454dbda7307e8ac176d365210f"
     },
     "tower_bosses": {
       "file": "tower_bosses.json",
@@ -84,5 +84,5 @@
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "ac3140bb57a5b57bead55578eb8f1ffcb2192be617ff2b92876e0fef2aa989b7"
+  "content_hash": "9f2abf0a6838bd8d38fb091676ceb616cd3e364733349e39dd9424b2bc0e2ced"
 }

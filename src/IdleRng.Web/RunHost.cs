@@ -537,7 +537,7 @@ namespace IdleRng.Web
                 }
                 w.EndArr().EndObj();
             }
-            w.Key("mods").Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("draftSizeBonus", m.DraftSizeBonus).P("startSp", m.StartSp).EndObj();
+            w.Key("mods"); Mods(w, m);
             w.P("vaultCap", _db.Constants.VaultCap).P("vaultOver", AccountOps.VaultOver(_db, ac));
             w.Key("vault").Arr();
             foreach (var e in ac.Vault) Entry(w, e);
@@ -545,6 +545,14 @@ namespace IdleRng.Web
             if (notice != null) w.P("notice", notice);
             return w.EndObj().ToString();
         }
+
+        /// <summary>The run bonuses talents give (specs/18 section 3), one field per RunModifiers property.</summary>
+        private static void Mods(JsonOut w, RunModifiers m) =>
+            w.Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("draftSizeBonus", m.DraftSizeBonus).P("startSp", m.StartSp)
+                .P("restEnergyBonus", m.RestEnergyBonus).P("failChanceDelta", m.FailChanceDelta).P("superChanceBonus", m.SuperChanceBonus)
+                .P("shardMult", m.ShardMult).P("momentumDrills", m.MomentumDrills).P("lossSp", m.LossSp).P("specialistBonus", m.SpecialistBonus)
+                .P("treeSlotBonus", m.TreeSlotBonus).P("injuryShields", m.InjuryShields).P("lastCycleAp", m.LastCycleAp)
+                .P("milestoneMult", m.MilestoneMult).P("draftRerolls", m.DraftRerolls).EndObj();
 
         private void Entry(JsonOut w, VaultEntry e)
         {
@@ -588,7 +596,8 @@ namespace IdleRng.Web
                         var r = TrainingRun.Drill(_db, s, a.Str(0));
                         w.P("ok", true).P("kind", "drill").P("stat", r.Stat).P("tier", r.Tier.ToString().ToLowerInvariant())
                             .P("tierName", _db.Text("drill." + r.Tier.ToString().ToLowerInvariant() + ".name"))
-                            .P("gain", r.Gain).P("value", r.NewValue).P("energy", r.EnergyAfter).P("injured", r.Injured);
+                            .P("gain", r.Gain).P("value", r.NewValue).P("energy", r.EnergyAfter).P("injured", r.Injured)
+                            .P("shielded", r.Shielded).P("free", r.Free);
                         w.Key("injury");
                         if (r.Injury == null) w.Null(); else Injury(w, r.Injury);
                         Milestones(w, r.Milestones);
@@ -625,6 +634,7 @@ namespace IdleRng.Web
                         break;
                     }
                     case "discard": TrainingRun.DiscardOffer(_db, s); w.P("ok", true).P("kind", "discard"); break;
+                    case "reroll": TrainingRun.RerollDraft(_db, s); w.P("ok", true).P("kind", "reroll"); break;
                     case "spend":
                     {
                         var r = TrainingRun.SpendPoint(_db, s, a.Int(0));
@@ -773,15 +783,21 @@ namespace IdleRng.Web
             var k = _db.Constants;
             var sp = _db.Species[s.SpeciesId];
             double e = TrainingRun.EnergyFraction(k, s.Energy);
-            double fail = TrainingRun.FailChance(k, e);
+            double fail = TrainingRun.RunFailChance(_db, s, e), super = TrainingRun.RunSuperChance(_db, s, e);
             var w = new JsonOut().Obj();
             w.P("species", s.SpeciesId).P("seed", s.Seed.ToString("x16", CultureInfo.InvariantCulture));
             w.P("phase", s.Phase.ToString().ToLowerInvariant()).P("end", s.End.ToString().ToLowerInvariant());
             w.P("cycle", s.Cycle).P("ap", s.ApLeft).P("energy", s.Energy).P("sp", s.Sp).P("rank", s.Rank);
             w.P("fightsFought", s.FightsFought).P("fightsWon", s.FightsWon).P("drills", s.Drills).P("rests", s.Rests);
             w.P("fightDue", s.Phase == RunPhase.AwaitFight);
-            w.P("drillCost", TrainingRun.DrillCost(_db, s));
-            w.Key("odds").Obj().P("fail", fail).P("super", k.DrillSuperP).P("success", Math.Max(0, 1 - fail - k.DrillSuperP))
+            w.P("drillCost", TrainingRun.DrillCost(_db, s)).P("restEnergy", TrainingRun.RestEnergy(_db, s));
+            w.P("freeDrills", s.FreeDrills).P("shieldsLeft", s.Mods.InjuryShields - s.ShieldsUsed).P("rerollsLeft", s.Mods.DraftRerolls - s.RerollsUsed)
+                .P("canReroll", TrainingRun.CanRerollDraft(_db, s));
+            w.Key("mods"); Mods(w, s.Mods);
+            w.Key("milestoneAt").Arr();   // the value each stat_milestones threshold is crossed at this run (Early Bloom lowers it)
+            foreach (int t in _db.StatMilestones) w.Num(TrainingRun.MilestoneAt(s, t));
+            w.EndArr();
+            w.Key("odds").Obj().P("fail", fail).P("super", super).P("success", Math.Max(0, 1 - fail - super))
                 .P("injury", TrainingRun.InjuryChance(k, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);
             var opp = _db.FightRanks[s.Rank];
