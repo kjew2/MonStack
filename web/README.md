@@ -25,7 +25,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 
 - **Rules and numbers**: the C# core and `Content/*.json` (built from `content_src/` by `tools/content_build.py`). Change a number in `content_src/`, rebuild content and the bundle, reload.
 - **Names and descriptions**: `Content/strings.json` through the bridge. The UI never evaluates a game formula itself: tooltip numbers (crit chance at this LUK, damage taken at this DEF) are computed by the C# battle formulas (`specs/16` section 9).
-- **Saves**: the account save (`specs/06`, `specs/18` section 6) as text in `localStorage['idle-rng-account-v1']`. A save that no longer loads is kept under `idle-rng-account-v1-unloadable`, never overwritten.
+- **Saves**: the account save (`specs/06`, `specs/18` section 6) as text in `localStorage['idle-rng-account-v1']`. A save that no longer loads is kept aside under `idle-rng-account-v1-unloadable-<ms>` (the oldest and the two newest are kept, `specs/06` section 5).
 
 ## Known limits
 
