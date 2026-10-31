@@ -207,12 +207,14 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const used = await (await page.waitForFunction(() => {
     const u = document.querySelector('.skill.used');
     return u && { id: u.dataset.id, name: u.querySelector('.nm').textContent, st: u.querySelector('.st').textContent, title: u.title, fill: u.querySelector('.cdfill').style.height,
+      drawn: u.querySelector('.cdfill').getBoundingClientRect().height / u.querySelector('.tile').clientHeight,
       now: document.querySelector('[data-id=fight-now] b').textContent };
   }, null, { timeout: 15000 })).jsonValue();
   check(used.name === used.now, 'the skill in use is highlighted and named in the banner: ' + used.now);
   const cdLen = +((/cooldown (\d+)/.exec(used.title) || [])[1]);
   check(used.st === (cdLen ? String(cdLen) : ''), 'a used skill\'s tile shows its full cooldown (' + cdLen + '): ' + used.st);
   check(used.fill === (cdLen ? '100%' : '0%'), 'its grey overlay covers the whole tile: ' + used.fill);
+  if (cdLen) check(used.drawn > 0.99, 'the overlay snaps to full grey on use, not animating up (issue #97): ' + used.drawn.toFixed(2) + ' of the tile drawn');
   await shot('04b-fight-skill');
   if (cdLen > 1) {
     const fill2 = await (await page.waitForFunction((id) => {

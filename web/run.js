@@ -460,11 +460,23 @@
         const sk = r.u.skills[si], left = now[k].cd[si] || 0;
         c.classList.toggle('ready', left === 0);
         c.classList.toggle('used', !!x && x.actor === r.u.id && x.si === si);
-        c.querySelector('.cdfill').style.height = (sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0) + '%';
+        setCdFill(c.querySelector('.cdfill'), sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0);
         c.querySelector('.st').textContent = left ? String(left) : '';
         c.title = sk.name + ': ' + (left ? 'ready in ' + left + ' of its actions' : 'ready') + ', cooldown ' + sk.cooldown;
       });
     });
+  }
+
+  // The grey overlay snaps up at once when a skill is used and only animates as it recedes (issue #97): a rise skips the CSS
+  // height transition (turned off, reflow forced, turned back on), a fall keeps it.
+  function setCdFill(el, pct) {
+    const prev = parseFloat(el.style.height) || 0;
+    if (pct > prev) {
+      el.style.transition = 'none';
+      el.style.height = pct + '%';
+      void el.offsetHeight;   // flush the jump before the transition comes back
+      el.style.transition = '';
+    } else el.style.height = pct + '%';
   }
 
   function fightPlayView(modal, f, s) {
