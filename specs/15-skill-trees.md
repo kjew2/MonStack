@@ -144,5 +144,5 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 
 ## 10. Open
 
-- Genetic aptitude raising the odds of rare drafts and chase trees (`specs/12` section 5.7) arrives with the gacha (post-MVP).
+- Genetic aptitude (`specs/12` section 5.7) was dropped with the species gacha at T9 (kj, 2026-10-30): nothing raises a species' draft or chase-tree odds.
 - Real tree content: names, skills and chase capstones beyond placeholders.

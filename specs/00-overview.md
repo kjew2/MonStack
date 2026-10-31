@@ -11,21 +11,21 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Monster battle: sides of 1 to 4, eight-stat sheet, ATB, triggers, rule modifiers | `src/IdleRng.Sim/Combat` | `16` |
 | Training run: action-point cycles of Drill and Rest, rank fights, milestones | `src/IdleRng.Sim/Training` | `14` |
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
-| Account: Vault (cap, lock, dismantle), Training Shards, talents, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
+| Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
 | Content database and pipeline | `content_src/` -> `Content/` -> `ContentDb` | `05` |
 | Account save lineage and stores | `src/IdleRng.Runtime/Save` | `06`, `18` |
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the species gacha (`01` has the math), the Daily and Endless Towers, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the Daily and Endless Towers (the Daily Tower drops Skill Books, the premium gate), the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 
 | Tag | Meaning | Content |
 |---|---|---|
 | **P0** | The MVP, a single-player web demo (`specs/12` section 12.1): built and live | Phases T0 to T7 of `specs/13`: battle, training run, skill trees, Vault, account and talents, web client, idle game removed |
-| **P1** | Toward 1.0 on Steam and the web (`specs/12` section 12.2) | T8 gauntlet wheel screen (engine done), T9 species gacha, T10 Daily Tower, T11 Endless Tower and gambits, T12 async PvP and server, T13 monetization and platform builds |
+| **P1** | Toward 1.0 on Steam and the web (`specs/12` section 12.2) | T8 gauntlet wheel screen (done), T9 species unlocks by achievement and the post-run vendor (done; the species gacha was scrapped), T10 Daily Tower, T11 Endless Tower and gambits, T12 async PvP and server, T13 monetization and platform builds |
 | **P2** | After 1.0, or parked until a platform decision | iOS and a native client, live operations |
 
 The priority labels on GitHub issues use the same tags (`specs/13` section 5).
@@ -39,7 +39,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*`, `STAT_FLOOR_FRAC` | `16` section 7 |
 | Training run | `RUN_CYCLES`, `RUN_AP`, `RUN_ENERGY_*`, `DRILL_*`, `REST_ENERGY`, `INJURY_*`, `STAT_MAX`, `FIGHT_EVERY` | `14` section 8 |
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, `MON_ECHO_POWER` | `15` section 9 |
-| Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7) | `18` |
+| Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7), `VENDOR_OFFERS` and the `vendor_rarities` table (section 4), the `achievements` table (section 8) | `18` |
 | Gauntlet | `GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` | `19` section 4 |
 
 ## 3. Vocabulary
@@ -53,8 +53,11 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | **Rank** | E to S: how far the monster has climbed in its rank fights; the MVP grade |
 | **Tree, node, chase trait** | `specs/15` |
 | **Vault** | The account's finished, frozen monsters |
-| **Training Shards** | The soft currency, paid at the end of a run; buys talents |
+| **Training Shards** | The soft currency, paid at the end of a run; buys talent ranks from the vendor |
 | **Talent** | A permanent account upgrade that changes the next runs (`RunModifiers`) |
+| **Vendor** | The post-run shop: after each sealed run, `VENDOR_OFFERS` random talent offers whose rarity odds follow the run's grade |
+| **Achievement** | An account goal checked when a run is sealed; some unlock a species. A new account owns only the starter species |
+| **Skill Book** | An item that opens a book tree in a run; the premium gate, dropped by the Daily Tower (T10) |
 | **Gauntlet** | The end-of-run tower the finished monster climbs; where it falls sets its Legacy Title |
 
 ## 4. Cross-spec contracts
@@ -76,7 +79,6 @@ Content/*.json               built by tools/content_build.py, committed, checked
 golden/                      generated reference outputs (bot CLI only)
 tools/content_build.py       CSV -> JSON converter and validator
 tools/test_content_build.py  tests for the converter's previous-build rules (E090, E091)
-tools/gacha_model.py         exact pity math for the species gacha (specs/01)
 src/IdleRng.Sim/             pure sim: Combat, Training, Account, Gauntlet, Content, Rng, Replay (hashing)
 src/IdleRng.Runtime/         save format, stores, account save
 src/IdleRng.Bots/            run bots, golden files, the `train` and `golden` verbs

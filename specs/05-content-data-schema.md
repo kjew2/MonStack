@@ -33,6 +33,8 @@ The CSVs and the JSON are both committed so CI can rebuild `Content/` offline an
 | `chase_conditions` | what unlocks each chase tree | `15` section 5 |
 | `skill_books` | books and the book tree each opens | `15` section 4 |
 | `talents` | the account talent list | `18` section 4 |
+| `vendor_rarities` | the post-run vendor's rarities: ranks, price multiplier, weight by grade | `18` section 4 |
+| `achievements` | account achievements and the species they unlock | `18` section 8 |
 | `gauntlet_enemies`, `legacy_titles` | gauntlet enemies and title bands | `19` |
 | `strings` (optional) | `key`, `en`: every player-visible name and description | section 5 |
 
@@ -55,7 +57,7 @@ The CSVs and the JSON are both committed so CI can rebuild `Content/` offline an
 | `key` | `species.slime.name` | localisation key `^[a-z0-9_]+(\.[a-z0-9_]+)+$`, resolved through `strings` (`ContentDb.Text`) |
 | `color` | `#E8622C` | `#RRGGBB` uppercase |
 
-Nullable columns accept an empty cell and emit `null`; any other empty cell is `E011`. Enums: `ConstantType`, `SkillKind`, `SkillTarget`, `TreeKind`, `NodeKind`, `FightTrigger`, `ConditionType`, `TalentEffect`. Adding an enum value is a converter change, a `ContentDb` change and a MINOR version bump.
+Nullable columns accept an empty cell and emit `null`; any other empty cell is `E011`. Enums: `ConstantType`, `SkillKind`, `SkillTarget`, `TreeKind`, `NodeKind`, `FightTrigger`, `ConditionType`, `TalentEffect`, `AchievementKind`. Adding an enum value is a converter change, a `ContentDb` change and a MINOR version bump.
 
 ## 4. JSON and the manifest
 
@@ -63,7 +65,7 @@ One file per table, shape `{ "table": "...", "rows": [ ... ] }`: UTF-8 without B
 
 `manifest.json` lists `schema_version` (the layout version; the loader refuses unknown values, `E901`), `content_version`, `source_revision`, every table's file and sha256, and `content_hash` (sha256 over the table hashes in name order). There is no timestamp, so rebuilding the same CSVs gives the same bytes. The loader verifies every file against the manifest (`E900`).
 
-`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.4**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9); 3.2 added `STAT_FLOOR_FRAC` and dropped the unused `monster_skills.desc_key` column; 3.3 gave each species two chase trees and a skill book of its own (`specs/15` section 5.1); 3.4 added `VAULT_CAP` and `fight_ranks.dismantle_shards` (`specs/18` section 7). Bump MINOR for any value or addition, or for dropping a column no code reads; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches.
+`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.5**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9); 3.2 added `STAT_FLOOR_FRAC` and dropped the unused `monster_skills.desc_key` column; 3.3 gave each species two chase trees and a skill book of its own (`specs/15` section 5.1); 3.4 added `VAULT_CAP` and `fight_ranks.dismantle_shards` (`specs/18` section 7); 3.5 added the `achievements` and `vendor_rarities` tables and `VENDOR_OFFERS` (`specs/18` sections 4 and 8). Bump MINOR for any value or addition, or for dropping a column no code reads; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches.
 
 **Previous-build rules.** Saves and Vault entries refer to ids (species, trees, nodes, skills, books, talents, enemies), so removing or renaming one breaks them. `content_build.py --baseline DIR` (an earlier `Content/`) or `--baseline-ref REF` (a git ref) compares the fresh build with it: `E090` when an id, or a whole table, is gone and MAJOR was not raised; `E091` when `content_version` is malformed or went backwards. `strings` keys are exempt (a missing key shows as itself, section 5). A MAJOR bump is the author saying "old saves may not fit": it comes with the decision in `specs/06` section 5 on what happens to them. Adding ids needs no bump. The tests are `tools/test_content_build.py`.
 
@@ -88,9 +90,9 @@ One line per error on stderr: `CONTENT <code> <location>: <message>`, where the 
 | `E032` | An ordered column is not strictly increasing (`stat_milestones`, `legacy_titles`) |
 | `E040`, `E041`, `E042` | Constant missing / wrong type / unknown |
 | `E043` | A value is out of its range (each constant's range is in its system spec) |
-| `E044` | A table lacks required rows (a species, a rank, an enemy or boss, `fail`/`success`/`super`, a tree with fewer than 2 nodes) |
+| `E044` | A table lacks required rows (a species, a rank, an enemy or boss, `fail`/`success`/`super`, a tree with fewer than 2 nodes, a vendor rarity, an achievement unlocking each non-starter species) |
 | `E045` | `legacy_titles` must start at floor 1 |
-| `E047` | `sort_order` must be exactly `0..N-1` (`elements`, `fight_ranks`) |
+| `E047` | `sort_order` must be exactly `0..N-1` (`elements`, `fight_ranks`, `vendor_rarities`) |
 | `E060` | Node `index` must be `0..N-1` contiguous per tree |
 | `E064` | The last node of a tree must be a skill, trigger or rule (the chase trait) |
 | `E065` | A chase tree has no condition |
@@ -102,7 +104,7 @@ One line per error on stderr: `CONTENT <code> <location>: <message>`, where the 
 
 ## 7. `ContentDb`
 
-`ContentDb.LoadFromDirectory(dir)` or `ContentDb.Load(IContentSource, verifyHashes)`. Read-only after load and safe to share. Tables are exposed as typed lists and dictionaries (`SpeciesList`, `Species`, `FightRanks`, `DrillTiers`, `StatMilestones`, `Trees`, `TreeList`, `TreeNodes`, `MonsterSkills`, `SkillBooks`, `TalentList`, `Talents`, `GauntletEnemies`, `GauntletBosses`, `LegacyTitles`, `ElementList`, `Elements`, `Strings`) and constants through `Constants` (one typed property per constant; property name = PascalCase of the key). `ConstantValues` maps every numeric constant's key to its value, for text templates (section 5); rules read the typed properties. `ElementMult(attacker, defender)` is the wheel. `IContentSource` has `FileContentSource` (a directory) and `DictionaryContentSource` (in memory: tests and the browser's content pack).
+`ContentDb.LoadFromDirectory(dir)` or `ContentDb.Load(IContentSource, verifyHashes)`. Read-only after load and safe to share. Tables are exposed as typed lists and dictionaries (`SpeciesList`, `Species`, `FightRanks`, `DrillTiers`, `StatMilestones`, `Trees`, `TreeList`, `TreeNodes`, `MonsterSkills`, `SkillBooks`, `TalentList`, `Talents`, `AchievementList`, `Achievements`, `VendorRarities`, `StarterSpecies` (the first species), `GauntletEnemies`, `GauntletBosses`, `LegacyTitles`, `ElementList`, `Elements`, `Strings`) and constants through `Constants` (one typed property per constant; property name = PascalCase of the key). `ConstantValues` maps every numeric constant's key to its value, for text templates (section 5); rules read the typed properties. `ElementMult(attacker, defender)` is the wheel. `IContentSource` has `FileContentSource` (a directory) and `DictionaryContentSource` (in memory: tests and the browser's content pack).
 
 ## 8. Tests
 

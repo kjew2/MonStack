@@ -5,6 +5,9 @@
 // checks the skill point gain indicators (HUD float-up, fight badge, Trees tab count, log lines), seals it, checks the grade
 // screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run,
 // locks and dismantles a Vault entry, and loads a v1 save over the Vault cap to check the migration and the blocked run start.
+// Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
+// condition; the run is played on an account save that has drake unlocked; after the run the vendor offers 5 talent offers and
+// buying one spends shards.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
 'use strict';
@@ -36,13 +39,36 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const url = srv.url + 'index.html';
   // The account save is AccountSave text: a header line, then JSON.
   const readAccount = () => page.evaluate(() => { const t = localStorage.getItem('idle-rng-account-v1'); return t ? JSON.parse(t.slice(t.indexOf('\n') + 1)) : null; });
+  // Encode a save body as AccountSave text (header line with CRC and length, then the JSON) and store it; the page loads it on reload.
+  const writeAccount = (body) => {
+    const bytes = Buffer.from(JSON.stringify(body), 'utf8');
+    const t = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(bytes) >>> 0).toString(16).padStart(8, '0') + ' len=' + bytes.length + '\n' + bytes.toString('utf8');
+    return page.evaluate((x) => localStorage.setItem('idle-rng-account-v1', x), t);
+  };
 
   // ---- home screen
   await page.goto(url);
   await act('start').waitFor({ timeout: 90000 });
   check((await page.locator('[data-act^="species-"]').count()) >= 3, 'home lists the species from the C# content');
   check(await act('start').isEnabled(), 'a species is pre-picked');
+  // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
+  const fresh = await readAccount();
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 3, 'a new account owns only the starter species (slime), schema v3');
+  check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
+  check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
+  check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
+  check((await page.locator('[data-id=unlock-slime]').count()) === 0, 'the starter has no unlock line');
+  check((await page.locator('[data-id^="ach-"]').count()) >= 2, 'the home screen lists the achievements');
+  check((await page.locator('[data-act^="talent-"]').count()) === 0, 'there is no always-on talent shop');
   await shot('01-home');
+  // The rest of the run plays drake: the account save gets drake unlocked and spare shards, as if earned.
+  const SHARDS0 = 1000;
+  fresh.Account.OwnedSpecies = ['slime', 'drake'];
+  fresh.Account.Shards = SHARDS0;
+  await writeAccount(fresh);
+  await page.reload();
+  await act('start').waitFor({ timeout: 90000 });
+  check(await act('species-drake').isEnabled() && (await page.locator('[data-id=unlock-drake]').count()) === 0, 'an account that unlocked drake can pick it');
 
   // ---- start a run, first drill and rest
   await act('species-drake').click();
@@ -230,7 +256,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(acct && acct.Account.Vault.length === 1 && entry.SpeciesId === 'drake' && entry.Log.length > 20 && acct.ActiveRun === null, 'sealing stored a Vault entry with the run log and cleared the active run');
   check(entry && entry.Grade === grade.toLowerCase() && /^[0-9a-f]{64}$/.test(entry.RunHash), 'entry grade and run hash match');
   const payout = +(/\+(\d+) Training Shards/.exec(await text('[data-id=payout]')) || [])[1];
-  check(payout > 0 && acct.Account.Shards === payout, 'the run paid ' + payout + ' shards into the account');
+  check(payout > 0 && acct.Account.Shards === SHARDS0 + payout, 'the run paid ' + payout + ' shards into the account');
   check((await text('[data-id=grade-title]')) === legacy, 'the grade screen shows the Legacy Title');
   await shot('05c-grade');
 
@@ -242,23 +268,42 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   check(/^[A-Z]$/.test(await text('[data-id=grade]')), 'and continues to the grade screen');
 
+  // ---- the post-run vendor (specs/18 section 4): 5 offers, rarity by grade, bought with shards
+  await act('to-vendor').click();
+  const offers = page.locator('[data-id=vendor-offer]');
+  check((await offers.count()) === 5, 'after the run the vendor shows 5 offers');
+  check(acct.Account.Vendor && acct.Account.Vendor.Grade === grade.toLowerCase() && acct.Account.Vendor.Offers.length === 5, 'the offers are saved on the account with the run\'s grade');
+  check(/^(Common|Rare|Epic)$/.test(await text('[data-id=vendor-offer] .rarity')), 'each offer has a rarity: ' + (await text('[data-id=vendor-offer] .rarity')));
+  await shot('05d-vendor');
+  const buy = page.locator('[data-act^="buy-offer-"]:not([disabled])').first();
+  const price = +(/(\d+) shards/.exec(await buy.innerText()) || [])[1];
+  const bought = +(/buy-offer-(\d+)/.exec(await buy.getAttribute('data-act')) || [])[1];
+  const shardsPre = (await readAccount()).Account.Shards;
+  await buy.click();
+  const afterBuy = await readAccount();
+  check(price > 0 && afterBuy.Account.Shards === shardsPre - price, 'buying an offer spent its ' + price + ' shards');
+  check(afterBuy.Account.Vendor.Offers[bought].Bought === true && (await offers.nth(bought).innerText()).includes('Sold'), 'the offer shows as sold');
+  const talentId = afterBuy.Account.Vendor.Offers[bought].Talent;
+  check((afterBuy.Account.Talents[talentId] || 0) > 0, 'and the talent gained ranks: ' + talentId + ' ' + afterBuy.Account.Talents[talentId]);
+  const vw0 = await page.evaluate(() => document.documentElement.scrollWidth);
+  check(vw0 <= 390, 'the vendor fits the phone width (' + vw0 + 'px)');
+  await act('vendor-done').click();
+  check((await page.locator('[data-id=vendor-offer]').count()) === 5, 'home keeps the unbought offers until the next run');
+  check(new RegExp('^' + afterBuy.Account.Talents[talentId] + '/').test(await text('[data-id=talent-' + talentId + '] .tag')), 'the talent list shows the new rank');
+
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'a reload after sealing keeps one Vault entry (no double seal)');
-  check((await text('[data-id=shards]')).startsWith(payout + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
+  check((await text('[data-id=shards]')).startsWith((SHARDS0 + payout - price) + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
   check((await text('[data-id=vault-title]')) === legacy, 'the Vault card shows the Legacy Title: ' + legacy);
   await shot('06-vault');
 
-  // ---- talents: buy one, and it shapes the next run
-  const talent = page.locator('[data-act="talent-frugal_drills"]');
-  check(await talent.isEnabled(), 'the first talent is affordable with the payout');
-  const cost = +(/(\d+) shards/.exec(await talent.innerText()) || [])[1];
-  await talent.click();
-  check(/^(\d+) shards/.exec(await text('[data-id=shards]'))[1] == payout - cost, 'buying it spent ' + cost + ' shards');
-  check(/1\/5/.test(await text('[data-id=talent-frugal_drills]')), 'the talent shows rank 1');
+  // ---- the next run: the vendor's offers go, and a bought Frugal Drills cuts the drill cost
   await act('start').click();
   await act('drill-str').waitFor();
-  check(/costs 19 energy/.test(await text('[data-id=odds]')), 'the talent cut the next run\'s drill cost: ' + (await text('[data-id=odds]')).slice(-26));
+  check((await readAccount()).Account.Vendor === null, 'starting the next run clears the vendor');
+  const frugal = afterBuy.Account.Talents.frugal_drills || 0;
+  if (frugal > 0) check(new RegExp('costs ' + (20 - frugal) + ' energy').test(await text('[data-id=odds]')), 'Frugal Drills cut the next run\'s drill cost: ' + (await text('[data-id=odds]')).slice(-26));
   await act('tab-log').click();
   await act('abandon').click();
   await act('abandon-no').click();
@@ -284,7 +329,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-id=vault-entry]').count()) === 1 && (await page.locator('[data-id=dismantle-confirm]').count()) === 0, 'declining keeps the monster');
 
   // Over the cap: a v1 save (written before the lock existed) whose Vault holds cap + 1 copies of the sealed entry. Loading it
-  // migrates it to v2; the run start is blocked until one is dismantled.
+  // migrates it to the current schema (v3); the run start is blocked until one is dismantled.
   const v2 = await readAccount();
   const v1 = JSON.parse(JSON.stringify(v2));
   v1.SchemaVersion = 1; v1.Account.SchemaVersion = 1;
@@ -307,7 +352,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 2 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v2 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 3 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v3 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap && (await page.locator('[data-id=vault-over]').count()) === 0, 'back at the cap, the warning goes');
   check(await act('start').isEnabled(), 'and a run can start again at the cap');

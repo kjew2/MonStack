@@ -16,8 +16,9 @@ namespace IdleRng.Runtime.Tests
         {
             var db = TestContent.Db;
             var a = AccountOps.New(db, 77);
+            foreach (var sp in db.SpeciesList) AccountOps.UnlockSpecies(db, a, sp.Id);
             a.Shards = 500;
-            AccountOps.BuyTalent(db, a, db.TalentList[0].Id);
+            a.Talents[db.TalentList[0].Id] = 1;
             AccountOps.GrantBooks(db, a, "book_echoes", 2);
 
             var first = AccountOps.StartRun(db, a, "drake");
@@ -81,7 +82,63 @@ namespace IdleRng.Runtime.Tests
             Assert.That(b.Vault[0].Locked, Is.False);
             Assert.That(b.Vault[0].RunHash, Is.EqualTo(a.Vault[0].RunHash));
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)), "the active run still replays");
-            Assert.That(SaveBody(AccountSave.Encode(b)), Does.Contain("\"SchemaVersion\": 2"), "it saves back as v2");
+            Assert.That(SaveBody(AccountSave.Encode(b)), Does.Contain("\"SchemaVersion\": 3"), "it saves back as the current version");
+        }
+
+        /// <summary>A save body as the v2 code wrote it: no achievements, records or vendor; every species owned.</summary>
+        static Newtonsoft.Json.Linq.JObject V2Body(AccountState a)
+        {
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 2;
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct["SchemaVersion"] = 2;
+            acct.Remove("Achievements");
+            acct.Remove("Records");
+            acct.Remove("Vendor");
+            return body;
+        }
+
+        [Test]
+        public void V2Save_MigratesToV3_KeepsSpeciesAndTalents_RebuildsRecordsFromTheVault()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(V2Body(a).ToString()));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.OwnedSpecies, Is.EqualTo(db.SpeciesList.Select(s => s.Id)), "a pre-T9 account keeps every species it owned");
+            Assert.That(b.Talents, Is.EqualTo(a.Talents));
+            Assert.That(b.Vendor, Is.Null);
+            Assert.That(b.Records.RunsFinished, Is.EqualTo(b.Vault.Count));
+            Assert.That(b.Records.BestRank, Is.EqualTo(b.Vault[0].RankIndex));
+            foreach (var d in db.AchievementList)
+                Assert.That(b.Achievements.Contains(d.Id), Is.EqualTo(AccountOps.AchievementHolds(db, b, d)), d.Id + ": earned from the rebuilt records");
+            Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)), "the active run still replays");
+        }
+
+        [Test]
+        public void AchievementsRecordsAndVendor_RoundTrip()
+        {
+            var db = TestContent.Db;
+            var a = AccountOps.New(db, 12);
+            var run = AccountOps.StartRun(db, a, "slime");
+            while (run.Phase != RunPhase.Finished)
+            {
+                while (run.Offers.Count > 0) TrainingRun.DiscardOffer(db, run);
+                if (run.Phase == RunPhase.AwaitFight) TrainingRun.Fight(db, run);
+                else TrainingRun.Rest(db, run);
+            }
+            AccountOps.FinishRun(db, a, 5);
+            a.Shards = 100000;
+            AccountOps.BuyOffer(db, a, 1);
+            a.Achievements.Add("veteran");   // earned out of order, kept as saved
+            var b = AccountSave.Decode(db, AccountSave.Encode(a));
+            Assert.That(b.Achievements, Is.EqualTo(a.Achievements));
+            Assert.That(b.Records.RunsFinished, Is.EqualTo(1));
+            Assert.That(b.Records.BestStats, Is.EqualTo(a.Records.BestStats));
+            Assert.That(b.Vendor.Grade, Is.EqualTo(a.Vendor.Grade));
+            Assert.That(b.Vendor.Offers.Select(o => o.Talent + "/" + o.Rarity + "/" + o.Bought), Is.EqualTo(a.Vendor.Offers.Select(o => o.Talent + "/" + o.Rarity + "/" + o.Bought)));
+            Assert.That(b.Vendor.Offers[1].Bought, Is.True);
+            Assert.That(b.OwnedSpecies, Is.EqualTo(a.OwnedSpecies));
         }
 
         static string SaveBody(byte[] file)

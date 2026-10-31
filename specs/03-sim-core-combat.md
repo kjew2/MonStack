@@ -85,7 +85,7 @@ Why SplitMix64 and not PCG32 or `System.Random`:
 - SplitMix64's output is already a hash of `seed + (k+1) * gamma`; "stateless derive" is its natural form, not a bolt-on. PCG32 is a sequential LCG; random access needs an O(log k) jump-ahead and its 32-bit output needs two draws per 53-bit double. Both are solvable but add code and audit surface for no gain.
 - `Derive(seed, k)` is exactly the k-th output of the reference generator (Java `SplittableRandom`, Rust `splitmix64`, every C reference). A server team can audit a pull with any off-the-shelf implementation.
 - `System.Random` changed algorithm in .NET 6, is not available with the same semantics inside Unity's runtime and has no random access.
-- Quality is adequate for a game: SplitMix64 passes BigCrush. It is not a CSPRNG; the gacha seed's secrecy would come from the server never sending it (`specs/01` section 6), not from the mixer.
+- Quality is adequate for a game: SplitMix64 passes BigCrush. It is not a CSPRNG; a server-held seed's secrecy (for a paid random draw, should one return: `specs/01`, retired) would come from the server never sending it, not from the mixer.
 
 The `+ 1` in `Derive` matters: `Mix(0) == 0`, so without the offset a zero seed would start with a zero draw. With the offset the first output for seed 0 is the standard reference value below.
 
@@ -138,6 +138,7 @@ def stream_seed(profile_seed, name): return mix64((profile_seed + fnv1a64(name))
 | `battle_sim` | one fight | evade, crit and target draws (`specs/16` section 5.3) |
 | `gauntlet` | a gauntlet | derives the seed of each floor's fight |
 | `run` | the account | derives each run's seed (`specs/18` section 2) |
+| `vendor` | the account | the post-run vendor's offers: per offer a rarity draw, then a talent draw; seeded per run index (`specs/18` section 4) |
 
 Every stream is `(seed, counter)`; the counter lives in the state it belongs to. Callers derive a child seed with `SplitMix64.Derive(StreamNames.StreamSeed(seed, name), index)`.
 

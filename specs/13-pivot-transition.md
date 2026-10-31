@@ -1,6 +1,6 @@
 # 13 - Transition Plan: Idle RNG to Monster Trainer
 
-Status: **MVP done (T1-T7); T8 done.** The idle game is removed (T7, 2026-10-30). Sections 2 to 4 describe the plan as it was made and what carried over; section 6 has each phase's result. How the repo moved from the idle stage-push game to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
+Status: **MVP done (T1-T7); T8 and T9 done.** The idle game is removed (T7, 2026-10-30). Sections 2 to 4 describe the plan as it was made and what carried over; section 6 has each phase's result. How the repo moved from the idle stage-push game to the monster-raising game in `specs/12`. Section 9 lists the decisions kj needs to make before the phases they block.
 
 ## 1. Approach
 
@@ -23,7 +23,7 @@ Status: **MVP done (T1-T7); T8 done.** The idle game is removed (T7, 2026-10-30)
 | Battle engine | `Battle/BattleEngine.cs`: 4v1 ATB, skill vocabulary, triggers | One engine for 1v1 (gauntlet, in-run fights), 4v1 (Daily Tower) and 4v4 (Endless, PvP). Becomes the `BattleSim.Resolve` of `specs/10` section 9.2 | Rebuilt as `IdleRng.Sim.Combat` (T1, `specs/16`) from the same ATB, damage and effect design; the idle engine retires at T7 |
 | Skill vocabulary and triggers | `skills.csv` kinds/targets, `BattleTrigger` | Tree nodes, chase traits and rule-breaking passives are written in it; the trigger list grows | Adapt |
 | Elements | `elements.csv`, strong/weak wheel | Species and skill types | Keep (section 9 item 9) |
-| Gacha math | `Gacha/Gacha.cs`, `specs/01`, pity, 10-pull guarantee, vectors | Species banner; dupes feed aptitude ranks instead of levels | Math and `tools/gacha_model.py` kept; the idle code and vectors were deleted at T7 and come back from git history as a starting point at T9 |
+| Gacha math | `Gacha/Gacha.cs`, `specs/01`, pity, 10-pull guarantee, vectors | None: the species gacha was scrapped at T9 (kj, 2026-10-30); species unlock from achievements | The idle code and vectors were deleted at T7; `tools/gacha_model.py` was deleted at T9 and `specs/01` marked retired |
 | Content pipeline | `content_src/*.csv` -> `tools/content_build.py` -> `Content/*.json` -> `ContentDb` | New tables: species, stats, train actions, milestones, trees, nodes, chase conditions, books, talents, ladder bosses, floors | Keep pipeline, new tables |
 | Save system | `IdleRng.Runtime/Save`: serializer, CRC, self-check, migrations, stores | New `AccountState` + `RunState` schema, new lineage | Keep machinery, new schema |
 | Backend seams | `IClock`, `IGachaService`, `ISaveStore`, `IdleRng.Remote` | Same seams; PvP adds `IPvpService` | `specs/08` kept as a design; `IdleRng.Remote`, the clocks and the services wiring were deleted at T7 (`ISaveStore` stays in `IdleRng.Runtime`) |
@@ -52,7 +52,7 @@ Result at T7: `00`, `03`, `05`, `06` and `09` were rewritten; `02`, `04`, `07` a
 | Spec | Fate |
 |---|---|
 | `00-overview` | Rewritten at T7 for the new game: scope, constants, vocabulary. Contracts in section 5 mostly survive. |
-| `01-gacha-math` | Kept; section 7 (hero dupes) becomes species dupes and aptitude ranks. |
+| `01-gacha-math` | Kept at T7 for the species gacha; **retired at T9** when kj scrapped it. |
 | `02-power-curve-math` | Retired. A run-balance model replaces it when balance resumes. |
 | `03-sim-core-combat` | Rewritten: run engine instead of the tick loop; RNG, numeric model, determinism and command sections kept. |
 | `04-economy-sinks` | Rewritten: shards, gems, books, talent tree. |
@@ -141,7 +141,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 **Engine done** (`specs/18`). Built in parallel with the T6 web slice by a second session; the web page wires the account in next.
 
-- `AccountState` and `AccountOps`: owned species (all MVP species until the gacha), the Vault (`VaultEntry`, T4), Training Shards, skill books, talent ranks, the run in progress. Start and finish runs, shard payout (cycles played and rank reached), buy talents. Gems wait for the gacha (T9).
+- `AccountState` and `AccountOps`: owned species (all MVP species until T9, which made them unlock from achievements), the Vault (`VaultEntry`, T4), Training Shards, skill books, talent ranks, the run in progress. Start and finish runs, shard payout (cycles played and rank reached), buy talents (from T9, through the post-run vendor).
 - `RunModifiers` carry talent effects into a run (drill cost, base stats, draft size, starting SP), stored on the run and the Vault entry so replays match.
 - Content `2.6`: `talents` (4 placeholder talents) and shard constants.
 - `AccountSave`: a new save lineage in its own store slot; the active run is saved as its replay recipe.
@@ -149,7 +149,7 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 
 ### T6 - Web prototype on the new loop
 
-**Done.** First built ahead of T5 at kj's request (2026-10-30), then moved onto the account (`specs/18`). `web/index.html` plays on a phone: species pick, Drill and Rest with the odds and drill cost shown, rank fights played back action by action (the ability in use, each skill's cooldown as a square tile whose grey overlay recedes downward, issue #85, and live HP; 1x, 2x or Skip, remembered on the device; issue #79) then the battle log, skill point gains shown as they arrive (HUD float-up, fight result badge, unspent SP on the Trees tab, log lines; issue #86), tree drafts into slots, the tree view with buying, the end screen with the grade, stat breakdown and shard payout, the talent shop, the skill book inventory and the Vault list (N/cap, lock, dismantle with a confirm; #82); sealing a monster spins the gauntlet wheel (T8, `specs/19` section 7). The save is the C# `AccountSave` (account, shards, talents, Vault and the active run as its replay recipe) in one browser key. The bridge is `IdleRng.Web.Engine.Run*`/`Account*` (`web/wasm/BRIDGE.md`). Abandoning a run pays and seals nothing and returns unused books (`AccountOps.AbandonRun`, `specs/18`).
+**Done.** First built ahead of T5 at kj's request (2026-10-30), then moved onto the account (`specs/18`). `web/index.html` plays on a phone: species pick, Drill and Rest with the odds and drill cost shown, rank fights played back action by action (the ability in use, each skill's cooldown as a square tile whose grey overlay recedes downward, issue #85, and live HP; 1x, 2x or Skip, remembered on the device; issue #79) then the battle log, skill point gains shown as they arrive (HUD float-up, fight result badge, unspent SP on the Trees tab, log lines; issue #86), tree drafts into slots, the tree view with buying, the end screen with the grade, stat breakdown, shard payout and achievements earned, the post-run vendor (T9; it replaced the talent shop), locked species with their unlock condition, the achievement list, the skill book inventory and the Vault list (N/cap, lock, dismantle with a confirm; #82); sealing a monster spins the gauntlet wheel (T8, `specs/19` section 7). The save is the C# `AccountSave` (account, shards, talents, Vault and the active run as its replay recipe) in one browser key. The bridge is `IdleRng.Web.Engine.Run*`/`Account*` (`web/wasm/BRIDGE.md`). Abandoning a run pays and seals nothing and returns unused books (`AccountOps.AbandonRun`, `specs/18`).
 
 - `src/IdleRng.Web` bridge exposes the run engine; `web/` gets the run screen, drafts, tree view, Tactical Challenge battle log, ladder/grade screen, Vault, talent tree.
 - The idle UI was removed from `web/` at T7.
@@ -165,14 +165,14 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 - Web: `idle.html`, `app.js`, `format.js`, the idle bridge (`Host.cs`, the idle exports), `MAPPING.md` and `run-wasm.js`; `engine.js` is now only the wasm loader.
 - `check.sh`: no balance sweep, no idle bench, no idle browser test. The golden files left are the battle, training-run and gauntlet vectors.
 - Specs rewritten or deleted as listed in section 4.
-- Not done, deliberately: the species gacha code (T9; `specs/01` and `tools/gacha_model.py` stay) and any rename of `IdleRng`.
+- Not done, deliberately: the species gacha code (planned for T9, then scrapped; `tools/gacha_model.py` went at T9) and any rename of `IdleRng`.
 
 ### Post-MVP (toward 1.0)
 
 | Phase | Content |
 |---|---|
 | T8 | **Done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title; the web client spins the wheel after sealing and shows "Floor N: title" on the grade screen and Vault cards). End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
-| T9 | Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors) |
+| T9 | **Done** (`specs/18` sections 4 and 8; issue #73). Re-scoped by kj (2026-10-30): the species gacha is scrapped. A new account owns the starter species (slime); the others unlock from account achievements (content table `achievements`, checked at seal and on load). The always-on talent shop is replaced by a post-run vendor: `VENDOR_OFFERS` (5) random talent offers per sealed run, rarity odds by the run's grade (`vendor_rarities`), bought with Training Shards, gone when the next run starts. Skill Books become the premium gate (dropped by the Daily Tower, T10; selling them is open, #49 and #77). Account save v3. Web: locked species with their condition, achievement list and notices, the vendor screen after the grade screen. `tools/gacha_model.py` deleted, `specs/01` retired, Genetic Aptitude dropped |
 | T10 | Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
 | T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |
 | T12 | Async 4v4 PvP on `specs/10`: accounts, server-resolved battles, cosmetic rewards |
@@ -200,4 +200,4 @@ Open, blocking first. Each has a recommendation.
 1. **What overwriting takes away** (`specs/15` section 4, agent decision): the overwritten tree's flat stat boosts are removed too. Not blocking; easy to change.
 2. **One energy meter** (`specs/12` section 13 item 16): drafts had energy plus fatigue; T2 uses energy only. Recommend keeping one meter. Not blocking.
 3. **Roles and elements.** The T3 placeholder content keeps the 5 elements and has no fixed roles (roles come from trees). Confirm. Not blocking.
-4. **Monetization** (`specs/12` section 13 item 10): gem sales or not. Not blocking until T13.
+4. **Monetization** (`specs/12` section 13 item 10): gem sales or not, and how Skill Books (the premium gate since T9) are sold (#49, #77). Not blocking until T13.

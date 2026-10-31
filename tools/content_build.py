@@ -31,6 +31,7 @@ ENUMS = {
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
     "TalentEffect": ["drill_cost", "stat_floor", "draft_size", "start_sp"],
+    "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
 }
@@ -52,7 +53,7 @@ REQUIRED_CONSTANTS = {
     # skill trees (specs/15)
     "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "MON_ECHO_POWER": "double",
     # account and meta-progression (specs/18)
-    "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int",
+    "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int",
     # end-of-run gauntlet (specs/19)
     "GAUNTLET_FLOORS": "int", "GAUNTLET_BASE": "double", "GAUNTLET_GROWTH": "double", "GAUNTLET_BOSS_EVERY": "int",
     "GAUNTLET_BOSS_MULT": "double",
@@ -84,7 +85,7 @@ MON_RANGES = {
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
-    "VAULT_CAP": ("> 0", lambda v: v > 0),
+    "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
     "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
     "GAUNTLET_GROWTH": (">= 1", lambda v: v >= 1), "GAUNTLET_BOSS_EVERY": ("> 0", lambda v: v > 0),
     "GAUNTLET_BOSS_MULT": ("> 0", lambda v: v > 0),
@@ -128,6 +129,10 @@ SCHEMA = {
     "legacy_titles": T([c("min_floor", "int"), c("title_key", "key")], key="min_floor"),
     "talents": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("effect", "enum:TalentEffect"),
                   c("per_rank", "double"), c("max_rank", "int"), c("cost_base", "int"), c("cost_step", "int")], key="id"),
+    "achievements": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:AchievementKind"), c("ref", "string", True),
+                       c("amount", "double", True), c("unlocks_species", "id", True)], key="id"),
+    "vendor_rarities": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("ranks", "int"), c("price_mult", "double"),
+                          c("weight_base", "double"), c("weight_per_rank", "double")], key="id"),
     "strings": T([c("key", "key"), c("en", "string")], key="key", required=False),
 }
 
@@ -380,6 +385,50 @@ def validate_talents(t, errs):
             errs.add("E043", loc, f"{eff} per_rank must be a whole number >= 0")
 
 
+def validate_unlocks(t, errs):
+    """Achievements and the post-run vendor (specs/18 sections 4 and 8). Mirrors ContentDb.BuildUnlocks."""
+    species = [r["id"] for r in t["species"]]
+    ranks = {r["id"] for r in t["fight_ranks"]}
+    unlocked = set()
+    for r in t["achievements"]:
+        loc = f"achievements[{r['id']}]"
+        kind, ref, amount = r["kind"], r["ref"], r["amount"]
+        if kind == "rank_reached":
+            if ref not in ranks:
+                errs.add("E023", loc, f"ref '{ref}' is not a fight rank id")
+            if amount is not None:
+                errs.add("E043", loc, "rank_reached takes no amount")
+        else:
+            if kind == "stat_reached":
+                if ref is not None and ref not in STATS:
+                    errs.add("E023", loc, f"ref '{ref}' is not a trained stat (or empty for any stat)")
+            elif ref is not None:
+                errs.add("E043", loc, f"{kind} takes no ref")
+            if amount is None or not amount > 0 or (kind != "stat_reached" and amount != int(amount)):
+                errs.add("E043", loc, f"{kind} needs an amount > 0" + ("" if kind == "stat_reached" else " (a whole number)"))
+        sp = r["unlocks_species"]
+        if sp is not None:
+            if sp not in species:
+                errs.add("E023", loc, f"unlocks_species '{sp}' is not a species id")
+            elif species and sp == species[0]:
+                errs.add("E043", loc, f"'{sp}' is the starter species (the first in species.csv): every account owns it")
+            unlocked.add(sp)
+    for sp in species[1:]:
+        if sp not in unlocked:
+            errs.add("E044", f"species[{sp}]", "only the first species is owned from the start: every other species needs an achievement that unlocks it")
+    rar = t["vendor_rarities"]
+    if not rar:
+        errs.add("E044", "vendor_rarities", "at least one rarity is required")
+    if sorted(r["sort_order"] for r in rar) != list(range(len(rar))):
+        errs.add("E047", "vendor_rarities", "sort_order must be exactly 0..N-1")
+    for r in rar:
+        if r["ranks"] < 1 or r["price_mult"] < 0:
+            errs.add("E043", f"vendor_rarities[{r['id']}]", "need ranks >= 1 and price_mult >= 0")
+    for g in range(len(t["fight_ranks"])):
+        if rar and not sum(max(0.0, r["weight_base"] + r["weight_per_rank"] * g) for r in rar) > 0:
+            errs.add("E043", "vendor_rarities", f"the weights must not all be 0 at grade index {g}")
+
+
 def validate_training(t, keys, errs):
     """Training run tables and constants (specs/14 section 8)."""
     kv = {k: keys[k]["value"] for k in keys}
@@ -423,6 +472,7 @@ def validate_training(t, keys, errs):
             errs.add("E043", loc, "dismantle_shards must be >= 0")
     validate_trees(t, errs)
     validate_talents(t, errs)
+    validate_unlocks(t, errs)
     validate_gauntlet(t, errs)
     ms = [r["threshold"] for r in t["stat_milestones"]]
     for i, v in enumerate(ms):

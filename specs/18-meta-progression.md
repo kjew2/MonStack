@@ -1,10 +1,12 @@
 # 18 - Account and Meta-Progression
 
-Status: **live as an engine (T5 of `specs/13`)**. Code: `src/IdleRng.Sim/Account` (account rules), `src/IdleRng.Sim/Training/RunState.cs` (`RunModifiers`), `src/IdleRng.Runtime/Save/AccountSave.cs` (save). Tests: `src/IdleRng.Sim.Tests/AccountTests.cs`, `src/IdleRng.Runtime.Tests/AccountSaveTests.cs`. The web client wires it in through its bridge (T6).
+Status: **live (T5 of `specs/13`; species unlocks by achievement and the post-run vendor since T9, issue #73)**. Code: `src/IdleRng.Sim/Account` (account rules), `src/IdleRng.Sim/Training/RunState.cs` (`RunModifiers`), `src/IdleRng.Runtime/Save/AccountSave.cs` (save). Tests: `src/IdleRng.Sim.Tests/AccountTests.cs`, `src/IdleRng.Runtime.Tests/AccountSaveTests.cs`. The web client wires it in through its bridge (T6).
 
 The design is `specs/12` sections 7, 9 and 10.
 
-> **Numbers and content are placeholders.** Payouts, talents, ranks and costs are placeholders until balance resumes (`CLAUDE.md`).
+> **Numbers and content are placeholders.** Payouts, talents, ranks, costs, achievement thresholds, vendor rarities, odds and prices are placeholders until balance resumes (`CLAUDE.md`).
+
+**T9 re-scope (kj, 2026-10-30, issue #73):** "scrap the gacha for creatures. make them unlock through other random achievements. the skill book become the main premium gate since they are target farmed as rng drops from daily towers. we also update the meta progression upgrades to be a random vendor assortment of buyable after a given run, say 5 offered, with rarities tied to score of your run." So: no species gacha, no duplicates and no Genetic Aptitude; species unlock from account achievements (section 8); the talent shop is replaced by the post-run vendor (section 4). How skill books are sold stays open (#49, #77); the Daily Tower that drops them is T10 (#74).
 
 ## 1. Account
 
@@ -14,26 +16,29 @@ The design is `specs/12` sections 7, 9 and 10.
 |---|---|
 | `Seed`, `RunsStarted` | Run seeds derive from these (section 2) |
 | `Shards` | Training Shards, the soft currency (`specs/12` section 10.2) |
-| `OwnedSpecies` | Species the player can train. **(agent)** All MVP species from the start until the gacha (`specs/13` T9) |
+| `OwnedSpecies` | Species the player can train, in content order: the starter (the first species in `species.csv`, slime) plus every species an achievement unlocked (section 8) |
 | `Books` | Skill books by id and count |
-| `Talents` | Talent ranks by id |
+| `Talents` | Talent ranks by id (bought from the post-run vendor, section 4) |
+| `Achievements`, `Records` | Achievement ids earned, in earn order, and the lifetime records they are checked against (section 8) |
+| `Vendor` | The post-run vendor's offers from the last sealed run, or null (section 4) |
 | `Vault` | Finished monsters (`VaultEntry`, `specs/13` T4), oldest first; each carries the player's `Locked` flag. At most `VAULT_CAP` before a new run (section 7) |
 | `Active` | The run in progress, or null |
 
-Gems (premium currency) arrive with the gacha (T9).
+There is no premium currency yet. Skill Books are the premium gate (kj, T9); whether and how they, or Star-Gems, are sold is the monetization call (#49, #77).
 
 ## 2. Commands (`AccountOps`)
 
 | Command | Rule |
 |---|---|
-| `New(seed)` | Every species owned; no shards, books, talents or Vault entries |
-| `StartRun(species, books)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3) |
-| `FinishRun(sealedUtcMs)` | The active run is over (completed or injured). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7) |
+| `New(seed)` | Owns only the starter species (`ContentDb.StarterSpecies`, section 8); no shards, books, talents, achievements or Vault entries |
+| `StartRun(species, books)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3). The vendor's unbought offers vanish (section 4) |
+| `FinishRun(sealedUtcMs)` | The active run is over (completed or injured). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`), records it and checks achievements, which may unlock species (section 8), rolls the vendor's offers (section 4) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7). The result lists the achievements earned and the species unlocked |
 | `AbandonRun()` | Ends the active run in any phase with no payout and no Vault entry; unused books return to the inventory (a misclick costs nothing). `RunsStarted` stays counted, so the next run gets a new seed and abandoning cannot reroll a run. (Agreed between the two building sessions, 2026-10-30; the web client's Abandon button calls it.) |
-| `BuyTalent(talent)` | Not maxed; enough shards. Costs shards, adds a rank. Applies from the next run: a run keeps the bonuses it started with |
+| `BuyOffer(index)` | A vendor offer not yet bought, whose talent is not maxed; enough shards. Costs the offer's price, adds its ranks (section 4). Applies from the next run: a run keeps the bonuses it started with. There is no other way to buy talents |
 | `Dismantle(index)` | Removes Vault entry `index` (oldest first) for good and pays its grade's refund (section 7). Refused for a locked entry. Allowed during a run |
 | `SetLocked(index, locked)` | Locks or unlocks Vault entry `index`. Account state only: not part of the sealed monster or its `RunHash` |
 | `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower will grant books through it (T10); tests and debug use it now |
+| `UnlockSpecies(species)` | Adds a species to `OwnedSpecies` in content order. Achievements call it; tests use it |
 
 Rejected commands throw and change nothing. The sim has no clock: the caller passes the seal time.
 
@@ -48,13 +53,35 @@ Rejected commands throw and change nothing. The sim has no clock: the caller pas
 | `DraftSizeBonus` | Added to `DRAFT_SIZE` | 0 |
 | `StartSp` | Extra skill points at the start | 0 |
 
-## 4. Talent tree
+## 4. Talents and the post-run vendor
 
-Content table `talents`: `id`, `name_key`, `desc_key`, `effect` (`drill_cost`, `stat_floor`, `draft_size`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. Rank `r + 1` costs `cost_base + cost_step x r` shards. A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
+Content table `talents`: `id`, `name_key`, `desc_key`, `effect` (`drill_cost`, `stat_floor`, `draft_size`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
+
+**The post-run vendor** (kj, T9) replaces the always-on talent shop. Code: `AccountOps.RollVendor`, `OfferRanks`, `OfferPrice`, `BuyOffer`.
+
+- When a run is sealed (`FinishRun`), the vendor rolls `VENDOR_OFFERS` offers. Each offer is one talent and a rarity. Per offer: draw a rarity by weight, then a talent uniformly among the talents not maxed. The same talent may be offered more than once **(agent: with 4 talents and 5 offers repeats cannot be avoided)**. No offers once every talent is maxed.
+- **Rarity odds follow the run's score**, its grade (the rank reached, E = index 0) **(agent: the grade is the score; the gauntlet floor does not count yet)**. Content table `vendor_rarities`: `id`, `sort_order`, `name_key`, `ranks`, `price_mult`, `weight_base`, `weight_per_rank`. A rarity's weight at grade index `g` is `max(0, weight_base + weight_per_rank x g)`.
+- **What a rarity means** **(agent)**: an offer adds up to `ranks` ranks of its talent (capped at the talent's max) for `price_mult` x the normal cost of those ranks, rounded half up. Rarer offers add more ranks for less per rank. Ranks and price are worked out at the talent's rank when bought, so buying one offer reprices another offer of the same talent.
+- Each offer sells once. **Unbought offers vanish when the next run starts (agent; recommended by the coordinator).** They stay through reloads and on the home screen until then. **No reroll (agent).** An abandoned run rolls no vendor.
+- **Deterministic:** the vendor's draws come from the `vendor` stream, seeded `Derive(StreamSeed(account seed, "vendor"), run index)` where the run index is the sealed run's (`RunsStarted - 1`). The offers are stored on the account (`Vendor`), so the save holds them as rolled.
+
+| Constant | Value | Range |
+|---|---|---|
+| `VENDOR_OFFERS` | 5 (kj: "say 5") | `> 0` |
+
+Placeholder rarities: `vendor_rarities.csv`. Odds at grade E and S follow from the weights:
+
+| Rarity | Ranks | Price | Weight `base + per_rank x g` | E | S |
+|---|---|---|---|---|---|
+| Common | 1 | x1.0 | 80 - 10g | 80% | 30% |
+| Rare | 2 | x0.8 | 18 + 4g | 18% | 38% |
+| Epic | 3 | x0.6 | 2 + 6g | 2% | 32% |
+
+Rules (`E043`, `E044`, `E047`, both `tools/content_build.py` and `ContentDb`): at least one rarity; `sort_order` exactly `0..N-1`; `ranks >= 1`; `price_mult >= 0`; at every grade index the weights do not all come to 0.
 
 Placeholder talents (the drafts' examples, `specs/12` section 9):
 
-| Talent | Effect per rank | Max | Cost |
+| Talent | Effect per rank | Max | Normal cost |
 |---|---|---|---|
 | Frugal Drills | drills cost 5% less energy | 5 | 20, 40, 60, ... |
 | Strong Stock | base stats +10% | 3 | 30, 60, 90 |
@@ -77,7 +104,7 @@ A flat list for now; a branching talent tree is a later content change. Rules (`
 A new save lineage (kj: clean break, `specs/13` section 1), in its own store slot (`AccountSave.SlotName` = `account`), using the file shape of `specs/06` (header with CRC, JSON body) and its two-slot rotation:
 
 ```
-{ "Kind": "monster_account", "SchemaVersion": 2,
+{ "Kind": "monster_account", "SchemaVersion": 3,
   "Account": { ...AccountState without Active... },
   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
 ```
@@ -85,7 +112,8 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. If the replay fails or the stored hash differs (for example after a rules change), the run is dropped, its books return to the inventory and the rest of the account loads with a notice (`specs/06` section 5).
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
-- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries. A v1 save migrates on load, every entry unlocked.
+- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
+- On every load the account's achievements are checked again, so an achievement added to content later is granted when the records already meet it (section 8).
 
 ## 7. Vault cap and dismantling
 
@@ -103,8 +131,39 @@ kj's decision (2026-10-30, issue #82): **a cap and dismantling only.** Code: `Ac
 
 Placeholder refunds (`fight_ranks.dismantle_shards`, `>= 0`, `E043`): E 5, D 10, C 15, B 25, A 40, S 60.
 
-## 8. Open
+## 8. Achievements and species unlocks
 
-- What else shards buy, and gems (T9).
+kj (T9): species unlock "through other random achievements" instead of a gacha. Code: `AccountOps.Record`, `RebuildRecords`, `AchievementProgress`, `AchievementHolds`, `CheckAchievements`, `UnlockSpecies`.
+
+- A new account owns one species, the **starter**: the first species in `species.csv` (slime) **(agent)**. Every other species is unlocked by an achievement.
+- Achievements are account-level. They are checked when a run is sealed (after it is recorded) and when an account loads. An earned achievement stays earned; the species it names is added to `OwnedSpecies`.
+- `Records` (sealed runs only; abandoned runs do not count): `RunsFinished`, `BestRank` (grade index, -1 before the first), `BestFloorsCleared` (gauntlet floors cleared: `GauntletFloor - 1`), `BestStats` (best final value per stat).
+- Content table `achievements`: `id`, `name_key`, `kind`, `ref`, `amount`, `unlocks_species` (nullable). Kinds:
+
+| Kind | `ref` | `amount` | Holds when |
+|---|---|---|---|
+| `runs_finished` | empty | whole number > 0 | `RunsFinished >= amount` |
+| `rank_reached` | a `fight_ranks` id | empty | a sealed run reached that rank (progress counts ranks from 1, E = 1) |
+| `stat_reached` | a stat id, or empty for any stat | > 0 | a sealed monster finished with that stat (any stat) `>= amount` |
+| `gauntlet_floors` | empty | whole number > 0 | a sealed monster cleared `>= amount` gauntlet floors |
+
+Placeholder achievements (thresholds checked against the bots: balanced runs reach B, focused runs pass 500 in one stat):
+
+| Achievement | Condition | Unlocks |
+|---|---|---|
+| Contender | Reach rank C in a run | drake |
+| Prodigy | Finish a run with any stat at 500 or more | sprite |
+| Veteran | Finish 5 runs | nothing yet |
+| Climber | Clear 10 gauntlet floors | nothing yet |
+
+Rules (both `tools/content_build.py` and `ContentDb`): `ref` and `amount` as in the table (`E023` for a bad reference, `E043` otherwise); `unlocks_species` is a species id (`E023`) and not the starter (`E043`); every species but the starter is unlocked by at least one achievement (`E044`), so none is unobtainable.
+
+The web client shows locked species on the species pick with their unlock condition and progress, an achievement list on the home screen, and a notice on the grade screen (and a toast) for each achievement a run earned.
+
+## 9. Open
+
+- Whether shards buy anything besides vendor offers; what Star-Gems are for now that there is no species gacha, and how skill books are sold (#49, #77).
+- Rewards for achievements that unlock no species (Veteran, Climber), and more achievements as species are added.
+- Whether the run's score for the vendor should include the gauntlet floor, not only the grade.
 - A branching talent tree instead of a list.
 - Vault capacity expansions (after the monetization call, #49).

@@ -1,0 +1,37 @@
+{
+  "table": "achievements",
+  "rows": [
+    {
+      "id": "rank_c",
+      "name_key": "achievement.rank_c.name",
+      "kind": "rank_reached",
+      "ref": "c",
+      "amount": null,
+      "unlocks_species": "drake"
+    },
+    {
+      "id": "stat_500",
+      "name_key": "achievement.stat_500.name",
+      "kind": "stat_reached",
+      "ref": null,
+      "amount": 500.0,
+      "unlocks_species": "sprite"
+    },
+    {
+      "id": "veteran",
+      "name_key": "achievement.veteran.name",
+      "kind": "runs_finished",
+      "ref": null,
+      "amount": 5.0,
+      "unlocks_species": null
+    },
+    {
+      "id": "climber",
+      "name_key": "achievement.climber.name",
+      "kind": "gauntlet_floors",
+      "ref": null,
+      "amount": 10.0,
+      "unlocks_species": null
+    }
+  ]
+}

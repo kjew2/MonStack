@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("3.4"));
+            Assert.That(db.Version, Is.EqualTo("3.5"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -22,6 +22,8 @@ namespace IdleRng.Sim.Tests
             Assert.That(db.StatMilestones, Is.EqualTo(new[] { 300, 500, 700, 900 }));
             Assert.That(db.TreeList, Is.Not.Empty);
             Assert.That(db.TalentList, Is.Not.Empty);
+            Assert.That(db.AchievementList, Is.Not.Empty);
+            Assert.That(db.VendorRarities, Is.Not.Empty);
             Assert.That(db.GauntletEnemies, Is.Not.Empty);
             Assert.That(db.GauntletBosses, Is.Not.Empty);
             Assert.That(db.LegacyTitles[0].MinFloor, Is.EqualTo(1));
@@ -48,7 +50,8 @@ namespace IdleRng.Sim.Tests
                 .Concat(db.FightRanks.Select(r => r.NameKey)).Concat(db.TreeList.Select(t => t.NameKey))
                 .Concat(db.TalentList.SelectMany(t => new[] { t.NameKey, t.DescKey }))
                 .Concat(db.GauntletEnemies.Concat(db.GauntletBosses).Select(e => e.NameKey))
-                .Concat(db.LegacyTitles.Select(t => t.TitleKey)).Concat(db.SkillBooks.Values.Select(b => b.NameKey));
+                .Concat(db.LegacyTitles.Select(t => t.TitleKey)).Concat(db.SkillBooks.Values.Select(b => b.NameKey))
+                .Concat(db.AchievementList.Select(d => d.NameKey)).Concat(db.VendorRarities.Select(r => r.NameKey));
             foreach (var k in keys) Assert.That(db.Strings.ContainsKey(k), Is.True, k);
         }
 
@@ -75,6 +78,19 @@ namespace IdleRng.Sim.Tests
             Assert.That(msgs, Has.Some.Contains("already belongs to species"));
             Assert.That(msgs, Has.Some.Contains("in-run chase tree 'arcane_overflow' must not need a book tree"));
             Assert.That(msgs, Has.Some.Contains("trees[unbreakable_will]: a chase tree must belong to a species"));
+        }
+
+        [Test]
+        public void SpeciesUnlocks_AreValidated()
+        {
+            string dir = FileContentSource.FindContentDirectory(TestContext.CurrentContext.TestDirectory);
+            var files = Directory.GetFiles(dir, "*.json").ToDictionary(Path.GetFileName, File.ReadAllText);
+            // The achievement that unlocked drake now names the starter: drake has no way in, and the starter cannot be unlocked.
+            files["achievements.json"] = files["achievements.json"].Replace("\"unlocks_species\": \"drake\"", "\"unlocks_species\": \"slime\"");
+            var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false));
+            var msgs = ex.Errors.Select(e => e.Code + " " + e.Location + ": " + e.Message).ToList();
+            Assert.That(msgs, Has.Some.Contains("E043 achievements[rank_c]: 'slime' is the starter species"));
+            Assert.That(msgs, Has.Some.Contains("E044 species[drake]: only the first species is owned from the start"));
         }
 
         [Test]

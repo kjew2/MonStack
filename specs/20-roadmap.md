@@ -26,14 +26,14 @@ Order follows `specs/13` section 6. Each phase gets its own spec before building
 | # | Item | Kind | Size | Issues |
 |---|---|---|---|---|
 | R1.1 | **Done.** **T8 gauntlet wheel screen and Legacy Titles** in the web client (engine done, `specs/19`). Also expose the gauntlet fields in the bridge. | Feature | S-M | #72 |
-| R1.2 | **T9 species gacha and aptitude ranks.** Engine and UI; the currency and gem-sale question (R1.9) blocks only the economy part. | Feature | M | #73 |
+| R1.2 | **Done.** **T9, re-scoped by kj (2026-10-30): species unlock from achievements and talents come from a post-run vendor** (5 random offers, rarity by the run's grade). The species gacha and aptitude ranks are scrapped; Skill Books are the premium gate (selling them is R1.9). | Feature | M | #73 |
 | R1.3 | **First-time experience, rewritten for the trainer**: guided first run, real strings (species, trees, nodes), settings, accessibility basics, localisation decision. The existing issue is written for the idle game. | Feature | M | #48 (**re-scope**) |
 | R1.4 | **T10 Daily Tower** (4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button). | Feature | L | #74 |
 | R1.5 | **Content depth for runs**: more species, native and generic trees, chase trees, books and talents beyond the placeholders; the long-term loop for a day-45 player. Numbers stay placeholders until balance resumes. | Feature | L | #51 (**re-scope**: its stage-walls, gear bag and prestige scope is the idle game; keep the endgame and live-ops-calendar questions) |
 | R1.6 | **T11 Endless Tower** (4v4, mutators, gambit rulebook editor on a phone). | Feature | L | #75 |
 | R1.7 | **Art and visual identity**: the largest launch gap and the longest lead time, so start the decisions early and run in parallel. Hero portraits become monster art; stage backgrounds become battle and tower backdrops. | Feature | L | #45 (**re-scope**) |
 | R1.8 | **Audio and game feel**: music, SFX, haptics, volume settings. | Feature | M | #46 (**re-scope**: gacha and boss cues map to pulls, rank fights and gauntlet) |
-| R1.9 | **Decide monetisation** (are gems sold; rewarded ads; cosmetics). Blocks the economy of R1.2 and all of R2.4. | Decision | decision | #49 (decision part), #77 |
+| R1.9 | **Decide monetisation** (are gems or Skill Books sold, and how; rewarded ads; cosmetics). Blocks R2.3. | Decision | decision | #49 (decision part), #77 |
 
 ## P1 - Launch readiness (after the game systems above)
 
@@ -42,7 +42,7 @@ Order follows `specs/13` section 6. Each phase gets its own spec before building
 | R2.1 | **T12 async 4v4 PvP and the server**: accounts, server-resolved battles, cloud save, plausibility checks, golden replay fixtures, deploy pipeline. Vault entries already carry the replay log and hash. Server work is a vertical; re-scope each child issue for the trainer before starting (they describe gem ledgers, offline gold and the idle chest). | Feature / Tech | L | #76, #15 (goal), #17 backend spike, #18 server assembly, #19 auth, #21 server clock, #22 pull ledger, #24 server-credited gems, #25 cloud save, #27 analytics and plausibility, #28 integration tests and deploy, #32 replay fixtures, #33 save trust fields (**all re-scope**) |
 | R2.2 | **T13 platform builds**: Steam wrapper (Tauri or Electron) and web release. | Tech | M | #77 |
 | R2.3 | **Monetisation build-out**, only if R1.9 says yes: shop, receipts, ad SDK, consent. | Feature | M-L | #49, #26 receipt validation |
-| R2.4 | **Compliance, legal and store accounts**: privacy policy, odds disclosure for the gacha, account deletion, age rating, Steam and developer accounts. Lead times are weeks and partly human, so start accounts early. | Tech / human | M | #50 |
+| R2.4 | **Compliance, legal and store accounts**: privacy policy, odds disclosure for any paid random items (the species gacha was scrapped at T9), account deletion, age rating, Steam and developer accounts. Lead times are weeks and partly human, so start accounts early. | Tech / human | M | #50 |
 | R2.5 | **Store presence**: listing, screenshots, support site, community channel (after the name and art). | Feature | S-M | #47 (store part) |
 | R2.6 | **QA, beta and soft launch** with analytics, on web and Steam first. | Feature | L | #53 (**re-scope**: it is written for TestFlight) |
 | R2.7 | **1.0 goal tracker.** | Tracking | none | #70 |
@@ -62,7 +62,6 @@ Candidates for new issues if kj agrees; none is filed.
 - **Balance harness** on the run bots (`specs/09` section 7), when balance resumes (CLAUDE.md).
 - **Battle and run throughput benchmark**, when speed matters (`specs/13` section 2).
 - **Phone-quality pass on the web client** (touch targets, wasm load time, save-size limits in one browser key).
-- **Confirm the "dupes feed aptitude" math** against `specs/01` with the species banner vectors (part of R1.2).
 
 ## Issue map (every open issue)
 

@@ -12,7 +12,7 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 2, "Account": { ...AccountState without Active... },
+    /// { "Kind": "monster_account", "SchemaVersion": 3, "Account": { ...AccountState without Active... },
     ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
     /// </code>
     /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
@@ -53,6 +53,7 @@ namespace IdleRng.Runtime.Save
             notice = null;
             var (version, body) = SaveSerializer.Decode(file);
             if ((string)body["Kind"] != Kind) throw new SaveInvalidException($"not an account save (Kind '{body["Kind"]}')");
+            int savedVersion = version;
             if (version >= 1 && version < AccountState.CurrentSchemaVersion) version = Migrate(body, version);
             if (version != AccountState.CurrentSchemaVersion)
                 throw new SaveInvalidException($"account schema v{version} is not supported (current v{AccountState.CurrentSchemaVersion})");
@@ -61,6 +62,9 @@ namespace IdleRng.Runtime.Save
             try { a = acct.ToObject<AccountState>(SaveSerializer.Serializer); }
             catch (JsonException e) { throw new SaveInvalidException("Account does not deserialise: " + e.Message, e); }
             if (a == null) throw new SaveInvalidException("Account is null");
+            if (savedVersion < 3) AccountOps.RebuildRecords(a);   // v2 -> v3: records did not exist; rebuilt from the Vault
+            if (a.Achievements == null) a.Achievements = new List<string>();   // a null in the file reads as none
+            if (a.Records == null) AccountOps.RebuildRecords(a);
 
             if (body["ActiveRun"] is JObject run)
             {
@@ -80,6 +84,8 @@ namespace IdleRng.Runtime.Save
                     notice = "Your run in progress was saved under older rules and could not continue. It was dropped and its books returned. (" + e.Message + ")";
                 }
             }
+            // An achievement added to content since the save is granted when the records already meet it (specs/18 section 8).
+            AccountOps.CheckAchievements(c, a);
             if (notice == null && !string.IsNullOrEmpty(a.ContentVersion) && !c.IsCompatibleWith(a.ContentVersion))
                 notice = $"This account was saved with content {a.ContentVersion}; the game is now on {c.Version}.";
             a.ContentVersion = c.Version;
@@ -102,6 +108,15 @@ namespace IdleRng.Runtime.Save
                     foreach (var e in vault)
                         if (e is JObject o && o["Locked"] == null) o["Locked"] = false;
                 version = 2;
+            }
+            if (version == 2)
+            {
+                // v2 -> v3 (issue #73): achievements, records and the post-run vendor. Species already owned stay owned (accounts
+                // from before T9 owned every species); Decode rebuilds the records from the Vault after deserialising.
+                acct["Achievements"] = new JArray();
+                acct.Remove("Records");
+                acct["Vendor"] = JValue.CreateNull();
+                version = 3;
             }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
