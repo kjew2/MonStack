@@ -3,7 +3,8 @@
 // opens a stat and an ability tooltip, plays a whole run through the real buttons (drill, rest, rank fights, tree drafts, buying
 // nodes), watches two rank fights play back (current ability, live HP, skill cooldown tiles, the remembered 1x/2x/Skip speed),
 // checks the skill point gain indicators (HUD float-up, fight badge, Trees tab count, log lines), seals it, checks the grade
-// screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run.
+// screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run,
+// locks and dismantles a Vault entry, and loads a v1 save over the Vault cap to check the migration and the blocked run start.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
 'use strict';
@@ -31,6 +32,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const shot = async (n) => { if (shotsDir) { fs.mkdirSync(shotsDir, { recursive: true }); await page.screenshot({ path: path.join(shotsDir, n + '.png') }); } };
   const act = (a) => page.locator('[data-act="' + a + '"]');
   const text = (sel) => page.locator(sel).first().innerText();
+  const tc = (sel) => page.locator(sel).first().textContent();   // as written, before CSS text-transform
   const url = srv.url + 'index.html';
   // The account save is AccountSave text: a header line, then JSON.
   const readAccount = () => page.evaluate(() => { const t = localStorage.getItem('idle-rng-account-v1'); return t ? JSON.parse(t.slice(t.indexOf('\n') + 1)) : null; });
@@ -266,6 +268,52 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('start').waitFor();
   check(((await readAccount()).ActiveRun) === null, 'abandoning ends the run without sealing');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'and the Vault is unchanged');
+
+  // ---- Vault cap, lock and dismantle (issue #82, specs/18 section 7)
+  const cap = +(/^Vault 1\/(\d+)$/.exec(await tc('[data-id=vault-count]')) || [])[1];
+  check(cap > 1,'the Vault shows its count against the cap: ' + (await tc('[data-id=vault-count]')));
+  await act('lock-0').click();
+  check((await act('lock-0').getAttribute('aria-pressed')) === 'true' && await act('dismantle-0').isDisabled(), 'locking an entry disables its dismantle button');
+  check((await readAccount()).Account.Vault[0].Locked === true, 'the lock is saved');
+  await act('lock-0').click();
+  check((await act('lock-0').getAttribute('aria-pressed')) === 'false' && await act('dismantle-0').isEnabled(), 'unlocking enables it again');
+  await act('dismantle-0').click();
+  check(await page.locator('[data-id=dismantle-confirm]').isVisible(), 'dismantling asks for confirmation first');
+  await shot('08-dismantle-confirm');
+  await act('dismantle-no').click();
+  check((await page.locator('[data-id=vault-entry]').count()) === 1 && (await page.locator('[data-id=dismantle-confirm]').count()) === 0, 'declining keeps the monster');
+
+  // Over the cap: a v1 save (written before the lock existed) whose Vault holds cap + 1 copies of the sealed entry. Loading it
+  // migrates it to v2; the run start is blocked until one is dismantled.
+  const v2 = await readAccount();
+  const v1 = JSON.parse(JSON.stringify(v2));
+  v1.SchemaVersion = 1; v1.Account.SchemaVersion = 1;
+  const one = v1.Account.Vault[0];
+  delete one.Locked;
+  v1.Account.Vault = Array.from({ length: cap + 1 }, () => one);
+  const v1Body = Buffer.from(JSON.stringify(v1), 'utf8');
+  const v1Text = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(v1Body) >>> 0).toString(16).padStart(8, '0') + ' len=' + v1Body.length + '\n' + v1Body.toString('utf8');
+  await page.evaluate((t) => localStorage.setItem('idle-rng-account-v1', t), v1Text);
+  await page.reload();
+  await act('start').waitFor({ timeout: 90000 });
+  check(!(await page.evaluate(() => localStorage.getItem('idle-rng-account-v1-unloadable'))), 'a v1 save loads (migrated), not kept aside');
+  check((await page.locator('[data-id=vault-entry]').count()) === cap + 1, 'all ' + (cap + 1) + ' monsters are in the Vault');
+  check((await tc('[data-id=vault-count]')) === 'Vault ' + (cap + 1) + '/' + cap, 'the count shows it over the cap');
+  check(await act('start').isDisabled() && /dismantle 1/i.test(await act('start').innerText()), 'starting a run is blocked: ' + (await act('start').innerText()));
+  check(/Dismantle 1 monster/.test(await text('[data-id=vault-over]')), 'with a clear message: ' + (await text('[data-id=vault-over]')));
+  await shot('09-vault-over-cap');
+  const shardsBefore = (await readAccount()).Account.Shards;
+  const refund = +(/\+(\d+) shards/.exec(await act('dismantle-' + cap).innerText()) || [])[1];
+  await act('dismantle-' + cap).click();
+  await act('dismantle-yes').click();
+  const afterDismantle = await readAccount();
+  check(afterDismantle.SchemaVersion === 2 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v2 with ' + cap + ' unlocked entries');
+  check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
+  check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap && (await page.locator('[data-id=vault-over]').count()) === 0, 'back at the cap, the warning goes');
+  check(await act('start').isEnabled(), 'and a run can start again at the cap');
+  const vw = await page.evaluate(() => document.documentElement.scrollWidth);
+  check(vw <= 390, 'the Vault fits the phone width (' + vw + 'px)');
+
 
   // ---- the book option and drafts (the test book is the picked species' own: drake's Ember Codex)
   await act('species-drake').click();

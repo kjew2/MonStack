@@ -58,6 +58,39 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void VaultLock_RoundTrips()
+        {
+            var a = Played();
+            AccountOps.SetLocked(TestContent.Db, a, 0, true);
+            var b = AccountSave.Decode(TestContent.Db, AccountSave.Encode(a));
+            Assert.That(b.Vault[0].Locked, Is.True);
+        }
+
+        [Test]
+        public void V1Save_MigratesToV2_EveryEntryUnlocked()
+        {
+            // A v1 body as the v1 code wrote it: no Locked on Vault entries.
+            var a = Played();
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 1;
+            body["Account"]["SchemaVersion"] = 1;
+            foreach (var e in body["Account"]["Vault"]) ((Newtonsoft.Json.Linq.JObject)e).Remove("Locked");
+            var b = AccountSave.Decode(TestContent.Db, SaveSerializer.EncodeBody(body.ToString()));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.Vault.Count, Is.EqualTo(1));
+            Assert.That(b.Vault[0].Locked, Is.False);
+            Assert.That(b.Vault[0].RunHash, Is.EqualTo(a.Vault[0].RunHash));
+            Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)), "the active run still replays");
+            Assert.That(SaveBody(AccountSave.Encode(b)), Does.Contain("\"SchemaVersion\": 2"), "it saves back as v2");
+        }
+
+        static string SaveBody(byte[] file)
+        {
+            string text = Encoding.UTF8.GetString(file);
+            return text.Substring(text.IndexOf('\n') + 1);
+        }
+
+        [Test]
         public void NoActiveRun_RoundTrips()
         {
             var a = AccountOps.New(TestContent.Db, 3);

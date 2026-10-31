@@ -56,6 +56,12 @@ namespace IdleRng.Sim.Training
         /// <summary>Wall-clock time the run was sealed. The sim has no clock: the caller supplies it (0 = not recorded).</summary>
         public long SealedUtcMs { get; set; }
 
+        /// <summary>
+        /// The player's lock (specs/18 section 7): a locked entry cannot be dismantled. Account state, not part of the sealed
+        /// monster: it is not in RunHash and toggles freely (AccountOps.SetLocked).
+        /// </summary>
+        public bool Locked { get; set; }
+
         /// <summary>The monster as a battle fighter, rebuilt by replaying the run.</summary>
         public Fighter Fighter(ContentDb c) => TrainingRun.MonsterFighter(c, TrainingRun.Replay(c, SpeciesId, Seed, Log, Books, Mods));
     }

@@ -190,6 +190,79 @@ namespace IdleRng.Sim.Tests
         }
     
         [Test]
+        public void VaultCap_FinishSealsOverTheCap_StartWaitsForDismantling()
+        {
+            var a = AccountOps.New(Db, 9);
+            for (int i = 0; i < K.VaultCap; i++) a.Vault.Add(new VaultEntry { Grade = "e" });
+            Assert.That(AccountOps.VaultOver(Db, a), Is.EqualTo(0), "at the cap is not over it");
+            var run = AccountOps.StartRun(Db, a, "drake");   // a run may start at the cap
+            PlayOut(run);
+            var f = AccountOps.FinishRun(Db, a);
+            Assert.That(a.Vault.Count, Is.EqualTo(K.VaultCap + 1), "a finished run always seals, even over the cap");
+            Assert.That(a.Vault[K.VaultCap], Is.SameAs(f.Entry));
+            Assert.That(AccountOps.VaultOver(Db, a), Is.EqualTo(1));
+            long shards = a.Shards;
+            int runs = a.RunsStarted;
+            var ex = Assert.Throws<InvalidOperationException>(() => AccountOps.StartRun(Db, a, "drake"));
+            Assert.That(ex.Message, Does.Contain("dismantle 1"));
+            Assert.That(a.Active, Is.Null);
+            Assert.That(a.RunsStarted, Is.EqualTo(runs), "a refused start changes nothing");
+            Assert.That(a.Shards, Is.EqualTo(shards));
+
+            AccountOps.Dismantle(Db, a, 0);
+            Assert.That(AccountOps.VaultOver(Db, a), Is.EqualTo(0));
+            Assert.That(AccountOps.StartRun(Db, a, "drake"), Is.Not.Null, "down to the cap, runs start again");
+        }
+
+        [Test]
+        public void Dismantle_RefundsByGrade_RemovesTheEntry_RefusesLockedOnes()
+        {
+            var a = AccountOps.New(Db, 9);
+            var low = new VaultEntry { Grade = Db.FightRanks[0].Id };
+            var top = new VaultEntry { Grade = Db.FightRanks[Db.FightRanks.Count - 1].Id };
+            var mid = new VaultEntry { Grade = Db.FightRanks[1].Id };
+            a.Vault.AddRange(new[] { low, top, mid });
+            Assert.That(Db.FightRanks.Last().DismantleShards, Is.GreaterThan(Db.FightRanks[0].DismantleShards), "placeholder refunds rise with the grade");
+
+            AccountOps.SetLocked(Db, a, 1, true);
+            Assert.That(top.Locked, Is.True);
+            Assert.Throws<InvalidOperationException>(() => AccountOps.Dismantle(Db, a, 1), "locked");
+            Assert.That(a.Vault.Count, Is.EqualTo(3));
+            Assert.That(a.Shards, Is.EqualTo(0));
+
+            Assert.That(AccountOps.Dismantle(Db, a, 0), Is.EqualTo(Db.FightRanks[0].DismantleShards));
+            Assert.That(a.Shards, Is.EqualTo(Db.FightRanks[0].DismantleShards));
+            Assert.That(a.Vault, Is.EqualTo(new[] { top, mid }), "later entries move down one index");
+
+            AccountOps.SetLocked(Db, a, 0, false);
+            long refund = AccountOps.Dismantle(Db, a, 0);
+            Assert.That(refund, Is.EqualTo(Db.FightRanks.Last().DismantleShards));
+            Assert.That(a.Shards, Is.EqualTo(Db.FightRanks[0].DismantleShards + refund));
+            Assert.That(a.Vault, Is.EqualTo(new[] { mid }));
+
+            Assert.Throws<ArgumentException>(() => AccountOps.Dismantle(Db, a, 1), "no such entry");
+            Assert.Throws<ArgumentException>(() => AccountOps.Dismantle(Db, a, -1));
+            Assert.Throws<ArgumentException>(() => AccountOps.SetLocked(Db, a, 5, true));
+            Assert.That(AccountOps.DismantleRefund(Db, new VaultEntry { Grade = "no_such_grade" }), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Dismantle_WorksDuringARun_AndLockDoesNotTouchTheRunHash()
+        {
+            var a = AccountOps.New(Db, 4);
+            PlayOut(AccountOps.StartRun(Db, a, "slime"));
+            var e = AccountOps.FinishRun(Db, a).Entry;
+            string hash = e.RunHash;
+            AccountOps.StartRun(Db, a, "drake");
+            AccountOps.SetLocked(Db, a, 0, true);
+            Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, e.SpeciesId, e.Seed, e.Log, e.Books, e.Mods)), Is.EqualTo(hash));
+            AccountOps.SetLocked(Db, a, 0, false);
+            AccountOps.Dismantle(Db, a, 0);
+            Assert.That(a.Vault, Is.Empty);
+            Assert.That(a.Active, Is.Not.Null, "the run in progress is untouched");
+        }
+
+        [Test]
         public void AbandonRun_PaysNothing_SealsNothing_ReturnsUnusedBooks_KeepsTheSeedMoving()
         {
             var a = AccountOps.New(Db, 5);

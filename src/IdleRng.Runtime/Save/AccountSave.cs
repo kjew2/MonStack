@@ -12,7 +12,7 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 1, "Account": { ...AccountState without Active... },
+    /// { "Kind": "monster_account", "SchemaVersion": 2, "Account": { ...AccountState without Active... },
     ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
     /// </code>
     /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
@@ -53,6 +53,7 @@ namespace IdleRng.Runtime.Save
             notice = null;
             var (version, body) = SaveSerializer.Decode(file);
             if ((string)body["Kind"] != Kind) throw new SaveInvalidException($"not an account save (Kind '{body["Kind"]}')");
+            if (version >= 1 && version < AccountState.CurrentSchemaVersion) version = Migrate(body, version);
             if (version != AccountState.CurrentSchemaVersion)
                 throw new SaveInvalidException($"account schema v{version} is not supported (current v{AccountState.CurrentSchemaVersion})");
             if (!(body["Account"] is JObject acct)) throw new SaveInvalidException("Account section missing");
@@ -86,6 +87,26 @@ namespace IdleRng.Runtime.Save
         }
 
         public static AccountState Decode(ContentDb c, byte[] file) => Decode(c, file, out _);
+
+        /// <summary>
+        /// Forward-only schema migrations (specs/06 section 5) on the decoded body, one step per version, frozen literals only
+        /// (never ContentDb). Returns the version reached.
+        /// </summary>
+        static int Migrate(JObject body, int version)
+        {
+            if (!(body["Account"] is JObject acct)) throw new SaveInvalidException("Account section missing");
+            if (version == 1)
+            {
+                // v1 -> v2 (issue #82): Vault entries gain Locked, false for every entry sealed before the lock existed.
+                if (acct["Vault"] is JArray vault)
+                    foreach (var e in vault)
+                        if (e is JObject o && o["Locked"] == null) o["Locked"] = false;
+                version = 2;
+            }
+            body["SchemaVersion"] = version;
+            acct["SchemaVersion"] = version;
+            return version;
+        }
 
         public static void Write(ISaveStore store, AccountState a) => store.Write(Encode(a));
 

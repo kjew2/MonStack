@@ -13,7 +13,8 @@
       "dex": 100.0,
       "def": 100.0,
       "spd": 100.0,
-      "luk": 100.0
+      "luk": 100.0,
+      "dismantle_shards": 5
     },
     {
       "id": "d",
@@ -27,7 +28,8 @@
       "dex": 160.0,
       "def": 160.0,
       "spd": 160.0,
-      "luk": 160.0
+      "luk": 160.0,
+      "dismantle_shards": 10
     },
     {
       "id": "c",
@@ -41,7 +43,8 @@
       "dex": 230.0,
       "def": 230.0,
       "spd": 230.0,
-      "luk": 230.0
+      "luk": 230.0,
+      "dismantle_shards": 15
     },
     {
       "id": "b",
@@ -55,7 +58,8 @@
       "dex": 310.0,
       "def": 310.0,
       "spd": 310.0,
-      "luk": 310.0
+      "luk": 310.0,
+      "dismantle_shards": 25
     },
     {
       "id": "a",
@@ -69,7 +73,8 @@
       "dex": 400.0,
       "def": 400.0,
       "spd": 400.0,
-      "luk": 400.0
+      "luk": 400.0,
+      "dismantle_shards": 40
     },
     {
       "id": "s",
@@ -83,7 +88,8 @@
       "dex": 500.0,
       "def": 500.0,
       "spd": 500.0,
-      "luk": 500.0
+      "luk": 500.0,
+      "dismantle_shards": 60
     }
   ]
 }
