@@ -418,7 +418,7 @@
     const you = speciesDef(s.species).name, foe = f.opponent.name;
     modal.append(
       h('h2', { class: f.won ? 'ok' : 'bad', text: f.won ? 'Victory! Promoted to ' + rank(f.rankAfter).name : f.outcome === 'TimedOut' ? 'Time ran out: no promotion' : 'Defeat: no promotion', 'data-id': 'fight-title' }),
-      f.won ? null : h('p', { class: 'muted', text: 'Train more and try again next cycle.' }),
+      f.won ? null : h('p', { class: 'muted', text: 'Train more and try again next cycle: ' + foe + ' waits for the rematch.' }),
       spBadge(ui.fightGains),
       fightUnits(f, you, foe, null, rankArt(f, s)).root,
       h('h3', { text: 'Battle log' }),
