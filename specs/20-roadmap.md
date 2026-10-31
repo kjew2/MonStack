@@ -16,7 +16,7 @@ Status: **proposal** (agent draft, 2026-10-30; kj has not reviewed it). A high-l
 |---|---|---|---|---|
 | R0.1 | **Close the MVP goal.** T0-T7 are done (`specs/13` section 6); the goal still lists T7 as in progress. Close it and point to #70. | Fix | S | #69 |
 | R0.2 | **CI workflow running `./check.sh`** on PRs and `main`. Everything else depends on the gates being enforced. Done: `.github/workflows/check.yml` (`specs/09` section 6); making it a required check is kj's GitHub setting. | Tech | S | #38 |
-| R0.3 | **Pick the game's name**, then do the one mechanical `IdleRng` rename (`specs/13` section 1). Cheaper the earlier it happens; store listing, site and community channels wait on it. | Fix / Tech | S + decision | #47 (name part) |
+| R0.3 | **Pick the game's name** (done: **MonStack**, kj 2026-10-31; store and trademark check open), then do the one mechanical `IdleRng` rename (`specs/13` section 1). Cheaper the earlier it happens; store listing, site and community channels wait on it. | Fix / Tech | S + decision | #47 (name part) |
 | R0.4 | **Answer the open design questions** in `specs/13` section 9 (what overwriting removes, one energy meter, roles and elements). Not blocking, but each is a rule the next specs build on. | Fix | decision | none |
 | R0.5 | **Done.** **T9** (moved up from P1, kj 2026-10-31), **re-scoped by kj (2026-10-30): species unlock from achievements and talents come from a post-run vendor** (5 random offers, rarity by the run's grade). The species gacha and aptitude ranks are scrapped; Skill Books are the premium gate (selling them is R1.9). | Feature | M | #73 |
 | R0.6 | **T10 Daily Tower** (moved up from P1, kj 2026-10-31): 4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button. Spec: `specs/21`. Live, with the web screen and floor playback (meters, tooltips); the rest of its polish is #98. | Feature | L | #74 |
@@ -59,7 +59,6 @@ Order follows `specs/13` section 6. Each phase gets its own spec before building
 
 Candidates for new issues if kj agrees; none is filed.
 
-- **Balance harness** on the run bots (`specs/09` section 7), when balance resumes (CLAUDE.md).
 - **Battle and run throughput benchmark**, when speed matters (`specs/13` section 2).
 - **Phone-quality pass on the web client** (touch targets, wasm load time, save-size limits in one browser key).
 

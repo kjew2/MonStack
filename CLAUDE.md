@@ -6,7 +6,7 @@ The game is the monster-raising design in `specs/12`; `specs/13` is the plan, th
 
 - Build new systems in the order of `specs/13` section 6. Do not start a phase whose blocking question in `specs/13` section 9 is unanswered.
 - Balance tuning is allowed again (kj, 2026-10-31, basic prototype working). Retuning constants and curves and balance-only changes are fine. Numbers in `content_src/` are still first-pass; when adding a system pick something reasonable.
-- There is no balance sweep or acceptance table yet. Build a run-balance harness on the bots (`specs/09` section 7) and agree targets with kj before any large retune; small obvious fixes (e.g. an AI threshold) need no targets.
+- Measure balance with the bot CLI's `balance` verb (`specs/09` section 7): grades, injuries, fights, shards, gauntlet and Daily Tower over many seeds per species x policy. It is a report with no targets yet: agree targets with kj (#89) before any large retune; small obvious fixes (e.g. an AI threshold) need no targets.
 - If a change moves the golden files (any `content_src/` change does, through the content hash), regenerate them with `golden --update` and say so in the merge commit. That is expected, not a balance problem.
 
 ## Keep the specs current

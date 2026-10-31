@@ -16,7 +16,8 @@
     book: false,             // test option: start with a skill book
     feed: [],                // newest first
     last: null,              // last drill/rest result, shown under the stats
-    flash: null,             // stat to flash after a drill
+    flash: null,             // the drill to flash its stat row for: {stat, tier}
+    drillPop: null,          // the drill outcome not yet popped over its stat row (issue #95): {stat, tier, gain}, shown once no modal covers it
     fight: null,             // fight result shown in the modal
     play: null,              // fight playback in progress: {f: the fight, i: actions shown, timer, dom}; null when showing the result
     speed: '1',              // fight playback speed: '1', '2' or 'skip' (remembered, see loadSpeed)
@@ -98,7 +99,7 @@
     renderTabs(tabs, s);
     renderModal(modal, s);
     main.scrollTop = prevScroll;
-    if (modal.hidden) showSpGains(); else $('floats').replaceChildren();
+    if (modal.hidden) { showSpGains(); showDrillPop(); } else $('floats').replaceChildren();
   }
 
   // ---- skill point gains (issue #86): a float-up next to the HUD's SP count and a pulse on it. Gains made behind a modal (a fight,
@@ -113,10 +114,27 @@
     gains.forEach((g, i) => {
       const el = h('div', { class: 'spgain', 'data-id': 'sp-gain', text: '+' + g.n + ' SP (' + g.why + ')',
         style: 'left:' + Math.max(8, r.left - app.left) + 'px;top:' + (Math.max(r.top, mainTop) - app.top + 18 + i * 22) + 'px;animation-delay:' + i * 0.15 + 's' });
-      while (layer.children.length >= 4) layer.firstChild.remove();
+      const sps = layer.querySelectorAll('.spgain');
+      for (let j = 0; j < sps.length - 3; j++) sps[j].remove();
       layer.append(el);
       setTimeout(() => el.remove(), 2200);
     });
+  }
+
+  // ---- drill outcome pop (issue #95): "+x" over the drilled stat's bar, styled by the tier (fail, success, super). Like the SP
+  // gains it lives in #floats and waits out a modal (a milestone's tree draft).
+  function showDrillPop() {
+    const p = ui.drillPop, row = p && document.querySelector('#main [data-id="stat-' + p.stat + '"]');
+    if (!row) { if (ui.tab !== 'train') ui.drillPop = null; return; }
+    ui.drillPop = null;
+    const layer = $('floats'), app = $('app').getBoundingClientRect(), r = (row.querySelector('.bar') || row).getBoundingClientRect();
+    const pane = $('main').getBoundingClientRect();   // a fight card drawn above can push the row down: keep the pop on screen
+    const y = Math.min(Math.max(r.top, pane.top + 40), pane.bottom - 30);
+    layer.querySelectorAll('.dpop').forEach((e) => e.remove());   // one at a time: a fast second drill replaces the first
+    const el = h('div', { class: 'dpop ' + p.tier, 'data-id': 'drill-pop',
+      text: '+' + num(p.gain), style: 'left:' + (r.left + r.width / 2 - app.left) + 'px;top:' + (y - app.top) + 'px' });
+    layer.append(el);
+    setTimeout(() => el.remove(), 2000);
   }
 
   function renderTabs(tabs, s) {
@@ -177,9 +195,9 @@
     main.append(h('div', { class: 'odds', 'data-id': 'odds',
       text: 'Drill at this energy: fail ' + pct(o.fail) + ' · success ' + pct(o.success) + ' · super ' + pct(o.super) + ' · injury ' + pct(o.injury) +
         '. Each drill costs ' + num(s.drillCost) + ' energy.' }));
-    const card = h('div', { class: 'card' });
+    const card = h('div', { class: 'card stats' });
     C.stats.forEach((st) => {
-      const row = h('div', { class: 'stat' + (ui.flash === st ? ' flash' : '') }, [
+      const row = h('div', { class: 'stat' + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
         h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }),
         h('div', { class: 'meta' }, [
           bar(s.stats[st], k.statMax, num(s.stats[st]) + ' / ' + k.statMax),
@@ -988,7 +1006,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.fightGains = []; ui.earned = []; }
+  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
@@ -1037,7 +1055,7 @@
     const sp0 = run.state.sp, cycle0 = run.state.cycle;
     const r = run.cmd('drill', stat);
     if (r.ok) {
-      ui.last = r; ui.flash = stat;
+      ui.last = r; ui.flash = { stat, tier: r.tier }; ui.drillPop = { stat, tier: r.tier, gain: r.gain };
       log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : ''));
       milestones(r);
       if (r.injured) toast('Injured! The run ends.');

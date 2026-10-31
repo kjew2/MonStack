@@ -1,4 +1,4 @@
-# training-run vectors, hash v3 content=3.8/4152eb70
+# training-run vectors, hash v3 content=3.10/a4f0eba3
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8
@@ -64,7 +64,7 @@ sprite balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6
   stats hp 168 str 156 int 165 wis 173 dex 157 def 159 spd 175 luk 158
   trees aether_striker:8/8 mind_warp:8/8 - -
-  hash 35963397ccc60e58924667cf2c878d3411e27b0a96d3a2aa7d9aa35df94b7f0d
+  hash d7cc2b1cd01b46e502e3c6598877a212de58773a2da16ea278d47190173b4b4f
 
 sprite focus seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0

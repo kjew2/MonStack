@@ -252,6 +252,9 @@ namespace IdleRng.Sim.Combat
         /// <summary>A trained stat never drops below this fraction of its base (STAT_FLOOR_FRAC).</summary>
         public double StatFloor { get; set; }
 
+        /// <summary>Most copies of one timed effect (same source and stat) a unit can carry (EFFECT_STACK_CAP).</summary>
+        public int StackCap { get; set; }
+
         /// <summary>echo_cast: the echo's fraction of the skill's power.</summary>
         public double EchoPower { get; set; }
 
@@ -291,7 +294,7 @@ namespace IdleRng.Sim.Combat
                 ElementStrongMult = k.ElementStrongMult, ElementWeakMult = k.ElementWeakMult,
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
-                CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, EchoPower = k.MonEchoPower,
+                CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
                 TideRegen = k.MonTideRegen, TideShieldCap = k.MonTideShieldCap, DrainFrac = k.MonDrainFrac, FirePierce = k.MonFirePierce,
                 DoubleTurns = k.MonDoubleTurns,
             };

@@ -51,7 +51,13 @@ namespace IdleRng.Sim.Combat
         public int Side { get; set; }
         public int Slot { get; set; }
 
+        /// <summary>Max HP with its HP effects: BaseMaxHp x max(STAT_FLOOR_FRAC, 1 + timed HP effects).</summary>
         public double MaxHp { get; set; }
+
+        /// <summary>
+        /// Max HP before timed HP effects (permanent HP passives included). Not hashed: it is MaxHp over the effect multiplier.
+        /// </summary>
+        public double BaseMaxHp { get; set; }
         public double Hp { get; set; }
         public double Gauge { get; set; }
         public double Shield { get; set; }

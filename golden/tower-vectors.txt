@@ -1,4 +1,4 @@
-# tower vectors, hash v1 content=3.8/4152eb70
+# tower vectors, hash v1 content=3.10/a4f0eba3
 
 day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_king tide_warden tide_warden gloom_stalker apex_chimera* bramble_king mire_brute sun_idol cinder_wyrm storm_titan* tide_warden sun_idol gloom_stalker cinder_wyrm storm_titan*
   slime focus seed=7: floor=21 cleared=True vents=4 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
@@ -6,9 +6,9 @@ day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_k
   drake focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check
     hash dee0738bff1e8b513a3c11dcf024298cdf33b279d5fb003c4e2208c5c7a45127
   sprite focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split
-    hash c72476f2642167efaedba038483a8a46e870e345367590e76b9f5f97b027b972
+    hash 1edceea0c04c95c0d068ffabdd85b77e0ab2724573bbf7b564542b4a0b92999f
   slime+drake+sprite focus seed=7: floor=21 cleared=True vents=1 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
-    hash 345e7f171510a703ab32c3434bba7b29a52e2fba3c94dc3a343a12ec297a777d
+    hash ca145b53d3518b7173d7413dea1bafe91fb0897c2d660e3551de8908627ba010
 
 day 20391 lineup sun_idol cinder_wyrm bramble_king tide_warden apex_chimera* gloom_stalker mire_brute bramble_king cinder_wyrm void_hydra* gloom_stalker mire_brute tide_warden sun_idol storm_titan* cinder_wyrm gloom_stalker sun_idol mire_brute apex_chimera*
   slime focus seed=7: floor=21 cleared=True vents=5 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
@@ -16,6 +16,6 @@ day 20391 lineup sun_idol cinder_wyrm bramble_king tide_warden apex_chimera* glo
   drake focus seed=7: floor=10 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split
     hash 6d2f8e38835d03661fc5a6d3252ef4cc0b89d6e841898a900dc069dac8169e4e
   sprite focus seed=7: floor=10 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split
-    hash f0d525f1a25b04ca79f750349d4681949dd2dd2c042bdb88d662c3c2ebe073c4
-  slime+drake+sprite focus seed=7: floor=21 cleared=True vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
-    hash 4fa318c0f65bf8a15c7e6095902eb6613b685fc5413d7e614a900933652ab031
+    hash 04f2d6393ca03bca831cbfef6544680dd381c19b1186d79e5fd551fde5d3810d
+  slime+drake+sprite focus seed=7: floor=21 cleared=True vents=0 phases=5:shield_check,5:split,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
+    hash 1231c2e2decde9554bc2fa708e54db8f09459e0391bc09d064dc3b145dfdc38a

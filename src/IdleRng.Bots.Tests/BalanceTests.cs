@@ -1,0 +1,166 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using IdleRng.Bots.Balance;
+using IdleRng.Sim.Content;
+using IdleRng.Sim.Training;
+using NUnit.Framework;
+
+namespace IdleRng.Bots.Tests
+{
+    /// <summary>The run-balance harness (specs/09 section 7): the aggregation maths, determinism and the output forms.</summary>
+    public class BalanceTests
+    {
+        [Test]
+        public void Distribution_MeanSdAndNearestRankPercentiles()
+        {
+            var d = Distribution.Of(new[] { 5, 1, 4, 2, 3, 6, 7, 8, 9, 10 });
+            Assert.That(d.N, Is.EqualTo(10));
+            Assert.That(d.Mean, Is.EqualTo(5.5));
+            Assert.That(d.Sd, Is.EqualTo(Math.Sqrt(8.25)).Within(1e-12));
+            Assert.That((d.Min, d.P10, d.P50, d.P90, d.Max), Is.EqualTo((1.0, 1.0, 5.0, 9.0, 10.0)));
+        }
+
+        [Test]
+        public void Percentile_UsesIntegerRanks()
+        {
+            // 0.1 x 30 is 3.0000000000000004 in floating point: a float ceil would pick rank 4.
+            var thirty = Enumerable.Range(1, 30).Select(x => (double)x).ToArray();
+            Assert.That(Distribution.Percentile(thirty, 10), Is.EqualTo(3));
+            Assert.That(Distribution.Percentile(thirty, 0), Is.EqualTo(1));
+            Assert.That(Distribution.Percentile(thirty, 100), Is.EqualTo(30));
+            Assert.That(Distribution.Percentile(new[] { 7.0 }, 90), Is.EqualTo(7));
+            Assert.Throws<ArgumentException>(() => Distribution.Percentile(new double[0], 50));
+            Assert.Throws<ArgumentOutOfRangeException>(() => Distribution.Percentile(thirty, 101));
+        }
+
+        [Test]
+        public void Distribution_Empty_IsAllZero()
+        {
+            var d = Distribution.Of(new double[0]);
+            Assert.That((d.N, d.Mean, d.Sd, d.Min, d.P50, d.Max), Is.EqualTo((0, 0.0, 0.0, 0.0, 0.0, 0.0)));
+        }
+
+        static RunSample Sample(int rank, RunEnd end, int cycles, int fought, int won, long shards, int floor, string killer, bool boss = false) =>
+            new RunSample
+            {
+                Species = "slime", Policy = "focus", RankIndex = rank, End = end, Cycles = cycles, FightsFought = fought, FightsWon = won,
+                Shards = shards, GauntletFloor = floor, GauntletCleared = killer == null, GauntletKiller = killer, GauntletBossStall = boss,
+            };
+
+        [Test]
+        public void CellSummary_CountsGradesEndsFightsAndKillers()
+        {
+            var runs = new[]
+            {
+                Sample(0, RunEnd.Injured, 2, 1, 0, 10, 20, "hydra", boss: true),
+                Sample(2, RunEnd.Completed, 12, 12, 2, 80, 40, "golem"),
+                Sample(2, RunEnd.Completed, 12, 12, 2, 80, 30, "hydra"),
+                Sample(5, RunEnd.Completed, 12, 12, 5, 110, 101, null),
+            };
+            var s = CellSummary.From("slime", "focus", 6, runs);
+            Assert.That(s.N, Is.EqualTo(4));
+            Assert.That(s.Grades, Is.EqualTo(new[] { 1, 0, 2, 0, 0, 1 }));
+            Assert.That((s.Completed, s.Injured, s.InjuryRate), Is.EqualTo((3, 1, 0.25)));
+            Assert.That(s.FightWinRate, Is.EqualTo(9.0 / 37));
+            Assert.That(s.FightsLost.Mean, Is.EqualTo((1 + 10 + 10 + 7) / 4.0));
+            Assert.That(s.Cycles.Min, Is.EqualTo(2));
+            Assert.That(s.Shards.Mean, Is.EqualTo(70));
+            Assert.That(s.Grade.Mean, Is.EqualTo(9 / 4.0));
+            Assert.That((s.GauntletCleared, s.GauntletClearRate), Is.EqualTo((1, 0.25)));
+            Assert.That(s.GauntletFloor.Max, Is.EqualTo(101));
+            Assert.That((s.GauntletBossStalls, s.GauntletBossStallRate), Is.EqualTo((1, 1.0 / 3)), "share of the runs that did not clear");
+            Assert.That(s.Killers.Select(k => (k.Key, k.Count)), Is.EqualTo(new[] { ("hydra", 2), ("golem", 1) }));
+        }
+
+        [Test]
+        public void CellSummary_KillerTiesSortById_AndBadRankThrows()
+        {
+            var s = CellSummary.From("x", "y", 3, new[] { Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "b"), Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "a") });
+            Assert.That(s.Killers.Select(k => k.Key), Is.EqualTo(new[] { "a", "b" }));
+            Assert.That(s.FightWinRate, Is.EqualTo(0), "no fights fought");
+            Assert.Throws<ArgumentException>(() => CellSummary.From("x", "y", 3, new[] { Sample(3, RunEnd.Completed, 12, 0, 0, 0, 5, "a") }));
+        }
+
+        [Test]
+        public void TowerSummary_Aggregates()
+        {
+            var t = TowerSummary.From("focus", "slime", new[]
+            {
+                new TowerSample { FloorsCleared = 20, Cleared = true, Shards = 80, Books = 4 },
+                new TowerSample { FloorsCleared = 10, Shards = 40, Books = 1 },
+            });
+            Assert.That((t.N, t.Cleared, t.ClearRate), Is.EqualTo((2, 1, 0.5)));
+            Assert.That((t.FloorsCleared.Mean, t.Shards.Mean, t.Books.Mean), Is.EqualTo((15.0, 60.0, 2.5)));
+        }
+
+        static BalanceOptions Small(int jobs) => new BalanceOptions { Seeds = 3, SeedBase = 11, Jobs = jobs };
+
+        [Test]
+        public void Run_IsDeterministic_AndIndependentOfJobs()
+        {
+            var db = Content.Db;
+            string serial = BalanceWriter.Json(BalanceHarness.Run(db, Small(1)));
+            Assert.That(BalanceWriter.Json(BalanceHarness.Run(db, Small(1))), Is.EqualTo(serial));
+            Assert.That(BalanceWriter.Json(BalanceHarness.Run(db, Small(4))), Is.EqualTo(serial));
+        }
+
+        [Test]
+        public void Run_CellsMatchSingleRuns()
+        {
+            var db = Content.Db;
+            var r = BalanceHarness.Run(db, Small(2));
+            var species = db.SpeciesList.Select(s => s.Id).ToList();
+            Assert.That(r.Cells.Count, Is.EqualTo(species.Count * IdleRng.Bots.Training.RunPolicies.Names.Length));
+            Assert.That(r.Tower.Count, Is.EqualTo(IdleRng.Bots.Training.RunPolicies.Names.Length * (species.Count + 1)));
+            var cell = r.Cells.Single(c => c.Species == species[1] && c.Policy == "focus");
+            var runs = Enumerable.Range(11, 3).Select(seed => BalanceHarness.Play(db, "focus", species[1], (ulong)seed)).ToList();
+            Assert.That(cell.Grades.Sum(), Is.EqualTo(3));
+            Assert.That(cell.Grade.Mean, Is.EqualTo(runs.Average(x => x.RankIndex)));
+            Assert.That(cell.GauntletFloor.Mean, Is.EqualTo(runs.Average(x => x.GauntletFloor)));
+            Assert.That(cell.Shards.Mean, Is.EqualTo(runs.Average(x => (double)x.Shards)));
+
+            // The shards and gauntlet match what sealing the run into the Vault records.
+            var state = IdleRng.Bots.Training.RunBot.Play(db, IdleRng.Bots.Training.RunPolicies.Create("focus"), species[1], 11);
+            var sealedEntry = Vault.Seal(db, state);
+            Assert.That(runs[0].GauntletFloor, Is.EqualTo(sealedEntry.GauntletFloor));
+            Assert.That(runs[0].RankIndex, Is.EqualTo(sealedEntry.RankIndex));
+            Assert.That(runs[0].Shards, Is.EqualTo(IdleRng.Sim.Account.AccountOps.Payout(db, state)));
+        }
+
+        [Test]
+        public void Run_FiltersAndRejectsBadOptions()
+        {
+            var db = Content.Db;
+            string sp = db.SpeciesList[0].Id;
+            var r = BalanceHarness.Run(db, new BalanceOptions { Seeds = 2, Species = new[] { sp }, Policies = new[] { "balanced" }, Tower = false });
+            Assert.That(r.Cells.Select(c => (c.Species, c.Policy)), Is.EqualTo(new[] { (sp, "balanced") }));
+            Assert.That(r.Tower, Is.Empty);
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Seeds = 0 }));
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Species = new[] { "nope" } }));
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Species = new[] { sp, sp } }));
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Policies = new[] { "nope" } }));
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Books = new[] { "nope" } }));
+        }
+
+        [Test]
+        public void Writers_ProduceParseableJson_AndOneCsvRowPerMetric()
+        {
+            var db = Content.Db;
+            var r = BalanceHarness.Run(db, Small(2));
+            var json = (Dictionary<string, object>)MiniJson.Parse(BalanceWriter.Json(r));
+            Assert.That(((List<object>)json["cells"]).Count, Is.EqualTo(r.Cells.Count));
+            Assert.That(((List<object>)json["tower"]).Count, Is.EqualTo(r.Tower.Count));
+
+            var csv = BalanceWriter.Csv(r).TrimEnd('\n').Split('\n');
+            Assert.That(csv[0], Is.EqualTo("section,species,policy,team,metric,n,mean,sd,min,p10,p50,p90,max"));
+            Assert.That(csv.Skip(1).All(l => l.Split(',').Length == 13), Is.True);
+            Assert.That(csv.Count(l => l.StartsWith("tower,", StringComparison.Ordinal)), Is.EqualTo(r.Tower.Count * 4));
+
+            string text = BalanceWriter.Text(r);
+            StringAssert.Contains("## Grades", text);
+            StringAssert.Contains("## Daily Tower", text);
+            Assert.Throws<ArgumentException>(() => BalanceWriter.Write(r, "xml"));
+        }
+    }
+}

@@ -102,6 +102,11 @@
       "value": 0.1
     },
     {
+      "key": "EFFECT_STACK_CAP",
+      "type": "int",
+      "value": 3
+    },
+    {
       "key": "RUN_CYCLES",
       "type": "int",
       "value": 12
@@ -239,7 +244,7 @@
     {
       "key": "GAUNTLET_BASE",
       "type": "double",
-      "value": 60.0
+      "value": 72.0
     },
     {
       "key": "GAUNTLET_GROWTH",
@@ -254,7 +259,7 @@
     {
       "key": "GAUNTLET_BOSS_MULT",
       "type": "double",
-      "value": 1.2
+      "value": 1.0
     },
     {
       "key": "REST_ENERGY",

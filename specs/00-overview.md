@@ -1,6 +1,6 @@
 # 00 - Overview and Shared Contracts
 
-Working title: **Idle RNG** (a leftover from the idle game this project started as; the game is now a monster raising game and has no name yet, #47). The target design is `specs/12`; this file is the contract the other specs build on. If another spec disagrees with a number or name here, this file wins.
+Name: **MonStack** (kj, 2026-10-31; a store-name and trademark check is still open, #47). Code, assemblies, paths and save keys still say `IdleRng` / `idle-rng`, a leftover from the idle game this project started as, until the one mechanical rename (`specs/20` R0.3). The target design is `specs/12`; this file is the contract the other specs build on. If another spec disagrees with a number or name here, this file wins.
 
 History: the project began as a mobile idle game (stage push, gear, gacha). It pivoted to the monster trainer on 2026-10-30 and the idle game was removed in `specs/13` phase T7. Git history holds it; the specs that described only it (`02` power curve, `04` economy, `07` Unity client, `11` party and builds) were deleted with it.
 
@@ -37,7 +37,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 | Group | Constants | Spec |
 |---|---|---|
-| Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*`, `STAT_FLOOR_FRAC` | `16` section 7 |
+| Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*`, `STAT_FLOOR_FRAC`, `EFFECT_STACK_CAP` | `16` section 7 |
 | Training run | `RUN_CYCLES`, `RUN_AP`, `RUN_ENERGY_*`, `DRILL_*`, `REST_ENERGY`, `INJURY_*`, `STAT_MAX`, `FIGHT_EVERY` | `14` section 8 |
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, the chase capstone constants `MON_ECHO_POWER`, `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE`, `MON_DOUBLE_TURNS` | `15` section 9 |
 | Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7), `VENDOR_OFFERS` and the `vendor_rarities` table (section 4), the `achievements` table (section 8) | `18` |

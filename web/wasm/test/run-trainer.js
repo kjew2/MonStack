@@ -85,8 +85,20 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-act^="drill-"]').count()) === 8, 'eight stats can be drilled');
   const odds0 = await text('[data-id=odds]');
   check(/fail \d+%/.test(odds0) && /injury \d+%/.test(odds0), 'drill odds shown: ' + odds0.slice(0, 60));
+  // Stat rows (issue #96): each Drill button is vertically centred in its stat's row, and the rows are divided
+  const rows = await page.evaluate(() => [...document.querySelectorAll('.stat')].map((row) => {
+    const r = row.getBoundingClientRect(), b = row.querySelector('[data-act^="drill-"]').getBoundingClientRect();
+    return { off: Math.abs((b.top + b.height / 2) - (r.top + r.height / 2)), inside: b.top >= r.top && b.bottom <= r.bottom, line: getComputedStyle(row).borderTopWidth };
+  }));
+  check(rows.length === 8 && rows.every((r) => r.off <= 1 && r.inside), 'each Drill button is centred in its stat row: ' + rows.map((r) => r.off.toFixed(1)).join(' '));
+  check(rows.slice(1).every((r) => r.line === '1px'), 'a divider separates the stat rows');
   await act('drill-str').click();
   check(/Drill|Fail|Success|Super/.test(await text('[data-id=result]')), 'a drill result appears');
+  // Drill outcome pop (issue #95): "+x" over the drilled row, its class the drill tier
+  const pop = await page.evaluate(() => { const e = document.querySelector('#floats [data-id=drill-pop]'); return e && { cls: e.className, text: e.textContent }; });
+  const tier0 = (/^(\w+)/.exec(await text('[data-id=result] b')) || [])[1];
+  check(!!pop && /^dpop (fail|success|super)$/.test(pop.cls) && /^\+\d+(\.\d)?$/.test(pop.text) && pop.cls.endsWith(tier0.toLowerCase()),
+    'the drill pops its gain styled by its tier: ' + JSON.stringify(pop) + ' for ' + tier0);
   await act('rest').click();
   check(/Rest/.test(await text('[data-id=result]')), 'a rest result appears');
   await shot('02-train');

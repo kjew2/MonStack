@@ -147,7 +147,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(Fact(ooze, "amount"), Is.EqualTo("8% of max HP"));
 
             var surge = BattleText.NodeTip(Db, NodeWith("overcharge"), "x", "x", true);
-            Assert.That(Fact(surge, "stacks"), Is.Not.Null, "a triggered buff stacks");
+            Assert.That(Fact(surge, "stacks"), Does.Contain(Db.Constants.EffectStackCap.ToString()), "a triggered buff stacks up to the cap");
 
             var plate = BattleText.NodeTip(Db, NodeWith("plate_mastery"), "x", "x", true);
             Assert.That(Fact(plate, "fires"), Is.EqualTo(Db.Text("tip.fires.battle_start")));

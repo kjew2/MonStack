@@ -1,6 +1,6 @@
-# Idle RNG (working title) - monster trainer
+# MonStack - monster trainer
 
-A fast, systems-driven monster-raising game (the working title is a leftover from the idle game this repo started as, which was removed on 2026-10-30). You train a monster in a 12-cycle run of Drill and Rest taps, fight rank fights, build four skill trees toward rule-breaking chase traits, then watch it climb the gauntlet tower. Finished monsters go into your Vault; runs pay Training Shards, and after each run a vendor offers random talent upgrades to buy with them. New species unlock from achievements. No story, no cutscenes.
+A fast, systems-driven monster-raising game (the repo and code still use the old name Idle RNG, a leftover from the idle game this repo started as, which was removed on 2026-10-30). You train a monster in a 12-cycle run of Drill and Rest taps, fight rank fights, build four skill trees toward rule-breaking chase traits, then watch it climb the gauntlet tower. Finished monsters go into your Vault; runs pay Training Shards, and after each run a vendor offers random talent upgrades to buy with them. New species unlock from achievements. No story, no cutscenes.
 
 The design is `specs/12`; the plan and what is built is `specs/13`. Start with `specs/00-overview.md`: it lists what exists and the contracts every spec follows.
 
@@ -12,7 +12,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/05-content-data-schema.md` | Content pipeline, conventions, error codes, `ContentDb` |
 | `specs/06-save-and-offline.md` | Save file format, stores, loading, schema versions |
 | `specs/08-backend-seams.md` | Backend interfaces for later (design only) |
-| `specs/09-test-harness-and-bots.md` | Run bots, golden files, `check.sh` |
+| `specs/09-test-harness-and-bots.md` | Run bots, the run-balance report, golden files, `check.sh` |
 | `specs/10-online-competitive.md` | Trust model for accounts, leaderboards and async PvP (design only) |
 | `specs/12-monster-trainer-design.md` | The game design, merged from kj's drafts, with the decisions recorded |
 | `specs/13-pivot-transition.md` | The pivot plan: phases T1-T13, what carries over, status, open questions |

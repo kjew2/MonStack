@@ -23,6 +23,7 @@ Legacy Title = the last legacy_titles row with min_floor <= FloorReached
 ## 2. Floors and enemies
 
 - Floor level: `GAUNTLET_BASE x GAUNTLET_GROWTH^(floor - 1)` by repeated multiplication (no `Math.Pow`), times `GAUNTLET_BOSS_MULT` on boss floors.
+- **Every floor is boss level (kj, 2026-10-31, issue #99).** With a boss spike (it was x1.2 plus heavier boss weights), a monster that beat a boss walked through the next nine floors, so about 90% of climbs ended on a floor ending in 0. Now `GAUNTLET_BOSS_MULT` is 1.0, `GAUNTLET_BASE` is the old boss level (60 x 1.2 = 72), and each normal enemy's weights add up to about the boss average (within 5%, tested), with its own stat profile. The curve is smooth; where a monster stalls depends on its level and on which enemy profile beats its build. Boss rows stay as named enemies on boss floors. The `balance` report (`specs/09` section 7) gives the boss-floor stall rate.
 - Every `GAUNTLET_BOSS_EVERY`-th floor is a boss floor; bosses rotate through the boss rows, other floors through the normal rows, in CSV order.
 - An enemy's stats are its row's eight weights x the floor level. Enemies have no skills yet (basic attacks).
 
@@ -37,10 +38,10 @@ Content table `legacy_titles`: `min_floor` (strictly increasing, first row 1) an
 | Constant | Value | Range |
 |---|---|---|
 | `GAUNTLET_FLOORS` | 100 | `> 0` |
-| `GAUNTLET_BASE` | 60 | `> 0` |
+| `GAUNTLET_BASE` | 72 | `> 0` |
 | `GAUNTLET_GROWTH` | 1.03 | `>= 1` |
 | `GAUNTLET_BOSS_EVERY` | 10 | `> 0` |
-| `GAUNTLET_BOSS_MULT` | 1.2 | `> 0` |
+| `GAUNTLET_BOSS_MULT` | 1.0 | `> 0` |
 
 `gauntlet_enemies`: at least one normal enemy and one boss (`E044`); element ids (`E023`); weights `>= 0` (`E043`). `legacy_titles`: first `min_floor` 1 (`E045`), strictly increasing (`E032`). Checked in `tools/content_build.py` (`validate_gauntlet`) and `ContentDb.BuildGauntlet`.
 
@@ -51,6 +52,8 @@ Content table `legacy_titles`: `min_floor` (strictly increasing, first row 1) an
 ## 6. Golden
 
 `golden/gauntlet-vectors.txt`: each species after a `focus` bot run at seed 7, sent up the tower with its run seed: floor, cleared, killer, title, hash.
+
+Spread over many seeds: the `balance` report's Gauntlet section (`specs/09` section 7): floor reached, clear rate, boss-floor stall rate and killers. Measured for issue #99 (20 seeds x every species and policy): before, median floor 30 and 92% of stalls on boss floors; after, median 29 and 9% (about one tenth, as a smooth curve should give).
 
 ## 7. Web client (the wheel)
 
