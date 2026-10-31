@@ -60,7 +60,7 @@ namespace IdleRng.Sim.Content
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
         public double TreeRefund { get; internal set; }          // TREE_REFUND
         // Rolled Awakening trees (specs/15 section 4.1): the tree's own stat, and MIN/MAX ranges per filler kind.
-        public double RollOwnChance { get; internal set; }       // ROLL_OWN_CHANCE
+        public double RollOwnChance { get; internal set; }       // ROLL_OWN_CHANCE (unused since content 5.3: rolled trees keep their node stats)
         public double RollGrowthOwnMin { get; internal set; }    // ROLL_GROWTH_OWN_MIN
         public double RollGrowthOwnMax { get; internal set; }    // ROLL_GROWTH_OWN_MAX
         public double RollGrowthOffMin { get; internal set; }    // ROLL_GROWTH_OFF_MIN
