@@ -1,4 +1,4 @@
-# training-run vectors, hash v3 content=3.7/7e31c8fa
+# training-run vectors, hash v3 content=3.8/e1a39c55
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8

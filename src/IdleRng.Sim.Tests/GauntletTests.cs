@@ -21,7 +21,7 @@ namespace IdleRng.Sim.Tests
         };
 
         [Test]
-        public void Levels_EscalateByRepeatedMultiplication_BossFloorsHigher()
+        public void Levels_EscalateByRepeatedMultiplication_BossFloorsUseTheBossMult()
         {
             var l = GauntletSim.Levels(Db);
             Assert.That(l.Length, Is.EqualTo(K.GauntletFloors));
@@ -30,10 +30,26 @@ namespace IdleRng.Sim.Tests
             int boss = K.GauntletBossEvery;
             Assert.That(GauntletSim.IsBoss(Db, boss), Is.True);
             Assert.That(GauntletSim.IsBoss(Db, boss - 1), Is.False);
-            Assert.That(l[boss - 1], Is.GreaterThan(l[boss]), "a boss floor out-levels the floor after it");
+            Assert.That(l[boss - 1], Is.EqualTo(l[boss - 2] * K.GauntletGrowth * K.GauntletBossMult).Within(1e-9));
             Assert.That(GauntletSim.EnemyDef(Db, boss).Boss, Is.True);
             Assert.That(GauntletSim.EnemyDef(Db, 1).Boss, Is.False);
             Assert.That(GauntletSim.EnemyDef(Db, 2 * boss).Id, Is.Not.EqualTo(GauntletSim.EnemyDef(Db, boss).Id), "bosses rotate");
+        }
+
+        /// <summary>
+        /// Every floor is boss level (kj 2026-10-31, issue #99): no spike on boss floors and normal enemies as strong in total
+        /// as bosses, so a monster can stall on any floor rather than mostly on boss floors.
+        /// </summary>
+        [Test]
+        public void Curve_IsSmooth_EveryFloorBossLevel()
+        {
+            var l = GauntletSim.Levels(Db);
+            for (int f = 1; f < l.Length; f++)
+                Assert.That(l[f], Is.EqualTo(l[f - 1] * K.GauntletGrowth).Within(1e-9 * l[f]), $"floor {f + 1}");
+            double Sum(MonsterStats w) => w.Hp + w.Str + w.Int + w.Wis + w.Dex + w.Def + w.Spd + w.Luk;
+            double boss = Db.GauntletBosses.Average(e => Sum(e.Weights));
+            foreach (var e in Db.GauntletEnemies)
+                Assert.That(Sum(e.Weights), Is.EqualTo(boss).Within(boss * 0.05), $"{e.Id} weight total vs the boss average");
         }
 
         [Test]
