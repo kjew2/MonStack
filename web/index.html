@@ -6,7 +6,7 @@
 <title>Monster Trainer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=Bangers&family=Caveat:wght@600&display=swap">
 <style>
 /* One phone-height column: header, scrolling body, tab bar. Dark palette. */
 :root {
@@ -79,11 +79,32 @@ small, .small { font-size: 12px; }
 
 /* Train */
 .odds { font-size: 12px; color: var(--muted); }
-.stat { display: grid; grid-template-columns: 38px 1fr auto; gap: 10px; align-items: center; }
+/* Stat rows (issue #96): one row per stat with a divider between rows; label, bar and Drill button share the row's centre line */
+.card.stats { gap: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
+.stat { display: grid; grid-template-columns: 38px minmax(0, 1fr) 76px; gap: 10px; align-items: center; min-height: 64px; margin: 0 -12px; padding: 8px 12px; }
+.stat + .stat { border-top: 1px solid var(--line); }
 .stat .lbl { font: 700 13px var(--font-display); }
-.stat .meta { display: flex; flex-direction: column; gap: 3px; }
-.stat .meta small { color: var(--muted); }
-.stat .btn { min-width: 76px; }
+.stat .meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.stat .meta small { color: var(--muted); overflow-wrap: anywhere; }
+.stat .btn { width: 76px; }
+/* Drill outcome pops (issue #95): a "+x" floating up from the drilled stat's row, styled by the drill tier */
+.dpop { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none; --o: 0 0 2px #000, 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; }
+.dpop.fail { font: 600 30px/1 'Caveat', 'Comic Sans MS', 'Segoe Print', cursive; color: #a4b6cc; text-shadow: var(--o), 0 3px 6px rgba(0,0,0,.6); animation: dpop-fail 1.6s ease-in both; }
+.dpop.success { font: 700 26px/1 var(--font-display); color: #7ee787; text-shadow: var(--o), 0 0 10px rgba(102,187,106,.7); animation: dpop-ok 1.4s ease-out both; }
+.dpop.super { font: 400 46px/1 'Bangers', Impact, 'Arial Black', fantasy; letter-spacing: .04em; color: var(--gold); -webkit-text-stroke: 1px #7a3e00;
+  text-shadow: 3px 3px 0 #b71c1c, 0 0 16px rgba(255,213,79,.85); z-index: 1; animation: dpop-super 1.9s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes dpop-fail { 0% { opacity: 0; transform: translate(-50%, -40%) rotate(0); } 15% { opacity: .95; transform: translate(-50%, -70%) rotate(-3deg); }
+  60% { opacity: .85; transform: translate(-50%, -55%) rotate(6deg); } 100% { opacity: 0; transform: translate(-50%, -20%) rotate(10deg); } }
+@keyframes dpop-ok { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.6); } 15% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+  30% { transform: translate(-50%, -70%) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -170%) scale(1); } }
+@keyframes dpop-super { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.2) rotate(-12deg); } 12% { opacity: 1; transform: translate(-50%, -70%) scale(1.5) rotate(6deg); }
+  20% { transform: translate(-50%, -70%) scale(.95) rotate(-5deg); } 28% { transform: translate(-50%, -75%) scale(1.15) rotate(4deg); }
+  34% { transform: translate(-47%, -78%) scale(1.05) rotate(-3deg); } 40% { transform: translate(-53%, -80%) scale(1.1) rotate(2deg); }
+  46% { transform: translate(-50%, -82%) scale(1.05) rotate(0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -190%) scale(1.05); } }
+.stat.flash.t-super { animation: flash-super .9s ease-out; }
+@keyframes flash-super { from { background: #4a3f12; box-shadow: inset 0 0 0 2px var(--gold); } }
+.stat.flash.t-fail { animation: flash-fail .6s ease-out; }
+@keyframes flash-fail { from { background: #2a2f38; } }
 .flash { animation: flash .5s ease-out; }
 @keyframes flash { from { background: #2f4a33; } }
 .result { display: flex; flex-direction: column; gap: 2px; }
@@ -211,7 +232,7 @@ small, .small { font-size: 12px; }
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; background: #333; box-shadow: 0 4px 12px rgba(0,0,0,.5); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .flash, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .flash, .stat.flash.t-super, .stat.flash.t-fail, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain, .dpop { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
 @keyframes spfade { to { opacity: 0; } }
 </style>
 </head>
