@@ -92,6 +92,30 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Awakening_AlwaysOffersTheCrossingStatsTreeFirst()
+        {
+            var own = Generic.Single(t => t.OfferStat == StatIds.Str);
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var o = StrAwakening(TrainingRun.Start(Db, "drake", seed));
+                Assert.That(o.Trees[0], Is.EqualTo(own.Id), "kj, issue #121: the crossing stat's own tree is always a card");
+                Assert.That(o.Trees.Count, Is.EqualTo(K.DraftSize));
+            }
+        }
+
+        [Test]
+        public void Awakening_WithTheStatsTreeSlotted_DrawsEveryCardFromAnyStat()
+        {
+            var own = Generic.Single(t => t.OfferStat == StatIds.Str);
+            var s = TrainingRun.Start(Db, "drake", 4);
+            s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { own.Id } });
+            TrainingRun.TakeTree(Db, s, 0, 2);
+            var o = StrAwakening(s);
+            Assert.That(o.Trees, Does.Not.Contain(own.Id));
+            Assert.That(o.Trees.Count, Is.EqualTo(K.DraftSize));
+        }
+
+        [Test]
         public void LegacyRun_DraftsItsStatsTrees_Unrolled()
         {
             for (ulong seed = 1; seed <= 10; seed++)

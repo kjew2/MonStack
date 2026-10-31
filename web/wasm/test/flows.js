@@ -321,7 +321,10 @@ const H = require('./harness.js');
   await t.layout('tree draft with a reroll');
   await clickDom('[data-act="reroll"]');
   const redrawn = await page.evaluate(() => [...document.querySelectorAll('[data-id^="offer-"]')].map((e) => e.getAttribute('data-id')).filter((x) => x !== 'offer-title'));
-  check(!!draft && redrawn.length > 0 && redrawn.every((x) => draft.indexOf(x) < 0), 'the reroll draws other trees: ' + JSON.stringify(redrawn));
+  // The crossing stat's own tree (HP: Vital Core) is always the first card and a reroll keeps it (issue #121).
+  check(!!draft && draft[0] === 'offer-vital_core', 'the HP Awakening offers HP\'s own tree first: ' + JSON.stringify(draft));
+  check(!!draft && redrawn[0] === draft[0] && redrawn.length > 1 && redrawn.slice(1).every((x) => draft.indexOf(x) < 0),
+    'the reroll keeps HP\'s tree and draws other trees: ' + JSON.stringify(redrawn));
   check((await page.locator('[data-act="reroll"]').count()) === 0, 'and only once per run');
   await clickDom('[data-act="discard"]');
   const afterOffer = await page.locator('#toasts').innerText();
