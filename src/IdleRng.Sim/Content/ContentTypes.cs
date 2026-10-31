@@ -59,7 +59,6 @@ namespace IdleRng.Sim.Content
         public int TreeSlots { get; internal set; }              // TREE_SLOTS
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
         public double TreeRefund { get; internal set; }          // TREE_REFUND
-        public double ChaseBaseChance { get; internal set; }     // CHASE_BASE_CHANCE
         public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
         public double MonTideRegen { get; internal set; }        // MON_TIDE_REGEN
         public double MonTideShieldCap { get; internal set; }    // MON_TIDE_SHIELD_CAP
@@ -374,7 +373,7 @@ namespace IdleRng.Sim.Content
     /// <summary>What a talent changes (specs/18 sections 3 and 4); each maps to one RunModifiers field.</summary>
     public enum TalentEffect
     {
-        DrillCost, StatFloor, ChaseChance, StartSp, RestEnergy, FailChance, SuperChance, ShardMult, Momentum, LossSp, Specialist,
+        DrillCost, StatFloor, StartSp, RestEnergy, FailChance, SuperChance, ShardMult, Momentum, LossSp, Specialist,
         TreeSlots, InjuryShield, LastCycleAp, MilestoneMult, DraftRerolls,
         IronConstitution, GamblersBlood, GlassCannon, EchoTraining,   // legendary rule changes (issue #103), one rank each
     }

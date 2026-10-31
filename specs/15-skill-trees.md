@@ -68,20 +68,17 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 
 Every species owns exactly two chase trees, named in `species`:
 
-- `chase_tree_run`, the **in-run** chase tree: unlocks from the species' own native trees plus stat thresholds and a playstyle tally (the normal chase rules). Its conditions name no book tree. It is only ever offered to a run that is **attuned** to it (section 5.4).
+- `chase_tree_run`, the **in-run** chase tree: unlocks from the species' own native trees plus stat thresholds and a playstyle tally (the normal chase rules). Its conditions name no book tree.
 - `chase_tree_book`, the **book-gated** chase tree, the one that rewards planning a run: its conditions also need nodes in a species-specific skill book tree (`specs/12` section 5.3), plus nodes in other trees and a playstyle tally. Each species has its own placeholder book.
 
 Only the owner's runs unlock a chase tree: another species meeting its conditions is never offered it. Every chase tree belongs to exactly one species. **(agent)** Books are not species-locked: any species may use any book and slot its tree as an ordinary tree; only the owner unlocks the chase tree that needs it.
 
-### 5.4 Attunement (kj, 2026-10-31)
+### 5.4 Attunement (removed, kj, 2026-10-31)
 
-kj: the in-run chase tree must not be something the player "just gets every run with no metagame progression"; with maxed meta progression it should still be about half the runs, not a thing to force every time. So the in-run chase tree is gated by an **attunement roll** made once when the run starts:
+kj: the in-run chase tree must not be something the player "just gets every run". A first limiter, an **attunement roll** at run start (`CHASE_BASE_CHANCE` 0.2 plus the Chase Instinct talent, 0.5 at max), was removed the same day: an unattuned run showed every condition met and still never unlocked the tree, which read as a bug, and kj called it a bad implementation of that limit. A better limiter is open in issue #119.
 
-- `RunState.ChaseAttuned = ChaseChance >= 1 or u < ChaseChance`, where `u` is the first draw of the run's `chase` stream (`StreamSeed(seed, "chase")`) and `ChaseChance` is the run modifier of `specs/18` section 3. The roll is part of the run's seed, so a replay repeats it.
-- An unattuned run never offers its species' in-run chase tree, whatever its conditions; `TrainingRun.ChaseOpen` says whether a chase tree can be offered. The book-gated chase tree needs no attunement (a book is already the rare gate, `specs/21` section 5). Chase trees of other species are never open.
-- An account's `ChaseChance` is `CHASE_BASE_CHANCE` (placeholder 0.2) plus the Chase Instinct talent (`chase_chance`, +0.1 per rank, 3 ranks, so 0.5 at max). A run started without an account (tests, bots) has `ChaseChance` 1 and is always attuned.
-- The Trees tab shows the in-run chase tree as **dormant** when the run is not attuned, so the player knows to build for something else.
-- The attuned share is the cap on how often the in-run chase capstone can happen (about half the runs at max meta); reaching it still needs the conditions and the SP (the reachability targets of section 10, which counted conditions only).
+- Every new run can unlock its in-run chase tree once its conditions hold, like the book-gated one. `RunModifiers.ChaseChance` is 1 for every new run, and no talent or constant changes it.
+- **Legacy (agent):** a run saved while attunement existed (an active run, or a Vault entry) carries its `ChaseChance` and replays with it: `RunState.ChaseAttuned = ChaseChance >= 1 or u < ChaseChance`, `u` the first draw of the run's `chase` stream. Otherwise its command log would hit a chase offer it never had and stop replaying. `TrainingRun.ChaseOpen` is false only for such an unattuned legacy run's in-run tree, and the Trees tab says so on that tree's card. Chase trees of other species are never open.
 
 ### 5.2 Conditions
 
@@ -135,7 +132,7 @@ Where each kind of capstone lands, weakest and commonest first. **The book-gated
 |---|---|---|
 | Ordinary tree capstone | max any native or generic tree | (no target) |
 | Fusion capstone | max both trees of a fusing pair (section 5.6) | +3 to +5 |
-| In-run chase tree | attunement roll plus its conditions (section 5.4) | +5 to +8 |
+| In-run chase tree | its conditions (section 5.1) | +5 to +8 |
 | Book chase tree | the species' own Skill Book plus its conditions | +10 to +15 |
 
 - **Measured** by the `balance` report's chase power section (`specs/09` section 7): each run's monster with its chase trees taken out, then with one chase tree bought in full on top, up the gauntlet on the same seed. The targets hold for each species averaged over the `focus`, `hoarder`, `balanced` and `chaser` policies; single cells may stray. The `capstone-ladder` sanity check WARNs when a species' book chase tree does not beat its in-run one under `focus`.
@@ -204,7 +201,6 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | `SP_PER_WIN` | 2 | `>= 0` |
 | `TREE_SLOTS` | 4 | `>= 2` |
 | `DRAFT_SIZE` | 3 | `> 0` |
-| `CHASE_BASE_CHANCE` | 0.2 | `[0, 1]` |
 | `TREE_REFUND` | 0.5 | `[0, 1]`: share of the SP spent in a tree that comes back when it leaves its slot (section 4) |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` (`specs/16` section 7) |
 | `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE` | 0.05, 0.3, 0.3, 0.5 | `[0, 1]` (`specs/16` section 7) |
@@ -221,12 +217,12 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 
 ## 10. Open
 
-- Genetic aptitude (`specs/12` section 5.7) was dropped with the species gacha at T9 (kj, 2026-10-30): nothing raises a species' Awakening or chase-tree odds. The Chase Instinct talent (section 5.4) raises the in-run chase tree's odds, for every species alike.
+- Genetic aptitude (`specs/12` section 5.7) was dropped with the species gacha at T9 (kj, 2026-10-30): nothing raises a species' Awakening or chase-tree odds.
 - Real tree content: names, skills and chase capstones beyond placeholders.
 - **Capstone reachability targets (kj, 2026-10-31, #110):**
-  - the in-run chase capstone is bought in about the top 10% of runs (attunement, section 5.4, caps it at about half the runs with maxed meta progression, kj);
+  - the in-run chase capstone is bought in about the top 10% of runs;
   - the book chase capstone in about 50% of runs that bring the species' own book.
-  - **(agent)** Measured with `balance` (`specs/09` section 7), 200 seeds, as the mean of the `focus` and `hoarder` cells: the in-run tree in the main pass (no books), the book-gated tree with `--books own`. `chaser` (which plans for it) is reported for reference. Bots are always attuned, so this is the rate among attuned runs.
+  - **(agent)** Measured with `balance` (`specs/09` section 7), 200 seeds, as the mean of the `focus` and `hoarder` cells: the in-run tree in the main pass (no books), the book-gated tree with `--books own`. `chaser` (which plans for it) is reported for reference.
   - **Retune, content `4.10` (#111):** book-gated chase trees need only their book tree's first node, *Arcane Overflow* a Mind Warp node instead of Spellcraft, some chase trees were repriced (section 3), and every policy buys a slotted chase tree first (section 8). Measured (in-run / book, focus+hoarder mean): slime 5% / 55%, drake 0% / 44%, sprite 0% / 44%, mandrake 13.5% / 44%, shade_hound 16% / 54% (before: 0-7% / 0%). `chaser` reaches 74-100% in-run and 87-100% book. Book capstones land in cycle 11-12 under `focus` and `hoarder`, in cycle 7.5-8 under `chaser` for drake, sprite and mandrake.
   - **Off-growth conditions kept (kj, 2026-10-31, #118):** drake's DEF >= 500 and sprite's SPD >= 500 in-run conditions ask for a stat their growth does not favour, so the non-planning bots never meet them (0% at any SP price); only a run that plans for them does. They stay as a reward for planning, and these two species' in-run capstones are judged by the `chaser` cells instead of `focus` and `hoarder`. Prices are unchanged (`chaser`: drake 74%, sprite 100%).
 - **Book chase capstones must be uber strong** (kj, 2026-10-31, #112): books are uber rare (`specs/21` section 5), so a run that gets its book should get a jackpot. The 50% target is for runs that have the book.

@@ -32,7 +32,7 @@ namespace IdleRng.Bots.Balance
             sb.Append("# balance report (specs/09 section 7). A report, not a gate: the sanity checks are loose and a WARN fails nothing.\n");
             sb.Append($"# content {TableWriter.ContentTag(r.ContentVersion, r.ContentHash)}, seeds {o.SeedBase}..{o.SeedBase + (ulong)o.Seeds - 1} ")
               .Append($"({o.Seeds} runs per species x policy), books {(o.OwnBooks ? "own (each species' own books)" : o.Books == null || o.Books.Count == 0 ? "none" : string.Join(",", o.Books))}, ")
-              .Append(o.Talents == null || o.Talents.Count == 0 ? "fresh account (no talents)\n" : "talents " + string.Join(",", o.Talents) + " at max rank (chase attunement kept at 1)\n");
+              .Append(o.Talents == null || o.Talents.Count == 0 ? "fresh account (no talents)\n" : "talents " + string.Join(",", o.Talents) + " at max rank\n");
 
             sb.Append("\n## Sanity checks: \"absolutely unplayable\" guards only, not balance targets (issue #89)\n");
             var t = new Table(2, textLast: true);

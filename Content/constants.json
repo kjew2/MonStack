@@ -217,11 +217,6 @@
       "value": 3
     },
     {
-      "key": "CHASE_BASE_CHANCE",
-      "type": "double",
-      "value": 0.2
-    },
-    {
       "key": "TREE_REFUND",
       "type": "double",
       "value": 0.5

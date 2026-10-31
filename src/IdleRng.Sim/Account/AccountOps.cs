@@ -478,7 +478,7 @@ namespace IdleRng.Sim.Account
         /// <summary>The run bonuses of the talents left on by the loadout <paramref name="talentsOff"/> (issue #106).</summary>
         public static RunModifiers Modifiers(ContentDb c, AccountState a, ICollection<string> talentsOff)
         {
-            var m = new RunModifiers { ChaseChance = c.Constants.ChaseBaseChance };
+            var m = new RunModifiers();
             double costMult = 1;
             foreach (var t in c.TalentList)
             {
@@ -489,7 +489,6 @@ namespace IdleRng.Sim.Account
                 {
                     case TalentEffect.DrillCost: m.DrillCostMult = Math.Max(0, m.DrillCostMult + v); break;
                     case TalentEffect.StatFloor: m.StatFloorMult += v; break;
-                    case TalentEffect.ChaseChance: m.ChaseChance = Math.Min(1, m.ChaseChance + v); break;
                     case TalentEffect.StartSp: m.StartSp += (int)v; break;
                     case TalentEffect.RestEnergy: m.RestEnergyBonus += v; break;
                     case TalentEffect.FailChance: m.FailChanceDelta += v; break;

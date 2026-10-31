@@ -731,14 +731,6 @@
       "text": "Monsters start runs with 10% higher base stats per rank."
     },
     {
-      "key": "talent.chase_instinct.name",
-      "text": "Chase Instinct"
-    },
-    {
-      "key": "talent.chase_instinct.desc",
-      "text": "+10% odds a run is attuned to its in-run chase tree."
-    },
-    {
       "key": "talent.head_start.name",
       "text": "Head Start"
     },

@@ -237,9 +237,9 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void UnattunedRun_NeverOffersItsInRunChaseTree_ButStillOffersTheBookOne()
+        public void LegacyUnattunedRun_NeverOffersItsInRunChaseTree_ButStillOffersTheBookOne()
         {
-            var off = new RunModifiers { ChaseChance = 0 };
+            var off = new RunModifiers { ChaseChance = 0 };   // a recipe saved while attunement existed
             var s = TrainingRun.Start(Db, "drake", 7, null, off);
             Assert.That(s.ChaseAttuned, Is.False);
             s.Stats.Def = 600;

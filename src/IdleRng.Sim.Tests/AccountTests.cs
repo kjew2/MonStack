@@ -513,7 +513,6 @@ namespace IdleRng.Sim.Tests
             var m = AccountOps.Modifiers(Db, a);
             Assert.That(m.DrillCostMult, Is.EqualTo(1 + Talent(TalentEffect.DrillCost).PerRank).Within(1e-12));
             Assert.That(m.StatFloorMult, Is.EqualTo(1 + Talent(TalentEffect.StatFloor).PerRank).Within(1e-12));
-            Assert.That(m.ChaseChance, Is.EqualTo(K.ChaseBaseChance + Talent(TalentEffect.ChaseChance).PerRank).Within(1e-12));
             Assert.That(m.StartSp, Is.EqualTo((int)Talent(TalentEffect.StartSp).PerRank));
 
             var run = AccountOps.StartRun(Db, a, "drake");
@@ -536,20 +535,17 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void ChaseInstinct_MaxedGivesHalfTheRuns_NoTalentsGivesTheBase()
+        public void AccountRuns_AreAlwaysAttuned_AndALegacyRecipeKeepsItsRoll()
         {
-            var t = Talent(TalentEffect.ChaseChance);
             var a = NewAll(5);
-            Assert.That(AccountOps.Modifiers(Db, a).ChaseChance, Is.EqualTo(K.ChaseBaseChance), "no talents: the base odds");
-            Assert.That(K.ChaseBaseChance, Is.LessThan(0.5), "a new account must not get the in-run chase tree about every run (kj)");
-            a.Talents[t.Id] = t.MaxRank;
-            Assert.That(AccountOps.Modifiers(Db, a).ChaseChance, Is.EqualTo(0.5).Within(1e-12), "maxed meta progression: about half the runs (kj)");
+            Assert.That(AccountOps.Modifiers(Db, a).ChaseChance, Is.EqualTo(1), "attunement was removed (kj): every run can unlock its in-run chase tree");
+            Assert.That(Enumerable.Range(0, 50).All(i => AccountOps.StartRun(Db, NewAll((ulong)i), "drake").ChaseAttuned));
 
+            // a recipe saved while attunement existed replays with its stored odds, so its log stays valid
             int Attuned(double chance) => Enumerable.Range(0, 400).Count(i => TrainingRun.Start(Db, "drake", (ulong)i, null, new RunModifiers { ChaseChance = chance }).ChaseAttuned);
             Assert.That(Attuned(0), Is.EqualTo(0));
             Assert.That(Attuned(1), Is.EqualTo(400));
-            Assert.That(Attuned(0.5), Is.InRange(160, 240), "the roll follows the odds");
-            Assert.That(Attuned(K.ChaseBaseChance), Is.InRange(50, 110));
+            Assert.That(Attuned(0.5), Is.InRange(160, 240), "the legacy roll follows the stored odds");
         }
 
         [Test]

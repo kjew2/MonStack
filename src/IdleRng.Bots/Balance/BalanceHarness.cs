@@ -37,7 +37,7 @@ namespace IdleRng.Bots.Balance
         /// <summary>
         /// Talents every run starts with, each at max rank (null or empty = a fresh account, no talents). The mods are what an
         /// account with those talents and every other talent off would start with (AccountOps.Modifiers, at most LEGENDARY_SLOTS
-        /// legendaries), except ChaseChance, which stays 1 as for the talentless bots so the cells compare (agent; issue #103).
+        /// legendaries).
         /// </summary>
         public IList<string> Talents { get; set; }
 
@@ -447,9 +447,7 @@ namespace IdleRng.Bots.Balance
                 if (!c.Talents.TryGetValue(id, out var t)) throw new ArgumentException($"unknown talent '{id}'");
                 acct.Talents[id] = t.MaxRank;
             }
-            var mods = AccountOps.Modifiers(c, acct, AccountOps.CheckLoadout(c, acct, new string[0]));
-            mods.ChaseChance = 1;
-            return mods;
+            return AccountOps.Modifiers(c, acct, AccountOps.CheckLoadout(c, acct, new string[0]));
         }
 
         static RunSample[] PlayAll(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, List<string> books, RunModifiers mods)

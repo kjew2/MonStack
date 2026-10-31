@@ -268,7 +268,7 @@ const H = require('./harness.js');
   const talentIds = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"]')].map((e) => e.getAttribute('data-id').slice(7))
     .filter((id) => id !== 'now'));
   const maxRanks = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"] .tag.num')].map((e) => +e.textContent.split('/')[1]));
-  check(talentIds.length === 20 && maxRanks.length === 20, 'the talent list shows all 20 talents (' + talentIds.join(' ') + ')');
+  check(talentIds.length === 19 && maxRanks.length === 19, 'the talent list shows all 19 talents (' + talentIds.join(' ') + ')');
   talented.Account.Talents = {};
   // legendary talents (issue #103) stay out: each changes a rule this test does not expect (LegendaryTalentTests and run-trainer.js cover them)
   talentIds.forEach((id, i) => { if (!['iron_constitution', 'gamblers_blood', 'glass_cannon', 'echo_training'].includes(id)) talented.Account.Talents[id] = maxRanks[i]; });
@@ -276,7 +276,7 @@ const H = require('./harness.js');
   await t.reload();
   const now = await text('[data-id=talent-now]');
   check(['rests +30 energy', 'a free drill after each Super', '+1 tree slot', '1 injury prevented per run', '+2 AP in the last cycle',
-    'milestones at x0.80', '1 Awakening reroll per run', '50% chase attunement', 'shards x1.50', '+2 SP per lost fight'].every((x) => now.includes(x)), 'the home screen sums every talent bonus: ' + now);
+    'milestones at x0.80', '1 Awakening reroll per run', 'shards x1.50', '+2 SP per lost fight'].every((x) => now.includes(x)), 'the home screen sums every talent bonus: ' + now);
   await act('start').click();
   await act('drill-hp').waitFor();
   check(/^Rest \(\+80 energy\)$/.test(await text('[data-act="rest"]')), 'the rest button shows Deep Rest\'s bigger rest: ' + await text('[data-act="rest"]'));

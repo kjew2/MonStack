@@ -42,7 +42,6 @@ SP_PER_CYCLE,int,2,skill points granted at the start of each cycle (specs/15; kj
 SP_PER_WIN,int,2,skill points for each rank fight win. Placeholder
 TREE_SLOTS,int,4,tree slots per monster: 2 native + 2 empty at the start (kj)
 DRAFT_SIZE,int,3,most trees offered by one Awakening (the milestone tree offer). Placeholder
-CHASE_BASE_CHANCE,double,0.2,odds a run is attuned to its in-run chase tree with no talents; the Chase Instinct talent adds to it (specs/15 section 5.4). Placeholder
 TREE_REFUND,double,0.5,share of the SP spent in a tree that comes back when it leaves its slot (overwritten or a chase tree locking again; kj 2026-10-31: half); rounded down
 MON_ECHO_POWER,double,1.0,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder
 MON_TIDE_REGEN,double,0.02,tidal_overflow rule: heal this fraction of max HP at the start of each own action. Placeholder
