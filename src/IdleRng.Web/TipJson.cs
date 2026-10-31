@@ -43,6 +43,18 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
+        /// <summary>
+        /// skillTips{skillId:tip} for every skill a rank fight opponent uses (BattleText.SkillTip, no trigger or SP cost): web/tooltips.js
+        /// shows them for an 'mskill:' ref, and for a 'skill:' ref when no tree node grants the skill.
+        /// </summary>
+        public static void SkillTips(JsonOut w, ContentDb db)
+        {
+            var ids = new SortedSet<string>(db.RankEnemies.Values.SelectMany(e => e.Skills), StringComparer.Ordinal);
+            w.Key("skillTips").Obj();
+            foreach (var id in ids) { w.Key(id); Tip(w, BattleText.SkillTip(db, db.MonsterSkills[id])); }
+            w.EndObj();
+        }
+
         /// <summary>towerTips{key:{name,text}}: the Dungeon playback's entropy, vent, corruption and phase tooltips (BattleText.TowerTips).</summary>
         public static void TowerTips(JsonOut w, ContentDb db)
         {

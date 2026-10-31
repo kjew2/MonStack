@@ -62,6 +62,8 @@ namespace IdleRng.Bots.Balance
                       Num(c.FightsWon.Mean), Pcts(c.FightsWon), Num(c.FightsLost.Mean), Pcts(c.FightsLost), Pct(c.FightWinRate), Num(c.Shards.Mean), Num(c.Shards.Sd), Pcts(c.Shards));
             t.AppendTo(sb);
 
+            OpponentTable(sb, r);
+
             sb.Append($"\n## Gauntlet: floor reached of {r.GauntletFloors} ({r.GauntletFloors + 1} = cleared)\n");
             t = new Table(2, textLast: true);
             t.Row("species", "policy", "mean", "sd", "min", "p10/p50/p90", "max", "cleared%", "boss-floor%", "top killers");
@@ -113,6 +115,32 @@ namespace IdleRng.Bots.Balance
                 t.AppendTo(sb);
             }
             return sb.ToString();
+        }
+
+        /// <summary>Each pool monster over every policy: how often ladders rolled it and, per species, the rank fights won against it.</summary>
+        static void OpponentTable(StringBuilder sb, BalanceReport r)
+        {
+            var species = r.Cells.Select(c => c.Species).Distinct().ToList();
+            var ids = r.Cells.SelectMany(c => c.Opponents).GroupBy(o => o.Id, StringComparer.Ordinal)
+                .Select(g => g.First()).OrderBy(o => o.Rank).ThenBy(o => o.Id, StringComparer.Ordinal).ToList();
+            if (ids.Count == 0) return;
+            int runs = r.Cells.Sum(c => c.N);
+            sb.Append("\n## Rank fights by opponent: % of ladders that rolled each pool monster; per species (every policy), % of the rank fights against it won\n");
+            var t = new Table(2);
+            t.Row(new[] { "rank", "opponent", "rolled%" }.Concat(species));
+            foreach (var id in ids)
+            {
+                var all = r.Cells.SelectMany(c => c.Opponents).Where(o => o.Id == id.Id).ToList();
+                var row = new List<string> { r.RankIds[id.Rank].ToUpperInvariant(), id.Id, Pct(runs == 0 ? 0 : (double)all.Sum(o => o.Rolled) / runs) };
+                foreach (var sp in species)
+                {
+                    var mine = r.Cells.Where(c => c.Species == sp).SelectMany(c => c.Opponents).Where(o => o.Id == id.Id).ToList();
+                    int fought = mine.Sum(o => o.Fought), won = mine.Sum(o => o.Won);
+                    row.Add(fought == 0 ? "-" : $"{Pct((double)won / fought)}% of {fought.ToString(Inv)}");
+                }
+                t.Row(row);
+            }
+            t.AppendTo(sb);
         }
 
         static void ChaseTable(StringBuilder sb, string title, List<CellSummary> cells)
@@ -230,6 +258,11 @@ namespace IdleRng.Bots.Balance
                 foreach (var k in c.Killers) j.Key(k.Key).Num(k.Count);
                 j.Close('}');
                 ChaseJson(j, c);
+                j.Key("opponents").Open('[');
+                foreach (var x in c.Opponents)
+                    j.Open('{').Key("id").Str(x.Id).Key("rank").Str(r.RankIds[x.Rank]).Key("rolled").Num(x.Rolled)
+                     .Key("fought").Num(x.Fought).Key("won").Num(x.Won).Key("winRate").Num(x.WinRate).Close('}');
+                j.Close(']');
                 j.Close('}');
             }
             j.Close(']');
@@ -328,7 +361,9 @@ namespace IdleRng.Bots.Balance
         /// when skipped); n is what the check looked at. The book canary's grades are section "books". The gauntlet's stall_mod_i
         /// rows give the share of the runs that did not clear (n) whose floor reached mod GAUNTLET_BOSS_EVERY is i. Section "chase" (and
         /// "books_chase" for the canary) holds capstone_rate and capstone_cycle, then per chase tree &lt;tree&gt;_unlock_rate,
-        /// &lt;tree&gt;_capstone_rate, &lt;tree&gt;_capstone_cycle and per condition &lt;condition id&gt;_held_rate.
+        /// &lt;tree&gt;_capstone_rate, &lt;tree&gt;_capstone_cycle and per condition &lt;condition id&gt;_held_rate. Section "opponent" has
+        /// per rank pool monster &lt;id&gt;_rolled_rate (share of the runs whose ladder had it) and &lt;id&gt;_win_rate (n = rank fights
+        /// against it).
         /// </summary>
         public static string Csv(BalanceReport r)
         {
@@ -353,6 +388,11 @@ namespace IdleRng.Bots.Balance
                          c.N == c.GauntletCleared ? 0 : (double)c.GauntletStallMod[i] / (c.N - c.GauntletCleared));
                 foreach (var k in c.Killers) Rate(sb, "gauntlet", c.Species, c.Policy, "", "killer_" + k.Key, c.N, c.N == 0 ? 0 : (double)k.Count / c.N);
                 ChaseCsv(sb, "chase", c);
+                foreach (var x in c.Opponents)
+                {
+                    Rate(sb, "opponent", c.Species, c.Policy, "", x.Id + "_rolled_rate", c.N, c.N == 0 ? 0 : (double)x.Rolled / c.N);
+                    Rate(sb, "opponent", c.Species, c.Policy, "", x.Id + "_win_rate", x.Fought, x.WinRate);
+                }
             }
             foreach (var b in r.BookCells)
             {

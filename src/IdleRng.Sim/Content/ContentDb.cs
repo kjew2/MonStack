@@ -19,7 +19,7 @@ namespace IdleRng.Sim.Content
         {
             "constants", "elements", "species", "drill_tiers", "fight_ranks", "stat_milestones", "monster_skills", "trees",
             "tree_nodes", "chase_conditions", "skill_books", "talents", "gauntlet_enemies", "legacy_titles",
-            "achievements", "vendor_rarities", "tower_bosses", "boss_phases", "book_drops",
+            "achievements", "vendor_rarities", "tower_bosses", "boss_phases", "book_drops", "rank_enemies",
         };
 
 
@@ -53,6 +53,9 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Index == sort_order == rank index in a run (0 = lowest).</summary>
         public IReadOnlyList<FightRankDef> FightRanks { get; private set; }
+
+        /// <summary>Every rank pool monster by id (specs/14 section 5); FightRankDef.Pool lists each rank's in CSV order.</summary>
+        public IReadOnlyDictionary<string, RankEnemyDef> RankEnemies { get; private set; }
 
         /// <summary>Stat thresholds in increasing order.</summary>
         public IReadOnlyList<int> StatMilestones { get; private set; }
@@ -377,9 +380,11 @@ namespace IdleRng.Sim.Content
                 if (!StatsOk(fr.Stats, 0, k.StatMax, false)) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "stats must be in [0, STAT_MAX]"));
                 if (fr.DismantleShards < 0) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "dismantle_shards must be >= 0"));
                 if (fr.TicketPieces < 0) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "ticket_pieces must be >= 0"));
+                fr.Budget = StatSum(fr.Stats);
             }
 
             BuildTrees(t, errors);
+            BuildRankEnemies(t, errors);
             BuildAccount(t, errors);
             BuildUnlocks(t, errors);
             BuildGauntlet(t, errors);
@@ -697,6 +702,59 @@ namespace IdleRng.Sim.Content
             for (int i = 1; i < LegacyTitles.Count; i++)
                 if (LegacyTitles[i].MinFloor <= LegacyTitles[i - 1].MinFloor)
                     errors.Add(new ContentError("E032", $"legacy_titles[{LegacyTitles[i].MinFloor}]", "min_floor must strictly increase"));
+        }
+
+        static double StatSum(IdleRng.Sim.Combat.MonsterStats m)
+        {
+            double sum = 0;
+            foreach (var id in IdleRng.Sim.Combat.StatIds.Trained) sum += m.Get(id);
+            return sum;
+        }
+
+        /// <summary>
+        /// Rank fight pools (specs/14 section 5): every pool monster names a rank, spends exactly its budget, uses known elements
+        /// and skills and has a weight > 0; every rank has at least one. Mirrors validate_rank_enemies in tools/content_build.py.
+        /// Needs FightRanks and MonsterSkills.
+        /// </summary>
+        void BuildRankEnemies(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            var k = Constants;
+            var rankIndex = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < FightRanks.Count; i++) rankIndex[FightRanks[i].Id] = i;
+            var pools = FightRanks.Select(_ => new List<RankEnemyDef>()).ToList();
+            var byId = new Dictionary<string, RankEnemyDef>(StringComparer.Ordinal);
+            foreach (var r in t["rank_enemies"])
+            {
+                var e = new RankEnemyDef
+                {
+                    Id = r.Str("id"), RankId = r.Str("rank"), NameKey = r.Str("name_key"), Element = r.Str("element"),
+                    Stats = StatsFrom(r, ""), Skills = SplitIds(r.NStr("skills")).AsReadOnly(), Weight = r.Dbl("weight"), RankIndex = -1,
+                };
+                string loc = $"rank_enemies[{e.Id}]";
+                if (byId.ContainsKey(e.Id)) { errors.Add(new ContentError("E020", loc, "duplicate key")); continue; }
+                byId[e.Id] = e;
+                if (!rankIndex.TryGetValue(e.RankId, out int ri)) errors.Add(new ContentError("E023", loc, $"rank '{e.RankId}' is not a fight_ranks id"));
+                else
+                {
+                    e.RankIndex = ri;
+                    pools[ri].Add(e);
+                    double sum = StatSum(e.Stats), budget = FightRanks[ri].Budget;
+                    if (Math.Abs(sum - budget) > 1e-6)
+                        errors.Add(new ContentError("E043", loc, $"stats sum to {sum.ToString(System.Globalization.CultureInfo.InvariantCulture)}, but the budget of rank '{e.RankId}' is {budget.ToString(System.Globalization.CultureInfo.InvariantCulture)}"));
+                }
+                if (!Elements.ContainsKey(e.Element)) errors.Add(new ContentError("E023", loc, $"element '{e.Element}' is not an element id"));
+                if (IdleRng.Sim.Combat.StatIds.Trained.Any(id => !(e.Stats.Get(id) >= 0 && e.Stats.Get(id) <= k.StatMax)))
+                    errors.Add(new ContentError("E043", loc, "stats must be in [0, STAT_MAX]"));
+                foreach (var sk in e.Skills)
+                    if (!MonsterSkills.ContainsKey(sk)) errors.Add(new ContentError("E023", loc, $"skill '{sk}' is not a monster_skills id"));
+                if (!(e.Weight > 0)) errors.Add(new ContentError("E043", loc, "weight must be > 0"));
+            }
+            for (int i = 0; i < FightRanks.Count; i++)
+            {
+                FightRanks[i].Pool = pools[i].AsReadOnly();
+                if (pools[i].Count == 0) errors.Add(new ContentError("E044", $"fight_ranks[{FightRanks[i].Id}]", "the rank has no rank_enemies row (empty pool)"));
+            }
+            RankEnemies = new ReadOnlyDictionary<string, RankEnemyDef>(byId);
         }
 
         static List<string> SplitIds(string s) =>

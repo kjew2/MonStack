@@ -13,11 +13,12 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("4.2"));
+            Assert.That(db.Version, Is.EqualTo("4.3"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
             Assert.That(db.FightRanks, Is.Not.Empty);
+            Assert.That(db.RankEnemies, Is.Not.Empty);
             Assert.That(db.DrillTiers.Select(t => t.Tier), Is.EqualTo(new[] { DrillTier.Fail, DrillTier.Success, DrillTier.Super }));
             Assert.That(db.StatMilestones, Is.EqualTo(new[] { 300, 500, 700, 900 }));
             Assert.That(db.TreeList, Is.Not.Empty);
@@ -94,6 +95,42 @@ namespace IdleRng.Sim.Tests
             var msgs = ex.Errors.Select(e => e.Code + " " + e.Location + ": " + e.Message).ToList();
             Assert.That(msgs, Has.Some.Contains("E043 achievements[rank_c]: 'slime' is the starter species"));
             Assert.That(msgs, Has.Some.Contains("E044 species[drake]: only the first species is owned from the start"));
+        }
+
+        [Test]
+        public void RankEnemies_AreValidated()
+        {
+            string dir = FileContentSource.FindContentDirectory(TestContext.CurrentContext.TestDirectory);
+            var files = Directory.GetFiles(dir, "*.json").ToDictionary(Path.GetFileName, File.ReadAllText);
+            string t = files["rank_enemies.json"];
+            // Mossling overspends rank E's budget and names an unknown skill; every rank D monster moves to a rank that does not
+            // exist, which empties D's pool; Puddle Pup gets weight 0 and an unknown element.
+            t = ReplaceInRow(t, "mossling", "\"hp\": 100.0", "\"hp\": 101.0");
+            t = ReplaceInRow(t, "mossling", "\"skills\": \"regenerate\"", "\"skills\": \"regenerate|no_such_skill\"");
+            t = t.Replace("\"rank\": \"d\"", "\"rank\": \"z\"");
+            t = ReplaceInRow(t, "puddle_pup", "\"weight\": 1.0", "\"weight\": 0.0");
+            t = ReplaceInRow(t, "puddle_pup", "\"element\": \"water\"", "\"element\": \"mud\"");
+            Assert.That(t, Is.Not.EqualTo(files["rank_enemies.json"]), "the test edits applied");
+            files["rank_enemies.json"] = t;
+            var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false));
+            var msgs = ex.Errors.Select(e => e.Code + " " + e.Location + ": " + e.Message).ToList();
+            Assert.That(msgs, Has.Some.StartsWith("E043 rank_enemies[mossling]: stats sum to 801, but the budget of rank 'e' is 800"));
+            Assert.That(msgs, Has.Some.Contains("E023 rank_enemies[mossling]: skill 'no_such_skill' is not a monster_skills id"));
+            Assert.That(msgs, Has.Some.Contains("E023 rank_enemies[brine_crab]: rank 'z' is not a fight_ranks id"));
+            Assert.That(msgs, Has.Some.Contains("E044 fight_ranks[d]: the rank has no rank_enemies row (empty pool)"));
+            Assert.That(msgs, Has.Some.Contains("E043 rank_enemies[puddle_pup]: weight must be > 0"));
+            Assert.That(msgs, Has.Some.Contains("E023 rank_enemies[puddle_pup]: element 'mud' is not an element id"));
+        }
+
+        /// <summary>Replace <paramref name="from"/> with <paramref name="to"/> inside the JSON row whose id is <paramref name="id"/>.</summary>
+        static string ReplaceInRow(string table, string id, string from, string to)
+        {
+            int start = table.IndexOf("\"id\": \"" + id + "\"", StringComparison.Ordinal);
+            int end = table.IndexOf('}', start);
+            Assert.That(start, Is.GreaterThanOrEqualTo(0), id);
+            string row = table.Substring(start, end - start);
+            Assert.That(row, Does.Contain(from), id + ": " + from);
+            return table.Substring(0, start) + row.Replace(from, to) + table.Substring(end);
         }
 
         [Test]

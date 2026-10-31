@@ -61,7 +61,7 @@ Each cycle the monster has a few **action points** (AP). Every tap spends 1 AP o
 | **Drill** (one stat) | Roll fail, success or super, which sets a gain range; a second roll picks the exact gain in that range. Costs energy. |
 | **Rest** | Restores training energy. Nothing else. |
 
-When the AP are spent, the run moves to a **rank fight**, in the spirit of *Monster Rancher*'s fight classes: almost always a single 1v1 fight against the opponent of the monster's current rank (E up to S). A win promotes the monster one rank. If a fight every cycle turns out too frequent, it moves to every other cycle (`FIGHT_EVERY`). This keeps the training loop snappy. Rules: `specs/14`.
+When the AP are spent, the run moves to a **rank fight**, in the spirit of *Monster Rancher*'s fight classes: almost always a single 1v1 fight against the opponent of the monster's current rank (E up to S). Each rank has a pool of monsters, lowly critters at E up to fearsome named beasts at S, and the run rolls one per rank when it starts: the whole ladder is visible from the start, and a loss is a rematch with the same opponent (kj, 2026-10-31). A win promotes the monster one rank. If a fight every cycle turns out too frequent, it moves to every other cycle (`FIGHT_EVERY`). This keeps the training loop snappy. Rules: `specs/14`.
 
 The rank fight replaces the drafts' *Tactical Challenge*: it is the in-run fight that feeds playstyle conditions (section 5.5).
 

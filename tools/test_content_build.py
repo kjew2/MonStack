@@ -108,5 +108,48 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(2, self.build(lambda src: None, ["--baseline", os.path.join(ROOT, "nope")]))
 
 
+class RankEnemies(unittest.TestCase):
+    """validate_rank_enemies (specs/14 section 5): refs, the rank budget and empty pools."""
+
+    STATS0 = {s: 10.0 for s in cb.STATS}
+
+    def errors(self, enemies, ranks=("e", "d")):
+        t = {
+            "elements": [{"id": "fire"}],
+            "monster_skills": [{"id": "smash"}],
+            "fight_ranks": [dict(self.STATS0, id=r) for r in ranks],
+            "rank_enemies": enemies,
+        }
+        errs = cb.Errors()
+        cb.validate_rank_enemies(t, 999, errs)
+        return errs
+
+    def enemy(self, id_, rank, **kw):
+        row = dict(self.STATS0, id=id_, rank=rank, element="fire", skills="smash", weight=1.0)
+        row.update(kw)
+        return row
+
+    def test_valid_pools_pass(self):
+        self.assertEqual([], self.errors([self.enemy("a", "e"), self.enemy("b", "d", hp=20.0, str=0.0, skills=None)]))
+
+    def test_budget_mismatch_is_e043(self):
+        errs = self.errors([self.enemy("a", "e", hp=11.0), self.enemy("b", "d")])
+        self.assertEqual(1, len(errs))
+        self.assertIn("E043 rank_enemies[a]", errs[0])
+        self.assertIn("budget", errs[0])
+
+    def test_bad_refs_are_e023(self):
+        errs = self.errors([self.enemy("a", "zz"), self.enemy("b", "d", element="mud", skills="smash|nope"), self.enemy("c", "e")])
+        self.assertEqual(3, len(errs))
+        self.assertTrue(all("E023" in e for e in errs))
+
+    def test_empty_pool_is_e044(self):
+        errs = self.errors([self.enemy("a", "e")])
+        self.assertEqual(["CONTENT E044 fight_ranks[d]: the rank has no rank_enemies row (empty pool)"], errs)
+
+    def test_weight_must_be_positive(self):
+        self.assertIn("E043 rank_enemies[a]", self.errors([self.enemy("a", "e", weight=0.0), self.enemy("b", "d")])[0])
+
+
 if __name__ == "__main__":
     unittest.main()

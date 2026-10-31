@@ -1,5 +1,5 @@
 id,sort_order,name_key,element,hp,str,int,wis,dex,def,spd,luk,dismantle_shards,ticket_pieces,#notes
-e,0,rank.e.name,nature,100,100,100,100,100,100,100,100,5,0,rank fight opponent at each rank (specs/14 section 5). Placeholder
+e,0,rank.e.name,nature,100,100,100,100,100,100,100,100,5,0,"a rank of the ladder (specs/14 section 5). The eight stats set the rank budget (their sum) that every rank_enemies row of the rank spends; they are also the flat opponent of runs started before the pools (content 3.17). Placeholder"
 d,1,rank.d.name,water,160,160,160,160,160,160,160,160,10,1,Placeholder
 c,2,rank.c.name,fire,230,230,230,230,230,230,230,230,15,1,Placeholder
 b,3,rank.b.name,light,310,310,310,310,310,310,310,310,25,2,Placeholder

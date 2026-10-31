@@ -151,6 +151,8 @@ SCHEMA = {
     "drill_tiers": T([c("id", "id"), c("gain_min", "int"), c("gain_max", "int"), c("name_key", "key")], key="id"),
     "fight_ranks": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("element", "id")]
                      + [c(s, "double") for s in STATS] + [c("dismantle_shards", "int"), c("ticket_pieces", "int")], key="id"),
+    "rank_enemies": T([c("id", "id"), c("rank", "id"), c("name_key", "key"), c("element", "id")]
+                      + [c(s, "double") for s in STATS] + [c("skills", "string", True), c("weight", "double")], key="id"),
     "stat_milestones": T([c("threshold", "int")], key="threshold"),
     "monster_skills": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:SkillKind"),
                          c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
@@ -545,6 +547,35 @@ def validate_unlocks(t, errs):
             errs.add("E043", "vendor_rarities", f"the weights must not all be 0 at grade index {g}")
 
 
+def validate_rank_enemies(t, stat_max, errs):
+    """Rank fight pools (specs/14 section 5). Mirrors the rank_enemies part of ContentDb.Build."""
+    elements = {r["id"] for r in t["elements"]}
+    skills = {r["id"] for r in t["monster_skills"]}
+    budget = {r["id"]: sum(r[s] for s in STATS) for r in t["fight_ranks"]}
+    pooled = set()
+    for r in t["rank_enemies"]:
+        loc = f"rank_enemies[{r['id']}]"
+        if r["rank"] not in budget:
+            errs.add("E023", loc, f"rank '{r['rank']}' is not a fight_ranks id")
+        else:
+            pooled.add(r["rank"])
+            total = sum(r[s] for s in STATS)
+            if abs(total - budget[r["rank"]]) > 1e-6:
+                errs.add("E043", loc, f"stats sum to {total:g}, but the budget of rank '{r['rank']}' is {budget[r['rank']]:g}")
+        if r["element"] not in elements:
+            errs.add("E023", loc, f"element '{r['element']}' is not an element id")
+        if any(not 0 <= r[s] <= stat_max for s in STATS):
+            errs.add("E043", loc, "stats must be in [0, STAT_MAX]")
+        for sk in split_ids(r["skills"]):
+            if sk not in skills:
+                errs.add("E023", loc, f"skill '{sk}' is not a monster_skills id")
+        if not r["weight"] > 0:
+            errs.add("E043", loc, "weight must be > 0")
+    for r in t["fight_ranks"]:
+        if r["id"] not in pooled:
+            errs.add("E044", f"fight_ranks[{r['id']}]", "the rank has no rank_enemies row (empty pool)")
+
+
 def validate_training(t, keys, errs):
     """Training run tables and constants (specs/14 section 8)."""
     kv = {k: keys[k]["value"] for k in keys}
@@ -590,6 +621,7 @@ def validate_training(t, keys, errs):
             errs.add("E043", loc, "dismantle_shards must be >= 0")
         if r["ticket_pieces"] < 0:
             errs.add("E043", loc, "ticket_pieces must be >= 0")
+    validate_rank_enemies(t, stat_max, errs)
     validate_trees(t, errs)
     validate_talents(t, errs)
     validate_unlocks(t, errs)

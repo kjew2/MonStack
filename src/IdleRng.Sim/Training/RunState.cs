@@ -177,6 +177,13 @@ namespace IdleRng.Sim.Training
         /// <summary>Index into ContentDb.FightRanks.</summary>
         public int Rank { get; set; }
 
+        /// <summary>
+        /// The rank ladder (specs/14 section 5): the rank_enemies id fought at each rank, indexed like ContentDb.FightRanks, rolled
+        /// at Start on the "ladder" stream. Empty for a legacy run (started before the pools, content 4.3): its opponent at each
+        /// rank is the flat fight_ranks row.
+        /// </summary>
+        public List<string> Ladder { get; set; } = new List<string>();
+
         public RunPhase Phase { get; set; }
         public RunEnd End { get; set; }
 
@@ -222,6 +229,7 @@ namespace IdleRng.Sim.Training
             var c = (RunState)MemberwiseClone();
             c.Stats = Stats.Clone();
             c.Mods = Mods.Clone();
+            c.Ladder = new List<string>(Ladder);
             c.Training = Training.Clone();
             c.Draft = Draft.Clone();
             c.Slots = new TreeSlot[Slots.Length];
@@ -265,6 +273,9 @@ namespace IdleRng.Sim.Training
     {
         public int RankBefore { get; set; }
         public int RankAfter { get; set; }
+
+        /// <summary>The rank_enemies id fought (the ladder's entry at RankBefore); null in a legacy run (flat fight_ranks opponent).</summary>
+        public string OpponentId { get; set; }
         public bool Won { get; set; }
         public int SpGained { get; set; }
         public FightResult Fight { get; set; }

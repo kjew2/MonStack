@@ -275,5 +275,28 @@ namespace IdleRng.Bots.Tests
             StringAssert.Contains("## Dungeon", text);
             Assert.Throws<ArgumentException>(() => BalanceWriter.Write(r, "xml"));
         }
+
+        [Test]
+        public void Opponents_TallyEveryRankFight_AgainstTheLadder()
+        {
+            var db = Content.Db;
+            var r = BalanceHarness.Run(db, new BalanceOptions { Seeds = 6, Tower = false, BookCanary = false, Species = new[] { "slime", "drake" }, Policies = new[] { "focus" } });
+            foreach (var c in r.Cells)
+            {
+                Assert.That(c.Opponents.Sum(o => o.Fought), Is.EqualTo((int)Math.Round(c.FightsWon.Mean * c.N + c.FightsLost.Mean * c.N)), c.Species + ": every fight is tallied");
+                Assert.That(c.Opponents.Sum(o => o.Won), Is.EqualTo((int)Math.Round(c.FightsWon.Mean * c.N)), c.Species + ": every win is tallied");
+                for (int rank = 0; rank < db.FightRanks.Count; rank++)
+                    Assert.That(c.Opponents.Where(o => o.Rank == rank).Sum(o => o.Rolled), Is.EqualTo(c.N), "each run rolled one opponent at rank " + rank);
+                foreach (var o in c.Opponents) Assert.That(db.RankEnemies[o.Id].RankIndex, Is.EqualTo(o.Rank));
+            }
+            // A fight is against the ladder's monster at the rank it was fought at.
+            var fights = new FightTracker();
+            var s = RunBot.Play(db, RunPolicies.Create("focus"), "slime", 3, null, null, fights.Observe);
+            Assert.That(fights.Fights.Count, Is.EqualTo(s.FightsFought));
+            Assert.That(fights.Fights.Count(f => f.Won), Is.EqualTo(s.FightsWon));
+            Assert.That(fights.Fights.All(f => f.Opponent == s.Ladder[f.Rank]), Is.True);
+            StringAssert.Contains("## Rank fights by opponent", BalanceWriter.Text(r));
+            StringAssert.Contains("opponent,slime,focus,,", BalanceWriter.Csv(r));
+        }
     }
 }

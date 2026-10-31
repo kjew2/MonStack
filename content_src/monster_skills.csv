@@ -61,3 +61,8 @@ deep_roots,mskill.deep_roots.name,shield,self,,hp,0.25,4,3,
 scream,mskill.scream.name,damage,all_enemies,,wis,1.1,3,0,nature
 shade_cloak,mskill.shade_cloak.name,buff,self,dex,,0.3,4,3,
 devour,mskill.devour.name,damage,enemy,,str,1.8,3,0,dark
+blur,mskill.blur.name,buff,self,dex,,0.15,0,2,
+keen_eye,mskill.keen_eye.name,passive,self,crit_rate,,0.15,0,0,
+stoke,mskill.stoke.name,buff,self,str,,0.15,0,2,
+focus_mind,mskill.focus_mind.name,buff,self,int,,0.3,0,2,
+tailwind,mskill.tailwind.name,buff,self,spd,,0.1,0,2,

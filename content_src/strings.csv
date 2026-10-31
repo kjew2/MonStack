@@ -16,6 +16,29 @@ rank.c.name,Rank C
 rank.b.name,Rank B
 rank.a.name,Rank A
 rank.s.name,Rank S
+rank_enemy.mossling.name,Mossling
+rank_enemy.puddle_pup.name,Puddle Pup
+rank_enemy.ember_rat.name,Ember Rat
+rank_enemy.dusk_bat.name,Dusk Bat
+rank_enemy.scorch_boar.name,Scorchback Boar
+rank_enemy.brine_crab.name,Brine Crab
+rank_enemy.spark_imp.name,Spark Imp
+rank_enemy.gloom_moth.name,Gloom Moth
+rank_enemy.cinder_hound.name,Cinder Hound
+rank_enemy.tidecaller.name,Tidecaller Naiad
+rank_enemy.ironbark.name,Ironbark Sentinel
+rank_enemy.hex_wisp.name,Hex Wisp
+rank_enemy.storm_roc.name,Storm Roc
+rank_enemy.grave_knight.name,Grave Knight
+rank_enemy.coral_hydra.name,Coral Hydra
+rank_enemy.magma_ogre.name,Magma Ogre
+rank_enemy.hollow_lich.name,Hollow Lich
+rank_enemy.sunfire_phoenix.name,Sunfire Phoenix
+rank_enemy.elder_treant.name,Elder Treant
+rank_enemy.shade_stalker.name,Shade Stalker
+rank_enemy.vorthak.name,Vorthak the Undying
+rank_enemy.leviathan.name,Abyssal Leviathan
+rank_enemy.solaris.name,Solaris the Dawn Tyrant
 mskill.gel_mend.name,Gel Mend
 mskill.gel_mend.desc,Heal the weakest ally for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.ooze_back.name,Ooze Back
@@ -293,6 +316,16 @@ mskill.boss_cleave.name,Cleave
 mskill.boss_cleave.desc,Hit every enemy for {power:pct} of {scales}. Cooldown {cooldown}.
 mskill.boss_roar.name,Shattering Roar
 mskill.boss_roar.desc,Lower every enemy's {stat} by {power:pct} for {duration} turns. Cooldown {cooldown}.
+mskill.blur.name,Blur
+mskill.blur.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
+mskill.keen_eye.name,Keen Eye
+mskill.keen_eye.desc,Permanent +{power:pct} {stat}.
+mskill.stoke.name,Stoke
+mskill.stoke.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
+mskill.focus_mind.name,Focus Mind
+mskill.focus_mind.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
+mskill.tailwind.name,Tailwind
+mskill.tailwind.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
 rule.entropy_convert.name,Entropy Convert
 rule.entropy_convert.desc,"Dungeon: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
 phase.shield_check.name,Shield Check
