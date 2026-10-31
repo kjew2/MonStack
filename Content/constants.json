@@ -97,6 +97,11 @@
       "value": 4
     },
     {
+      "key": "STAT_FLOOR_FRAC",
+      "type": "double",
+      "value": 0.1
+    },
+    {
       "key": "RUN_CYCLES",
       "type": "int",
       "value": 12

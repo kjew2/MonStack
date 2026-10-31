@@ -18,6 +18,7 @@ MON_CRIT_DMG,double,1.5,monster battle: crit damage multiplier before effects. P
 MON_SPD_MIN,double,10,monster battle: minimum ATB gauge fill per tick so SPD 0 still acts. Placeholder
 MON_TIME_LIMIT_TICKS,int,900,monster battle: turn limit (90 s); reaching it is a timeout. Placeholder
 MON_SIDE_SIZE,int,4,monster battle: most units per side
+STAT_FLOOR_FRAC,double,0.1,monster battle: a trained stat never drops below this fraction of its base however many debuffs stack (current = base x max(this; 1 + effects)). Placeholder
 RUN_CYCLES,int,12,training run (specs/14): cycles per run; each cycle is RUN_AP taps then maybe a rank fight. Placeholder
 RUN_AP,int,5,action points per cycle; Drill and Rest cost 1 each. Placeholder
 RUN_ENERGY_MAX,double,100,Placeholder

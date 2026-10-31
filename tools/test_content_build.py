@@ -4,6 +4,7 @@
     python3 tools/test_content_build.py
 """
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -13,6 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import content_build as cb  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+with open(os.path.join(ROOT, "content_src", "meta.csv"), encoding="utf-8") as _f:
+    CURRENT_MAJOR = int(re.search(r"content_version,(\d+)\.", _f.read()).group(1))
 
 
 class BaselineRules(unittest.TestCase):
@@ -71,15 +74,19 @@ class EndToEnd(unittest.TestCase):
     def drop_last_row(self, name):
         def go(src):
             path = os.path.join(src, name + ".csv")
-            lines = open(path, encoding="utf-8").read().rstrip("\n").split("\n")
-            open(path, "w", encoding="utf-8").write("\n".join(lines[:-1]) + "\n")
+            with open(path, encoding="utf-8") as f:
+                lines = f.read().rstrip("\n").split("\n")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines[:-1]) + "\n")
         return go
 
     def set_version(self, version):
         def go(src):
             path = os.path.join(src, "meta.csv")
-            text = open(path, encoding="utf-8").read().replace("content_version,3.1", "content_version," + version)
-            open(path, "w", encoding="utf-8").write(text)
+            with open(path, encoding="utf-8") as f:
+                text = re.sub(r"content_version,\S+", "content_version," + version, f.read())
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
         return go
 
     def test_unchanged_content_passes(self):
@@ -91,11 +98,11 @@ class EndToEnd(unittest.TestCase):
     def test_dropping_a_talent_with_a_major_bump_passes(self):
         def go(src):
             self.drop_last_row("talents")(src)
-            self.set_version("4.0")(src)
+            self.set_version(f"{CURRENT_MAJOR + 1}.0")(src)
         self.assertEqual(0, self.build(go, ["--baseline", os.path.join(ROOT, "Content")]))
 
     def test_lowering_the_version_fails(self):
-        self.assertEqual(1, self.build(self.set_version("3.0"), ["--baseline", os.path.join(ROOT, "Content")]))
+        self.assertEqual(1, self.build(self.set_version("0.0"), ["--baseline", os.path.join(ROOT, "Content")]))
 
     def test_missing_baseline_is_a_usage_error(self):
         self.assertEqual(2, self.build(lambda src: None, ["--baseline", os.path.join(ROOT, "nope")]))

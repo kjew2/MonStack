@@ -145,6 +145,9 @@ namespace IdleRng.Sim.Combat
         public double CritDmg { get; set; }
         public double SpdMin { get; set; }
 
+        /// <summary>A trained stat never drops below this fraction of its base (STAT_FLOOR_FRAC).</summary>
+        public double StatFloor { get; set; }
+
         /// <summary>echo_cast: the echo's fraction of the skill's power.</summary>
         public double EchoPower { get; set; }
 
@@ -158,7 +161,7 @@ namespace IdleRng.Sim.Combat
                 ElementStrongMult = k.ElementStrongMult, ElementWeakMult = k.ElementWeakMult,
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
-                CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, EchoPower = k.MonEchoPower,
+                CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, EchoPower = k.MonEchoPower,
             };
             foreach (var e in c.ElementList) r.StrongVs[e.Id] = e.StrongVs;
             return r;

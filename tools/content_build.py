@@ -44,6 +44,7 @@ REQUIRED_CONSTANTS = {
     "MON_HP_PER_POINT": "double", "MON_DEF_K": "double", "MON_EVADE_BASE": "double", "MON_EVADE_PER_DEX": "double",
     "MON_EVADE_CAP": "double", "MON_CRIT_BASE": "double", "MON_CRIT_PER_LUK": "double", "MON_CRIT_CAP": "double",
     "MON_CRIT_DMG": "double", "MON_SPD_MIN": "double", "MON_TIME_LIMIT_TICKS": "int", "MON_SIDE_SIZE": "int",
+    "STAT_FLOOR_FRAC": "double",
     # training run (specs/14)
     "RUN_CYCLES": "int", "RUN_AP": "int", "RUN_ENERGY_MAX": "double", "RUN_ENERGY_START": "double",
     "DRILL_ENERGY_COST": "double", "REST_ENERGY": "double", "DRILL_FAIL_MIN": "double", "DRILL_FAIL_MAX": "double",
@@ -72,6 +73,7 @@ MON_RANGES = {
     "MON_CRIT_PER_LUK": (">= 0", lambda v: v >= 0), "MON_CRIT_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_CRIT_DMG": (">= 1", lambda v: v >= 1), "MON_SPD_MIN": ("> 0", lambda v: v > 0),
     "MON_TIME_LIMIT_TICKS": ("> 0", lambda v: v > 0), "MON_SIDE_SIZE": ("> 0", lambda v: v > 0),
+    "STAT_FLOOR_FRAC": ("(0, 1]", lambda v: 0 < v <= 1),
     "RUN_CYCLES": ("> 0", lambda v: v > 0), "RUN_AP": ("> 0", lambda v: v > 0), "RUN_ENERGY_MAX": ("> 0", lambda v: v > 0),
     "RUN_ENERGY_START": (">= 0", lambda v: v >= 0), "DRILL_ENERGY_COST": (">= 0", lambda v: v >= 0),
     "REST_ENERGY": (">= 0", lambda v: v >= 0), "DRILL_FAIL_MIN": ("[0, 1]", lambda v: 0 <= v <= 1),
@@ -108,7 +110,7 @@ SCHEMA = {
     "fight_ranks": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("element", "id")]
                      + [c(s, "double") for s in STATS], key="id"),
     "stat_milestones": T([c("threshold", "int")], key="threshold"),
-    "monster_skills": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("kind", "enum:SkillKind"),
+    "monster_skills": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:SkillKind"),
                          c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
                          c("power", "double"), c("cooldown", "int"), c("duration", "int"), c("element", "id", True)], key="id"),
     "trees": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:TreeKind"), c("offer_stat", "string", True),
