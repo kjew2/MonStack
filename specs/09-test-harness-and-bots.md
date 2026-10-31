@@ -1,6 +1,6 @@
 # 09 - Test Harness, Bots and Golden Files
 
-Scope: the headless bot project `IdleRng.Bots` (`src/IdleRng.Bots`), the tests, the golden files and `check.sh`. This spec was the idle game's balance harness (day-by-day bots, an acceptance table and a 20-seed sweep); that went with the idle game at `specs/13` T7. Balance work is on hold (`CLAUDE.md`); when it resumes, a run-balance harness is built on the bots below.
+Scope: the headless bot project `IdleRng.Bots` (`src/IdleRng.Bots`), the tests, the golden files and `check.sh`. This spec was the idle game's balance harness (day-by-day bots, an acceptance table and a 20-seed sweep); that went with the idle game at `specs/13` T7. Balance work resumed on 2026-10-31 (`CLAUDE.md`); a run-balance harness is to be built on the bots below.
 
 ## 1. Design goals
 
