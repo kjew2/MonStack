@@ -73,8 +73,8 @@ Priorities after the pivot, used by the `priority:` labels on GitHub issues:
 
 | Priority | Scope | Tracking issue |
 |---|---|---|
-| **P0** | The MVP: `specs/12` section 12.1, phases T0-T7 | #69 (T7: #71) |
-| **P1** | Toward 1.0 on Steam and the web: `specs/12` section 12.2, phases T8-T13, plus the launch goals | #70 (T8-T13: #72-#77) |
+| **P0** | The MVP: `specs/12` section 12.1, phases T0-T7, plus T9 and T10 (moved up from P1 by kj, 2026-10-31) | #69 (T7: #71, T9: #73, T10: #74) |
+| **P1** | Toward 1.0 on Steam and the web: `specs/12` section 12.2, phases T8, T11-T13, plus the launch goals | #70 (T8: #72, T11-T13: #75-#77) |
 | **P2** | After 1.0, or parked until a platform decision (iOS/TestFlight, Unity client, live ops) | none |
 
 Triage applied:
@@ -93,7 +93,7 @@ Triage applied:
 
 ## 6. Phases
 
-MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own with `./check.sh` green.
+MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were moved up from P1 by kj, 2026-10-31). Each phase merges on its own with `./check.sh` green.
 
 ### T0 - Decisions and freeze
 
@@ -167,13 +167,13 @@ MVP is T0-T7 (matches `specs/12` section 12.1). Each phase merges on its own wit
 - Specs rewritten or deleted as listed in section 4.
 - Not done, deliberately: the species gacha code (T9; `specs/01` and `tools/gacha_model.py` stay) and any rename of `IdleRng`.
 
-### Post-MVP (toward 1.0)
+### T8-T13 (T9 and T10 are P0, the rest P1)
 
 | Phase | Content |
 |---|---|
 | T8 | **Done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title; the web client spins the wheel after sealing and shows "Floor N: title" on the grade screen and Vault cards). End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
-| T9 | Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors) |
-| T10 | Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
+| T9 | **P0.** Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors). The gem-sale question (section 9 item 4) blocks only the economy part |
+| T10 | **P0.** Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
 | T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |
 | T12 | Async 4v4 PvP on `specs/10`: accounts, server-resolved battles, cosmetic rewards |
 | T13 | Monetization: opt-in ads, ad-removal pass, cosmetics; platform builds |
