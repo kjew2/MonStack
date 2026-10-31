@@ -1,0 +1,26 @@
+{
+  "_doc": "Creature art prompts for tools/art/generate.py (specs/26 section 6, issue #116). Style is described in words only: never name an artist or a series.",
+  "style": "Original creature illustration for a monster-raising game, single creature centred and fully in frame, three-quarter view, full body. Soft hand-painted watercolour with layered translucent washes and visible paper grain, a fine delicate sepia pencil line with light hatching in the shadows. Background: a vast, misty, vertical chasm deep underground with hanging roots, glowing bioluminescent flora and soft light falling from far above, fading into luminous haze. Muted, slightly desaturated colours with bright glowing accents. The creature is endearing and cute, but has exactly one subtly unsettling detail, as if sketched by an expedition researcher. No text, no letters, no signature, no frame, no border.",
+  "species": {
+    "slime": {
+      "name": "Coremote",
+      "prompt": "A round, translucent blue jelly creature (deep blue to sky blue) with a glossy highlight and two small dark eyes. A glowing golden nucleus floats inside the gel. Unsettling detail: the nucleus has a slit pupil like an eye, and a tiny fish skeleton drifts inside the gel."
+    },
+    "drake": {
+      "name": "Bastion Drake",
+      "prompt": "A squat, heavy young dragon with a red-orange body, small cream horns and yellow eyes, covered in riveted grey steel forge plates like a siege tower. Fire glows orange through a ribbed, bellows-like chest. Unsettling detail: the plates are riveted straight into its flesh, with dark trickles under the rivets."
+    },
+    "sprite": {
+      "name": "Mirage Moth",
+      "prompt": "A small, luminous moth creature with large gold and cream wings, feathery antennae and a fuzzy cream body, hovering in a faint halo of glowing dust. The wings carry hypnotic eyespots, dark purple ringed with orange. Unsettling detail: the eyespots look like real eyes, with irises, lids and catchlights."
+    },
+    "mandrake": {
+      "name": "Mandrake",
+      "prompt": "A small root creature shaped like a little person: a tan and brown gnarled root body, root legs and root arms flung up, a sprout of fresh green leaves on its head, half pulled out of the dark soil. Its mouth is wide open in a scream. Unsettling detail: the screaming mouth is lined with rings of tiny needle teeth."
+    },
+    "shade_hound": {
+      "name": "Shade Hound",
+      "prompt": "A dog made purely of shadow, deep purple-black with soft violet edges, in a real canine pose with a lean body and four jointed legs, its tail dissolving into drifting smoke. Bright acid-green eyes and small white fangs. Unsettling detail: a short row of tiny extra acid-green eyes along its cheek."
+    }
+  }
+}
