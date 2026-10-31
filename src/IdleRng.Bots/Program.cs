@@ -42,7 +42,7 @@ namespace IdleRng.Bots
         const string Usage =
             "usage: IdleRng.Bots <train|balance|golden|help> [options]\n" +
             "  train      --species ID --policy balanced|focus|reckless|hoarder|chaser|mono-<stat> --seed N --books a,b --content dir   (one training run, specs/14-15)\n" +
-            "  balance    --seeds N --seed-base N --species a,b --policies a,b --books none|all|a,b --no-tower --tower-day N\n" +
+            "  balance    --seeds N --seed-base N --species a,b --policies a,b --books none|all|own|a,b --no-tower --tower-day N\n" +
             "             --no-book-canary --strict --format text|json|csv --jobs N --out path\n" +
             "             (run-balance report and loose sanity checks over many seeds, specs/09 section 7; --strict exits 1 on a WARN)\n" +
             "  golden     --check|--update --golden-dir path --content dir   (specs/09 section 11)\n";
@@ -121,7 +121,8 @@ namespace IdleRng.Bots
                 SeedBase = (ulong)a.Long("seed-base", 1),
                 Species = List(a.Str("species", null)),
                 Policies = List(a.Str("policies", null)),
-                Books = books == "none" ? null : books == "all" ? db.SkillBooks.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList() : List(books),
+                Books = books == "none" || books == "own" ? null : books == "all" ? db.SkillBooks.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList() : List(books),
+                OwnBooks = books == "own",
                 Tower = !a.Has("no-tower"),
                 TowerDayBase = a.Int("tower-day", 0),
                 Jobs = a.Int("jobs", Environment.ProcessorCount),

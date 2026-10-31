@@ -26,14 +26,14 @@
       "id": "arcane_overflow_c3",
       "tree_id": "arcane_overflow",
       "type": "node_owned",
-      "ref": "tome_of_echoes_n5",
+      "ref": "tome_of_echoes_n0",
       "amount": null
     },
     {
       "id": "arcane_overflow_c4",
       "tree_id": "arcane_overflow",
       "type": "node_owned",
-      "ref": "spellcraft_n4",
+      "ref": "mind_warp_n4",
       "amount": null
     },
     {
@@ -41,7 +41,7 @@
       "tree_id": "arcane_overflow",
       "type": "tally_at_least",
       "ref": "crits",
-      "amount": 3.0
+      "amount": 2.0
     },
     {
       "id": "living_ocean_c0",
@@ -68,7 +68,7 @@
       "id": "abyssal_bloom_c0",
       "tree_id": "abyssal_bloom",
       "type": "node_owned",
-      "ref": "tidal_codex_n5",
+      "ref": "tidal_codex_n0",
       "amount": null
     },
     {
@@ -89,7 +89,7 @@
       "id": "inferno_sovereign_c0",
       "tree_id": "inferno_sovereign",
       "type": "node_owned",
-      "ref": "ember_codex_n5",
+      "ref": "ember_codex_n0",
       "amount": null
     },
     {
@@ -152,7 +152,7 @@
       "id": "mandragora_scream_c0",
       "tree_id": "mandragora_scream",
       "type": "node_owned",
-      "ref": "verdant_herbarium_n5",
+      "ref": "verdant_herbarium_n0",
       "amount": null
     },
     {
@@ -194,7 +194,7 @@
       "id": "night_feast_c0",
       "tree_id": "night_feast",
       "type": "node_owned",
-      "ref": "umbral_grimoire_n5",
+      "ref": "umbral_grimoire_n0",
       "amount": null
     },
     {
@@ -209,7 +209,7 @@
       "tree_id": "night_feast",
       "type": "tally_at_least",
       "ref": "damage_dark",
-      "amount": 2000.0
+      "amount": 7000.0
     }
   ]
 }

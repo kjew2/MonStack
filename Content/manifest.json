@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "4.6",
+  "content_version": "4.7",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -17,7 +17,7 @@
     },
     "chase_conditions": {
       "file": "chase_conditions.json",
-      "sha256": "c029a860e667b0302ee8b7f9cbae9d7cb42e472ccef12578aea6dfcd8fe423cf"
+      "sha256": "b45717702c915bd8b332eef88cf16bea832885323b5cd1f3d586ef60f5a590b4"
     },
     "constants": {
       "file": "constants.json",
@@ -77,7 +77,7 @@
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
-      "sha256": "9d71f57ca90cb0e04fdc555d54ba3855f2844b822694be7d5435cf90f11bab0d"
+      "sha256": "27e528a4443e8116e7a2563fc2f73331df71c8b3b29487b36388cbab68c89109"
     },
     "trees": {
       "file": "trees.json",
@@ -88,5 +88,5 @@
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "d5d0c800493b795bef94f9d1621441bffd8e1e9085628a869841973d41debe70"
+  "content_hash": "a1cfc25453808b32dbb423d8e0011897210b1ed61efdc8cec21370eb44923f9f"
 }

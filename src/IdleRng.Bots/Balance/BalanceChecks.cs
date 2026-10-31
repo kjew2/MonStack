@@ -187,7 +187,7 @@ namespace IdleRng.Bots.Balance
         {
             var pairs = r.BookCells.Select(b => (b, n: r.Cells.FirstOrDefault(c => c.Species == b.Species && c.Policy == b.Policy)))
                 .Where(p => p.n != null).ToList();
-            string none = r.Options.Books != null && r.Options.Books.Count > 0 ? "the main pass already brings books"
+            string none = r.Options.Books != null && r.Options.Books.Count > 0 || r.Options.OwnBooks ? "the main pass already brings books"
                         : !r.Options.BookCanary ? "book canary off (--no-book-canary)" : "no cells";
             return Min("books", $"bringing every book lowers no cell's mean rank by more than {N(MaxBookGradeDrop)}", pairs,
                 p => p.b.Grade.Mean - p.n.Grade.Mean, p => Cell(p.n), -MaxBookGradeDrop, strict: false, none: none);

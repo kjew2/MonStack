@@ -84,6 +84,7 @@ step "Bots: balance report smoke run (2 seeds; WARNs do not fail)"
 $BOTS balance --seeds 2 > /dev/null
 $BOTS balance --seeds 2 --format json | python3 -c 'import json, sys; json.load(sys.stdin)'
 $BOTS balance --seeds 2 --format csv > /dev/null
+$BOTS balance --seeds 2 --books own --no-tower > /dev/null
 
 if [ "$FAST" -eq 1 ]; then
   step ".NET: unit tests (no golden)"

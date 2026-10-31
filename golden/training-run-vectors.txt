@@ -1,4 +1,4 @@
-# training-run vectors, hash v7 content=4.6/d5d0c800
+# training-run vectors, hash v7 content=4.7/a1cfc254
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8 injuries=0
@@ -7,10 +7,10 @@ slime balanced seed=7
   hash b2991178ddc07db0927417bceac43b6265a69db40ff00b6eaf93e977ba11d3c0
 
 slime focus seed=7
-  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 859 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:7/8 living_ocean:1/8
-  hash 61157fa484118633733c56058877f8c6cf00ceab312e6e7a5fd15dee4550f238
+  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=1 injuries=0
+  stats hp 870 str 90 int 100 wis 145 dex 90 def 155 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:4/8 living_ocean:4/8
+  hash e014b49b351e0a550f3831583d8fbf86d8aec88f033db0b0f2cee8411ad09ca7
 
 slime reckless seed=7
   end=Completed cycle=12 rank=d fights=1/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
@@ -20,9 +20,9 @@ slime reckless seed=7
 
 slime hoarder seed=7
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 809 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:7/8 living_ocean:2/8
-  hash 8365fea16871ccbb465c7573860db29eac895efe0c71d353b369188fcdec9adc
+  stats hp 816 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:2/8 living_ocean:7/8
+  hash 3545d820e535b9a7c907bd02d7d7dbf7658406f178e793db031fdc97c0b824df
 
 slime chaser seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
@@ -31,10 +31,10 @@ slime chaser seed=7
   hash b7c9b34ef952d47485972fc43b85eac3f4ebdabc37e7661786ded47f29ee1c8b
 
 slime focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
-  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 817 str 90 int 115 wis 180 dex 90 def 125 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:7/8 living_ocean:1/8
-  hash 5936a575ab44392745d4eea5fddc1fe9fde27c67da4ce853ad80c0838a43f1a4
+  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=1 injuries=0
+  stats hp 832 str 90 int 115 wis 160 dex 90 def 140 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:4/8 living_ocean:4/8
+  hash fb138cc6e9d32006ce23ef825105f5f1561c45e124e1396b6d8f42c05307905e
 
 drake balanced seed=7
   end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=0 sp=4 injuries=0
@@ -68,9 +68,9 @@ drake chaser seed=7
 
 drake focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 165 str 830 int 110 wis 115 dex 90 def 155 spd 90 luk 70
-  trees pyromancy:8/8 heavy_armor:7/8 tome_of_echoes:7/8 ember_codex:1/8
-  hash 0be4d4a8a608935134c64ee7d9a00fefefd455cfe34cd0aaaa545ad516c5f8c0
+  stats hp 165 str 861 int 110 wis 80 dex 90 def 155 spd 90 luk 70
+  trees pyromancy:8/8 heavy_armor:7/8 inferno_sovereign:6/8 ember_codex:1/8
+  hash b26399244ac4c899cc59783a3973ea75d68c46a8b1d2f21d4a40a29209a1a2e3
 
 sprite balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -103,10 +103,10 @@ sprite chaser seed=7
   hash 538ec0a6e0bd284cfccbb57549fe573ea729f7c6f5c89db03ab121ac3753d944
 
 sprite focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
-  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 90 str 75 int 874 wis 190 dex 155 def 85 spd 175 luk 110
-  trees aether_striker:7/8 mind_warp:7/8 tome_of_echoes:7/8 ember_codex:5/8
-  hash 69910d7274013d22c3b64cd77e9a61f28e5ae3c704ebf28351d6083443a063ac
+  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
+  stats hp 90 str 60 int 917 wis 205 dex 155 def 70 spd 175 luk 110
+  trees aether_striker:8/8 mind_warp:7/8 tome_of_echoes:4/8 arcane_overflow:8/8
+  hash 4455815bd5b2dff2f38c0842fdc3f92cc0d9c32eb0cf0cdd1d3c8dbe94e69077
 
 mandrake balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -116,9 +116,9 @@ mandrake balanced seed=7
 
 mandrake focus seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 874 str 90 int 135 wis 145 dex 70 def 190 spd 70 luk 100
-  trees rootbound:8/8 mandrake_wail:7/8 vital_core:7/8 world_root:1/8
-  hash 7081a8de2df0217a97d0a5dd21b8c5a3cedf1a6ddaa947236d48477318bf2481
+  stats hp 885 str 90 int 135 wis 145 dex 70 def 170 spd 70 luk 100
+  trees rootbound:8/8 mandrake_wail:7/8 vital_core:5/8 world_root:3/8
+  hash 672818f45841f446f0063253fdec7678ac63093ec775acb047beb65b96851bfc
 
 mandrake reckless seed=7
   end=Completed cycle=12 rank=d fights=1/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
@@ -128,9 +128,9 @@ mandrake reckless seed=7
 
 mandrake hoarder seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 805 str 90 int 135 wis 145 dex 70 def 170 spd 70 luk 100
-  trees rootbound:8/8 mandrake_wail:8/8 vital_core:5/8 world_root:0/8
-  hash eefee24bc9b08b513d5d2eb0eafbc789446d1d63de0376ffa8975ce02c43e744
+  stats hp 821 str 90 int 135 wis 145 dex 70 def 190 spd 70 luk 100
+  trees rootbound:8/8 mandrake_wail:7/8 vital_core:1/8 world_root:7/8
+  hash cc31683de1ec2bb73875853e22190d7b799a8d4145ccf022e0639cca6e063443
 
 mandrake chaser seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
@@ -140,9 +140,9 @@ mandrake chaser seed=7
 
 mandrake focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 835 str 90 int 150 wis 180 dex 70 def 155 spd 70 luk 100
-  trees rootbound:8/8 mandrake_wail:7/8 tome_of_echoes:7/8 world_root:1/8
-  hash a656fce1f122d033d0a54a805dba75975cd3cf881a9e295f8bf5ada241abcbca
+  stats hp 852 str 90 int 150 wis 160 dex 70 def 155 spd 70 luk 100
+  trees rootbound:8/8 mandrake_wail:7/8 tome_of_echoes:5/8 world_root:3/8
+  hash eb6fba3d1a44670a6559b629eb2ea646c618678926498d6c97a79085851245ed
 
 shade_hound balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -151,31 +151,31 @@ shade_hound balanced seed=7
   hash 8aed0b24aca6d54ba921e0f4300f511e06b508c851776cd1d0cd4e0b7538fcce
 
 shade_hound focus seed=7
-  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 100 str 145 int 60 wis 70 dex 888 def 70 spd 210 luk 155
-  trees umbral_step:8/8 shadow_harvest:8/8 nimble_feet:7/8 umbral_veil:2/8
-  hash b02aaddcb4d660991037866cfadc46cb267dce7d48c7455f5a6455d36ec54b46
+  end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
+  stats hp 100 str 145 int 60 wis 70 dex 911 def 70 spd 210 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 nimble_feet:2/8 umbral_veil:8/8
+  hash 394c0c98cfe6174097edeb990db45d7483171edc865db4ea0281a1b3d6347d54
 
 shade_hound reckless seed=7
   end=Completed cycle=12 rank=b fights=3/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
-  stats hp 100 str 145 int 60 wis 70 dex 623 def 70 spd 175 luk 155
-  trees umbral_step:8/8 shadow_harvest:8/8 nimble_feet:2/8 umbral_veil:0/8
-  hash fed99ee648b90f2d66d895a98042679821e7ed27ae44a4e4c5b5fc50024804fd
+  stats hp 100 str 145 int 60 wis 70 dex 624 def 70 spd 190 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 nimble_feet:1/8 umbral_veil:4/8
+  hash 055cb87eb618ed39f6680d9729061adbca12f8123a22d5e637e50338774d351d
 
 shade_hound hoarder seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 100 str 145 int 60 wis 70 dex 800 def 70 spd 210 luk 155
-  trees umbral_step:8/8 shadow_harvest:8/8 nimble_feet:7/8 umbral_veil:0/8
-  hash 92e1999473574a01f49df1350f3b71ba6f5e39c602ba70411ea3ea6105613839
+  stats hp 100 str 145 int 60 wis 70 dex 826 def 70 spd 210 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 nimble_feet:2/8 umbral_veil:7/8
+  hash 85edcce0472f9b7707a1c8789196293c2ca5c11dfbb3b9753475f39e30f42d81
 
 shade_hound chaser seed=7
-  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
-  stats hp 100 str 145 int 60 wis 70 dex 912 def 70 spd 225 luk 135
-  trees umbral_step:8/8 shadow_harvest:4/8 nimble_feet:4/8 umbral_veil:8/8
-  hash 6e0d6f4300327cf5f17edd7c50439455cacd9cb234cedb2f90b77088bb54ec0c
+  end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
+  stats hp 115 str 145 int 60 wis 70 dex 865 def 70 spd 210 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 umbral_veil:8/8 survivor:2/8
+  hash 1783b12c8247b417aca8722278f411553eadec352b055f3703f787ff24656ec4
 
 shade_hound focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
-  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 100 str 145 int 75 wis 105 dex 821 def 70 spd 175 luk 155
-  trees umbral_step:8/8 shadow_harvest:8/8 tome_of_echoes:7/8 umbral_veil:0/8
-  hash b6170bd3e69f4bc2c25ec54470b302b08714a34de73f498aa79fa4ff18f0580c
+  end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
+  stats hp 100 str 145 int 75 wis 70 dex 865 def 70 spd 210 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 tome_of_echoes:2/8 umbral_veil:8/8
+  hash 674037f51a71a8d34868d83ebada092029c0d26d319c343e889bd169a983a5e5
