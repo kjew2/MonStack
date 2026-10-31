@@ -1,6 +1,6 @@
-# Idle RNG (working title) - monster trainer
+# MonStack - monster trainer
 
-A fast, systems-driven monster-raising game (the working title is a leftover from the idle game this repo started as, which was removed on 2026-10-30). You train a monster in a 12-cycle run of Drill and Rest taps, fight rank fights, build four skill trees toward rule-breaking chase traits, then watch it climb the gauntlet tower. Finished monsters go into your Vault; runs pay Training Shards, and after each run a vendor offers random talent upgrades to buy with them. New species unlock from achievements. No story, no cutscenes.
+A fast, systems-driven monster-raising game (the repo and code still use the old name Idle RNG, a leftover from the idle game this repo started as, which was removed on 2026-10-30). You train a monster in a 12-cycle run of Drill and Rest taps, fight rank fights, build four skill trees toward rule-breaking chase traits, then watch it climb the gauntlet tower. Finished monsters go into your Vault; runs pay Training Shards, and after each run a vendor offers random talent upgrades to buy with them. New species unlock from achievements. No story, no cutscenes.
 
 The design is `specs/12`; the plan and what is built is `specs/13`. Start with `specs/00-overview.md`: it lists what exists and the contracts every spec follows.
 
