@@ -248,6 +248,18 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Healer_RescuesBeforeADamageSkillListedFirst()
+        {
+            var mend = new CombatSkill { Id = "mend", Kind = SkillKind.Heal, Target = SkillTarget.LowestAlly, Scales = StatIds.Wis, Power = 1, Cooldown = 1 };
+            var s = BattleSim.Start(Rules, Side(Mon("healer", 300, null, x => x.Spd = 500, Strike(), mend), Mon("buddy", 300)), Side(Mon("enemy", 300)));
+            s.Units[1].Hp = s.Units[1].MaxHp * 0.1;
+            var log = new List<FightAction>();
+            var rng = new RngStream(BattleSim.StreamName, 5);
+            while (!log.Any(a => a.Actor == "healer")) BattleSim.Step(Rules, s, rng, log.Add);
+            Assert.That(log.First(a => a.Actor == "healer").Skill?.Id, Is.EqualTo("mend"));
+        }
+
+        [Test]
         public void Passive_AppliesAtStart_AndTriggersFire()
         {
             var tough = new CombatSkill { Id = "tough", Kind = SkillKind.Passive, Target = SkillTarget.Self, Stat = StatIds.Hp, Power = 0.5 };

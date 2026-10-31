@@ -216,17 +216,20 @@ namespace IdleRng.Sim.Combat
             if (!u.Alive) return;
             for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
             var skills = u.Source.Skills;
-            for (int i = 0; i < skills.Count; i++)
-            {
-                var sk = skills[i];
-                if (sk.Kind == SkillKind.Passive || u.Cooldowns[i] > 0 || !Useful(r, s, u, sk)) continue;
-                u.Cooldowns[i] = sk.Cooldown;
-                Use(r, s, u, sk, rng, onAction, triggered: false);
-                if (u.Alive && Has(u, RuleModifiers.EchoCast)
-                    && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield))
-                    Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
-                return;
-            }
+            // Rescue pass first (heal, shield), then everything else; each pass is in list order.
+            for (int pass = 0; pass < 2; pass++)
+                for (int i = 0; i < skills.Count; i++)
+                {
+                    var sk = skills[i];
+                    if ((sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield) != (pass == 0)) continue;
+                    if (sk.Kind == SkillKind.Passive || u.Cooldowns[i] > 0 || !Useful(r, s, u, sk)) continue;
+                    u.Cooldowns[i] = sk.Cooldown;
+                    Use(r, s, u, sk, rng, onAction, triggered: false);
+                    if (u.Alive && Has(u, RuleModifiers.EchoCast)
+                        && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield))
+                        Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
+                    return;
+                }
             BasicAttack(r, s, u, rng, onAction);
         }
 
@@ -241,7 +244,7 @@ namespace IdleRng.Sim.Combat
             Hit(r, s, u, target, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), u.Source.Element, null, false, rng, onAction);
         }
 
-        /// <summary>Default AI (specs/16 section 5.2): the first ready skill, in list order, that would do something.</summary>
+        /// <summary>Default AI (specs/16 section 5.2): the first ready skill that would do something: heal and shield first, then the rest, each in list order.</summary>
         static bool Useful(FightRules r, FightState s, FightUnit u, CombatSkill sk)
         {
             switch (sk.Kind)
