@@ -140,5 +140,5 @@ Hold back loans, wagers, typed SP, temperament and storms until the package show
    - **(agent)** What counts: the core rolls are not counted (drill tier and gain, fight RNG, milestone draft draws). A source is a new system whose random draw makes runs differ.
    - The package uses **one**: node hints (where a hint lands). Challenge fights reuse the fight RNG; interest has no randomness.
    - **The second slot stays free** until the package is measured. The candidates are the cycle-0 boon (a random set of offers) and neglect bounties with random growth.
-4. **Overwrite:** **keep** "points in an overwritten tree are lost"; no respec (kj). Later the same day kj agreed one exception (`specs/22` section 8.6): overwriting a tree with one of its listed neighbours refunds half its points (lateral swap).
+4. **Overwrite:** **keep** "points in an overwritten tree are lost"; no respec (kj). **Amended later the same day** (kj, `specs/22` section 8.6): every overwrite refunds half the points spent in the tree (`TREE_REFUND`). Still no respec.
 5. **Visible odds:** **yes** (kj). Bust chance, hint discounts and interest are shown on the buttons.

@@ -279,5 +279,8 @@ namespace IdleRng.Sim.Training
     {
         public string Placed { get; set; }
         public List<string> Removed { get; set; } = new List<string>();
+
+        /// <summary>SP refunded by the trees that left (TREE_REFUND of what was spent in each, rounded down).</summary>
+        public int Refunded { get; set; }
     }
 }
