@@ -1068,7 +1068,7 @@
     },
     {
       "key": "tip.ai.heal",
-      "text": "It or an ally is below {AI_HEAL_BELOW:pct} of max HP"
+      "text": "It or an ally is missing at least the HP it restores, so none is wasted (a heal too big for that: at or below {AI_HEAL_BELOW:pct} of max HP)"
     },
     {
       "key": "tip.ai.shield",

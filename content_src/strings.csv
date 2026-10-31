@@ -265,7 +265,7 @@ tip.cooldown.n,At most once every {cooldown} of its own actions
 tip.cooldown.triggered,None: fires every time
 tip.stacks.triggered,"Each trigger adds a stack, up to {EFFECT_STACK_CAP}; at the cap it renews the stack with the least time left instead"
 tip.ai.damage,An enemy is alive
-tip.ai.heal,It or an ally is below {AI_HEAL_BELOW:pct} of max HP
+tip.ai.heal,"It or an ally is missing at least the HP it restores, so none is wasted (a heal too big for that: at or below {AI_HEAL_BELOW:pct} of max HP)"
 tip.ai.shield,It or an ally is below {AI_SHIELD_BELOW:pct} of max HP
 tip.ai.taunt,It is not taunting already
 tip.ai.buff,The target does not have this buff

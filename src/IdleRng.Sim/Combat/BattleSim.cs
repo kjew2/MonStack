@@ -374,13 +374,22 @@ namespace IdleRng.Sim.Combat
             Hit(r, s, u, target, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), u.Source.Element, null, false, rng, onAction);
         }
 
-        /// <summary>Default AI (specs/16 section 5.2): the first ready skill that would do something: heal and shield first, then the rest, each in list order.</summary>
+        /// <summary>
+        /// Default AI (specs/16 section 5.2): the first ready skill that would do something: heal and shield first, then the rest,
+        /// each in list order. A heal waits until a target is missing the whole amount it restores (HealNeed).
+        /// </summary>
         static bool Useful(FightRules r, FightState s, FightUnit u, CombatSkill sk)
         {
             switch (sk.Kind)
             {
                 case SkillKind.Damage: return AnyEnemy(s, u);
-                case SkillKind.Heal: return AnyAllyBelow(s, u, r.AiHealBelow);
+                case SkillKind.Heal:
+                {
+                    double amt = Scaled(r, u, sk) * HealMult(r, s);
+                    if (sk.Target != SkillTarget.LowestAlly && sk.Target != SkillTarget.AllAllies) return WantsHeal(r, u, amt);
+                    foreach (var a in s.Units) if (a.Side == u.Side && WantsHeal(r, a, amt)) return true;
+                    return false;
+                }
                 case SkillKind.Shield: return AnyAllyBelow(s, u, r.AiShieldBelow);
                 case SkillKind.Taunt: return u.TauntTicks == 0;
                 case SkillKind.Buff:
@@ -424,7 +433,7 @@ namespace IdleRng.Sim.Combat
                 case SkillKind.Heal:
                 {
                     double amt = Scaled(r, src, sk) * HealMult(r, s), total = 0;
-                    var targets = Allies(s, src, sk.Target);
+                    var targets = sk.Target == SkillTarget.LowestAlly ? HealTarget(r, s, src, amt) : Allies(s, src, sk.Target);
                     double shield = 0;
                     foreach (var t in targets) total += Heal(r, t, amt, ref shield);
                     src.Tally.HealingDone += total;
@@ -642,6 +651,33 @@ namespace IdleRng.Sim.Combat
             foreach (var a in s.Units)
                 if (a.Side == u.Side && a.Alive && (best == null || a.Hp / a.MaxHp < best.Hp / best.MaxHp)) best = a;
             return best;
+        }
+
+        /// <summary>
+        /// The HP a heal of <paramref name="amount"/> should find missing before the AI casts it on <paramref name="t"/> (specs/16
+        /// section 5.2): the whole amount, so none of it is wasted; for a heal too big to land in full (above (1 - AI_HEAL_BELOW) of
+        /// max HP), that much instead, so it is cast once the target is below AI_HEAL_BELOW.
+        /// </summary>
+        static double HealNeed(FightRules r, FightUnit t, double amount) => Math.Min(amount, (1 - r.AiHealBelow) * t.MaxHp);
+
+        /// <summary>True when <paramref name="t"/> is alive, hurt and missing at least HealNeed.</summary>
+        static bool WantsHeal(FightRules r, FightUnit t, double amount)
+        {
+            double missing = t.MaxHp - t.Hp;
+            return t.Alive && missing > 0 && missing >= HealNeed(r, t, amount);
+        }
+
+        /// <summary>
+        /// A lowest-ally heal's target: the living ally with the lowest HP fraction among those that WantsHeal (lowest slot on a tie),
+        /// else the lowest ally (a triggered heal fires whether or not it fits).
+        /// </summary>
+        static List<FightUnit> HealTarget(FightRules r, FightState s, FightUnit src, double amount)
+        {
+            FightUnit best = null;
+            foreach (var a in s.Units)
+                if (a.Side == src.Side && WantsHeal(r, a, amount) && (best == null || a.Hp / a.MaxHp < best.Hp / best.MaxHp)) best = a;
+            if (best != null) return new List<FightUnit>(1) { best };
+            return Allies(s, src, SkillTarget.LowestAlly);
         }
 
         static bool AnyAllyBelow(FightState s, FightUnit u, double frac)

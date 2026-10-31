@@ -1,8 +1,8 @@
-# gauntlet vectors, hash v1 content=3.10/a4f0eba3
+# gauntlet vectors, hash v1 content=3.11/6798e83f
 
 slime focus seed=7 rank=s
   floor=58 cleared=False killer=golem title=title.professional_punching_bag
-  hash 24d9420974dc548481693a8b02c4a688cc5d187770ced00ffda4df321610ca4d
+  hash 46eddee1330c86088c55f612a54f5c68afd9335300372079ddd2cfa9b04cd4d6
 
 drake focus seed=7 rank=b
   floor=31 cleared=False killer=slimeling title=title.respectable_brawler

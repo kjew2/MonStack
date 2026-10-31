@@ -75,12 +75,12 @@ A "turn" for durations is `BATTLE_GAUGE / SPD_REF` ticks (10 ticks, one action a
 
 Both sides use the same AI, so PvP stays symmetric. On its action a unit fires its `OnAction` triggers, ticks its cooldowns down by one, then uses the first skill that is ready and would do something. Rescue skills (heal, shield) are considered first, in list order, so a hurt ally is not left waiting behind a damage skill; then every other skill, in list order:
 
-- damage: an enemy is alive; heal: an ally is below `AI_HEAL_BELOW` of max HP; shield: below `AI_SHIELD_BELOW`; taunt: not already taunting; buff: the target lacks this skill's effect; debuff: a living enemy lacks it.
+- damage: an enemy is alive; heal: a living target is missing at least the HP the heal would restore now (`Scales x Power`, after the tower's heal cut), so none of it is wasted (kj on issue #94, 2026-10-31: use it once it can land in full, to make the most of the cooldown); a heal too big for that (more than `1 - AI_HEAL_BELOW` of the target's max HP) waits until the target is at or below `AI_HEAL_BELOW` of max HP instead (`missing >= min(heal, (1 - AI_HEAL_BELOW) x max HP)`, and the target is hurt). The "would the ally die before my next action" case is not considered. The targets checked are the skill's own (self for a self heal, every living ally for a lowest-ally or all-allies heal); shield: an ally is below `AI_SHIELD_BELOW`; taunt: not already taunting; buff: the target lacks this skill's effect; debuff: a living enemy lacks it.
 - A skill used with `Cooldown` N is ready again on the Nth action after it (cooldown 0 or 1: every action).
 
 Otherwise it fires `OnBasicAttack` triggers and makes a basic attack: `BASIC_ATTACK_POWER x max(STR, INT)`, magical when INT is higher.
 
-**Targeting:** a single-target enemy action hits a taunting enemy (lowest slot) if there is one, else a random living enemy (one draw; no draw when only one is alive). A single-target debuff (an action or a trigger) first narrows the choice to the living enemies that lack its effect, when any does, and applies the same rule among them: so it skips a taunter that already has it (issue #83, kj 2026-10-31). Placeholder until gambits.
+**Targeting:** a single-target enemy action hits a taunting enemy (lowest slot) if there is one, else a random living enemy (one draw; no draw when only one is alive). A lowest-ally heal goes to the ally with the lowest HP fraction among those missing its full amount (the rule above; lowest slot on a tie), else, when none is (a triggered heal), to the ally with the lowest HP fraction. A single-target debuff (an action or a trigger) first narrows the choice to the living enemies that lack its effect, when any does, and applies the same rule among them: so it skips a taunter that already has it (issue #83, kj 2026-10-31). Placeholder until gambits.
 
 ### 5.3 A hit
 
