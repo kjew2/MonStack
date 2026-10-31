@@ -18,8 +18,8 @@ namespace IdleRng.Bots.Training
         /// <summary>Prerequisite trees with the nodes the conditions need (tree_maxed: all; node_owned: up to that node).</summary>
         public List<(TreeDef Tree, int Nodes)> Prereqs { get; } = new List<(TreeDef, int)>();
 
-        /// <summary>Stats still below what a condition needs, with the value needed, in condition order. In a legacy run a drafted
-        /// prerequisite that is not slotted yet adds its offer stat up to the next milestone that would draft it.</summary>
+        /// <summary>Stats still below what a condition needs, with the value needed, in condition order. A drafted prerequisite
+        /// that is not slotted yet adds its offer stat up to the next milestone that would draft it.</summary>
         public List<(string Stat, double Value)> StatGoals { get; } = new List<(string, double)>();
 
         /// <summary>SP still needed: unbought prerequisite nodes plus the chase tree's unbought nodes.</summary>
@@ -89,7 +89,7 @@ namespace IdleRng.Bots.Training
 
         /// <summary>
         /// Whether a prerequisite tree that is not slotted can still be had: it is pending in an offer; a book tree whose book
-        /// the run still holds; or a generic tree a milestone not yet crossed could draft (in a legacy run, its offer stat goes into StatGoals).
+        /// the run still holds; or a generic tree a milestone not yet crossed would draft (its offer stat goes into StatGoals).
         /// A native tree that left its slot cannot come back.
         /// </summary>
         static bool Obtainable(ContentDb c, RunState s, TreeDef p, ChaseTarget x)
@@ -100,8 +100,8 @@ namespace IdleRng.Bots.Training
                 case TreeKind.Book: return s.Books.Any(b => c.SkillBooks[b].TreeId == p.Id);
                 case TreeKind.Generic:
                 {
-                    // Since issue #121 any stat's milestone may draft it (by luck, so no stat goal); a legacy run drafts by offer stat.
-                    bool byStat = s.Mods.LegacyDrafts && p.OfferStat != null;
+                    // Its own stat's milestone always offers it (issue #121); an any-stat tree may come from any stat's milestone.
+                    bool byStat = p.OfferStat != null;
                     var stats = byStat ? new[] { p.OfferStat } : StatIds.Trained;
                     foreach (int m in c.StatMilestones)
                     {

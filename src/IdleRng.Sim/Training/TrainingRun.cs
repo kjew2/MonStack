@@ -245,10 +245,12 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>
-        /// Second Look (specs/18 section 3): redraw the oldest offer, a milestone draft, once per Mods.DraftRerolls. The new trees
-        /// are generic trees at or below the draft's threshold for <b>any</b> stat, not slotted and not in a pending offer (so none
-        /// it offered), by the same partial shuffle on the draft stream, and rolled afresh (specs/15 section 4.1) unless the run
-        /// is a legacy one. Refused when no such tree is left (<see cref="CanRerollDraft"/>).
+        /// Second Look (specs/18 section 3): redraw the oldest offer, a milestone draft, once per Mods.DraftRerolls. The crossing
+        /// stat's own tree, when the offer holds it (its first card), stays (kj, 2026-10-31, issue #121); the other trees are
+        /// redrawn from the generic trees at or below the draft's threshold for <b>any</b> stat, not slotted and not in a pending
+        /// offer (so none it offered), by the same partial shuffle on the draft stream, and every tree is rolled afresh (specs/15
+        /// section 4.1). A legacy run redraws every tree and rolls none. Refused when no new tree can be drawn
+        /// (<see cref="CanRerollDraft"/>).
         /// </summary>
         public static void RerollDraft(ContentDb c, RunState s)
         {
@@ -256,8 +258,9 @@ namespace IdleRng.Sim.Training
             var offer = s.Offers[0];
             if (offer.Source != OfferSource.Milestone) throw new InvalidOperationException("only an Awakening (a milestone tree offer) can be rerolled");
             if (s.RerollsUsed >= s.Mods.DraftRerolls) throw new InvalidOperationException("no draft rerolls left this run");
-            var trees = DraftPicks(c, s, null, offer.Threshold);
-            if (trees.Count == 0) throw new InvalidOperationException("no other tree can be drawn for this Awakening");
+            string keep = !s.Mods.LegacyDrafts && offer.Trees.Count > 0 && c.Trees[offer.Trees[0]].OfferStat == offer.Stat ? offer.Trees[0] : null;   // as CanRerollDraft
+            var trees = s.Mods.LegacyDrafts ? DraftPicks(c, s, null, offer.Threshold) : AwakeningPicks(c, s, offer.Stat, offer.Threshold, keep);
+            if (trees.Count == (keep == null ? 0 : 1)) throw new InvalidOperationException("no other tree can be drawn for this Awakening");
             offer.Trees = trees;
             offer.Rolls = Rolls(c, s, trees);
             s.RerollsUsed++;
@@ -269,6 +272,9 @@ namespace IdleRng.Sim.Training
         public static bool CanRerollDraft(ContentDb c, RunState s)
         {
             if (s.Offers.Count == 0 || s.Offers[0].Source != OfferSource.Milestone || s.RerollsUsed >= s.Mods.DraftRerolls) return false;
+            var o = s.Offers[0];
+            bool keeps = !s.Mods.LegacyDrafts && o.Trees.Count > 0 && c.Trees[o.Trees[0]].OfferStat == o.Stat;
+            if (keeps && c.Constants.DraftSize <= 1) return false;   // the kept tree fills the whole offer
             foreach (var t in c.TreeList)
                 if (DraftEligible(s, t, null, s.Offers[0].Threshold)) return true;
             return false;
@@ -587,14 +593,14 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>
-        /// A milestone draft, an Awakening (specs/15 section 4): up to DRAFT_SIZE distinct generic trees for any stat (kj,
-        /// 2026-10-31, issue #121) at or below this threshold that are not slotted or already offered, picked by partial shuffle
-        /// on the draft stream (one draw per pick), then each rolled (section 4.1). A legacy run (RunModifiers.LegacyDrafts) drafts
+        /// A milestone draft, an Awakening (specs/15 section 4): up to DRAFT_SIZE distinct generic trees at or below this threshold
+        /// that are not slotted or already offered (<see cref="AwakeningPicks"/>: the crossing stat's own tree first, the rest for
+        /// any stat; kj, 2026-10-31, issue #121), then each rolled (section 4.1). A legacy run (RunModifiers.LegacyDrafts) drafts
         /// as it was played: only trees for <paramref name="stat"/> or any stat, not rolled. No eligible tree, no offer.
         /// </summary>
         static void Draft(ContentDb c, RunState s, string stat, int threshold)
         {
-            var trees = DraftPicks(c, s, s.Mods.LegacyDrafts ? stat : null, threshold);
+            var trees = s.Mods.LegacyDrafts ? DraftPicks(c, s, stat, threshold) : AwakeningPicks(c, s, stat, threshold, null);
             if (trees.Count == 0) return;
             s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = stat, Threshold = threshold, Trees = trees, Rolls = Rolls(c, s, trees) });
         }
@@ -658,15 +664,33 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>
-        /// A draft's picks: eligible generic trees (<see cref="DraftEligible"/>; <paramref name="stat"/> null = any stat), partial
-        /// shuffle on the draft stream.
+        /// A legacy draft's picks: eligible generic trees (<see cref="DraftEligible"/>; <paramref name="stat"/> null = any stat),
+        /// partial shuffle on the draft stream.
         /// </summary>
-        static List<string> DraftPicks(ContentDb c, RunState s, string stat, int threshold)
+        static List<string> DraftPicks(ContentDb c, RunState s, string stat, int threshold) =>
+            Shuffle(c, s, t => DraftEligible(s, t, stat, threshold), c.Constants.DraftSize);
+
+        /// <summary>
+        /// An Awakening's picks (specs/15 section 4): first the crossing stat's own tree, <paramref name="keep"/> when given (a
+        /// reroll keeps it), else one eligible tree whose offer_stat is <paramref name="stat"/> (a partial shuffle of one, so one
+        /// draw; none when the stat's tree is slotted or offered); then the other cards from the eligible trees of any stat, by
+        /// partial shuffle on the draft stream, up to DRAFT_SIZE trees in all.
+        /// </summary>
+        static List<string> AwakeningPicks(ContentDb c, RunState s, string stat, int threshold, string keep)
+        {
+            var picks = keep != null ? new List<string> { keep }
+                : Shuffle(c, s, t => DraftEligible(s, t, null, threshold) && t.OfferStat == stat, Math.Min(1, c.Constants.DraftSize));
+            picks.AddRange(Shuffle(c, s, t => DraftEligible(s, t, null, threshold) && !picks.Contains(t.Id), c.Constants.DraftSize - picks.Count));
+            return picks;
+        }
+
+        /// <summary>Up to <paramref name="size"/> trees from those <paramref name="eligible"/> (content order), by partial shuffle on the draft stream (one draw per pick).</summary>
+        static List<string> Shuffle(ContentDb c, RunState s, Func<TreeDef, bool> eligible, int size)
         {
             var pool = new List<string>();
             foreach (var t in c.TreeList)
-                if (DraftEligible(s, t, stat, threshold)) pool.Add(t.Id);
-            int n = Math.Min(c.Constants.DraftSize, pool.Count);
+                if (eligible(t)) pool.Add(t.Id);
+            int n = Math.Max(0, Math.Min(size, pool.Count));
             for (int i = 0; i < n; i++)
             {
                 int j = i + Math.Min(pool.Count - i - 1, (int)(s.Draft.NextDouble() * (pool.Count - i)));

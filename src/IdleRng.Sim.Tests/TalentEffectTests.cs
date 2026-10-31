@@ -311,9 +311,10 @@ namespace IdleRng.Sim.Tests
             Assert.That(TrainingRun.CanRerollDraft(Db, s));
             TrainingRun.RerollDraft(Db, s);
             var after = s.Offers[0].Trees;
-            Assert.That(after, Is.Not.Empty);
-            Assert.That(after.Count, Is.EqualTo(Math.Min(K.DraftSize, pool - before.Count)));
-            Assert.That(after.Intersect(before), Is.Empty, "a reroll draws new trees");
+            Assert.That(Db.Trees[before[0]].OfferStat, Is.EqualTo(StatIds.Int), "the Awakening's first card is INT's own tree (issue #121)");
+            Assert.That(after[0], Is.EqualTo(before[0]), "a reroll keeps the crossing stat's own tree");
+            Assert.That(after.Count, Is.EqualTo(1 + Math.Min(K.DraftSize - 1, pool - before.Count)));
+            Assert.That(after.Skip(1).Intersect(before), Is.Empty, "a reroll draws new trees for the other cards");
             Assert.That(s.Offers[0].Rolls.Count, Is.EqualTo(after.Count), "the new trees are rolled too (specs/15 section 4.1)");
             Assert.That(s.Offers[0].Source, Is.EqualTo(OfferSource.Milestone));
             Assert.That(s.RerollsUsed, Is.EqualTo(1));
