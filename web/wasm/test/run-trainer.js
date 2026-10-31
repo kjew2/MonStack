@@ -96,17 +96,23 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/Cycle 1\/12/.test(await text('[data-id=cycle]')), 'HUD shows cycle 1/12');
   check(/Rank E/.test(await text('[data-id=rank]')), 'starts at rank E');
   check((await page.locator('[data-act^="drill-"]').count()) === 8, 'eight stats can be drilled');
-  // Drill odds as a chip row (issue #115): one chip each for fail, success, super, injury and the drill's cost
+  // Drill odds as one row of cells (issue #115): one each for fail, success, super, injury and the drill's energy cost, on one line
   const odds0 = await page.$$eval('[data-id=odds] .ochip', (els) => els.map((e) => e.textContent));
-  check(odds0.length >= 5 && ['Fail', 'Success', 'Super', 'Injury'].every((w, i) => new RegExp('^' + w + ' \\d+%$').test(odds0[i])) && /^Cost \d+(\.\d)? energy$/.test(odds0[4]),
+  check(odds0.length >= 5 && ['Fail', 'Success', 'Super', 'Injury'].every((w, i) => new RegExp('^' + w + ' \\d+%$').test(odds0[i])) && /^Energy -\d+(\.\d)?$/.test(odds0[4]),
     'drill odds shown as chips: ' + odds0.join(' | '));
+  const oddsTops = await page.$$eval('[data-id=odds] .ochip', (els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))).size);
+  check(oddsTops === 1, 'the odds fit on one line');
+  // The stat list fits a phone screen: all eight rows (and the result line above them) in under 480px
+  const listH = await page.evaluate(() => document.querySelector('.card.stats').getBoundingClientRect().height);
+  check(listH < 480, 'the eight stat rows fit in ' + Math.round(listH) + 'px');
+  check(/Drill a stat/.test(await text('[data-id=result-hint]')), 'before the first action, the result line explains Drill and Rest');
   // Stat gauges (issue #115): each bar takes its stat's colour and has a tick per milestone, none reached at the start
   const statGauges = await page.evaluate(() => [...document.querySelectorAll('.stat')].map((row) => ({
     fill: getComputedStyle(row.querySelector('.bar.gauge .fill')).backgroundColor,
     st: getComputedStyle(row).getPropertyValue('--st').trim(),
     ticks: [...row.querySelectorAll('.bar.gauge .tick')].map((t) => +t.dataset.at),
     hit: row.querySelectorAll('.bar.gauge .tick.hit').length,
-    text: /\d/.test(row.querySelector('.meta small').textContent.replace(/growth x[\d.]+/, '')),
+    text: /\d/.test(row.querySelector('.meta small').textContent.replace(/^x[\d.]+$/, '')),
   })));
   check(statGauges.length === 8 && new Set(statGauges.map((g) => g.fill)).size === 8 && statGauges.every((g) => g.st !== ''), 'each stat gauge is filled in its own stat colour: ' + statGauges.map((g) => g.fill).join(' '));
   check(statGauges.every((g) => g.ticks.length === 4 && g.ticks.every((v, i) => i === 0 || v > g.ticks[i - 1]) && g.hit === 0 && !g.text),
@@ -511,7 +517,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('drill-str').waitFor();
   check((await readAccount()).Account.Vendor === null, 'starting the next run clears the vendor');
   const frugal = afterBuy.Account.Talents.frugal_drills || 0;
-  if (frugal > 0) check(new RegExp('Cost ' + (20 - frugal) + ' energy').test(await text('[data-id=odds]')), 'Frugal Drills cut the next run\'s drill cost: ' + (await text('[data-id=odds]')).slice(-26));
+  const costCell = () => page.locator('[data-id=odds] .o-cost').textContent();
+  if (frugal > 0) check((await costCell()) === 'Energy -' + (20 - frugal), 'Frugal Drills cut the next run\'s drill cost: ' + (await costCell()));
   await act('tab-log').click();
   await act('abandon').click();
   await act('abandon-no').click();
