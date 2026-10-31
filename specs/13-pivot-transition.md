@@ -90,6 +90,7 @@ Triage applied:
 | #38 CI workflow | P1 |
 | #6, #10, #11 iOS / Unity, #23 Unity pending-pull flow, #52 live ops | P2 |
 | #29 remote config | P2 (unchanged) |
+| Second pass (kj, 2026-10-31) | Closed as idle-only: #10, #11 (Unity, TestFlight), #18, #22, #23, #24 (gacha ledger, pulls, gem sources), #32 (idle replay fixtures); #33 folded into #25. Rewritten for MonStack, Steam and web first: goals #45-#53, #77, #15 and its children #19, #21, #25-#29; #6 is now a P2 mobile build of the web game |
 
 ## 6. Phases
 
