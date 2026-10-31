@@ -33,6 +33,22 @@ step() { printf '\n== %s\n' "$1"; }
 step "Content: content_src builds to Content/ with no drift"
 python3 tools/content_build.py --check
 
+step "Content: builder tests"
+python3 tools/test_content_build.py >/dev/null
+
+# E090/E091 (specs/05 section 6): no id removed without a MAJOR bump, the version never goes backwards. The baseline is the
+# Content/ at the merge base with origin/main, so a branch is judged against what main already shipped. Locally a missing
+# origin/main skips this; in CI (CI set) it is an error, because CI checks out the full history.
+step "Content: ids compatible with main (E090, E091)"
+if BASE="$(git merge-base HEAD origin/main 2>/dev/null)"; then
+  python3 tools/content_build.py --check --baseline-ref "$BASE"
+elif [ -n "${CI:-}" ] && [ "${CI:-}" != "false" ]; then
+  echo "CI is set but origin/main is not available to compare content ids against (the checkout needs fetch-depth: 0)." >&2
+  exit 1
+else
+  echo "origin/main not found: skipped the id compatibility check. Run 'git fetch origin main' first."
+fi
+
 if [ "$DOTNET" -eq 0 ]; then
   printf '\nSkipped .NET checks (--no-dotnet). Not a full pass.\n'
   exit 0

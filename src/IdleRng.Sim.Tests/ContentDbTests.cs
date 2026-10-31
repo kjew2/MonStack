@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("3.2"));
+            Assert.That(db.Version, Is.EqualTo("3.3"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -93,7 +93,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void IsCompatibleWith()
         {
-            var db = TestContent.Db;   // 3.1
+            var db = TestContent.Db;   // 3.3
             Assert.That(db.IsCompatibleWith("3.0"), Is.True);
             Assert.That(db.IsCompatibleWith("3.1"), Is.True);
             Assert.That(db.IsCompatibleWith("2.7"), Is.False);

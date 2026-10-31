@@ -916,7 +916,7 @@
     },
     {
       "key": "tip.effect.debuff",
-      "text": "Lowers a stat while it lasts, by a share of its base value. A stat never drops below 10% of its base."
+      "text": "Lowers a stat while it lasts, by a share of its base value. A stat never drops below {STAT_FLOOR_FRAC:pct} of its base."
     },
     {
       "key": "tip.effect.passive",

@@ -80,7 +80,7 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
 ```
 
-- The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. The stored hash must match the replayed run, otherwise the save is invalid (it no longer replays, for example after a rules change).
+- The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. If the replay fails or the stored hash differs (for example after a rules change), the run is dropped, its books return to the inventory and the rest of the account loads with a notice (`specs/06` section 5).
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
 - Schema migrations for this lineage start at v1 when a field changes.

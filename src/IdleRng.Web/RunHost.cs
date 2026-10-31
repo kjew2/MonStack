@@ -208,11 +208,14 @@ namespace IdleRng.Web
         /// <summary>Saved form (AccountSave text: a header line, then JSON). The active run is its replay recipe.</summary>
         public string SaveAccount() => _acct == null ? "null" : Encoding.UTF8.GetString(AccountSave.Encode(_acct));
 
-        /// <summary>Rebuild the account from its save. Throws (returned as {"error"}) when the save is damaged or no longer replays.</summary>
+        /// <summary>
+        /// Rebuild the account from its save. Throws (returned as {"error"}) when the save is damaged or from a newer schema.
+        /// A run in progress that no longer replays is dropped instead; the view then carries a <c>notice</c> sentence (specs/06 section 5).
+        /// </summary>
         public string LoadAccount(string saveText)
         {
-            _acct = AccountSave.Decode(_db, Encoding.UTF8.GetBytes(saveText));
-            return AccountView();
+            _acct = AccountSave.Decode(_db, Encoding.UTF8.GetBytes(saveText), out var notice);
+            return AccountView(notice);
         }
 
         /// <summary>Account commands. Invalid ones return {ok:false,reason} and leave the account unchanged.</summary>
@@ -291,7 +294,7 @@ namespace IdleRng.Web
         }
 
         /// <summary>The account without the active run: shards, books, talents (with the next rank's cost), the Vault, the bonuses runs start with.</summary>
-        public string AccountView()
+        public string AccountView(string notice = null)
         {
             if (_acct == null) return "null";
             var ac = _acct;
@@ -317,6 +320,7 @@ namespace IdleRng.Web
             w.Key("vault").Arr();
             foreach (var e in ac.Vault) Entry(w, e);
             w.EndArr();
+            if (notice != null) w.P("notice", notice);
             return w.EndObj().ToString();
         }
 

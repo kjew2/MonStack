@@ -36,7 +36,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 | Group | Constants | Spec |
 |---|---|---|
-| Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*` | `16` section 7 |
+| Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*`, `STAT_FLOOR_FRAC` | `16` section 7 |
 | Training run | `RUN_CYCLES`, `RUN_AP`, `RUN_ENERGY_*`, `DRILL_*`, `REST_ENERGY`, `INJURY_*`, `STAT_MAX`, `FIGHT_EVERY` | `14` section 8 |
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, `MON_ECHO_POWER` | `15` section 9 |
 | Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` | `18` section 5 |
@@ -75,6 +75,7 @@ content_src/*.csv            the content source of truth (specs/05)
 Content/*.json               built by tools/content_build.py, committed, checked for drift
 golden/                      generated reference outputs (bot CLI only)
 tools/content_build.py       CSV -> JSON converter and validator
+tools/test_content_build.py  tests for the converter's previous-build rules (E090, E091)
 tools/gacha_model.py         exact pity math for the species gacha (specs/01)
 src/IdleRng.Sim/             pure sim: Combat, Training, Account, Gauntlet, Content, Rng, Replay (hashing)
 src/IdleRng.Runtime/         save format, stores, account save

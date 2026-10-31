@@ -227,7 +227,7 @@ tip.effect.heal,"Restores HP, never above max HP."
 tip.effect.shield,Absorbs damage before HP while it lasts. A new shield replaces a smaller one; shields do not add up.
 tip.effect.taunt,Single-target enemy actions must target this unit while it lasts.
 tip.effect.buff,"Raises a stat while it lasts: a trained stat by a share of its base value, crit chance and crit damage by the amount itself."
-tip.effect.debuff,"Lowers a stat while it lasts, by a share of its base value. A stat never drops below 10% of its base."
+tip.effect.debuff,"Lowers a stat while it lasts, by a share of its base value. A stat never drops below {STAT_FLOOR_FRAC:pct} of its base."
 tip.effect.passive,"Raises a stat for the whole fight: a trained stat by a share of its base value (max HP raises current HP too), crit chance and crit damage by the amount itself."
 tip.amount.scaled,{power:pct} of {scales}
 tip.amount.raise,+{power:pct} {stat}

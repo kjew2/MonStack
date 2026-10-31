@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace IdleRng.Sim.Content
 {
-    /// <summary>Scalar constants (specs/05 section 9.2). Property name = PascalCase of the content key.</summary>
+    /// <summary>Scalar constants (specs/00 section 2; the constants table, specs/05 section 2). Property name = PascalCase of the content key.</summary>
     public sealed class Constants
     {
         public double SpdRef { get; internal set; }              // SPD_REF: with BATTLE_GAUGE, sets a turn
@@ -29,6 +29,7 @@ namespace IdleRng.Sim.Content
         public double MonSpdMin { get; internal set; }           // MON_SPD_MIN
         public int MonTimeLimitTicks { get; internal set; }      // MON_TIME_LIMIT_TICKS
         public int MonSideSize { get; internal set; }            // MON_SIDE_SIZE
+        public double StatFloorFrac { get; internal set; }       // STAT_FLOOR_FRAC: a trained stat never drops below this x base
 
         // Training run (specs/14 section 8). Placeholders.
         public int RunCycles { get; internal set; }              // RUN_CYCLES
