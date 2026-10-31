@@ -71,6 +71,20 @@ namespace IdleRng.Bots.Balance
                       c.Killers.Count == 0 ? "-" : string.Join(" ", c.Killers.Take(3).Select(k => $"{k.Key} {Pct(c.N == 0 ? 0 : (double)k.Count / c.N)}%")));
             t.AppendTo(sb);
 
+            if (r.GauntletBossEvery > 0)
+            {
+                sb.Append($"\n## Gauntlet stall floors: % of the runs that did not clear, by floor reached mod {r.GauntletBossEvery} (x0 = boss floor; issue #99)\n");
+                t = new Table(2);
+                t.Row(new[] { "species", "policy", "stalls" }.Concat(Enumerable.Range(0, r.GauntletBossEvery).Select(i => "x" + i.ToString(Inv))));
+                foreach (var c in r.Cells)
+                {
+                    int stalls = c.N - c.GauntletCleared;
+                    t.Row(new[] { c.Species, c.Policy, stalls.ToString(Inv) }
+                        .Concat(c.GauntletStallMod.Select(k => Pct(stalls == 0 ? 0 : (double)k / stalls))));
+                }
+                t.AppendTo(sb);
+            }
+
             ChaseTable(sb, "\n## Chase capstones: % of runs ending with the capstone bought and its cycle; % of runs where the tree unlocked and where each condition held at some point (\"any\": either tree)\n", r.Cells);
 
             if (r.BookCells.Count > 0)
@@ -209,6 +223,9 @@ namespace IdleRng.Bots.Balance
                 j.Key("gauntletFloor"); Dist(j, c.GauntletFloor);
                 j.Key("gauntletCleared").Num(c.GauntletCleared).Key("gauntletClearRate").Num(c.GauntletClearRate);
                 j.Key("gauntletBossStalls").Num(c.GauntletBossStalls).Key("gauntletBossStallRate").Num(c.GauntletBossStallRate);
+                j.Key("gauntletStallMod").Open('[');
+                foreach (var k in c.GauntletStallMod) j.Num(k);
+                j.Close(']');
                 j.Key("killers").Open('{');
                 foreach (var k in c.Killers) j.Key(k.Key).Num(k.Count);
                 j.Close('}');
@@ -308,7 +325,8 @@ namespace IdleRng.Bots.Balance
         /// Long form, one metric per row: section,species,policy,team,metric,n,mean,sd,min,p10,p50,p90,max. Rates and grade shares
         /// put the fraction in mean and leave the spread columns empty. Each sanity check gives two rows in section "check":
         /// metric = its id (mean = the measured value, empty when skipped) and id + "_warn" (mean 1 on WARN, 0 on PASS, empty
-        /// when skipped); n is what the check looked at. The book canary's grades are section "books". Section "chase" (and
+        /// when skipped); n is what the check looked at. The book canary's grades are section "books". The gauntlet's stall_mod_i
+        /// rows give the share of the runs that did not clear (n) whose floor reached mod GAUNTLET_BOSS_EVERY is i. Section "chase" (and
         /// "books_chase" for the canary) holds capstone_rate and capstone_cycle, then per chase tree &lt;tree&gt;_unlock_rate,
         /// &lt;tree&gt;_capstone_rate, &lt;tree&gt;_capstone_cycle and per condition &lt;condition id&gt;_held_rate.
         /// </summary>
@@ -330,6 +348,9 @@ namespace IdleRng.Bots.Balance
                 Row(sb, "gauntlet", c.Species, c.Policy, "", "floor", c.GauntletFloor);
                 Rate(sb, "gauntlet", c.Species, c.Policy, "", "clear_rate", c.N, c.GauntletClearRate);
                 Rate(sb, "gauntlet", c.Species, c.Policy, "", "boss_stall_rate", c.N - c.GauntletCleared, c.GauntletBossStallRate);
+                for (int i = 0; i < c.GauntletStallMod.Length; i++)
+                    Rate(sb, "gauntlet", c.Species, c.Policy, "", "stall_mod_" + i.ToString(Inv), c.N - c.GauntletCleared,
+                         c.N == c.GauntletCleared ? 0 : (double)c.GauntletStallMod[i] / (c.N - c.GauntletCleared));
                 foreach (var k in c.Killers) Rate(sb, "gauntlet", c.Species, c.Policy, "", "killer_" + k.Key, c.N, c.N == 0 ? 0 : (double)k.Count / c.N);
                 ChaseCsv(sb, "chase", c);
             }

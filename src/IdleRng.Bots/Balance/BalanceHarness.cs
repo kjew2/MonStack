@@ -172,6 +172,12 @@ namespace IdleRng.Bots.Balance
         public int GauntletBossStalls { get; set; }
         public double GauntletBossStallRate => N - GauntletCleared == 0 ? 0 : (double)GauntletBossStalls / (N - GauntletCleared);
 
+        /// <summary>
+        /// Where the runs that did not clear stalled: index i counts the ones whose floor reached mod GAUNTLET_BOSS_EVERY is i, so
+        /// index 0 is the boss floors (issue #99). Empty when From was not given the boss spacing.
+        /// </summary>
+        public int[] GauntletStallMod { get; set; } = Array.Empty<int>();
+
         /// <summary>Gauntlet killers, most runs first (ties by id).</summary>
         public List<Tally> Killers { get; set; }
 
@@ -185,10 +191,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>Per chase tree of the species, in the order the runs list them (content order).</summary>
         public List<ChaseSummary> Chase { get; set; }
 
-        public static CellSummary From(string species, string policy, int rankCount, IReadOnlyList<RunSample> runs)
+        /// <param name="bossEvery">GAUNTLET_BOSS_EVERY, for the stall-floor histogram; 0 leaves GauntletStallMod empty.</param>
+        public static CellSummary From(string species, string policy, int rankCount, IReadOnlyList<RunSample> runs, int bossEvery = 0)
         {
             if (rankCount < 1) throw new ArgumentOutOfRangeException(nameof(rankCount));
-            var s = new CellSummary { Species = species, Policy = policy, N = runs.Count, Grades = new int[rankCount] };
+            if (bossEvery < 0) throw new ArgumentOutOfRangeException(nameof(bossEvery));
+            var s = new CellSummary { Species = species, Policy = policy, N = runs.Count, Grades = new int[rankCount], GauntletStallMod = new int[bossEvery] };
             long fought = 0, won = 0;
             foreach (var r in runs)
             {
@@ -198,6 +206,7 @@ namespace IdleRng.Bots.Balance
                 if (r.End == RunEnd.Completed) s.Completed++;
                 if (r.GauntletCleared) s.GauntletCleared++;
                 if (r.GauntletBossStall) s.GauntletBossStalls++;
+                if (bossEvery > 0 && !r.GauntletCleared) s.GauntletStallMod[r.GauntletFloor % bossEvery]++;
                 fought += r.FightsFought;
                 won += r.FightsWon;
             }
@@ -369,7 +378,7 @@ namespace IdleRng.Bots.Balance
             for (int p = 0; p < policies.Count; p++)
                 for (int s = 0; s < species.Count; s++)
                     cells.Add(CellSummary.From(species[s], policies[p], c.FightRanks.Count,
-                        new ArraySegment<RunSample>(runs, p * perPolicy + s * o.Seeds, o.Seeds)));
+                        new ArraySegment<RunSample>(runs, p * perPolicy + s * o.Seeds, o.Seeds), c.Constants.GauntletBossEvery));
             return cells;
         }
 
