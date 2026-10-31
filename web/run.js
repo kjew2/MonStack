@@ -31,6 +31,7 @@
     towerTeam: [],           // Daily Tower team: Vault indices in slot order (specs/21 section 8)
     towerResult: null,       // the last attempt's result from the engine (run.runTower) plus its day and team, shown on the tower screen
     towerFight: null,        // the tower floor fight shown in the playback modal (issue #98), or null
+    reveal: null,            // the merchant's card reveal on the vendor screen (issue #108): {i, phase: 'hint'|'flip', timer}, or null
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -911,7 +912,7 @@
       text: 'Sealed over the Vault cap (' + acct.vault.length + '/' + acct.vaultCap + '). Dismantle ' + acct.vaultOver + ' before the next run.' }));
     if (ui.climb) main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-replay', text: 'Watch the gauntlet again', onclick: () => openClimb(ui.climb.data) }));
     if (acct.vendor && acct.vendor.offers.length)
-      main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'to-vendor', text: 'Visit the vendor', onclick: () => { stopClimb(); ui.view = 'vendor'; render(); } }));
+      main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'to-vendor', text: 'Visit the vendor', onclick: () => { stopClimb(); ui.view = 'vendor'; startReveal(); render(); } }));
     else main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
   }
 
@@ -919,16 +920,32 @@
   const rarityDef = (id) => C.rarities.find((r) => r.id === id) || { id: id, name: id };
   function achievementProgress(id) { return run.account.achievements.find((x) => x.id === id) || { earned: false, current: 0, target: 1 }; }
   function owned(id) { return !!id && run.account.owned.indexOf(id) >= 0; }
+  const offerTier = (o) => Math.max(0, C.rarities.indexOf(rarityDef(o.rarity)));
+  // How offer i shows during the merchant's reveal: 'back' (face down), 'hint' (face down, glowing its tier's colour), 'flip'
+  // (turning face up now) or 'face'. Without a reveal (home screen, reveal done or skipped) every offer is 'face'.
+  function revealState(i) {
+    const r = ui.reveal;
+    if (!r || ui.view !== 'vendor' || i < r.i) return 'face';
+    if (i > r.i) return 'back';
+    return r.phase;
+  }
   function vendorOffers(main) {
     const acct = run.account;
     acct.vendor.offers.forEach((o, i) => {
+      const tier = offerTier(o), state = revealState(i);
+      if (state === 'back' || state === 'hint') {
+        main.append(h('div', { class: 'card offer back' + (state === 'hint' ? ' hint r' + tier : ''), 'data-id': 'vendor-offer', 'aria-hidden': 'true',
+          onclick: skipReveal }, [h('span', { class: 'mark', text: '?' })]));
+        return;
+      }
       const def = C.talents.find((x) => x.id === o.talent) || { name: o.talent, desc: '', maxRank: 0 };
-      const rar = rarityDef(o.rarity), tier = C.rarities.indexOf(rar);
+      const rar = rarityDef(o.rarity);
       const status = o.bought ? h('div', { class: 'small ok', text: 'Sold' })
         : o.maxed ? h('div', { class: 'small muted', text: 'Maxed' })
         : h('button', { class: 'btn small gemsy', type: 'button', 'data-act': 'buy-offer-' + i, disabled: acct.shards < o.price,
           text: 'Buy · ' + o.price + ' shards', onclick: () => buyOffer(i) });
-      main.append(h('div', { class: 'card offer r' + Math.max(0, tier) + (o.bought ? ' sold' : ''), 'data-id': 'vendor-offer' }, [
+      main.append(h('div', { class: 'card offer r' + tier + (o.bought ? ' sold' : '') + (state === 'flip' ? ' flip' + (tier >= 2 ? ' burst' : '') + (tier >= 3 ? ' shake' : '') : ''),
+        'data-id': 'vendor-offer' }, [
         h('div', { class: 'row between' }, [h('b', { text: def.name }), h('span', { class: 'tag rarity', text: rar.name })]),
         h('div', { class: 'small muted', text: def.desc }),
         h('div', { class: 'row between' }, [
@@ -937,6 +954,39 @@
       ]));
     });
   }
+
+  // ---- the merchant's reveal (issue #108): presentation only. The offers were rolled and saved when the run was sealed; this
+  // turns them face up one at a time, each glowing its tier's colour first (rarer tiers build up longer, epic and up burst as they
+  // flip). It plays when the player visits the vendor from the grade screen; tapping a face-down card or Skip shows them all.
+  // Reduced motion shows them at once. Not tied to the fight speed, so a player who skips fights still sees it.
+  const REVEAL_HINT_MS = [260, 520, 820, 1150];   // PLACEHOLDER: glow time before the flip, by tier (common, rare, epic, legendary+)
+  const REVEAL_FLIP_MS = 380;                      // PLACEHOLDER: the flip; matches the .offer.flip animation
+  function startReveal() {
+    stopReveal();
+    const v = run.account.vendor;
+    if (!v || !v.offers.length || reducedMotion()) return;
+    ui.reveal = { i: 0, phase: 'hint', timer: null };
+    scheduleReveal();
+  }
+  function scheduleReveal() {
+    const r = ui.reveal, o = run.account.vendor.offers[r.i];
+    r.timer = setTimeout(stepReveal, r.phase === 'hint' ? REVEAL_HINT_MS[Math.min(offerTier(o), REVEAL_HINT_MS.length - 1)] : REVEAL_FLIP_MS);
+  }
+  function stepReveal() {
+    const r = ui.reveal, v = run.account.vendor;
+    if (!r) return;
+    if (ui.view !== 'vendor' || !v) { stopReveal(); return; }
+    if (r.phase === 'hint') r.phase = 'flip';
+    else {
+      r.i++;
+      r.phase = 'hint';
+      if (r.i >= v.offers.length) { stopReveal(); render(); return; }
+    }
+    render();
+    scheduleReveal();
+  }
+  function stopReveal() { if (ui.reveal) clearTimeout(ui.reveal.timer); ui.reveal = null; }
+  function skipReveal() { if (!ui.reveal) return; stopReveal(); render(); }
   function buyOffer(i) {
     const r = run.acct('buyOffer', i);
     if (!r.ok) toast(r.reason);
@@ -949,9 +999,12 @@
     if (!v || !v.offers.length) main.append(h('p', { class: 'muted', text: 'Every talent is maxed: nothing to sell.' }));
     else {
       main.append(h('p', { class: 'small muted', text: v.offers.length + ' offers for your grade ' + up(v.grade) + ' run: a better grade rolls rarer talents. Each offer adds one rank. Talents apply from the next run on. Unbought offers vanish when the next run starts.' }));
+      if (ui.reveal) main.append(h('div', { class: 'row between' }, [
+        h('span', { class: 'small merchant', 'data-id': 'merchant-line', text: 'The merchant lays out the wares…' }),
+        h('button', { class: 'btn small', type: 'button', 'data-act': 'reveal-skip', text: 'Skip', onclick: skipReveal })]));
       vendorOffers(main);
     }
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: () => { stopReveal(); resetRunUi(); ui.view = 'home'; render(); } }));
   }
 
   // ---- gauntlet wheel (specs/19, specs/12 section 6): a slowing reel of the floors climbed lands on the floor and the enemy
@@ -1057,7 +1110,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; }
+  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
