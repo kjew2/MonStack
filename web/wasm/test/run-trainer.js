@@ -293,6 +293,15 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('to-vendor').click();
   const offers = page.locator('[data-id=vendor-offer]');
   check((await offers.count()) === 5, 'after the run the vendor shows 5 offers');
+  // the merchant's reveal (issue #108): face down at first, turned up one by one on its own; Skip shows the rest at once
+  check((await page.locator('.offer.back').count()) >= 4 && (await act('reveal-skip').isVisible()), 'the merchant lays the offers out face down');
+  await page.waitForFunction(() => !document.querySelector('[data-id=vendor-offer]').classList.contains('back'), null, { timeout: 10000 });
+  const backsLeft = await page.locator('.offer.back').count();
+  check(backsLeft >= 1 && backsLeft <= 4, 'they turn face up one at a time (' + backsLeft + ' still face down)');
+  await shot('05c-vendor-reveal');
+  await act('reveal-skip').click();
+  check((await page.locator('.offer.back').count()) === 0 && (await act('reveal-skip').count()) === 0, 'Skip turns the rest face up');
+  check((await offers.count()) === 5, 'still 5 offers after the reveal');
   check(acct.Account.Vendor && acct.Account.Vendor.Grade === grade.toLowerCase() && acct.Account.Vendor.Offers.length === 5, 'the offers are saved on the account with the run\'s grade');
   check(/^(Common|Rare|Epic)$/.test(await text('[data-id=vendor-offer] .rarity')), 'each offer has a rarity: ' + (await text('[data-id=vendor-offer] .rarity')));
   await shot('05d-vendor');

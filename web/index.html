@@ -186,6 +186,24 @@ small, .small { font-size: 12px; }
 .offer.r2 { border-color: var(--epic); } .offer.r2 .rarity { color: var(--epic); border-color: var(--epic); }
 .offer.r3, .offer.r4 { border-color: var(--gold); } .offer.r3 .rarity, .offer.r4 .rarity { color: var(--gold); border-color: var(--gold); }
 .offer.sold { opacity: .55; }
+/* The merchant's reveal (issue #108): face-down cards glow their tier's colour, then flip; epic and up burst, legendary shakes */
+.offer { --tier: var(--muted); position: relative; }
+.offer.r1 { --tier: var(--gems); } .offer.r2 { --tier: var(--epic); } .offer.r3, .offer.r4 { --tier: var(--gold); }
+.offer.back { min-height: 92px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  background: repeating-linear-gradient(45deg, var(--panel-2), var(--panel-2) 8px, var(--panel) 8px, var(--panel) 16px); }
+.offer.back .mark { font: 700 34px/1 var(--font-display); color: var(--muted); }
+.offer.back.hint { border-color: var(--tier); animation: rv-glow .5s ease-in-out infinite alternate; }
+.offer.back.hint .mark { color: var(--tier); }
+@keyframes rv-glow { from { box-shadow: 0 0 0 0 var(--tier); } to { box-shadow: 0 0 18px 3px var(--tier); } }
+.offer.flip { animation: rv-flip .38s ease-out both; }
+@keyframes rv-flip { 0% { transform: perspective(600px) rotateY(90deg); } 60% { transform: perspective(600px) rotateY(-12deg) scale(1.03); } 100% { transform: none; } }
+.offer.burst::after { content: ''; position: absolute; inset: -2px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 0 var(--tier); animation: rv-burst .7s ease-out .2s both; }
+@keyframes rv-burst { 0% { box-shadow: 0 0 0 0 var(--tier); opacity: 1; } 100% { box-shadow: 0 0 0 22px var(--tier); opacity: 0; } }
+.offer.shake { animation: rv-flip .38s ease-out both, rv-shake .4s ease-in-out .38s 2; }
+@keyframes rv-shake { 25% { transform: translateX(-5px) rotate(-1deg); } 75% { transform: translateX(5px) rotate(1deg); } }
+.merchant { color: var(--muted); font-style: italic; }
+@media (prefers-reduced-motion: reduce) { .offer.back.hint, .offer.flip, .offer.shake, .offer.burst::after { animation: none !important; } }
 .ach { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid #2a2a2a; }
 .ach:first-child { border-top: 0; }
 .ach .chk { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; }
