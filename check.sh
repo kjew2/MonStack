@@ -92,6 +92,9 @@ else
     step "Web: C# core builds to WebAssembly"
     bash web/wasm/build.sh --fast
 
+    step "Web: phone artifact publish call lists only files that exist"
+    bash web/wasm/publish-artifact.sh --no-build > /dev/null
+
     step "Web: monster trainer plays a full run in headless Chromium"
     node web/wasm/test/run-trainer.js
   else

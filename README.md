@@ -78,7 +78,7 @@ If the page says "The C# engine did not load", it names the cause: the bundle is
 
 The repo is private, so GitHub cannot serve the page (raw links show source, and GitHub Pages on a private repo needs a paid plan and publishes the site publicly). Two ways in:
 
-**Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It opens the monster trainer. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude rebuilds and republishes it (`web/wasm/build.sh`, then publish `web/index.html` with the file map from `web/wasm/artifact-files.py`, root = repo root, to that URL). `wasm/dist/build-info.json` in the artifact holds the build time.
+**Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It opens the monster trainer. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude republishes it (`web/wasm/publish-artifact.sh` builds and prints the Artifact publish call: `web/index.html`, root = repo root, and the file map from `web/wasm/artifact-files.py`). The page header shows the commit and date it was built from (`wasm/dist/build-info.json`), so you can tell whether it is current; "dev" means no build stamp.
 
 **From your computer, on the same Wi-Fi (always matches your checkout):**
 

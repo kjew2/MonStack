@@ -5,6 +5,7 @@
 // checks the skill point gain indicators (HUD float-up, fight badge, Trees tab count, log lines), seals it, checks the grade
 // screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run,
 // locks and dismantles a Vault entry, and loads a v1 save over the Vault cap to check the migration and the blocked run start.
+// Also checks the header build stamp from dist/build-info.json, and that a missing stamp shows "dev".
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
 'use strict';
@@ -42,6 +43,9 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('start').waitFor({ timeout: 90000 });
   check((await page.locator('[data-act^="species-"]').count()) >= 3, 'home lists the species from the C# content');
   check(await act('start').isEnabled(), 'a species is pre-picked');
+  await page.waitForFunction(() => document.getElementById('build').textContent !== '');
+  const stamp = await page.locator('#build').textContent();
+  check(/^[0-9a-f]{4,}(\+dirty)? · \d{4}-\d\d-\d\d$/.test(stamp), 'the header shows the build stamp: ' + stamp);
   await shot('01-home');
 
   // ---- start a run, first drill and rest
@@ -332,6 +336,15 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-act^="book-"]:not([data-act="book-toggle"])').count()) === 0, 'the used book is gone');
   check((await page.locator('[data-id^="chasecard-"]').count()) === 2, 'the Trees tab lists the drake\'s own two chase trees');
   check(/Ember Codex/.test(await text('[data-id=chasecard-inferno_sovereign]')), 'the book-gated chase tree says which skill book it needs');
+
+  // ---- without a build stamp (an older dist) the header says "dev" and nothing errors
+  const bare = await ctx.newPage();
+  bare.on('pageerror', (e) => errors.push('pageerror (no stamp): ' + e.message));
+  await bare.route(/build-info\.json/, (r) => r.fulfill({ status: 404, body: '' }));
+  await bare.goto(url);
+  await bare.waitForFunction(() => document.getElementById('build').textContent !== '');
+  check((await bare.locator('#build').textContent()) === 'dev', 'a missing build stamp shows "dev"');
+  await bare.close();
 
   check(errors.length === 0, 'no page/console errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await browser.close();
