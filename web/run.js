@@ -1068,7 +1068,7 @@
     main.append(h('button', { class: 'btn primary block' + (ui.pick && over <= 0 ? ' sticky-start' : ''), type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
       text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run with ' + pickName : 'Pick a species', onclick: startRun }));
   }
-  // The owned species as a row of big cards that swipes sideways; the card that settles in the middle is the pick (tapping a
+  // The owned species as a row of big square cards (the whole portrait, no crop, the name over its foot) that swipes sideways; the card that settles in the middle is the pick (tapping a
   // card or a dot picks it too and glides it to the middle). Locked species stay out of the row, folded under one line.
   function pickSpecies(id) { if (id === ui.pick) return; ui.pick = id; ui.carousel.glide = true; render(); }
   function speciesCarousel(main) {

@@ -41,6 +41,7 @@
   --st-hp: #e0384c; --st-str: #e8742a; --st-int: #2b6fd6; --st-wis: #8a4fe0;
   --st-dex: #1f9d5c; --st-def: #6c7a93; --st-spd: #0fa3b1; --st-luk: #c99400;
   --on-st: #ffffff;                 /* text on a solid stat colour */
+  --art-bg: #000000; --art-shade: rgba(0, 0, 0, .75); --on-art: #ffffff;   /* behind a creature portrait, the shade under text on it, that text */
   /* skill tiles take a per-skill hue from the page; these are the saturation and lightness it is drawn at (pastel, dark ink on top) */
   --skill-bg: 70%, 88%; --skill-edge: 60%, 55%; --skill-tile: 65%, 86%;
   /* glows: soft coloured lifts instead of neon */
@@ -99,12 +100,14 @@ small, .small { font-size: 12px; }
 /* Raise tab: the species carousel. Cards snap to the middle and the neighbours peek in from the sides. */
 .carousel { position: relative; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 14% 8px; margin: 0 calc(-1 * var(--gutter-r)) 0 calc(-1 * var(--gutter-l)); scrollbar-width: none; overscroll-behavior-x: contain; }
 .carousel::-webkit-scrollbar { display: none; }
-.species-card { flex: 0 0 100%; scroll-snap-align: center; padding: 0; overflow: hidden; display: flex; flex-direction: column; text-align: left; opacity: .55; transform: scale(.94); transition: opacity var(--dur), transform var(--dur); }
-.species-card.sel { opacity: 1; transform: none; }
-.species-card .pimg { display: grid; place-items: center; aspect-ratio: 4 / 3; background: var(--panel-2); }
-.species-card .pimg img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+.card.species-card { flex: 0 0 100%; scroll-snap-align: center; position: relative; padding: 0; gap: 0; overflow: hidden; text-align: left; opacity: .55; transform: scale(.94); transition: opacity var(--dur), transform var(--dur); }
+.card.species-card.sel { opacity: 1; transform: none; }
+/* The portraits are square (512 px): show the whole image, edge to edge, and lay the name over its foot */
+.species-card .pimg { display: grid; place-items: center; aspect-ratio: 1; background: var(--art-bg); }
+.species-card .pimg img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .species-card .pimg .sprite { width: 45%; height: auto; }
-.species-card > .row { padding: 10px 12px; }
+.species-card > .row { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 14px 12px; background: linear-gradient(transparent, var(--art-shade)); }
+.species-card > .row b { color: var(--on-art); font-size: 20px; }
 .dots { display: flex; justify-content: center; gap: 8px; margin-top: -6px; }
 .dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: var(--line); }
 .dot.on { background: var(--gems); }
