@@ -1,8 +1,8 @@
-# 25 - Spike: manhwa-style creature art
+# 26 - Spike: manhwa-style creature art
 
 Status: **spike report (agent, 2026-10-31).** Research only; nothing here is agreed design until kj answers section 6. kj asked for a spike on creature sprites in the style of widely known manhwa (Korean webtoons): (1) is it feasible, (2) which styles are the most popular, (3) a panel comparing some of our creatures in those styles.
 
-The panel is the artifact https://claude.ai/artifact/6kuv4A2UWBV6sM6UVmizpo. Its 20 concept drawings are kept in `specs/assets/25/` (hand-written SVG, one file per style and species), so they survive without the artifact.
+The panel is the artifact https://claude.ai/artifact/6kuv4A2UWBV6sM6UVmizpo. Its 20 concept drawings are kept in `specs/assets/26/` (hand-written SVG, one file per style and species), so they survive without the artifact.
 
 ## 1. Where the art is today
 

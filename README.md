@@ -26,7 +26,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/22-spike-higher-tier-trees.md` | Spike report (#110): skill trees and capstones for higher-tier creatures, measurements of capstone reach, a mechanics catalogue (games, anime, manhwa, donghua, web and light novels; *Lord of the Mysteries* in section 8) and questions for kj |
 | `specs/23-spike-point-economy.md` | Spike report (#112): point economies with variance and dynamism, a baseline of how little runs vary today, a mechanics catalogue (management, strategy, RPG, roguelite) and a first package for kj |
 | `specs/24-spike-creature-inspiration.md` | Spike report: a creature concept for every skill tree (native, generic, book, chase), inspirations from myth, games, anime, film and nature, apex forms for capstones, nature/dark species ideas and questions for kj |
-| `specs/25-spike-manhwa-sprites.md` | Spike report: manhwa-style creature art, feasibility (AI, artist, vector), the most popular manhwa style families, a comparison panel of five species in four styles (drawings in `specs/assets/25/`) and questions for kj |
+| `specs/26-spike-manhwa-sprites.md` | Spike report: manhwa-style creature art, feasibility (AI, artist, vector), the most popular manhwa style families, a comparison panel of five species in four styles (drawings in `specs/assets/26/`) and questions for kj |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). CI (`.github/workflows/check.yml`) runs the full `./check.sh` on every pull request and push to `main`. Agent rules live in `CLAUDE.md`.
 
