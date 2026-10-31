@@ -19,7 +19,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/14-training-run.md` | Training run: AP cycles of Drill and Rest, drill rolls, energy and injury, rank fights, milestones |
 | `specs/15-skill-trees.md` | Skill trees: 4 slots, skill points, nodes with ~75% filler, milestone/book/chase offers, overwriting, chase unlock and re-lock |
 | `specs/16-battle.md` | Monster battle engine: sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
-| `specs/18-meta-progression.md` | Account: owned species, Vault, Training Shards, talents, run modifiers, abandon, account save |
+| `specs/18-meta-progression.md` | Account: owned species, Vault (cap, lock, dismantle), Training Shards, talents, run modifiers, abandon, account save |
 | `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
 | `specs/20-roadmap.md` | Proposed roadmap: fixes, features and tech by priority, every open issue mapped |
 
@@ -90,5 +90,5 @@ Progress is saved in the browser, separately for each address, so the artifact l
 
 ### Tests for the web build
 
-- `node web/wasm/test/run-trainer.js`: plays a whole monster-trainer run on `index.html` through the real buttons (drill, rest, fights, drafts, buying), seals it, checks the grade and Vault, and reloads mid-run and after the end.
+- `node web/wasm/test/run-trainer.js`: plays a whole monster-trainer run on `index.html` through the real buttons (drill, rest, fights, drafts, buying), seals it, checks the grade and Vault, reloads mid-run and after the end, and locks, dismantles and loads an over-cap v1 save.
 - Game rules are tested in C# (`src/IdleRng.Sim.Tests`); `./check.sh` runs everything, including the web build and the browser test in full mode.

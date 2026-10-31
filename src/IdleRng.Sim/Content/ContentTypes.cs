@@ -56,6 +56,7 @@ namespace IdleRng.Sim.Content
         // Account and meta-progression (specs/18 section 5). Placeholders.
         public int ShardsPerCycle { get; internal set; }         // SHARDS_PER_CYCLE
         public int ShardsPerRank { get; internal set; }          // SHARDS_PER_RANK
+        public int VaultCap { get; internal set; }               // VAULT_CAP
 
         // End-of-run gauntlet (specs/19 section 4). Placeholders.
         public int GauntletFloors { get; internal set; }         // GAUNTLET_FLOORS
@@ -182,6 +183,9 @@ namespace IdleRng.Sim.Content
         public string NameKey { get; internal set; }
         public string Element { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Stats { get; internal set; }
+
+        /// <summary>Training Shards for dismantling a Vault entry of this grade (specs/18 section 7). Placeholder.</summary>
+        public int DismantleShards { get; internal set; }
     }
 
     public enum TreeKind { Native, Generic, Chase, Book }

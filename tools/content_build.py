@@ -52,7 +52,7 @@ REQUIRED_CONSTANTS = {
     # skill trees (specs/15)
     "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "MON_ECHO_POWER": "double",
     # account and meta-progression (specs/18)
-    "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int",
+    "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int",
     # end-of-run gauntlet (specs/19)
     "GAUNTLET_FLOORS": "int", "GAUNTLET_BASE": "double", "GAUNTLET_GROWTH": "double", "GAUNTLET_BOSS_EVERY": "int",
     "GAUNTLET_BOSS_MULT": "double",
@@ -84,6 +84,7 @@ MON_RANGES = {
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
+    "VAULT_CAP": ("> 0", lambda v: v > 0),
     "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
     "GAUNTLET_GROWTH": (">= 1", lambda v: v >= 1), "GAUNTLET_BOSS_EVERY": ("> 0", lambda v: v > 0),
     "GAUNTLET_BOSS_MULT": ("> 0", lambda v: v > 0),
@@ -108,7 +109,7 @@ SCHEMA = {
                   + [c("base_" + s, "double") for s in STATS] + [c("grow_" + s, "double") for s in STATS], key="id"),
     "drill_tiers": T([c("id", "id"), c("gain_min", "int"), c("gain_max", "int"), c("name_key", "key")], key="id"),
     "fight_ranks": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("element", "id")]
-                     + [c(s, "double") for s in STATS], key="id"),
+                     + [c(s, "double") for s in STATS] + [c("dismantle_shards", "int")], key="id"),
     "stat_milestones": T([c("threshold", "int")], key="threshold"),
     "monster_skills": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:SkillKind"),
                          c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
@@ -383,6 +384,8 @@ def validate_training(t, keys, errs):
         for s in STATS:
             if not 0 <= r[s] <= stat_max:
                 errs.add("E043", loc, f"{s} must be in [0, STAT_MAX]")
+        if r["dismantle_shards"] < 0:
+            errs.add("E043", loc, "dismantle_shards must be >= 0")
     validate_trees(t, errs)
     validate_talents(t, errs)
     validate_gauntlet(t, errs)

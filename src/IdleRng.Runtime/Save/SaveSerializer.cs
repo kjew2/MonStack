@@ -15,7 +15,7 @@ namespace IdleRng.Runtime.Save
     /// The save file format (specs/06 section 4): one ASCII header line plus a UTF-8 JSON body:
     /// <code>
     /// IDLERNG-SAVE fmt=json crc32=1a2b3c4d len=3917\n
-    /// { "Kind": "monster_account", "SchemaVersion": 1, ... }
+    /// { "Kind": "monster_account", "SchemaVersion": 2, ... }
     /// </code>
     /// AccountSave builds the body. Enums are member names; ulong seeds are 16-char lowercase hex strings; doubles round-trip
     /// exactly.

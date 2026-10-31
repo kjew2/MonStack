@@ -142,6 +142,7 @@ Duplicate pulls raise a species' **Genetic Aptitude rank**, which raises the odd
 ## 7. Roster
 
 - The **Vault** holds every certified monster. Teams for 4v1 and 4v4 content come from it.
+- **Vault cap (kj, 2026-10-30, #82):** a placeholder cap of 50. A finished run always seals, even over the cap; the player dismantles down to the cap (Training Shards by grade) before the next run. A lock protects favourites from dismantling. Capacity expansions wait for the monetization call (#49). Rules: `specs/18` section 7.
 - **Onboarding:** a new account has 1 custom-trained slot plus 3 Mercenary starter units so 4-monster content is playable at once. Mercenaries are replaced as raised monsters retire into the Vault.
 
 ## 8. Combat
