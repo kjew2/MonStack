@@ -43,7 +43,8 @@ namespace IdleRng.Bots
             "usage: IdleRng.Bots <train|balance|golden|help> [options]\n" +
             "  train      --species ID --policy balanced|focus|reckless|hoarder --seed N --books a,b --content dir   (one training run, specs/14-15)\n" +
             "  balance    --seeds N --seed-base N --species a,b --policies a,b --books none|all|a,b --no-tower --tower-day N\n" +
-            "             --format text|json|csv --jobs N --out path   (run-balance report over many seeds, specs/09 section 7)\n" +
+            "             --no-book-canary --strict --format text|json|csv --jobs N --out path\n" +
+            "             (run-balance report and loose sanity checks over many seeds, specs/09 section 7; --strict exits 1 on a WARN)\n" +
             "  golden     --check|--update --golden-dir path --content dir   (specs/09 section 11)\n";
 
         public static int Main(string[] argv)
@@ -103,7 +104,10 @@ namespace IdleRng.Bots
             return 0;
         }
 
-        /// <summary>The run-balance report (specs/09 section 7). A report, not a gate: it exits 0 whatever the numbers say.</summary>
+        /// <summary>
+        /// The run-balance report (specs/09 section 7). A report, not a gate: it exits 0 whatever the numbers say, unless --strict
+        /// (opt-in, not used by check.sh), which exits 1 when a sanity check WARNs.
+        /// </summary>
         static int BalanceCmd(CliArgs a)
         {
             var db = LoadContent(a);
@@ -121,12 +125,15 @@ namespace IdleRng.Bots
                 Tower = !a.Has("no-tower"),
                 TowerDayBase = a.Int("tower-day", 0),
                 Jobs = a.Int("jobs", Environment.ProcessorCount),
+                BookCanary = !a.Has("no-book-canary"),
             };
             var sw = Stopwatch.StartNew();
             var report = IdleRng.Bots.Balance.BalanceHarness.Run(db, o);
             Console.Error.Write($"# balance: {report.Cells.Count} cells x {o.Seeds} seeds in {sw.Elapsed.TotalSeconds:0.0}s\n");
             Emit(a, IdleRng.Bots.Balance.BalanceWriter.Write(report, format));
-            return 0;
+            var warns = report.Checks.Where(k => k.Status == IdleRng.Bots.Balance.CheckStatus.Warn).Select(k => k.Id).ToList();
+            Console.Error.Write($"# sanity checks: {(warns.Count == 0 ? "no WARN" : "WARN " + string.Join(", ", warns))}\n");
+            return IdleRng.Bots.Balance.BalanceChecks.ExitCode(report.Checks, a.Has("strict"));
         }
 
         static List<string> List(string csv) => csv?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToList();
