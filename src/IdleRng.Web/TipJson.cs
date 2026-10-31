@@ -43,6 +43,18 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
+        /// <summary>
+        /// skillTips{skillId:tip} for every skill a rank fight opponent uses (BattleText.SkillTip): the opponent's skills have no
+        /// tree node to show, so web/tooltips.js falls back to these for a 'skill:' ref.
+        /// </summary>
+        public static void SkillTips(JsonOut w, ContentDb db)
+        {
+            var ids = new SortedSet<string>(db.RankEnemies.Values.SelectMany(e => e.Skills), StringComparer.Ordinal);
+            w.Key("skillTips").Obj();
+            foreach (var id in ids) { w.Key(id); Tip(w, BattleText.SkillTip(db, db.MonsterSkills[id])); }
+            w.EndObj();
+        }
+
         /// <summary>towerTips{key:{name,text}}: the Daily Tower playback's entropy, vent, corruption and phase tooltips (BattleText.TowerTips).</summary>
         public static void TowerTips(JsonOut w, ContentDb db)
         {

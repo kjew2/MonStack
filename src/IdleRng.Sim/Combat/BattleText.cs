@@ -171,6 +171,17 @@ namespace IdleRng.Sim.Combat
             return tip;
         }
 
+        /// <summary>
+        /// The tooltip of a skill on its own, as a rank fight opponent uses it (specs/14 section 5): what it does, how much, to
+        /// whom, how often and when the AI uses it; no SP cost.
+        /// </summary>
+        public static Tip SkillTip(ContentDb db, CombatSkill sk)
+        {
+            var tip = new Tip { Title = db.Text("mskill." + sk.Id + ".name") };
+            SkillFacts(db, tip, sk, null, label => db.Text("tip.label." + label), (key, res) => TextTemplate.Fill(db, db.Text(key), res));
+            return tip;
+        }
+
         static void SkillFacts(ContentDb db, Tip tip, CombatSkill sk, FightTrigger? trigger, Func<string, string> L,
                                Func<string, Func<string, string, string>, string> T)
         {

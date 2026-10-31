@@ -552,6 +552,66 @@
       "cooldown": 5,
       "duration": 2,
       "element": null
+    },
+    {
+      "id": "blur",
+      "name_key": "mskill.blur.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "dex",
+      "scales": null,
+      "power": 0.15,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
+    },
+    {
+      "id": "keen_eye",
+      "name_key": "mskill.keen_eye.name",
+      "kind": "passive",
+      "target": "self",
+      "stat": "crit_rate",
+      "scales": null,
+      "power": 0.15,
+      "cooldown": 0,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "stoke",
+      "name_key": "mskill.stoke.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "str",
+      "scales": null,
+      "power": 0.15,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
+    },
+    {
+      "id": "focus_mind",
+      "name_key": "mskill.focus_mind.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "int",
+      "scales": null,
+      "power": 0.3,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
+    },
+    {
+      "id": "tailwind",
+      "name_key": "mskill.tailwind.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "spd",
+      "scales": null,
+      "power": 0.1,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
     }
   ]
 }

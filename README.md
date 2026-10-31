@@ -16,7 +16,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/10-online-competitive.md` | Trust model for accounts, leaderboards and async PvP (design only) |
 | `specs/12-monster-trainer-design.md` | The game design, merged from kj's drafts, with the decisions recorded |
 | `specs/13-pivot-transition.md` | The pivot plan: phases T1-T13, what carries over, status, open questions |
-| `specs/14-training-run.md` | Training run: AP cycles of Drill and Rest, drill rolls, energy and injury (skips cycles), rank fights, milestones |
+| `specs/14-training-run.md` | Training run: AP cycles of Drill and Rest, drill rolls, energy and injury (skips cycles), rank fights against a ladder rolled from per-rank pools, milestones |
 | `specs/15-skill-trees.md` | Skill trees: 4 slots, skill points, nodes with ~75% filler, milestone/book/chase offers, overwriting, chase unlock and re-lock |
 | `specs/16-battle.md` | Monster battle engine: sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
 | `specs/18-meta-progression.md` | Account: species unlocks by achievement, Vault (cap, lock, dismantle), Training Shards, the post-run talent vendor, run modifiers, abandon, account save |

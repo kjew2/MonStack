@@ -45,3 +45,8 @@ sovereign_flame,mskill.sovereign_flame.name,damage,all_enemies,,str,1.2,3,0,fire
 star_lance,mskill.star_lance.name,damage,enemy,,spd,1.6,2,0,light
 boss_cleave,mskill.boss_cleave.name,damage,all_enemies,,str,0.7,3,0,
 boss_roar,mskill.boss_roar.name,debuff,all_enemies,def,,0.25,5,2,
+blur,mskill.blur.name,buff,self,dex,,0.15,0,2,
+keen_eye,mskill.keen_eye.name,passive,self,crit_rate,,0.15,0,0,
+stoke,mskill.stoke.name,buff,self,str,,0.15,0,2,
+focus_mind,mskill.focus_mind.name,buff,self,int,,0.3,0,2,
+tailwind,mskill.tailwind.name,buff,self,spd,,0.1,0,2,

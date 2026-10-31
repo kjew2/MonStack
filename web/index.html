@@ -38,7 +38,7 @@ small, .small { font-size: 12px; }
 #top .title { font: 700 16px var(--font-display); flex: 1; }
 .link-btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 6px 10px; font-size: 13px; text-decoration: none; color: var(--text); white-space: nowrap; }
 #main { flex: 1; min-height: 0; overflow-y: auto; padding: 12px var(--gutter-r) 20px var(--gutter-l); -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 12px; }
-#tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding: 0 var(--gutter-r) env(safe-area-inset-bottom, 0px) var(--gutter-l); }
+#tabs { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding: 0 var(--gutter-r) env(safe-area-inset-bottom, 0px) var(--gutter-l); }
 #tabs button { position: relative; border: 0; background: none; padding: 12px 0 13px; font: 600 13px var(--font-display); letter-spacing: .04em; color: var(--muted); }
 #tabs button[aria-selected="true"] { color: var(--text); box-shadow: inset 0 3px 0 var(--gems); }
 #tabs .tabsp { font-weight: 700; }
@@ -125,6 +125,23 @@ small, .small { font-size: 12px; }
 .cond.met { color: var(--ok); }
 .src { margin-top: 2px; }
 .slotcard.empty { border-style: dashed; color: var(--muted); }
+/* The rank ladder (specs/14 section 5): one rung per rank, top rank first; the next fight stands out, beaten rungs fade. */
+.grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.grow > .row.between { align-self: stretch; }
+.ladder { display: flex; flex-direction: column; gap: 8px; }
+.rung { flex-direction: row; align-items: center; gap: 10px; padding: 10px; }
+.rung .letter { font: 700 22px var(--font-display); width: 22px; text-align: center; flex: none; color: var(--muted); }
+.rung .sprite { width: 48px; height: 48px; }
+.rung.current { border-color: var(--gems); box-shadow: 0 0 0 1px var(--gems) inset; }
+.rung.current .letter { color: var(--gems); }
+.rung.beaten { opacity: .62; }
+.rung.beaten .letter { color: var(--ok); }
+.rung.boss .letter { color: var(--gold); }
+.oppskills { display: flex; flex-wrap: wrap; gap: 4px; }
+.rankbtn { color: var(--text); cursor: pointer; }
+.unithead { gap: 6px; min-width: 0; }
+.unithead b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sprite.small { width: 32px; height: 32px; padding: 2px; border-radius: 6px; }
 
 /* Layers */
 #modal { position: absolute; inset: 0; background: rgba(10,10,10,.94); padding: 14px var(--gutter-r) 14px var(--gutter-l); overflow-y: auto; z-index: 5; display: flex; flex-direction: column; gap: 12px; }

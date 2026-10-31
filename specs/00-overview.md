@@ -53,6 +53,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | **Run** | One monster trained for `RUN_CYCLES` cycles |
 | **Cycle** | `RUN_AP` taps of Drill or Rest, then a rank fight |
 | **Rank** | E to S: how far the monster has climbed in its rank fights; the MVP grade |
+| **Ladder** | A run's rank fight opponents, one per rank, rolled at the start from each rank's pool (`rank_enemies`, `specs/14` section 5); a loss is a rematch |
 | **Tree, node, chase trait** | `specs/15` |
 | **Vault** | The account's finished, frozen monsters |
 | **Training Shards** | The soft currency, paid at the end of a run; buys talent ranks from the vendor |
@@ -80,7 +81,7 @@ content_src/*.csv            the content source of truth (specs/05)
 Content/*.json               built by tools/content_build.py, committed, checked for drift
 golden/                      generated reference outputs (bot CLI only)
 tools/content_build.py       CSV -> JSON converter and validator
-tools/test_content_build.py  tests for the converter's previous-build rules (E090, E091)
+tools/test_content_build.py  tests for the converter: previous-build rules (E090, E091), rank pool validation
 src/IdleRng.Sim/             pure sim: Combat, Training, Account, Gauntlet, Content, Rng, Replay (hashing)
 src/IdleRng.Runtime/         save format, stores, account save
 src/IdleRng.Bots/            run bots, golden files, the `train` and `golden` verbs

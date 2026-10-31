@@ -175,14 +175,39 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       return stats;
     }, [stop, played]);
   };
+  // ---- the rank ladder (specs/14 section 5): one opponent per rank, rolled at the start, all visible; the HUD's rank opens it
+  await page.locator('[data-id=rank]').click();
+  check((await act('tab-ladder').getAttribute('aria-selected')) === 'true', 'tapping the HUD rank opens the Ladder tab');
+  const rungs = await page.evaluate(() => [...document.querySelectorAll('[data-id^="ladder-"]')].map((e) => ({
+    id: e.getAttribute('data-id'), cls: e.className, name: e.querySelector('b').textContent,
+    skills: e.querySelectorAll('[data-id^="oppskill-"]').length, sprite: !!e.querySelector('canvas.sprite'),
+  })));
+  check(rungs.length === 6 && rungs[0].id === 'ladder-s' && rungs[5].id === 'ladder-e', 'the ladder lists every rank, top rank first: ' + rungs.map((r) => r.id).join(' '));
+  check(/current/.test(rungs[5].cls) && rungs.filter((r) => /current/.test(r.cls)).length === 1 && !rungs.some((r) => /beaten/.test(r.cls)),
+    'rank E is the next fight and nothing is beaten yet');
+  check(rungs.every((r) => r.name && !/^Rank /.test(r.name) && r.skills >= 1 && r.sprite), 'each rung shows its rolled opponent, a sprite and its skills: ' + rungs.map((r) => r.name).join(', '));
+  const savedLadder = (await readAccount()).ActiveRun.Ladder;
+  check(Array.isArray(savedLadder) && savedLadder.length === 6, 'the save keeps the rolled ladder: ' + JSON.stringify(savedLadder));
+  await page.locator('[data-id="ladder-s"] [data-id^="oppskill-"]').first().click();
+  const oppTip = await tip.innerText();
+  check(await tip.isVisible() && /Cooldown/i.test(oppTip) && !/[{}]/.test(oppTip) && !/\d SP/.test(oppTip),
+    'an opponent skill opens its tooltip from the engine (no SP cost): ' + oppTip.replace(/\s+/g, ' '));
+  check(await fits(), 'the opponent skill tooltip fits the screen');
+  await shot('03c-ladder');
+  await page.keyboard.press('Escape');
+  await act('tab-train').click();
+
   const speedSaved = () => page.evaluate(() => localStorage.getItem('idle-rng-fight-speed'));
 
   // ---- the first rank fight plays back action by action (issue #79), then the speed toggle
   await playUntil('fight');
   check(await act('fight').isEnabled(), 'a rank fight is due after ' + played.steps + ' steps');
   check((await act('speed-1').getAttribute('aria-pressed')) === 'true', 'fight speed defaults to 1x');
+  check((await text('[data-id=fight-opp]')) === 'Rank E fight: ' + rungs[5].name, 'the fight card names the ladder\'s rank E opponent: ' + (await text('[data-id=fight-opp]')));
   await act('fight').click();
   check(await page.locator('[data-id=fight-play]').isVisible(), 'the fight plays back instead of showing the result at once');
+  check((await text('[data-id=fight-play]')).includes(rungs[5].name) && (await page.locator('[data-id="unit-1"] canvas.sprite').count()) === 1,
+    'the playback names the opponent and shows its sprite: ' + (await text('[data-id=fight-play]')));
   check((await act('fight-continue').count()) === 0, 'no result while it plays');
   await page.waitForFunction(() => /\S/.test((document.querySelector('[data-id=fight-now] small') || {}).textContent || ''), null, { timeout: 5000 });
   const now1 = await text('[data-id=fight-now]');

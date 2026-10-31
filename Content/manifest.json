@@ -45,11 +45,11 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "0b290156ef51057cf19b8d1dd9d7f85e70e5793cb9c62cd7d68954c2477ef7fe"
+      "sha256": "f3a0d00597578a2c7742c4196c61f640cf7d774aa5eb5dd7294e42f74287cd1e"
     },
     "rank_enemies": {
       "file": "rank_enemies.json",
-      "sha256": "b81f7114db522f08ba156680222242bf56766989e5ea65e4355f9ff1d6fa0b96"
+      "sha256": "4ffde18ff83e17d9bb1ac870d6c6df0cff66472d8e296f50739cbb88ebbf1209"
     },
     "skill_books": {
       "file": "skill_books.json",
@@ -65,7 +65,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "6f00f418ecf41e384f2b20a8901baff83a01aebdc851f0cb18093b70161c0cf7"
+      "sha256": "f228d7e89eb38175c6d10787f59c6d1560ded7243a341f6c0ae9a3f7dc4266ec"
     },
     "talents": {
       "file": "talents.json",
@@ -88,5 +88,5 @@
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "0927bf0c89f85195a6b527e97fa895a7021319ca304768f7dbe3d6fbd6fccccd"
+  "content_hash": "0c37918ec5703b71c659f058ef6a9eeaa48f67b4ae371da1d16e85ae67eaea8a"
 }

@@ -310,6 +310,16 @@ mskill.boss_cleave.name,Cleave
 mskill.boss_cleave.desc,Hit every enemy for {power:pct} of {scales}. Cooldown {cooldown}.
 mskill.boss_roar.name,Shattering Roar
 mskill.boss_roar.desc,Lower every enemy's {stat} by {power:pct} for {duration} turns. Cooldown {cooldown}.
+mskill.blur.name,Blur
+mskill.blur.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
+mskill.keen_eye.name,Keen Eye
+mskill.keen_eye.desc,Permanent +{power:pct} {stat}.
+mskill.stoke.name,Stoke
+mskill.stoke.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
+mskill.focus_mind.name,Focus Mind
+mskill.focus_mind.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
+mskill.tailwind.name,Tailwind
+mskill.tailwind.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
 rule.entropy_convert.name,Entropy Convert
 rule.entropy_convert.desc,"Daily Tower: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
 phase.shield_check.name,Shield Check

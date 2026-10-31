@@ -62,7 +62,7 @@
       "def": 80.0,
       "spd": 130.0,
       "luk": 80.0,
-      "skills": "afterimage",
+      "skills": "blur",
       "weight": 1.0
     },
     {
@@ -142,7 +142,7 @@
       "def": 207.0,
       "spd": 230.0,
       "luk": 253.0,
-      "skills": "kindle|ember_lance",
+      "skills": "stoke|ember_lance",
       "weight": 1.0
     },
     {
@@ -190,7 +190,7 @@
       "def": 207.0,
       "spd": 196.0,
       "luk": 332.0,
-      "skills": "mana_surge|arcane_blast",
+      "skills": "focus_mind|arcane_blast",
       "weight": 1.0
     },
     {
@@ -206,7 +206,7 @@
       "def": 248.0,
       "spd": 341.0,
       "luk": 310.0,
-      "skills": "afterimage|star_lance|quick_jab",
+      "skills": "blur|star_lance|quick_jab",
       "weight": 1.0
     },
     {
@@ -254,7 +254,7 @@
       "def": 310.0,
       "spd": 248.0,
       "luk": 434.0,
-      "skills": "second_wind|kindle|ember_lance",
+      "skills": "second_wind|stoke|ember_lance",
       "weight": 1.0
     },
     {
@@ -270,7 +270,7 @@
       "def": 360.0,
       "spd": 340.0,
       "luk": 560.0,
-      "skills": "confuse|mana_surge|arcane_blast",
+      "skills": "confuse|focus_mind|arcane_blast",
       "weight": 1.0
     },
     {
@@ -286,7 +286,7 @@
       "def": 360.0,
       "spd": 340.0,
       "luk": 540.0,
-      "skills": "regenerate|kindle|sovereign_flame",
+      "skills": "regenerate|stoke|sovereign_flame",
       "weight": 1.0
     },
     {
@@ -318,7 +318,7 @@
       "def": 320.0,
       "spd": 400.0,
       "luk": 520.0,
-      "skills": "killer_instinct|afterimage|quick_jab",
+      "skills": "keen_eye|blur|quick_jab",
       "weight": 1.0
     },
     {
@@ -366,7 +366,7 @@
       "def": 475.0,
       "spd": 425.0,
       "luk": 825.0,
-      "skills": "mana_surge|overcharge|aether_bolt",
+      "skills": "focus_mind|tailwind|aether_bolt",
       "weight": 1.0
     }
   ]

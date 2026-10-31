@@ -80,9 +80,15 @@ namespace IdleRng.Web
             {
                 w.Obj().P("id", r.Id).P("name", _db.Text(r.NameKey)).P("letter", r.Id.ToUpperInvariant()).P("element", r.Element);
                 w.Key("stats"); Stats(w, r.Stats);
+                w.Key("pool").Arr();   // the rank's pool monsters (rankEnemies ids), in content order
+                foreach (var e in r.Pool) w.Str(e.Id);
+                w.EndArr();
                 w.EndObj();
             }
             w.EndArr();
+            w.Key("rankEnemies").Obj();
+            foreach (var e in _db.FightRanks.SelectMany(r => r.Pool)) { w.Key(e.Id); RankEnemy(w, e); }
+            w.EndObj();
             w.Key("trees").Obj();
             foreach (var t in _db.Trees.Values.OrderBy(t => t.Id, StringComparer.Ordinal)) Tree(w, t);
             w.EndObj();
@@ -108,8 +114,39 @@ namespace IdleRng.Web
             w.EndObj().EndObj();
             TipJson.StatInfo(w, _db);
             TipJson.NodeTips(w, _db, NodeText);
+            TipJson.SkillTips(w, _db);
             TipJson.TowerTips(w, _db);
             return w.EndObj().ToString();
+        }
+
+        /// <summary>A rank pool monster (specs/14 section 5): {id, name, rank, letter, element, boss, stats, skills[{id, name, kind}]}. boss = the top rank's pool.</summary>
+        private void RankEnemy(JsonOut w, RankEnemyDef e)
+        {
+            var r = _db.FightRanks[e.RankIndex];
+            w.Obj().P("id", e.Id).P("name", _db.Text(e.NameKey)).P("rank", r.Id).P("letter", r.Id.ToUpperInvariant()).P("element", e.Element)
+                .P("boss", e.RankIndex == _db.FightRanks.Count - 1);
+            w.Key("stats"); Stats(w, e.Stats);
+            w.Key("skills").Arr();
+            foreach (var id in e.Skills)
+                w.Obj().P("id", id).P("name", _db.Text("mskill." + id + ".name")).P("kind", _db.MonsterSkills[id].Kind.ToString().ToLowerInvariant()).EndObj();
+            w.EndArr();
+            w.EndObj();
+        }
+
+        /// <summary>
+        /// The run's opponent at rank <paramref name="i"/> for the UI: {rank, letter, id (the rankEnemies id; null in a legacy run,
+        /// which fights the flat rank), name, element, boss, skills[skill ids]}.
+        /// </summary>
+        private void LadderStep(JsonOut w, RunState s, int i)
+        {
+            var r = _db.FightRanks[i];
+            var e = TrainingRun.LadderEnemy(_db, s, i);
+            w.Obj().P("rank", r.Id).P("letter", r.Id.ToUpperInvariant()).P("id", e?.Id)
+                .P("name", _db.Text(e != null ? e.NameKey : r.NameKey)).P("element", e != null ? e.Element : r.Element)
+                .P("boss", i == _db.FightRanks.Count - 1);
+            w.Key("skills").Arr();
+            if (e != null) foreach (var id in e.Skills) w.Str(id);
+            w.EndArr();
         }
 
         private void Tree(JsonOut w, TreeDef t)
@@ -603,6 +640,7 @@ namespace IdleRng.Web
                         var log = new FightLog();
                         var r = TrainingRun.Fight(_db, s, log.Record, log.Watch);
                         w.P("ok", true).P("kind", "fight").P("won", r.Won).P("rankBefore", r.RankBefore).P("rankAfter", r.RankAfter).P("sp", r.SpGained);
+                        w.Key("opponent"); LadderStep(w, s, r.RankBefore); w.EndObj();   // who was fought (the ladder does not change)
                         w.P("outcome", r.Fight.Outcome.ToString()).P("ticks", r.Fight.Ticks);
                         w.Key("units").Arr();
                         foreach (var u in r.Fight.Final.Units) FightUnitOut(w, u);
@@ -782,15 +820,27 @@ namespace IdleRng.Web
             w.Key("odds").Obj().P("fail", fail).P("super", k.DrillSuperP).P("success", Math.Max(0, 1 - fail - k.DrillSuperP))
                 .P("injury", TrainingRun.InjuryChance(k, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);
-            var opp = _db.FightRanks[s.Rank];
-            TipJson.StatNow(w, _db, s.Stats, opp.Stats, _db.Text(opp.NameKey));
+            var opp = TrainingRun.OpponentFighter(_db, s, s.Rank);
+            var oppEnemy = TrainingRun.LadderEnemy(_db, s, s.Rank);
+            string oppName = _db.Text(oppEnemy != null ? oppEnemy.NameKey : _db.FightRanks[s.Rank].NameKey);
+            TipJson.StatNow(w, _db, s.Stats, opp.Stats, oppName);
             w.Key("growth").Obj();
             foreach (var id in StatIds.Trained) w.P(id, TrainingRun.Growth(_db, s, id));
             w.EndObj();
-            w.Key("opponent").Obj().P("name", _db.Text(opp.NameKey)).P("element", opp.Element);
+            w.Key("opponent"); LadderStep(w, s, s.Rank);   // the current rank's opponent on the ladder
             w.Key("stats"); Stats(w, opp.Stats);
             TipJson.StatNow(w, _db, opp.Stats, s.Stats, _db.Text(sp.NameKey));
             w.EndObj();
+            // The whole ladder, lowest rank first (specs/14 section 5): beaten = the monster won a fight at that rank (below its
+            // rank now, or a win at the top rank, where a win does not promote); current = the rank fought next.
+            int top = _db.FightRanks.Count - 1;
+            w.Key("ladder").Arr();
+            for (int i = 0; i <= top; i++)
+            {
+                LadderStep(w, s, i);
+                w.P("beaten", i < s.Rank || (i == top && s.Rank == top && s.FightsWon > s.Rank)).P("current", i == s.Rank).EndObj();
+            }
+            w.EndArr();
             w.Key("slots").Arr();
             foreach (var t in s.Slots)
             {

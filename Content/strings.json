@@ -1247,6 +1247,46 @@
       "text": "Lower every enemy's {stat} by {power:pct} for {duration} turns. Cooldown {cooldown}."
     },
     {
+      "key": "mskill.blur.name",
+      "text": "Blur"
+    },
+    {
+      "key": "mskill.blur.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
+    },
+    {
+      "key": "mskill.keen_eye.name",
+      "text": "Keen Eye"
+    },
+    {
+      "key": "mskill.keen_eye.desc",
+      "text": "Permanent +{power:pct} {stat}."
+    },
+    {
+      "key": "mskill.stoke.name",
+      "text": "Stoke"
+    },
+    {
+      "key": "mskill.stoke.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
+    },
+    {
+      "key": "mskill.focus_mind.name",
+      "text": "Focus Mind"
+    },
+    {
+      "key": "mskill.focus_mind.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
+    },
+    {
+      "key": "mskill.tailwind.name",
+      "text": "Tailwind"
+    },
+    {
+      "key": "mskill.tailwind.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Used again when it runs out."
+    },
+    {
       "key": "rule.entropy_convert.name",
       "text": "Entropy Convert"
     },
