@@ -65,7 +65,7 @@ Result at T7: `00`, `03`, `05`, `06` and `09` were rewritten; `02`, `04`, `07` a
 | `11-party-and-builds` | Phases 3-5 cancelled. The battle, kit vocabulary and elements carry into the new battle spec; the rest retires. |
 | `12-monster-trainer-design` | The target design. Each built system moves out of it into its own rules spec. |
 
-New rules specs were written as phases landed, one per system: `14-training-run`, `15-skill-trees`, `16-battle`, `18-meta-progression`, `19-gauntlet` (the Vault is in `13` T4 and `18`; `17` was never used). Each says what is live.
+New rules specs were written as phases landed, one per system: `14-training-run`, `15-skill-trees`, `16-battle`, `18-meta-progression`, `19-gauntlet`, `21-daily-tower` (the Vault is in `13` T4 and `18`; `17` was never used). Each says what is live.
 
 ## 5. Priorities and issue triage (applied 2026-10-30 at kj's request)
 
@@ -173,7 +173,7 @@ MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were m
 |---|---|
 | T8 | **Done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title; the web client spins the wheel after sealing and shows "Floor N: title" on the grade screen and Vault cards). End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
 | T9 | **Done** (`specs/18` sections 4 and 8; issue #73). Re-scoped by kj (2026-10-30): the species gacha is scrapped. A new account owns the starter species (slime); the others unlock from account achievements (content table `achievements`, checked at seal and on load). The always-on talent shop is replaced by a post-run vendor: `VENDOR_OFFERS` (5) random talent offers per sealed run, rarity odds by the run's grade (`vendor_rarities`), bought with Training Shards, gone when the next run starts. Skill Books become the premium gate (dropped by the Daily Tower, T10; selling them is open, #49 and #77). Account save v3. Web: locked species with their condition, achievement list and notices, the vendor screen after the grade screen. `tools/gacha_model.py` deleted, `specs/01` retired, Genetic Aptitude dropped |
-| T10 | **P0.** Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
+| T10 | **P0.** Rules written in `specs/21` (not built; questions 1 and 2 there block the content step). Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
 | T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |
 | T12 | Async 4v4 PvP on `specs/10`: accounts, server-resolved battles, cosmetic rewards |
 | T13 | Monetization: opt-in ads, ad-removal pass, cosmetics; platform builds |
