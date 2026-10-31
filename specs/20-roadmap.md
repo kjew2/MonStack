@@ -10,7 +10,7 @@ Status: **proposal** (agent draft, 2026-10-30; kj has not reviewed it). A high-l
 - Items are in the order they should be done inside each priority.
 - Issues that describe the removed idle game (stage walls, offline gold, heroes, gear, idle chest) are not deleted here. Each is mapped to the item that replaces it and marked **re-scope**, meaning the issue text must be rewritten before anyone builds from it.
 
-## P0 - Now: close out the MVP and lay foundations
+## P0 - Now: close out the MVP, build T9 and T10, lay foundations
 
 | # | Item | Kind | Size | Issues |
 |---|---|---|---|---|
@@ -19,21 +19,22 @@ Status: **proposal** (agent draft, 2026-10-30; kj has not reviewed it). A high-l
 | R0.3 | **Pick the game's name**, then do the one mechanical `IdleRng` rename (`specs/13` section 1). Cheaper the earlier it happens; store listing, site and community channels wait on it. | Fix / Tech | S + decision | #47 (name part) |
 | R0.4 | **Answer the open design questions** in `specs/13` section 9 (what overwriting removes, one energy meter, roles and elements). Not blocking, but each is a rule the next specs build on. | Fix | decision | none |
 
+| R0.5 | **T9 species gacha and aptitude ranks** (moved up from P1, kj 2026-10-31). Engine and UI; the currency and gem-sale question (R1.9) blocks only the economy part. | Feature | M | #73 |
+| R0.6 | **T10 Daily Tower** (moved up from P1, kj 2026-10-31): 4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button. Needs its own spec before building. | Feature | L | #74 |
+
 ## P1 - Next: the game toward 1.0
 
-Order follows `specs/13` section 6. Each phase gets its own spec before building (T10 and T11 explicitly).
+Order follows `specs/13` section 6. Each phase gets its own spec before building (T11 explicitly). T9 and T10 are P0 (R0.5, R0.6).
 
 | # | Item | Kind | Size | Issues |
 |---|---|---|---|---|
 | R1.1 | **Done.** **T8 gauntlet wheel screen and Legacy Titles** in the web client (engine done, `specs/19`). Also expose the gauntlet fields in the bridge. | Feature | S-M | #72 |
-| R1.2 | **T9 species gacha and aptitude ranks.** Engine and UI; the currency and gem-sale question (R1.9) blocks only the economy part. | Feature | M | #73 |
 | R1.3 | **First-time experience, rewritten for the trainer**: guided first run, real strings (species, trees, nodes), settings, accessibility basics, localisation decision. The existing issue is written for the idle game. | Feature | M | #48 (**re-scope**) |
-| R1.4 | **T10 Daily Tower** (4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button). | Feature | L | #74 |
 | R1.5 | **Content depth for runs**: more species, native and generic trees, chase trees, books and talents beyond the placeholders; the long-term loop for a day-45 player. Numbers stay placeholders until balance resumes. | Feature | L | #51 (**re-scope**: its stage-walls, gear bag and prestige scope is the idle game; keep the endgame and live-ops-calendar questions) |
 | R1.6 | **T11 Endless Tower** (4v4, mutators, gambit rulebook editor on a phone). | Feature | L | #75 |
 | R1.7 | **Art and visual identity**: the largest launch gap and the longest lead time, so start the decisions early and run in parallel. Hero portraits become monster art; stage backgrounds become battle and tower backdrops. | Feature | L | #45 (**re-scope**) |
 | R1.8 | **Audio and game feel**: music, SFX, haptics, volume settings. | Feature | M | #46 (**re-scope**: gacha and boss cues map to pulls, rank fights and gauntlet) |
-| R1.9 | **Decide monetisation** (are gems sold; rewarded ads; cosmetics). Blocks the economy of R1.2 and all of R2.4. | Decision | decision | #49 (decision part), #77 |
+| R1.9 | **Decide monetisation** (are gems sold; rewarded ads; cosmetics). Blocks the economy of R0.5 and all of R2.4. | Decision | decision | #49 (decision part), #77 |
 
 ## P1 - Launch readiness (after the game systems above)
 
@@ -62,7 +63,7 @@ Candidates for new issues if kj agrees; none is filed.
 - **Balance harness** on the run bots (`specs/09` section 7), when balance resumes (CLAUDE.md).
 - **Battle and run throughput benchmark**, when speed matters (`specs/13` section 2).
 - **Phone-quality pass on the web client** (touch targets, wasm load time, save-size limits in one browser key).
-- **Confirm the "dupes feed aptitude" math** against `specs/01` with the species banner vectors (part of R1.2).
+- **Confirm the "dupes feed aptitude" math** against `specs/01` with the species banner vectors (part of R0.5).
 
 ## Issue map (every open issue)
 
@@ -83,8 +84,8 @@ Candidates for new issues if kj agrees; none is filed.
 | #26 | R2.3 | #69 | R0.1 |
 | #27 | R2.1 | #70 | R2.7 |
 | #28 | R2.1 | #72 | R1.1 |
-| #29 | R3.2 | #73 | R1.2 |
-| #74 | R1.4 | #75 | R1.6 |
+| #29 | R3.2 | #73 | R0.5 |
+| #74 | R0.6 | #75 | R1.6 |
 | #76 | R2.1 | #77 | R2.2, R1.9 |
 
 ## Suggested triage changes

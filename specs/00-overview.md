@@ -24,8 +24,8 @@ Not built yet (designed in `specs/12`, ordered in `specs/13`): the species gacha
 
 | Tag | Meaning | Content |
 |---|---|---|
-| **P0** | The MVP, a single-player web demo (`specs/12` section 12.1): built and live | Phases T0 to T7 of `specs/13`: battle, training run, skill trees, Vault, account and talents, web client, idle game removed |
-| **P1** | Toward 1.0 on Steam and the web (`specs/12` section 12.2) | T8 gauntlet wheel screen (engine done), T9 species gacha, T10 Daily Tower, T11 Endless Tower and gambits, T12 async PvP and server, T13 monetization and platform builds |
+| **P0** | The MVP, a single-player web demo (`specs/12` section 12.1): T0 to T7 built and live, T9 and T10 to build (moved up from P1 by kj, 2026-10-31) | Phases T0 to T7 of `specs/13` (battle, training run, skill trees, Vault, account and talents, web client, idle game removed), plus T9 species gacha and T10 Daily Tower |
+| **P1** | Toward 1.0 on Steam and the web (`specs/12` section 12.2) | T8 gauntlet wheel screen (done), T11 Endless Tower and gambits, T12 async PvP and server, T13 monetization and platform builds |
 | **P2** | After 1.0, or parked until a platform decision | iOS and a native client, live operations |
 
 The priority labels on GitHub issues use the same tags (`specs/13` section 5).

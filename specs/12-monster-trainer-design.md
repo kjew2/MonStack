@@ -211,13 +211,15 @@ Estimated 150-200 hours (8-12 weeks part time with AI help).
 - Rank fights during the run; the rank reached is the grade (instead of towers and the gauntlet).
 - Score screen with the rank and a stat breakdown.
 
-Not in the MVP: multiplayer and database, gacha UI, Endless Tower scaling, PvP.
+- Added to the MVP (kj, 2026-10-31): the species gacha with dupes feeding aptitude ranks (`specs/13` T9) and the Daily Tower (T10). The hour estimate above predates this and has not been revisited.
+
+Not in the MVP: multiplayer and database, Endless Tower scaling, PvP.
 
 ### 12.2 1.0 launch
 
 - Async 4v4 PvP sync.
-- Daily Tower and Endless Tower with mutators.
-- Ad-removal integration and gacha.
+- Endless Tower with mutators.
+- Ad-removal integration.
 - Steam and web launch.
 
 ## 13. Conflicts between the drafts and open questions
