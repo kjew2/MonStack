@@ -83,6 +83,10 @@ mskill.quick_jab.name,Quick Jab
 mskill.quick_jab.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.riposte.name,Riposte
 mskill.riposte.desc,Chase trait. On evade: strike back for {power:pct} {scales}.
+mskill.iron_press.name,Iron Press
+mskill.iron_press.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.smite.name,Smite
+mskill.smite.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.provoke.name,Provoke
 mskill.provoke.desc,Taunt for {duration} turns. Cooldown {cooldown}.
 mskill.spiked_shell.name,Spiked Shell
@@ -320,7 +324,7 @@ tip.stacks.triggered,"Each trigger adds a stack, up to {EFFECT_STACK_CAP}; at th
 tip.ai.damage,An enemy is alive
 tip.ai.heal,"It or an ally is missing at least the HP it restores, so none is wasted (a heal too big for that: at or below {AI_HEAL_BELOW:pct} of max HP)"
 tip.ai.shield,It or an ally is below {AI_SHIELD_BELOW:pct} of max HP
-tip.ai.taunt,It is not taunting already
+tip.ai.taunt,"It is not taunting already, and an ally is alive for it to protect"
 tip.ai.buff,The target does not have this buff
 tip.ai.debuff,"An enemy does not have this debuff, and it lands on one that does not"
 tip.priority,"Each action uses the first ready heal or shield whose condition holds, else the first ready other skill, in slot then node order; otherwise a basic attack"

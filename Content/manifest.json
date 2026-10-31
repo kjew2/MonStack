@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "4.6",
+  "content_version": "4.7",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -45,7 +45,7 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "6f8276cbf2122e305ced584c308622cfc32ee848c147e9349d3c4d280e2134fe"
+      "sha256": "fdfe5edcacb93c8267ef91aab9921a4378e2d9b608cdcd36d6926ea7b3a4c714"
     },
     "rank_enemies": {
       "file": "rank_enemies.json",
@@ -65,7 +65,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "f1419e94fac714d2651810d3a8e9c5a6979da4caf93d0308eddcfb3c3a68768e"
+      "sha256": "75a327d221656b854b202d402ee8e5eaef9ef45091f5a1e08bc062f44e38db4a"
     },
     "talents": {
       "file": "talents.json",
@@ -77,7 +77,7 @@
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
-      "sha256": "9d71f57ca90cb0e04fdc555d54ba3855f2844b822694be7d5435cf90f11bab0d"
+      "sha256": "f455a597119dcc08e176d5a81d3b6705dcb7bcc9afb82e9681c68059b5b61cbf"
     },
     "trees": {
       "file": "trees.json",
@@ -88,5 +88,5 @@
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "d5d0c800493b795bef94f9d1621441bffd8e1e9085628a869841973d41debe70"
+  "content_hash": "d6b5bd6120ebd151f114b62f3cf1640f01354cc001055630cc1b5c052f176d30"
 }

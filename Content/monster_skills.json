@@ -900,6 +900,30 @@
       "cooldown": 0,
       "duration": 0,
       "element": null
+    },
+    {
+      "id": "iron_press",
+      "name_key": "mskill.iron_press.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "def",
+      "power": 1.2,
+      "cooldown": 2,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "smite",
+      "name_key": "mskill.smite.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "wis",
+      "power": 1.6,
+      "cooldown": 2,
+      "duration": 0,
+      "element": null
     }
   ]
 }

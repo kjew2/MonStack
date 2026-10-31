@@ -171,7 +171,7 @@ The run adds up the monster's battle tallies (`specs/16` section 6.3) across its
 | Kind | Trees |
 |---|---|
 | Native | slime: *Slime Fundamentals*, *Gel Armor*; drake: *Pyromancy*, *Heavy Armor*; sprite: *Aether Striker*, *Mind Warp*; mandrake: *Rootbound*, *Mandrake Wail*; shade_hound: *Umbral Step*, *Shadow Harvest* (content `4.2`) |
-| Generic | one per stat at 300 (*Vital Core*, *Brute Force*, *Spellcraft*, *Sage Mind*, *Nimble Feet*, *Bulwark*, *Overclock*, *Fortune*), two for any stat at 500 (*Battle Instinct*, *Survivor*) |
+| Generic | one per stat at 300 (*Vital Core*, *Brute Force*, *Spellcraft*, *Sage Mind*, *Nimble Feet*, *Bulwark*, *Overclock*, *Fortune*), two for any stat at 500 (*Battle Instinct*, *Survivor*). Four stat trees put a damage skill scaled by their own stat at index 1, so an all-in build gets it soon after its Awakening (content 4.7, `specs/25` section 10): *Bulwark* *Iron Press* (DEF), *Sage Mind* *Smite* (WIS, magical), *Fortune* *Gamble* (LUK), *Spellcraft* *Arcane Blast* (INT) |
 | Book | *Codex of Tides* (book `book_tides`, slime), *Ember Codex* (`book_embers`, drake), *Tome of Echoes* (`book_echoes`, sprite), *Verdant Herbarium* (`book_roots`, mandrake), *Umbral Grimoire* (`book_shadows`, shade_hound) |
 
 Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
