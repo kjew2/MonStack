@@ -247,6 +247,16 @@ namespace IdleRng.Sim.Combat
         public double CritPerLuk { get; set; }
         public double CritCap { get; set; }
         public double CritDmg { get; set; }
+
+        /// <summary>Crit damage multiplier added per point of the attacker's DEX (specs/16 section 5.3).</summary>
+        public double CritDmgPerDex { get; set; }
+
+        /// <summary>Share of its damage a magical hit deals when it rolls under the target's evade chance.</summary>
+        public double GrazeMult { get; set; }
+
+        /// <summary>Fortune = min(FortuneCap, LUK / (LUK + FortuneK)): the chance to reroll a roll that went against the unit.</summary>
+        public double FortuneK { get; set; }
+        public double FortuneCap { get; set; }
         public double SpdMin { get; set; }
 
         /// <summary>A trained stat never drops below this fraction of its base (STAT_FLOOR_FRAC).</summary>
@@ -330,7 +340,7 @@ namespace IdleRng.Sim.Combat
                 ElementStrongMult = k.ElementStrongMult, ElementWeakMult = k.ElementWeakMult,
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
-                CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
+                CritDmg = k.MonCritDmg, CritDmgPerDex = k.MonCritDmgPerDex, GrazeMult = k.MonGrazeMult, FortuneK = k.MonFortuneK, FortuneCap = k.MonFortuneCap, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
                 TideRegen = k.MonTideRegen, TideShieldCap = k.MonTideShieldCap, DrainFrac = k.MonDrainFrac, FirePierce = k.MonFirePierce,
                 DoubleTurns = k.MonDoubleTurns, RebirthHeal = k.MonRebirthHeal, WailStagger = k.MonWailStagger, WailWither = k.MonWailWither,
                 VeilEvadeCap = k.MonVeilEvadeCap, FeastStr = k.MonFeastStr, CounterMult = k.MonCounterMult, FireBonus = k.MonFireBonus,

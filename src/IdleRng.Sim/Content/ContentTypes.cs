@@ -26,6 +26,10 @@ namespace IdleRng.Sim.Content
         public double MonCritPerLuk { get; internal set; }       // MON_CRIT_PER_LUK
         public double MonCritCap { get; internal set; }          // MON_CRIT_CAP
         public double MonCritDmg { get; internal set; }          // MON_CRIT_DMG
+        public double MonCritDmgPerDex { get; internal set; }    // MON_CRIT_DMG_PER_DEX
+        public double MonGrazeMult { get; internal set; }        // MON_GRAZE_MULT
+        public double MonFortuneK { get; internal set; }         // MON_FORTUNE_K
+        public double MonFortuneCap { get; internal set; }       // MON_FORTUNE_CAP
         public double MonSpdMin { get; internal set; }           // MON_SPD_MIN
         public int MonTimeLimitTicks { get; internal set; }      // MON_TIME_LIMIT_TICKS
         public int MonSideSize { get; internal set; }            // MON_SIDE_SIZE

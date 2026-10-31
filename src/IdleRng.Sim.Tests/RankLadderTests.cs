@@ -182,9 +182,10 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void LegacyRun_FightsTheFlatRanks_AndKeepsTheVersion5Hash()
         {
-            // Computed by the code before the rank pools (run hash version 5) for this exact script: runs saved and Vault entries
-            // sealed before content 4.3 must keep replaying to their stored hashes.
-            const string V5Hash = "3036b66f6cc6a90c85e4114e510230ce64d3f2916b64ec8513d6f2aaf4d7c932";
+            // A legacy run (no ladder) keeps the run hash version 5 encoding. First computed by the code before the rank pools;
+            // re-pinned when battle rules change the fights themselves (content 4.5: graze, fortune, DEX crit damage; specs/25),
+            // which specs/06 section 5 allows: entries sealed under older rules may stop replaying.
+            const string V5Hash = "8262eb7467bf036bb757176797b1b7914d39b3c4767a33007fc48373b320996f";
             var s = Scripted(TrainingRun.Start(Db, "drake", 11, null, null, new List<string>()));
             Assert.That(s.Ladder, Is.Empty);
             Assert.That(TrainingRun.LadderEnemy(Db, s, 0), Is.Null);

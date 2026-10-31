@@ -72,6 +72,8 @@ namespace IdleRng.Sim.Combat
                     case "foe_evade": return TextTemplate.Number(BattleSim.EvadeChance(r, foe.Dex, self.Dex), fmt);
                     case "acts": return TextTemplate.Number(BattleSim.GaugeFill(r, self.Spd) * r.TurnTicks / r.GaugeSize, fmt);
                     case "crit": return TextTemplate.Number(BattleSim.CritChance(r, self.Luk, 0), fmt);
+                    case "crit_dmg": return TextTemplate.Number(BattleSim.CritMult(r, self.Dex, 0), fmt);
+                    case "fortune": return TextTemplate.Number(BattleSim.Fortune(r, self.Luk), fmt);
                     default: return null;
                 }
             }

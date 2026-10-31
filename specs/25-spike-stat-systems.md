@@ -1,6 +1,6 @@
 # 25 - Spike: stat systems, DEX, LUK and single-stat builds
 
-Status: **spike report (agent, 2026-10-31); nothing here is agreed design.** kj asked for field research before changing any stat: DEX needs a tweak, LUK should be more interesting, every all-in single-stat build should at least kind of work, and "magic cannot be dodged" looks like a problem, but kj wants to see other stat systems before fixing it. Section 7 has the questions for kj.
+Status: **spike report (agent, 2026-10-31); kj answered section 7 the same day, and the DEX and LUK retune is built (content 4.5, section 9).** Only the answers in section 7 are agreed design; the rest is research. kj asked for field research before changing any stat: DEX needs a tweak, LUK should be more interesting, every all-in single-stat build should at least kind of work, and "magic cannot be dodged" looks like a problem, but kj wants to see other stat systems before fixing it. Section 7 has the questions for kj.
 
 ## 1. Scope and method
 
@@ -148,7 +148,10 @@ Each package is independent and is measured with `balance --policies focus,mono-
 - DEX as cast or action speed (SPD owns tempo).
 - Full binary dodge against magic at the current 50% cap (the most frustrating option in the field).
 
-## 7. Questions for kj
+## 7. Questions for kj (answered 2026-10-31)
+
+kj's answers, in order: (1) graze, "maybe 25%", tuning left to the agent; (2) DEX as a crit damage scaler, if sound; (3) LUK rerolls dodge as well, and defends against crits; (4) an all-in build should reach about D or C when the rest is played sensibly, and all-in DEX should at least win some fights; (5) no timeout-by-HP% rule: it would overtune HP and heal builds; (6) leave SPD as it is and make the other stats stronger. The questions as asked:
+
 
 1. **Magic and DEX.** Which family (section 3.1)?
    - B: DEX dodges magic like physical.
@@ -191,3 +194,32 @@ Web checks during this spike:
 - TFT items: [Titan's Resolve](https://wiki.leagueoflegends.com/en-us/TFT:Titan%27s_Resolve)
 
 Everything else is from the researchers' own knowledge, and formulas marked (≈) may be off in the details.
+
+## 9. The retune (content 4.5)
+
+Built from the answers in section 7. The rules are in `specs/16` sections 3 and 5.3:
+- **Graze.** Every hit rolls against the target's evade chance. A physical hit under it misses; a magical hit under it is grazed and deals `MON_GRAZE_MULT` = 0.25 of its damage, with no crit. `umbral_veil` makes those grazes full evades.
+- **Evade curve.** `MON_EVADE_PER_DEX` 0.0005 to 0.001, so 550 DEX against a B rank's 300 evades about 30% instead of 17.5%.
+- **DEX crit damage.** A crit deals `MON_CRIT_DMG` + DEX x `MON_CRIT_DMG_PER_DEX` (0.001), so 550 DEX makes a crit x2.05 instead of x1.5.
+- **Fortune.** `min(0.5, LUK / (LUK + 1000))`. It rerolls the unit's own failed evade (graze included) and failed crit, and a crit against it rolls again. The battle log marks those hits "lucky!" and grazes "(grazed)".
+
+Graze took the 25% kj suggested: in the measurements, 0.25 and 0.5 differed by less than 0.1 grade for every cell. Grade means at 200 seeds, before and after (E = 0, D = 1, C = 2):
+
+| Policy | slime | drake | sprite | mandrake | shade_hound | avg | rank fight win rate |
+|---|---|---|---|---|---|---|---|
+| `mono-dex` before | 1.78 | 1.14 | 1.91 | 1.25 | 2.99 | 1.81 | 15% |
+| `mono-dex` after | 2.02 | 1.51 | 2.25 | 1.29 | 3.38 | 2.09 | 17% |
+| `mono-luk` before / after | 2.56 / 2.50 | 1.26 / 1.25 | 2.37 / 2.38 | 1.75 / 1.72 | 1.74 / 1.90 | 1.94 / 1.95 | 16% / 16% |
+| `mono-def` before / after | 1.97 / 1.93 | 1.14 / 1.06 | 2.02 / 2.03 | 1.51 / 1.43 | 1.77 / 1.84 | 1.68 / 1.66 | 14% / 14% |
+| `focus` before / after | 4.67 / 4.18 | 2.41 / 2.29 | 3.00 / 2.91 | 2.31 / 2.12 | 2.99 / 3.38 | 3.08 / 2.97 | 26% / 25% |
+
+What changed:
+- **All-in DEX** moved from second-worst to level with all-in STR (2.04). Its median rank fights won rose to 2 for drake, and the drake mean rose from 1.1 to 1.5.
+- **Every all-in build** now averages D or better on every species. All-in WIS and all-in DEF on drake sit right at D (1.00 and 1.06).
+- **LUK** barely moves in the means, because rank opponents carry the highest LUK of any stat (825 at S), so their fortune cancels most of the player's. LUK now does what kj asked (rerolls dodges, defends crits); making the all-in build stronger is the follow-up below.
+- **Low-DEX builds** lose a little: opponents' DEX now dodges more of their hits. Slime `focus` (all-in HP) went from 4.67 to 4.18.
+- **Magic** grazes against high-DEX opponents, so all-in INT lost about 0.07.
+- **Sanity checks:** all 12 pass in the default `balance` run.
+
+Follow-up: all-in DEF is now the weakest build (1.66). LUK, WIS and INT are close behind (about 1.9). A pass to make those stronger is issue #117.
+

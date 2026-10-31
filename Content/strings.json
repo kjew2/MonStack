@@ -952,7 +952,7 @@
     },
     {
       "key": "stat.int.desc",
-      "text": "Magical damage. INT-scaled skills deal magical damage, which cannot be dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
+      "text": "Magical damage. INT-scaled skills deal magical damage, which can be grazed but not dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
     },
     {
       "key": "stat.int.now",
@@ -976,11 +976,11 @@
     },
     {
       "key": "stat.dex.desc",
-      "text": "Dodging physical hits. Dodge chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. DEX also makes the unit's own physical hits harder to dodge. Magical hits cannot be dodged."
+      "text": "Dodging and precision. Evade chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. A physical hit that rolls under it misses; a magical hit is grazed instead: it deals {MON_GRAZE_MULT:pct} of its damage and cannot crit. DEX also makes the unit's own hits harder to evade, and each point adds {MON_CRIT_DMG_PER_DEX:pct} to its crit damage (a x{MON_CRIT_DMG} crit deals {MON_CRIT_DMG:pct})."
     },
     {
       "key": "stat.dex.now",
-      "text": "Dodges {evade:pct} of {foe}'s physical hits; {foe} dodges {foe_evade:pct} of the physical hits it takes"
+      "text": "Evades {evade:pct} of {foe}'s hits (spells are grazed); {foe} evades {foe_evade:pct} of the hits it takes; crits deal x{crit_dmg}"
     },
     {
       "key": "stat.def.name",
@@ -1012,11 +1012,11 @@
     },
     {
       "key": "stat.luk.desc",
-      "text": "Critical hits. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage (plus crit damage effects). Physical and magical hits can both crit."
+      "text": "Critical hits and fortune. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage plus the attacker's DEX bonus (and crit damage effects). Fortune is LUK / (LUK + {MON_FORTUNE_K}), up to {MON_FORTUNE_CAP:pct}: the chance to reroll the unit's own failed evade or failed crit, and to make a crit against it roll again."
     },
     {
       "key": "stat.luk.now",
-      "text": "{crit:pct} crit chance"
+      "text": "{crit:pct} crit chance, {fortune:pct} fortune"
     },
     {
       "key": "stat.crit_rate.label",
@@ -1160,7 +1160,7 @@
     },
     {
       "key": "tip.magical",
-      "text": "Magical: cannot be dodged, the target's WIS reduces it"
+      "text": "Magical: grazed instead of dodged, the target's WIS reduces it"
     },
     {
       "key": "tip.element.own",
@@ -1712,7 +1712,7 @@
     },
     {
       "key": "rule.umbral_veil.desc",
-      "text": "It can evade spells as well as physical hits, gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+      "text": "Spells that roll under its evade chance miss instead of grazing; it gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
     },
     {
       "key": "rule.night_feast.name",

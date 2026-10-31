@@ -35,6 +35,60 @@ namespace IdleRng.Sim.Tests
             public double NextDouble() => _v;
         }
 
+        /// <summary>A rng that returns the given draws in order, then 0.99 (no crit, evade or reroll) forever.</summary>
+        sealed class Seq : IRandomSource
+        {
+            readonly Queue<double> _q;
+            public Seq(params double[] v) { _q = new Queue<double>(v); }
+            public double NextDouble() => _q.Count > 0 ? _q.Dequeue() : 0.99;
+        }
+
+        /// <summary>The first action of a fight of a fast attacker against <paramref name="target"/>, under the given draws.</summary>
+        static FightAction FirstHit(Fighter attacker, Fighter target, IRandomSource rng)
+        {
+            var s = BattleSim.Start(Rules, Side(attacker), Side(target));
+            var log = new List<FightAction>();
+            while (log.Count == 0) BattleSim.Step(Rules, s, rng, log.Add);
+            return log[0];
+        }
+
+        [Test]
+        public void Fortune_IsLukOverLukPlusK_Capped()
+        {
+            var r = Rules;
+            Assert.That(BattleSim.Fortune(r, 0), Is.EqualTo(0));
+            Assert.That(BattleSim.Fortune(r, 300), Is.EqualTo(Math.Min(r.FortuneCap, 300 / (300 + r.FortuneK))).Within(1e-12));
+            Assert.That(BattleSim.Fortune(r, 1e9), Is.EqualTo(r.FortuneCap));
+        }
+
+        [Test]
+        public void Fortune_RerollsAFailedEvade()
+        {
+            // target DEX 999 vs 300: evade chance is the cap. Draws: evade fails, fortune hits, evade again succeeds.
+            var hit = FirstHit(Attacker(), Mon("b", 300, null, x => x.Dex = 999), new Seq(0.99, 0.0, 0.0));
+            Assert.That((hit.Evaded, hit.Lucky), Is.EqualTo((true, true)));
+            // fortune hits but the second evade roll fails too: the hit lands, nothing lucky
+            hit = FirstHit(Attacker(), Mon("b", 300, null, x => x.Dex = 999), new Seq(0.99, 0.0, 0.99));
+            Assert.That((hit.Evaded, hit.Lucky), Is.EqualTo((false, false)));
+            // no LUK: no fortune draw, so the second draw (0) is the crit roll
+            hit = FirstHit(Attacker(), Mon("b", 300, null, x => { x.Dex = 999; x.Luk = 0; }), new Seq(0.99, 0.0, 0.99));
+            Assert.That((hit.Evaded, hit.Crit, hit.Lucky), Is.EqualTo((false, true, false)));
+        }
+
+        [Test]
+        public void Fortune_RerollsAFailedCrit_AndMakesACritAgainstItRollAgain()
+        {
+            // target DEX 0: no evade draw. Draws: crit fails, attacker's fortune hits, crit again lands, target's fortune misses
+            var hit = FirstHit(Attacker(), Mon("b", 300, null, x => x.Dex = 0), new Seq(0.99, 0.0, 0.0, 0.99));
+            Assert.That((hit.Crit, hit.Lucky), Is.EqualTo((true, true)));
+            // crit lands, the target's fortune hits, the crit's second roll fails: denied
+            hit = FirstHit(Attacker(), Mon("b", 300, null, x => x.Dex = 0), new Seq(0.0, 0.0, 0.99));
+            Assert.That((hit.Crit, hit.Lucky), Is.EqualTo((false, true)));
+            // crit lands, the target's fortune hits, the crit's second roll lands too: it stands
+            hit = FirstHit(Attacker(), Mon("b", 300, null, x => x.Dex = 0), new Seq(0.0, 0.0, 0.0));
+            Assert.That((hit.Crit, hit.Lucky), Is.EqualTo((true, false)));
+        }
+
         static FightResult Run(Fighter[] a, Fighter[] b, ulong seed = 1, List<FightAction> log = null) =>
             BattleSim.Resolve(Rules, a, b, seed, log == null ? null : (Action<FightAction>)log.Add);
 
@@ -196,14 +250,16 @@ namespace IdleRng.Sim.Tests
             double neutral = OneHit(Attacker("fire"), Mon("b", 300, "light"), 0.99);
             double strong = OneHit(Attacker("fire"), Mon("b", 300, "nature"), 0.99);
             Assert.That(strong / neutral, Is.EqualTo(r.ElementStrongMult).Within(1e-9));
-            // draw 0 means: the target evades every physical hit, so use a magical attacker to see the crit
-            double magNoCrit = OneHit(Attacker(null, s => s.Int = 400), Mon("b", 300), 0.99);
-            double magCrit = OneHit(Attacker(null, s => s.Int = 400), Mon("b", 300), 0.0);
-            Assert.That(magCrit / magNoCrit, Is.EqualTo(r.CritDmg).Within(1e-9));
+            // a target with no DEX has no evade chance (no evade draw), so a draw of 0 always crits; DEX adds crit damage
+            double noCrit = OneHit(Attacker(), Mon("b", 300, null, s => s.Dex = 0), 0.99);
+            double crit = OneHit(Attacker(), Mon("b", 300, null, s => s.Dex = 0), 0.0);
+            Assert.That(crit / noCrit, Is.EqualTo(BattleSim.CritMult(r, 300, 0)).Within(1e-9));
+            Assert.That(BattleSim.CritMult(r, 300, 0), Is.EqualTo(r.CritDmg + 300 * r.CritDmgPerDex).Within(1e-12));
+            Assert.That(BattleSim.CritMult(r, 0, -5), Is.EqualTo(1.0), "never below x1");
         }
 
         [Test]
-        public void Evasion_OnlyAgainstPhysical_AndCounted()
+        public void Evasion_PhysicalMisses_MagicGrazes_AndCounted()
         {
             var s = BattleSim.Start(Rules, Side(Attacker()), Side(Mon("b", 300, null, x => x.Dex = 999)));
             var log = new List<FightAction>();
@@ -212,8 +268,15 @@ namespace IdleRng.Sim.Tests
             Assert.That(s.Units[1].Tally.Evades, Is.EqualTo(1));
             Assert.That(s.Units[1].Hp, Is.EqualTo(s.Units[1].MaxHp));
 
-            double mag = OneHit(Attacker(null, x => x.Int = 400), Mon("b", 300, null, x => x.Dex = 999), 0.0);
-            Assert.That(mag, Is.GreaterThan(0), "magic cannot be evaded");
+            // a magical hit that rolls under the evade chance is grazed: MON_GRAZE_MULT of its damage, no crit, not an evade
+            var r = Rules;
+            double full = OneHit(Attacker(null, x => x.Int = 400), Mon("b", 300, null, x => x.Dex = 999), 0.99);
+            var gs = BattleSim.Start(r, Side(Attacker(null, x => x.Int = 400)), Side(Mon("b", 300, null, x => x.Dex = 999)));
+            var glog = new List<FightAction>();
+            while (glog.Count == 0) BattleSim.Step(r, gs, new Fixed(0.0), glog.Add);
+            Assert.That((glog[0].Graze, glog[0].Evaded, glog[0].Crit), Is.EqualTo((true, false, false)));
+            Assert.That(glog[0].Amount, Is.EqualTo(full * r.GrazeMult).Within(1e-9));
+            Assert.That((gs.Units[1].Tally.Grazes, gs.Units[1].Tally.Evades), Is.EqualTo((1, 0)));
         }
 
         [Test]
@@ -396,9 +459,9 @@ namespace IdleRng.Sim.Tests
             var f = Mon("a", 300, null, x => x.Spd = 500, tough);
             var onCrit = new CombatSkill { Id = "frenzy", Kind = SkillKind.Buff, Target = SkillTarget.Self, Stat = StatIds.Str, Power = 0.25, Duration = 2 };
             f.Triggers.Add(new TriggeredSkill(FightTrigger.OnCrit, onCrit));
-            f.Stats.Int = 400;   // magical basic attack: no evade roll, so a draw of 0 always crits
+            // the target has no DEX, so no evade roll: a draw of 0 always crits
 
-            var s = BattleSim.Start(Rules, Side(f), Side(Mon("b", 300)));
+            var s = BattleSim.Start(Rules, Side(f), Side(Mon("b", 300, null, x => x.Dex = 0)));
             var log = new List<FightAction>();
             BattleSim.Step(Rules, s, new Fixed(0.0), log.Add);
             Assert.That(s.Units[0].MaxHp, Is.EqualTo(300 * Rules.HpPerPoint * 1.5).Within(1e-9));
@@ -593,7 +656,8 @@ namespace IdleRng.Sim.Tests
                 var s = BattleSim.Start(r, Side(Mon("a", 300, null, x => x.Spd = 900, bolt)), Side(target));
                 var log = new List<FightAction>();
                 while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Skill?.Id == "bolt")) BattleSim.Step(r, s, new Fixed(0), log.Add);
-                Assert.That(log.First(x => x.Skill?.Id == "bolt").Evaded, Is.EqualTo(veil), veil ? "a spell is evaded" : "spells are never evaded without it");
+                var hit = log.First(x => x.Skill?.Id == "bolt");
+                Assert.That((hit.Evaded, hit.Graze), Is.EqualTo((veil, !veil)), veil ? "a spell is evaded" : "without it a spell is only grazed");
             }
             Assert.That(BattleSim.EvadeChance(r, 1e9, 0, r.VeilEvadeCap), Is.EqualTo(r.VeilEvadeCap));
             Assert.That(BattleSim.EvadeChance(r, 1e9, 0), Is.EqualTo(r.EvadeCap));

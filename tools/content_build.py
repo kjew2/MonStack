@@ -48,7 +48,7 @@ REQUIRED_CONSTANTS = {
     # monster battle (specs/16)
     "MON_HP_PER_POINT": "double", "MON_DEF_K": "double", "MON_EVADE_BASE": "double", "MON_EVADE_PER_DEX": "double",
     "MON_EVADE_CAP": "double", "MON_CRIT_BASE": "double", "MON_CRIT_PER_LUK": "double", "MON_CRIT_CAP": "double",
-    "MON_CRIT_DMG": "double", "MON_SPD_MIN": "double", "MON_TIME_LIMIT_TICKS": "int", "MON_SIDE_SIZE": "int",
+    "MON_CRIT_DMG": "double", "MON_CRIT_DMG_PER_DEX": "double", "MON_GRAZE_MULT": "double", "MON_FORTUNE_K": "double", "MON_FORTUNE_CAP": "double", "MON_SPD_MIN": "double", "MON_TIME_LIMIT_TICKS": "int", "MON_SIDE_SIZE": "int",
     "STAT_FLOOR_FRAC": "double", "EFFECT_STACK_CAP": "int",
     # training run (specs/14)
     "RUN_CYCLES": "int", "RUN_AP": "int", "RUN_ENERGY_MAX": "double", "RUN_ENERGY_START": "double",
@@ -92,7 +92,7 @@ MON_RANGES = {
     "MON_EVADE_BASE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_EVADE_PER_DEX": (">= 0", lambda v: v >= 0),
     "MON_EVADE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_CRIT_BASE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_CRIT_PER_LUK": (">= 0", lambda v: v >= 0), "MON_CRIT_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
-    "MON_CRIT_DMG": (">= 1", lambda v: v >= 1), "MON_SPD_MIN": ("> 0", lambda v: v > 0),
+    "MON_CRIT_DMG": (">= 1", lambda v: v >= 1), "MON_CRIT_DMG_PER_DEX": (">= 0", lambda v: v >= 0), "MON_GRAZE_MULT": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FORTUNE_K": ("> 0", lambda v: v > 0), "MON_FORTUNE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_SPD_MIN": ("> 0", lambda v: v > 0),
     "MON_TIME_LIMIT_TICKS": ("> 0", lambda v: v > 0), "MON_SIDE_SIZE": ("> 0", lambda v: v > 0),
     "STAT_FLOOR_FRAC": ("(0, 1]", lambda v: 0 < v <= 1), "EFFECT_STACK_CAP": (">= 1", lambda v: v >= 1),
     "RUN_CYCLES": ("> 0", lambda v: v > 0), "RUN_AP": ("> 0", lambda v: v > 0), "RUN_ENERGY_MAX": ("> 0", lambda v: v > 0),

@@ -231,6 +231,7 @@ namespace IdleRng.Sim.Content
                 MonHpPerPoint = D("MON_HP_PER_POINT"), MonDefK = D("MON_DEF_K"), MonEvadeBase = D("MON_EVADE_BASE"),
                 MonEvadePerDex = D("MON_EVADE_PER_DEX"), MonEvadeCap = D("MON_EVADE_CAP"), MonCritBase = D("MON_CRIT_BASE"),
                 MonCritPerLuk = D("MON_CRIT_PER_LUK"), MonCritCap = D("MON_CRIT_CAP"), MonCritDmg = D("MON_CRIT_DMG"),
+                MonCritDmgPerDex = D("MON_CRIT_DMG_PER_DEX"), MonGrazeMult = D("MON_GRAZE_MULT"), MonFortuneK = D("MON_FORTUNE_K"), MonFortuneCap = D("MON_FORTUNE_CAP"),
                 MonSpdMin = D("MON_SPD_MIN"), MonTimeLimitTicks = I("MON_TIME_LIMIT_TICKS"), MonSideSize = I("MON_SIDE_SIZE"),
                 StatFloorFrac = D("STAT_FLOOR_FRAC"), EffectStackCap = I("EFFECT_STACK_CAP"),
                 RunCycles = I("RUN_CYCLES"), RunAp = I("RUN_AP"), RunEnergyMax = D("RUN_ENERGY_MAX"),
@@ -285,7 +286,7 @@ namespace IdleRng.Sim.Content
             var mk = Constants;
             bool In01(double v) => v >= 0 && v <= 1;
             if (!(mk.MonHpPerPoint > 0 && mk.MonDefK > 0 && In01(mk.MonEvadeBase) && mk.MonEvadePerDex >= 0 && In01(mk.MonEvadeCap)
-                  && In01(mk.MonCritBase) && mk.MonCritPerLuk >= 0 && In01(mk.MonCritCap) && mk.MonCritDmg >= 1 && mk.MonSpdMin > 0
+                  && In01(mk.MonCritBase) && mk.MonCritPerLuk >= 0 && In01(mk.MonCritCap) && mk.MonCritDmg >= 1 && mk.MonCritDmgPerDex >= 0 && In01(mk.MonGrazeMult) && mk.MonFortuneK > 0 && In01(mk.MonFortuneCap) && mk.MonSpdMin > 0
                   && mk.MonTimeLimitTicks > 0 && mk.MonSideSize > 0 && mk.StatFloorFrac > 0 && mk.StatFloorFrac <= 1 && mk.EffectStackCap >= 1))
                 errors.Add(new ContentError("E043", "constants", "monster battle constants out of range (specs/16 section 7)"));
 

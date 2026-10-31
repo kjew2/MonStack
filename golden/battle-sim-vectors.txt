@@ -1,57 +1,57 @@
-# battle-sim vectors, hash v1 content=4.4/535036dd
+# battle-sim vectors, hash v2 content=4.5/627eba68
 
-1v1 brawler vs mage seed=1 outcome=SideBWon ticks=32
-  A0 brawler  hp      0.00/  3200.00 act   7 dealt    2290.91 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
-  B0 mage     hp    109.09/  2400.00 act   7 dealt    3200.00 taken    2290.91 heal      0.00 crit  1 evade  0 kill 1 counter  0
-  hash 2f84d9ed13e789402720dd5558e8a30fe66cf0a3ebc210c411fe203fd9c2e1c4
+1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
+  A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
+  B0 mage     hp      0.00/  2400.00 act   6 dealt    2232.75 taken    2400.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  hash ba1738908e3199c7e79d544daa9f984948149d1cd8c58e207f7aa4f9b83a6b31
 
 1v1 brawler vs counter tank seed=2 outcome=SideBWon ticks=17
   A0 brawler  hp      0.00/  3200.00 act   4 dealt    1121.92 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   B0 tank     hp   4078.08/  5200.00 act   2 dealt    3200.00 taken    1121.92 heal      0.00 crit  0 evade  0 kill 1 counter  4
-  hash be25e66b9d22d06a1702e7cf7b856688930708573d71a8ee67c665446de49114
+  hash 4a5cf8bc02c9ff6c5954c6951f3d7c13d2d048de504bec4fff68000658f3f285
 
 4v1 party vs boss seed=3 outcome=SideAWon ticks=31
-  A0 tank     hp   4601.87/  5200.00 act   4 dealt    5960.84 taken    1993.91 heal      0.00 crit  0 evade  0 kill 1 counter  6
+  A0 tank     hp   4377.48/  5200.00 act   4 dealt    5885.35 taken    2218.30 heal      0.00 crit  2 evade  0 kill 1 counter  6
   A1 brawler  hp   3193.33/  3200.00 act   7 dealt    1909.09 taken     426.67 heal      0.00 crit  0 evade  0 kill 0 counter  0
-  A2 mage     hp   2400.00/  2400.00 act   6 dealt    1598.16 taken     320.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  A3 healer   hp   2986.67/  3000.00 act   7 dealt     521.91 taken     433.33 heal   2555.78 crit  1 evade  0 kill 0 counter  0
-  B0 boss     hp      0.00/  9990.00 act   8 dealt    3173.91 taken    9990.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  hash eda076ffe1c4195bd5471c14005d6bdcd712d3df0188a485e389a1fe644b7a5d
+  A2 mage     hp   2400.00/  2400.00 act   6 dealt    1643.82 taken     320.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A3 healer   hp   3000.00/  3000.00 act   7 dealt     551.74 taken     346.67 heal   2482.44 crit  1 evade  0 kill 0 counter  0
+  B0 boss     hp      0.00/  9990.00 act   8 dealt    3311.63 taken    9990.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  hash 65f2477279a077972560d99b1762ccf2f2d65f020ea8e577faec2fb25b62451a
 
-4v4 mirror elements seed=4 outcome=SideBWon ticks=60
-  A0 a_tank   hp      0.00/  5200.00 act   6 dealt    4861.74 taken    5200.00 heal      0.00 crit  0 evade  0 kill 1 counter 10
-  A1 a_brawler hp      0.00/  3200.00 act   5 dealt    1494.23 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
-  A2 a_mage   hp      0.00/  2400.00 act  13 dealt    5695.44 taken    2400.00 heal      0.00 crit  4 evade  0 kill 1 counter  0
-  A3 a_support hp      0.00/  2600.00 act  10 dealt     778.85 taken    2600.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
-  B0 b_tank   hp      0.00/  5200.00 act   5 dealt    5487.57 taken    5410.00 heal      0.00 crit  1 evade  0 kill 2 counter 15
-  B1 b_brawler hp      0.00/  3200.00 act   9 dealt    1831.56 taken    5636.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  B2 b_mage   hp   2238.00/  2400.00 act  13 dealt    5334.29 taken     441.00 heal      0.00 crit  2 evade  0 kill 1 counter  0
-  B3 b_healer hp   2539.50/  3000.00 act  13 dealt     746.57 taken    1343.25 heal   3807.75 crit  1 evade  0 kill 1 counter  0
-  hash c3a57269922d64b3314dc9b80bbc26c03d406585c78029d42229029ce753f98e
+4v4 mirror elements seed=4 outcome=SideBWon ticks=64
+  A0 a_tank   hp      0.00/  5200.00 act   7 dealt    4912.07 taken    5200.00 heal      0.00 crit  1 evade  0 kill 1 counter  9
+  A1 a_brawler hp      0.00/  3200.00 act   5 dealt    1292.31 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  A2 a_mage   hp      0.00/  2400.00 act  14 dealt    6382.21 taken    2400.00 heal      0.00 crit  4 evade  0 kill 1 counter  0
+  A3 a_support hp      0.00/  2600.00 act  14 dealt     852.00 taken    2600.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B0 b_tank   hp      0.00/  5200.00 act   7 dealt    5535.48 taken    6922.00 heal      0.00 crit  0 evade  2 kill 2 counter 15
+  B1 b_brawler hp      0.00/  3200.00 act   8 dealt    1955.56 taken    4628.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  B2 b_mage   hp   1916.16/  2400.00 act  14 dealt    5105.90 taken     807.84 heal      0.00 crit  5 evade  0 kill 2 counter  0
+  B3 b_healer hp   2843.25/  3000.00 act  14 dealt     803.06 taken    1080.75 heal   4398.00 crit  2 evade  0 kill 0 counter  0
+  hash c36c86bf5bcab6c2ad603a1f961f6a8c6d8a517e9a8d3fcd5fb41f4299cdd477
 
-2v3 uneven seed=5 outcome=SideBWon ticks=32
-  A0 a_brawler hp      0.00/  3200.00 act   7 dealt    4101.34 taken    3200.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
-  A1 a_support hp      0.00/  2600.00 act   5 dealt     641.02 taken    2600.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  B0 b_mage   hp   1566.01/  2400.00 act   7 dealt    2914.04 taken    1337.99 heal      0.00 crit  2 evade  0 kill 0 counter  0
-  B1 b_mage2  hp   1822.35/  2400.00 act   7 dealt    2539.29 taken    2299.65 heal      0.00 crit  1 evade  0 kill 2 counter  0
-  B2 b_healer hp   1895.27/  3000.00 act   7 dealt     346.67 taken    1104.73 heal   2226.00 crit  0 evade  0 kill 0 counter  0
-  hash d7b2d24554bde3f45e8085d27098260b663ffae10ccdaaacfb8136ceff653fc5
+2v3 uneven seed=5 outcome=SideBWon ticks=37
+  A0 a_brawler hp      0.00/  3200.00 act   8 dealt    4633.50 taken    3200.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A1 a_support hp      0.00/  2600.00 act   8 dealt    1188.23 taken    2600.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B0 b_mage   hp   1196.04/  2400.00 act   8 dealt    3002.01 taken    1917.96 heal      0.00 crit  2 evade  0 kill 2 counter  0
+  B1 b_mage2  hp   1178.23/  2400.00 act   7 dealt    2429.65 taken    3153.77 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B2 b_healer hp   2460.00/  3000.00 act   8 dealt     368.33 taken     750.00 heal   2856.00 crit  0 evade  0 kill 0 counter  0
+  hash 86cbf24e75942a61b4811e1d925f7bdcd0b967c691c50ce076f1f21abaa3cfe3
 
-1v1 tidal overflow vs fire pierce seed=6 outcome=SideBWon ticks=20
-  A0 tide     hp      0.00/  4800.00 act   3 dealt     286.57 taken    5328.00 heal    528.00 crit  0 evade  0 kill 0 counter  0
-  B0 sovereign hp   3313.43/  3600.00 act   4 dealt    5328.00 taken     286.57 heal      0.00 crit  1 evade  0 kill 1 counter  0
-  hash 2ec89139d2f52789eb69b17bca9ab96db57518b1d26d3d62a7e9f517411f91e7
+1v1 tidal overflow vs fire pierce seed=6 outcome=SideBWon ticks=24
+  A0 tide     hp      0.00/  4800.00 act   4 dealt     286.57 taken    5664.00 heal    864.00 crit  0 evade  1 kill 0 counter  0
+  B0 sovereign hp   3313.43/  3600.00 act   5 dealt    5664.00 taken     286.57 heal      0.00 crit  0 evade  0 kill 1 counter  0
+  hash 3cf307783a22b7429bf52d6c0c45d378fa56a628ce2a76cdfbd6ccd1aaa43bc8
 
 2v2 drain and echo vs double turn seed=7 outcome=SideAWon ticks=28
-  A0 a_bloom  hp   3600.00/  3600.00 act   5 dealt    1365.85 taken     415.80 heal    415.80 crit  1 evade  0 kill 0 counter  0
-  A1 a_echo   hp    331.36/  2400.00 act   6 dealt    4234.15 taken    2068.64 heal      0.00 crit  1 evade  0 kill 2 counter  0
-  B0 b_starlit hp      0.00/  2400.00 act   8 dealt    1195.80 taken    2400.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
-  B1 b_brawler hp      0.00/  3200.00 act   6 dealt    1288.64 taken    3200.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  hash 98cd2818ada77c173f693da1df4d3109dde383a0b70d8b9ff47fae9aca5dcc7d
+  A0 a_bloom  hp   3600.00/  3600.00 act   5 dealt    1216.68 taken    1326.25 heal   1326.25 crit  0 evade  0 kill 1 counter  0
+  A1 a_echo   hp   1457.14/  2400.00 act   6 dealt    4383.32 taken     942.86 heal      0.00 crit  2 evade  0 kill 1 counter  0
+  B0 b_starlit hp      0.00/  2400.00 act  11 dealt    1310.48 taken    2400.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B1 b_brawler hp      0.00/  3200.00 act   4 dealt     958.64 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  hash 8173d49591e3a0896b8607b3c039dbf9bbc22f3acd29c8fee604335aa7cc5d90
 
-2v2 rebirth and stagger vs veil and feast seed=8 outcome=SideBWon ticks=35
-  A0 a_root   hp      0.00/  5200.00 act   4 dealt    2428.50 taken    5460.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  A1 a_mage   hp      0.00/  2400.00 act   2 dealt     468.75 taken    2400.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
-  B0 b_shade  hp   1874.00/  2600.00 act  11 dealt    7611.82 taken     936.00 heal      0.00 crit  0 evade  5 kill 2 counter  0
-  B1 b_healer hp   2256.75/  3000.00 act   5 dealt     248.18 taken    1961.25 heal   1428.00 crit  0 evade  0 kill 0 counter  0
-  hash d948cf0efdb4276d99cd0b7ca2c89300602e212929781bd0ecf5217e66e9183c
+2v2 rebirth and stagger vs veil and feast seed=8 outcome=SideBWon ticks=25
+  A0 a_root   hp      0.00/  5200.00 act   3 dealt    1553.25 taken    5460.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  A1 a_mage   hp      0.00/  2400.00 act   3 dealt     860.25 taken    2400.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B0 b_shade  hp   2108.00/  2600.00 act   8 dealt    7730.00 taken     702.00 heal      0.00 crit  2 evade  4 kill 2 counter  0
+  B1 b_healer hp   2002.50/  3000.00 act   3 dealt     130.00 taken    1711.50 heal    924.00 crit  0 evade  0 kill 0 counter  0
+  hash 85166f47311d1b6620d5ba9933e3530374f0364a3f21ee0efb44632297c9460e
