@@ -40,9 +40,10 @@ namespace IdleRng.Bots
     public static class Program
     {
         const string Usage =
-            "usage: IdleRng.Bots <train|golden|help> [options]\n" +
+            "usage: IdleRng.Bots <train|balance|golden|help> [options]\n" +
             "  train      --species ID --policy balanced|focus|reckless|hoarder --seed N --books a,b --content dir   (one training run, specs/14-15)\n" +
-            "  gauntlet   --seeds N --policies a,b --content dir   (where bot monsters stall in the gauntlet, specs/19 section 6)\n" +
+            "  balance    --seeds N --seed-base N --species a,b --policies a,b --books none|all|a,b --no-tower --tower-day N\n" +
+            "             --format text|json|csv --jobs N --out path   (run-balance report over many seeds, specs/09 section 7)\n" +
             "  golden     --check|--update --golden-dir path --content dir   (specs/09 section 11)\n";
 
         public static int Main(string[] argv)
@@ -55,7 +56,7 @@ namespace IdleRng.Bots
                 {
                     case "golden": return GoldenCmd(a);
                     case "train": return Train(a);
-                    case "gauntlet": return Gauntlet(a);
+                    case "balance": return BalanceCmd(a);
                     case "help": case "--help": Console.Out.Write(Usage); return 0;
                     default: Console.Error.Write($"unknown verb '{a.Verb}'\n" + Usage); return 2;
                 }
@@ -102,17 +103,33 @@ namespace IdleRng.Bots
             return 0;
         }
 
-        static int Gauntlet(CliArgs a)
+        /// <summary>The run-balance report (specs/09 section 7). A report, not a gate: it exits 0 whatever the numbers say.</summary>
+        static int BalanceCmd(CliArgs a)
         {
             var db = LoadContent(a);
-            var policies = a.Str("policies", string.Join(",", IdleRng.Bots.Training.RunPolicies.Names))
-                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            int seeds = a.Int("seeds", 10);
-            if (seeds < 1) throw new ArgumentException("--seeds must be at least 1");
-            var r = IdleRng.Bots.Training.GauntletSpread.Collect(db, policies, seeds);
-            Emit(a, IdleRng.Bots.Training.GauntletSpread.Report(r));
+            string format = a.Str("format", "text");
+            if (format != "text" && format != "json" && format != "csv") throw new ArgumentException($"unknown --format '{format}' (one of text, json, csv)");
+            string books = a.Str("books", "none");
+            if (a.Long("seed-base", 1) < 0) throw new ArgumentException("--seed-base must be >= 0");
+            var o = new IdleRng.Bots.Balance.BalanceOptions
+            {
+                Seeds = a.Int("seeds", 200),
+                SeedBase = (ulong)a.Long("seed-base", 1),
+                Species = List(a.Str("species", null)),
+                Policies = List(a.Str("policies", null)),
+                Books = books == "none" ? null : books == "all" ? db.SkillBooks.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList() : List(books),
+                Tower = !a.Has("no-tower"),
+                TowerDayBase = a.Int("tower-day", 0),
+                Jobs = a.Int("jobs", Environment.ProcessorCount),
+            };
+            var sw = Stopwatch.StartNew();
+            var report = IdleRng.Bots.Balance.BalanceHarness.Run(db, o);
+            Console.Error.Write($"# balance: {report.Cells.Count} cells x {o.Seeds} seeds in {sw.Elapsed.TotalSeconds:0.0}s\n");
+            Emit(a, IdleRng.Bots.Balance.BalanceWriter.Write(report, format));
             return 0;
         }
+
+        static List<string> List(string csv) => csv?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToList();
 
         /// <summary>--update rewrites golden/, otherwise every file is compared byte for byte.</summary>
         static int GoldenCmd(CliArgs a)

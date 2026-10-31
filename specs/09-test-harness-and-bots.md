@@ -1,6 +1,6 @@
 # 09 - Test Harness, Bots and Golden Files
 
-Scope: the headless bot project `IdleRng.Bots` (`src/IdleRng.Bots`), the tests, the golden files and `check.sh`. This spec was the idle game's balance harness (day-by-day bots, an acceptance table and a 20-seed sweep); that went with the idle game at `specs/13` T7. Balance work resumed on 2026-10-31 (`CLAUDE.md`); a run-balance harness is to be built on the bots below.
+Scope: the headless bot project `IdleRng.Bots` (`src/IdleRng.Bots`), the tests, the golden files and `check.sh`. This spec was the idle game's balance harness (day-by-day bots, an acceptance table and a 20-seed sweep); that went with the idle game at `specs/13` T7. Balance work resumed on 2026-10-31 (`CLAUDE.md`); the run-balance harness on the bots is section 7.
 
 ## 1. Design goals
 
@@ -19,8 +19,11 @@ src/IdleRng.Bots/
   Golden/BattleVectors.cs   fixed fights through BattleSim
   Golden/GauntletVectors.cs each species' bot-trained monster up the gauntlet
   Golden/TowerVectors.cs    the same monsters, alone and together, up the Daily Tower on two days
+  Balance/BalanceHarness.cs the run-balance harness: options, samples, per-cell and tower summaries (section 7)
+  Balance/Distribution.cs   mean, sd, min, max and nearest-rank p10/p50/p90 of one metric
+  Balance/BalanceWriter.cs  the balance report as a text table, JSON or long-form CSV
   Report/TableWriter.cs     how a content version and hash are printed
-src/IdleRng.Bots.Tests/     RunBotTests
+src/IdleRng.Bots.Tests/     RunBotTests, BalanceTests
 ```
 
 ## 3. Golden files
@@ -51,22 +54,43 @@ Regenerate with `dotnet run -c Release --project src/IdleRng.Bots -- golden --up
 
 ```
 dotnet run -c Release --project src/IdleRng.Bots -- train  --species ID --policy P --seed N [--books a,b]
-dotnet run -c Release --project src/IdleRng.Bots -- gauntlet [--seeds N] [--policies a,b]
+dotnet run -c Release --project src/IdleRng.Bots -- balance [--seeds N] [--seed-base N] [--species a,b] [--policies a,b]
+                                                            [--books none|all|a,b] [--no-tower] [--tower-day N]
+                                                            [--format text|json|csv] [--jobs N] [--out path]
 dotnet run -c Release --project src/IdleRng.Bots -- golden --check | --update [--golden-dir path] [--content dir]
 ```
 
-`train` prints every command, a summary and the run hash. `gauntlet` plays every species x policy (default all) x seeds 1..N (default 10) and reports where the monsters stall in the gauntlet (`specs/19` section 6). `--content` defaults to the repo's `Content/`.
+`train` prints every command, a summary and the run hash. `balance` prints the run-balance report (section 7). `--content` defaults to the repo's `Content/`.
 
 ## 6. Tests and `check.sh`
 
-`./check.sh` runs, in order: the content build with no drift (`tools/content_build.py --check`), the builder's tests (`tools/test_content_build.py`), the content id check against the merge base with `origin/main` (`E090`, `E091`, `specs/05` section 4; skipped locally when `origin/main` is missing, an error in CI), the .NET build, all tests, `golden --check`, then (when the wasm-tools workload is installed) the WebAssembly build and the headless-browser tests: one plays a whole run through the buttons (`web/wasm/test/run-trainer.js`), the other checks each main screen at phone width (no horizontal scroll, no console error), a tree overwrite, save/reload/resume with the same run hash, and a stale or damaged save (`web/wasm/test/flows.js`). `--fast` skips the golden tests and the golden check; `--no-wasm` skips the web steps; `--no-dotnet` runs only the content check (a partial pass: say so). A change is not done while any check fails.
+`./check.sh` runs, in order: the content build with no drift (`tools/content_build.py --check`), the builder's tests (`tools/test_content_build.py`), the content id check against the merge base with `origin/main` (`E090`, `E091`, `specs/05` section 4; skipped locally when `origin/main` is missing, an error in CI), the .NET build, a `balance --seeds 2` smoke run in each output form (section 7; it checks that the verb runs and its JSON parses, never a number), all tests, `golden --check`, then (when the wasm-tools workload is installed) the WebAssembly build and the headless-browser tests: one plays a whole run through the buttons (`web/wasm/test/run-trainer.js`), the other checks each main screen at phone width (no horizontal scroll, no console error), a tree overwrite, save/reload/resume with the same run hash, and a stale or damaged save (`web/wasm/test/flows.js`). `--fast` skips the golden tests and the golden check (the balance smoke run stays); `--no-wasm` skips the web steps; `--no-dotnet` runs only the content check (a partial pass: say so). A change is not done while any check fails.
 
 When the `CI` environment variable is set (anything but empty or `false`; GitHub Actions sets `CI=true`), a missing wasm-tools workload in full mode is an error, not a skip, so CI cannot pass without the web steps. `--no-wasm` still skips them on purpose.
 
 **CI.** `.github/workflows/check.yml` runs the full `./check.sh` on every pull request, every push to `main` and on manual dispatch, on `ubuntu-latest`. It installs Python 3.12, Node 22, the .NET 8 SDK (in its own directory, so newer SDKs on the runner image are not selected and `wasm-tools` matches `net8.0`), the wasm-tools workload, and Playwright (pinned in the workflow, installed outside the repo and found through `NODE_PATH`, since the repo has no `package.json`) with Chromium. NuGet packages are cached. Making the check required for merging is a branch-protection setting on GitHub, not part of the repo.
 
-`RunBotTests` plays every policy on every species, with and without books, and checks that the command log replays to the same hash.
+`RunBotTests` plays every policy on every species, with and without books, and checks that the command log replays to the same hash. `BalanceTests` covers the harness: the distribution maths (nearest-rank percentiles in integer arithmetic, empty input), the per-cell and tower aggregation on hand-made samples, that a report is byte-identical across repeats and `--jobs` values, that a cell matches single runs and what `Vault.Seal` and `AccountOps.Payout` record, option validation, and that the JSON parses and every CSV row has every column.
 
-## 7. Open
+## 7. Run-balance harness
 
-- A run-balance harness (score distributions over many seeds per policy and species) when balance resumes. Started: `gauntlet` (section 5) gives the gauntlet floor spread; no targets yet.
+**A report, not a gate, and not a golden.** `balance` measures the placeholder numbers; it has no targets and exits 0 whatever they say. **Targets are to be agreed with kj** (issue #89) before any large retune (`CLAUDE.md`); once agreed they go in a table here, and only then could a check compare against them.
+
+**What it plays.** For every species x run policy (default: every species in content order and every policy in section 4), `--seeds` runs (default 200) on seeds `--seed-base` (default 1), `--seed-base` + 1, ... Each run is `RunBot.Play` from a fresh account (no talents, `RunModifiers` defaults), bringing the `--books` (default none; `all` = every skill book), then sealed the way `AccountOps.FinishRun` seals it: `AccountOps.Payout` shards and `GauntletSim.Run` on the run seed. Unless `--no-tower`, each policy's monsters then climb the Daily Tower (`TowerSim.Run`): each species alone, and one of each species (the first `MON_SIDE_SIZE`) from the same seed as one team, on day `--tower-day` (default 0) + the seed's index, so the lineups vary across the sample. A tower sample's shards are `TOWER_SHARDS_PER_FLOOR` x floors cleared (a first attempt that day) and its books the `TowerSim.BookDrop` hits on the cleared floors.
+
+**What it reports.** Per species x policy:
+
+| Section | Metrics |
+|---|---|
+| Grades | % of runs ending at each rank (E to S), mean rank index (E = 0), p10/p50/p90 |
+| Runs | injury rate (an injury ends the run), cycles played, rank fights won and lost, fight win rate (won / fought over the cell), shard payout |
+| Gauntlet | floor reached (`GAUNTLET_FLOORS` + 1 = cleared), clear rate, boss-floor stall rate (share of the runs that did not clear that ended on a boss floor; about 1/`GAUNTLET_BOSS_EVERY` when the curve is smooth, `specs/19` section 2), the killers that ended most runs |
+| Daily Tower | per policy x team: floors cleared, clear rate, shards, books |
+
+Every spread is a `Distribution`: mean, population standard deviation, min, max and nearest-rank p10/p50/p90 (the value at sorted index `ceil(p x n / 100) - 1`, computed in integers).
+
+**Output.** `--format text` (default) prints one aligned table per section with a header naming the content version and hash, the seeds and the books; `json` gives the same report as one object (`content`, `options`, `ranks`, `cells`, `tower`, every spread as `{n, mean, sd, min, p10, p50, p90, max}`); `csv` gives long form, one metric per row: `section,species,policy,team,metric,n,mean,sd,min,p10,p50,p90,max` (rates and grade shares put the fraction in `mean`). `--out` writes to a file instead of stdout.
+
+**Deterministic.** The same content and arguments give the same bytes. `--jobs` (default the processor count) runs samples in parallel; results are collected by index, so it never changes the report. 200 seeds of every species and policy, with the tower, take a few seconds.
+
+**`check.sh`** runs `balance --seeds 2` in all three forms (section 6) so the verb cannot rot; no number in it can fail the build.
