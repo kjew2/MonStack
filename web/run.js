@@ -14,6 +14,9 @@
     tab: 'train',            // train | trees | ladder | log
     homeTab: 'raise',        // the home screen's tab: raise | vault | talents | dungeon | goals
     pick: null,              // species chosen on the home screen
+    showLocked: false,       // the Raise tab's locked species list is open
+    howto: false,            // the Raise tab's "How a run works" is open
+    carousel: { x: 0, glide: false, timer: 0 },   // the species carousel: its scroll, whether to glide to the picked card, the swipe-settle timer
     book: false,             // test option: start with a skill book
     feed: [],                // newest first
     last: null,              // last drill/rest result, shown under the stats
@@ -1030,40 +1033,23 @@
   function homeRaise(main) {
     const acct = run.account;
     homeHeader(main, 'Raise a monster');
-    main.append(h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up and spend skill points on trees. Drilling at low energy can injure the monster, which loses ' + injuryRisk() + '.' }));
+    main.append(h('details', { class: 'howto small muted', 'data-id': 'howto', open: ui.howto, ontoggle: (e) => { ui.howto = e.target.open; } }, [h('summary', { text: 'How a run works' }),
+      h('p', { text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up and spend skill points on trees. Drilling at low energy can injure the monster, which loses ' + injuryRisk() + '.' })]));
     if (!owned(ui.pick)) ui.pick = acct.owned[0] || null;
     const over = acct.vaultOver;   // the engine refuses a new run while the Vault is over its cap (specs/18 section 7)
     if (over > 0) main.append(h('div', { class: 'row between' }, [
       h('p', { class: 'small bad', 'data-id': 'vault-over', role: 'status',
         text: 'The Vault holds ' + acct.vault.length + ' of ' + acct.vaultCap + ' monsters. Dismantle ' + over + (over === 1 ? ' monster' : ' monsters') + ' in the Vault to start a run.' }),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'vault-over-open', text: 'Open Vault', onclick: () => goHomeTab('vault') })]));
-    main.append(h('h3', { text: 'Species' }));
-    const pickArt = ui.pick && SP.art(ui.pick);   // the picked species' portrait (specs/26 section 8)
-    if (pickArt) main.append(h('figure', { class: 'card portrait', 'data-id': 'portrait' }, [
-      h('img', { src: pickArt.portrait, alt: speciesDef(ui.pick).name, draggable: 'false' })]));
-    C.species.forEach((sp) => {
-      const sel = ui.pick === sp.id, have = owned(sp.id);
-      const mini = h('div', { class: 'mini' });
-      C.stats.forEach((st) => mini.append(h('span', null, [up(st) + ' ', h('b', { text: num(sp.base[st]) })])));
-      // A locked species (specs/18 section 8) shows the achievement that unlocks it and the progress towards it.
-      const lock = !have && sp.unlock ? achievementProgress(sp.unlock.achievement) : null;
-      main.append(h('button', { class: 'card species' + (sel ? ' sel' : '') + (have ? '' : ' locked'), type: 'button', 'data-act': 'species-' + sp.id,
-        'data-locked': have ? null : 'true', disabled: !have, 'aria-disabled': have ? null : 'true', onclick: () => { if (have) { ui.pick = sp.id; render(); } } }, [
-        sprite(sp.id),
-        h('div', null, [h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element), have ? null : h('span', { class: 'tag', text: '🔒 Locked' })]), mini,
-          have ? null : h('small', { class: 'gold', 'data-id': 'unlock-' + sp.id,
-            text: sp.unlock ? 'Unlock: ' + sp.unlock.name + ' — ' + sp.unlock.text + (lock ? ' (' + num(lock.current) + '/' + num(lock.target) + ')' : '') : 'Not available yet' }),
-          h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') }),
-          h('small', { class: 'muted', 'data-id': 'chase-' + sp.id, text: 'Chase trees: ' + treeName(sp.chase[0]) + ', ' + treeName(sp.chase[1]) +
-            (sp.book ? ' (needs ' + C.books[sp.book].name + ')' : '') })]),
-      ]));
-    });
+    speciesCarousel(main);
+    speciesDetail(main);
     const bring = bookToBring();
     if (bring) {
       const cb = h('input', { type: 'checkbox', 'data-act': 'book-toggle', onchange: (e) => { ui.book = e.target.checked; } });
       cb.checked = ui.book;
       main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[bring].name + ' (you have ' + acct.books[bring] + ')' })]));
     }
+    lockedSpecies(main);
     // The vendor's offers stay until the next run starts (specs/18 section 4).
     if (acct.vendor && acct.vendor.offers.length) {
       main.append(h('h3', { text: 'Vendor' }));
@@ -1081,6 +1067,76 @@
     const pickName = ui.pick ? speciesDef(ui.pick).name : null;
     main.append(h('button', { class: 'btn primary block' + (ui.pick && over <= 0 ? ' sticky-start' : ''), type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
       text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run with ' + pickName : 'Pick a species', onclick: startRun }));
+  }
+  // The owned species as a row of big cards that swipes sideways; the card that settles in the middle is the pick (tapping a
+  // card or a dot picks it too and glides it to the middle). Locked species stay out of the row, folded under one line.
+  function pickSpecies(id) { if (id === ui.pick) return; ui.pick = id; ui.carousel.glide = true; render(); }
+  function speciesCarousel(main) {
+    const mine = C.species.filter((sp) => owned(sp.id));
+    if (!mine.length) return;
+    clearTimeout(ui.carousel.timer);
+    const row = h('div', { class: 'carousel', 'data-id': 'species-carousel', role: 'listbox', 'aria-label': 'Species' });
+    mine.forEach((sp) => {
+      const sel = sp.id === ui.pick, art = SP.art(sp.id);   // the species' portrait (specs/26 section 8), else its sprite
+      row.append(h('button', { class: 'card species-card' + (sel ? ' sel' : ''), type: 'button', role: 'option', 'aria-selected': String(sel),
+        'data-act': 'species-' + sp.id, 'data-sp': sp.id, onclick: () => pickSpecies(sp.id) }, [
+        h('div', { class: 'pimg', 'data-id': sel ? 'portrait' : null }, [art ? h('img', { src: art.portrait, alt: sp.name, draggable: 'false' }) : sprite(sp.id)]),
+        h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element)]),
+      ]));
+    });
+    main.append(row);
+    if (mine.length > 1) main.append(h('div', { class: 'dots', 'aria-hidden': 'true' }, mine.map((sp) =>
+      h('button', { class: 'dot' + (sp.id === ui.pick ? ' on' : ''), type: 'button', tabindex: '-1', onclick: () => pickSpecies(sp.id) }))));
+    // Back to where the row was, then the picked card to the middle: a glide after a tap, a jump otherwise.
+    const card = row.querySelector('.sel');
+    row.scrollLeft = ui.carousel.x;
+    if (card) {
+      const target = card.offsetLeft - (row.clientWidth - card.offsetWidth) / 2;
+      const smooth = ui.carousel.glide && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (Math.abs(row.scrollLeft - target) > 1) { if (smooth) row.scrollTo({ left: target, behavior: 'smooth' }); else row.scrollLeft = target; }
+      ui.carousel.x = row.scrollLeft;
+    }
+    ui.carousel.glide = false;
+    // A swipe: once the row stops moving, the card nearest the middle becomes the pick.
+    row.addEventListener('scroll', () => {
+      ui.carousel.x = row.scrollLeft;
+      clearTimeout(ui.carousel.timer);
+      ui.carousel.timer = setTimeout(() => {
+        if (!row.isConnected) return;
+        const mid = row.scrollLeft + row.clientWidth / 2;
+        let best = null, dist = Infinity;
+        row.querySelectorAll('.species-card').forEach((c) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < dist) { dist = d; best = c; } });
+        if (best && best.dataset.sp !== ui.pick) { ui.pick = best.dataset.sp; render(); }
+      }, 150);
+    }, { passive: true });
+  }
+  // The picked species' numbers: base stats, its trees and its chase trees.
+  function speciesDetail(main) {
+    const sp = ui.pick && speciesDef(ui.pick);
+    if (!sp) return;
+    const mini = h('div', { class: 'mini' });
+    C.stats.forEach((st) => mini.append(h('span', null, [up(st) + ' ', h('b', { text: num(sp.base[st]) })])));
+    main.append(h('div', { class: 'card species-info', 'data-id': 'species-info' }, [mini,
+      h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') }),
+      h('small', { class: 'muted', 'data-id': 'chase-' + sp.id, text: 'Chase trees: ' + treeName(sp.chase[0]) + ', ' + treeName(sp.chase[1]) +
+        (sp.book ? ' (needs ' + C.books[sp.book].name + ')' : '') })]));
+  }
+  // Locked species (specs/18 section 8) behind one line; open, each shows the achievement that unlocks it and the progress.
+  function lockedSpecies(main) {
+    const locked = C.species.filter((sp) => !owned(sp.id));
+    if (!locked.length) return;
+    main.append(h('button', { class: 'btn small block locked-toggle', type: 'button', 'data-act': 'locked-toggle', 'aria-expanded': String(ui.showLocked),
+      text: (ui.showLocked ? '▾ ' : '▸ ') + '🔒 ' + locked.length + ' locked species', onclick: () => { ui.showLocked = !ui.showLocked; render(); } }));
+    if (!ui.showLocked) return;
+    locked.forEach((sp) => {
+      const lock = sp.unlock ? achievementProgress(sp.unlock.achievement) : null;
+      main.append(h('button', { class: 'card species locked', type: 'button', 'data-act': 'species-' + sp.id, 'data-locked': 'true', disabled: true, 'aria-disabled': 'true' }, [
+        sprite(sp.id),
+        h('div', null, [h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element)]),
+          h('small', { class: 'gold', 'data-id': 'unlock-' + sp.id,
+            text: sp.unlock ? 'Unlock: ' + sp.unlock.name + ' — ' + sp.unlock.text + (lock ? ' (' + num(lock.current) + '/' + num(lock.target) + ')' : '') : 'Not available yet' })]),
+      ]));
+    });
   }
   function homeTalents(main) {
     const acct = run.account;
