@@ -319,12 +319,12 @@
     {
       "key": "TOWER_BOOK_CHANCE",
       "type": "double",
-      "value": 0.15
+      "value": 0.0005
     },
     {
       "key": "TOWER_BOOK_CHANCE_PER_FLOOR",
       "type": "double",
-      "value": 0.01
+      "value": 0.0003
     },
     {
       "key": "ENTROPY_CAP",

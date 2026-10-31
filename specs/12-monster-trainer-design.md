@@ -105,7 +105,14 @@ Agreed direction from the higher-tier spike (`specs/22` section 6); not built ye
 - **Chase capstones may carry drawbacks** (keystones that give something up, in the *Exiled Heavy Knight* shape).
 - **Some specific tree pairs may fuse** into one tree, and the UI must make each fusing pair clear. Fusion is not a general rule.
 - **Reachability targets:** the in-run chase capstone in about the top 10% of runs; the book chase capstone in about 50% of runs that bring the species' own book (`specs/15` section 10).
-- **Runs must diverge more** through skill expression or RNG; the skill point economy is the first place to look (spike #112).
+- **Runs must diverge more** through skill expression or RNG. The skill point economy is the first place to look (spike #112, `specs/23`).
+- **Skill point economy package, approved (kj, 2026-10-31, #112; not built yet):**
+  - **Node hints:** drill results discount tree nodes.
+  - **Challenge fights:** an optional harder rank fight that pays skill points.
+  - **Capped SP interest.**
+  - Points in an overwritten tree stay lost; no respec.
+  - Odds, discounts and interest are shown on the buttons.
+  - At most two new sources of randomness per run (`specs/23` section 6).
 
 ### 5.3 Chase trees
 
@@ -134,6 +141,7 @@ Some unlocks need in-run actions, e.g. "deal X fire damage" or "execute Y perfec
 
 ### 5.6 Skill Books
 
+- **Uber rare and uber strong (kj, 2026-10-31, #112):** a book is a rare event, and the book-gated chase tree it opens must be among the strongest things a run can get. Drop rates: `specs/21` section 5.
 - Earned in the Daily Tower (section 8.2), kept in the account inventory. **The main premium gate (kj, T9):** books are target-farmed as RNG drops from the Daily Tower (T10). How books are sold, if at all, is open (#49, #77).
 - Consuming a book at the start of (or during) a run opens its **Book Tree** for that run.
 - A book-gated chase tree unlocks when all of these hold: points in named Book Tree nodes, points in named nodes of other trees, and a playstyle condition.

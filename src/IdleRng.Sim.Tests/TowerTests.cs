@@ -153,8 +153,11 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void BookDrop_IsFixedByDayAndFloor_AndOnlyDropsEligibleBooks()
         {
+            // enough days for about 400 expected drops, whatever the (uber rare) rate is
+            double perDay = Enumerable.Range(1, K.TowerFloors).Sum(f => K.TowerBookChance + K.TowerBookChancePerFloor * (f - 1));
+            int days = (int)Math.Ceiling(400 / perDay);
             int hits = 0;
-            for (int day = 0; day < 200; day++)
+            for (int day = 0; day < days; day++)
                 for (int floor = 1; floor <= K.TowerFloors; floor++)
                 {
                     var book = TowerSim.BookDrop(Db, day, floor);
@@ -164,7 +167,7 @@ namespace IdleRng.Sim.Tests
                     var row = Db.BookDrops.Single(b => b.BookId == book);
                     Assert.That(row.MinFloor, Is.LessThanOrEqualTo(floor), "deeper books only drop deep enough");
                 }
-            double expected = Enumerable.Range(1, K.TowerFloors).Sum(f => K.TowerBookChance + K.TowerBookChancePerFloor * (f - 1)) * 200;
+            double expected = perDay * days;
             Assert.That(hits, Is.InRange(expected * 0.8, expected * 1.2), "the drop rate follows the constants");
         }
 

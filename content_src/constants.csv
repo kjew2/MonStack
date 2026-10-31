@@ -62,8 +62,8 @@ TOWER_GROWTH,double,1.06,Daily Tower: level x this per floor. Placeholder
 TOWER_BOSS_HP_MULT,double,4,Daily Tower: boss hp weight x this (four monsters face one boss). Placeholder
 TOWER_MILESTONE_EVERY,int,5,Daily Tower: every Nth floor is a marquee boss and a milestone. Placeholder
 TOWER_SHARDS_PER_FLOOR,int,4,Daily Tower: Training Shards per floor cleared, once per floor per day. Placeholder
-TOWER_BOOK_CHANCE,double,0.15,Daily Tower: Skill Book drop chance on floor 1. Placeholder
-TOWER_BOOK_CHANCE_PER_FLOOR,double,0.01,Daily Tower: added drop chance per floor above 1. Placeholder
+TOWER_BOOK_CHANCE,double,0.0005,"Daily Tower: Skill Book drop chance on floor 1. Uber rare (kj, 2026-10-31, #112): about 1 book per 15 full clears. Placeholder"
+TOWER_BOOK_CHANCE_PER_FLOOR,double,0.0003,Daily Tower: added drop chance per floor above 1. Placeholder
 ENTROPY_CAP,double,100,Daily Tower entropy gauge (specs/21 section 3.1): vents at this. Placeholder
 ENTROPY_PER_TRIGGER,double,5,entropy per triggered effect (not BattleStart passives). Placeholder
 ENTROPY_PER_ECHO,double,10,entropy per echo_cast repeat. Placeholder

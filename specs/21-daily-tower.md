@@ -122,8 +122,10 @@ Constants (all placeholders; range violations are `E043` in both `tools/content_
 | `CORRUPT_HEAL_PER_LEVEL` / `_FLOOR` | 0.2 / 0.2 | `>= 0` / `[0, 1]` |
 | `CORRUPT_DMG_PER_LEVEL` | 0.1 | `>= 0` |
 | `TOWER_SHARDS_PER_FLOOR` | 4 | `>= 0` |
-| `TOWER_BOOK_CHANCE` | 0.15 | `[0, 1]` |
-| `TOWER_BOOK_CHANCE_PER_FLOOR` | 0.01 | `>= 0` |
+| `TOWER_BOOK_CHANCE` | 0.0005 | `[0, 1]` |
+| `TOWER_BOOK_CHANCE_PER_FLOOR` | 0.0003 | `>= 0` |
+
+**Skill Books are uber rare (kj, 2026-10-31, issue #112).** Content 3.14 cut the drop chance from 0.15 + 0.01 per floor (3 to 5 books a day for a good team) to 0.0005 + 0.0003 per floor. A full 20-floor clear then drops about 0.067 books, **about one book per 15 days of full clears**, and a given species' own book about one in 45 **(agent: the numbers; kj asked for "uber rare")**. The debug book button (section 8) stays for testing.
 
 Validation, in both `tools/content_build.py` (`validate_tower`) and `ContentDb.BuildTower`, reusing the existing codes **(agent: no new code range was needed)**: element, `skills`, `add_skills`, `boss_id`, `adds` (role `add`) and `book_id` references exist (`E023`); at least one regular and one marquee boss, an add has no phases, `book_drops` has at least one row and one with `min_floor` 1 (`E044`); each kind's values are in range, as `BattleSim.Start` checks them (`E043`); a boss's phases, by `order`, have strictly decreasing `enter_hp` in `(0, 1)` (`E032`); `min_floor` in `[1, TOWER_FLOORS]` and `weight > 0` (`E043`); the constants' ranges above (`E043`).
 
