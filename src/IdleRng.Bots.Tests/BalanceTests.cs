@@ -79,6 +79,24 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void CellSummary_StallModHistogram_CountsOnlyRunsThatDidNotClear()
+        {
+            var runs = new[]
+            {
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 20, "hydra", boss: true),
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 30, "titan", boss: true),
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 23, "imp"),
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 9, "wisp"),
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 101, null),
+            };
+            var s = CellSummary.From("x", "y", 3, runs, 10);
+            Assert.That(s.GauntletStallMod, Is.EqualTo(new[] { 2, 0, 0, 1, 0, 0, 0, 0, 0, 1 }), "a cleared run (floor 101) is not a stall");
+            Assert.That(s.GauntletStallMod[0], Is.EqualTo(s.GauntletBossStalls), "x0 is the boss floors");
+            Assert.That(CellSummary.From("x", "y", 3, runs).GauntletStallMod, Is.Empty, "no histogram without the boss spacing");
+            Assert.Throws<ArgumentOutOfRangeException>(() => CellSummary.From("x", "y", 3, runs, -1));
+        }
+
+        [Test]
         public void CellSummary_KillerTiesSortById_AndBadRankThrows()
         {
             var s = CellSummary.From("x", "y", 3, new[] { Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "b"), Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "a") });
@@ -161,9 +179,21 @@ namespace IdleRng.Bots.Tests
             Assert.That(csv[0], Is.EqualTo("section,species,policy,team,metric,n,mean,sd,min,p10,p50,p90,max"));
             Assert.That(csv.Skip(1).All(l => l.Split(',').Length == 13), Is.True);
             Assert.That(csv.Count(l => l.StartsWith("tower,", StringComparison.Ordinal)), Is.EqualTo(r.Tower.Count * 4));
+            int every = db.Constants.GauntletBossEvery;
+            Assert.That(csv.Count(l => l.StartsWith("gauntlet,", StringComparison.Ordinal) && l.Contains(",stall_mod_")),
+                Is.EqualTo(r.Cells.Count * every), "one stall-floor row per cell and floor mod GAUNTLET_BOSS_EVERY");
+            foreach (var cell in (List<object>)json["cells"])
+            {
+                var d = (Dictionary<string, object>)cell;
+                var mod = ((List<object>)d["gauntletStallMod"]).Select(Convert.ToDouble).ToList();
+                Assert.That(mod.Count, Is.EqualTo(every));
+                Assert.That(mod.Sum(), Is.EqualTo(Convert.ToDouble(d["n"]) - Convert.ToDouble(d["gauntletCleared"])), "the histogram counts every stall");
+                Assert.That(mod[0], Is.EqualTo(Convert.ToDouble(d["gauntletBossStalls"])), "x0 is the boss floors");
+            }
 
             string text = BalanceWriter.Text(r);
             StringAssert.Contains("## Grades", text);
+            StringAssert.Contains("## Gauntlet stall floors", text);
             StringAssert.Contains("## Daily Tower", text);
             Assert.Throws<ArgumentException>(() => BalanceWriter.Write(r, "xml"));
         }
