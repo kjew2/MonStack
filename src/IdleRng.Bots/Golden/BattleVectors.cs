@@ -10,7 +10,7 @@ namespace IdleRng.Bots.Golden
 {
     /// <summary>
     /// golden/battle-sim-vectors.txt (specs/16 section 8): fixed fights through BattleSim.Resolve, covering 1v1, 4v1 and 4v4
-    /// plus every skill kind, a trigger and the counter rule. Any change to the battle rules or the content they read moves
+    /// plus every skill kind, a trigger and every chase capstone rule modifier. Any change to the battle rules or the content they read moves
     /// this file. The fighters are placeholder monsters defined here until species content exists (specs/13 T3).
     /// </summary>
     public static class BattleVectors
@@ -104,6 +104,42 @@ namespace IdleRng.Bots.Golden
             Skills = { Dmg("cataclysm", StatIds.Int, 0.8, 4, SkillTarget.AllEnemies), Dmg("crush", StatIds.Str, 1.8, 2) },
         };
 
+        // Chase capstone carriers (specs/15 section 2): one rule modifier each.
+        static Fighter Tide(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(480, 120, 200, 300, 160, 300, 200, 120),
+            Skills = { Fx("regenerate", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.8, 3, 0), Dmg("slam", StatIds.Str, 1.4, 2) },
+            Rules = { RuleModifiers.TidalOverflow },
+        };
+
+        static Fighter Sovereign(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(360, 400, 120, 160, 180, 260, 210, 140),
+            Skills = { Dmg("flame", StatIds.Str, 1.6, 2, SkillTarget.Enemy, "fire") },
+            Rules = { RuleModifiers.FirePierce },
+        };
+
+        static Fighter Bloom(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(360, 80, 160, 380, 160, 200, 210, 140),
+            Skills = { Dmg("surge", StatIds.Wis, 1.0, 3, SkillTarget.AllEnemies, "water") },
+            Rules = { RuleModifiers.AbyssalDrain },
+        };
+
+        static Fighter Starlit(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(240, 60, 380, 220, 260, 140, 330, 220),
+            Skills = { Dmg("lance", StatIds.Spd, 1.4, 2, SkillTarget.Enemy, "light") },
+            Rules = { RuleModifiers.DoubleTurnStart },
+        };
+
+        static Fighter Echo(string id)
+        {
+            var f = Mage(id, "dark");
+            f.Rules.Add(RuleModifiers.EchoCast);
+            return f;
+        }
+
         static IEnumerable<Vector> Vectors()
         {
             yield return new Vector("1v1 brawler vs mage", 1, new[] { Brawler("brawler") }, new[] { Mage("mage") });
@@ -115,6 +151,9 @@ namespace IdleRng.Bots.Golden
                 new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
             yield return new Vector("2v3 uneven", 5,
                 new[] { Brawler("a_brawler", "light"), Support("a_support") }, new[] { Mage("b_mage"), Mage("b_mage2", "fire"), Healer("b_healer") });
+            yield return new Vector("1v1 tidal overflow vs fire pierce", 6, new[] { Tide("tide") }, new[] { Sovereign("sovereign") });
+            yield return new Vector("2v2 drain and echo vs double turn", 7,
+                new[] { Bloom("a_bloom"), Echo("a_echo") }, new[] { Starlit("b_starlit"), Brawler("b_brawler") });
         }
     }
 }

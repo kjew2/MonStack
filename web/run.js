@@ -319,10 +319,11 @@
     const a = who(x.actor), t = x.target ? who(x.target) : 'all';
     return { text: a + ' · ' + actionName(x) + ' → ' + t + ': ' + actionResult(x), you: x.actor === 'monster', skillId: x.skillId };
   }
-  const actionName = (x) => x.skill || (x.counter ? 'Counter' : 'Attack');
+  const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
   function actionResult(x) {
     let body;
-    if (x.evaded) body = 'dodged';
+    if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
+    else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
     else if (x.kind === 'shield') body = 'shields ' + Math.round(x.amount);
     else if (x.kind === 'buff' || x.kind === 'debuff' || x.kind === 'passive' || x.kind === 'taunt') body = 'applied';   // amount is the effect size, not damage
@@ -663,7 +664,7 @@
     ti.floors.forEach((fl) => fl.phases.forEach((p) => { phaseName[p.kind] = p.name; }));
     const lines = f.actions.map((x) => {
       const a = nameOf[x.actor] || x.actor, ours = f.units.some((u) => u.id === x.actor && u.side === 0);
-      if (x.event) return { cls: 'gold', text: towerEventText(x, a, phaseName) };
+      if (x.event && x.event.indexOf('rule:') !== 0) return { cls: 'gold', text: towerEventText(x, a, phaseName) };   // rule events read like actions
       return { cls: ours ? 'you' : 'foe', text: a + ' · ' + actionName(x) + ' → ' + (x.target ? nameOf[x.target] || x.target : 'all') + ': ' + actionResult(x) };
     });
     const list = h('ul', { class: 'alog', 'data-id': 'tower-log' });

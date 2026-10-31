@@ -108,6 +108,10 @@ Behaviour a table row cannot express is coded once and referenced by id from con
 |---|---|
 | `counter_mitigated` | After taking a single-target physical hit and surviving, counterattack the attacker at once for the damage DEF mitigated, as true damage (no evade, crit, element or mitigation; shields still absorb), regardless of gauge. The drafts' *Heavy Armor* + *Unbreakable Will* passive (`specs/12` section 5.3); the *Unbreakable Will* chase capstone. |
 | `echo_cast` | Every active damage, heal or shield skill the unit uses is cast again at once, at `MON_ECHO_POWER` of its power, within the same action. Passives, triggered effects and basic attacks do not echo. The *Arcane Overflow* chase capstone (`specs/15`). |
+| `tidal_overflow` | At the start of each of its actions (before its `OnAction` triggers) the unit heals `MON_TIDE_REGEN` of its max HP. Any healing it receives beyond max HP (this regeneration, heal skills, `abyssal_drain`) becomes shield, up to `MON_TIDE_SHIELD_CAP` of its max HP; the shield is the unit's one shield pool, so a timed shield's expiry clears it too and a bigger skill shield is not cut down. Only HP counts as healing done. Corruption scales the regeneration like any heal. Logged as the event `rule:tidal_overflow`. The *Living Ocean* chase capstone. |
+| `abyssal_drain` | Each hit the unit lands (skills, basic attacks, triggered damage) heals it for `MON_DRAIN_FRAC` of the HP damage the hit dealt (after shields), right after the hit and before the target's `OnHitTaken` triggers. Counters, channel strikes and other true damage do not drain. Logged as `rule:abyssal_drain`. The *Abyssal Bloom* chase capstone. |
+| `fire_pierce` | The unit's `fire` damage ignores `MON_FIRE_PIERCE` of the target's DEF or WIS and is never resisted: the element multiplier is at least 1 (a strong matchup still counts). The *Inferno Sovereign* chase capstone. |
+| `double_turn_start` | Each of the unit's first `MON_DOUBLE_TURNS` actions of the fight is followed at once by an extra full action (cooldowns tick, `OnAction` triggers fire, the AI picks again) without spending gauge. Logged as `rule:double_turn_start` before the extra action. The *Starlit Ascension* chase capstone. |
 | `entropy_convert` | Tower fights only (`specs/21` section 3.1): instead of venting its entropy gauge, the unit gains a shield. Inert in other fights. |
 
 The entropy gauge, boss phases and the environmental clock (`specs/12` section 8.3, `specs/13` T10) are built: `FightRules.Tower` (`TowerRules`), `Fighter.Phases` and the tower fields of `FightState` and `FightUnit`, specified in `specs/21` section 3. They are off unless the caller sets `Tower`, so existing fights and hashes do not move. Two more bonus-only effect stats come with them, `dmg_dealt` and `entropy_gain` (`StatIds`), valid for skills and tree nodes like `crit_rate`.
@@ -136,14 +140,19 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_SIDE_SIZE` | 4 | `> 0` | Most units per side |
 | `STAT_FLOOR_FRAC` | 0.1 | `(0, 1]` | A trained stat never drops below this fraction of its base (section 3; content `3.2`) |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` | `echo_cast` repeat power (content `2.5`) |
+| `MON_TIDE_REGEN` | 0.05 | `[0, 1]` | `tidal_overflow` heal per own action, fraction of max HP (content `3.7`) |
+| `MON_TIDE_SHIELD_CAP` | 0.3 | `[0, 1]` | `tidal_overflow` shield cap, fraction of max HP (content `3.7`) |
+| `MON_DRAIN_FRAC` | 0.3 | `[0, 1]` | `abyssal_drain` share of damage dealt healed (content `3.7`) |
+| `MON_FIRE_PIERCE` | 0.5 | `[0, 1]` | `fire_pierce` share of DEF or WIS ignored (content `3.7`) |
+| `MON_DOUBLE_TURNS` | 1 | `>= 1` | `double_turn_start` doubled opening actions (content `3.7`) |
 
-Range violations are `E043` in both `tools/content_build.py` and `ContentDb`.
+Range violations are `E043` in both `tools/content_build.py` and `ContentDb`. `BattleSim.Start` also rejects a hand-built `FightRules` whose rule modifier values are outside these ranges (`DoubleTurns` may be 0 there: the rule does nothing).
 
 ## 8. Determinism and goldens
 
 - No clock, IO, reflection or `Math.Pow`; every draw comes from the `IRandomSource` passed in (`specs/00` section 5).
 - `BattleSim.StateHash` is SHA-256 over a canonical encoding of the whole fight (`StateHasher` conventions; version `HashVersion` = 1). Changing the encoding bumps the version.
-- `golden/battle-sim-vectors.txt` resolves five fixed fights (1v1 twice, 4v1, 4v4, 2v3) with placeholder fighters defined in `src/IdleRng.Bots/Golden/BattleVectors.cs`, printing outcome, ticks, each unit's HP and tallies, and the hash. It covers every skill kind, a trigger and the counter rule. Any rule or content change that moves it is regenerated with `golden --update` and noted in the merge commit.
+- `golden/battle-sim-vectors.txt` resolves seven fixed fights (1v1 twice, 4v1, 4v4, 2v3, a 1v1 and a 2v2 of chase capstone carriers) with placeholder fighters defined in `src/IdleRng.Bots/Golden/BattleVectors.cs`, printing outcome, ticks, each unit's HP and tallies, and the hash. It covers every skill kind, a trigger and every chase capstone rule modifier. Any rule or content change that moves it is regenerated with `golden --update` and noted in the merge commit.
 
 ## 9. Descriptions (tooltips)
 
@@ -152,7 +161,7 @@ The web client explains stats and abilities in tooltips (issue #80). The words a
 - **Formulas.** The fight's own formulas are public helpers on `BattleSim` (`MaxHp`, `GaugeFill`, `BasicAttackRaw`, `BasicAttackMagical`, `EvadeChance`, `CritChance`, `Mitigate`); the battle and the tooltips both call them.
 - **Stats.** `stat.<id>.name` ("Strength"), `stat.<id>.desc` (what the stat does, with constants such as `{MON_DEF_K}` filled in) and `stat.<id>.now` (what the current value does against the coming opponent: `{max_hp}`, `{basic}`, `{basic_type}`, `{def_taken}`, `{wis_taken}`, `{evade}`, `{foe_evade}`, `{acts}` actions per turn, `{crit}`, `{foe}`), under the heading `tip.now`. "Now" lines use the raw stat sheets: before buffs, debuffs and passives. `stat.<id>.label` names a stat inside a sentence where the upper-case id would read wrong (`hp`: "max HP", `crit_rate`, `crit_dmg`).
 - **Skills.** `mskill.<id>.desc` is a template over the skill's own row: `{power}` (or `{power:pct}`), `{scales}`, `{stat}`, `{cooldown}`, `{duration}`, `{ticks}`, `{element}`. A tree node's tooltip adds tags (kind, physical or magical, element, trigger, chase trait) and facts from the row and the rules above: effect, amount, damage type, element, target, duration, cooldown and the AI condition for active skills, when it fires for triggers and passives (`trigger.<id>.name`, `tip.fires.<id>`), stacking for triggered buffs, and the node's SP cost. The vocabulary is `tip.*`, with constants filled in (`tip.effect.debuff` names `{STAT_FLOOR_FRAC:pct}`). Abilities have no energy cost: energy is a training resource (`specs/14`); a skill's cost is its node's SP.
-- **Rules.** `rule.<id>.desc`, with constants filled in (`echo_cast` names `{MON_ECHO_POWER:pct}`).
+- **Rules.** `rule.<id>.desc`, with constants filled in (`echo_cast` names `{MON_ECHO_POWER:pct}`). A rule modifier's log event (`FightAction.Event` `rule:<id>`) shows under `rule.<id>.name` in the battle log.
 
 Template syntax and the constant lookup are `specs/05` section 5.
 

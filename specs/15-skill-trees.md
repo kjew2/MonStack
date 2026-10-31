@@ -29,7 +29,7 @@ Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree
 | `rule` | `rule_id` | Adds a coded rule modifier (`specs/16` section 6.2) |
 
 - The last node must be `skill`, `trigger` or `rule` (`E064`): it is the chase trait.
-- **Chase trees' capstones must be significantly more impactful and unique** than a normal tree's chase trait (kj). In the placeholder content they are coded rule modifiers: *Unbreakable Will*, *Living Ocean* and *Starlit Ascension* end in `counter_mitigated`; *Arcane Overflow*, *Abyssal Bloom* and *Inferno Sovereign* in `echo_cast`. Only two rule modifiers are coded so far, so six chase trees share them (TODO(#92): a unique capstone per chase tree).
+- **Chase trees' capstones must be significantly more impactful and unique** than a normal tree's chase trait (kj). Each chase tree ends in a coded rule modifier of its own, and no two chase trees share one (kj, 2026-10-31, issue #92): *Unbreakable Will* `counter_mitigated`, *Arcane Overflow* `echo_cast`, *Living Ocean* `tidal_overflow`, *Abyssal Bloom* `abyssal_drain`, *Inferno Sovereign* `fire_pierce`, *Starlit Ascension* `double_turn_start` (`specs/16` section 6.2). Their numbers are placeholders and can be fleshed out later.
 - Placeholder shape **(agent)**: 8 nodes per tree: growth, stat, growth, stat, skill (cost 2), growth, stat, chase trait (cost 3); filler nodes cost 1, so a tree costs 11 SP. Trees can be any length; kj suggested longer ones with about 75% filler.
 
 Content table `monster_skills`: the skills nodes grant, in the battle vocabulary (`specs/16` section 5.1): `id`, `name_key`, `kind`, `target`, `stat`, `scales`, `power`, `cooldown`, `duration`, `element`. The description is the string `mskill.<id>.desc` by convention (there is no `desc_key` column; dropped in content `3.2`), a template over the row (`{power:pct}`, `{cooldown}`, ...; `specs/16` section 9), so its numbers cannot drift from the data.
@@ -109,9 +109,9 @@ Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
 
 | Species | In-run | Book-gated |
 |---|---|---|
-| slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `counter_mitigated` | *Abyssal Bloom*: Codex of Tides node 5, Slime Fundamentals node 4, 2000 water damage; `echo_cast` |
-| drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Codex node 5, Pyromancy node 4, 2000 fire damage; `echo_cast` |
-| sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `counter_mitigated` | *Arcane Overflow*: Tome of Echoes node 5, Spellcraft node 4, 3 crits; `echo_cast` |
+| slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `tidal_overflow` | *Abyssal Bloom*: Codex of Tides node 5, Slime Fundamentals node 4, 2000 water damage; `abyssal_drain` |
+| drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Codex node 5, Pyromancy node 4, 2000 fire damage; `fire_pierce` |
+| sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `double_turn_start` | *Arcane Overflow*: Tome of Echoes node 5, Spellcraft node 4, 3 crits; `echo_cast` |
 
 The two original chase trees were shared by every species until issue #78 assigned them: *Unbreakable Will* to drake, *Arcane Overflow* to sprite. Every tree and threshold is a placeholder.
 
@@ -132,12 +132,14 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | `TREE_SLOTS` | 4 | `>= 2` |
 | `DRAFT_SIZE` | 3 | `> 0` |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` (`specs/16` section 7) |
+| `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE` | 0.05, 0.3, 0.3, 0.5 | `[0, 1]` (`specs/16` section 7) |
+| `MON_DOUBLE_TURNS` | 1 | `>= 1` (`specs/16` section 7) |
 
 | Table | Rules |
 |---|---|
 | `monster_skills` | effect stat for buff/debuff/passive, trained `scales` for damage/heal/shield (`E023`); power, cooldown, duration `>= 0` (`E043`); element id or empty (`E023`) |
 | `trees` | generic trees need `offer_threshold > 0` and a trained or empty `offer_stat`; other kinds have neither (`E043`, `E023`) |
-| `tree_nodes` | known tree (`E023`); index `0..N-1` (`E060`); at least 2 nodes (`E044`); cost `>= 1`; growth/stat need a trained stat and `amount > 0`; skill/trigger need a monster skill; trigger nodes need a trigger and cannot fire a passive; rule nodes need a known rule id; last node skill/trigger/rule (`E064`) |
+| `tree_nodes` | known tree (`E023`); index `0..N-1` (`E060`); at least 2 nodes (`E044`); cost `>= 1`; growth/stat need a trained stat and `amount > 0`; skill/trigger need a monster skill; trigger nodes need a trigger and cannot fire a passive; rule nodes need a known rule id, and a `fire_pierce` node needs the `fire` element (`E023`); last node skill/trigger/rule (`E064`) |
 | `species` | `native_tree_1`, `native_tree_2`: two different native trees (`E023`, `E043`); `chase_tree_run`, `chase_tree_book`: two different chase trees (`E023`, `E043`); the in-run one names no book tree in its conditions, the book-gated one names at least one (`E043`); no chase tree belongs to two species and every chase tree belongs to one (`E043`) |
 | `chase_conditions` | a chase tree (`E023`); refs by type (`E023`); `amount >= 0` for stat and tally (`E043`); every chase tree has a condition (`E065`) |
 | `skill_books` | `tree_id` is a book tree (`E023`) |

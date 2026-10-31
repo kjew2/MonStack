@@ -1,4 +1,4 @@
-# training-run vectors, hash v3 content=3.6/d61f4fb2
+# training-run vectors, hash v3 content=3.7/7e31c8fa
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8
@@ -22,7 +22,7 @@ slime hoarder seed=7
   end=Completed cycle=12 rank=s fights=6/12 drills=44 rests=16 energy=20 milestones=3 sp=0
   stats hp 807 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 living_ocean:8/8 survivor:3/8
-  hash f7f6cd79d69ec54b60c28bfaa21d67320701e048ba572f66c992790b167f4e2b
+  hash 514a04b0c588a98ed9d6480beb88b1e5848fab91cc298857fb9fb554e50713c0
 
 slime focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=3 sp=0

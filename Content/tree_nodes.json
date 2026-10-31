@@ -2111,7 +2111,7 @@
       "amount": null,
       "skill_id": null,
       "trigger": null,
-      "rule_id": "counter_mitigated"
+      "rule_id": "tidal_overflow"
     },
     {
       "id": "abyssal_bloom_n0",
@@ -2207,7 +2207,7 @@
       "amount": null,
       "skill_id": null,
       "trigger": null,
-      "rule_id": "echo_cast"
+      "rule_id": "abyssal_drain"
     },
     {
       "id": "inferno_sovereign_n0",
@@ -2303,7 +2303,7 @@
       "amount": null,
       "skill_id": null,
       "trigger": null,
-      "rule_id": "echo_cast"
+      "rule_id": "fire_pierce"
     },
     {
       "id": "starlit_ascension_n0",
@@ -2399,7 +2399,7 @@
       "amount": null,
       "skill_id": null,
       "trigger": null,
-      "rule_id": "counter_mitigated"
+      "rule_id": "double_turn_start"
     }
   ]
 }

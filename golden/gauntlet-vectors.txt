@@ -1,4 +1,4 @@
-# gauntlet vectors, hash v1 content=3.6/d61f4fb2
+# gauntlet vectors, hash v1 content=3.7/7e31c8fa
 
 slime focus seed=7 rank=s
   floor=73 cleared=False killer=golem title=title.food

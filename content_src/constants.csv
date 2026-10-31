@@ -36,6 +36,11 @@ SP_PER_WIN,int,2,skill points for each rank fight win. Placeholder
 TREE_SLOTS,int,4,tree slots per monster: 2 native + 2 empty at the start (kj)
 DRAFT_SIZE,int,3,most trees offered by one milestone draft. Placeholder
 MON_ECHO_POWER,double,0.5,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder
+MON_TIDE_REGEN,double,0.05,tidal_overflow rule: heal this fraction of max HP at the start of each own action. Placeholder
+MON_TIDE_SHIELD_CAP,double,0.3,tidal_overflow rule: overhealing becomes shield up to this fraction of max HP. Placeholder
+MON_DRAIN_FRAC,double,0.3,abyssal_drain rule: each hit heals the attacker for this fraction of the HP damage dealt. Placeholder
+MON_FIRE_PIERCE,double,0.5,fire_pierce rule: fire damage ignores this fraction of the target's DEF or WIS. Placeholder
+MON_DOUBLE_TURNS,int,1,double_turn_start rule: this many of the unit's first actions are each followed by an extra action. Placeholder
 SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/18; injured runs pay too). Placeholder
 SHARDS_PER_RANK,int,10,training shards per rank index reached (E = 0). Placeholder
 VENDOR_OFFERS,int,5,offers the post-run vendor rolls after each sealed run (specs/18 section 4). Placeholder

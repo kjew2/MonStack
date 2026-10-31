@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v1 content=3.6/d61f4fb2
+# battle-sim vectors, hash v1 content=3.7/7e31c8fa
 
 1v1 brawler vs mage seed=1 outcome=SideBWon ticks=32
   A0 brawler  hp      0.00/  3200.00 act   7 dealt    2290.91 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
@@ -36,3 +36,15 @@
   B1 b_mage2  hp   1372.96/  2400.00 act   6 dealt    2647.31 taken    2245.04 heal      0.00 crit  1 evade  0 kill 1 counter  0
   B2 b_healer hp   2105.27/  3000.00 act   7 dealt     541.67 taken    1104.73 heal   2142.00 crit  0 evade  0 kill 0 counter  0
   hash bfcfba64551380de2319169944763179c06df348663b28cb835f73d89e87aed8
+
+1v1 tidal overflow vs fire pierce seed=6 outcome=SideAWon ticks=160
+  A0 tide     hp   2080.00/  4800.00 act  32 dealt    3600.00 taken   11600.00 heal   8880.00 crit  0 evade  2 kill 1 counter  0
+  B0 sovereign hp      0.00/  3600.00 act  33 dealt   11600.00 taken    3600.00 heal      0.00 crit  4 evade  2 kill 0 counter  0
+  hash 63ce3b3a289ee4b666abd1d743a0556ed15d3af0903fcbbae6b88742acef6d7f
+
+2v2 drain and echo vs double turn seed=7 outcome=SideBWon ticks=38
+  A0 a_bloom  hp      0.00/  3600.00 act   7 dealt    2217.26 taken    4265.18 heal    665.18 crit  1 evade  0 kill 0 counter  0
+  A1 a_echo   hp      0.00/  2400.00 act   3 dealt    2264.06 taken    2400.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  B0 b_starlit hp    309.01/  2400.00 act  13 dealt    3662.56 taken    2090.99 heal      0.00 crit  3 evade  0 kill 0 counter  0
+  B1 b_brawler hp    809.67/  3200.00 act   9 dealt    3002.61 taken    2390.33 heal      0.00 crit  2 evade  0 kill 2 counter  0
+  hash 2f9ef136b50c1a92f4205c81de815fb0809b501ccd0c84c3fe00af0d6a0b0437

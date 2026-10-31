@@ -255,6 +255,21 @@ namespace IdleRng.Sim.Combat
         /// <summary>echo_cast: the echo's fraction of the skill's power.</summary>
         public double EchoPower { get; set; }
 
+        /// <summary>tidal_overflow: the fraction of max HP the unit heals at the start of each of its actions.</summary>
+        public double TideRegen { get; set; }
+
+        /// <summary>tidal_overflow: overhealing becomes shield up to this fraction of max HP.</summary>
+        public double TideShieldCap { get; set; }
+
+        /// <summary>abyssal_drain: the fraction of the HP damage a hit deals that heals the attacker.</summary>
+        public double DrainFrac { get; set; }
+
+        /// <summary>fire_pierce: the fraction of the target's DEF or WIS that fire damage ignores.</summary>
+        public double FirePierce { get; set; }
+
+        /// <summary>double_turn_start: how many of the unit's first actions are each followed by an extra action.</summary>
+        public int DoubleTurns { get; set; }
+
         /// <summary>The Daily Tower's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
         public TowerRules Tower { get; set; }
 
@@ -277,6 +292,8 @@ namespace IdleRng.Sim.Combat
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
                 CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, EchoPower = k.MonEchoPower,
+                TideRegen = k.MonTideRegen, TideShieldCap = k.MonTideShieldCap, DrainFrac = k.MonDrainFrac, FirePierce = k.MonFirePierce,
+                DoubleTurns = k.MonDoubleTurns,
             };
             foreach (var e in c.ElementList) r.StrongVs[e.Id] = e.StrongVs;
             return r;
@@ -307,12 +324,40 @@ namespace IdleRng.Sim.Combat
         public const string EchoCast = "echo_cast";
 
         /// <summary>
+        /// At the start of each of its actions the unit heals MON_TIDE_REGEN of its max HP, and any healing it receives beyond max HP
+        /// (this regeneration, heal skills, abyssal_drain) becomes shield, up to MON_TIDE_SHIELD_CAP of its max HP. The Living Ocean
+        /// chase capstone.
+        /// </summary>
+        public const string TidalOverflow = "tidal_overflow";
+
+        /// <summary>
+        /// Every hit the unit lands heals it for MON_DRAIN_FRAC of the HP damage the hit dealt (counters and other true damage do
+        /// not drain). The Abyssal Bloom chase capstone.
+        /// </summary>
+        public const string AbyssalDrain = "abyssal_drain";
+
+        /// <summary>
+        /// The unit's fire damage ignores MON_FIRE_PIERCE of the target's DEF or WIS and is never resisted (the element multiplier is
+        /// at least 1). The Inferno Sovereign chase capstone.
+        /// </summary>
+        public const string FirePierce = "fire_pierce";
+
+        /// <summary>
+        /// Each of the unit's first MON_DOUBLE_TURNS actions of the fight is followed at once by an extra full action (cooldowns
+        /// tick, OnAction triggers fire). The Starlit Ascension chase capstone.
+        /// </summary>
+        public const string DoubleTurnStart = "double_turn_start";
+
+        /// <summary>The element id fire_pierce works on.</summary>
+        public const string FireElement = "fire";
+
+        /// <summary>
         /// When the unit's entropy gauge would vent (tower fights only), it gains a shield of ENTROPY_CONVERT_SHIELD of its max HP
         /// instead (specs/21 section 3.1).
         /// </summary>
         public const string EntropyConvert = "entropy_convert";
 
-        public static readonly string[] Known = { CounterMitigated, EchoCast, EntropyConvert };
+        public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }
