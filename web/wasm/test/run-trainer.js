@@ -503,7 +503,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     check((await text('[data-id=vault-showing]')).startsWith('Showing 2 of 6') && /Filters · 1/.test(await act('vault-filters').innerText()), 'it says how many it shows and counts the active filters');
     await page.selectOption('[data-act=vault-species]', '');
     await page.selectOption('[data-act=vault-element]', 'light');
-    check(same(await order(), [5, 2]), 'filter by element (Sprite is light)');
+    check(same(await order(), [5, 2]), 'filter by element (the Mirage Moth is light)');
     await page.selectOption('[data-act=vault-element]', '');
     await page.selectOption('[data-act=vault-title]', { label: 'No title' });
     check(same(await order(), [2]), 'filter: no Legacy Title');
@@ -601,7 +601,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     if (await act('tower-clear').count()) await act('tower-clear').click();   // the Vault's remembered filters apply here too
     const all = await page.locator('[data-id=tower-entry]').count();
     check(all === (await readAccount()).Account.Vault.length, 'the team picker lists the whole Vault (' + all + ')');
-    await act('vault-search').fill('sprite');
+    await act('vault-search').fill('moth');
     const hits = await page.locator('[data-id=tower-entry]').evaluateAll((els) => els.map((e) => +e.dataset.index));
     check(hits.length > 0 && hits.length < all && /Showing \d+ of \d+/.test(await text('[data-id=tower-showing]')), 'the Vault search narrows the team picker: ' + hits.join(','));
     await act('tower-pick-' + hits[0]).check();
