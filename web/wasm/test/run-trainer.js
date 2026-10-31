@@ -374,7 +374,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('.offer.back').count()) === 0 && (await act('reveal-skip').count()) === 0, 'Skip turns the rest face up');
   check((await offers.count()) === 5, 'still 5 offers after the reveal');
   check(acct.Account.Vendor && acct.Account.Vendor.Grade === grade.toLowerCase() && acct.Account.Vendor.Offers.length === 5, 'the offers are saved on the account with the run\'s grade');
-  check(/^(Common|Rare|Epic)$/.test(await text('[data-id=vendor-offer] .rarity')), 'each offer has a rarity: ' + (await text('[data-id=vendor-offer] .rarity')));
+  check(/^(Common|Rare|Epic|Legendary)$/.test(await text('[data-id=vendor-offer] .rarity')), 'each offer has a rarity: ' + (await text('[data-id=vendor-offer] .rarity')));
   await shot('05d-vendor');
   const buy = page.locator('[data-act^="buy-offer-"]:not([disabled])').first();
   const price = +(/(\d+) shards/.exec(await buy.innerText()) || [])[1];
@@ -523,6 +523,23 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await shot('08-dismantle-confirm');
   await act('dismantle-no').click();
   check((await page.locator('[data-id=vault-entry]').count()) === 1 && (await page.locator('[data-id=dismantle-confirm]').count()) === 0, 'declining keeps the monster');
+
+  // ---- legendary talents (issue #103) in the loadout: one legendary slot, tagged; switching one on swaps out the other
+  const beforeLegend = await readAccount();
+  const legend = JSON.parse(JSON.stringify(beforeLegend));
+  legend.Account.Talents.glass_cannon = 1; legend.Account.Talents.echo_training = 1; legend.Account.TalentsOff = [];
+  await writeAccount(legend);
+  await page.reload();
+  await act('start').waitFor({ timeout: 90000 });
+  check((await page.locator('[data-id=talent-glass_cannon] .tag.gold').count()) === 1 && (await page.locator('[data-id=talent-echo_training] .tag.gold').count()) === 1, 'legendary talents carry a Legendary tag');
+  check(await act('talent-toggle-glass_cannon').isChecked() && !(await act('talent-toggle-echo_training').isChecked()), 'with one slot, only the first legendary is on by default');
+  await act('talent-toggle-echo_training').check();
+  check(!(await act('talent-toggle-glass_cannon').isChecked()) && await act('talent-toggle-echo_training').isChecked(), 'switching the other legendary on swaps the slot');
+  check(JSON.stringify((await readAccount()).Account.TalentsOff) === '["glass_cannon"]', 'and the loadout saves it');
+  await shot('07b-legendary-loadout');
+  await writeAccount(beforeLegend);
+  await page.reload();
+  await act('start').waitFor({ timeout: 90000 });
 
   // Over the cap: a v1 save (written before the lock existed) whose Vault holds cap + 1 copies of the sealed entry. Loading it
   // migrates it to the current schema (v3); the run start is blocked until one is dismantled.

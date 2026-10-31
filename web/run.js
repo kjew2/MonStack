@@ -308,6 +308,7 @@
           r.injury.back ? 'Back in cycle ' + r.injury.back + '.' : 'The run is over.']) : null,
         r.shielded ? h('div', { class: 'gold', 'data-id': 'shield-result' }, [h('b', { text: 'Second Wind! ' }), 'The injury was prevented; energy dropped to 0.']) : null,
         r.free ? h('div', { class: 'small gems', 'data-id': 'free-result', text: 'Momentum: this drill cost no energy.' }) : null,
+        r.echoStat ? h('div', { class: 'small gold', 'data-id': 'echo-result', text: 'Echo Training: ' + up(r.echoStat) + ' +' + num(r.echoGain) + '.' }) : null,
       ]);
     }
     return h('div', { class: 'card result', 'data-id': 'result' }, [h('div', null, [h('b', { text: 'Rest' }), h('span', { text: ' +' + num(r.restored) + ' energy' })])]);
@@ -882,6 +883,12 @@
       m.lastCycleAp && '+' + m.lastCycleAp + ' AP in the last cycle',
       m.milestoneMult !== 1 && 'milestones at x' + m.milestoneMult.toFixed(2),
       m.draftRerolls && m.draftRerolls + ' Awakening reroll' + (m.draftRerolls > 1 ? 's' : '') + ' per run',
+      // legendary rule changes (issue #103)
+      m.injuryImmune && 'no injuries',
+      m.restEnergyMult !== 1 && 'rests x' + m.restEnergyMult.toFixed(2),
+      m.neverFail && 'drills never Fail',
+      m.glassCannonBonus && 'drills +' + pts(m.glassCannonBonus) + '% on every stat but HP, none on HP',
+      m.echoFrac && pts(m.echoFrac) + '% of each drill echoes to another stat',
     ].filter(Boolean);
   }
 
@@ -1217,6 +1224,7 @@
         'data-id': 'vendor-offer' }, [
         h('div', { class: 'row between' }, [h('b', { text: def.name }), h('span', { class: 'tag rarity', text: rar.name })]),
         h('div', { class: 'small muted', text: def.desc }),
+        def.legendary ? h('div', { class: 'small gold', 'data-id': 'legendary-note', text: 'Legendary: changes a rule. ' + C.consts.legendarySlots + ' can be on per run; pick it on the species screen.' }) : null,
         h('div', { class: 'row between' }, [
           h('span', { class: 'small num', text: o.bought || o.maxed ? 'Rank ' + o.rank + '/' + def.maxRank : '+1 rank · ' + o.rank + ' → ' + (o.rank + 1) + '/' + def.maxRank }),
           status]),
@@ -1463,7 +1471,8 @@
     if (r.ok) {
       ui.last = r; ui.flash = { stat, tier: r.tier }; ui.drillPop = { stat, tier: r.tier, gain: r.gain };
       log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : '') +
-        (r.shielded ? ' (Second Wind stopped an injury)' : '') + (r.free ? ' (free: Momentum)' : ''));
+        (r.shielded ? ' (Second Wind stopped an injury)' : '') + (r.free ? ' (free: Momentum)' : '') +
+        (r.echoStat ? ' (echo: ' + up(r.echoStat) + ' +' + num(r.echoGain) + ')' : ''));
       if (r.shielded) toast('Second Wind! The injury was prevented.');
       milestones(r);
       if (r.injury) {

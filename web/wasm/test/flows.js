@@ -267,10 +267,11 @@ const H = require('./harness.js');
   talented.ActiveRun = null;
   const talentIds = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"]')].map((e) => e.getAttribute('data-id').slice(7))
     .filter((id) => id !== 'now'));
-  const maxRanks = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"] .tag')].map((e) => +e.textContent.split('/')[1]));
-  check(talentIds.length === 16 && maxRanks.length === 16, 'the talent list shows all 16 talents (' + talentIds.join(' ') + ')');
+  const maxRanks = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"] .tag.num')].map((e) => +e.textContent.split('/')[1]));
+  check(talentIds.length === 20 && maxRanks.length === 20, 'the talent list shows all 20 talents (' + talentIds.join(' ') + ')');
   talented.Account.Talents = {};
-  talentIds.forEach((id, i) => { talented.Account.Talents[id] = maxRanks[i]; });
+  // legendary talents (issue #103) stay out: each changes a rule this test does not expect (LegendaryTalentTests and run-trainer.js cover them)
+  talentIds.forEach((id, i) => { if (!['iron_constitution', 'gamblers_blood', 'glass_cannon', 'echo_training'].includes(id)) talented.Account.Talents[id] = maxRanks[i]; });
   await t.writeSaveText(H.encodeSave(talented));
   await t.reload();
   const now = await text('[data-id=talent-now]');

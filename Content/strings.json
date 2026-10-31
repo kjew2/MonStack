@@ -843,6 +843,38 @@
       "text": "Reroll one Awakening per run into trees of any stat."
     },
     {
+      "key": "talent.iron_constitution.name",
+      "text": "Iron Constitution"
+    },
+    {
+      "key": "talent.iron_constitution.desc",
+      "text": "Legendary. Drills never injure, but rests restore only half as much energy."
+    },
+    {
+      "key": "talent.gamblers_blood.name",
+      "text": "Gambler's Blood"
+    },
+    {
+      "key": "talent.gamblers_blood.desc",
+      "text": "Legendary. Drills never Fail, but every drill costs twice the energy."
+    },
+    {
+      "key": "talent.glass_cannon.name",
+      "text": "Glass Cannon"
+    },
+    {
+      "key": "talent.glass_cannon.desc",
+      "text": "Legendary. Drills grow every stat but HP 30% more, but HP drills gain nothing."
+    },
+    {
+      "key": "talent.echo_training.name",
+      "text": "Echo Training"
+    },
+    {
+      "key": "talent.echo_training.desc",
+      "text": "Legendary. Each drill also adds 25% of its gain to a random other stat."
+    },
+    {
       "key": "achievement.rank_c.name",
       "text": "Contender"
     },
@@ -869,6 +901,10 @@
     {
       "key": "rarity.epic.name",
       "text": "Epic"
+    },
+    {
+      "key": "rarity.legendary.name",
+      "text": "Legendary"
     },
     {
       "key": "gauntlet.slimeling.name",

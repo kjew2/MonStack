@@ -32,7 +32,8 @@ ENUMS = {
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
     "TalentEffect": ["drill_cost", "stat_floor", "chase_chance", "start_sp", "rest_energy", "fail_chance", "super_chance",
                      "shard_mult", "momentum", "loss_sp", "specialist", "tree_slots", "injury_shield", "last_cycle_ap",
-                     "milestone_mult", "draft_rerolls"],
+                     "milestone_mult", "draft_rerolls", "iron_constitution", "gamblers_blood", "glass_cannon",
+                     "echo_training"],
     "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
@@ -515,6 +516,7 @@ def validate_tower(t, keys, errs):
 
 WHOLE_TALENT_EFFECTS = ("start_sp", "momentum", "loss_sp", "tree_slots", "injury_shield", "last_cycle_ap",
                         "draft_rerolls")
+LEGENDARY_TALENT_EFFECTS = ("iron_constitution", "gamblers_blood", "glass_cannon", "echo_training")
 
 
 def validate_talents(t, errs):
@@ -541,6 +543,13 @@ def validate_talents(t, errs):
             errs.add("E043", loc, "milestone_mult per_rank must be <= 0 and keep the multiplier > 0 at max rank")
         if eff in WHOLE_TALENT_EFFECTS and not (p >= 0 and p == int(p)):
             errs.add("E043", loc, f"{eff} per_rank must be a whole number >= 0")
+        # Legendary rule changes (issue #103): one rank each; per_rank is the rule's one number.
+        if eff in LEGENDARY_TALENT_EFFECTS and r["max_rank"] != 1:
+            errs.add("E043", loc, f"{eff} is a rule change: max_rank must be 1")
+        if eff in ("iron_constitution", "echo_training") and not 0 <= p <= 1:
+            errs.add("E043", loc, f"{eff} per_rank must be in [0, 1]")
+        if eff in ("gamblers_blood", "glass_cannon") and not p >= 0:
+            errs.add("E043", loc, f"{eff} per_rank must be >= 0")
 
 
 def validate_unlocks(t, errs):

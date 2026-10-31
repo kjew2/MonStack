@@ -621,7 +621,9 @@ namespace IdleRng.Web
                 .P("restEnergyBonus", m.RestEnergyBonus).P("failChanceDelta", m.FailChanceDelta).P("superChanceBonus", m.SuperChanceBonus)
                 .P("shardMult", m.ShardMult).P("momentumDrills", m.MomentumDrills).P("lossSp", m.LossSp).P("specialistBonus", m.SpecialistBonus)
                 .P("treeSlotBonus", m.TreeSlotBonus).P("injuryShields", m.InjuryShields).P("lastCycleAp", m.LastCycleAp)
-                .P("milestoneMult", m.MilestoneMult).P("draftRerolls", m.DraftRerolls).EndObj();
+                .P("milestoneMult", m.MilestoneMult).P("draftRerolls", m.DraftRerolls)
+                .P("injuryImmune", m.InjuryImmune).P("restEnergyMult", m.RestEnergyMult).P("neverFail", m.NeverFail)
+                .P("glassCannonBonus", m.GlassCannonBonus).P("echoFrac", m.EchoFrac).EndObj();
 
         private void Entry(JsonOut w, VaultEntry e)
         {
@@ -668,7 +670,7 @@ namespace IdleRng.Web
                         w.P("ok", true).P("kind", "drill").P("stat", r.Stat).P("tier", r.Tier.ToString().ToLowerInvariant())
                             .P("tierName", _db.Text("drill." + r.Tier.ToString().ToLowerInvariant() + ".name"))
                             .P("gain", r.Gain).P("value", r.NewValue).P("energy", r.EnergyAfter).P("injured", r.Injured)
-                            .P("shielded", r.Shielded).P("free", r.Free);
+                            .P("shielded", r.Shielded).P("free", r.Free).P("echoStat", r.EchoStat).P("echoGain", r.EchoGain);
                         w.Key("injury");
                         if (r.Injury == null) w.Null(); else Injury(w, r.Injury);
                         Milestones(w, r.Milestones);

@@ -55,7 +55,7 @@ Regenerate with `dotnet run -c Release --project src/IdleRng.Bots -- golden --up
 ```
 dotnet run -c Release --project src/IdleRng.Bots -- train  --species ID --policy P --seed N [--books a,b]
 dotnet run -c Release --project src/IdleRng.Bots -- balance [--seeds N] [--seed-base N] [--species a,b] [--policies a,b]
-                                                            [--books none|all|a,b] [--no-tower] [--tower-day N]
+                                                            [--books none|all|a,b] [--talents a,b] [--no-tower] [--tower-day N]
                                                             [--no-book-canary] [--strict] [--format text|json|csv] [--jobs N] [--out path]
 dotnet run -c Release --project src/IdleRng.Bots -- golden --check | --update [--golden-dir path] [--content dir]
 ```
@@ -76,7 +76,7 @@ When the `CI` environment variable is set (anything but empty or `false`; GitHub
 
 **A report, not a gate, and not a golden.** `balance` measures the placeholder numbers and runs a few **loose sanity checks** over them (below); it exits 0 whatever they say unless `--strict` is passed. There are **no balance targets** (issue #89, kj 2026-10-31): meta-progression is still being added and will move the tuning, so for now the harness only asks "is anything absolutely unplayable?". Tight targets wait until kj asks for them, and any large retune still needs targets agreed with kj first (`CLAUDE.md`).
 
-**What it plays.** For every species x run policy (default: every species in content order and every policy in section 4), `--seeds` runs (default 200) on seeds `--seed-base` (default 1), `--seed-base` + 1, ... Each run is `RunBot.Play` from a fresh account (no talents, `RunModifiers` defaults), bringing the `--books` (default none; `all` = every skill book), then sealed the way `AccountOps.FinishRun` seals it: `AccountOps.Payout` shards and `GauntletSim.Run` on the run seed. Unless `--no-tower`, each policy's monsters then climb the Dungeon (`TowerSim.Run`): each species alone, and one of each species (the first `MON_SIDE_SIZE`) from the same seed as one team, on day `--tower-day` (default 0) + the seed's index, so the lineups vary across the sample. A tower sample's shards are `TOWER_SHARDS_PER_FLOOR` x floors cleared (a first attempt that day) and its books the `TowerSim.BookDrop` hits on the cleared floors.
+**What it plays.** For every species x run policy (default: every species in content order and every policy in section 4), `--seeds` runs (default 200) on seeds `--seed-base` (default 1), `--seed-base` + 1, ... Each run is `RunBot.Play` from a fresh account (no talents, `RunModifiers` defaults; `--talents a,b` starts every run with those talents at max rank instead, at most `LEGENDARY_SLOTS` legendaries, with `ChaseChance` kept at 1 so the cells compare with the talentless ones, `BalanceHarness.TalentMods`, issue #103), bringing the `--books` (default none; `all` = every skill book), then sealed the way `AccountOps.FinishRun` seals it: `AccountOps.Payout` shards and `GauntletSim.Run` on the run seed. Unless `--no-tower`, each policy's monsters then climb the Dungeon (`TowerSim.Run`): each species alone, and one of each species (the first `MON_SIDE_SIZE`) from the same seed as one team, on day `--tower-day` (default 0) + the seed's index, so the lineups vary across the sample. A tower sample's shards are `TOWER_SHARDS_PER_FLOOR` x floors cleared (a first attempt that day) and its books the `TowerSim.BookDrop` hits on the cleared floors.
 
 **What it reports.** Per species x policy:
 

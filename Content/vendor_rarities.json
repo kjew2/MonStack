@@ -24,6 +24,14 @@
       "weight_base": 2.0,
       "weight_per_rank": 6.0,
       "legendary_slot": false
+    },
+    {
+      "id": "legendary",
+      "sort_order": 3,
+      "name_key": "rarity.legendary.name",
+      "weight_base": -14.0,
+      "weight_per_rank": 4.0,
+      "legendary_slot": true
     }
   ]
 }

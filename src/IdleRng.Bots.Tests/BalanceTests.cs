@@ -23,6 +23,22 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void TalentMods_MaxRank_OneLegendary_ChaseKeptAtOne()
+        {
+            var db = Content.Db;
+            Assert.That(BalanceHarness.TalentMods(db, null), Is.Null);
+            Assert.That(BalanceHarness.TalentMods(db, new string[0]), Is.Null);
+            var m = BalanceHarness.TalentMods(db, new[] { "glass_cannon", "frugal_drills" });
+            Assert.That(m.GlassCannonBonus, Is.EqualTo(db.Talents["glass_cannon"].PerRank));
+            Assert.That(m.DrillCostMult, Is.EqualTo(1 + db.Talents["frugal_drills"].PerRank * db.Talents["frugal_drills"].MaxRank).Within(1e-12));
+            Assert.That(m.ChaseChance, Is.EqualTo(1));
+            Assert.Throws<InvalidOperationException>(() => BalanceHarness.TalentMods(db, new[] { "glass_cannon", "echo_training" }), "one legendary slot");
+            Assert.Throws<ArgumentException>(() => BalanceHarness.TalentMods(db, new[] { "nope" }));
+            var s = BalanceHarness.Play(db, "focus", "slime", 1, null, m);
+            Assert.That(s.RankIndex, Is.GreaterThanOrEqualTo(0));
+        }
+
+        [Test]
         public void Percentile_UsesIntegerRanks()
         {
             // 0.1 x 30 is 3.0000000000000004 in floating point: a float ceil would pick rank 4.

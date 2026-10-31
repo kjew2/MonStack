@@ -108,6 +108,23 @@ namespace IdleRng.Sim.Training
         /// <summary>Milestone drafts the run may reroll (Second Look).</summary>
         public int DraftRerolls { get; set; }
 
+        // Legendary rule changes (specs/18 section 3, issue #103). Hashed only when a run uses one (run hash version 8).
+
+        /// <summary>Drills never injure (Iron Constitution). The injury roll is still drawn, so the stream stays aligned.</summary>
+        public bool InjuryImmune { get; set; }
+
+        /// <summary>Multiplies what a rest restores, REST_ENERGY plus Deep Rest (Iron Constitution's drawback). 1 = no change.</summary>
+        public double RestEnergyMult { get; set; } = 1;
+
+        /// <summary>Drills never Fail: the fail chance is 0 (Gambler's Blood; its drawback multiplies DrillCostMult).</summary>
+        public bool NeverFail { get; set; }
+
+        /// <summary>Drill growth x(1 + this) on every trained stat but HP, and 0 on HP (Glass Cannon). 0 = off.</summary>
+        public double GlassCannonBonus { get; set; }
+
+        /// <summary>Each drill also adds this fraction of its gain (floored) to a random other trained stat (Echo Training). 0 = off.</summary>
+        public double EchoFrac { get; set; }
+
         public RunModifiers Clone() => (RunModifiers)MemberwiseClone();
     }
 
@@ -321,6 +338,10 @@ namespace IdleRng.Sim.Training
 
         /// <summary>The drill cost no energy (Momentum).</summary>
         public bool Free { get; set; }
+
+        /// <summary>Echo Training: the other stat the drill echoed into and the points it added there (null and 0 without it).</summary>
+        public string EchoStat { get; set; }
+        public double EchoGain { get; set; }
 
         /// <summary>The injury this drill caused (also the last entry of RunState.Injuries); null when not injured.</summary>
         public InjuryHit Injury { get; set; }
