@@ -41,7 +41,15 @@ small, .small { font-size: 12px; }
 #tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding: 0 var(--gutter-r) env(safe-area-inset-bottom, 0px) var(--gutter-l); }
 #tabs button { position: relative; border: 0; background: none; padding: 12px 0 13px; font: 600 13px var(--font-display); letter-spacing: .04em; color: var(--muted); }
 #tabs button[aria-selected="true"] { color: var(--text); box-shadow: inset 0 3px 0 var(--gems); }
-.dot { position: absolute; top: 7px; right: 28%; width: 8px; height: 8px; border-radius: 50%; background: var(--gems); }
+#tabs .tabsp { font-weight: 700; }
+/* Skill point gains (issue #86): a float-up by the HUD's SP count, a pulse on the count, the fight result's badge */
+#floats { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
+.spgain { position: absolute; padding: 2px 8px; border-radius: 10px; background: #1d3438; border: 1px solid var(--gems); color: var(--gems); font: 700 13px var(--font-display); white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.5); animation: spfloat 2s ease-out both; }
+@keyframes spfloat { 0% { opacity: 0; transform: translateY(10px); } 15% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-22px); } }
+.spcount.pulse { display: inline-block; animation: sppulse .7s ease-out 2; }
+@keyframes sppulse { 40% { transform: scale(1.35); color: var(--text); text-shadow: 0 0 8px var(--gems); } }
+.spbadge { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--gems); border-radius: 8px; background: #1d3438; color: var(--gems); font-size: 13px; }
+.spbadge > b { font: 700 28px/1 var(--font-display); white-space: nowrap; }
 
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .card.alert { border-color: var(--gems); }
@@ -101,16 +109,21 @@ small, .small { font-size: 12px; }
 .units { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .unit { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .unit .bar .fill { background: var(--ok); } .unit.foe .bar .fill { background: var(--bad); }
-/* Fight playback (issue #79): skill rows with cooldowns, the current action, the speed toggle */
+/* Fight playback (issue #79): skill tiles with cooldowns, the current action, the speed toggle.
+   A tile's grey overlay covers it while on cooldown and recedes downward as the cooldown runs out (issue #85). */
 .unit .bar .fill { transition: width .25s ease-out; }
-.skills { display: flex; flex-direction: column; gap: 4px; }
-.skill { position: relative; display: flex; justify-content: space-between; gap: 6px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2); font-size: 12px; overflow: hidden; }
-.skill .cdfill { position: absolute; inset: 0 auto 0 0; background: rgba(255,255,255,.09); transition: width .25s ease-out; }
-.skill span { position: relative; }
-.skill .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.skill .st { color: var(--muted); white-space: nowrap; }
-.skill.ready { border-color: #3d6b40; } .skill.ready .st { color: var(--ok); }
-.skill.used { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); animation: used .45s ease-out; }
+.skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill { width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; }
+.skill .tile { position: relative; width: 48px; height: 48px; border: 2px solid var(--line); border-radius: 8px; overflow: hidden; background: hsl(var(--hue, 200), 30%, 30%); display: grid; place-items: center; }
+.skill .cdfill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: rgba(40,40,40,.82); transition: height .25s ease-out; }
+.skill .ab, .skill .st { grid-area: 1 / 1; position: relative; }
+.skill .ab { font: 700 16px var(--font-display); letter-spacing: .02em; color: var(--text); }
+.skill .st { font: 700 20px var(--font-display); color: var(--text); text-shadow: 0 1px 3px #000; }
+.skill .st:empty { display: none; }
+.skill:not(.ready) .ab { align-self: start; margin-top: 2px; font-size: 10px; color: var(--muted); }
+.skill .nm { max-width: 100%; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill.ready .tile { border-color: var(--ok); }
+.skill.used .tile { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); animation: used .45s ease-out; }
 @keyframes used { from { background: #5a4d1c; } }
 .now { min-height: 72px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; }
 .now b { font: 700 20px var(--font-display); animation: pop .25s ease-out; }
@@ -173,7 +186,8 @@ small, .small { font-size: 12px; }
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; background: #333; box-shadow: 0 4px 12px rgba(0,0,0,.5); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .flash, .toast, .now b, .skill.used { animation: none !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .flash, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
+@keyframes spfade { to { opacity: 0; } }
 </style>
 </head>
 <body>
@@ -183,6 +197,7 @@ small, .small { font-size: 12px; }
   </header>
   <main id="main"><p class="muted">Loading the C# engine...</p></main>
   <nav id="tabs" role="tablist" hidden></nav>
+  <div id="floats" aria-live="polite"></div>
   <div id="modal" hidden></div>
   <div id="toasts" aria-live="polite"></div>
 </div>
