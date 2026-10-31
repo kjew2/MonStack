@@ -1,6 +1,6 @@
 # 21 - Daily Tower
 
-Status: **in progress (T10 of `specs/13`, P0)**. Build steps 1 to 3 are **live** (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4). Step 4, the web client (section 8), is design only.
+Status: **live (T10 of `specs/13`, P0)**, all four build steps (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4); a first web screen, section 8 (`web/run.js`, browser test in `web/wasm/test/run-trainer.js`). Section 8 lists what the screen does not do yet.
 
 The design is `specs/12` sections 8.2 and 8.3 and the Skill Book rules in section 5.6. This spec turns it into rules, data and build steps.
 
@@ -163,12 +163,14 @@ The day number is read from the device clock by the caller. The sim cannot tell 
 
 ## 8. Web client
 
-A **Tower** tab beside the Vault (`web/`), all through the bridge (`web/wasm/BRIDGE.md`; new `Tower*` exports, nothing computed in JS):
+**Built (first version).** A **Daily Tower** card on the home screen (attempts left today, today's best) opens the tower screen; everything comes through the bridge (`AccountCmd` `towerInfo` and `runTower`, `web/wasm/BRIDGE.md`), and the page computes no rule. The day is the UTC day number from the device clock (`run.towerDay()`).
 
-- Today's lineup: floor list with each boss's name, element and phase badges, the milestone floors marked, attempts left and today's best floor.
-- Team picker: choose 1 to 4 Vault monsters from a list with the Vault's sort, filters and search (`specs/18` section 9); slot order is shown and reorderable.
-- Playback: per floor, the existing action-by-action fight view (`specs/13` T6; 1x, 2x or Skip) with phase banners, each unit's entropy gauge and next vent, and the corruption meter. A summary at the end: floor reached, floors cleared, rewards paid (shards, books, gems when present).
-- A tooltip for every mechanism, built from the same data as the fight (`BattleText`, `specs/16` section 9).
+- Status line: attempts left, floors cleared today and ever.
+- Team: every Vault entry with a checkbox, up to `MON_SIDE_SIZE`; the order picked is the slot order, shown as "Slot n". Climb runs one attempt.
+- Result card: where the team fell (or a full clear), the shards paid, the Skill Books dropped and on which floor, first clears, every floor fought (won or lost, phases entered, vents, peak corruption), and the last floor's fight as a collapsible log in which the tower events (phase entered, entropy vent, shield check failed, channel broken or landed) are highlighted lines.
+- Today's floors: each floor's boss, element, marquee bosses in gold, their phases in order and the floor level.
+
+**Not yet** (issue #98): animated playback with the rank fight's view (1x, 2x, Skip) for tower floors; entropy gauges, the next vent and the corruption meter during playback; tooltips for phases, entropy and corruption (`BattleText`); the Vault's sort, filters and search in the team picker and reordering the team; moving the "Test: add a book" button behind a debug flag (it is still on the home screen).
 
 ## 9. Determinism and tests
 
@@ -186,7 +188,7 @@ Each step merges on its own with `./check.sh` green.
 1. **Engine hooks** (`BattleSim`): `TowerRules`, entropy, the four phase kinds, the clock, tests. Rank fights and the gauntlet unchanged. **Done** (`TowerBattleTests`; no golden moved).
 2. **Tower sim and content:** the three tables, constants, validators in both `content_build.py` and `ContentDb`, `TowerSim`, goldens. **Done** (content 3.6, `TowerTests`, `golden/tower-vectors.txt`).
 3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v4, tests. **Done** (`TowerAccountTests`, `AccountSaveTests`).
-4. **Web:** the Tower tab, the bridge, tooltips, the debug-only book button. Publish the artifact (`CLAUDE.md`).
+4. **Web:** the tower screen and the bridge. **Done** as a first version (section 8); its open items are issue #98.
 
 ## 11. Questions for kj
 

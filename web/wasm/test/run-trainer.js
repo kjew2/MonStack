@@ -303,6 +303,35 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await text('[data-id=vault-title]')) === legacy, 'the Vault card shows the Legacy Title: ' + legacy);
   await shot('06-vault');
 
+  // ---- the Daily Tower (specs/21 section 8): one attempt with the sealed monster, paid and saved by the engine
+  const towerShards0 = (await readAccount()).Account.Shards;
+  const attemptsBefore = /^(\d+)\/(\d+) attempts left today/.exec(await text('[data-id=tower-attempts]'));
+  check(!!attemptsBefore && attemptsBefore[1] === attemptsBefore[2], 'home shows the Daily Tower card with every attempt left: ' + (await text('[data-id=tower-attempts]')));
+  await act('tower').click();
+  await act('tower-climb').waitFor();
+  check(await act('tower-climb').isDisabled(), 'the climb waits for a team');
+  check((await page.locator('[data-id^=tower-floor-]').count()) > 0, "today's floors are listed");
+  await act('tower-pick-0').check();
+  check(/Climb with 1 monster/.test(await act('tower-climb').innerText()), 'picking a Vault monster puts it on the team');
+  await act('tower-climb').click();
+  await page.locator('[data-id=tower-result]').waitFor();
+  const tower = await readAccount();
+  check(tower.Account.Tower.AttemptsUsed === 1 && tower.Account.Tower.Day >= 0, 'the attempt is counted and saved (day ' + tower.Account.Tower.Day + ')');
+  check((await text('[data-id=shards]')).startsWith(tower.Account.Shards + ' ') && tower.Account.Shards >= towerShards0,
+    'the tower paid ' + (tower.Account.Shards - towerShards0) + ' shards: ' + (await text('[data-id=tower-shards]')));
+  const shown = /^\+(\d+) Training Shards/.exec(await text('[data-id=tower-shards]'));
+  check((shown ? +shown[1] : 0) === tower.Account.Shards - towerShards0 && (tower.Account.Tower.ClearedToday > 0) === !!shown,
+    'the result card shows what was paid, for ' + tower.Account.Tower.ClearedToday + ' floors cleared');
+  await page.locator('[data-id=tower-result] summary').click();
+  check((await page.locator('[data-id=tower-log] li').count()) > 0, "the last floor's fight log is listed");
+  const tw = await page.evaluate(() => document.documentElement.scrollWidth);
+  check(tw <= 390, 'the tower screen fits the phone width (' + tw + 'px)');
+  await shot('06b-tower');
+  await act('tower-back').click();
+  await act('start').waitFor();
+  const attemptsAfter = /^(\d+)\//.exec(await text('[data-id=tower-attempts]'));
+  check(!!attemptsAfter && +attemptsAfter[1] === +attemptsBefore[1] - 1, 'back home, the card shows one attempt used: ' + (await text('[data-id=tower-attempts]')));
+
   // ---- the next run: the vendor's offers go, and a bought Frugal Drills cuts the drill cost
   await act('start').click();
   await act('drill-str').waitFor();
