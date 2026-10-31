@@ -71,17 +71,21 @@ namespace IdleRng.Bots.Balance
                       c.Killers.Count == 0 ? "-" : string.Join(" ", c.Killers.Take(3).Select(k => $"{k.Key} {Pct(c.N == 0 ? 0 : (double)k.Count / c.N)}%")));
             t.AppendTo(sb);
 
+            ChaseTable(sb, "\n## Chase capstones: % of runs ending with the capstone bought and its cycle; % of runs where the tree unlocked and where each condition held at some point (\"any\": either tree)\n", r.Cells);
+
             if (r.BookCells.Count > 0)
             {
-                sb.Append("\n## Book canary: mean rank with every skill book vs none (no tower)\n");
+                sb.Append("\n## Book canary: mean rank and capstone% with every skill book vs none (no tower)\n");
                 t = new Table(2);
-                t.Row("species", "policy", "none", "all books", "change");
+                t.Row("species", "policy", "none", "all books", "change", "capstone% none", "all books");
                 foreach (var b in r.BookCells)
                 {
                     var n = r.Cells.First(c => c.Species == b.Species && c.Policy == b.Policy);
-                    t.Row(b.Species, b.Policy, Num(n.Grade.Mean), Num(b.Grade.Mean), (b.Grade.Mean - n.Grade.Mean).ToString("+0.##;-0.##;0", Inv));
+                    t.Row(b.Species, b.Policy, Num(n.Grade.Mean), Num(b.Grade.Mean), (b.Grade.Mean - n.Grade.Mean).ToString("+0.##;-0.##;0", Inv),
+                          Pct(n.CapstoneRate), Pct(b.CapstoneRate));
                 }
                 t.AppendTo(sb);
+                ChaseTable(sb, "\n## Book canary chase capstones (every skill book brought)\n", r.BookCells);
             }
 
             if (o.Tower)
@@ -96,6 +100,23 @@ namespace IdleRng.Bots.Balance
             }
             return sb.ToString();
         }
+
+        static void ChaseTable(StringBuilder sb, string title, List<CellSummary> cells)
+        {
+            sb.Append(title);
+            var t = new Table(3, textLast: true);
+            t.Row("species", "policy", "tree", "unlocked%", "capstone%", "cycle mean", "p10/p50/p90", "conditions held%");
+            foreach (var c in cells)
+            {
+                t.Row(c.Species, c.Policy, "any", "-", Pct(c.CapstoneRate), CycleMean(c.CapstoneCycle), Pcts(c.CapstoneCycle), "-");
+                foreach (var x in c.Chase)
+                    t.Row(c.Species, c.Policy, x.TreeId, Pct(x.UnlockRate), Pct(x.CapstoneRate), CycleMean(x.CapstoneCycle), Pcts(x.CapstoneCycle),
+                          string.Join(", ", x.Conditions.Select(k => $"{k.Label} {Pct(k.HeldRate)}")));
+            }
+            t.AppendTo(sb);
+        }
+
+        static string CycleMean(Distribution d) => d.N == 0 ? "-" : Num(d.Mean);
 
         static string Pct(double fraction) => (fraction * 100).ToString("0.0", Inv);
 
@@ -191,6 +212,7 @@ namespace IdleRng.Bots.Balance
                 j.Key("killers").Open('{');
                 foreach (var k in c.Killers) j.Key(k.Key).Num(k.Count);
                 j.Close('}');
+                ChaseJson(j, c);
                 j.Close('}');
             }
             j.Close(']');
@@ -210,11 +232,31 @@ namespace IdleRng.Bots.Balance
             {
                 j.Open('{').Key("species").Str(b.Species).Key("policy").Str(b.Policy).Key("n").Num(b.N);
                 j.Key("grade"); Dist(j, b.Grade);
+                ChaseJson(j, b);
                 j.Close('}');
             }
             j.Close(']');
             j.Close('}');
             return j.ToString() + "\n";
+        }
+
+        static void ChaseJson(JsonOut j, CellSummary c)
+        {
+            j.Key("capstoned").Num(c.Capstoned).Key("capstoneRate").Num(c.CapstoneRate);
+            j.Key("capstoneCycle"); Dist(j, c.CapstoneCycle);
+            j.Key("chase").Open('[');
+            foreach (var x in c.Chase)
+            {
+                j.Open('{').Key("tree").Str(x.TreeId).Key("unlocked").Num(x.Unlocked).Key("unlockRate").Num(x.UnlockRate)
+                 .Key("capstones").Num(x.Capstones).Key("capstoneRate").Num(x.CapstoneRate);
+                j.Key("capstoneCycle"); Dist(j, x.CapstoneCycle);
+                j.Key("conditions").Open('[');
+                foreach (var k in x.Conditions)
+                    j.Open('{').Key("id").Str(k.Id).Key("label").Str(k.Label).Key("held").Num(k.Held).Key("heldRate").Num(k.HeldRate).Close('}');
+                j.Close(']');
+                j.Close('}');
+            }
+            j.Close(']');
         }
 
         static void Dist(JsonOut j, Distribution d) =>
@@ -266,7 +308,9 @@ namespace IdleRng.Bots.Balance
         /// Long form, one metric per row: section,species,policy,team,metric,n,mean,sd,min,p10,p50,p90,max. Rates and grade shares
         /// put the fraction in mean and leave the spread columns empty. Each sanity check gives two rows in section "check":
         /// metric = its id (mean = the measured value, empty when skipped) and id + "_warn" (mean 1 on WARN, 0 on PASS, empty
-        /// when skipped); n is what the check looked at. The book canary's grades are section "books".
+        /// when skipped); n is what the check looked at. The book canary's grades are section "books". Section "chase" (and
+        /// "books_chase" for the canary) holds capstone_rate and capstone_cycle, then per chase tree &lt;tree&gt;_unlock_rate,
+        /// &lt;tree&gt;_capstone_rate, &lt;tree&gt;_capstone_cycle and per condition &lt;condition id&gt;_held_rate.
         /// </summary>
         public static string Csv(BalanceReport r)
         {
@@ -287,8 +331,13 @@ namespace IdleRng.Bots.Balance
                 Rate(sb, "gauntlet", c.Species, c.Policy, "", "clear_rate", c.N, c.GauntletClearRate);
                 Rate(sb, "gauntlet", c.Species, c.Policy, "", "boss_stall_rate", c.N - c.GauntletCleared, c.GauntletBossStallRate);
                 foreach (var k in c.Killers) Rate(sb, "gauntlet", c.Species, c.Policy, "", "killer_" + k.Key, c.N, c.N == 0 ? 0 : (double)k.Count / c.N);
+                ChaseCsv(sb, "chase", c);
             }
-            foreach (var b in r.BookCells) Row(sb, "books", b.Species, b.Policy, "", "grade", b.Grade);
+            foreach (var b in r.BookCells)
+            {
+                Row(sb, "books", b.Species, b.Policy, "", "grade", b.Grade);
+                ChaseCsv(sb, "books_chase", b);
+            }
             foreach (var w in r.Tower)
             {
                 Row(sb, "tower", "", w.Policy, w.Team, "floors_cleared", w.FloorsCleared);
@@ -303,6 +352,19 @@ namespace IdleRng.Bots.Balance
                 Check(sb, k.Id + "_warn", k.N, skip ? "" : k.Status == CheckStatus.Warn ? "1" : "0");
             }
             return sb.ToString();
+        }
+
+        static void ChaseCsv(StringBuilder sb, string section, CellSummary c)
+        {
+            Rate(sb, section, c.Species, c.Policy, "", "capstone_rate", c.N, c.CapstoneRate);
+            Row(sb, section, c.Species, c.Policy, "", "capstone_cycle", c.CapstoneCycle);
+            foreach (var x in c.Chase)
+            {
+                Rate(sb, section, c.Species, c.Policy, "", x.TreeId + "_unlock_rate", x.N, x.UnlockRate);
+                Rate(sb, section, c.Species, c.Policy, "", x.TreeId + "_capstone_rate", x.N, x.CapstoneRate);
+                Row(sb, section, c.Species, c.Policy, "", x.TreeId + "_capstone_cycle", x.CapstoneCycle);
+                foreach (var k in x.Conditions) Rate(sb, section, c.Species, c.Policy, "", k.Id + "_held_rate", c.N, k.HeldRate);
+            }
         }
 
         static void Row(StringBuilder sb, string section, string species, string policy, string team, string metric, Distribution d) =>

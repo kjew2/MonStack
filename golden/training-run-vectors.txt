@@ -24,6 +24,12 @@ slime hoarder seed=7
   trees slime_fundamentals:8/8 gel_armor:8/8 living_ocean:8/8 survivor:3/8
   hash e34a82bfe7e75faec953dc6ef7f7f54ff704b91cd2bbecf8c203d3f01f83c8eb
 
+slime chaser seed=7
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
+  stats hp 799 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
+  trees slime_fundamentals:7/8 gel_armor:8/8 living_ocean:8/8 survivor:0/8
+  hash 592c996da35a597ede74253b0d599037b53d2fe63700f41f5cf6da4f13198a7d
+
 slime focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 832 str 90 int 115 wis 180 dex 90 def 140 spd 100 luk 155
@@ -54,6 +60,12 @@ drake hoarder seed=7
   trees pyromancy:8/8 heavy_armor:8/8 brute_force:4/8 survivor:2/8
   hash 7b6fcc4fca7b1830abffc132f5272c5f2ae981140eb844d6d810657ac90b42d4
 
+drake chaser seed=7
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
+  stats hp 200 str 324 int 95 wis 80 dex 90 def 627 spd 90 luk 70
+  trees pyromancy:7/8 heavy_armor:8/8 unbreakable_will:8/8 survivor:0/8
+  hash c7ebd0f04547f2105e48bdfc1c6c86a1c101954f6ae9952ef68fd86d4c02e294
+
 drake focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 165 str 840 int 110 wis 115 dex 90 def 170 spd 90 luk 70
@@ -83,6 +95,12 @@ sprite hoarder seed=7
   stats hp 90 str 60 int 796 wis 190 dex 155 def 70 spd 175 luk 110
   trees aether_striker:8/8 mind_warp:8/8 spellcraft:7/8 survivor:0/8
   hash 289467deecd8bdb9d8067c3b07e0c8f228d214023e84de7386a02b1e825ae9f7
+
+sprite chaser seed=7
+  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
+  stats hp 105 str 60 int 518 wis 155 dex 155 def 70 spd 519 luk 110
+  trees aether_striker:8/8 mind_warp:7/8 starlit_ascension:8/8 survivor:2/8
+  hash 08f55cd4945dd9d1319f0ee8dd5b48ea8e8bdad065801beff0f028d59c95bdd0
 
 sprite focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0

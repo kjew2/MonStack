@@ -72,6 +72,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>The gauntlet ended on a boss floor (GauntletSim.IsBoss); false when cleared. Issue #99.</summary>
         public bool GauntletBossStall { get; set; }
 
+        /// <summary>The species' chase trees in content order: conditions held, unlocked, capstone and its cycle (ChaseTracker).</summary>
+        public List<ChaseOutcome> Chase { get; set; } = new List<ChaseOutcome>();
+
+        /// <summary>The earliest cycle a capstone the run ended with was bought; 0 = the run ended with no capstone.</summary>
+        public int CapstoneCycle => Chase.Where(x => x.Capstone).Select(x => x.CapstoneCycle).DefaultIfEmpty(0).Min();
+
         /// <summary>The finished run, for building tower teams; not reported.</summary>
         internal RunState State { get; set; }
     }
@@ -98,6 +104,32 @@ namespace IdleRng.Bots.Balance
     {
         public string Key { get; set; }
         public int Count { get; set; }
+    }
+
+    /// <summary>One chase condition across a cell's runs: how many runs it held in at some point.</summary>
+    public sealed class ConditionSummary
+    {
+        public string Id { get; set; }
+
+        /// <summary>Short label (ChaseTracker.Label), e.g. "heavy_armor maxed", "def>=500".</summary>
+        public string Label { get; set; }
+        public int Held { get; set; }
+        public double HeldRate { get; set; }
+    }
+
+    /// <summary>One chase tree across a cell's runs (specs/09 section 7): unlocked, ended with its capstone, and when.</summary>
+    public sealed class ChaseSummary
+    {
+        public string TreeId { get; set; }
+        public int N { get; set; }
+        public int Unlocked { get; set; }
+        public double UnlockRate => N == 0 ? 0 : (double)Unlocked / N;
+        public int Capstones { get; set; }
+        public double CapstoneRate => N == 0 ? 0 : (double)Capstones / N;
+
+        /// <summary>Cycle the capstone was bought, over the runs that ended with it.</summary>
+        public Distribution CapstoneCycle { get; set; }
+        public List<ConditionSummary> Conditions { get; set; }
     }
 
     /// <summary>Everything the report says about one species x policy.</summary>
@@ -143,6 +175,16 @@ namespace IdleRng.Bots.Balance
         /// <summary>Gauntlet killers, most runs first (ties by id).</summary>
         public List<Tally> Killers { get; set; }
 
+        /// <summary>Runs that ended with at least one chase capstone bought, and their share (issue #111).</summary>
+        public int Capstoned { get; set; }
+        public double CapstoneRate => N == 0 ? 0 : (double)Capstoned / N;
+
+        /// <summary>Per capstoned run, the earliest cycle a capstone it ended with was bought.</summary>
+        public Distribution CapstoneCycle { get; set; }
+
+        /// <summary>Per chase tree of the species, in the order the runs list them (content order).</summary>
+        public List<ChaseSummary> Chase { get; set; }
+
         public static CellSummary From(string species, string policy, int rankCount, IReadOnlyList<RunSample> runs)
         {
             if (rankCount < 1) throw new ArgumentOutOfRangeException(nameof(rankCount));
@@ -171,7 +213,36 @@ namespace IdleRng.Bots.Balance
             s.Shards = Distribution.Of(runs.Select(r => (double)r.Shards));
             s.GauntletFloor = Distribution.Of(runs.Select(r => r.GauntletFloor));
             s.Killers = Count(runs.Where(r => r.GauntletKiller != null).Select(r => r.GauntletKiller));
+            s.Capstoned = runs.Count(r => r.CapstoneCycle > 0);
+            s.CapstoneCycle = Distribution.Of(runs.Where(r => r.CapstoneCycle > 0).Select(r => r.CapstoneCycle));
+            s.Chase = SummariseChase(runs);
             return s;
+        }
+
+        static List<ChaseSummary> SummariseChase(IReadOnlyList<RunSample> runs)
+        {
+            var list = new List<ChaseSummary>();
+            foreach (var g in runs.SelectMany(r => r.Chase).GroupBy(o => o.TreeId, StringComparer.Ordinal))
+            {
+                var outs = g.ToList();
+                var first = outs[0];
+                var cs = new ChaseSummary
+                {
+                    TreeId = g.Key, N = runs.Count, Unlocked = outs.Count(o => o.Unlocked), Capstones = outs.Count(o => o.Capstone),
+                    CapstoneCycle = Distribution.Of(outs.Where(o => o.Capstone).Select(o => o.CapstoneCycle)),
+                    Conditions = new List<ConditionSummary>(),
+                };
+                for (int j = 0; j < first.ConditionIds.Length; j++)
+                {
+                    int held = outs.Count(o => o.ConditionsHeld[j]);
+                    cs.Conditions.Add(new ConditionSummary
+                    {
+                        Id = first.ConditionIds[j], Label = first.ConditionLabels[j], Held = held, HeldRate = (double)held / runs.Count,
+                    });
+                }
+                list.Add(cs);
+            }
+            return list;
         }
 
         internal static List<Tally> Count(IEnumerable<string> keys) =>
@@ -328,7 +399,8 @@ namespace IdleRng.Bots.Balance
         /// <summary>One bot run, sealed the way AccountOps.FinishRun seals it (payout, gauntlet on the run seed).</summary>
         public static RunSample Play(ContentDb c, string policy, string species, ulong seed, IEnumerable<string> books = null)
         {
-            var s = RunBot.Play(c, RunPolicies.Create(policy), species, seed, null, books);
+            var chase = new ChaseTracker(c, species);
+            var s = RunBot.Play(c, RunPolicies.Create(policy), species, seed, null, books, chase.Observe);
             var g = GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
             return new RunSample
             {
@@ -337,7 +409,7 @@ namespace IdleRng.Bots.Balance
                 Milestones = s.Milestones.Count, Shards = AccountOps.Payout(c, s),
                 Injuries = s.Injuries.Count, CyclesLost = s.Injuries.Sum(i => i.CyclesLost),
                 GauntletFloor = g.FloorReached, GauntletCleared = g.Cleared, GauntletKiller = g.KillerId,
-                GauntletBossStall = !g.Cleared && GauntletSim.IsBoss(c, g.FloorReached), State = s,
+                GauntletBossStall = !g.Cleared && GauntletSim.IsBoss(c, g.FloorReached), State = s, Chase = chase.Outcomes.ToList(),
             };
         }
 

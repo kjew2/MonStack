@@ -123,7 +123,7 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 
 ## 9. Bots and goldens
 
-- `src/IdleRng.Bots/Training/RunBots.cs`: four policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the best-growth stat that is not capped; `reckless` never rests (so it is injured about four times a run and sits out about four cycles, section 4.1); `hoarder` is `focus` but saves skill points until cycle 9. All fight when a fight is due; tree handling is `specs/15` section 8.
+- `src/IdleRng.Bots/Training/RunBots.cs`: five policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the best-growth stat that is not capped; `reckless` never rests (so it is injured about four times a run and sits out about four cycles, section 4.1); `hoarder` is `focus` but saves skill points until cycle 9; `chaser` is `focus` planning toward its species' own chase capstone (`specs/15` section 8, issue #111). All fight when a fight is due; tree handling is `specs/15` section 8.
 - CLI: `dotnet run --project src/IdleRng.Bots -- train --species drake --policy hoarder --seed 7 [--books book_echoes]` prints every command, the summary and the hash.
 - `golden/training-run-vectors.txt`: every species x policy at seed 7, plus `focus` with every book, summary and hash. Regenerate with `golden --update` when the run rules, the battle or their content change.
 
