@@ -18,20 +18,26 @@ namespace IdleRng.Bots.Training
     }
 
     /// <summary>
-    /// Resolve offers (take into an empty slot; a chase tree overwrites the least-invested slot that is not one of its
-    /// prerequisites; otherwise discard), use any books, buy nodes once the cycle reaches <c>spendFrom</c> (first slot whose
-    /// next node is affordable), fight when due, rest below a threshold energy fraction, else drill the stat the pick function
-    /// chooses.
+    /// Resolve offers, use books, buy nodes once the cycle reaches <c>spendFrom</c>, fight when due, rest below a threshold
+    /// energy fraction, else drill the stat the pick function chooses. Without <c>chase</c>: take offers into an empty slot (a
+    /// chase tree overwrites the least-invested slot that is not one of its prerequisites; otherwise discard), use every book,
+    /// buy the first affordable next node in slot order. With <c>chase</c> (issue #111) the policy works toward its
+    /// <see cref="ChaseTarget"/>: it uses only the species' own book; a draft that holds a tree the target needs gives that tree,
+    /// and a needed tree, an own book tree or a chase tree overwrites the least-invested slot the target does not need; it buys
+    /// the target's nodes first (prerequisites in condition order, then the chase tree) and other nodes only while the points
+    /// left plus the cycle points still to come cover what the target needs; and it drills the target's unmet stats before the
+    /// pick function.
     /// </summary>
     public sealed class ThresholdRunPolicy : IRunPolicy
     {
         readonly double _restBelow;
         readonly int _spendFrom;
         readonly Func<ContentDb, RunState, string> _pick;
+        readonly bool _chase;
 
-        public ThresholdRunPolicy(string name, double restBelow, Func<ContentDb, RunState, string> pick, int spendFrom = 1)
+        public ThresholdRunPolicy(string name, double restBelow, Func<ContentDb, RunState, string> pick, int spendFrom = 1, bool chase = false)
         {
-            Name = name; _restBelow = restBelow; _pick = pick; _spendFrom = spendFrom;
+            Name = name; _restBelow = restBelow; _pick = pick; _spendFrom = spendFrom; _chase = chase;
         }
 
         public string Name { get; }
@@ -41,44 +47,105 @@ namespace IdleRng.Bots.Training
             if (s.Offers.Count > 0) return ResolveOffer(c, s);
             foreach (var b in s.Books)
             {
-                string tree = c.SkillBooks[b].TreeId;
-                if (Array.FindIndex(s.Slots, x => x != null && x.TreeId == tree) < 0)
-                    return new RunCommand(RunCommandKind.UseBook) { Book = b };
+                if (_chase && !ChaseTarget.IsOwnBook(c, s.SpeciesId, b)) continue;
+                if (ChaseTarget.Slot(s, c.SkillBooks[b].TreeId) < 0) return new RunCommand(RunCommandKind.UseBook) { Book = b };
             }
+            var target = _chase ? ChaseTarget.Of(c, s) : null;
             if (s.Cycle >= _spendFrom || s.Phase == RunPhase.Finished)
-                for (int i = 0; i < s.Slots.Length; i++)
-                {
-                    var ts = s.Slots[i];
-                    if (ts == null) continue;
-                    var nodes = c.Trees[ts.TreeId].Nodes;
-                    if (ts.Bought < nodes.Count && nodes[ts.Bought].Cost <= s.Sp) return new RunCommand(RunCommandKind.SpendPoint) { Slot = i };
-                }
+            {
+                var spend = target == null ? FirstAffordable(c, s, 0) : PlannedSpend(c, s, target);
+                if (spend != null) return spend;
+            }
             if (s.Phase == RunPhase.Finished) return null;
             if (s.Phase == RunPhase.AwaitFight) return new RunCommand(RunCommandKind.Fight);
             if (TrainingRun.EnergyFraction(c.Constants, s.Energy) < _restBelow) return new RunCommand(RunCommandKind.Rest);
+            if (target != null)
+                foreach (var (stat, _) in target.StatGoals)
+                    if (s.Stats.Get(stat) < c.Constants.StatMax) return new RunCommand(RunCommandKind.Drill, stat);
             return new RunCommand(RunCommandKind.Drill, _pick(c, s));
         }
 
-        static RunCommand ResolveOffer(ContentDb c, RunState s)
+        /// <summary>The first slot whose next node is affordable with <paramref name="reserve"/> SP left over.</summary>
+        static RunCommand FirstAffordable(ContentDb c, RunState s, int reserve)
+        {
+            for (int i = 0; i < s.Slots.Length; i++)
+            {
+                var ts = s.Slots[i];
+                if (ts == null) continue;
+                var nodes = c.Trees[ts.TreeId].Nodes;
+                if (ts.Bought < nodes.Count && s.Sp - nodes[ts.Bought].Cost >= reserve) return new RunCommand(RunCommandKind.SpendPoint) { Slot = i };
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The target's next affordable node (prerequisites in condition order, then the chase tree); else a filler node, if the
+        /// points left after it plus the cycle points still to come cover what the target needs. Once the run is finished, a
+        /// target whose nodes are all unaffordable or bought can no longer progress, so nothing is held back.
+        /// </summary>
+        static RunCommand PlannedSpend(ContentDb c, RunState s, ChaseTarget target)
+        {
+            foreach (var (tree, need) in target.Prereqs.Concat(new[] { (target.Tree, target.Tree.Nodes.Count) }))
+            {
+                int slot = ChaseTarget.Slot(s, tree.Id);
+                if (slot < 0 || s.Slots[slot].Bought >= need) continue;
+                if (tree.Nodes[s.Slots[slot].Bought].Cost <= s.Sp) return new RunCommand(RunCommandKind.SpendPoint) { Slot = slot };
+            }
+            // No node the target needs is affordable now. Once the run is finished SP only goes down, so the target cannot
+            // progress any further and nothing is held back.
+            if (s.Phase == RunPhase.Finished) return FirstAffordable(c, s, 0);
+            int future = Math.Max(0, c.Constants.RunCycles - s.Cycle) * c.Constants.SpPerCycle;
+            int reserve = Math.Max(0, target.RemainingSp - future);
+            return FirstAffordable(c, s, reserve);
+        }
+
+        RunCommand ResolveOffer(ContentDb c, RunState s)
         {
             var offer = s.Offers[0];
             int empty = Array.IndexOf(s.Slots, null);
-            if (empty >= 0) return new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = empty };
-            if (offer.Source != OfferSource.Chase) return new RunCommand(RunCommandKind.DiscardOffer);
-            var prereqs = new HashSet<string>();
-            foreach (var cd in c.Trees[offer.Trees[0]].Conditions)
+            if (!_chase)
             {
-                if (cd.Type == ConditionType.TreeMaxed) prereqs.Add(cd.Ref);
-                if (cd.Type == ConditionType.NodeOwned) prereqs.Add(c.TreeNodes[cd.Ref].TreeId);
+                if (empty >= 0) return new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = empty };
+                if (offer.Source != OfferSource.Chase) return new RunCommand(RunCommandKind.DiscardOffer);
+                return Overwrite(c, s, 0, Prereqs(c, c.Trees[offer.Trees[0]]));
             }
+
+            // Planned: a tree the target needs, the species' own book tree or an own chase tree is "wanted" and may overwrite filler.
+            var target = ChaseTarget.Of(c, s);
+            var keep = target?.Needed ?? new HashSet<string>(StringComparer.Ordinal);
+            int wanted = offer.Trees.FindIndex(id => keep.Contains(id));
+            if (wanted < 0 && offer.Source != OfferSource.Milestone) wanted = 0;
+            if (wanted < 0)
+                return empty >= 0 ? new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = empty } : new RunCommand(RunCommandKind.DiscardOffer);
+            if (empty >= 0) return new RunCommand(RunCommandKind.TakeTree) { Choice = wanted, Slot = empty };
+            var protect = new HashSet<string>(keep, StringComparer.Ordinal);
+            var placed = c.Trees[offer.Trees[wanted]];
+            if (placed.Kind == TreeKind.Chase) protect.UnionWith(Prereqs(c, placed));
+            return Overwrite(c, s, wanted, protect);
+        }
+
+        /// <summary>Take offer tree <paramref name="choice"/> over the least-invested slot that is neither a chase tree nor protected; else discard.</summary>
+        static RunCommand Overwrite(ContentDb c, RunState s, int choice, HashSet<string> protect)
+        {
             int best = -1;
             for (int i = 0; i < s.Slots.Length; i++)
             {
                 var t = c.Trees[s.Slots[i].TreeId];
-                if (t.Kind == TreeKind.Chase || prereqs.Contains(t.Id)) continue;
+                if (t.Kind == TreeKind.Chase || protect.Contains(t.Id)) continue;
                 if (best < 0 || s.Slots[i].Bought < s.Slots[best].Bought) best = i;
             }
-            return best < 0 ? new RunCommand(RunCommandKind.DiscardOffer) : new RunCommand(RunCommandKind.TakeTree) { Choice = 0, Slot = best };
+            return best < 0 ? new RunCommand(RunCommandKind.DiscardOffer) : new RunCommand(RunCommandKind.TakeTree) { Choice = choice, Slot = best };
+        }
+
+        static HashSet<string> Prereqs(ContentDb c, TreeDef chase)
+        {
+            var prereqs = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var cd in chase.Conditions)
+            {
+                if (cd.Type == ConditionType.TreeMaxed) prereqs.Add(cd.Ref);
+                if (cd.Type == ConditionType.NodeOwned) prereqs.Add(c.TreeNodes[cd.Ref].TreeId);
+            }
+            return prereqs;
         }
 
         public static string Lowest(ContentDb c, RunState s) => StatIds.Trained.OrderBy(id => s.Stats.Get(id)).First();
@@ -93,11 +160,15 @@ namespace IdleRng.Bots.Training
 
     public static class RunPolicies
     {
-        public static readonly string[] Names = { "balanced", "focus", "reckless", "hoarder" };
+        public static readonly string[] Names = { "balanced", "focus", "reckless", "hoarder", "chaser" };
 
         /// <summary>Cycle from which the hoarder spends: it banks points for a late point dump (specs/12 section 5.4).</summary>
         public const int HoarderSpendFrom = 9;
 
+        /// <summary>
+        /// The first four do not plan for chase trees, so what they measure (spread training, best-growth focus, no rest, a late
+        /// point dump) stays comparable. <c>chaser</c> is <c>focus</c> planning toward its species' own chase capstone (issue #111).
+        /// </summary>
         public static IRunPolicy Create(string name)
         {
             switch (name)
@@ -106,6 +177,7 @@ namespace IdleRng.Bots.Training
                 case "focus": return new ThresholdRunPolicy(name, 0.3, ThresholdRunPolicy.BestGrowth);
                 case "reckless": return new ThresholdRunPolicy(name, -1, ThresholdRunPolicy.BestGrowth);
                 case "hoarder": return new ThresholdRunPolicy(name, 0.3, ThresholdRunPolicy.BestGrowth, HoarderSpendFrom);
+                case "chaser": return new ThresholdRunPolicy(name, 0.3, ThresholdRunPolicy.BestGrowth, chase: true);
                 default: throw new ArgumentException($"unknown run policy '{name}' (one of {string.Join(", ", Names)})");
             }
         }
@@ -115,11 +187,15 @@ namespace IdleRng.Bots.Training
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
-        /// <summary>Play a whole run. <paramref name="log"/> gets one line per command when not null.</summary>
+        /// <summary>
+        /// Play a whole run. <paramref name="log"/> gets one line per command when not null; <paramref name="observe"/> gets the
+        /// state at the start and after every command (the balance report's ChaseTracker).
+        /// </summary>
         public static RunState Play(ContentDb c, IRunPolicy policy, string speciesId, ulong seed, Action<string> log = null,
-                                    IEnumerable<string> books = null)
+                                    IEnumerable<string> books = null, Action<RunState> observe = null)
         {
             var s = TrainingRun.Start(c, speciesId, seed, books);
+            observe?.Invoke(s);
             const int guard = 100000;
             for (int i = 0; ; i++)
             {
@@ -181,6 +257,7 @@ namespace IdleRng.Bots.Training
                     }
                 }
                 log?.Invoke(line);
+                observe?.Invoke(s);
             }
             if (s.Phase != RunPhase.Finished) throw new InvalidOperationException("policy stopped before the run finished");
             return s;

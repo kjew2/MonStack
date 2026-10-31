@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using IdleRng.Bots.Balance;
+using IdleRng.Bots.Training;
 using IdleRng.Sim.Content;
 using IdleRng.Sim.Training;
 using NUnit.Framework;
@@ -76,6 +77,71 @@ namespace IdleRng.Bots.Tests
             Assert.That(s.GauntletFloor.Max, Is.EqualTo(101));
             Assert.That((s.GauntletBossStalls, s.GauntletBossStallRate), Is.EqualTo((1, 1.0 / 3)), "share of the runs that did not clear");
             Assert.That(s.Killers.Select(k => (k.Key, k.Count)), Is.EqualTo(new[] { ("hydra", 2), ("golem", 1) }));
+        }
+
+        static ChaseOutcome Chase(string tree, bool unlocked, int capstoneCycle, params bool[] held) => new ChaseOutcome
+        {
+            TreeId = tree, Unlocked = unlocked, CapstoneCycle = capstoneCycle, ConditionsHeld = held,
+            ConditionIds = held.Select((_, j) => $"{tree}_c{j}").ToArray(), ConditionLabels = held.Select((_, j) => $"l{j}").ToArray(),
+        };
+
+        [Test]
+        public void CellSummary_CountsChaseCapstonesCyclesAndConditions()
+        {
+            var runs = new[]
+            {
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "a"),
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "a"),
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "a"),
+                Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "a"),
+            };
+            runs[0].Chase = new List<ChaseOutcome> { Chase("run", true, 11, true, true), Chase("book", true, 12, true) };
+            runs[1].Chase = new List<ChaseOutcome> { Chase("run", true, 0, true, true), Chase("book", false, 0, false) };
+            runs[2].Chase = new List<ChaseOutcome> { Chase("run", false, 0, true, false), Chase("book", true, 9, true) };
+            runs[3].Chase = new List<ChaseOutcome> { Chase("run", false, 0, false, false), Chase("book", false, 0, false) };
+            Assert.That(runs.Select(r => r.CapstoneCycle), Is.EqualTo(new[] { 11, 0, 9, 0 }), "earliest capstone the run ended with");
+
+            var s = CellSummary.From("slime", "focus", 3, runs);
+            Assert.That((s.Capstoned, s.CapstoneRate), Is.EqualTo((2, 0.5)));
+            Assert.That((s.CapstoneCycle.N, s.CapstoneCycle.Mean), Is.EqualTo((2, 10.0)));
+            Assert.That(s.Chase.Select(x => x.TreeId), Is.EqualTo(new[] { "run", "book" }), "content order, as the runs list them");
+            var run = s.Chase[0];
+            Assert.That((run.Unlocked, run.UnlockRate, run.Capstones, run.CapstoneRate), Is.EqualTo((2, 0.5, 1, 0.25)));
+            Assert.That((run.CapstoneCycle.N, run.CapstoneCycle.Mean), Is.EqualTo((1, 11.0)));
+            Assert.That(run.Conditions.Select(k => (k.Id, k.Label, k.Held, k.HeldRate)),
+                        Is.EqualTo(new[] { ("run_c0", "l0", 3, 0.75), ("run_c1", "l1", 2, 0.5) }));
+            Assert.That((s.Chase[1].Capstones, s.Chase[1].CapstoneCycle.Mean), Is.EqualTo((2, 10.5)));
+
+            var none = CellSummary.From("slime", "focus", 3, new[] { Sample(0, RunEnd.Completed, 12, 0, 0, 0, 5, "a") });
+            Assert.That((none.Capstoned, none.CapstoneCycle.N, none.Chase.Count), Is.EqualTo((0, 0, 0)), "a run with no chase trees");
+        }
+
+        [Test]
+        public void ChaseTracker_RecordsConditionsUnlockAndCapstoneCycle()
+        {
+            var db = Content.Db;
+            foreach (var sp in db.SpeciesList)
+            {
+                var tracker = new ChaseTracker(db, sp.Id);
+                int cycleAtCapstone = 0;
+                var s = RunBot.Play(db, RunPolicies.Create("chaser"), sp.Id, 3, null, null, st =>
+                {
+                    tracker.Observe(st);
+                    if (cycleAtCapstone == 0 && tracker.Outcomes.Any(o => o.Capstone)) cycleAtCapstone = st.Cycle;
+                });
+                var r = BalanceHarness.Play(db, "chaser", sp.Id, 3);
+                var trees = db.TreeList.Where(t => t.Kind == TreeKind.Chase && t.Species == sp.Id).ToList();
+                Assert.That(r.Chase.Select(x => x.TreeId), Is.EqualTo(trees.Select(t => t.Id)));
+                for (int i = 0; i < trees.Count; i++)
+                {
+                    Assert.That(r.Chase[i].ConditionIds, Is.EqualTo(trees[i].Conditions.Select(cd => cd.Id)));
+                    var slot = s.Slots.FirstOrDefault(x => x != null && x.TreeId == trees[i].Id);
+                    bool capstone = slot != null && slot.Bought == trees[i].Nodes.Count;
+                    Assert.That(r.Chase[i].Capstone, Is.EqualTo(capstone), $"{sp.Id} {trees[i].Id}: capstone = the run ended with the last node bought");
+                    if (capstone) Assert.That(r.Chase[i].Unlocked && r.Chase[i].ConditionsHeld.All(h => h), Is.True);
+                }
+                Assert.That(r.CapstoneCycle, Is.EqualTo(cycleAtCapstone), sp.Id);
+            }
         }
 
         [Test]
@@ -190,8 +256,20 @@ namespace IdleRng.Bots.Tests
                 Assert.That(mod.Sum(), Is.EqualTo(Convert.ToDouble(d["n"]) - Convert.ToDouble(d["gauntletCleared"])), "the histogram counts every stall");
                 Assert.That(mod[0], Is.EqualTo(Convert.ToDouble(d["gauntletBossStalls"])), "x0 is the boss floors");
             }
+            int chaseRows = r.Cells.Sum(c => 2 + c.Chase.Sum(x => 3 + x.Conditions.Count));
+            Assert.That(csv.Count(l => l.StartsWith("chase,", StringComparison.Ordinal)), Is.EqualTo(chaseRows));
+            Assert.That(csv.Count(l => l.StartsWith("books_chase,", StringComparison.Ordinal)), Is.EqualTo(r.BookCells.Sum(c => 2 + c.Chase.Sum(x => 3 + x.Conditions.Count))));
+            Assert.That(r.Cells.All(c => c.Chase.Count == 2), Is.True, "every species has its two chase trees");
+
+            var cell0 = (Dictionary<string, object>)((List<object>)json["cells"])[0];
+            Assert.That(cell0.ContainsKey("capstoneRate") && cell0.ContainsKey("capstoneCycle"), Is.True);
+            var chase0 = (Dictionary<string, object>)((List<object>)cell0["chase"])[0];
+            Assert.That(chase0["tree"], Is.EqualTo(r.Cells[0].Chase[0].TreeId));
+            Assert.That(((List<object>)chase0["conditions"]).Count, Is.EqualTo(r.Cells[0].Chase[0].Conditions.Count));
+            Assert.That(((Dictionary<string, object>)((List<object>)json["bookCells"])[0]).ContainsKey("chase"), Is.True);
 
             string text = BalanceWriter.Text(r);
+            StringAssert.Contains("## Chase capstones", text);
             StringAssert.Contains("## Grades", text);
             StringAssert.Contains("## Gauntlet stall floors", text);
             StringAssert.Contains("## Daily Tower", text);
