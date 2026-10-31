@@ -300,15 +300,22 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void InjuredRun_StillPays()
+        public void InjuredRun_PlaysOn_AndPaysEveryCycle()
         {
             var a = NewAll(9);
             var run = AccountOps.StartRun(Db, a, "slime");
-            while (run.Phase != RunPhase.Finished) { run.Energy = 0; TrainingRun.Drill(Db, run, StatIds.Def); }
-            Assert.That(run.End, Is.EqualTo(RunEnd.Injured));
+            while (run.Phase != RunPhase.Finished)
+            {
+                if (run.Offers.Count > 0) TrainingRun.DiscardOffer(Db, run);
+                else if (run.Phase == RunPhase.AwaitFight) TrainingRun.Fight(Db, run);
+                else TrainingRun.Drill(Db, run, StatIds.Def);   // never rests, so energy runs out and injuries come
+            }
+            Assert.That(run.Injuries, Is.Not.Empty);
+            Assert.That(run.End, Is.EqualTo(RunEnd.Completed), "an injury costs cycles, it does not end the run");
             var f = AccountOps.FinishRun(Db, a);
-            Assert.That(f.Shards, Is.GreaterThan(0));
-            Assert.That(a.Vault.Single().End, Is.EqualTo(RunEnd.Injured));
+            Assert.That(f.Shards, Is.EqualTo((long)K.ShardsPerCycle * K.RunCycles + (long)K.ShardsPerRank * f.Entry.RankIndex),
+                        "cycles sat out injured still count as played");
+            Assert.That(a.Vault.Single().End, Is.EqualTo(RunEnd.Completed));
         }
 
         [Test]

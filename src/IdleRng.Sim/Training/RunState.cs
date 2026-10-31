@@ -17,6 +17,10 @@ namespace IdleRng.Sim.Training
         Finished,
     }
 
+    /// <summary>
+    /// Why a run finished. <c>Injured</c> is kept only for Vault entries sealed before issue #89 (2026-10-31): an injury used
+    /// to end the run. New runs always end <c>Completed</c>; an injury now costs cycles instead (specs/14 section 4.1).
+    /// </summary>
     public enum RunEnd { None, Completed, Injured }
 
     public enum RunCommandKind { Drill, Rest, Fight, TakeTree, DiscardOffer, SpendPoint, UseBook }
@@ -113,6 +117,22 @@ namespace IdleRng.Sim.Training
         }
     }
 
+    /// <summary>
+    /// An injury (specs/14 section 4.1): the drill in <see cref="Cycle"/> injured the monster, the rest of that cycle and its
+    /// fight were lost, and so were the next INJURY_SKIP_CYCLES whole cycles. <see cref="BackCycle"/> is the cycle the monster
+    /// trains again (0 when the lost cycles ran past the last one and the run finished).
+    /// </summary>
+    public sealed class InjuryHit
+    {
+        public int Cycle { get; set; }
+        public int BackCycle { get; set; }
+
+        /// <summary>Whole cycles sat out after <see cref="Cycle"/>: INJURY_SKIP_CYCLES, or fewer when the run ran out of cycles.</summary>
+        public int CyclesLost { get; set; }
+
+        public InjuryHit Clone() => (InjuryHit)MemberwiseClone();
+    }
+
     /// <summary>What the monster did across the run's rank fights; chase conditions read these (specs/15 section 5).</summary>
     public sealed class RunTally
     {
@@ -186,6 +206,9 @@ namespace IdleRng.Sim.Training
         public RunTally Tally { get; set; } = new RunTally();
 
         public List<MilestoneHit> Milestones { get; set; } = new List<MilestoneHit>();
+
+        /// <summary>Every injury this run, oldest first (specs/14 section 4.1).</summary>
+        public List<InjuryHit> Injuries { get; set; } = new List<InjuryHit>();
         public List<RunCommand> Log { get; set; } = new List<RunCommand>();
 
         public RunState Clone()
@@ -202,6 +225,7 @@ namespace IdleRng.Sim.Training
             c.ChaseOffered = new List<string>(ChaseOffered);
             c.Tally = Tally.Clone();
             c.Milestones = Milestones.ConvertAll(m => new MilestoneHit { Stat = m.Stat, Threshold = m.Threshold, Cycle = m.Cycle });
+            c.Injuries = Injuries.ConvertAll(i => i.Clone());
             c.Log = Log.ConvertAll(l => l.Clone());
             return c;
         }
@@ -218,6 +242,9 @@ namespace IdleRng.Sim.Training
         public double NewValue { get; set; }
         public double EnergyAfter { get; set; }
         public bool Injured { get; set; }
+
+        /// <summary>The injury this drill caused (also the last entry of RunState.Injuries); null when not injured.</summary>
+        public InjuryHit Injury { get; set; }
         public List<MilestoneHit> Milestones { get; set; } = new List<MilestoneHit>();
     }
 

@@ -33,7 +33,7 @@ There is no premium currency yet. Skill Books are the premium gate (kj, T9); whe
 |---|---|
 | `New(seed)` | Owns only the starter species (`ContentDb.StarterSpecies`, section 8); no shards, books, talents, achievements or Vault entries |
 | `StartRun(species, books)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3). The vendor's unbought offers vanish (section 4) |
-| `FinishRun(sealedUtcMs)` | The active run is over (completed or injured). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`), records it and checks achievements, which may unlock species (section 8), rolls the vendor's offers (section 4) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7). The result lists the achievements earned and the species unlocked |
+| `FinishRun(sealedUtcMs)` | The active run is over (after its last cycle). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`), records it and checks achievements, which may unlock species (section 8), rolls the vendor's offers (section 4) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7). The result lists the achievements earned and the species unlocked |
 | `AbandonRun()` | Ends the active run in any phase with no payout and no Vault entry; unused books return to the inventory (a misclick costs nothing). `RunsStarted` stays counted, so the next run gets a new seed and abandoning cannot reroll a run. (Agreed between the two building sessions, 2026-10-30; the web client's Abandon button calls it.) |
 | `BuyOffer(index)` | A vendor offer not yet bought, whose talent is not maxed; enough shards. Costs the offer's price, adds its ranks (section 4). Applies from the next run: a run keeps the bonuses it started with. There is no other way to buy talents |
 | `Dismantle(index)` | Removes Vault entry `index` (oldest first) for good and pays its grade's refund (section 7). Refused for a locked entry. Allowed during a run |
@@ -93,7 +93,7 @@ A flat list for now; a branching talent tree is a later content change. Rules (`
 
 ## 5. Shard payout
 
-`Payout = SHARDS_PER_CYCLE x cycles played + SHARDS_PER_RANK x rank index reached` (E = 0). Injured runs pay too (kj, `specs/12` section 4.5).
+`Payout = SHARDS_PER_CYCLE x cycles played + SHARDS_PER_RANK x rank index reached` (E = 0). Cycles sat out after an injury count as played (`specs/14` section 4.1), so every finished run pays for `RUN_CYCLES` cycles; old Vault entries that ended `Injured` were paid for the cycles they reached.
 
 | Constant | Value | Range |
 |---|---|---|

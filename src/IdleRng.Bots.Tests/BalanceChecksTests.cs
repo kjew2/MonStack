@@ -15,10 +15,12 @@ namespace IdleRng.Bots.Tests
 
         /// <summary>n runs of one cell, all alike.</summary>
         static CellSummary Cell(string species, string policy, int rank, int n = 10, int won = 3, int rests = 2, RunEnd end = RunEnd.Completed,
-                                int cycles = 12, int floor = 30, bool cleared = false) =>
+                                int cycles = 12, int floor = 30, bool cleared = false,
+                                int injuries = 0, int satOut = 0) =>
             CellSummary.From(species, policy, Ranks.Length, Enumerable.Range(0, n).Select(_ => new RunSample
             {
                 Species = species, Policy = policy, RankIndex = rank, End = end, Cycles = cycles, FightsFought = 12, FightsWon = won,
+                Injuries = injuries, CyclesLost = satOut,
                 Rests = rests, GauntletFloor = cleared ? 101 : floor, GauntletCleared = cleared, GauntletKiller = cleared ? null : "golem",
             }).ToList());
 
@@ -52,7 +54,7 @@ namespace IdleRng.Bots.Tests
             var checks = BalanceChecks.Evaluate(Healthy());
             Assert.That(checks.Select(k => k.Id), Is.EqualTo(new[]
             {
-                "progress-fights", "progress-grade", "not-all-s", "policy-matters", "injury-resting", "injury-instant",
+                "progress-fights", "progress-grade", "not-all-s", "policy-matters", "injury-resting", "injury-total",
                 "gauntlet-progress", "gauntlet-not-solved", "tower-reachable", "tower-not-solved", "books",
             }));
             Assert.That(checks.Where(k => k.Status != CheckStatus.Pass).Select(k => k.Id + " " + k.Detail), Is.Empty);
@@ -102,19 +104,24 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
-        public void Injury_RestingPoliciesAndInstantEnds()
+        public void Injury_RestingPoliciesAndTotalLoss()
         {
             var r = Healthy();
-            // A policy that never rests may be injured every run, as long as it is not by cycle 2.
-            r.Cells.Add(Cell("a", "reckless", 1, rests: 0, end: RunEnd.Injured, cycles: 5));
+            // A policy that never rests may be injured every run, as long as injuries do not swallow the whole run.
+            r.Cells.Add(Cell("a", "reckless", 1, rests: 0, injuries: 4, satOut: 4));
             Assert.That(Get(r, "injury-resting").Status, Is.EqualTo(CheckStatus.Pass));
-            Assert.That(Get(r, "injury-instant").Status, Is.EqualTo(CheckStatus.Pass));
+            var total = Get(r, "injury-total");
+            Assert.That(total.Status, Is.EqualTo(CheckStatus.Pass));
+            Assert.That(total.Value, Is.EqualTo(8.0 / 12).Within(1e-12));
 
+            r.Cells[r.Cells.Count - 1] = Cell("a", "reckless", 1, rests: 0, injuries: 6, satOut: 5);
+            total = Get(r, "injury-total");
+            Assert.That((total.Status, total.Detail), Is.EqualTo((CheckStatus.Warn, "highest: a reckless")));
+            Assert.That(total.Value, Is.EqualTo(11.0 / 12).Within(1e-12));
             r.Cells[r.Cells.Count - 1] = Cell("a", "reckless", 1, rests: 0, end: RunEnd.Injured, cycles: 2);
-            var instant = Get(r, "injury-instant");
-            Assert.That((instant.Status, instant.Value, instant.Detail), Is.EqualTo((CheckStatus.Warn, 1.0, "highest: a reckless")));
+            Assert.That(Get(r, "injury-total").Status, Is.EqualTo(CheckStatus.Warn), "a legacy run ended by injury counts as all of it lost");
 
-            Replace(r.Cells, Cell("a", "focus", 3, end: RunEnd.Injured, cycles: 8));
+            Replace(r.Cells, Cell("a", "focus", 3, injuries: 1, satOut: 1));
             var resting = Get(r, "injury-resting");
             Assert.That((resting.Status, resting.Value, resting.Detail), Is.EqualTo((CheckStatus.Warn, 1.0, "highest: a focus")));
             Assert.That(resting.N, Is.EqualTo(4), "the reckless cell never rests and is not counted");

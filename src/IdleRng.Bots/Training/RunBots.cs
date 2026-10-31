@@ -134,7 +134,7 @@ namespace IdleRng.Bots.Training
                     {
                         var r = TrainingRun.Drill(c, s, cmd.Stat);
                         line = string.Format(Inv, "c{0,2} drill {1,-3} {2,-7} +{3,-3} -> {4,5:0} energy {5,5:0}{6}{7}", cycle, r.Stat, r.Tier, r.Gain,
-                            r.NewValue, r.EnergyAfter, r.Injured ? " INJURED" : "",
+                            r.NewValue, r.EnergyAfter, r.Injury == null ? "" : r.Injury.BackCycle > 0 ? $" INJURED (back in cycle {r.Injury.BackCycle})" : " INJURED (out for the rest of the run)",
                             string.Concat(r.Milestones.Select(m => $" milestone {m.Stat}>={m.Threshold}")));
                         break;
                     }
@@ -187,10 +187,11 @@ namespace IdleRng.Bots.Training
         }
 
         public static string Summary(ContentDb c, RunState s) =>
-            string.Format(Inv, "end={0} cycle={1} rank={2} fights={3}/{4} drills={5} rests={6} energy={7:0} milestones={8} sp={9}\n  stats {10}\n  trees {11}",
+            string.Format(Inv, "end={0} cycle={1} rank={2} fights={3}/{4} drills={5} rests={6} energy={7:0} milestones={8} sp={9} injuries={12}\n  stats {10}\n  trees {11}",
                 s.End, s.Cycle, c.FightRanks[s.Rank].Id, s.FightsWon, s.FightsFought, s.Drills, s.Rests, s.Energy, s.Milestones.Count, s.Sp,
                 string.Join(" ", StatIds.Trained.Select(id => $"{id} {s.Stats.Get(id):0}")),
-                string.Join(" ", s.Slots.Select(t => t == null ? "-" : $"{t.TreeId}:{t.Bought}/{c.Trees[t.TreeId].Nodes.Count}")));
+                string.Join(" ", s.Slots.Select(t => t == null ? "-" : $"{t.TreeId}:{t.Bought}/{c.Trees[t.TreeId].Nodes.Count}")),
+                s.Injuries.Count == 0 ? "0" : string.Join(",", s.Injuries.Select(i => $"c{i.Cycle}")));
 
         /// <summary>
         /// golden/training-run-vectors.txt (specs/14 section 9): every species x run policy at seed 7, summary and hash. Moves

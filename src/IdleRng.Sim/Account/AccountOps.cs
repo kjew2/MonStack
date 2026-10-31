@@ -67,7 +67,7 @@ namespace IdleRng.Sim.Account
         }
 
         /// <summary>
-        /// Finish the active run once it is over (completed or injured): pay shards (<see cref="Payout"/>), return unused books,
+        /// Finish the active run once it is over (after its last cycle): pay shards (<see cref="Payout"/>), return unused books,
         /// seal the monster into the Vault (Vault.Seal, specs/13 T4), record it and check achievements (which may unlock species),
         /// roll the post-run vendor's offers (<see cref="RollVendor"/>) and clear the active run. It seals even when the Vault is
         /// at or over VAULT_CAP (no monster is lost); the next StartRun waits until the player dismantles down to the cap.

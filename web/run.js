@@ -179,22 +179,26 @@
   function renderTrain(main, s) {
     const k = C.consts;
     if (s.phase === 'finished') {
+      const lastHurt = s.injuries.length ? s.injuries[s.injuries.length - 1] : null;
       main.append(h('div', { class: 'card alert' }, [
-        h('h2', { text: s.end === 'injured' ? 'Injured: the run is over' : 'Run complete' }),
-        h('p', { class: 'muted', text: s.end === 'injured'
-          ? 'A drill at low energy injured the monster. Sealing still vaults it and pays its shards.'
-          : 'All ' + k.runCycles + ' cycles are done.' }),
+        h('h2', { text: 'Run complete' }),
+        h('p', { class: 'muted', text: 'All ' + k.runCycles + ' cycles are done.' +
+          (lastHurt && !lastHurt.back ? ' An injury in cycle ' + lastHurt.cycle + ' cost the rest of the run.' : '') }),
         s.sp > 0 ? h('p', { class: 'gems', text: s.sp + ' unspent skill points are lost when you seal. Spend them on the Trees tab first.' }) : null,
         h('button', { class: 'btn primary block', type: 'button', 'data-act': 'seal', text: 'Seal in the Vault', onclick: seal }),
       ]));
     } else if (s.phase === 'awaitfight') {
       main.append(fightCard(s));
     }
+    const hurt = s.injuries.length ? s.injuries[s.injuries.length - 1] : null;
+    if (hurt && hurt.back === s.cycle && s.phase === 'training') main.append(h('div', { class: 'card injury', 'data-id': 'injury' }, [
+      h('b', { class: 'bad', text: ui.last && ui.last.injury ? 'Injured!' : 'Back from injury' }), h('div', { class: 'small', text: injuryText(hurt) }),
+    ]));
     const busy = s.phase !== 'training' || s.offers.length > 0;
     const o = s.odds;
     main.append(h('div', { class: 'odds', 'data-id': 'odds',
       text: 'Drill at this energy: fail ' + pct(o.fail) + ' · success ' + pct(o.success) + ' · super ' + pct(o.super) + ' · injury ' + pct(o.injury) +
-        '. Each drill costs ' + num(s.drillCost) + ' energy.' }));
+        '. Each drill costs ' + num(s.drillCost) + ' energy.' + (o.injury > 0 ? ' An injury loses ' + injuryRisk() + '.' : '') }));
     const card = h('div', { class: 'card stats' });
     C.stats.forEach((st) => {
       const row = h('div', { class: 'stat' + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
@@ -219,10 +223,25 @@
     if (r.kind === 'drill') {
       return h('div', { class: 'card result', 'data-id': 'result' }, [
         h('div', null, [h('b', { class: r.tier, text: r.tierName }), h('span', { text: ' ' + up(r.stat) + ' ' + (r.gain ? '+' + num(r.gain) : '+0') + ' → ' + num(r.value) })]),
-        r.injured ? h('b', { class: 'bad', text: 'Injured! The run ends.' }) : null,
+        r.injury ? h('div', { class: 'bad', 'data-id': 'injury-result' }, [h('b', { text: 'Injured! ' }),
+          r.injury.back ? 'Back in cycle ' + r.injury.back + '.' : 'The run is over.']) : null,
       ]);
     }
     return h('div', { class: 'card result', 'data-id': 'result' }, [h('div', null, [h('b', { text: 'Rest' }), h('span', { text: ' +' + num(r.restored) + ' energy' })])]);
+  }
+
+  // An injury (specs/14 section 4.1): what it cost and when the monster is back, from the engine's numbers.
+  function cycleList(a, b) { return a === b ? 'cycle ' + a : 'cycles ' + a + '-' + b; }
+  function injuryText(i) {
+    const k = C.consts, parts = ['the rest of cycle ' + i.cycle];
+    if (i.cycle % k.fightEvery === 0) parts.push('its rank fight');
+    if (i.lost) parts.push(cycleList(i.cycle + 1, i.cycle + i.lost) + ' (no drills, fights or cycle SP)');
+    return 'Lost: ' + parts.join(', ') + '. ' +
+      (i.back ? 'Back in cycle ' + i.back + ' with ' + num(k.injuryRecoverEnergy) + ' energy.' : 'The run had no cycles left, so it is over.');
+  }
+  function injuryRisk() {
+    const n = C.consts.injurySkipCycles;
+    return 'the rest of the cycle and its fight' + (n ? ', then ' + (n === 1 ? 'the next cycle' : 'the next ' + n + ' cycles') : '');
   }
 
   function fightCard(s) {
@@ -629,7 +648,7 @@
     const acct = run.account;
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Raise a monster' }),
         h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
-      h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up, spend skill points on trees, and avoid injury.' }));
+      h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up and spend skill points on trees. Drilling at low energy can injure the monster, which loses ' + injuryRisk() + '.' }));
     if (!owned(ui.pick)) ui.pick = acct.owned[0] || null;
     C.species.forEach((sp) => {
       const sel = ui.pick === sp.id, have = owned(sp.id);
@@ -869,7 +888,7 @@
     const e = ui.sealed, sp = speciesDef(e.species) || { name: e.species };
     const r = C.ranks[e.rank];
     main.append(
-      h('div', { class: 'center small muted', text: e.end === 'injured' ? 'Injured at cycle ' + e.cycles : 'Run complete' }),
+      h('div', { class: 'center small muted', text: 'Run complete' }),
       h('div', { class: 'grade ' + e.grade, 'data-id': 'grade', text: up(e.grade) }),
       h('div', { class: 'center' }, [h('b', { text: sp.name + ' reached ' + r.name })]),
       e.gauntlet ? h('div', { class: 'legacy', 'data-id': 'grade-title', text: e.gauntlet.label }) : null,
@@ -1090,7 +1109,10 @@
       ui.last = r; ui.flash = { stat, tier: r.tier }; ui.drillPop = { stat, tier: r.tier, gain: r.gain };
       log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : ''));
       milestones(r);
-      if (r.injured) toast('Injured! The run ends.');
+      if (r.injury) {
+        toast(r.injury.back ? 'Injured! Back in cycle ' + r.injury.back + '.' : 'Injured! The run is over.');
+        log('Injured in cycle ' + r.injury.cycle + (r.injury.back ? ': back in cycle ' + r.injury.back : ': out for the rest of the run'));
+      }
       spGained(sp0, cycle0, r);
     }
     after(r);

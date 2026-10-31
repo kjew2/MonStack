@@ -139,25 +139,119 @@ namespace IdleRng.Sim.Tests
             Assert.Throws<InvalidOperationException>(() => TrainingRun.Fight(Db, s));
         }
 
-        [Test]
-        public void DrillingAtZeroEnergy_CanInjure_AndEndsTheRun()
+        /// <summary>A run on <paramref name="seed"/> played with rests and fights to the start of <paramref name="cycle"/>.</summary>
+        static RunState RunAtCycle(ulong seed, int cycle)
         {
-            bool sawInjury = false;
-            for (ulong seed = 1; seed <= 50 && !sawInjury; seed++)
+            var s = NewRun(seed);
+            while (s.Cycle < cycle)
             {
-                var s = NewRun(seed);
+                if (s.Phase == RunPhase.AwaitFight) TrainingRun.Fight(Db, s);
+                else TrainingRun.Rest(Db, s);
+            }
+            return s;
+        }
+
+        /// <summary>The first seed whose run, at the start of <paramref name="cycle"/> with energy set to 0, is injured by its first drill.</summary>
+        static (RunState s, DrillResult r, int sp, int fights) InjuredAt(int cycle)
+        {
+            for (ulong seed = 1; seed <= 200; seed++)
+            {
+                var s = RunAtCycle(seed, cycle);
+                int sp = s.Sp, fights = s.FightsFought;
                 s.Energy = 0;
                 var r = TrainingRun.Drill(Db, s, StatIds.Def);
-                Assert.That(s.Training.Counter, Is.EqualTo(3UL), "tier, gain and injury rolls");
-                if (!r.Injured) continue;
-                sawInjury = true;
-                Assert.That(s.Phase, Is.EqualTo(RunPhase.Finished));
-                Assert.That(s.End, Is.EqualTo(RunEnd.Injured));
-                Assert.That(s.ApLeft, Is.EqualTo(0));
-                Assert.That(s.Stats.Def, Is.EqualTo(Db.SpeciesList[0].Base.Def + r.Gain), "the drill's gain still counts");
-                Assert.Throws<InvalidOperationException>(() => TrainingRun.Drill(Db, s, StatIds.Def));
+                if (r.Injured) return (s, r, sp, fights);
             }
-            Assert.That(sawInjury, Is.True);
+            Assert.Fail($"no injury in cycle {cycle} within 200 seeds");
+            return default;
+        }
+
+        [Test]
+        public void Injury_LosesTheCycleAndItsFight_AndTheNextCycle_ThenTheRunGoesOn()
+        {
+            Assume.That(K.RunCycles, Is.GreaterThanOrEqualTo(3 + K.InjurySkipCycles), "room for a cycle after the lost ones");
+            var (s, r, spBefore, fightsBefore) = InjuredAt(1);
+            double def = Db.SpeciesList[0].Base.Def;
+            Assert.That(s.Stats.Def, Is.EqualTo(def + r.Gain), "the injuring drill's gain still counts");
+            Assert.That(s.Training.Counter, Is.EqualTo(3UL), "tier, gain and injury rolls; the injury itself draws nothing more");
+            int back = 2 + K.InjurySkipCycles;
+            Assert.That(r.Injury, Is.Not.Null);
+            Assert.That((r.Injury.Cycle, r.Injury.CyclesLost, r.Injury.BackCycle), Is.EqualTo((1, K.InjurySkipCycles, back)));
+            Assert.That(s.Injuries, Has.Count.EqualTo(1));
+            Assert.That(s.Injuries[0], Is.SameAs(r.Injury));
+            Assert.That(s.Phase, Is.EqualTo(RunPhase.Training), "the run is not over");
+            Assert.That(s.End, Is.EqualTo(RunEnd.None));
+            Assert.That(s.Cycle, Is.EqualTo(back));
+            Assert.That(s.ApLeft, Is.EqualTo(K.RunAp));
+            Assert.That(s.Energy, Is.EqualTo(K.InjuryRecoverEnergy));
+            Assert.That(s.FightsFought, Is.EqualTo(fightsBefore), "the injured cycle's fight and the lost cycles' fights are skipped");
+            Assert.That(s.Sp, Is.EqualTo(spBefore + K.SpPerCycle), "lost cycles pay no SP; the cycle the monster is back in does");
+            Assert.That(s.Drills, Is.EqualTo(1));
+
+            while (s.Phase != RunPhase.Finished)
+            {
+                if (s.Phase == RunPhase.AwaitFight) TrainingRun.Fight(Db, s);
+                else TrainingRun.Rest(Db, s);
+            }
+            Assert.That(s.End, Is.EqualTo(RunEnd.Completed));
+            Assert.That(s.Cycle, Is.EqualTo(K.RunCycles));
+            int fought = 0;
+            for (int c = back; c <= K.RunCycles; c++) if (c % K.FightEvery == 0) fought++;
+            Assert.That(s.FightsFought, Is.EqualTo(fought));
+        }
+
+        [Test]
+        public void Injury_InTheLastCycles_FinishesTheRunAsCompleted()
+        {
+            var (s, r, _, fights) = InjuredAt(K.RunCycles);
+            Assert.That(s.Phase, Is.EqualTo(RunPhase.Finished));
+            Assert.That(s.End, Is.EqualTo(RunEnd.Completed), "a new run never ends Injured");
+            Assert.That((r.Injury.Cycle, r.Injury.CyclesLost, r.Injury.BackCycle), Is.EqualTo((K.RunCycles, 0, 0)));
+            Assert.That(s.Cycle, Is.EqualTo(K.RunCycles));
+            Assert.That(s.FightsFought, Is.EqualTo(fights), "the last fight is skipped");
+            Assert.Throws<InvalidOperationException>(() => TrainingRun.Drill(Db, s, StatIds.Def));
+
+            if (K.InjurySkipCycles < 1 || K.RunCycles < 2) return;
+            (s, r, _, _) = InjuredAt(K.RunCycles - 1);
+            Assert.That(s.Phase, Is.EqualTo(RunPhase.Finished), "the lost cycle was the last one");
+            Assert.That(s.End, Is.EqualTo(RunEnd.Completed));
+            Assert.That((r.Injury.Cycle, r.Injury.CyclesLost, r.Injury.BackCycle), Is.EqualTo((K.RunCycles - 1, 1, 0)));
+            Assert.That(s.Cycle, Is.EqualTo(K.RunCycles));
+        }
+
+        [Test]
+        public void ARunThatNeverRests_IsInjured_FinishesCompleted_AndReplays()
+        {
+            int injured = 0;
+            for (ulong seed = 1; seed <= 20; seed++)
+            {
+                var s = NewRun(seed);
+                while (s.Phase != RunPhase.Finished)
+                {
+                    if (s.Offers.Count > 0) TrainingRun.DiscardOffer(Db, s);
+                    else if (s.Phase == RunPhase.AwaitFight) TrainingRun.Fight(Db, s);
+                    else TrainingRun.Drill(Db, s, StatIds.Str);
+                }
+                Assert.That(s.End, Is.EqualTo(RunEnd.Completed));
+                Assert.That(s.Cycle, Is.EqualTo(K.RunCycles));
+                if (s.Injuries.Count > 0) injured++;
+                var replayed = TrainingRun.Replay(Db, Species, seed, s.Log);
+                Assert.That(TrainingRun.StateHash(replayed), Is.EqualTo(TrainingRun.StateHash(s)), $"seed {seed}");
+                Assert.That(replayed.Injuries.Select(i => (i.Cycle, i.BackCycle, i.CyclesLost)),
+                            Is.EqualTo(s.Injuries.Select(i => (i.Cycle, i.BackCycle, i.CyclesLost))));
+                Assert.That(TrainingRun.StateHash(s.Clone()), Is.EqualTo(TrainingRun.StateHash(s)));
+            }
+            Assert.That(injured, Is.GreaterThan(0), "drilling at zero energy injures");
+        }
+
+        [Test]
+        public void StateHash_CoversInjuries()
+        {
+            var (s, _, _, _) = InjuredAt(1);
+            var c = s.Clone();
+            c.Injuries[0].BackCycle++;
+            Assert.That(TrainingRun.StateHash(c), Is.Not.EqualTo(TrainingRun.StateHash(s)));
+            Assert.That(s.Injuries[0].BackCycle, Is.EqualTo(2 + K.InjurySkipCycles), "Clone copies the injuries");
         }
 
         [Test]

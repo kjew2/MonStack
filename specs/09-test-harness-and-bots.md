@@ -83,7 +83,7 @@ When the `CI` environment variable is set (anything but empty or `false`; GitHub
 | Section | Metrics |
 |---|---|
 | Grades | % of runs ending at each rank (E to S), mean rank index (E = 0), p10/p50/p90 |
-| Runs | injury rate (an injury ends the run), cycles played, rank fights won and lost, fight win rate (won / fought over the cell), shard payout |
+| Runs | injury rate (runs with at least one injury), injuries per run and whole cycles sat out (`specs/14` section 4.1), rank fights won and lost, fight win rate (won / fought over the cell), shard payout |
 | Gauntlet | floor reached (`GAUNTLET_FLOORS` + 1 = cleared), clear rate, boss-floor stall rate (share of the runs that did not clear that ended on a boss floor; about 1/`GAUNTLET_BOSS_EVERY` when the curve is smooth, `specs/19` section 2), the killers that ended most runs |
 | Daily Tower | per policy x team: floors cleared, clear rate, shards, books |
 | Book canary | per species x policy: mean rank with every skill book vs none (below) |
@@ -101,14 +101,14 @@ Every spread is a `Distribution`: mean, population standard deviation, min, max 
 | `not-all-s` | under `focus`, not every species ends at the top grade (S) in all of its runs (one maxed species is intended; all of them is "nothing left to progress") | share of maxed species < 1 |
 | `policy-matters` | `focus` mean rank >= `balanced` mean rank for every species (no margin) | >= 0 |
 | `injury-resting` | no cell whose runs rest (any run has a Rest) is injured in more than the threshold share of runs | <= 50% |
-| `injury-instant` | in every cell, runs ended by an injury by cycle 2 are under the threshold share | < 90% |
+| `injury-total` | in every cell, the mean share of a run's cycles lost to injury (injured cycles plus whole cycles sat out, `specs/14` section 4.1) is under the threshold. Replaced `injury-instant` (runs ended by injury by cycle 2), which the injury rework made impossible | < 90% |
 | `gauntlet-progress` | every species has a policy whose median gauntlet floor is past the first boss floor (`GAUNTLET_BOSS_EVERY`) | > 10 |
 | `gauntlet-not-solved` | no cell clears the gauntlet in more than the threshold share of runs | <= 50% |
 | `tower-reachable` | the full `focus` team (one of each species) clears at least floor 1 on more than the threshold share of days | > 50% |
 | `tower-not-solved` | the full `focus` team does not clear the tower on every day | < 100% |
 | `books` | bringing every book lowers no cell's mean rank by more than the threshold (a canary for broken books) | >= -1.5 |
 
-They are a report until the first retune lands (kj's answer to Q3 on #89), then a soft warning: `check.sh` never fails on one (the smoke run prints a one-line `# sanity checks:` summary to stderr). `--strict` (opt-in, not wired into `check.sh`) exits 1 when any check WARNs; a SKIP never fails. At content 3.10, 200 seeds: every check passes except `injury-instant` (reckless runs end by injury by cycle 2 in about 93% of runs), which the injury rework is expected to clear.
+They are a report until the first retune lands (kj's answer to Q3 on #89), then a soft warning: `check.sh` never fails on one (the smoke run prints a one-line `# sanity checks:` summary to stderr). `--strict` (opt-in, not wired into `check.sh`) exits 1 when any check WARNs; a SKIP never fails. At content 3.10, 200 seeds: every check passed except `injury-instant` (reckless runs ended by injury by cycle 2 in about 93% of runs). At content 3.12 (the injury rework), 200 seeds: all 11 checks pass; `injury-total` is highest for reckless (about 65% of a run's cycles lost to four injuries), and no resting policy is ever injured.
 
 **Output.** `--format text` (default) prints the sanity checks first, then one aligned table per section with a header naming the content version and hash, the seeds and the books; `json` gives the same report as one object (`content`, `options`, `ranks`, `checks` as `{id, status, value, limit, n, rule, detail}` with `value` null on a SKIP, `cells`, `tower`, `bookCells`, every spread as `{n, mean, sd, min, p10, p50, p90, max}`); `csv` gives long form, one metric per row: `section,species,policy,team,metric,n,mean,sd,min,p10,p50,p90,max` (rates and grade shares put the fraction in `mean`; section `books` holds the canary's grades; section `check` has two rows per check, metric `<id>` with the measured value and `<id>_warn` with 1 on WARN and 0 on PASS, both empty on a SKIP). `--out` writes to a file instead of stdout.
 

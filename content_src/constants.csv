@@ -30,6 +30,8 @@ DRILL_FAIL_MAX,double,0.6,drill fail chance at zero energy. Placeholder
 DRILL_SUPER_P,double,0.1,drill super chance. Placeholder
 INJURY_BELOW,double,0.25,energy fraction below which a drill can injure. Placeholder
 INJURY_MAX_P,double,0.4,injury chance of a drill at zero energy; scales linearly up from INJURY_BELOW. Placeholder
+INJURY_SKIP_CYCLES,int,1,an injury ends the current cycle (no fight) and the monster also sits out this many whole cycles (no drills; fights or cycle SP) (kj 2026-10-31; issue #89). Placeholder
+INJURY_RECOVER_ENERGY,double,100,energy the monster comes back with after an injury. Placeholder
 STAT_MAX,double,999,trained stat cap
 FIGHT_EVERY,int,1,a rank fight follows every Nth cycle (kj: maybe every other if too frequent). Placeholder
 SP_PER_CYCLE,int,2,skill points granted at the start of each cycle (specs/15; kj: per cycle plus a win bonus). Placeholder
@@ -42,7 +44,7 @@ MON_TIDE_SHIELD_CAP,double,0.3,tidal_overflow rule: overhealing becomes shield u
 MON_DRAIN_FRAC,double,0.3,abyssal_drain rule: each hit heals the attacker for this fraction of the HP damage dealt. Placeholder
 MON_FIRE_PIERCE,double,0.5,fire_pierce rule: fire damage ignores this fraction of the target's DEF or WIS. Placeholder
 MON_DOUBLE_TURNS,int,1,double_turn_start rule: this many of the unit's first actions are each followed by an extra action. Placeholder
-SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/18; injured runs pay too). Placeholder
+SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/18; cycles lost to injury count). Placeholder
 SHARDS_PER_RANK,int,10,training shards per rank index reached (E = 0). Placeholder
 VENDOR_OFFERS,int,5,offers the post-run vendor rolls after each sealed run (specs/18 section 4). Placeholder
 VAULT_CAP,int,50,most Vault entries a new run may start with (specs/18 section 7; a finished run still seals over it). Placeholder

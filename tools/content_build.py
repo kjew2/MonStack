@@ -51,7 +51,8 @@ REQUIRED_CONSTANTS = {
     # training run (specs/14)
     "RUN_CYCLES": "int", "RUN_AP": "int", "RUN_ENERGY_MAX": "double", "RUN_ENERGY_START": "double",
     "DRILL_ENERGY_COST": "double", "REST_ENERGY": "double", "DRILL_FAIL_MIN": "double", "DRILL_FAIL_MAX": "double",
-    "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
+    "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "INJURY_SKIP_CYCLES": "int",
+    "INJURY_RECOVER_ENERGY": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
     # skill trees (specs/15)
     "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "MON_ECHO_POWER": "double",
     "MON_TIDE_REGEN": "double", "MON_TIDE_SHIELD_CAP": "double", "MON_DRAIN_FRAC": "double", "MON_FIRE_PIERCE": "double",
@@ -94,6 +95,7 @@ MON_RANGES = {
     "REST_ENERGY": (">= 0", lambda v: v >= 0), "DRILL_FAIL_MIN": ("[0, 1]", lambda v: 0 <= v <= 1),
     "DRILL_FAIL_MAX": ("[0, 1]", lambda v: 0 <= v <= 1), "DRILL_SUPER_P": ("[0, 1]", lambda v: 0 <= v <= 1),
     "INJURY_BELOW": ("[0, 1]", lambda v: 0 <= v <= 1), "INJURY_MAX_P": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "INJURY_SKIP_CYCLES": (">= 0", lambda v: v >= 0), "INJURY_RECOVER_ENERGY": (">= 0", lambda v: v >= 0),
     "STAT_MAX": ("> 0", lambda v: v > 0), "FIGHT_EVERY": ("> 0", lambda v: v > 0),
     "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
@@ -538,6 +540,8 @@ def validate_training(t, keys, errs):
     stat_max = kv.get("STAT_MAX", 999)
     if "RUN_ENERGY_START" in kv and "RUN_ENERGY_MAX" in kv and kv["RUN_ENERGY_START"] > kv["RUN_ENERGY_MAX"]:
         errs.add("E043", "constants[RUN_ENERGY_START]", "value out of range (<= RUN_ENERGY_MAX)")
+    if "INJURY_RECOVER_ENERGY" in kv and "RUN_ENERGY_MAX" in kv and kv["INJURY_RECOVER_ENERGY"] > kv["RUN_ENERGY_MAX"]:
+        errs.add("E043", "constants[INJURY_RECOVER_ENERGY]", "value out of range (<= RUN_ENERGY_MAX)")
     if kv.get("DRILL_FAIL_MIN", 0) > kv.get("DRILL_FAIL_MAX", 1):
         errs.add("E043", "constants[DRILL_FAIL_MIN]", "value out of range (<= DRILL_FAIL_MAX)")
     if kv.get("DRILL_FAIL_MAX", 0) + kv.get("DRILL_SUPER_P", 0) > 1:

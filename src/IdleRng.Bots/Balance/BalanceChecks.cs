@@ -50,11 +50,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>injury-resting: a policy that rests (any run with a Rest) is injured in at most this share of runs.</summary>
         public const double MaxRestingInjuryRate = 0.5;
 
-        /// <summary>injury-instant: runs ended by an injury by this cycle...</summary>
-        public const int EarlyEndCycle = 2;
-
-        /// <summary>...are below this share of every cell.</summary>
-        public const double MaxEarlyEndShare = 0.9;
+        /// <summary>
+        /// injury-total: in every cell, the mean share of a run's cycles lost to injury (injured cycles plus cycles sat out) stays
+        /// below this. Replaces injury-instant (runs ended by injury by cycle 2), which an injury can no longer do since the rework
+        /// (specs/14 section 4.1): injury may cripple a run, but not swallow all of it.
+        /// </summary>
+        public const double MaxInjuryLossShare = 0.9;
 
         /// <summary>gauntlet-not-solved: no cell clears the gauntlet in more than this share of runs.</summary>
         public const double MaxGauntletClearRate = 0.5;
@@ -84,8 +85,8 @@ namespace IdleRng.Bots.Balance
                 PolicyMatters(r),
                 Max("injury-resting", $"no resting policy is injured in > {Pct(MaxRestingInjuryRate)} of runs",
                     r.Cells.Where(c => c.Rests.Max > 0).ToList(), c => c.InjuryRate, Cell, MaxRestingInjuryRate, strict: false, none: "no cell rests"),
-                Max("injury-instant", $"runs ended by injury by cycle {EarlyEndCycle} are < {Pct(MaxEarlyEndShare)} of every cell",
-                    r.Cells, c => c.N == 0 ? 0 : (double)c.EarlyEnds / c.N, Cell, MaxEarlyEndShare, strict: true, none: "no cells"),
+                Max("injury-total", $"in every cell, injuries cost < {Pct(MaxInjuryLossShare)} of a run's cycles on average",
+                    r.Cells, c => c.InjuryLoss.Mean, Cell, MaxInjuryLossShare, strict: true, none: "no cells"),
                 GauntletProgress(r),
                 Max("gauntlet-not-solved", $"no cell clears the gauntlet in > {Pct(MaxGauntletClearRate)} of runs",
                     r.Cells, c => c.GauntletClearRate, Cell, MaxGauntletClearRate, strict: false, none: "no cells"),
