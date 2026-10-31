@@ -12,7 +12,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/05-content-data-schema.md` | Content pipeline, conventions, error codes, `ContentDb` |
 | `specs/06-save-and-offline.md` | Save file format, stores, loading, schema versions |
 | `specs/08-backend-seams.md` | Backend interfaces for later (design only) |
-| `specs/09-test-harness-and-bots.md` | Run bots, golden files, `check.sh` |
+| `specs/09-test-harness-and-bots.md` | Run bots, the run-balance report, golden files, `check.sh` |
 | `specs/10-online-competitive.md` | Trust model for accounts, leaderboards and async PvP (design only) |
 | `specs/12-monster-trainer-design.md` | The game design, merged from kj's drafts, with the decisions recorded |
 | `specs/13-pivot-transition.md` | The pivot plan: phases T1-T13, what carries over, status, open questions |

@@ -59,7 +59,6 @@ Order follows `specs/13` section 6. Each phase gets its own spec before building
 
 Candidates for new issues if kj agrees; none is filed.
 
-- **Balance harness** on the run bots (`specs/09` section 7), when balance resumes (CLAUDE.md).
 - **Battle and run throughput benchmark**, when speed matters (`specs/13` section 2).
 - **Phone-quality pass on the web client** (touch targets, wasm load time, save-size limits in one browser key).
 
