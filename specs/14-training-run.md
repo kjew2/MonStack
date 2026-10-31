@@ -34,7 +34,7 @@ Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` s
 
 ## 3. Species
 
-Content table `species`: `id`, `name_key`, `element`, `base_<stat>` and `grow_<stat>` for each of the eight stats. A run starts with the species' base stats. The growth multiplier scales every drill gain on that stat. Three placeholder species (slime, drake, sprite) match the MVP's three (`specs/12` section 12.1); their native trees arrive in T3.
+Content table `species`: `id`, `name_key`, `element`, `base_<stat>` and `grow_<stat>` for each of the eight stats. A run starts with the species' base stats. The growth multiplier scales every drill gain on that stat. Three placeholder species (slime, drake, sprite; named Coremote, Bastion Drake and Mirage Moth after the creature spike, `specs/24` section 6) match the MVP's three (`specs/12` section 12.1); their native trees arrive in T3. Content 4.2 added two more after the creature spike: the Mandrake (nature) and the Shade Hound (dark).
 
 ## 4. Drill and Rest
 
@@ -63,7 +63,7 @@ Both cost 1 AP. When AP reach 0 the run goes to `AwaitFight` if a fight is due, 
 
 kj: "rework injury to be like, skip a fight cycle or something, less punishing and annoying, but would still basically brick ur build." An injury no longer ends the run; it costs cycles. **(agent)** The concrete rule:
 
-1. The injuring drill keeps its gain (and any milestone it crossed, whose draft waits as usual).
+1. The injuring drill keeps its gain (and any milestone it crossed, whose Awakening waits as usual).
 2. The rest of the current cycle is lost: its remaining AP are gone and its rank fight (if one was due) is skipped. No promotion chance, no `SP_PER_WIN`.
 3. The next `INJURY_SKIP_CYCLES` (placeholder 1) whole cycles are sat out: no drills, no rank fights and no `SP_PER_CYCLE` for them.
 4. The monster is then back: energy is set to `INJURY_RECOVER_ENERGY` (placeholder 100, full) and the following cycle starts as usual (full AP, `SP_PER_CYCLE`).
@@ -86,13 +86,13 @@ Why: one tap still costs a fight and up to `RUN_AP - 1 + RUN_AP * INJURY_SKIP_CY
 
 ## 6. Milestones
 
-Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it (the Early Bloom talent lowers the value it is crossed at, `specs/18` section 3), the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens a milestone draft (`specs/15` section 4).
+Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it (the Early Bloom talent lowers the value it is crossed at, `specs/18` section 3), the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens an Awakening, the milestone tree offer (`specs/15` section 4).
 
 ## 7. Determinism, replay, hash
 
-- Pure: no clock, IO or `Math.Pow`. All randomness is the `training` and `draft` streams plus derived fight seeds.
+- Pure: no clock, IO or `Math.Pow`. All randomness is the `training`, `draft` (Awakening picks) and `chase` (the attunement roll, `specs/15` section 5.4) streams plus derived fight seeds.
 - `TrainingRun.Replay(content, species, seed, log, books)` rebuilds a run from its command log; tests check it gives the same `StateHash` for every species, bot and book list.
-- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 5 since the talent catalog v2 of `specs/18` section 3 (issue #105: more modifier fields, the Momentum, Second Wind and Second Look counters, the `RerollDraft` command), 4 since the injuries of section 4.1, 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument). A hash version bump means a saved run in progress no longer matches its stored hash: it is dropped on load with the notice of `specs/06` section 5 and its books are returned.
+- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 6 since the talent catalog v2 of `specs/18` section 3 (issue #105: more modifier fields, the Momentum, Second Wind and Second Look counters, the `RerollDraft` command), 5 since the attunement roll replaced the draft-size modifier (kj, 2026-10-31), 4 since the injuries of section 4.1, 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument). A hash version bump means a saved run in progress no longer matches its stored hash: it is dropped on load with the notice of `specs/06` section 5 and its books are returned.
 
 ## 8. Content
 

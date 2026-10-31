@@ -79,6 +79,57 @@ function enemySprite(seed, boss) {
   const pal = { A: `hsl(${hue} 45% 45%)`, B: `hsl(${hue} 50% 32%)`, E: "#120d1c", W: "#fff4d6", H: boss ? "#f2c14e" : "#ddd" };
   return (SPR[key] = paint(g, pal));
 }
+// Hand-drawn species art (specs/24 section 6): 12x12 rows, one palette letter per pixel, "." is empty.
+const SPECIES_ART = {
+  slime: { pal: { A: "#1d5f9e", B: "#4fb3e8", W: "#d8f3ff", E: "#10203a", C: "#f2c14e", K: "#fff4b0" }, rows: [   // Coremote
+    "............", "............", "....AAAA....", "...AWWBBA...", "..AWBBBBBA..", "..ABEBBEBA..",
+    ".ABBBBBBBBA.", ".ABBBCCBBBA.", ".ABBCKKCBBA.", "AABBBCCBBBAA", "ABBBBBBBBBBA", ".AAAAAAAAAA."] },
+  drake: { pal: { P: "#4a4f5c", M: "#a9b2c4", R: "#c2452e", O: "#ffb347", E: "#ffe066", D: "#2a2133", H: "#eef1f6" }, rows: [   // Bastion Drake
+    "............", ".......H.H..", "......MMMM..", "..M..MRRERM.", ".MPM.MRRRRRO", "MPPPMMRRMM..",
+    "MPOPPPPPM...", "MPPOPPOPPM..", ".MPPOOOPPM..", ".MMPPPPPMM..", "..MR..MR....", "..DD..DD...."] },
+  sprite: { pal: { A: "#6b5b3e", W: "#fff6d8", Y: "#f2c94c", K: "#3a2a5a", O: "#ff9f43", B: "#c9b27a", E: "#1b1428" }, rows: [   // Mirage Moth
+    "...A....A...", "....A..A....", "YY...BB...YY", "YWY.BEEB.YWY", "YKOYBBBBYOKY", "YOKYYBBYYKOY",
+    ".YYYWBBWYYY.", "..YWYBBYWY..", ".YOKYBBYKOY.", ".YKOY.BYOKY.", "..YY..B.YY..", "............"] },
+  mandrake: { pal: { L: "#3f8f3a", G: "#7ccf5a", R: "#a8743f", S: "#d9a86c", E: "#1b1428", M: "#5a1e1e" }, rows: [   // Mandrake
+    "..G..GG..G..", "..GL.LL.LG..", "...LLGGLL...", ".....LL.....", "....RSSR....", "...RSSSSR...",
+    "...SESSES...", "...SSMMSS...", "...RSMMSR...", "..R.RSSR.R..", ".R..R..R..R.", "R...R..R...R"] },
+  shade_hound: { pal: { K: "#1c1426", P: "#4b3570", V: "#a98ae0", E: "#c6ff4d", T: "#f0ecf8" }, rows: [   // Shade Hound
+    "............", "........V.V.", "........PVP.", ".......VPEPV", "V......PPPPT", ".V....VPPKK.",
+    "..VVVVPPPV..", "..VPPPPPPV..", "..VPKPPKPV..", "..VP.VV.PV..", "..V..V..V...", ".KK.KK.KK..."] },
+};
+// Apex forms (specs/15 section 5.3): the species' art with a palette swap and an overlay (non-"." pixels replace the base).
+const BLANK = "............";
+const APEX_ART = {
+  living_ocean: { pal: { A: "#0b6e6e", B: "#2ec4b6", W: "#e0fffb", C: "#7fd6ff", K: "#ffffff", S: "#e0fffb" },   // Solaris Tide
+    over: ["..S.S..S.S..", ".SSS.SS.SSS."] },
+  abyssal_bloom: { pal: { A: "#2a0f4a", B: "#4b1d7a", W: "#ff7ad9", E: "#ffe0f5", C: "#ff3fa4", K: "#ffd1f0", T: "#ff7ad9" },   // Abyssal Siphonophore
+    over: ["...T..T..T..", "..T.T.T..T.."] },
+  unbreakable_will: { pal: { P: "#5a4a2a", M: "#ffd36b", O: "#ff4d1a", H: "#fff2b0", G: "#ffd36b" },   // Aegis Wyrm
+    over: ["......G.G.G."] },
+  inferno_sovereign: { pal: { P: "#2a2038", M: "#7a6a96", R: "#2a1a2e", O: "#b366ff", E: "#d9b3ff", H: "#b366ff", F: "#7a3cff" },   // Surtr Drake
+    over: ["......F.F.F.", ".....F......"] },
+  starlit_ascension: { pal: { Y: "#8fd1ff", W: "#ffffff", O: "#4f7dff", K: "#1b2a6b", B: "#dfe8ff", A: "#bcd4ff", S: "#fff6b0" },   // Comet Moth
+    over: [BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, ".S.S....S.S."] },
+  arcane_overflow: { pal: { Y: "#b388ff", W: "#f3e8ff", O: "#ff7ad9", K: "#2a1050", B: "#d9c2ff", S: "#e8d6ff" },   // Gemini Moth
+    over: [BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, "..S..SS..S.."] },
+  world_root: { pal: { L: "#2f6b2a", G: "#a6e070", R: "#6b4423", S: "#8a5a32", M: "#2a1208", F: "#f2c94c" },   // Worldroot Colossus
+    over: ["F.G..GG..G.F", ".FGL.LL.LGF."] },
+  mandragora_scream: { pal: { L: "#7a2f6b", G: "#e070c0", R: "#7a3f5a", S: "#e8b0c8", M: "#ff3f6b", E: "#ffffff", F: "#ff9ad5" },   // Mandragora Queen
+    over: ["F...F..F...F", "..F......F.."] },
+  umbral_veil: { pal: { K: "#0b0812", P: "#1c1426", V: "#5a4a7a", E: "#9fe8ff", T: "#9fe8ff", G: "#3a3050" },   // Grave Shuck
+    over: ["G.G.........", ".G.G........"] },
+  night_feast: { pal: { K: "#2a0a10", P: "#3a1428", V: "#ff5a6b", E: "#ffcf3f", T: "#ffcf3f", O: "#ffcf3f" },   // Eclipse Hound
+    over: ["........OOO.", ".......O...O"] },
+};
+// The species' hand-drawn art, in its apex form when apex (a chase tree id) has one; null for a species without art.
+function speciesSprite(id, apex) {
+  const a = SPECIES_ART[id]; if (!a) return null;
+  const x = apex ? APEX_ART[apex] : null;
+  const key = "sp:" + id + (x ? ":" + apex : ""); if (SPR[key]) return SPR[key];
+  const g = a.rows.map(r => r.split(""));
+  if (x) x.over.forEach((row, y) => row.split("").forEach((c, xx) => { if (c !== ".") g[y][xx] = c; }));
+  return (SPR[key] = paint(g, x ? Object.assign({}, a.pal, x.pal) : a.pal));
+}
 function paint(g, pal) {
   const c = document.createElement("canvas"); c.width = g[0].length; c.height = g.length;
   const x = c.getContext("2d");
@@ -94,6 +145,7 @@ function paint(g, pal) {
   }
   root.IdleSprites = {
     hero: heroSprite,
+    species: speciesSprite,
     player: playerSprite,
     enemy: function (stage, boss, variant) { return enemySprite(stage * 31 + (boss ? 999 : (variant || 0) % 4), boss); },
     enemyName: enemyName,

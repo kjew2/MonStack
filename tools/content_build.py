@@ -30,7 +30,7 @@ ENUMS = {
     "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
-    "TalentEffect": ["drill_cost", "stat_floor", "draft_size", "start_sp", "rest_energy", "fail_chance", "super_chance",
+    "TalentEffect": ["drill_cost", "stat_floor", "chase_chance", "start_sp", "rest_energy", "fail_chance", "super_chance",
                      "shard_mult", "momentum", "loss_sp", "specialist", "tree_slots", "injury_shield", "last_cycle_ap",
                      "milestone_mult", "draft_rerolls"],
     "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors"],
@@ -56,10 +56,11 @@ REQUIRED_CONSTANTS = {
     "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "INJURY_SKIP_CYCLES": "int",
     "INJURY_RECOVER_ENERGY": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
     # skill trees (specs/15)
-    "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "TREE_REFUND": "double",
+    "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "TREE_REFUND": "double", "CHASE_BASE_CHANCE": "double",
     "MON_ECHO_POWER": "double",
     "MON_TIDE_REGEN": "double", "MON_TIDE_SHIELD_CAP": "double", "MON_DRAIN_FRAC": "double", "MON_FIRE_PIERCE": "double",
-    "MON_DOUBLE_TURNS": "int",
+    "MON_DOUBLE_TURNS": "int", "MON_REBIRTH_HEAL": "double", "MON_WAIL_STAGGER": "double", "MON_VEIL_EVADE_CAP": "double",
+    "MON_FEAST_STR": "double",
     # account and meta-progression (specs/18)
     "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int",
     # end-of-run gauntlet (specs/19)
@@ -81,7 +82,7 @@ DRILL_TIERS = ["fail", "success", "super"]
 EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 # Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
 RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
-            "entropy_convert"]
+            "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -102,11 +103,13 @@ MON_RANGES = {
     "STAT_MAX": ("> 0", lambda v: v > 0), "FIGHT_EVERY": ("> 0", lambda v: v > 0),
     "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
-    "TREE_REFUND": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "TREE_REFUND": ("[0, 1]", lambda v: 0 <= v <= 1), "CHASE_BASE_CHANCE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_TIDE_REGEN": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TIDE_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DRAIN_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FIRE_PIERCE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DOUBLE_TURNS": (">= 1", lambda v: v >= 1),
+    "MON_REBIRTH_HEAL": ("(0, 1]", lambda v: 0 < v <= 1), "MON_WAIL_STAGGER": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_VEIL_EVADE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FEAST_STR": (">= 0", lambda v: v >= 0),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
     "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
     "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
@@ -155,7 +158,7 @@ SCHEMA = {
                          c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
                          c("power", "double"), c("cooldown", "int"), c("duration", "int"), c("element", "id", True)], key="id"),
     "trees": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:TreeKind"), c("offer_stat", "string", True),
-                c("offer_threshold", "int", True)], key="id"),
+                c("offer_threshold", "int", True), c("apex_name_key", "key", True)], key="id"),
     "tree_nodes": T([c("id", "id"), c("tree_id", "id"), c("index", "int"), c("cost", "int"), c("kind", "enum:NodeKind"),
                      c("stat", "string", True), c("amount", "double", True), c("skill_id", "id", True),
                      c("trigger", "enum:FightTrigger", True), c("rule_id", "id", True)], key="id"),
@@ -291,6 +294,8 @@ def validate_trees(t, errs):
                 errs.add("E023", loc, f"offer_stat '{r['offer_stat']}' is not a trained stat")
         elif r["offer_stat"] is not None or r["offer_threshold"] is not None:
             errs.add("E043", loc, "only generic trees have offer_stat and offer_threshold")
+        if (r["kind"] == "chase") != (r["apex_name_key"] is not None):
+            errs.add("E043", loc, "chase trees, and only chase trees, have an apex_name_key")
     by_tree = {}
     nodes = {}
     for n in t["tree_nodes"]:
@@ -479,12 +484,13 @@ def validate_tower(t, keys, errs):
         errs.add("E044", "book_drops", "at least one row needs min_floor 1")
 
 
-WHOLE_TALENT_EFFECTS = ("draft_size", "start_sp", "momentum", "loss_sp", "tree_slots", "injury_shield", "last_cycle_ap",
+WHOLE_TALENT_EFFECTS = ("start_sp", "momentum", "loss_sp", "tree_slots", "injury_shield", "last_cycle_ap",
                         "draft_rerolls")
 
 
 def validate_talents(t, errs):
     """Account talent tree (specs/18 section 4). Mirrors ContentDb.BuildAccount."""
+    chase_base = next((float(r["value"]) for r in t["constants"] if r["key"] == "CHASE_BASE_CHANCE"), 0.0)
     for r in t["talents"]:
         loc = f"talents[{r['id']}]"
         if r["max_rank"] < 1 or r["cost_base"] < 0 or r["cost_step"] < 0:
@@ -494,6 +500,8 @@ def validate_talents(t, errs):
             errs.add("E043", loc, "drill_cost per_rank must be <= 0 and keep the multiplier >= 0 at max rank")
         if eff in ("stat_floor", "rest_energy", "shard_mult") and not p >= 0:
             errs.add("E043", loc, f"{eff} per_rank must be >= 0")
+        if eff == "chase_chance" and not (p >= 0 and chase_base + p * r["max_rank"] <= 1):
+            errs.add("E043", loc, "chase_chance per_rank must be >= 0 and keep CHASE_BASE_CHANCE + per_rank x max_rank <= 1")
         if eff == "fail_chance" and not p <= 0:
             errs.add("E043", loc, "fail_chance per_rank must be <= 0")
         if eff == "super_chance" and not (p >= 0 and p * r["max_rank"] <= 1):

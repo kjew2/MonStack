@@ -55,11 +55,16 @@ namespace IdleRng.Sim.Content
         public int TreeSlots { get; internal set; }              // TREE_SLOTS
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
         public double TreeRefund { get; internal set; }          // TREE_REFUND
+        public double ChaseBaseChance { get; internal set; }     // CHASE_BASE_CHANCE
         public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
         public double MonTideRegen { get; internal set; }        // MON_TIDE_REGEN
         public double MonTideShieldCap { get; internal set; }    // MON_TIDE_SHIELD_CAP
         public double MonDrainFrac { get; internal set; }        // MON_DRAIN_FRAC
         public double MonFirePierce { get; internal set; }       // MON_FIRE_PIERCE
+        public double MonRebirthHeal { get; internal set; }      // MON_REBIRTH_HEAL
+        public double MonWailStagger { get; internal set; }      // MON_WAIL_STAGGER
+        public double MonVeilEvadeCap { get; internal set; }     // MON_VEIL_EVADE_CAP
+        public double MonFeastStr { get; internal set; }         // MON_FEAST_STR
         public int MonDoubleTurns { get; internal set; }         // MON_DOUBLE_TURNS
 
         // Account and meta-progression (specs/18 section 5). Placeholders.
@@ -264,6 +269,9 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Chase trees: true for the species' book-gated chase tree, false for its in-run one.</summary>
         public bool BookGated { get; internal set; }
+
+        /// <summary>Chase trees: the name of the apex form a monster takes once it owns this tree's capstone (specs/15 section 5.3). Null otherwise.</summary>
+        public string ApexNameKey { get; internal set; }
     }
 
     public sealed class TreeNodeDef
@@ -309,7 +317,7 @@ namespace IdleRng.Sim.Content
     /// <summary>What a talent changes (specs/18 sections 3 and 4); each maps to one RunModifiers field.</summary>
     public enum TalentEffect
     {
-        DrillCost, StatFloor, DraftSize, StartSp, RestEnergy, FailChance, SuperChance, ShardMult, Momentum, LossSp, Specialist,
+        DrillCost, StatFloor, ChaseChance, StartSp, RestEnergy, FailChance, SuperChance, ShardMult, Momentum, LossSp, Specialist,
         TreeSlots, InjuryShield, LastCycleAp, MilestoneMult, DraftRerolls,
     }
 

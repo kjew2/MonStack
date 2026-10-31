@@ -263,7 +263,7 @@ const H = require('./harness.js');
   await t.reload();
   const now = await text('[data-id=talent-now]');
   check(['rests +30 energy', 'a free drill after each Super', '+1 tree slot', '1 injury prevented per run', '+2 AP in the last cycle',
-    'milestones at x0.80', '1 draft reroll per run', 'shards x1.50', '+2 SP per lost fight'].every((x) => now.includes(x)), 'the home screen sums every talent bonus: ' + now);
+    'milestones at x0.80', '1 Awakening reroll per run', '50% chase attunement', 'shards x1.50', '+2 SP per lost fight'].every((x) => now.includes(x)), 'the home screen sums every talent bonus: ' + now);
   await act('start').click();
   await act('drill-hp').waitFor();
   check(/^Rest \(\+80 energy\)$/.test(await text('[data-act="rest"]')), 'the rest button shows Deep Rest\'s bigger rest: ' + await text('[data-act="rest"]'));
@@ -283,7 +283,7 @@ const H = require('./harness.js');
     }
     return null;
   });
-  check(!!draft && draft.length > 0, 'a milestone draft offers Second Look\'s reroll: ' + JSON.stringify(draft));
+  check(!!draft && draft.length > 0, 'an Awakening offers Second Look\'s reroll: ' + JSON.stringify(draft));
   await t.layout('tree draft with a reroll');
   await clickDom('[data-act="reroll"]');
   const redrawn = await page.evaluate(() => [...document.querySelectorAll('[data-id^="offer-"]')].map((e) => e.getAttribute('data-id')).filter((x) => x !== 'offer-title'));

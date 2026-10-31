@@ -2,3 +2,5 @@ book_id,min_floor,weight,#notes
 book_embers,1,3,"Dungeon Skill Book drops (specs/21 section 7): drawn by weight from rows with min_floor <= floor. Placeholder"
 book_tides,1,3,Placeholder
 book_echoes,10,1,rarer and deeper. Placeholder
+book_roots,10,1,Placeholder
+book_shadows,10,1,Placeholder

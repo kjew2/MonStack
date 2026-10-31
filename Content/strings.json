@@ -24,15 +24,15 @@
     },
     {
       "key": "species.slime.name",
-      "text": "Slime"
+      "text": "Coremote"
     },
     {
       "key": "species.drake.name",
-      "text": "Drake"
+      "text": "Bastion Drake"
     },
     {
       "key": "species.sprite.name",
-      "text": "Sprite"
+      "text": "Mirage Moth"
     },
     {
       "key": "drill.fail.name",
@@ -523,6 +523,30 @@
       "text": "Starlit Ascension"
     },
     {
+      "key": "tree.unbreakable_will.apex",
+      "text": "Aegis Wyrm"
+    },
+    {
+      "key": "tree.inferno_sovereign.apex",
+      "text": "Surtr Drake"
+    },
+    {
+      "key": "tree.living_ocean.apex",
+      "text": "Solaris Tide"
+    },
+    {
+      "key": "tree.abyssal_bloom.apex",
+      "text": "Abyssal Siphonophore"
+    },
+    {
+      "key": "tree.starlit_ascension.apex",
+      "text": "Comet Moth"
+    },
+    {
+      "key": "tree.arcane_overflow.apex",
+      "text": "Gemini Moth"
+    },
+    {
       "key": "book.book_echoes.name",
       "text": "Skill Book: Tome of Echoes"
     },
@@ -599,12 +623,12 @@
       "text": "Monsters start runs with 10% higher base stats per rank."
     },
     {
-      "key": "talent.wide_scouting.name",
-      "text": "Wide Scouting"
+      "key": "talent.chase_instinct.name",
+      "text": "Chase Instinct"
     },
     {
-      "key": "talent.wide_scouting.desc",
-      "text": "Milestone drafts offer one more tree per rank."
+      "key": "talent.chase_instinct.desc",
+      "text": "+10% odds a run is attuned to its in-run chase tree."
     },
     {
       "key": "talent.head_start.name",
@@ -708,7 +732,7 @@
     },
     {
       "key": "talent.second_look.desc",
-      "text": "Reroll one milestone draft per run for new trees."
+      "text": "Reroll one Awakening per run into trees of any stat."
     },
     {
       "key": "achievement.rank_c.name",
@@ -1333,6 +1357,238 @@
     {
       "key": "tower.corruption.desc",
       "text": "Dungeon: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
+    },
+    {
+      "key": "species.mandrake.name",
+      "text": "Mandrake"
+    },
+    {
+      "key": "species.shade_hound.name",
+      "text": "Shade Hound"
+    },
+    {
+      "key": "tree.rootbound.name",
+      "text": "Rootbound"
+    },
+    {
+      "key": "tree.mandrake_wail.name",
+      "text": "Mandrake Wail"
+    },
+    {
+      "key": "tree.umbral_step.name",
+      "text": "Umbral Step"
+    },
+    {
+      "key": "tree.shadow_harvest.name",
+      "text": "Shadow Harvest"
+    },
+    {
+      "key": "tree.verdant_herbarium.name",
+      "text": "Verdant Herbarium"
+    },
+    {
+      "key": "tree.umbral_grimoire.name",
+      "text": "Umbral Grimoire"
+    },
+    {
+      "key": "tree.world_root.name",
+      "text": "World Root"
+    },
+    {
+      "key": "tree.mandragora_scream.name",
+      "text": "Mandragora Scream"
+    },
+    {
+      "key": "tree.umbral_veil.name",
+      "text": "Umbral Veil"
+    },
+    {
+      "key": "tree.night_feast.name",
+      "text": "Night Feast"
+    },
+    {
+      "key": "tree.world_root.apex",
+      "text": "Worldroot Colossus"
+    },
+    {
+      "key": "tree.mandragora_scream.apex",
+      "text": "Mandragora Queen"
+    },
+    {
+      "key": "tree.umbral_veil.apex",
+      "text": "Grave Shuck"
+    },
+    {
+      "key": "tree.night_feast.apex",
+      "text": "Eclipse Hound"
+    },
+    {
+      "key": "book.book_roots.name",
+      "text": "Skill Book: Verdant Herbarium"
+    },
+    {
+      "key": "book.book_shadows.name",
+      "text": "Skill Book: Umbral Grimoire"
+    },
+    {
+      "key": "mskill.sap_mend.name",
+      "text": "Sap Mend"
+    },
+    {
+      "key": "mskill.sap_mend.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.bramble.name",
+      "text": "Bramble"
+    },
+    {
+      "key": "mskill.bramble.desc",
+      "text": "Chase trait. When hit: {element} damage for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.wail.name",
+      "text": "Wail"
+    },
+    {
+      "key": "mskill.wail.desc",
+      "text": "An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.toxic_bloom.name",
+      "text": "Toxic Bloom"
+    },
+    {
+      "key": "mskill.toxic_bloom.desc",
+      "text": "Chase trait. {element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.shadow_lunge.name",
+      "text": "Shadow Lunge"
+    },
+    {
+      "key": "mskill.shadow_lunge.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.fade.name",
+      "text": "Fade"
+    },
+    {
+      "key": "mskill.fade.desc",
+      "text": "Chase trait. On evade: +{power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "mskill.rend.name",
+      "text": "Rend"
+    },
+    {
+      "key": "mskill.rend.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.harvest.name",
+      "text": "Harvest"
+    },
+    {
+      "key": "mskill.harvest.desc",
+      "text": "Chase trait. On crit: heal self for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.spore_burst.name",
+      "text": "Spore Burst"
+    },
+    {
+      "key": "mskill.spore_burst.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.photosynthesis.name",
+      "text": "Photosynthesis"
+    },
+    {
+      "key": "mskill.photosynthesis.desc",
+      "text": "Chase trait. Every action: heal self for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.night_fang.name",
+      "text": "Night Fang"
+    },
+    {
+      "key": "mskill.night_fang.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.bloodscent.name",
+      "text": "Bloodscent"
+    },
+    {
+      "key": "mskill.bloodscent.desc",
+      "text": "Chase trait. On crit: +{power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "mskill.deep_roots.name",
+      "text": "Deep Roots"
+    },
+    {
+      "key": "mskill.deep_roots.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.scream.name",
+      "text": "Scream"
+    },
+    {
+      "key": "mskill.scream.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.shade_cloak.name",
+      "text": "Shade Cloak"
+    },
+    {
+      "key": "mskill.shade_cloak.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.devour.name",
+      "text": "Devour"
+    },
+    {
+      "key": "mskill.devour.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "rule.root_rebirth.name",
+      "text": "Root Rebirth"
+    },
+    {
+      "key": "rule.root_rebirth.desc",
+      "text": "Once per fight, a blow that would fell it leaves it standing at {MON_REBIRTH_HEAL:pct} of max HP instead."
+    },
+    {
+      "key": "rule.wail_stagger.name",
+      "text": "Uprooting Scream"
+    },
+    {
+      "key": "rule.wail_stagger.desc",
+      "text": "Every hit it lands pushes the target's next turn back by {MON_WAIL_STAGGER:pct} of a turn."
+    },
+    {
+      "key": "rule.umbral_veil.name",
+      "text": "Umbral Veil"
+    },
+    {
+      "key": "rule.umbral_veil.desc",
+      "text": "It can evade spells as well as physical hits, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+    },
+    {
+      "key": "rule.night_feast.name",
+      "text": "Night Feast"
+    },
+    {
+      "key": "rule.night_feast.desc",
+      "text": "Every hit it lands adds {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
     }
   ]
 }

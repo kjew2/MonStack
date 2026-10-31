@@ -49,9 +49,9 @@
     return el;
   }
   function hash(str) { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
-  function sprite(key) {
+  function sprite(key, apex) {
     const cv = h('canvas', { class: 'sprite', 'aria-hidden': 'true' });
-    SP.draw(cv, SP.enemy(hash(key) % 100000, false, 0));
+    SP.draw(cv, SP.species(key, apex) || SP.enemy(hash(key) % 100000, false, 0));   // hand-drawn species art (apex form), else a seeded sprite
     return cv;
   }
   function toast(msg) {
@@ -105,7 +105,7 @@
   }
 
   // ---- skill point gains (issue #86): a float-up next to the HUD's SP count and a pulse on it. Gains made behind a modal (a fight,
-  // a draft) wait until it closes. The floats live in a layer outside #main so a re-render does not cut them short.
+  // an Awakening) wait until it closes. The floats live in a layer outside #main so a re-render does not cut them short.
   function showSpGains() {
     const gains = ui.spGains, at = document.querySelector('#main [data-id=sp]');
     if (!gains.length || !at) return;
@@ -124,7 +124,7 @@
   }
 
   // ---- drill outcome pop (issue #95): "+x" over the drilled stat's bar, styled by the tier (fail, success, super). Like the SP
-  // gains it lives in #floats and waits out a modal (a milestone's tree draft).
+  // gains it lives in #floats and waits out a modal (a milestone's Awakening).
   function showDrillPop() {
     const p = ui.drillPop, row = p && document.querySelector('#main [data-id="stat-' + p.stat + '"]');
     if (!row) { if (ui.tab !== 'train') ui.drillPop = null; return; }
@@ -154,16 +154,24 @@
     });
   }
 
+  // Apex forms (specs/15 section 5.3): toast once when the run's monster takes one (not on a reload of a run already in it).
+  let apexSeen = null;
+  function noticeApex(s) {
+    if (apexSeen && apexSeen.seed === s.seed && s.apex && s.apex !== apexSeen.apex) toast(speciesDef(s.species).name + ' became the ' + s.name + '!');
+    apexSeen = { seed: s.seed, apex: s.apex };
+  }
+
   function renderHud(s) {
     const sp = speciesDef(s.species), r = rank(s.rank), k = C.consts;
+    noticeApex(s);
     const low = s.energy / k.energyMax < 0.3;
     const pips = h('div', { class: 'pips', 'aria-label': s.ap + ' action points left' });
     for (let i = 0; i < k.runAp; i++) pips.append(h('span', { class: 'pip' + (i < s.ap ? ' full' : '') }));
     return h('div', { class: 'card hud' }, [
-      sprite(s.species),
+      sprite(s.species, s.apex),
       h('div', null, [
         h('div', { class: 'hud-line' }, [
-          h('span', { text: sp.name }), elementTag(sp.element), h('span', { class: 'tag', text: r.name, 'data-id': 'rank' }),
+          h('span', { text: s.name || sp.name, 'data-id': 'monster-name' }), elementTag(sp.element), h('span', { class: 'tag', text: r.name, 'data-id': 'rank' }),
         ]),
         h('div', { class: 'hud-line small muted' }, [
           h('span', { text: 'Cycle ' + s.cycle + '/' + k.runCycles, 'data-id': 'cycle' }),
@@ -217,7 +225,7 @@
     main.append(card);
     main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
       text: 'Rest (+' + num(s.restEnergy) + ' energy)', onclick: rest }));
-    if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree draft is waiting. Choose or discard it to keep training.' }));
+    if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     if (ui.last) main.append(resultCard(ui.last));
     ui.flash = null;
   }
@@ -284,7 +292,7 @@
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Skill trees' }), h('span', { class: 'num ' + (s.sp ? 'gems' : 'muted'), text: s.sp + ' SP', 'data-id': 'sp2' })]));
     s.slots.forEach((slot, i) => {
       if (!slot) {
-        main.append(h('div', { class: 'card slotcard empty' }, [h('b', { text: 'Slot ' + (i + 1) + ': empty' }), h('small', { text: 'Fills from tree drafts (stat milestones, books, chase unlocks).' })]));
+        main.append(h('div', { class: 'card slotcard empty' }, [h('b', { text: 'Slot ' + (i + 1) + ': empty' }), h('small', { text: 'Fills from tree offers (Awakenings at stat milestones, books, chase unlocks).' })]));
         return;
       }
       const t = C.trees[slot.tree];
@@ -305,14 +313,15 @@
     });
 
     main.append(h('h3', { text: 'Chase trees' }));
-    main.append(h('p', { class: 'small muted', text: 'Each species has two chase trees of its own: one unlocks from its own trees and stats, the other also needs a skill book tree. A chase tree unlocks when every condition holds, then it is offered as a draft. It locks again if a condition stops holding.' }));
+    main.append(h('p', { class: 'small muted', text: 'Each species has two chase trees of its own: one unlocks from its own trees and stats (and only in runs that are attuned to it, rolled at the start; Chase Instinct talents raise the odds), the other also needs a skill book tree. A chase tree unlocks when every condition holds, then it is offered. It locks again if a condition stops holding.' }));
     s.chase.forEach((c) => {
       const t = C.trees[c.tree];
       const slotted = s.slots.some((x) => x && x.tree === c.tree);
       main.append(h('div', { class: 'card', 'data-id': 'chasecard-' + c.tree }, [
         h('div', { class: 'row between' }, [h('b', { text: t.name }), h('span', null, [
           h('span', { class: 'tag', text: t.bookGated ? 'book-gated' : 'in-run' }), ' ',
-          h('span', { class: 'tag', text: slotted ? 'slotted' : c.unlocked ? 'unlocked' : 'locked' })])]),
+          h('span', { class: 'tag', text: !c.open ? 'dormant' : slotted ? 'slotted' : c.unlocked ? 'unlocked' : 'locked' })])]),
+        ...(c.open ? [] : [h('small', { class: 'muted', text: 'This run is not attuned to this tree, so it cannot unlock. Chase Instinct talents raise the odds for later runs.' })]),
         ...t.conditions.map((txt, i) => h('div', { class: 'cond' + (c.met[i] ? ' met' : '') }, [h('span', { text: c.met[i] ? '✓' : '○' }), h('span', { text: txt })])),
         ...conditionSources(t),
       ]));
@@ -352,7 +361,7 @@
     }
   }
 
-  // ---- modal: fight result and tree drafts
+  // ---- modal: fight result and tree offers
   function renderModal(modal, s) {
     modal.replaceChildren();
     if (ui.fight && ui.play) { modal.hidden = false; fightPlayView(modal, ui.fight, rankView(ui.fight, s)); return; }
@@ -629,7 +638,7 @@
   const refundShare = () => { const p = C.consts.treeRefund; return p === 0.5 ? 'half' : Math.round(p * 100) + '%'; };
   function offerModal(modal, s) {
     const o = s.offers[0];
-    const why = o.source === 'milestone' ? up(o.stat) + ' reached ' + o.threshold + ': choose a tree'
+    const why = o.source === 'milestone' ? 'Awakening: ' + up(o.stat) + ' reached ' + o.threshold + ', choose a tree'
       : o.source === 'book' ? 'Skill book: take its tree' : 'A chase tree unlocked';
     modal.append(h('h2', { text: why, 'data-id': 'offer-title' }),
       h('p', { class: 'small muted', text: 'Put it in a slot. An occupied slot is overwritten: ' + refundShare() + ' of the skill points spent in it come back, its flat boosts are lost, and a chase tree that depended on it locks again (refunded the same way).' +
@@ -648,7 +657,7 @@
     });
     if (s.canReroll) modal.append(h('button', { class: 'btn block gemsy', type: 'button', 'data-act': 'reroll',
       text: 'Second Look: reroll into trees of any stat (' + s.rerollsLeft + ' left this run)', onclick: reroll }));
-    modal.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'discard', text: 'Discard this draft', onclick: discard }));
+    modal.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'discard', text: 'Discard this offer', onclick: discard }));
   }
 
   // The run bonuses the account's talents give now (specs/18 section 3), only those that change something.
@@ -657,7 +666,7 @@
     return [
       m.drillCostMult !== 1 && 'drills cost x' + m.drillCostMult.toFixed(2),
       m.statFloorMult !== 1 && 'start stats x' + m.statFloorMult.toFixed(2),
-      m.draftSizeBonus && '+' + m.draftSizeBonus + ' draft size',
+      Math.round(m.chaseChance * 100) + '% chase attunement',
       m.startSp && '+' + m.startSp + ' starting SP',
       m.restEnergyBonus && 'rests +' + num(m.restEnergyBonus) + ' energy',
       m.failChanceDelta && 'fail -' + pts(m.failChanceDelta) + ' pts',
@@ -670,7 +679,7 @@
       m.injuryShields && m.injuryShields + ' injur' + (m.injuryShields > 1 ? 'ies' : 'y') + ' prevented per run',
       m.lastCycleAp && '+' + m.lastCycleAp + ' AP in the last cycle',
       m.milestoneMult !== 1 && 'milestones at x' + m.milestoneMult.toFixed(2),
-      m.draftRerolls && m.draftRerolls + ' draft reroll' + (m.draftRerolls > 1 ? 's' : '') + ' per run',
+      m.draftRerolls && m.draftRerolls + ' Awakening reroll' + (m.draftRerolls > 1 ? 's' : '') + ' per run',
     ].filter(Boolean);
   }
 
@@ -1148,7 +1157,7 @@
   // The comic defeat: the killer strikes and the monster is launched off screen or turned to ash (picked from the result hash,
   // cosmetic only); a cleared tower gets a victory hop instead.
   function climbArena(g, e, sp) {
-    const you = h('div', { class: 'fighter you' }, [sprite(e.species), h('span', { text: sp.name })]);
+    const you = h('div', { class: 'fighter you' }, [sprite(e.species, e.apex), h('span', { text: e.name || sp.name })]);
     if (g.cleared) {
       you.classList.add('hop');
       return h('div', { class: 'arena', 'data-id': 'climb-arena' }, [you, h('div', { class: 'pow', style: 'left:auto;right:10%', text: '★ CLEARED ★' })]);
@@ -1202,7 +1211,7 @@
     render();
   }
   function milestones(r) {
-    (r.milestones || []).forEach((m) => { toast('Milestone: ' + up(m.stat) + ' ' + m.threshold + '. A tree draft is waiting'); log('Milestone ' + up(m.stat) + ' ' + m.threshold); });
+    (r.milestones || []).forEach((m) => { toast('Milestone: ' + up(m.stat) + ' ' + m.threshold + '. An Awakening is waiting'); log('Milestone ' + up(m.stat) + ' ' + m.threshold); });
   }
 
   function drill(stat) {
@@ -1248,8 +1257,8 @@
     }
     after(r);
   }
-  function discard() { const r = run.cmd('discard'); if (r.ok) log('Discarded a tree draft'); after(r); }
-  function reroll() { const r = run.cmd('reroll'); if (r.ok) log('Second Look: rerolled a tree draft'); after(r); }
+  function discard() { const r = run.cmd('discard'); if (r.ok) log('Discarded a tree offer'); after(r); }
+  function reroll() { const r = run.cmd('reroll'); if (r.ok) log('Second Look: rerolled an Awakening'); after(r); }
   function spend(slot) {
     const r = run.cmd('spend', slot);
     if (r.ok) { log('Bought ' + r.node + (r.statGain ? ' (+' + num(r.statGain) + ')' : '')); milestones(r); }

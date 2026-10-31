@@ -1,6 +1,6 @@
 # 24 - Spike: creature inspiration for the skill trees
 
-Status: **spike report (agent, 2026-10-31).** Research only; nothing here is agreed design. kj asked for creature inspiration that fits the current skill trees thematically, from any medium (myth, folklore, games, anime, manga, film, books, nature), as long as it is cool and fits the tree. Section 6 has questions for kj.
+Status: **spike report (agent, 2026-10-31); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for creature inspiration that fits the current skill trees thematically, from any medium (myth, folklore, games, anime, manga, film, books, nature), as long as it is cool and fits the tree. Section 6 has questions for kj.
 
 ## 1. Scope and method
 
@@ -65,8 +65,8 @@ These are drafted from a stat, so each creature is the purest image of that stat
 | *Abyssal Bloom* (slime, book) | `abyssal_drain`: every hit heals it | **Abyssal Siphonophore**: a glowing deep-sea colony; tendrils bloom into its target and pulse light back to it. | Siphonophores (real colonial organisms tens of metres long), *Annihilation*'s Shimmer, anglerfish, Cthulhu |
 | *Unbreakable Will* (drake, in-run) | `counter_mitigated`: counterattacks for the damage DEF stopped | **Aegis Wyrm**: the plates crack to show a molten core; every blocked hit flares out of the cracks as a counterblow. | Naofumi's counter shields (*The Rising of the Shield Hero*), Reinhardt (Overwatch), the heavy knight, Iron Golem (Dark Souls) |
 | *Inferno Sovereign* (drake, book) | `fire_pierce`: fire ignores part of DEF/WIS and is never resisted | **Surtr Drake**: wears a crown of black flame that water cannot put out. | Surtr (Norse fire giant who burns the world), Amaterasu's black flames (*Naruto*), the Balrog, Kagutsuchi |
-| *Starlit Ascension* (sprite, in-run) | `double_turn_start`: acts twice on its first turns | **Comet Sprite**: arrives as a falling star, a streak of light that hits twice before anything else moves. | Star Platinum's time stop (*JoJo's Bizarre Adventure*), Jirachi, shooting stars, Sailor Moon |
-| *Arcane Overflow* (sprite, book) | `echo_cast`: every active skill casts again at reduced power | **Gemini Wisp**: a sprite with a mirror twin a half-beat behind it that repeats each spell. | Dualcast (*Final Fantasy* games, *Slay the Spire*'s Defect), Castor and Pollux, Doctor Strange's mirror dimension |
+| *Starlit Ascension* (sprite, in-run) | `double_turn_start`: acts twice on its first turns | **Comet Moth**: arrives as a falling star, a streak of light that hits twice before anything else moves. | Star Platinum's time stop (*JoJo's Bizarre Adventure*), Jirachi, shooting stars, Sailor Moon |
+| *Arcane Overflow* (sprite, book) | `echo_cast`: every active skill casts again at reduced power | **Gemini Moth**: a sprite with a mirror twin a half-beat behind it that repeats each spell. | Dualcast (*Final Fantasy* games, *Slay the Spire*'s Defect), Castor and Pollux, Doctor Strange's mirror dimension |
 
 ## 5. Ideas beyond today's trees
 
@@ -90,12 +90,10 @@ kj allowed fusion for **some specific pairs**, with the pair clear in the UI (`s
 | *Mind Warp* + *Nimble Feet* | **Mirror Fox**: nine afterimages, only one is real | dodge triggers on both trees |
 | *Fortune* + *Spellcraft* | **Tarot Mimic**: a deck of cards with teeth, deals a random spell | gambling magic; Spellcraft's on-crit trigger feeds on Fortune's crit build |
 
-## 6. Questions for kj
+## 6. Questions for kj (answered 2026-10-31)
 
-1. **Tone:** which way should creature art lean: cute and chunky (Monster Rancher, Dragon Quest), mythic and folkloric (Ōkami, *Princess Mononoke*), or dark and toothy (Monster Hunter, *Berserk*)? The concepts above mix all three on purpose.
-2. **Apex forms:** should buying a chase capstone change the monster's look (section 4)? It is the cheapest way to make a capstone feel like a jackpot, but every chase tree then needs its own art.
-3. **Species names:** keep the placeholders (slime, drake, sprite), or name the species after these concepts (e.g. *Coremote*, *Bastion Drake*, *Mirage Moth*)?
-4. **Nature and dark species:** worth adding as the next achievement unlocks (section 5.1)? Each needs two native trees, two chase trees and a book, so it is content work plus at least two rule modifiers.
-5. **Fusion pairs:** are any of the pairs in section 5.2 the ones kj had in mind?
-
-Nothing is built from this report until kj answers.
+1. **Tone:** **a mix, the best of all worlds** (kj): cute, mythic, grimdark or hot. No one style is required; each creature takes whichever suits it.
+2. **Apex forms:** **yes** (kj). Buying a chase tree's capstone changes the monster's look and gives it the apex name in section 4.2. Rules: `specs/15` section 5.3.
+3. **Species names:** **rename them and adjust them to the concepts** (kj). The species ids stay (`slime`, `drake`, `sprite`, so saves and goldens keep working); their names become **Coremote**, **Bastion Drake** and **Mirage Moth**, and the web client draws each from hand-made pixel art of its concept instead of a seeded sprite. The *Starlit Ascension* and *Arcane Overflow* apex forms follow the moth: **Comet Moth** and **Gemini Moth**.
+4. **Nature and dark species:** **yes** (kj). The **Mandrake** (nature) and the **Shade Hound** (dark) are added as achievement unlocks (Veteran and Climber) with their own native, book and chase trees and four new capstone rules (`specs/15` section 7, `specs/16` section 6.2).
+5. **Fusion pairs:** **yes** (kj): the four pairs in section 5.2 are the fusing pairs (`specs/12` section 5.2.1). How fusion works (when it happens, what the fused tree holds, which slot it frees) is not decided yet.

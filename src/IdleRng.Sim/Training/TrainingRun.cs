@@ -15,10 +15,10 @@ namespace IdleRng.Sim.Training
     /// </summary>
     public static class TrainingRun
     {
-        public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight";
+        public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight", ChaseStream = "chase";
         public const string MonsterId = "monster";
-        public const int HashVersion = 5;
-        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v5");
+        public const int HashVersion = 6;
+        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v6");
 
         // ------------------------------------------------------------------ start
 
@@ -34,11 +34,12 @@ namespace IdleRng.Sim.Training
                 throw new ArgumentException($"unknown species '{speciesId}'", nameof(speciesId));
             var k = c.Constants;
             mods = mods?.Clone() ?? new RunModifiers();
-            if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.DraftSizeBonus < 0 || mods.StartSp < 0
+            if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.StartSp < 0
                 || !(mods.RestEnergyBonus >= 0) || !(mods.FailChanceDelta <= 0) || !(mods.SuperChanceBonus >= 0) || !(mods.ShardMult >= 0)
                 || mods.MomentumDrills < 0 || mods.LossSp < 0 || !(mods.SpecialistBonus >= 0 && mods.SpecialistBonus <= 2)
                 || mods.TreeSlotBonus < 0 || mods.InjuryShields < 0 || mods.LastCycleAp < 0 || !(mods.MilestoneMult > 0) || mods.DraftRerolls < 0)
                 throw new ArgumentException("run modifiers out of range (specs/18 section 3)", nameof(mods));
+            if (!(mods.ChaseChance >= 0 && mods.ChaseChance <= 1)) throw new ArgumentException("ChaseChance must be in [0, 1]", nameof(mods));
             var stats = sp.Base.Clone();
             if (mods.StatFloorMult != 1)
                 foreach (var id in StatIds.Trained) Set(stats, id, Math.Min(k.StatMax, Math.Floor(stats.Get(id) * mods.StatFloorMult)));
@@ -49,6 +50,7 @@ namespace IdleRng.Sim.Training
                 Training = new RngStream(TrainingStream, StreamNames.StreamSeed(seed, TrainingStream)),
                 Draft = new RngStream(DraftStream, StreamNames.StreamSeed(seed, DraftStream)),
                 Sp = k.SpPerCycle + mods.StartSp, Slots = new TreeSlot[k.TreeSlots + mods.TreeSlotBonus],
+                ChaseAttuned = mods.ChaseChance >= 1 || new RngStream(ChaseStream, StreamNames.StreamSeed(seed, ChaseStream)).NextDouble() < mods.ChaseChance,
             };
             s.ApLeft = CycleAp(c, s);
             s.Slots[0] = new TreeSlot { TreeId = sp.NativeTree1 };
@@ -205,10 +207,10 @@ namespace IdleRng.Sim.Training
         {
             RequireOffer(s);
             var offer = s.Offers[0];
-            if (offer.Source != OfferSource.Milestone) throw new InvalidOperationException("only a milestone draft can be rerolled");
+            if (offer.Source != OfferSource.Milestone) throw new InvalidOperationException("only an Awakening (a milestone tree offer) can be rerolled");
             if (s.RerollsUsed >= s.Mods.DraftRerolls) throw new InvalidOperationException("no draft rerolls left this run");
             var trees = DraftPicks(c, s, null, offer.Threshold);
-            if (trees.Count == 0) throw new InvalidOperationException("no other tree can be drawn for this draft");
+            if (trees.Count == 0) throw new InvalidOperationException("no other tree can be drawn for this Awakening");
             offer.Trees = trees;
             s.RerollsUsed++;
             s.Log.Add(new RunCommand(RunCommandKind.RerollDraft));
@@ -313,6 +315,10 @@ namespace IdleRng.Sim.Training
             foreach (var id in StatIds.Trained) top = Math.Max(top, s.Stats.Get(id));
             return g * (s.Stats.Get(stat) >= top ? 1 + b : 1 - b / 2);
         }
+
+        /// <summary>Whether chase tree <paramref name="tree"/> can ever be offered to this run: an unattuned run never sees its in-run chase tree (specs/15 section 5.4).</summary>
+        public static bool ChaseOpen(ContentDb c, RunState s, TreeDef tree) =>
+            tree.Kind == TreeKind.Chase && tree.Species == s.SpeciesId && (s.ChaseAttuned || tree.Id != c.Species[s.SpeciesId].ChaseTreeRun);
 
         /// <summary>Whether every condition of chase tree <paramref name="tree"/> holds now (specs/15 section 5).</summary>
         public static bool ChaseConditionsHold(ContentDb c, RunState s, TreeDef tree)
@@ -491,7 +497,7 @@ namespace IdleRng.Sim.Training
             var pool = new List<string>();
             foreach (var t in c.TreeList)
                 if (DraftEligible(s, t, stat, threshold)) pool.Add(t.Id);
-            int n = Math.Min(c.Constants.DraftSize + s.Mods.DraftSizeBonus, pool.Count);
+            int n = Math.Min(c.Constants.DraftSize, pool.Count);
             for (int i = 0; i < n; i++)
             {
                 int j = i + Math.Min(pool.Count - i - 1, (int)(s.Draft.NextDouble() * (pool.Count - i)));
@@ -534,6 +540,7 @@ namespace IdleRng.Sim.Training
             foreach (var t in c.TreeList)
             {
                 if (t.Kind != TreeKind.Chase || t.Species != s.SpeciesId || s.ChaseOffered.Contains(t.Id) || Slotted(s, t.Id) >= 0) continue;
+                if (!ChaseOpen(c, s, t)) continue;
                 if (!ChaseConditionsHold(c, s, t)) continue;
                 s.Offers.Add(new TreeOffer { Source = OfferSource.Chase, Trees = { t.Id } });
                 s.ChaseOffered.Add(t.Id);
@@ -656,7 +663,7 @@ namespace IdleRng.Sim.Training
             w.Str(s.SpeciesId);
             w.U64(s.Seed);
             var mo = s.Mods;
-            w.F64(mo.DrillCostMult); w.F64(mo.StatFloorMult); w.I32(mo.DraftSizeBonus); w.I32(mo.StartSp);
+            w.F64(mo.DrillCostMult); w.F64(mo.StatFloorMult); w.F64(mo.ChaseChance); w.I32(mo.StartSp);
             w.F64(mo.RestEnergyBonus); w.F64(mo.FailChanceDelta); w.F64(mo.SuperChanceBonus); w.F64(mo.ShardMult); w.I32(mo.MomentumDrills);
             w.I32(mo.LossSp); w.F64(mo.SpecialistBonus); w.I32(mo.TreeSlotBonus); w.I32(mo.InjuryShields); w.I32(mo.LastCycleAp);
             w.F64(mo.MilestoneMult); w.I32(mo.DraftRerolls);

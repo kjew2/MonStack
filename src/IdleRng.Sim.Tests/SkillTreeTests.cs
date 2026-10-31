@@ -235,6 +235,24 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void UnattunedRun_NeverOffersItsInRunChaseTree_ButStillOffersTheBookOne()
+        {
+            var off = new RunModifiers { ChaseChance = 0 };
+            var s = TrainingRun.Start(Db, "drake", 7, null, off);
+            Assert.That(s.ChaseAttuned, Is.False);
+            s.Stats.Def = 600;
+            s.FightsWon = 2;
+            Max(s, SlotOf(s, "heavy_armor"));
+            Assert.That(TrainingRun.ChaseConditionsHold(Db, s, Db.Trees["unbreakable_will"]), Is.True);
+            Assert.That(TrainingRun.ChaseOpen(Db, s, Db.Trees["unbreakable_will"]), Is.False);
+            Assert.That(s.Offers, Is.Empty, "dormant: the conditions hold but the run is not attuned");
+
+            var book = Db.Species["drake"].ChaseTreeBook;
+            Assert.That(TrainingRun.ChaseOpen(Db, s, Db.Trees[book]), Is.True, "the book-gated chase tree does not need attunement");
+            Assert.That(TrainingRun.ChaseOpen(Db, s, Db.Trees["arcane_overflow"]), Is.False, "another species' tree is never open");
+        }
+
+        [Test]
         public void ChaseTree_OffersWhenConditionsHold_AndLocksAgainWhenAPrerequisiteIsOverwritten()
         {
             var s = DrakeWithUnbreakableWillOffered();
@@ -257,6 +275,27 @@ namespace IdleRng.Sim.Tests
             Assert.That(s.Slots[2], Is.Null);
             Assert.That(s.ChaseOffered, Is.Empty, "it can be offered again once its conditions hold again");
             Assert.That(TrainingRun.MonsterFighter(Db, s).Rules, Is.Empty);
+        }
+
+        [Test]
+        public void ApexForm_IsTheFirstSlottedChaseTreeWithItsCapstoneBought()
+        {
+            var s = DrakeWithUnbreakableWillOffered();
+            Assert.That(ApexForm.TreeOf(Db, s), Is.Null, "no chase tree slotted: the base form");
+            Assert.That(ApexForm.Name(Db, "drake", null), Is.EqualTo(Db.Text(Db.Species["drake"].NameKey)));
+            TrainingRun.TakeTree(Db, s, 0, 2);
+            while (s.Slots[2].Bought < Db.Trees["unbreakable_will"].Nodes.Count - 1) { s.Sp = Math.Max(s.Sp, 10); TrainingRun.SpendPoint(Db, s, 2); }
+            Assert.That(ApexForm.TreeOf(Db, s), Is.Null, "every node but the capstone: still the base form");
+            Max(s, 2);
+            Assert.That(ApexForm.TreeOf(Db, s), Is.EqualTo("unbreakable_will"));
+            Assert.That(ApexForm.Name(Db, "drake", "unbreakable_will"), Is.EqualTo(Db.Text(Db.Trees["unbreakable_will"].ApexNameKey)));
+            Assert.That(ApexForm.Name(Db, "drake", "unbreakable_will"), Is.Not.EqualTo(ApexForm.Name(Db, "drake", null)));
+
+            var e = new VaultEntry { SpeciesId = "drake" };
+            e.Trees.Add(new VaultTree { TreeId = "pyromancy", Bought = Db.Trees["pyromancy"].Nodes.Count });
+            e.Trees.Add(new VaultTree { TreeId = "inferno_sovereign", Bought = Db.Trees["inferno_sovereign"].Nodes.Count });
+            e.Trees.Add(new VaultTree { TreeId = "unbreakable_will", Bought = Db.Trees["unbreakable_will"].Nodes.Count });
+            Assert.That(ApexForm.TreeOf(Db, e), Is.EqualTo("inferno_sovereign"), "two capstones: the first in slot order; native trees never count");
         }
 
         [Test]

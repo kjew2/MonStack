@@ -114,7 +114,7 @@ class TalentRules(unittest.TestCase):
 
     def errors(self, effect, per_rank, max_rank=2):
         errs = cb.Errors()
-        cb.validate_talents({"talents": [{"id": "x", "effect": effect, "per_rank": per_rank, "max_rank": max_rank,
+        cb.validate_talents({"constants": [], "talents": [{"id": "x", "effect": effect, "per_rank": per_rank, "max_rank": max_rank,
                                           "cost_base": 1, "cost_step": 1}]}, errs)
         return errs
 

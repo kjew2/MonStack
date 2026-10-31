@@ -235,9 +235,11 @@ namespace IdleRng.Sim.Content
                 DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"),
                 InjurySkipCycles = I("INJURY_SKIP_CYCLES"), InjuryRecoverEnergy = D("INJURY_RECOVER_ENERGY"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
-                SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"), TreeRefund = D("TREE_REFUND"),
+                SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"), TreeRefund = D("TREE_REFUND"), ChaseBaseChance = D("CHASE_BASE_CHANCE"),
                 MonEchoPower = D("MON_ECHO_POWER"), MonTideRegen = D("MON_TIDE_REGEN"), MonTideShieldCap = D("MON_TIDE_SHIELD_CAP"),
                 MonDrainFrac = D("MON_DRAIN_FRAC"), MonFirePierce = D("MON_FIRE_PIERCE"), MonDoubleTurns = I("MON_DOUBLE_TURNS"),
+                MonRebirthHeal = D("MON_REBIRTH_HEAL"), MonWailStagger = D("MON_WAIL_STAGGER"), MonVeilEvadeCap = D("MON_VEIL_EVADE_CAP"),
+                MonFeastStr = D("MON_FEAST_STR"),
                 ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
                 VaultCap = I("VAULT_CAP"), VendorOffers = I("VENDOR_OFFERS"),
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
@@ -306,8 +308,9 @@ namespace IdleRng.Sim.Content
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.InjurySkipCycles >= 0
                   && k.InjuryRecoverEnergy >= 0 && k.InjuryRecoverEnergy <= k.RunEnergyMax && k.StatMax > 0 && k.FightEvery > 0
-                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.TreeRefund) && In01(k.MonEchoPower)
+                  && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.TreeRefund) && In01(k.ChaseBaseChance) && In01(k.MonEchoPower)
                   && In01(k.MonTideRegen) && In01(k.MonTideShieldCap) && In01(k.MonDrainFrac) && In01(k.MonFirePierce) && k.MonDoubleTurns >= 1
+                  && k.MonRebirthHeal > 0 && k.MonRebirthHeal <= 1 && In01(k.MonWailStagger) && In01(k.MonVeilEvadeCap) && k.MonFeastStr >= 0
                   && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.VendorOffers > 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
                   && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
@@ -476,7 +479,7 @@ namespace IdleRng.Sim.Content
                 return new TreeDef
                 {
                     Id = id, NameKey = r.Str("name_key"), Kind = ParseTreeKind(r.Str("kind")), OfferStat = r.NStr("offer_stat"),
-                    OfferThreshold = r.NInt("offer_threshold") ?? 0,
+                    OfferThreshold = r.NInt("offer_threshold") ?? 0, ApexNameKey = r.NStr("apex_name_key"),
                     Nodes = (ns ?? new List<TreeNodeDef>()).OrderBy(n => n.Index).ToList().AsReadOnly(),
                     Conditions = (cs ?? new List<ChaseConditionDef>()).AsReadOnly(),
                 };
@@ -493,6 +496,8 @@ namespace IdleRng.Sim.Content
                 }
                 else if (tr.OfferStat != null || hasThreshold.Contains(tr.Id))
                     errors.Add(new ContentError("E043", loc, "only generic trees have offer_stat and offer_threshold"));
+                if ((tr.Kind == TreeKind.Chase) != (tr.ApexNameKey != null))
+                    errors.Add(new ContentError("E043", loc, "chase trees, and only chase trees, have an apex_name_key"));
                 if (tr.Nodes.Count < 2) { errors.Add(new ContentError("E044", loc, "a tree needs at least 2 nodes")); continue; }
                 for (int i = 0; i < tr.Nodes.Count; i++)
                     if (tr.Nodes[i].Index != i) { errors.Add(new ContentError("E060", loc, "node index must be 0..N-1 contiguous")); break; }
@@ -588,6 +593,7 @@ namespace IdleRng.Sim.Content
                 {
                     case TalentEffect.DrillCost: ok = p <= 0 && 1 + p * d.MaxRank >= 0; break;
                     case TalentEffect.StatFloor: case TalentEffect.RestEnergy: case TalentEffect.ShardMult: ok = p >= 0; break;
+                    case TalentEffect.ChaseChance: ok = p >= 0 && Constants.ChaseBaseChance + p * d.MaxRank <= 1; break;
                     case TalentEffect.FailChance: ok = p <= 0; break;
                     case TalentEffect.SuperChance: ok = p >= 0 && p * d.MaxRank <= 1; break;
                     case TalentEffect.Specialist: ok = p >= 0 && p * d.MaxRank <= 2; break;
@@ -801,7 +807,7 @@ namespace IdleRng.Sim.Content
             {
                 case "drill_cost": return TalentEffect.DrillCost;
                 case "stat_floor": return TalentEffect.StatFloor;
-                case "draft_size": return TalentEffect.DraftSize;
+                case "chase_chance": return TalentEffect.ChaseChance;
                 case "start_sp": return TalentEffect.StartSp;
                 case "rest_energy": return TalentEffect.RestEnergy;
                 case "fail_chance": return TalentEffect.FailChance;

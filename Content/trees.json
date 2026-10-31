@@ -6,175 +6,280 @@
       "name_key": "tree.slime_fundamentals.name",
       "kind": "native",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "gel_armor",
       "name_key": "tree.gel_armor.name",
       "kind": "native",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "pyromancy",
       "name_key": "tree.pyromancy.name",
       "kind": "native",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "heavy_armor",
       "name_key": "tree.heavy_armor.name",
       "kind": "native",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "aether_striker",
       "name_key": "tree.aether_striker.name",
       "kind": "native",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "mind_warp",
       "name_key": "tree.mind_warp.name",
       "kind": "native",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "vital_core",
       "name_key": "tree.vital_core.name",
       "kind": "generic",
       "offer_stat": "hp",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "brute_force",
       "name_key": "tree.brute_force.name",
       "kind": "generic",
       "offer_stat": "str",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "spellcraft",
       "name_key": "tree.spellcraft.name",
       "kind": "generic",
       "offer_stat": "int",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "sage_mind",
       "name_key": "tree.sage_mind.name",
       "kind": "generic",
       "offer_stat": "wis",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "nimble_feet",
       "name_key": "tree.nimble_feet.name",
       "kind": "generic",
       "offer_stat": "dex",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "bulwark",
       "name_key": "tree.bulwark.name",
       "kind": "generic",
       "offer_stat": "def",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "overclock",
       "name_key": "tree.overclock.name",
       "kind": "generic",
       "offer_stat": "spd",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "fortune",
       "name_key": "tree.fortune.name",
       "kind": "generic",
       "offer_stat": "luk",
-      "offer_threshold": 300
+      "offer_threshold": 300,
+      "apex_name_key": null
     },
     {
       "id": "battle_instinct",
       "name_key": "tree.battle_instinct.name",
       "kind": "generic",
       "offer_stat": null,
-      "offer_threshold": 500
+      "offer_threshold": 500,
+      "apex_name_key": null
     },
     {
       "id": "survivor",
       "name_key": "tree.survivor.name",
       "kind": "generic",
       "offer_stat": null,
-      "offer_threshold": 500
+      "offer_threshold": 500,
+      "apex_name_key": null
     },
     {
       "id": "tome_of_echoes",
       "name_key": "tree.tome_of_echoes.name",
       "kind": "book",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "tidal_codex",
       "name_key": "tree.tidal_codex.name",
       "kind": "book",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "ember_codex",
       "name_key": "tree.ember_codex.name",
       "kind": "book",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": null
     },
     {
       "id": "unbreakable_will",
       "name_key": "tree.unbreakable_will.name",
       "kind": "chase",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": "tree.unbreakable_will.apex"
     },
     {
       "id": "arcane_overflow",
       "name_key": "tree.arcane_overflow.name",
       "kind": "chase",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": "tree.arcane_overflow.apex"
     },
     {
       "id": "living_ocean",
       "name_key": "tree.living_ocean.name",
       "kind": "chase",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": "tree.living_ocean.apex"
     },
     {
       "id": "abyssal_bloom",
       "name_key": "tree.abyssal_bloom.name",
       "kind": "chase",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": "tree.abyssal_bloom.apex"
     },
     {
       "id": "inferno_sovereign",
       "name_key": "tree.inferno_sovereign.name",
       "kind": "chase",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": "tree.inferno_sovereign.apex"
     },
     {
       "id": "starlit_ascension",
       "name_key": "tree.starlit_ascension.name",
       "kind": "chase",
       "offer_stat": null,
-      "offer_threshold": null
+      "offer_threshold": null,
+      "apex_name_key": "tree.starlit_ascension.apex"
+    },
+    {
+      "id": "rootbound",
+      "name_key": "tree.rootbound.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "mandrake_wail",
+      "name_key": "tree.mandrake_wail.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "umbral_step",
+      "name_key": "tree.umbral_step.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "shadow_harvest",
+      "name_key": "tree.shadow_harvest.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "verdant_herbarium",
+      "name_key": "tree.verdant_herbarium.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "umbral_grimoire",
+      "name_key": "tree.umbral_grimoire.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null
+    },
+    {
+      "id": "world_root",
+      "name_key": "tree.world_root.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.world_root.apex"
+    },
+    {
+      "id": "mandragora_scream",
+      "name_key": "tree.mandragora_scream.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.mandragora_scream.apex"
+    },
+    {
+      "id": "umbral_veil",
+      "name_key": "tree.umbral_veil.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.umbral_veil.apex"
+    },
+    {
+      "id": "night_feast",
+      "name_key": "tree.night_feast.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.night_feast.apex"
     }
   ]
 }

@@ -484,6 +484,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       mk('sprite', 's', 5, 101, 'title.tower_breaker', 400, false, 5),
     ];
     base.Account.Vault[1].Trees[0].Bought = 3;                         // a part-bought tree for the detail sheet
+    base.Account.Vault[5].Trees.push({ TreeId: 'starlit_ascension', Bought: 8 });   // a capstone owned: the apex form (specs/15 section 5.3)
     const body = Buffer.from(JSON.stringify(base), 'utf8');
     const saveTxt = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(body) >>> 0).toString(16).padStart(8, '0') + ' len=' + body.length + '\n' + body.toString('utf8');
     await page.evaluate((t) => { localStorage.setItem('idle-rng-account-v1', t); localStorage.removeItem('idle-rng-vault-view'); }, saveTxt);
@@ -493,6 +494,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     const sortBy = async (v) => { await page.selectOption('[data-act=vault-sort]', v); return order(); };
     check(same(await order(), [5, 4, 3, 2, 1, 0]), 'the Vault lists newest first by default');
+    const apexName = await page.$eval('[data-id=vault-entry][data-index="5"] [data-id=vault-species]', (el) => el.textContent);
+    check(apexName === 'Comet Moth', 'a monster that owns a chase capstone shows its apex name in the Vault: ' + apexName);
     check(same(await sortBy('grade'), [5, 1, 3, 0, 4, 2]), 'sort by grade, best first');
     check(same(await sortBy('floor'), [5, 1, 3, 0, 4, 2]), 'sort by gauntlet floor, a cleared tower on top and no title last');
     check(same(await sortBy('species'), [1, 4, 3, 0, 5, 2]), 'sort by species A to Z, best grade first within one');
@@ -510,7 +513,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     check((await text('[data-id=vault-showing]')).startsWith('Showing 2 of 6') && /Filters · 1/.test(await act('vault-filters').innerText()), 'it says how many it shows and counts the active filters');
     await page.selectOption('[data-act=vault-species]', '');
     await page.selectOption('[data-act=vault-element]', 'light');
-    check(same(await order(), [5, 2]), 'filter by element (Sprite is light)');
+    check(same(await order(), [5, 2]), 'filter by element (the Mirage Moth is light)');
     await page.selectOption('[data-act=vault-element]', '');
     await page.selectOption('[data-act=vault-title]', { label: 'No title' });
     check(same(await order(), [2]), 'filter: no Legacy Title');
@@ -608,7 +611,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     if (await act('tower-clear').count()) await act('tower-clear').click();   // the Vault's remembered filters apply here too
     const all = await page.locator('[data-id=tower-entry]').count();
     check(all === (await readAccount()).Account.Vault.length, 'the team picker lists the whole Vault (' + all + ')');
-    await act('vault-search').fill('sprite');
+    await act('vault-search').fill('moth');
     const hits = await page.locator('[data-id=tower-entry]').evaluateAll((els) => els.map((e) => +e.dataset.index));
     check(hits.length > 0 && hits.length < all && /Showing \d+ of \d+/.test(await text('[data-id=tower-showing]')), 'the Vault search narrows the team picker: ' + hits.join(','));
     await act('tower-pick-' + hits[0]).check();
