@@ -58,6 +58,7 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 - **Chase tree.** Section 5.
 - Offers queue oldest first.
 - **Overwriting** (kj): the overwritten tree's points are lost. **(agent)** Its effects go with it: its flat stat boosts are subtracted again (never below 0), its growth bonus stops applying, its skills leave the kit. Gains already made from its growth bonus stay. Milestones already recorded stay recorded.
+- **Lateral swap** (kj, 2026-10-31, `specs/12` section 5.2.1; not built yet): if the new tree is one of the old tree's listed neighbours, half the SP spent in the old tree comes back (**(agent)** rounded down). The rest of the overwrite works as above.
 
 ## 5. Chase trees
 
@@ -156,3 +157,4 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
   - **(agent)** Measured under the `focus` and `hoarder` policies. Today it is 0-69% for in-run and 0% for book (`specs/22` section 2), so content and the SP economy need retuning. The bots must first play toward their chase conditions (#111).
 - **Book chase capstones must be uber strong** (kj, 2026-10-31, #112): books are uber rare (`specs/21` section 5), so a run that gets its book should get a jackpot. The 50% target is for runs that have the book.
 - **Drawback capstones** and **fusion of specific tree pairs** are allowed (kj, 2026-10-31; `specs/12` section 5.2.1).
+- **Digestion, rank-fight loot and lateral swap** are agreed, tribulation fights are not (kj, 2026-10-31; `specs/12` section 5.2.1, `specs/22` section 8.6). Open **(agent)**: the content shape for neighbours (a list per tree) and for digestion tallies on nodes, and what rank-fight loot drops.
