@@ -114,6 +114,10 @@ Behaviour a table row cannot express is coded once and referenced by id from con
 | `abyssal_drain` | Each hit the unit lands (skills, basic attacks, triggered damage) heals it for `MON_DRAIN_FRAC` of the HP damage the hit dealt (after shields), right after the hit and before the target's `OnHitTaken` triggers. Counters, channel strikes and other true damage do not drain. Logged as `rule:abyssal_drain`. The *Abyssal Bloom* chase capstone. |
 | `fire_pierce` | The unit's `fire` damage ignores `MON_FIRE_PIERCE` of the target's DEF or WIS and is never resisted: the element multiplier is at least 1 (a strong matchup still counts). The *Inferno Sovereign* chase capstone. |
 | `double_turn_start` | Each of the unit's first `MON_DOUBLE_TURNS` actions of the fight is followed at once by an extra full action (cooldowns tick, `OnAction` triggers fire, the AI picks again) without spending gauge. Logged as `rule:double_turn_start` before the extra action. The *Starlit Ascension* chase capstone. |
+| `root_rebirth` | Once per fight, damage from another unit (a hit, a counter or a channel strike; not its own entropy recoil) that would bring the unit to 0 HP leaves it at `MON_REBIRTH_HEAL` of its max HP instead; no kill is counted. Logged as `rule:root_rebirth` after the action that triggered it, with the HP it came back with. Its remaining rebirth is hashed only for units that carry the rule. The *World Root* chase capstone (Mandrake). |
+| `wail_stagger` | Each hit the unit lands that deals HP or shield damage takes `MON_WAIL_STAGGER` of a full ATB gauge from a living target (never below 0), pushing its next turn back. Logged as `rule:wail_stagger` with the gauge taken. The *Mandragora Scream* chase capstone (Mandrake). |
+| `umbral_veil` | The unit's evade roll also applies to magical hits, and its evade chance is capped at `MON_VEIL_EVADE_CAP` instead of `MON_EVADE_CAP`. The *Umbral Veil* chase capstone (Shade Hound). |
+| `night_feast` | Each hit the unit lands that deals damage adds `MON_FEAST_STR` of its base STR for the rest of the fight, with no cap (it counts like a permanent effect, outside `EFFECT_STACK_CAP`). Logged as `rule:night_feast` with the bonus so far; hashed only for units that carry the rule. The *Night Feast* chase capstone (Shade Hound). |
 | `entropy_convert` | Tower fights only (`specs/21` section 3.1): instead of venting its entropy gauge, the unit gains a shield. Inert in other fights. |
 
 The entropy gauge, boss phases and the environmental clock (`specs/12` section 8.3, `specs/13` T10) are built: `FightRules.Tower` (`TowerRules`), `Fighter.Phases` and the tower fields of `FightState` and `FightUnit`, specified in `specs/21` section 3. They are off unless the caller sets `Tower`, so existing fights and hashes do not move. Two more bonus-only effect stats come with them, `dmg_dealt` and `entropy_gain` (`StatIds`), valid for skills and tree nodes like `crit_rate`.
@@ -148,6 +152,10 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_DRAIN_FRAC` | 0.3 | `[0, 1]` | `abyssal_drain` share of damage dealt healed (content `3.7`) |
 | `MON_FIRE_PIERCE` | 0.5 | `[0, 1]` | `fire_pierce` share of DEF or WIS ignored (content `3.7`) |
 | `MON_DOUBLE_TURNS` | 1 | `>= 1` | `double_turn_start` doubled opening actions (content `3.7`) |
+| `MON_REBIRTH_HEAL` | 0.4 | `(0, 1]` | `root_rebirth` HP after the killing blow, fraction of max HP (content `4.2`) |
+| `MON_WAIL_STAGGER` | 0.25 | `[0, 1]` | `wail_stagger` gauge taken per hit, fraction of a full gauge (content `4.2`) |
+| `MON_VEIL_EVADE_CAP` | 0.65 | `[0, 1]` | `umbral_veil` evade cap (content `4.2`) |
+| `MON_FEAST_STR` | 0.04 | `>= 0` | `night_feast` STR per landed hit, fraction of base (content `4.2`) |
 
 Range violations are `E043` in both `tools/content_build.py` and `ContentDb`. `BattleSim.Start` also rejects a hand-built `FightRules` whose rule modifier values are outside these ranges (`DoubleTurns` may be 0 there: the rule does nothing).
 

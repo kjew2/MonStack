@@ -24,3 +24,13 @@ living_ocean,tree.living_ocean.name,chase,,,tree.living_ocean.apex,placeholder: 
 abyssal_bloom,tree.abyssal_bloom.name,chase,,,tree.abyssal_bloom.apex,placeholder: slime book-gated chase tree
 inferno_sovereign,tree.inferno_sovereign.name,chase,,,tree.inferno_sovereign.apex,placeholder: drake book-gated chase tree
 starlit_ascension,tree.starlit_ascension.name,chase,,,tree.starlit_ascension.apex,placeholder: sprite in-run chase tree
+rootbound,tree.rootbound.name,native,,,,
+mandrake_wail,tree.mandrake_wail.name,native,,,,
+umbral_step,tree.umbral_step.name,native,,,,
+shadow_harvest,tree.shadow_harvest.name,native,,,,
+verdant_herbarium,tree.verdant_herbarium.name,book,,,,mandrake's book tree (Mandragora Scream)
+umbral_grimoire,tree.umbral_grimoire.name,book,,,,shade hound's book tree (Night Feast)
+world_root,tree.world_root.name,chase,,,tree.world_root.apex,mandrake in-run chase tree
+mandragora_scream,tree.mandragora_scream.name,chase,,,tree.mandragora_scream.apex,mandrake book-gated chase tree
+umbral_veil,tree.umbral_veil.name,chase,,,tree.umbral_veil.apex,shade hound in-run chase tree
+night_feast,tree.night_feast.name,chase,,,tree.night_feast.apex,shade hound book-gated chase tree

@@ -116,7 +116,7 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. If the replay fails or the stored hash differs (for example after a rules change), the run is dropped, its books return to the inventory and the rest of the account loads with a notice (`specs/06` section 5).
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
-- `Ladder` (content 4.2, `specs/14` section 5) is the run's rolled rank ladder, in the recipe and on each Vault entry, so a replay fights the same opponents even if the pools change later. A save from before the pools has none: it loads as an empty ladder, a legacy run that fights the flat `fight_ranks` opponents and keeps its version 5 run hash, so the run in progress goes on and old Vault entries replay as sealed. The field is additive with that default, so the schema version does not change **(agent)**.
+- `Ladder` (content 4.3, `specs/14` section 5) is the run's rolled rank ladder, in the recipe and on each Vault entry, so a replay fights the same opponents even if the pools change later. A save from before the pools has none: it loads as an empty ladder, a legacy run that fights the flat `fight_ranks` opponents and keeps its version 5 run hash, so the run in progress goes on and old Vault entries replay as sealed. The field is additive with that default, so the schema version does not change **(agent)**.
 - Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves; v5 (`specs/21` section 7) adds the Dungeon tickets to it, none for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
 - On every load the account's achievements are checked again, so an achievement added to content later is granted when the records already meet it (section 8).
 
@@ -158,8 +158,8 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 |---|---|---|
 | Contender | Reach rank C in a run | drake (Bastion Drake) |
 | Prodigy | Finish a run with any stat at 500 or more | sprite (Mirage Moth) |
-| Veteran | Finish 5 runs | nothing yet |
-| Climber | Clear 10 gauntlet floors | nothing yet |
+| Veteran | Finish 5 runs | mandrake (Mandrake; kj, 2026-10-31, `specs/24` section 6) |
+| Climber | Clear 10 gauntlet floors | shade_hound (Shade Hound; kj, 2026-10-31) |
 
 Rules (both `tools/content_build.py` and `ContentDb`): `ref` and `amount` as in the table (`E023` for a bad reference, `E043` otherwise); `unlocks_species` is a species id (`E023`) and not the starter (`E043`); every species but the starter is unlocked by at least one achievement (`E044`), so none is unobtainable.
 

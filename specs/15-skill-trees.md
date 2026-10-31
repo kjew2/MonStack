@@ -120,6 +120,10 @@ A monster that owns a chase tree's capstone takes that tree's **apex form**: the
 | *Inferno Sovereign* | Surtr Drake |
 | *Starlit Ascension* | Comet Moth |
 | *Arcane Overflow* | Gemini Moth |
+| *World Root* | Worldroot Colossus |
+| *Mandragora Scream* | Mandragora Queen |
+| *Umbral Veil* | Grave Shuck |
+| *Night Feast* | Eclipse Hound |
 
 ## 6. Run tally
 
@@ -129,9 +133,9 @@ The run adds up the monster's battle tallies (`specs/16` section 6.3) across its
 
 | Kind | Trees |
 |---|---|
-| Native | slime: *Slime Fundamentals*, *Gel Armor*; drake: *Pyromancy*, *Heavy Armor*; sprite: *Aether Striker*, *Mind Warp* |
+| Native | slime: *Slime Fundamentals*, *Gel Armor*; drake: *Pyromancy*, *Heavy Armor*; sprite: *Aether Striker*, *Mind Warp*; mandrake: *Rootbound*, *Mandrake Wail*; shade_hound: *Umbral Step*, *Shadow Harvest* (content `4.2`) |
 | Generic | one per stat at 300 (*Vital Core*, *Brute Force*, *Spellcraft*, *Sage Mind*, *Nimble Feet*, *Bulwark*, *Overclock*, *Fortune*), two for any stat at 500 (*Battle Instinct*, *Survivor*) |
-| Book | *Codex of Tides* (book `book_tides`, slime), *Ember Codex* (`book_embers`, drake), *Tome of Echoes* (`book_echoes`, sprite) |
+| Book | *Codex of Tides* (book `book_tides`, slime), *Ember Codex* (`book_embers`, drake), *Tome of Echoes* (`book_echoes`, sprite), *Verdant Herbarium* (`book_roots`, mandrake), *Umbral Grimoire* (`book_shadows`, shade_hound) |
 
 Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
 
@@ -140,6 +144,8 @@ Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
 | slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `tidal_overflow` | *Abyssal Bloom*: Codex of Tides node 5, Slime Fundamentals node 4, 2000 water damage; `abyssal_drain` |
 | drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Codex node 5, Pyromancy node 4, 2000 fire damage; `fire_pierce` |
 | sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `double_turn_start` | *Arcane Overflow*: Tome of Echoes node 5, Spellcraft node 4, 3 crits; `echo_cast` |
+| mandrake | *World Root*: Rootbound maxed, HP >= 500, 2 wins; `root_rebirth` | *Mandragora Scream*: Verdant Herbarium node 5, Mandrake Wail node 4, 2000 nature damage; `wail_stagger` |
+| shade_hound | *Umbral Veil*: Umbral Step maxed, DEX >= 500, 2 wins; `umbral_veil` | *Night Feast*: Umbral Grimoire node 5, Shadow Harvest node 4, 2000 dark damage; `night_feast` |
 
 The two original chase trees were shared by every species until issue #78 assigned them: *Unbreakable Will* to drake, *Arcane Overflow* to sprite. Every tree and threshold is a placeholder.
 

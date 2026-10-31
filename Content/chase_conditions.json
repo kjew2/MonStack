@@ -126,6 +126,90 @@
       "type": "tally_at_least",
       "ref": "wins",
       "amount": 2.0
+    },
+    {
+      "id": "world_root_c0",
+      "tree_id": "world_root",
+      "type": "tree_maxed",
+      "ref": "rootbound",
+      "amount": null
+    },
+    {
+      "id": "world_root_c1",
+      "tree_id": "world_root",
+      "type": "stat_at_least",
+      "ref": "hp",
+      "amount": 500.0
+    },
+    {
+      "id": "world_root_c2",
+      "tree_id": "world_root",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "mandragora_scream_c0",
+      "tree_id": "mandragora_scream",
+      "type": "node_owned",
+      "ref": "verdant_herbarium_n5",
+      "amount": null
+    },
+    {
+      "id": "mandragora_scream_c1",
+      "tree_id": "mandragora_scream",
+      "type": "node_owned",
+      "ref": "mandrake_wail_n4",
+      "amount": null
+    },
+    {
+      "id": "mandragora_scream_c2",
+      "tree_id": "mandragora_scream",
+      "type": "tally_at_least",
+      "ref": "damage_nature",
+      "amount": 2000.0
+    },
+    {
+      "id": "umbral_veil_c0",
+      "tree_id": "umbral_veil",
+      "type": "tree_maxed",
+      "ref": "umbral_step",
+      "amount": null
+    },
+    {
+      "id": "umbral_veil_c1",
+      "tree_id": "umbral_veil",
+      "type": "stat_at_least",
+      "ref": "dex",
+      "amount": 500.0
+    },
+    {
+      "id": "umbral_veil_c2",
+      "tree_id": "umbral_veil",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "night_feast_c0",
+      "tree_id": "night_feast",
+      "type": "node_owned",
+      "ref": "umbral_grimoire_n5",
+      "amount": null
+    },
+    {
+      "id": "night_feast_c1",
+      "tree_id": "night_feast",
+      "type": "node_owned",
+      "ref": "shadow_harvest_n4",
+      "amount": null
+    },
+    {
+      "id": "night_feast_c2",
+      "tree_id": "night_feast",
+      "type": "tally_at_least",
+      "ref": "damage_dark",
+      "amount": 2000.0
     }
   ]
 }

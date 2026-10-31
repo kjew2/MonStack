@@ -23,7 +23,7 @@
       "kind": "runs_finished",
       "ref": null,
       "amount": 5.0,
-      "unlocks_species": null
+      "unlocks_species": "mandrake"
     },
     {
       "id": "climber",
@@ -31,7 +31,7 @@
       "kind": "gauntlet_floors",
       "ref": null,
       "amount": 10.0,
-      "unlocks_species": null
+      "unlocks_species": "shade_hound"
     }
   ]
 }

@@ -101,6 +101,12 @@ const SPECIES_ART = {
   sprite: { pal: { A: "#6b5b3e", W: "#fff6d8", Y: "#f2c94c", K: "#3a2a5a", O: "#ff9f43", B: "#c9b27a", E: "#1b1428" }, rows: [   // Mirage Moth
     "...A....A...", "....A..A....", "YY...BB...YY", "YWY.BEEB.YWY", "YKOYBBBBYOKY", "YOKYYBBYYKOY",
     ".YYYWBBWYYY.", "..YWYBBYWY..", ".YOKYBBYKOY.", ".YKOY.BYOKY.", "..YY..B.YY..", "............"] },
+  mandrake: { pal: { L: "#3f8f3a", G: "#7ccf5a", R: "#a8743f", S: "#d9a86c", E: "#1b1428", M: "#5a1e1e" }, rows: [   // Mandrake
+    "..G..GG..G..", "..GL.LL.LG..", "...LLGGLL...", ".....LL.....", "....RSSR....", "...RSSSSR...",
+    "...SESSES...", "...SSMMSS...", "...RSMMSR...", "..R.RSSR.R..", ".R..R..R..R.", "R...R..R...R"] },
+  shade_hound: { pal: { K: "#1c1426", P: "#4b3570", V: "#a98ae0", E: "#c6ff4d", T: "#f0ecf8" }, rows: [   // Shade Hound
+    "............", "........V.V.", "........PVP.", ".......VPEPV", "V......PPPPT", ".V....VPPKK.",
+    "..VVVVPPPV..", "..VPPPPPPV..", "..VPKPPKPV..", "..VP.VV.PV..", "..V..V..V...", ".KK.KK.KK..."] },
 };
 // Apex forms (specs/15 section 5.3): the species' art with a palette swap and an overlay (non-"." pixels replace the base).
 const BLANK = "............";
@@ -117,6 +123,14 @@ const APEX_ART = {
     over: [BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, ".S.S....S.S."] },
   arcane_overflow: { pal: { Y: "#b388ff", W: "#f3e8ff", O: "#ff7ad9", K: "#2a1050", B: "#d9c2ff", S: "#e8d6ff" },   // Gemini Moth
     over: [BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, "..S..SS..S.."] },
+  world_root: { pal: { L: "#2f6b2a", G: "#a6e070", R: "#6b4423", S: "#8a5a32", M: "#2a1208", F: "#f2c94c" },   // Worldroot Colossus
+    over: ["F.G..GG..G.F", ".FGL.LL.LGF."] },
+  mandragora_scream: { pal: { L: "#7a2f6b", G: "#e070c0", R: "#7a3f5a", S: "#e8b0c8", M: "#ff3f6b", E: "#ffffff", F: "#ff9ad5" },   // Mandragora Queen
+    over: ["F...F..F...F", "..F......F.."] },
+  umbral_veil: { pal: { K: "#0b0812", P: "#1c1426", V: "#5a4a7a", E: "#9fe8ff", T: "#9fe8ff", G: "#3a3050" },   // Grave Shuck
+    over: ["G.G.........", ".G.G........"] },
+  night_feast: { pal: { K: "#2a0a10", P: "#3a1428", V: "#ff5a6b", E: "#ffcf3f", T: "#ffcf3f", O: "#ffcf3f" },   // Eclipse Hound
+    over: ["........OOO.", ".......O...O"] },
 };
 // The species' hand-drawn art, in its apex form when apex (a chase tree id) has one; null for a species without art.
 function speciesSprite(id, apex) {

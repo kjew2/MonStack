@@ -15,6 +15,16 @@
       "book_id": "book_echoes",
       "min_floor": 10,
       "weight": 1.0
+    },
+    {
+      "book_id": "book_roots",
+      "min_floor": 10,
+      "weight": 1.0
+    },
+    {
+      "book_id": "book_shadows",
+      "min_floor": 10,
+      "weight": 1.0
     }
   ]
 }

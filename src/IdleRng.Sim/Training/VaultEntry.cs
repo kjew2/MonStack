@@ -30,7 +30,7 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// The run's rank ladder (RunState.Ladder, specs/14 section 5); Replay needs it. Empty for an entry sealed before the rank
-        /// pools (content 4.2): that run fought the flat fight_ranks opponents and replays against them.
+        /// pools (content 4.3): that run fought the flat fight_ranks opponents and replays against them.
         /// </summary>
         public List<string> Ladder { get; set; } = new List<string>();
 

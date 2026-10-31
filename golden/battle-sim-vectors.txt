@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v1 content=4.2/f933d39f
+# battle-sim vectors, hash v1 content=4.3/44a42cbb
 
 1v1 brawler vs mage seed=1 outcome=SideBWon ticks=32
   A0 brawler  hp      0.00/  3200.00 act   7 dealt    2290.91 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
@@ -48,3 +48,10 @@
   B0 b_starlit hp    309.01/  2400.00 act  13 dealt    3662.56 taken    2090.99 heal      0.00 crit  3 evade  0 kill 0 counter  0
   B1 b_brawler hp    809.67/  3200.00 act   9 dealt    3002.61 taken    2390.33 heal      0.00 crit  2 evade  0 kill 2 counter  0
   hash 2f9ef136b50c1a92f4205c81de815fb0809b501ccd0c84c3fe00af0d6a0b0437
+
+2v2 rebirth and stagger vs veil and feast seed=8 outcome=SideBWon ticks=69
+  A0 a_root   hp      0.00/  5200.00 act   9 dealt    1607.73 taken    7280.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  A1 a_mage   hp      0.00/  2400.00 act   7 dealt    2853.41 taken    2400.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B0 b_shade  hp   2421.36/  2600.00 act  25 dealt    9006.36 taken    3328.64 heal      0.00 crit  6 evade  2 kill 2 counter  0
+  B1 b_healer hp   3000.00/  3000.00 act  14 dealt     673.64 taken    1132.50 heal   4282.50 crit  1 evade  0 kill 0 counter  0
+  hash 4dfc6dbedd4d72cb9eb2ee8d855f82aa7a83d268f4f8dfac57922f8623697c0b

@@ -273,6 +273,18 @@ namespace IdleRng.Sim.Combat
         /// <summary>double_turn_start: how many of the unit's first actions are each followed by an extra action.</summary>
         public int DoubleTurns { get; set; }
 
+        /// <summary>root_rebirth: the fraction of max HP the unit comes back with after its one killing blow.</summary>
+        public double RebirthHeal { get; set; }
+
+        /// <summary>wail_stagger: the fraction of a full ATB gauge each hit takes from the target.</summary>
+        public double WailStagger { get; set; }
+
+        /// <summary>umbral_veil: the unit's evade cap (its evade roll also covers magical hits).</summary>
+        public double VeilEvadeCap { get; set; }
+
+        /// <summary>night_feast: the STR (fraction of base) each landed hit adds for the rest of the fight.</summary>
+        public double FeastStr { get; set; }
+
         /// <summary>The Dungeon's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
         public TowerRules Tower { get; set; }
 
@@ -296,7 +308,8 @@ namespace IdleRng.Sim.Combat
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
                 CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
                 TideRegen = k.MonTideRegen, TideShieldCap = k.MonTideShieldCap, DrainFrac = k.MonDrainFrac, FirePierce = k.MonFirePierce,
-                DoubleTurns = k.MonDoubleTurns,
+                DoubleTurns = k.MonDoubleTurns, RebirthHeal = k.MonRebirthHeal, WailStagger = k.MonWailStagger,
+                VeilEvadeCap = k.MonVeilEvadeCap, FeastStr = k.MonFeastStr,
             };
             foreach (var e in c.ElementList) r.StrongVs[e.Id] = e.StrongVs;
             return r;
@@ -351,6 +364,30 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string DoubleTurnStart = "double_turn_start";
 
+        /// <summary>
+        /// Once per fight, a blow that would bring the unit to 0 HP leaves it alive at MON_REBIRTH_HEAL of its max HP instead (no
+        /// kill is counted). The World Root chase capstone (Mandrake).
+        /// </summary>
+        public const string RootRebirth = "root_rebirth";
+
+        /// <summary>
+        /// Every hit the unit lands that deals damage takes MON_WAIL_STAGGER of a full ATB gauge from the target (never below 0),
+        /// pushing its next turn back. The Mandragora Scream chase capstone (Mandrake).
+        /// </summary>
+        public const string WailStagger = "wail_stagger";
+
+        /// <summary>
+        /// The unit's evade roll also applies to magical hits, and its evade chance is capped at MON_VEIL_EVADE_CAP instead of
+        /// MON_EVADE_CAP. The Umbral Veil chase capstone (Shade Hound).
+        /// </summary>
+        public const string UmbralVeil = "umbral_veil";
+
+        /// <summary>
+        /// Every hit the unit lands that deals damage adds MON_FEAST_STR of its base STR for the rest of the fight, without a cap.
+        /// The Night Feast chase capstone (Shade Hound).
+        /// </summary>
+        public const string NightFeast = "night_feast";
+
         /// <summary>The element id fire_pierce works on.</summary>
         public const string FireElement = "fire";
 
@@ -360,7 +397,8 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string EntropyConvert = "entropy_convert";
 
-        public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert };
+        public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
+            RootRebirth, WailStagger, UmbralVeil, NightFeast };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

@@ -347,3 +347,61 @@ vent.enrage.desc,Every enemy deals {ENTROPY_ENRAGE_FRAC:pct} more damage for {EN
 vent.convert.name,Shield
 tower.corruption.name,Corruption
 tower.corruption.desc,"Dungeon: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
+species.mandrake.name,Mandrake
+species.shade_hound.name,Shade Hound
+tree.rootbound.name,Rootbound
+tree.mandrake_wail.name,Mandrake Wail
+tree.umbral_step.name,Umbral Step
+tree.shadow_harvest.name,Shadow Harvest
+tree.verdant_herbarium.name,Verdant Herbarium
+tree.umbral_grimoire.name,Umbral Grimoire
+tree.world_root.name,World Root
+tree.mandragora_scream.name,Mandragora Scream
+tree.umbral_veil.name,Umbral Veil
+tree.night_feast.name,Night Feast
+tree.world_root.apex,Worldroot Colossus
+tree.mandragora_scream.apex,Mandragora Queen
+tree.umbral_veil.apex,Grave Shuck
+tree.night_feast.apex,Eclipse Hound
+book.book_roots.name,Skill Book: Verdant Herbarium
+book.book_shadows.name,Skill Book: Umbral Grimoire
+mskill.sap_mend.name,Sap Mend
+mskill.sap_mend.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.bramble.name,Bramble
+mskill.bramble.desc,Chase trait. When hit: {element} damage for {power:pct} {scales}.
+mskill.wail.name,Wail
+mskill.wail.desc,An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
+mskill.toxic_bloom.name,Toxic Bloom
+mskill.toxic_bloom.desc,Chase trait. {element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.shadow_lunge.name,Shadow Lunge
+mskill.shadow_lunge.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.fade.name,Fade
+mskill.fade.desc,Chase trait. On evade: +{power:pct} {stat} for {duration} turns.
+mskill.rend.name,Rend
+mskill.rend.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.harvest.name,Harvest
+mskill.harvest.desc,Chase trait. On crit: heal self for {power:pct} {scales}.
+mskill.spore_burst.name,Spore Burst
+mskill.spore_burst.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.photosynthesis.name,Photosynthesis
+mskill.photosynthesis.desc,Chase trait. Every action: heal self for {power:pct} {scales}.
+mskill.night_fang.name,Night Fang
+mskill.night_fang.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.bloodscent.name,Bloodscent
+mskill.bloodscent.desc,Chase trait. On crit: +{power:pct} {stat} for {duration} turns.
+mskill.deep_roots.name,Deep Roots
+mskill.deep_roots.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.scream.name,Scream
+mskill.scream.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.shade_cloak.name,Shade Cloak
+mskill.shade_cloak.desc,+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
+mskill.devour.name,Devour
+mskill.devour.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+rule.root_rebirth.name,Root Rebirth
+rule.root_rebirth.desc,"Once per fight, a blow that would fell it leaves it standing at {MON_REBIRTH_HEAL:pct} of max HP instead."
+rule.wail_stagger.name,Uprooting Scream
+rule.wail_stagger.desc,Every hit it lands pushes the target's next turn back by {MON_WAIL_STAGGER:pct} of a turn.
+rule.umbral_veil.name,Umbral Veil
+rule.umbral_veil.desc,"It can evade spells as well as physical hits, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+rule.night_feast.name,Night Feast
+rule.night_feast.desc,"Every hit it lands adds {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."

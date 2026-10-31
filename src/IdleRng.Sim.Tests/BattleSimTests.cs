@@ -525,6 +525,96 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void RootRebirth_SurvivesOneKillingBlowPerFight()
+        {
+            var r = Rules;
+            Assert.That(r.RebirthHeal, Is.GreaterThan(0));
+            var s = BattleSim.Start(r, Side(Attacker()), Side(With(Harmless("b", 10), RuleModifiers.RootRebirth)));
+            var a = s.Units[0];
+            var b = s.Units[1];
+            b.Hp = 1;
+            var log = new List<FightAction>();
+            while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Event == FightAction.RebirthEvent)) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            var ev = log.Single(x => x.Event == FightAction.RebirthEvent);
+            Assert.That(ev.Actor, Is.EqualTo("b"));
+            Assert.That(ev.Amount, Is.EqualTo(r.RebirthHeal * b.MaxHp).Within(1e-9));
+            Assert.That(b.Alive && s.Outcome == FightOutcome.Ongoing, "it survived the blow");
+            Assert.That(b.Hp, Is.EqualTo(r.RebirthHeal * b.MaxHp).Within(1e-9));
+            Assert.That(a.Tally.Kills, Is.EqualTo(0), "no kill is counted");
+            Assert.That(log.IndexOf(ev), Is.GreaterThan(log.FindIndex(x => x.Actor == "a" && x.Target == "b")), "the event follows the hit");
+
+            b.Hp = 1;   // the second killing blow lands
+            while (s.Outcome == FightOutcome.Ongoing) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            Assert.That(s.Outcome, Is.EqualTo(FightOutcome.SideAWon));
+            Assert.That(a.Tally.Kills, Is.EqualTo(1));
+            Assert.That(log.Count(x => x.Event == FightAction.RebirthEvent), Is.EqualTo(1), "once per fight");
+        }
+
+        [Test]
+        public void WailStagger_PushesTheTargetsTurnBack()
+        {
+            var r = Rules;
+            Assert.That(r.WailStagger, Is.GreaterThan(0));
+            var s = BattleSim.Start(r, Side(With(Attacker(), RuleModifiers.WailStagger)), Side(Mon("b", 999, null, x => x.Spd = 10)));
+            var b = s.Units[1];
+            b.Gauge = r.GaugeSize * 0.6;
+            double atHit = -1;
+            var log = new List<FightAction>();
+            while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Event == FightAction.StaggerEvent))
+                BattleSim.Step(r, s, new Fixed(0.99), x => { if (x.Actor == "a" && x.Event == null) atHit = b.Gauge; log.Add(x); });
+            var ev = log.Single(x => x.Event == FightAction.StaggerEvent);
+            Assert.That((ev.Actor, ev.Target), Is.EqualTo(("a", "b")));
+            Assert.That(ev.Amount, Is.EqualTo(r.WailStagger * r.GaugeSize).Within(1e-9));
+            Assert.That(b.Gauge, Is.EqualTo(atHit - ev.Amount).Within(1e-9));
+
+            // never below an empty gauge
+            var low = BattleSim.Start(r, Side(With(Attacker(), RuleModifiers.WailStagger)), Side(Mon("b", 999, null, x => x.Spd = 10)));
+            var lb = low.Units[1];
+            var ll = new List<FightAction>();
+            while (low.Outcome == FightOutcome.Ongoing && !ll.Any(x => x.Event == FightAction.StaggerEvent))
+                BattleSim.Step(r, low, new Fixed(0.99), x => { if (x.Actor == "a" && x.Event == null) { lb.Gauge = r.GaugeSize * r.WailStagger / 2; atHit = lb.Gauge; } ll.Add(x); });
+            Assert.That(ll.Single(x => x.Event == FightAction.StaggerEvent).Amount, Is.EqualTo(atHit).Within(1e-9), "it takes only what is there");
+            Assert.That(lb.Gauge, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void UmbralVeil_EvadesSpells_WithAHigherCap()
+        {
+            var r = Rules;
+            Assert.That(r.VeilEvadeCap, Is.GreaterThan(r.EvadeCap));
+            var bolt = new CombatSkill { Id = "bolt", Kind = SkillKind.Damage, Target = SkillTarget.Enemy, Scales = StatIds.Int, Power = 2, Cooldown = 1 };
+            foreach (bool veil in new[] { true, false })
+            {
+                var target = Mon("b", 999, null, x => x.Spd = 10);
+                if (veil) target.Rules.Add(RuleModifiers.UmbralVeil);
+                var s = BattleSim.Start(r, Side(Mon("a", 300, null, x => x.Spd = 900, bolt)), Side(target));
+                var log = new List<FightAction>();
+                while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Skill?.Id == "bolt")) BattleSim.Step(r, s, new Fixed(0), log.Add);
+                Assert.That(log.First(x => x.Skill?.Id == "bolt").Evaded, Is.EqualTo(veil), veil ? "a spell is evaded" : "spells are never evaded without it");
+            }
+            Assert.That(BattleSim.EvadeChance(r, 1e9, 0, r.VeilEvadeCap), Is.EqualTo(r.VeilEvadeCap));
+            Assert.That(BattleSim.EvadeChance(r, 1e9, 0), Is.EqualTo(r.EvadeCap));
+        }
+
+        [Test]
+        public void NightFeast_EachHitAddsStrForTheFight()
+        {
+            var r = Rules;
+            Assert.That(r.FeastStr, Is.GreaterThan(0));
+            var s = BattleSim.Start(r, Side(With(Attacker(), RuleModifiers.NightFeast)), Side(Mon("b", 9999, null, x => x.Spd = 10)));
+            var a = s.Units[0];
+            var log = new List<FightAction>();
+            string h0 = BattleSim.StateHash(s);
+            while (s.Outcome == FightOutcome.Ongoing && log.Count(x => x.Event == FightAction.FeastEvent) < 3) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            var feasts = log.Where(x => x.Event == FightAction.FeastEvent).ToList();
+            for (int i = 0; i < 3; i++) Assert.That(feasts[i].Amount, Is.EqualTo((i + 1) * r.FeastStr).Within(1e-9), "stacks without a cap");
+            Assert.That(BattleSim.Eff(r, a, StatIds.Str), Is.EqualTo(300 * (1 + 3 * r.FeastStr)).Within(1e-9));
+            var hits = log.Where(x => x.Actor == "a" && x.Event == null).ToList();
+            Assert.That(hits[1].Amount, Is.GreaterThan(hits[0].Amount), "the next hit is stronger");
+            Assert.That(BattleSim.StateHash(s), Is.Not.EqualTo(h0));
+        }
+
+        [Test]
         public void FirePierce_IgnoresPartOfDefense_AndElementResistance()
         {
             var r = Rules;

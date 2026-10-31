@@ -46,6 +46,10 @@ MON_TIDE_SHIELD_CAP,double,0.3,tidal_overflow rule: overhealing becomes shield u
 MON_DRAIN_FRAC,double,0.3,abyssal_drain rule: each hit heals the attacker for this fraction of the HP damage dealt. Placeholder
 MON_FIRE_PIERCE,double,0.5,fire_pierce rule: fire damage ignores this fraction of the target's DEF or WIS. Placeholder
 MON_DOUBLE_TURNS,int,1,double_turn_start rule: this many of the unit's first actions are each followed by an extra action. Placeholder
+MON_REBIRTH_HEAL,double,0.4,root_rebirth rule: once per fight a killing blow leaves the unit at this fraction of max HP instead. Placeholder
+MON_WAIL_STAGGER,double,0.25,wail_stagger rule: each damaging hit takes this fraction of a full ATB gauge from the target. Placeholder
+MON_VEIL_EVADE_CAP,double,0.65,umbral_veil rule: the unit's evade cap (its evade also covers magical hits). Placeholder
+MON_FEAST_STR,double,0.04,night_feast rule: each damaging hit adds this fraction of base STR for the rest of the fight. Placeholder
 SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/18; cycles lost to injury count). Placeholder
 SHARDS_PER_RANK,int,10,training shards per rank index reached (E = 0). Placeholder
 VENDOR_OFFERS,int,5,offers the post-run vendor rolls after each sealed run (specs/18 section 4). Placeholder
