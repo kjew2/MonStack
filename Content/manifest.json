@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.13",
+  "content_version": "3.14",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -47,6 +47,10 @@
       "file": "monster_skills.json",
       "sha256": "0b290156ef51057cf19b8d1dd9d7f85e70e5793cb9c62cd7d68954c2477ef7fe"
     },
+    "rank_enemies": {
+      "file": "rank_enemies.json",
+      "sha256": "b81f7114db522f08ba156680222242bf56766989e5ea65e4355f9ff1d6fa0b96"
+    },
     "skill_books": {
       "file": "skill_books.json",
       "sha256": "788e638052e10b1ab4fac78e098dd4bd3272bfce495bb67a498bd87adf427e94"
@@ -61,7 +65,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "a159e342ec5e04d4ea7689ae91f30c45720dba68e553ac50b611b67328740400"
+      "sha256": "6f00f418ecf41e384f2b20a8901baff83a01aebdc851f0cb18093b70161c0cf7"
     },
     "talents": {
       "file": "talents.json",
@@ -84,5 +88,5 @@
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "b0ec62f5f279105b6020a40a384f7b0cc653ba2bde93e1ce75d3802a29ec982f"
+  "content_hash": "0927bf0c89f85195a6b527e97fa895a7021319ca304768f7dbe3d6fbd6fccccd"
 }

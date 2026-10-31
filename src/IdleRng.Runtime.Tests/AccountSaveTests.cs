@@ -79,6 +79,41 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void TheLadder_RoundTrips_InTheRecipeAndTheVault()
+        {
+            var a = Played();
+            var b = AccountSave.Decode(TestContent.Db, AccountSave.Encode(a), out var notice);
+            Assert.That(notice, Is.Null);
+            Assert.That(b.Active.Ladder, Is.EqualTo(a.Active.Ladder));
+            Assert.That(b.Active.Ladder, Is.Not.Empty);
+            Assert.That(b.Vault[0].Ladder, Is.EqualTo(a.Vault[0].Ladder));
+        }
+
+        [Test]
+        public void APrePoolSave_KeepsItsRunGoing_AgainstTheFlatRanks()
+        {
+            // A save written before the rank pools (content 3.14): no Ladder in the recipe or the Vault entries, and the run's hash
+            // is the version 4 one. Its run in progress replays as a legacy run, so it is not dropped.
+            var db = TestContent.Db;
+            var a = Played();
+            var legacy = TrainingRun.Start(db, "sprite", 123, null, null, new System.Collections.Generic.List<string>());
+            while (legacy.Cycle < 3)
+            {
+                while (legacy.Offers.Count > 0) TrainingRun.DiscardOffer(db, legacy);
+                if (legacy.Phase == RunPhase.AwaitFight) TrainingRun.Fight(db, legacy); else TrainingRun.Drill(db, legacy, StatIds.Int);
+            }
+            a.Active = legacy;
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            ((Newtonsoft.Json.Linq.JObject)body["ActiveRun"]).Remove("Ladder");
+            foreach (var e in body["Account"]["Vault"]) ((Newtonsoft.Json.Linq.JObject)e).Remove("Ladder");
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
+            Assert.That(notice, Is.Null, "nothing was dropped");
+            Assert.That(b.Active.Ladder, Is.Empty);
+            Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(legacy)));
+            Assert.That(b.Vault[0].Ladder, Is.Empty);
+        }
+
+        [Test]
         public void VaultLock_RoundTrips()
         {
             var a = Played();

@@ -78,8 +78,23 @@ namespace IdleRng.Bots.Balance
         /// <summary>The earliest cycle a capstone the run ended with was bought; 0 = the run ended with no capstone.</summary>
         public int CapstoneCycle => Chase.Where(x => x.Capstone).Select(x => x.CapstoneCycle).DefaultIfEmpty(0).Min();
 
+        /// <summary>The run's rank ladder (RunState.Ladder) and each rank fight it fought (specs/14 section 5).</summary>
+        public List<string> Ladder { get; set; } = new List<string>();
+        public List<FightRecord> Fights { get; set; } = new List<FightRecord>();
+
         /// <summary>The finished run, for building tower teams; not reported.</summary>
         internal RunState State { get; set; }
+    }
+
+    /// <summary>One pool monster across a cell's runs: how many ladders rolled it, and the rank fights against it and won.</summary>
+    public sealed class OpponentSummary
+    {
+        public string Id { get; set; }
+        public int Rank { get; set; }
+        public int Rolled { get; set; }
+        public int Fought { get; set; }
+        public int Won { get; set; }
+        public double WinRate => Fought == 0 ? 0 : (double)Won / Fought;
     }
 
     /// <summary>One Daily Tower attempt by a team of sealed monsters on a day.</summary>
@@ -191,6 +206,9 @@ namespace IdleRng.Bots.Balance
         /// <summary>Per chase tree of the species, in the order the runs list them (content order).</summary>
         public List<ChaseSummary> Chase { get; set; }
 
+        /// <summary>Per pool monster any run rolled or fought, by rank then id (rank fights against legacy flat opponents are left out).</summary>
+        public List<OpponentSummary> Opponents { get; set; } = new List<OpponentSummary>();
+
         /// <param name="bossEvery">GAUNTLET_BOSS_EVERY, for the stall-floor histogram; 0 leaves GauntletStallMod empty.</param>
         public static CellSummary From(string species, string policy, int rankCount, IReadOnlyList<RunSample> runs, int bossEvery = 0)
         {
@@ -225,7 +243,27 @@ namespace IdleRng.Bots.Balance
             s.Capstoned = runs.Count(r => r.CapstoneCycle > 0);
             s.CapstoneCycle = Distribution.Of(runs.Where(r => r.CapstoneCycle > 0).Select(r => r.CapstoneCycle));
             s.Chase = SummariseChase(runs);
+            s.Opponents = SummariseOpponents(runs);
             return s;
+        }
+
+        static List<OpponentSummary> SummariseOpponents(IReadOnlyList<RunSample> runs)
+        {
+            var by = new Dictionary<string, OpponentSummary>(StringComparer.Ordinal);
+            OpponentSummary Get(string id, int rank) =>
+                by.TryGetValue(id, out var o) ? o : by[id] = new OpponentSummary { Id = id, Rank = rank };
+            foreach (var r in runs)
+            {
+                for (int i = 0; i < r.Ladder.Count; i++) Get(r.Ladder[i], i).Rolled++;
+                foreach (var f in r.Fights)
+                {
+                    if (f.Opponent == null) continue;
+                    var o = Get(f.Opponent, f.Rank);
+                    o.Fought++;
+                    if (f.Won) o.Won++;
+                }
+            }
+            return by.Values.OrderBy(o => o.Rank).ThenBy(o => o.Id, StringComparer.Ordinal).ToList();
         }
 
         static List<ChaseSummary> SummariseChase(IReadOnlyList<RunSample> runs)
@@ -409,7 +447,8 @@ namespace IdleRng.Bots.Balance
         public static RunSample Play(ContentDb c, string policy, string species, ulong seed, IEnumerable<string> books = null)
         {
             var chase = new ChaseTracker(c, species);
-            var s = RunBot.Play(c, RunPolicies.Create(policy), species, seed, null, books, chase.Observe);
+            var fights = new FightTracker();
+            var s = RunBot.Play(c, RunPolicies.Create(policy), species, seed, null, books, st => { chase.Observe(st); fights.Observe(st); });
             var g = GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
             return new RunSample
             {
@@ -419,6 +458,7 @@ namespace IdleRng.Bots.Balance
                 Injuries = s.Injuries.Count, CyclesLost = s.Injuries.Sum(i => i.CyclesLost),
                 GauntletFloor = g.FloorReached, GauntletCleared = g.Cleared, GauntletKiller = g.KillerId,
                 GauntletBossStall = !g.Cleared && GauntletSim.IsBoss(c, g.FloorReached), State = s, Chase = chase.Outcomes.ToList(),
+                Ladder = new List<string>(s.Ladder), Fights = fights.Fights,
             };
         }
 

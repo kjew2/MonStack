@@ -13,7 +13,7 @@ namespace IdleRng.Runtime.Save
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
     /// { "Kind": "monster_account", "SchemaVersion": 4, "Account": { ...AccountState without Active... },
-    ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
+    ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Ladder", "Log", "Hash" } | null }
     /// </code>
     /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
     /// a recipe that no longer replays to the same run (for example after a rules change). Such a run is dropped with a
@@ -73,7 +73,8 @@ namespace IdleRng.Runtime.Save
                 try
                 {
                     r = run.ToObject<RunRecipe>(SaveSerializer.Serializer);
-                    a.Active = TrainingRun.Replay(c, r.SpeciesId, r.Seed, r.Log, r.Books, r.Mods);
+                    // A recipe saved before the rank pools has no Ladder: an empty one, a legacy run with flat opponents.
+                    a.Active = TrainingRun.Replay(c, r.SpeciesId, r.Seed, r.Log, r.Books, r.Mods, r.Ladder ?? new List<string>());
                     if (r.Hash != TrainingRun.StateHash(a.Active)) throw new InvalidOperationException("the replay hash differs from the saved one");
                 }
                 catch (Exception e)
@@ -164,7 +165,7 @@ namespace IdleRng.Runtime.Save
             // the replayed list leaves the unused books in the same order).
             var books = new List<string>(s.Books);
             foreach (var l in s.Log) if (l.Kind == RunCommandKind.UseBook) books.Add(l.Book);
-            var r = new RunRecipe { SpeciesId = s.SpeciesId, Seed = s.Seed, Books = books, Mods = s.Mods, Log = s.Log, Hash = TrainingRun.StateHash(s) };
+            var r = new RunRecipe { SpeciesId = s.SpeciesId, Seed = s.Seed, Books = books, Mods = s.Mods, Ladder = s.Ladder, Log = s.Log, Hash = TrainingRun.StateHash(s) };
             return JObject.FromObject(r, SaveSerializer.Serializer);
         }
 
@@ -175,6 +176,9 @@ namespace IdleRng.Runtime.Save
             public ulong Seed { get; set; }
             public List<string> Books { get; set; } = new List<string>();
             public RunModifiers Mods { get; set; } = new RunModifiers();
+
+            /// <summary>The rank ladder (RunState.Ladder); absent (empty) in a recipe saved before the rank pools.</summary>
+            public List<string> Ladder { get; set; } = new List<string>();
             public List<RunCommand> Log { get; set; } = new List<RunCommand>();
             public string Hash { get; set; }
         }

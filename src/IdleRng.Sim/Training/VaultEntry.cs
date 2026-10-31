@@ -28,6 +28,12 @@ namespace IdleRng.Sim.Training
         /// <summary>The account's talent bonuses the run started with (specs/18 section 3); Replay needs them.</summary>
         public RunModifiers Mods { get; set; } = new RunModifiers();
 
+        /// <summary>
+        /// The run's rank ladder (RunState.Ladder, specs/14 section 5); Replay needs it. Empty for an entry sealed before the rank
+        /// pools (content 3.14): that run fought the flat fight_ranks opponents and replays against them.
+        /// </summary>
+        public List<string> Ladder { get; set; } = new List<string>();
+
         /// <summary>The MVP grade: the rank the monster reached (a fight_ranks id, e.g. "c").</summary>
         public string Grade { get; set; }
         public int RankIndex { get; set; }
@@ -64,7 +70,8 @@ namespace IdleRng.Sim.Training
         public bool Locked { get; set; }
 
         /// <summary>The monster as a battle fighter, rebuilt by replaying the run.</summary>
-        public Fighter Fighter(ContentDb c) => TrainingRun.MonsterFighter(c, TrainingRun.Replay(c, SpeciesId, Seed, Log, Books, Mods));
+        public Fighter Fighter(ContentDb c) =>
+            TrainingRun.MonsterFighter(c, TrainingRun.Replay(c, SpeciesId, Seed, Log, Books, Mods, Ladder ?? new List<string>()));
     }
 
     public static class Vault
@@ -81,7 +88,7 @@ namespace IdleRng.Sim.Training
                 SpeciesId = s.SpeciesId, Seed = s.Seed, End = s.End, RankIndex = s.Rank, Grade = c.FightRanks[s.Rank].Id,
                 Cycles = s.Cycle, FightsFought = s.FightsFought, FightsWon = s.FightsWon, Stats = s.Stats.Clone(),
                 RunHash = TrainingRun.StateHash(s), SealedUtcMs = sealedUtcMs,
-                Log = s.Log.ConvertAll(l => l.Clone()), Mods = s.Mods.Clone(),
+                Log = s.Log.ConvertAll(l => l.Clone()), Mods = s.Mods.Clone(), Ladder = new List<string>(s.Ladder),
             };
             // Books brought into the run = unused ones now + the ones the log used.
             e.Books.AddRange(s.Books);

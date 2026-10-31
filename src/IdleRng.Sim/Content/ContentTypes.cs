@@ -218,7 +218,11 @@ namespace IdleRng.Sim.Content
         public string NameKey { get; internal set; }
     }
 
-    /// <summary>A fight rank and the opponent fought at it (specs/14 section 5). Index == sort_order.</summary>
+    /// <summary>
+    /// A rank of the ladder (specs/14 section 5). Index == sort_order. <see cref="Stats"/> sets the rank's stat budget (their
+    /// sum, <see cref="Budget"/>) that every pool monster of the rank spends; they are also the flat opponent of a run started
+    /// before the pools (a legacy run, empty RunState.Ladder).
+    /// </summary>
     public sealed class FightRankDef
     {
         public string Id { get; internal set; }
@@ -227,8 +231,36 @@ namespace IdleRng.Sim.Content
         public string Element { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Stats { get; internal set; }
 
+        /// <summary>The sum of the eight <see cref="Stats"/>: what each pool monster's stats add up to.</summary>
+        public double Budget { get; internal set; }
+
+        /// <summary>The rank's pool of opponents (rank_enemies rows of this rank) in CSV order; never empty in loaded content.</summary>
+        public IReadOnlyList<RankEnemyDef> Pool { get; internal set; }
+
         /// <summary>Training Shards for dismantling a Vault entry of this grade (specs/18 section 7). Placeholder.</summary>
         public int DismantleShards { get; internal set; }
+    }
+
+    /// <summary>
+    /// One monster of a rank's pool (specs/14 section 5): a run rolls one per rank at its start. Its stats spend the rank's
+    /// budget in its own shape; its skills are monster_skills ids in AI priority order.
+    /// </summary>
+    public sealed class RankEnemyDef
+    {
+        public string Id { get; internal set; }
+
+        /// <summary>The fight_ranks id of the pool it belongs to.</summary>
+        public string RankId { get; internal set; }
+
+        /// <summary>Index of that rank in ContentDb.FightRanks.</summary>
+        public int RankIndex { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string Element { get; internal set; }
+        public IdleRng.Sim.Combat.MonsterStats Stats { get; internal set; }
+        public IReadOnlyList<string> Skills { get; internal set; }
+
+        /// <summary>Relative chance of being rolled within its rank (> 0).</summary>
+        public double Weight { get; internal set; }
     }
 
     public enum TreeKind { Native, Generic, Chase, Book }
