@@ -300,7 +300,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await page.evaluate((t) => localStorage.setItem('idle-rng-account-v1', t), v1Text);
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
-  check(!(await page.evaluate(() => localStorage.getItem('idle-rng-account-v1-unloadable'))), 'a v1 save loads (migrated), not kept aside');
+  check((await page.evaluate(() => RunEngine.badKeys().length)) === 0, 'a v1 save loads (migrated), not kept aside');
   check((await page.locator('[data-id=vault-entry]').count()) === cap + 1, 'all ' + (cap + 1) + ' monsters are in the Vault');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + (cap + 1) + '/' + cap, 'the count shows it over the cap');
   check(await act('start').isDisabled() && /dismantle 1/i.test(await act('start').innerText()), 'starting a run is blocked: ' + (await act('start').innerText()));

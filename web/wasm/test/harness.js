@@ -10,7 +10,7 @@ const { start } = require('./serve.js');
 const WEB = path.resolve(__dirname, '..', '..');
 const PHONE = { width: 390, height: 844 };
 const SAVE_KEY = 'idle-rng-account-v1';            // web/run-engine.js SAVE_KEY
-const BAD_KEY = 'idle-rng-account-v1-unloadable';  // web/run-engine.js BAD_KEY
+const BAD_KEY = 'idle-rng-account-v1-unloadable';  // web/run-engine.js BAD_KEY (legacy); backups are BAD_KEY + '-' + ms
 const STATS = ['str', 'hp', 'def', 'spd', 'int', 'wis', 'dex', 'luk'];
 
 // AccountSave text (src/IdleRng.Runtime/Save/SaveSerializer.cs): a header line with the body's CRC-32 and length, then the JSON.
@@ -46,7 +46,8 @@ async function open(opts) {
       await page.screenshot({ path: path.join(opts.shotsDir, n + '.png') });
     },
     readSaveText: () => page.evaluate((k) => localStorage.getItem(k), SAVE_KEY),
-    readBadText: () => page.evaluate((k) => localStorage.getItem(k), BAD_KEY),
+    // The saves kept aside (web/run-engine.js keepAside), oldest first.
+    readBadTexts: () => page.evaluate(() => RunEngine.badKeys().map((k) => localStorage.getItem(k))),
     readAccount: async () => decodeSave(await h.readSaveText()),
     writeSaveText: (t) => page.evaluate(([k, v]) => localStorage.setItem(k, v), [SAVE_KEY, t]),
     // Reload and wait for the engine: the run screen (a drill button) or the home screen (the start button).

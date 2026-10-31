@@ -39,7 +39,7 @@ Run commands (`TrainingRun`): `drill(stat)` (tier, gain, new value, energy, inju
 - `nodeTips[nodeId]`: `{title, text, tags[], facts[[label, value]]}` for every tree node: a skill's effect, amount, damage type, element, target, duration, cooldown or trigger, AI condition and SP cost; a rule's description; for a filler node, what its stat does.
 - `skillNode[skillId]`: the node that grants a skill, so a skill named in the fight log opens that node's tooltip.
 
-`web/run-engine.js` wraps this (`RunEngine.create`) and keeps the whole save in `localStorage['idle-rng-account-v1']`. A save that does not load is kept under `idle-rng-account-v1-unloadable`, never overwritten.
+`web/run-engine.js` wraps this (`RunEngine.create`) and keeps the whole save in `localStorage['idle-rng-account-v1']`. A save that does not load is kept aside under `idle-rng-account-v1-unloadable-<ms>` (the oldest and the two newest are kept, `specs/06` section 5).
 
 ## Not exposed yet
 

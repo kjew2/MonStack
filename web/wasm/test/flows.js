@@ -4,7 +4,8 @@
 //   and no page/console error; a tree draft overwrites an occupied slot (specs/12 section 5.1: its spent points are lost).
 // - issue #88: save, reload and resume. A run reloaded mid-way (also with a draft waiting) comes back with the same state hash and
 //   is then finished; a save whose run in progress no longer replays drops only that run, with a notice, its books returned and
-//   the original kept aside (specs/06 section 5); a damaged save is kept aside and the player gets a fresh, working account.
+//   the original kept aside (specs/06 section 5); a damaged save is kept aside next to it and the player gets a fresh, working
+//   account. Issue #93: kept-aside saves are capped, the oldest (or a legacy single backup) is never evicted.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/flows.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
@@ -156,7 +157,8 @@ const H = require('./harness.js');
   await act('start').waitFor({ timeout: 90000 });
   const toasts = await page.locator('#toasts').innerText();
   check(/older rules/.test(toasts) && /books returned/.test(toasts), 'the player is told the stale run was dropped: ' + toasts.replace(/\s+/g, ' ').slice(0, 90));
-  check((await t.readBadText()) === staleText, 'the original save is kept aside under ' + H.BAD_KEY);
+  const bad1 = await t.readBadTexts();
+  check(bad1.length === 1 && bad1[0] === staleText, 'the original save is kept aside under a backup key (' + bad1.length + ' kept)');
   const fixed = await t.readAccount();
   check(fixed.ActiveRun === null, 'the stale run is gone from the saved account');
   check(fixed.Account.Shards === live.Account.Shards && fixed.Account.Vault.length === 1 && fixed.Account.Vault[0].RunHash === entry.RunHash,
@@ -178,8 +180,8 @@ const H = require('./harness.js');
   await act('start').waitFor({ timeout: 90000 });
   const toasts2 = await page.locator('#toasts').innerText();
   check(/could not be loaded and was kept aside/.test(toasts2), 'the player is told the save was kept aside: ' + toasts2.replace(/\s+/g, ' ').slice(0, 90));
-  // TODO(#93): this replaces the stale save kept aside above; the test pins today's single backup key.
-  check((await t.readBadText()) === damaged, 'the damaged save is kept under ' + H.BAD_KEY + ', unchanged');
+  const bad2 = await t.readBadTexts();
+  check(bad2.length === 2 && bad2[0] === staleText && bad2[1] === damaged, 'the damaged save is kept aside, unchanged, next to the stale save kept before (issue #93)');
   const fresh = await t.readAccount();
   check(fresh && fresh.Kind === 'monster_account' && fresh.ActiveRun === null && fresh.Account.Vault.length === 0 && fresh.Account.Shards === 0, 'a fresh account replaces it');
   check((await page.locator('[data-id=vault-entry]').count()) === 0 && (await text('[data-id=shards]')).startsWith('0 '), 'the home screen shows the fresh account');
@@ -189,7 +191,25 @@ const H = require('./harness.js');
   await act('drill-str').click();
   await t.reload();
   check((await page.locator('[data-act="drill-str"]').count()) === 1 && (await t.readAccount()).ActiveRun.Log.length === 1, 'the fresh account saves and resumes a run');
-  check((await t.readBadText()) === damaged, 'and the kept-aside save is still there');
+  const bad3 = await t.readBadTexts();
+  check(bad3.length === 2 && bad3[0] === staleText && bad3[1] === damaged, 'and both kept-aside saves are still there');
+
+  // ---- the backup cap (issue #93): a legacy single backup counts as the oldest and is never evicted; a new backup past the cap
+  // evicts the second oldest
+  const legacy = 'legacy backup written before issue #93';
+  await page.evaluate(([k, v]) => localStorage.setItem(k, v), [H.BAD_KEY, legacy]);
+  const keep = await page.evaluate(() => RunEngine.BAD_KEEP);
+  const extra = [];
+  for (let i = 0; i < 2; i++) {
+    const d = (await t.readSaveText()).slice(0, -(21 + i));           // damaged differently each time
+    extra.push(d);
+    await t.writeSaveText(d);
+    await t.reload();
+  }
+  const bad4 = await t.readBadTexts();
+  check(keep === 3 && bad4.length === keep && bad4[0] === legacy && bad4[1] === extra[0] && bad4[2] === extra[1],
+    'past the cap of ' + keep + ' the legacy backup and the newest saves are kept (' + bad4.length + ' kept)');
+  check((await page.evaluate((k) => localStorage.getItem(k), H.BAD_KEY)) === legacy, 'the legacy backup key is untouched');
 
   await t.finish();
 })().catch((e) => { console.error(e); process.exit(1); });

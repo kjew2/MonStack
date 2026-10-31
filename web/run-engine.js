@@ -1,12 +1,16 @@
 // Facade over the C# monster-trainer engine (IdleRng.Web.Engine.Run*/Account*, contract in web/wasm/BRIDGE.md, "Run bridge").
 // RunEngine.create(opts) -> Promise<run>. No game rule lives here: every number and label comes from the C# engine.
 // The whole save is the C# AccountSave text (account, shards, talents, vault, and the active run as its replay recipe) in one
-// localStorage key. A save that no longer loads is kept under a backup key, never overwritten, and reported in `loadError`.
+// localStorage key. A save that no longer loads is kept aside under its own timestamped backup key and reported in `loadError`
+// (damaged) or `loadNotice` (its run in progress was dropped). At most BAD_KEEP backups are kept: the oldest one (most likely the
+// real account) is never evicted; a new backup evicts the second oldest. A backup key is never overwritten (specs/06 section 5).
 (function (root) {
   'use strict';
 
   const SAVE_KEY = 'idle-rng-account-v1';
-  const BAD_KEY = 'idle-rng-account-v1-unloadable';
+  const BAD_KEY = 'idle-rng-account-v1-unloadable';          // legacy single backup (before issue #93): kept, counts as the oldest
+  const BAD_PREFIX = BAD_KEY + '-';                           // backups: BAD_PREFIX + Date.now() ms
+  const BAD_KEEP = 3;                                         // placeholder cap
   const OLD_KEYS = ['idle-rng-run-v1', 'idle-rng-vault-v1'];   // the first trainer slice's saves: clean save break (specs/13)
 
   function randomSeedHex() {
@@ -19,6 +23,28 @@
     set(k, v) { try { root.localStorage.setItem(k, v); } catch (e) { /* storage blocked: play without saving */ } },
     del(k) { try { root.localStorage.removeItem(k); } catch (e) { /* ignore */ } },
   };
+  // The backup keys, oldest first: the legacy BAD_KEY, then BAD_PREFIX + ms by time. Other keys under the prefix are left alone.
+  function badKeys() {
+    const out = [];
+    try {
+      for (let i = 0; i < root.localStorage.length; i++) {
+        const k = root.localStorage.key(i);
+        if (k === BAD_KEY || (k && k.startsWith(BAD_PREFIX) && /^\d+$/.test(k.slice(BAD_PREFIX.length)))) out.push(k);
+      }
+    } catch (e) { return []; }
+    const ms = (k) => (k === BAD_KEY ? -1 : Number(k.slice(BAD_PREFIX.length)));
+    return out.sort((a, b) => ms(a) - ms(b));
+  }
+  // Keep a save that did not load as it was, under a new backup key. The same text already kept is not kept twice.
+  function keepAside(text) {
+    const keys = badKeys();
+    if (keys.some((k) => ls.get(k) === text)) return;
+    let ms = Date.now();
+    while (keys.indexOf(BAD_PREFIX + ms) >= 0) ms++;
+    ls.set(BAD_PREFIX + ms, text);
+    const all = badKeys();
+    while (all.length > BAD_KEEP) ls.del(all.splice(1, 1)[0]);   // keep the oldest, evict the second oldest
+  }
   const parse = (text) => {
     const v = JSON.parse(text);
     if (v && v.error) throw new Error(v.error);
@@ -34,7 +60,7 @@
       content: content,
       saveKey: SAVE_KEY,
       loadNotice: null,          // set when a saved account loaded but gave something up (its run in progress was dropped)
-      loadError: null,           // set when a saved account could not be loaded (it is kept under BAD_KEY)
+      loadError: null,           // set when a saved account could not be loaded (it is kept aside: keepAside)
       version() { return host.Version(); },
       get account() { if (acctCache === undefined) acctCache = parse(host.AccountView()); return acctCache; },
       get state() { if (runCache === undefined) runCache = parse(host.RunState()); return runCache; },   // the active run, or null
@@ -69,12 +95,12 @@
         const view = parse(host.AccountLoad(saved));
         loaded = true;
         // The save loaded but gave something up (a run saved under older rules was dropped): tell the player, and save the result.
-        if (view.notice) { run.loadNotice = view.notice; ls.set(BAD_KEY, saved); }   // the original stays under BAD_KEY
+        if (view.notice) { run.loadNotice = view.notice; keepAside(saved); }   // the original is kept aside
       }
       catch (e) {
         run.loadError = e.message;
         console.warn('Saved account not loaded:', e);
-        ls.set(BAD_KEY, saved);
+        keepAside(saved);
         ls.del(SAVE_KEY);
       }
     }
@@ -90,5 +116,5 @@
     return wrap(loaded.host);
   }
 
-  root.RunEngine = { create: create, SAVE_KEY: SAVE_KEY, BAD_KEY: BAD_KEY };
+  root.RunEngine = { create: create, SAVE_KEY: SAVE_KEY, BAD_KEY: BAD_KEY, BAD_PREFIX: BAD_PREFIX, BAD_KEEP: BAD_KEEP, badKeys: badKeys };
 })(typeof self !== 'undefined' ? self : this);
