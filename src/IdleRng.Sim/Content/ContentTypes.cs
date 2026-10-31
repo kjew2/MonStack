@@ -265,6 +265,9 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Chase trees: true for the species' book-gated chase tree, false for its in-run one.</summary>
         public bool BookGated { get; internal set; }
+
+        /// <summary>Chase trees: the name of the apex form a monster takes once it owns this tree's capstone (specs/15 section 5.3). Null otherwise.</summary>
+        public string ApexNameKey { get; internal set; }
     }
 
     public sealed class TreeNodeDef

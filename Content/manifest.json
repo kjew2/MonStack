@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "4.0",
+  "content_version": "4.1",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -61,7 +61,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "adf87e907f350662b1b798218c73438342730ccd3d6ad04b7f5c846bb1502633"
+      "sha256": "e22b0a0eed4106a540de5e871a45e1da421a9d669169b4d1fc0593a7a1334ed8"
     },
     "talents": {
       "file": "talents.json",
@@ -77,12 +77,12 @@
     },
     "trees": {
       "file": "trees.json",
-      "sha256": "4464edbbf2e19b6f54caf34b4e898616a48b04abc519ee43d03cee72108e240e"
+      "sha256": "7cc359e937e23944fc53044e0d276e37b7761654a579d039502f382e74328b8f"
     },
     "vendor_rarities": {
       "file": "vendor_rarities.json",
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "2f0082495a690ed3baef5aa17f9d2c47fd77f0b8b5aa7921cd03875f04de3fa7"
+  "content_hash": "2ed61fb0e0e2ad643fc909d94a6e5b8c50a41d8070d7a286d49f8664aa9758d5"
 }

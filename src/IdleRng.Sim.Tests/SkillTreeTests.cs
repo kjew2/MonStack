@@ -278,6 +278,27 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void ApexForm_IsTheFirstSlottedChaseTreeWithItsCapstoneBought()
+        {
+            var s = DrakeWithUnbreakableWillOffered();
+            Assert.That(ApexForm.TreeOf(Db, s), Is.Null, "no chase tree slotted: the base form");
+            Assert.That(ApexForm.Name(Db, "drake", null), Is.EqualTo(Db.Text(Db.Species["drake"].NameKey)));
+            TrainingRun.TakeTree(Db, s, 0, 2);
+            while (s.Slots[2].Bought < Db.Trees["unbreakable_will"].Nodes.Count - 1) { s.Sp = Math.Max(s.Sp, 10); TrainingRun.SpendPoint(Db, s, 2); }
+            Assert.That(ApexForm.TreeOf(Db, s), Is.Null, "every node but the capstone: still the base form");
+            Max(s, 2);
+            Assert.That(ApexForm.TreeOf(Db, s), Is.EqualTo("unbreakable_will"));
+            Assert.That(ApexForm.Name(Db, "drake", "unbreakable_will"), Is.EqualTo(Db.Text(Db.Trees["unbreakable_will"].ApexNameKey)));
+            Assert.That(ApexForm.Name(Db, "drake", "unbreakable_will"), Is.Not.EqualTo(ApexForm.Name(Db, "drake", null)));
+
+            var e = new VaultEntry { SpeciesId = "drake" };
+            e.Trees.Add(new VaultTree { TreeId = "pyromancy", Bought = Db.Trees["pyromancy"].Nodes.Count });
+            e.Trees.Add(new VaultTree { TreeId = "inferno_sovereign", Bought = Db.Trees["inferno_sovereign"].Nodes.Count });
+            e.Trees.Add(new VaultTree { TreeId = "unbreakable_will", Bought = Db.Trees["unbreakable_will"].Nodes.Count });
+            Assert.That(ApexForm.TreeOf(Db, e), Is.EqualTo("inferno_sovereign"), "two capstones: the first in slot order; native trees never count");
+        }
+
+        [Test]
         public void PendingChaseOffer_IsWithdrawn_WhenItsConditionsBreak()
         {
             var s = Drake();
