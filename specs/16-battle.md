@@ -43,7 +43,9 @@ Eight trained stats (kj, 2026-10-30), on the 0-999 training scale:
 | `SPD` | ATB gauge fill per tick, at least `MON_SPD_MIN` |
 | `LUK` | Crit chance |
 
-Effects can also add to `crit_rate` and `crit_dmg` directly. The current value of a trained stat is `base x max(STAT_FLOOR_FRAC, 1 + sum of effect fractions)`: however many debuffs stack, it never drops below `STAT_FLOOR_FRAC` (0.1) of its base. A permanent HP effect (a passive) multiplies max HP and current HP by `max(STAT_FLOOR_FRAC, 1 + fraction)`.
+Effects can also add to `crit_rate` and `crit_dmg` directly. The current value of a trained stat is `base x max(STAT_FLOOR_FRAC, 1 + sum of effect fractions)`: however many debuffs stack, it never drops below `STAT_FLOOR_FRAC` (0.1) of its base. HP effects work on max HP (issue #83, kj 2026-10-31): a permanent HP effect (a passive) multiplies base max HP by `max(STAT_FLOOR_FRAC, 1 + fraction)`, and max HP is `base max HP x max(STAT_FLOOR_FRAC, 1 + sum of timed HP effect fractions)`. Whenever max HP changes (a passive, a timed HP buff or debuff landing or expiring), current HP is scaled with it, so the unit keeps its fraction of max HP: a full unit stays full, and an expiring buff cannot kill.
+
+**Stacking** (issue #83, kj 2026-10-31): a unit carries at most `EFFECT_STACK_CAP` (3) copies of one timed effect, counted per source skill and stat. A copy added at the cap is not added: instead the copy with the fewest ticks left gets the new duration (if that is longer). Permanent effects (passives, boss phase buffs) are not capped.
 
 The player reads this table in each stat's tooltip (section 9).
 
@@ -67,7 +69,7 @@ A "turn" for durations is `BATTLE_GAUGE / SPD_REF` ticks (10 ticks, one action a
 
 - Damage scaled by INT or WIS is **magical**; everything else is **physical**.
 - Heal: `Scales x Power` to the target(s), capped at max HP. Shield: absorbs `Scales x Power` for `Duration` turns. Taunt: single-target enemy actions must target this unit for `Duration` turns.
-- Buff/debuff: `Power` as a fraction of base for trained stats, added directly for crit stats; `Duration` turns. Passive: the same, permanent, at battle start. A permanent HP passive raises max and current HP together.
+- Buff/debuff: `Power` as a fraction of base for trained stats, added directly for crit stats; `Duration` turns. Passive: the same, permanent, at battle start. HP buffs, debuffs and passives change max HP and scale current HP with it (section 3).
 
 ### 5.2 Default AI
 
@@ -78,7 +80,7 @@ Both sides use the same AI, so PvP stays symmetric. On its action a unit fires i
 
 Otherwise it fires `OnBasicAttack` triggers and makes a basic attack: `BASIC_ATTACK_POWER x max(STR, INT)`, magical when INT is higher.
 
-**Targeting:** a single-target enemy action hits a taunting enemy (lowest slot) if there is one, else a random living enemy (one draw; no draw when only one is alive). Placeholder until gambits.
+**Targeting:** a single-target enemy action hits a taunting enemy (lowest slot) if there is one, else a random living enemy (one draw; no draw when only one is alive). A single-target debuff (an action or a trigger) first narrows the choice to the living enemies that lack its effect, when any does, and applies the same rule among them: so it skips a taunter that already has it (issue #83, kj 2026-10-31). Placeholder until gambits.
 
 ### 5.3 A hit
 
@@ -98,7 +100,7 @@ element = ELEMENT_STRONG_MULT if the attack's element beats the target's, ELEMEN
 
 ### 6.1 Triggers
 
-`FightTrigger`: `BattleStart`, `OnAction`, `OnBasicAttack`, `OnCrit`, `OnHitTaken`, `OnEvade`. A fighter's `Triggers` list pairs a trigger with a `CombatSkill`; when the trigger fires, the skill does what it would do as an action (a damage trigger hits, a buff trigger buffs). Passives in `Skills` count as `BattleStart` triggers. Tree nodes and chase traits (T3) will produce these entries. A dead unit's triggers do not fire. Triggered effects ignore cooldowns and the AI's conditions, so a triggered buff or debuff adds another stack each time it fires.
+`FightTrigger`: `BattleStart`, `OnAction`, `OnBasicAttack`, `OnCrit`, `OnHitTaken`, `OnEvade`. A fighter's `Triggers` list pairs a trigger with a `CombatSkill`; when the trigger fires, the skill does what it would do as an action (a damage trigger hits, a buff trigger buffs). Passives in `Skills` count as `BattleStart` triggers. Tree nodes and chase traits (T3) will produce these entries. A dead unit's triggers do not fire. Triggered effects ignore cooldowns and the AI's conditions, so a triggered buff or debuff adds another stack each time it fires, up to `EFFECT_STACK_CAP` (section 3).
 
 ### 6.2 Rule modifiers
 
@@ -139,6 +141,7 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_TIME_LIMIT_TICKS` | 900 | `> 0` | Turn limit (90 s) |
 | `MON_SIDE_SIZE` | 4 | `> 0` | Most units per side |
 | `STAT_FLOOR_FRAC` | 0.1 | `(0, 1]` | A trained stat never drops below this fraction of its base (section 3; content `3.2`) |
+| `EFFECT_STACK_CAP` | 3 | `>= 1` | Most copies of one timed effect (same source skill and stat) on a unit; another refreshes the shortest (section 3; content `3.8`) |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` | `echo_cast` repeat power (content `2.5`) |
 | `MON_TIDE_REGEN` | 0.05 | `[0, 1]` | `tidal_overflow` heal per own action, fraction of max HP (content `3.7`) |
 | `MON_TIDE_SHIELD_CAP` | 0.3 | `[0, 1]` | `tidal_overflow` shield cap, fraction of max HP (content `3.7`) |
@@ -160,7 +163,7 @@ The web client explains stats and abilities in tooltips (issue #80). The words a
 
 - **Formulas.** The fight's own formulas are public helpers on `BattleSim` (`MaxHp`, `GaugeFill`, `BasicAttackRaw`, `BasicAttackMagical`, `EvadeChance`, `CritChance`, `Mitigate`); the battle and the tooltips both call them.
 - **Stats.** `stat.<id>.name` ("Strength"), `stat.<id>.desc` (what the stat does, with constants such as `{MON_DEF_K}` filled in) and `stat.<id>.now` (what the current value does against the coming opponent: `{max_hp}`, `{basic}`, `{basic_type}`, `{def_taken}`, `{wis_taken}`, `{evade}`, `{foe_evade}`, `{acts}` actions per turn, `{crit}`, `{foe}`), under the heading `tip.now`. "Now" lines use the raw stat sheets: before buffs, debuffs and passives. `stat.<id>.label` names a stat inside a sentence where the upper-case id would read wrong (`hp`: "max HP", `crit_rate`, `crit_dmg`).
-- **Skills.** `mskill.<id>.desc` is a template over the skill's own row: `{power}` (or `{power:pct}`), `{scales}`, `{stat}`, `{cooldown}`, `{duration}`, `{ticks}`, `{element}`. A tree node's tooltip adds tags (kind, physical or magical, element, trigger, chase trait) and facts from the row and the rules above: effect, amount, damage type, element, target, duration, cooldown and the AI condition for active skills, when it fires for triggers and passives (`trigger.<id>.name`, `tip.fires.<id>`), stacking for triggered buffs, and the node's SP cost. The vocabulary is `tip.*`, with constants filled in (`tip.effect.debuff` names `{STAT_FLOOR_FRAC:pct}`). Abilities have no energy cost: energy is a training resource (`specs/14`); a skill's cost is its node's SP.
+- **Skills.** `mskill.<id>.desc` is a template over the skill's own row: `{power}` (or `{power:pct}`), `{scales}`, `{stat}`, `{cooldown}`, `{duration}`, `{ticks}`, `{element}`. A tree node's tooltip adds tags (kind, physical or magical, element, trigger, chase trait) and facts from the row and the rules above: effect, amount, damage type, element, target, duration, cooldown and the AI condition for active skills, when it fires for triggers and passives (`trigger.<id>.name`, `tip.fires.<id>`), stacking for triggered buffs and debuffs (`tip.stacks.triggered` names `{EFFECT_STACK_CAP}`), and the node's SP cost. The vocabulary is `tip.*`, with constants filled in (`tip.effect.debuff` names `{STAT_FLOOR_FRAC:pct}`). Abilities have no energy cost: energy is a training resource (`specs/14`); a skill's cost is its node's SP.
 - **Rules.** `rule.<id>.desc`, with constants filled in (`echo_cast` names `{MON_ECHO_POWER:pct}`). A rule modifier's log event (`FightAction.Event` `rule:<id>`) shows under `rule.<id>.name` in the battle log.
 
 Template syntax and the constant lookup are `specs/05` section 5.

@@ -102,6 +102,11 @@
       "value": 0.1
     },
     {
+      "key": "EFFECT_STACK_CAP",
+      "type": "int",
+      "value": 3
+    },
+    {
       "key": "RUN_CYCLES",
       "type": "int",
       "value": 12
