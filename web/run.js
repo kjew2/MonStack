@@ -590,6 +590,7 @@
     return body + (x.graze ? ' (grazed)' : '') + (x.crit ? ' CRIT' : '') + (x.lucky ? ' · lucky!' : '');
   }
 
+  const FIGHT_LOG_LINES = 6;   // lines shown before "Show all", so Continue fits on a phone screen without scrolling
   function fightModal(modal, f, s) {
     const you = speciesDef(s.species).name, foe = f.opponent.name;
     modal.append(
@@ -600,7 +601,7 @@
       h('h3', { text: 'Battle log' }),
     );
     const lines = f.actions.map((x) => actionLine(x, foe, you));
-    const shown = ui.showAll ? lines : lines.slice(0, 24);
+    const shown = ui.showAll ? lines : lines.slice(0, FIGHT_LOG_LINES);
     modal.append(h('ul', { class: 'alog' }, shown.map((l) => h('li', { class: l.you ? 'you' : 'foe', text: l.text,
       ...(l.skillId ? TIP.attrs((l.you ? 'skill:' : 'mskill:') + l.skillId) : null) }))));
     if (lines.length > shown.length) modal.append(h('button', { class: 'btn small', type: 'button', text: 'Show all ' + f.actionCount + ' actions', onclick: () => { ui.showAll = true; render(); } }));
