@@ -1,0 +1,9 @@
+id,boss_id,order,enter_hp,kind,power,duration,count,guard,heal_frac,strike,buff,adds,add_skills,#notes
+chimera_p1,apex_chimera,1,0.7,shield_check,0.15,3,0,0,0.2,0,0.2,,,"Boss phases (specs/21 section 3.2): entered once, highest enter_hp first. Unused columns are 0 or empty. Placeholder"
+chimera_p2,apex_chimera,2,0.4,split,0,0,2,0.4,0,0,0,cinder_whelp,,Placeholder
+chimera_p3,apex_chimera,3,0.15,enrage,0,0,0,0,0,0,0.05,,,Placeholder
+hydra_p1,void_hydra,1,0.75,split,0,0,3,0.5,0,0,0,hydra_head,,Placeholder
+hydra_p2,void_hydra,2,0.35,channel,0.1,3,0,0,0,1.5,0,,boss_roar,Placeholder
+titan_p1,storm_titan,1,0.6,channel,0.08,2,0,0,0,2.0,0,,,Placeholder
+titan_p2,storm_titan,2,0.3,shield_check,0.2,2,0,0,0.25,0,0.3,,iron_hide,Placeholder
+titan_p3,storm_titan,3,0.1,enrage,0,0,0,0,0,0,0.08,,,Placeholder

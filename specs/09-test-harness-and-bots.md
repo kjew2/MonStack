@@ -18,6 +18,7 @@ src/IdleRng.Bots/
   Golden/GoldenFiles.cs     the list of golden files, compare and write
   Golden/BattleVectors.cs   fixed fights through BattleSim
   Golden/GauntletVectors.cs each species' bot-trained monster up the gauntlet
+  Golden/TowerVectors.cs    the same monsters, alone and together, up the Daily Tower on two days
   Report/TableWriter.cs     how a content version and hash are printed
 src/IdleRng.Bots.Tests/     RunBotTests
 ```
@@ -31,6 +32,7 @@ src/IdleRng.Bots.Tests/     RunBotTests
 | `golden/battle-sim-vectors.txt` | Five fixed fights (1v1, 4v1, 4v4, 2v3) with every skill kind, a trigger and a rule modifier: outcome, ticks, tallies, hash (`specs/16` section 8) |
 | `golden/training-run-vectors.txt` | Every species x run policy at seed 7, plus a run with every book: summary and run hash (`specs/14` section 9) |
 | `golden/gauntlet-vectors.txt` | Each species after a `focus` bot run, sent up the gauntlet: floor, killer, title, hash (`specs/19` section 6) |
+| `golden/tower-vectors.txt` | The same monsters, alone and up to four together, up the Daily Tower on days 0 and 20391: lineup, floor, cleared, vents, phases, hash (`specs/21` section 9) |
 
 Each file's first line carries the content version and short hash (`content=3.0/b7ba908c`). Any change to a `content_src/` file changes the hash, so every golden is regenerated and the merge commit says so.
 

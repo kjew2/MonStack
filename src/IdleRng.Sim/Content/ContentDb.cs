@@ -19,7 +19,7 @@ namespace IdleRng.Sim.Content
         {
             "constants", "elements", "species", "drill_tiers", "fight_ranks", "stat_milestones", "monster_skills", "trees",
             "tree_nodes", "chase_conditions", "skill_books", "talents", "gauntlet_enemies", "legacy_titles",
-            "achievements", "vendor_rarities",
+            "achievements", "vendor_rarities", "tower_bosses", "boss_phases", "book_drops",
         };
 
 
@@ -92,6 +92,19 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Legacy titles by increasing MinFloor; the first has MinFloor 1.</summary>
         public IReadOnlyList<LegacyTitleDef> LegacyTitles { get; private set; }
+
+        // Daily Tower (specs/21)
+        /// <summary>Every tower boss row by id (regular, marquee and add).</summary>
+        public IReadOnlyDictionary<string, TowerBossDef> TowerBosses { get; private set; }
+
+        /// <summary>Regular bosses in CSV order (the lineup draws from them).</summary>
+        public IReadOnlyList<TowerBossDef> TowerRegulars { get; private set; }
+
+        /// <summary>Marquee bosses in CSV order (milestone floors draw from them).</summary>
+        public IReadOnlyList<TowerBossDef> TowerMarquees { get; private set; }
+
+        /// <summary>Skill Book drops in CSV order.</summary>
+        public IReadOnlyList<BookDropDef> BookDrops { get; private set; }
 
 
         // ---------------------------------------------------------------- derived
@@ -226,6 +239,17 @@ namespace IdleRng.Sim.Content
                 VaultCap = I("VAULT_CAP"), VendorOffers = I("VENDOR_OFFERS"),
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
                 GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
+                TowerSeed = I("TOWER_SEED"), TowerFloors = I("TOWER_FLOORS"), TowerAttemptsPerDay = I("TOWER_ATTEMPTS_PER_DAY"),
+                TowerBase = D("TOWER_BASE"), TowerGrowth = D("TOWER_GROWTH"), TowerBossHpMult = D("TOWER_BOSS_HP_MULT"),
+                TowerMilestoneEvery = I("TOWER_MILESTONE_EVERY"), TowerShardsPerFloor = I("TOWER_SHARDS_PER_FLOOR"),
+                TowerBookChance = D("TOWER_BOOK_CHANCE"), TowerBookChancePerFloor = D("TOWER_BOOK_CHANCE_PER_FLOOR"),
+                EntropyCap = D("ENTROPY_CAP"), EntropyPerTrigger = D("ENTROPY_PER_TRIGGER"), EntropyPerEcho = D("ENTROPY_PER_ECHO"),
+                EntropyPerCounter = D("ENTROPY_PER_COUNTER"), EntropyDecay = D("ENTROPY_DECAY"), EntropyRecoilFrac = D("ENTROPY_RECOIL_FRAC"),
+                EntropyStunGauge = D("ENTROPY_STUN_GAUGE"), EntropyEnrageFrac = D("ENTROPY_ENRAGE_FRAC"), EntropyEnrageTurns = I("ENTROPY_ENRAGE_TURNS"),
+                EntropyConvertShield = D("ENTROPY_CONVERT_SHIELD"), EntropyConvertTurns = I("ENTROPY_CONVERT_TURNS"),
+                CorruptStartTick = I("CORRUPT_START_TICK"), CorruptEveryTicks = I("CORRUPT_EVERY_TICKS"),
+                CorruptHealPerLevel = D("CORRUPT_HEAL_PER_LEVEL"), CorruptHealFloor = D("CORRUPT_HEAL_FLOOR"),
+                CorruptDmgPerLevel = D("CORRUPT_DMG_PER_LEVEL"),
             };
             if (errors.Count > 0) return;
             var values = new Dictionary<string, double>(StringComparer.Ordinal);
@@ -348,6 +372,7 @@ namespace IdleRng.Sim.Content
             BuildAccount(t, errors);
             BuildUnlocks(t, errors);
             BuildGauntlet(t, errors);
+            BuildTower(t, errors);
 
             StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
             for (int i = 0; i < StatMilestones.Count; i++)
@@ -654,6 +679,104 @@ namespace IdleRng.Sim.Content
             for (int i = 1; i < LegacyTitles.Count; i++)
                 if (LegacyTitles[i].MinFloor <= LegacyTitles[i - 1].MinFloor)
                     errors.Add(new ContentError("E032", $"legacy_titles[{LegacyTitles[i].MinFloor}]", "min_floor must strictly increase"));
+        }
+
+        static List<string> SplitIds(string s) =>
+            string.IsNullOrEmpty(s) ? new List<string>() : s.Split('|').Where(x => x.Length > 0).ToList();
+
+        /// <summary>Daily Tower (specs/21 section 5). Mirrors validate_tower in tools/content_build.py.</summary>
+        void BuildTower(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            var k = Constants;
+            bool In01(double v) => v >= 0 && v <= 1;
+            if (!(k.TowerFloors > 0 && k.TowerAttemptsPerDay > 0 && k.TowerBase > 0 && k.TowerGrowth >= 1 && k.TowerBossHpMult > 0
+                  && k.TowerMilestoneEvery > 0 && k.TowerShardsPerFloor >= 0 && In01(k.TowerBookChance) && k.TowerBookChancePerFloor >= 0
+                  && k.EntropyCap > 0 && k.EntropyPerTrigger >= 0 && k.EntropyPerEcho >= 0 && k.EntropyPerCounter >= 0 && k.EntropyDecay >= 0
+                  && In01(k.EntropyRecoilFrac) && k.EntropyStunGauge >= 0 && k.EntropyEnrageFrac >= 0 && k.EntropyEnrageTurns > 0
+                  && k.EntropyConvertShield >= 0 && k.EntropyConvertTurns > 0 && k.CorruptStartTick >= 0 && k.CorruptEveryTicks > 0
+                  && k.CorruptHealPerLevel >= 0 && In01(k.CorruptHealFloor) && k.CorruptDmgPerLevel >= 0))
+                errors.Add(new ContentError("E043", "constants", "Daily Tower constants out of range (specs/21 section 5)"));
+
+            var phases = t["boss_phases"].Select(r => new BossPhaseDef
+            {
+                Id = r.Str("id"), BossId = r.Str("boss_id"), Order = r.Int("order"), EnterHp = r.Dbl("enter_hp"), Kind = r.Str("kind"),
+                Power = r.Dbl("power"), Duration = r.Int("duration"), Count = r.Int("count"), Guard = r.Dbl("guard"),
+                HealFrac = r.Dbl("heal_frac"), Strike = r.Dbl("strike"), Buff = r.Dbl("buff"),
+                Adds = r.NStr("adds"),
+                AddSkills = SplitIds(r.NStr("add_skills")).AsReadOnly(),
+            }).ToList();
+            var bosses = t["tower_bosses"].Select(r => new TowerBossDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), Element = r.Str("element"), Weights = StatsFrom(r, ""),
+                Role = ParseTowerRole(r.Str("role")),
+                Skills = SplitIds(r.NStr("skills")).AsReadOnly(),
+            }).ToList();
+            var byId = bosses.ToDictionary(b => b.Id, StringComparer.Ordinal);
+            foreach (var b in bosses)
+            {
+                string loc = $"tower_bosses[{b.Id}]";
+                b.Phases = phases.Where(p => p.BossId == b.Id).OrderBy(p => p.Order).ToList().AsReadOnly();
+                if (!Elements.ContainsKey(b.Element)) errors.Add(new ContentError("E023", loc, $"element '{b.Element}' is not an element id"));
+                foreach (var id in IdleRng.Sim.Combat.StatIds.Trained)
+                    if (!(b.Weights.Get(id) >= 0)) { errors.Add(new ContentError("E043", loc, "stat weights must be >= 0")); break; }
+                foreach (var sk in b.Skills)
+                    if (!MonsterSkills.ContainsKey(sk)) errors.Add(new ContentError("E023", loc, $"skill '{sk}' is not a monster_skills id"));
+                double prev = 1;
+                foreach (var p in b.Phases)
+                {
+                    if (!(p.EnterHp > 0 && p.EnterHp < prev))
+                        errors.Add(new ContentError("E032", $"boss_phases[{p.Id}]", "enter_hp must be in (0, 1) and strictly decrease with order"));
+                    prev = p.EnterHp;
+                }
+                if (b.Role == TowerRole.Add && b.Phases.Count > 0) errors.Add(new ContentError("E044", loc, "an add cannot have phases"));
+            }
+            foreach (var p in phases)
+            {
+                string loc = $"boss_phases[{p.Id}]";
+                if (!byId.ContainsKey(p.BossId)) errors.Add(new ContentError("E023", loc, $"boss_id '{p.BossId}' is not a tower_bosses id"));
+                foreach (var sk in p.AddSkills)
+                    if (!MonsterSkills.ContainsKey(sk)) errors.Add(new ContentError("E023", loc, $"add_skills '{sk}' is not a monster_skills id"));
+                bool ok;
+                switch (p.Kind)
+                {
+                    case IdleRng.Sim.Combat.PhaseKinds.ShieldCheck: ok = p.Power > 0 && p.Duration > 0 && p.HealFrac >= 0 && p.Buff >= 0; break;
+                    case IdleRng.Sim.Combat.PhaseKinds.Split: ok = p.Count >= 1 && p.Guard >= 0 && p.Guard <= 1 && p.Adds != null; break;
+                    case IdleRng.Sim.Combat.PhaseKinds.Channel: ok = p.Power > 0 && p.Duration > 0 && p.Strike >= 0; break;
+                    case IdleRng.Sim.Combat.PhaseKinds.Enrage: ok = p.Buff >= 0; break;
+                    default: errors.Add(new ContentError("E021", loc, $"unknown phase kind '{p.Kind}'")); continue;
+                }
+                if (!ok) errors.Add(new ContentError("E043", loc, $"values out of range for kind '{p.Kind}' (specs/21 section 3.2)"));
+                if (p.Adds != null && (!byId.TryGetValue(p.Adds, out var add) || add.Role != TowerRole.Add))
+                    errors.Add(new ContentError("E023", loc, $"adds '{p.Adds}' is not a tower_bosses id with role add"));
+            }
+            TowerBosses = new ReadOnlyDictionary<string, TowerBossDef>(byId);
+            TowerRegulars = bosses.Where(b => b.Role == TowerRole.Regular).ToList().AsReadOnly();
+            TowerMarquees = bosses.Where(b => b.Role == TowerRole.Marquee).ToList().AsReadOnly();
+            if (TowerRegulars.Count == 0 || TowerMarquees.Count == 0)
+                errors.Add(new ContentError("E044", "tower_bosses", "need at least one regular and one marquee boss"));
+
+            BookDrops = t["book_drops"].Select(r => new BookDropDef { BookId = r.Str("book_id"), MinFloor = r.Int("min_floor"), Weight = r.Dbl("weight") })
+                .ToList().AsReadOnly();
+            if (BookDrops.Count == 0) errors.Add(new ContentError("E044", "book_drops", "at least one row is required"));
+            else if (!BookDrops.Any(b => b.MinFloor == 1)) errors.Add(new ContentError("E044", "book_drops", "at least one row needs min_floor 1"));
+            foreach (var b in BookDrops)
+            {
+                string loc = $"book_drops[{b.BookId}]";
+                if (!SkillBooks.ContainsKey(b.BookId)) errors.Add(new ContentError("E023", loc, $"book_id '{b.BookId}' is not a skill_books id"));
+                if (!(b.MinFloor >= 1 && b.MinFloor <= k.TowerFloors)) errors.Add(new ContentError("E043", loc, "min_floor must be in [1, TOWER_FLOORS]"));
+                if (!(b.Weight > 0)) errors.Add(new ContentError("E043", loc, "weight must be > 0"));
+            }
+        }
+
+        static TowerRole ParseTowerRole(string s)
+        {
+            switch (s)
+            {
+                case "regular": return TowerRole.Regular;
+                case "marquee": return TowerRole.Marquee;
+                case "add": return TowerRole.Add;
+                default: throw new FormatException($"unknown tower role '{s}'");
+            }
         }
 
         static TalentEffect ParseTalentEffect(string s)

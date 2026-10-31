@@ -235,6 +235,136 @@
       "key": "REST_ENERGY",
       "type": "double",
       "value": 50.0
+    },
+    {
+      "key": "TOWER_SEED",
+      "type": "int",
+      "value": 20260101
+    },
+    {
+      "key": "TOWER_FLOORS",
+      "type": "int",
+      "value": 20
+    },
+    {
+      "key": "TOWER_ATTEMPTS_PER_DAY",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "TOWER_BASE",
+      "type": "double",
+      "value": 80.0
+    },
+    {
+      "key": "TOWER_GROWTH",
+      "type": "double",
+      "value": 1.06
+    },
+    {
+      "key": "TOWER_BOSS_HP_MULT",
+      "type": "double",
+      "value": 4.0
+    },
+    {
+      "key": "TOWER_MILESTONE_EVERY",
+      "type": "int",
+      "value": 5
+    },
+    {
+      "key": "TOWER_SHARDS_PER_FLOOR",
+      "type": "int",
+      "value": 4
+    },
+    {
+      "key": "TOWER_BOOK_CHANCE",
+      "type": "double",
+      "value": 0.15
+    },
+    {
+      "key": "TOWER_BOOK_CHANCE_PER_FLOOR",
+      "type": "double",
+      "value": 0.01
+    },
+    {
+      "key": "ENTROPY_CAP",
+      "type": "double",
+      "value": 100.0
+    },
+    {
+      "key": "ENTROPY_PER_TRIGGER",
+      "type": "double",
+      "value": 5.0
+    },
+    {
+      "key": "ENTROPY_PER_ECHO",
+      "type": "double",
+      "value": 10.0
+    },
+    {
+      "key": "ENTROPY_PER_COUNTER",
+      "type": "double",
+      "value": 15.0
+    },
+    {
+      "key": "ENTROPY_DECAY",
+      "type": "double",
+      "value": 3.0
+    },
+    {
+      "key": "ENTROPY_RECOIL_FRAC",
+      "type": "double",
+      "value": 0.15
+    },
+    {
+      "key": "ENTROPY_STUN_GAUGE",
+      "type": "double",
+      "value": 100.0
+    },
+    {
+      "key": "ENTROPY_ENRAGE_FRAC",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "ENTROPY_ENRAGE_TURNS",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "ENTROPY_CONVERT_SHIELD",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "ENTROPY_CONVERT_TURNS",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "CORRUPT_START_TICK",
+      "type": "int",
+      "value": 300
+    },
+    {
+      "key": "CORRUPT_EVERY_TICKS",
+      "type": "int",
+      "value": 100
+    },
+    {
+      "key": "CORRUPT_HEAL_PER_LEVEL",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "CORRUPT_HEAL_FLOOR",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "CORRUPT_DMG_PER_LEVEL",
+      "type": "double",
+      "value": 0.1
     }
   ]
 }

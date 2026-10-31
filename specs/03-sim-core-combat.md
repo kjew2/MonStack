@@ -1,6 +1,6 @@
 # 03 - Sim Core
 
-Scope: the `IdleRng.Sim` assembly. Pure C#, no `UnityEngine` reference, no IO, clock or JSON. It holds the monster battle (`specs/16`), the training run (`specs/14`, `specs/15`), the account (`specs/18`), the gauntlet (`specs/19`), the content database (`specs/05`) and the RNG. The web bridge (`src/IdleRng.Web`), the bots (`specs/09`) and the save layer (`IdleRng.Runtime`, `specs/06`) all drive this one assembly.
+Scope: the `IdleRng.Sim` assembly. Pure C#, no `UnityEngine` reference, no IO, clock or JSON. It holds the monster battle (`specs/16`), the training run (`specs/14`, `specs/15`), the account (`specs/18`), the gauntlet (`specs/19`), the Daily Tower (`specs/21`), the content database (`specs/05`) and the RNG. The web bridge (`src/IdleRng.Web`), the bots (`specs/09`) and the save layer (`IdleRng.Runtime`, `specs/06`) all drive this one assembly.
 
 This spec was the idle game's tick-loop spec until the pivot (`specs/13` T7 removed that game). It now keeps what every part of the sim still shares: the design rules, the numeric model and the RNG.
 
@@ -137,6 +137,8 @@ def stream_seed(profile_seed, name): return mix64((profile_seed + fnv1a64(name))
 | `fight` | a training run | derives the seed of each rank fight |
 | `battle_sim` | one fight | evade, crit and target draws (`specs/16` section 5.3) |
 | `gauntlet` | a gauntlet | derives the seed of each floor's fight |
+| `tower` | `TOWER_SEED` and the UTC day | the day's seed and its lineup draws (`specs/21` section 4) |
+| `tower_fight`, `drop` | the day's seed | derive each floor's fight seed and Skill Book roll (`specs/21` sections 2 and 7) |
 | `run` | the account | derives each run's seed (`specs/18` section 2) |
 | `vendor` | the account | the post-run vendor's offers: per offer a rarity draw, then a talent draw; seeded per run index (`specs/18` section 4) |
 
@@ -144,4 +146,4 @@ Every stream is `(seed, counter)`; the counter lives in the state it belongs to.
 
 ## 6. Unit tests
 
-`src/IdleRng.Sim.Tests`: `RngTests` (the vectors above), `BattleSimTests`, `TrainingRunTests`, `SkillTreeTests`, `AccountTests`, `VaultTests`, `GauntletTests`, `ContentDbTests`. Golden files for the battle, the runs and the gauntlet are in `specs/09`.
+`src/IdleRng.Sim.Tests`: `RngTests` (the vectors above), `BattleSimTests`, `TrainingRunTests`, `SkillTreeTests`, `AccountTests`, `VaultTests`, `GauntletTests`, `TowerBattleTests`, `TowerTests`, `ContentDbTests`. Golden files for the battle, the runs, the gauntlet and the tower are in `specs/09`.

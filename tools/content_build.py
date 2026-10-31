@@ -34,6 +34,8 @@ ENUMS = {
     "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
+    "TowerRole": ["regular", "marquee", "add"],
+    "PhaseKind": ["shield_check", "split", "channel", "enrage"],
 }
 
 # key -> type. Mirrors IdleRng.Sim.Content.Constants (specs/16 to specs/19 list each group).
@@ -57,6 +59,15 @@ REQUIRED_CONSTANTS = {
     # end-of-run gauntlet (specs/19)
     "GAUNTLET_FLOORS": "int", "GAUNTLET_BASE": "double", "GAUNTLET_GROWTH": "double", "GAUNTLET_BOSS_EVERY": "int",
     "GAUNTLET_BOSS_MULT": "double",
+    # Daily Tower (specs/21 section 5)
+    "TOWER_SEED": "int", "TOWER_FLOORS": "int", "TOWER_ATTEMPTS_PER_DAY": "int", "TOWER_BASE": "double", "TOWER_GROWTH": "double",
+    "TOWER_BOSS_HP_MULT": "double", "TOWER_MILESTONE_EVERY": "int", "TOWER_SHARDS_PER_FLOOR": "int", "TOWER_BOOK_CHANCE": "double",
+    "TOWER_BOOK_CHANCE_PER_FLOOR": "double",
+    "ENTROPY_CAP": "double", "ENTROPY_PER_TRIGGER": "double", "ENTROPY_PER_ECHO": "double", "ENTROPY_PER_COUNTER": "double",
+    "ENTROPY_DECAY": "double", "ENTROPY_RECOIL_FRAC": "double", "ENTROPY_STUN_GAUGE": "double", "ENTROPY_ENRAGE_FRAC": "double",
+    "ENTROPY_ENRAGE_TURNS": "int", "ENTROPY_CONVERT_SHIELD": "double", "ENTROPY_CONVERT_TURNS": "int",
+    "CORRUPT_START_TICK": "int", "CORRUPT_EVERY_TICKS": "int", "CORRUPT_HEAL_PER_LEVEL": "double", "CORRUPT_HEAL_FLOOR": "double",
+    "CORRUPT_DMG_PER_LEVEL": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -89,6 +100,20 @@ MON_RANGES = {
     "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
     "GAUNTLET_GROWTH": (">= 1", lambda v: v >= 1), "GAUNTLET_BOSS_EVERY": ("> 0", lambda v: v > 0),
     "GAUNTLET_BOSS_MULT": ("> 0", lambda v: v > 0),
+    "TOWER_FLOORS": ("> 0", lambda v: v > 0), "TOWER_ATTEMPTS_PER_DAY": ("> 0", lambda v: v > 0),
+    "TOWER_BASE": ("> 0", lambda v: v > 0), "TOWER_GROWTH": (">= 1", lambda v: v >= 1),
+    "TOWER_BOSS_HP_MULT": ("> 0", lambda v: v > 0), "TOWER_MILESTONE_EVERY": ("> 0", lambda v: v > 0),
+    "TOWER_SHARDS_PER_FLOOR": (">= 0", lambda v: v >= 0), "TOWER_BOOK_CHANCE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "TOWER_BOOK_CHANCE_PER_FLOOR": (">= 0", lambda v: v >= 0),
+    "ENTROPY_CAP": ("> 0", lambda v: v > 0), "ENTROPY_PER_TRIGGER": (">= 0", lambda v: v >= 0),
+    "ENTROPY_PER_ECHO": (">= 0", lambda v: v >= 0), "ENTROPY_PER_COUNTER": (">= 0", lambda v: v >= 0),
+    "ENTROPY_DECAY": (">= 0", lambda v: v >= 0), "ENTROPY_RECOIL_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "ENTROPY_STUN_GAUGE": (">= 0", lambda v: v >= 0), "ENTROPY_ENRAGE_FRAC": (">= 0", lambda v: v >= 0),
+    "ENTROPY_ENRAGE_TURNS": ("> 0", lambda v: v > 0), "ENTROPY_CONVERT_SHIELD": (">= 0", lambda v: v >= 0),
+    "ENTROPY_CONVERT_TURNS": ("> 0", lambda v: v > 0),
+    "CORRUPT_START_TICK": (">= 0", lambda v: v >= 0), "CORRUPT_EVERY_TICKS": ("> 0", lambda v: v > 0),
+    "CORRUPT_HEAL_PER_LEVEL": (">= 0", lambda v: v >= 0), "CORRUPT_HEAL_FLOOR": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "CORRUPT_DMG_PER_LEVEL": (">= 0", lambda v: v >= 0),
 }
 
 
@@ -127,6 +152,12 @@ SCHEMA = {
     "gauntlet_enemies": T([c("id", "id"), c("name_key", "key"), c("element", "id"), c("boss", "bool")]
                            + [c(s, "double") for s in STATS], key="id"),
     "legacy_titles": T([c("min_floor", "int"), c("title_key", "key")], key="min_floor"),
+    "tower_bosses": T([c("id", "id"), c("name_key", "key"), c("element", "id"), c("role", "enum:TowerRole")]
+                       + [c(s, "double") for s in STATS] + [c("skills", "string", True)], key="id"),
+    "boss_phases": T([c("id", "id"), c("boss_id", "id"), c("order", "int"), c("enter_hp", "double"), c("kind", "enum:PhaseKind"),
+                      c("power", "double"), c("duration", "int"), c("count", "int"), c("guard", "double"), c("heal_frac", "double"),
+                      c("strike", "double"), c("buff", "double"), c("adds", "id", True), c("add_skills", "string", True)], key="id"),
+    "book_drops": T([c("book_id", "id"), c("min_floor", "int"), c("weight", "double")], key="book_id"),
     "talents": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("effect", "enum:TalentEffect"),
                   c("per_rank", "double"), c("max_rank", "int"), c("cost_base", "int"), c("cost_step", "int")], key="id"),
     "achievements": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:AchievementKind"), c("ref", "string", True),
@@ -370,6 +401,69 @@ def validate_gauntlet(t, errs):
             errs.add("E032", f"legacy_titles[{v}]", "min_floor must strictly increase")
 
 
+def split_ids(text):
+    return [x for x in (text or "").split("|") if x]
+
+
+def validate_tower(t, keys, errs):
+    """Daily Tower (specs/21 section 5). Mirrors ContentDb.BuildTower."""
+    elements = {r["id"] for r in t["elements"]}
+    skills = {r["id"] for r in t["monster_skills"]}
+    bosses = {r["id"]: r for r in t["tower_bosses"]}
+    roles = [r["role"] for r in t["tower_bosses"]]
+    if "regular" not in roles or "marquee" not in roles:
+        errs.add("E044", "tower_bosses", "need at least one regular and one marquee boss")
+    for r in t["tower_bosses"]:
+        loc = f"tower_bosses[{r['id']}]"
+        if r["element"] not in elements:
+            errs.add("E023", loc, f"element '{r['element']}' is not an element id")
+        if any(r[s] < 0 for s in STATS):
+            errs.add("E043", loc, "stat weights must be >= 0")
+        for sk in split_ids(r["skills"]):
+            if sk not in skills:
+                errs.add("E023", loc, f"skill '{sk}' is not a monster_skills id")
+    by_boss = {}
+    for p in t["boss_phases"]:
+        loc = f"boss_phases[{p['id']}]"
+        by_boss.setdefault(p["boss_id"], []).append(p)
+        if p["boss_id"] not in bosses:
+            errs.add("E023", loc, f"boss_id '{p['boss_id']}' is not a tower_bosses id")
+        elif bosses[p["boss_id"]]["role"] == "add":
+            errs.add("E044", loc, "an add cannot have phases")
+        for sk in split_ids(p["add_skills"]):
+            if sk not in skills:
+                errs.add("E023", loc, f"add_skills '{sk}' is not a monster_skills id")
+        k = p["kind"]
+        ok = (p["power"] > 0 and p["duration"] > 0 and p["heal_frac"] >= 0 and p["buff"] >= 0) if k == "shield_check" else \
+             (p["count"] >= 1 and 0 <= p["guard"] <= 1 and p["adds"] is not None) if k == "split" else \
+             (p["power"] > 0 and p["duration"] > 0 and p["strike"] >= 0) if k == "channel" else p["buff"] >= 0
+        if not ok:
+            errs.add("E043", loc, f"values out of range for kind '{k}' (specs/21 section 3.2)")
+        if p["adds"] is not None and (p["adds"] not in bosses or bosses[p["adds"]]["role"] != "add"):
+            errs.add("E023", loc, f"adds '{p['adds']}' is not a tower_bosses id with role add")
+    for boss, ps in by_boss.items():
+        ps = sorted(ps, key=lambda x: x["order"])
+        prev = 1.0
+        for p in ps:
+            if not 0 < p["enter_hp"] < prev:
+                errs.add("E032", f"boss_phases[{p['id']}]", "enter_hp must be in (0, 1) and strictly decrease with order")
+            prev = p["enter_hp"]
+    books = {r["id"] for r in t["skill_books"]}
+    floors = keys.get("TOWER_FLOORS", {}).get("value", 1)
+    if not t["book_drops"]:
+        errs.add("E044", "book_drops", "at least one row is required")
+    for r in t["book_drops"]:
+        loc = f"book_drops[{r['book_id']}]"
+        if r["book_id"] not in books:
+            errs.add("E023", loc, f"book_id '{r['book_id']}' is not a skill_books id")
+        if not 1 <= r["min_floor"] <= floors:
+            errs.add("E043", loc, "min_floor must be in [1, TOWER_FLOORS]")
+        if not r["weight"] > 0:
+            errs.add("E043", loc, "weight must be > 0")
+    if t["book_drops"] and not any(r["min_floor"] == 1 for r in t["book_drops"]):
+        errs.add("E044", "book_drops", "at least one row needs min_floor 1")
+
+
 def validate_talents(t, errs):
     """Account talent tree (specs/18 section 4). Mirrors ContentDb.BuildAccount."""
     for r in t["talents"]:
@@ -474,6 +568,7 @@ def validate_training(t, keys, errs):
     validate_talents(t, errs)
     validate_unlocks(t, errs)
     validate_gauntlet(t, errs)
+    validate_tower(t, keys, errs)
     ms = [r["threshold"] for r in t["stat_milestones"]]
     for i, v in enumerate(ms):
         if v <= 0 or (i > 0 and v <= ms[i - 1]):
