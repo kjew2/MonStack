@@ -94,7 +94,7 @@
   const activeFilters = () => ['species', 'element', 'title', 'lock'].filter((k) => st.view[k]).length + (st.search.trim() ? 1 : 0);
 
   // ------------------------------------------------------------ list
-  // Draws the Vault section into main. When the detail or compare sheet is open, draws it into modal (shown over the home screen).
+  // Draws the Vault list into main, under the home screen's Vault tab header (run.js draws the count). When the detail or compare sheet is open, draws it into modal (shown over the home screen).
   function render(main, modal, helpers) {
     X = helpers;
     const h = X.h, acct = X.run.account;
@@ -103,7 +103,6 @@
     if (st.pick && !refOk(st.pick)) st.pick = null;
     if (st.compare && !st.compare.every(refOk)) st.compare = null;
 
-    main.append(h('h3', { class: acct.vaultOver > 0 ? 'bad' : '', 'data-id': 'vault-count', text: 'Vault ' + acct.vault.length + '/' + acct.vaultCap }));
     if (!acct.vault.length) { main.append(h('p', { class: 'small muted', text: 'Sealed monsters appear here.' })); return renderSheet(modal); }
     main.append(h('p', { class: 'small muted', text: 'Dismantle a monster for Training Shards; lock your favourites so they cannot be dismantled. Tap Details for its stats and trees, or Compare on two monsters.' }));
     const list = h('div', { class: 'vlist', 'data-id': 'vault-list' });

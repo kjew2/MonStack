@@ -181,7 +181,7 @@ The day number is read from the device clock by the caller. The sim cannot tell 
 
 ## 8. Web client
 
-**Built (first version).** A **Dungeon** card on the home screen (tickets ready, pieces toward the next, today's best, and how tickets are earned) opens the Dungeon screen; everything comes through the bridge (`AccountCmd` `towerInfo` and `runTower`, `web/wasm/BRIDGE.md`), and the page computes no rule. The day is the UTC day number from the device clock (`run.towerDay()`).
+**Built (first version).** A **Dungeon** card on the home screen's Dungeon tab (the tab shows the tickets ready as a count; the card shows tickets ready, pieces toward the next, today's best, and how tickets are earned) opens the Dungeon screen, whose Back returns to that tab; everything comes through the bridge (`AccountCmd` `towerInfo` and `runTower`, `web/wasm/BRIDGE.md`), and the page computes no rule. The day is the UTC day number from the device clock (`run.towerDay()`).
 
 - Status line: tickets (held plus the free ones due, `towerInfo.tickets`), pieces, floors cleared today and ever. The enter button is disabled with no ticket and says how to get one.
 - The grade screen shows the pieces the sealed run earned, any ticket they completed and the progress toward the next (`finishRun`'s `ticketPieces`, `ticketsEarned`).

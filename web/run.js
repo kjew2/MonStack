@@ -8,10 +8,11 @@
   const up = (s) => String(s).toUpperCase();
   const num = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
 
-  let run = null, C = null, shownView = null;   // shownView: the view the last render drew
+  let run = null, C = null, shownView = null, shownHomeTab = null;   // shownView: the view the last render drew (shownHomeTab: and the home tab)
   const ui = {
     view: 'home',            // home | run | climb | grade | vendor | tower
     tab: 'train',            // train | trees | ladder | log
+    homeTab: 'raise',        // the home screen's tab: raise | vault | talents | dungeon | goals
     pick: null,              // species chosen on the home screen
     book: false,             // test option: start with a skill book
     feed: [],                // newest first
@@ -132,8 +133,10 @@
     if (ui.view !== 'run') $('floats').replaceChildren();
     const wasView = shownView; shownView = ui.view;
     if (ui.view === 'home') {   // the Vault's detail and compare sheets open in the modal over the home screen
-      tabs.hidden = true; modal.hidden = true; modal.replaceChildren(); renderHome(main);
-      if (wasView === 'home') main.scrollTop = prevScroll;   // a lock or dismantle deep in a long Vault keeps the place
+      modal.hidden = true; modal.replaceChildren(); renderHome(main);
+      tabs.hidden = false; renderHomeTabs(tabs);
+      main.scrollTop = wasView === 'home' && shownHomeTab === ui.homeTab ? prevScroll : 0;   // a lock or dismantle deep in a long Vault keeps the place; a new tab opens at its top
+      shownHomeTab = ui.homeTab;
       return;
     }
     if (ui.view === 'tower') {   // a floor playback (issue #98) opens in the modal over the tower screen
@@ -979,12 +982,56 @@
   }
 
   // ---- home and grade
+  // The home screen is split into tabs on the bottom bar (the run screen's bar): Raise (species, start, the vendor's offers),
+  // Vault, Talents, Dungeon and Goals (achievements). Each tab opens at its top; the header keeps the shards in view.
+  const HOME_TABS = [['raise', 'Raise'], ['vault', 'Vault'], ['talents', 'Talents'], ['dungeon', 'Dungeon'], ['goals', 'Goals']];
+  function goHomeTab(id) { ui.homeTab = id; render(); }
+  function renderHomeTabs(tabs) {
+    tabs.replaceChildren();
+    const acct = run.account, ti = run.towerInfo(run.towerDay());
+    const done = run.account.achievements.filter((x) => x.earned).length;
+    // A count on a tab when it says something: the Vault's fill (red when over its cap), Dungeon tickets ready, goals done.
+    const badge = {
+      vault: acct.vault.length ? { n: acct.vault.length, cls: acct.vaultOver > 0 ? ' bad' : '', label: acct.vault.length + ' monsters' + (acct.vaultOver > 0 ? ', over the cap' : '') } : null,
+      dungeon: acct.vault.length && ti.tickets > 0 ? { n: ti.tickets, cls: ' gems', label: ti.tickets + (ti.tickets === 1 ? ' ticket' : ' tickets') + ' ready' } : null,
+      goals: { n: done + '/' + C.achievements.length, cls: '', label: done + ' of ' + C.achievements.length + ' done' },
+    };
+    HOME_TABS.forEach(([id, label]) => {
+      const b = h('button', { type: 'button', role: 'tab', 'aria-selected': String(ui.homeTab === id), 'data-act': 'hometab-' + id, text: label,
+        onclick: () => goHomeTab(id) });
+      const bd = badge[id];
+      if (bd) { b.append(h('span', { class: 'tabsp pill num' + bd.cls, 'data-id': 'hometab-' + id + '-n', text: String(bd.n) })); b.setAttribute('aria-label', label + ', ' + bd.label); }
+      tabs.append(b);
+    });
+  }
+  function homeHeader(main, title, attrs) {
+    main.append(h('div', { class: 'row between' }, [h('h2', Object.assign({ text: title }, attrs)),
+      h('span', { class: 'num gems', 'data-id': 'shards', text: run.account.shards + ' shards' })]));
+  }
   function renderHome(main) {
+    if (!HOME_TABS.some(([id]) => id === ui.homeTab)) ui.homeTab = 'raise';
+    if (ui.homeTab === 'vault') {   // the count against the cap, red when over it (specs/18 section 7), then the list (web/vault.js)
+      const acct = run.account;
+      homeHeader(main, 'Vault ' + acct.vault.length + '/' + acct.vaultCap, { class: acct.vaultOver > 0 ? 'bad' : '', 'data-id': 'vault-count' });
+      VAULT.render(main, $('modal'), vaultHelpers());
+      return;
+    }
+    if (ui.homeTab === 'talents') return homeTalents(main);
+    if (ui.homeTab === 'dungeon') return homeDungeon(main);
+    if (ui.homeTab === 'goals') return homeGoals(main);
+    homeRaise(main);
+  }
+  function homeRaise(main) {
     const acct = run.account;
-    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Raise a monster' }),
-        h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
-      h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up and spend skill points on trees. Drilling at low energy can injure the monster, which loses ' + injuryRisk() + '.' }));
+    homeHeader(main, 'Raise a monster');
+    main.append(h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up and spend skill points on trees. Drilling at low energy can injure the monster, which loses ' + injuryRisk() + '.' }));
     if (!owned(ui.pick)) ui.pick = acct.owned[0] || null;
+    const over = acct.vaultOver;   // the engine refuses a new run while the Vault is over its cap (specs/18 section 7)
+    if (over > 0) main.append(h('div', { class: 'row between' }, [
+      h('p', { class: 'small bad', 'data-id': 'vault-over', role: 'status',
+        text: 'The Vault holds ' + acct.vault.length + ' of ' + acct.vaultCap + ' monsters. Dismantle ' + over + (over === 1 ? ' monster' : ' monsters') + ' in the Vault to start a run.' }),
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'vault-over-open', text: 'Open Vault', onclick: () => goHomeTab('vault') })]));
+    main.append(h('h3', { text: 'Species' }));
     const pickArt = ui.pick && SP.art(ui.pick);   // the picked species' portrait (specs/26 section 8)
     if (pickArt) main.append(h('figure', { class: 'card portrait', 'data-id': 'portrait' }, [
       h('img', { src: pickArt.portrait, alt: speciesDef(ui.pick).name, draggable: 'false' })]));
@@ -1011,15 +1058,7 @@
       cb.checked = ui.book;
       main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[bring].name + ' (you have ' + acct.books[bring] + ')' })]));
     }
-    const over = acct.vaultOver;   // the engine refuses a new run while the Vault is over its cap (specs/18 section 7)
-    if (over > 0) main.append(h('p', { class: 'small bad', 'data-id': 'vault-over', role: 'status',
-      text: 'The Vault holds ' + acct.vault.length + ' of ' + acct.vaultCap + ' monsters. Dismantle ' + over + (over === 1 ? ' monster' : ' monsters') + ' in the Vault below to start a run.' }));
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
-      text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
-    const grant = debugOn() ? speciesBook() || Object.keys(C.books)[0] : null;   // debug only: the Dungeon drops books (specs/21 section 7)
-    if (grant) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[grant].name,
-      onclick: () => { const r = run.acct('debugGrantBook', grant, 1); if (!r.ok) toast(r.reason); render(); } }));
-
+    // The vendor's offers stay until the next run starts (specs/18 section 4).
     if (acct.vendor && acct.vendor.offers.length) {
       main.append(h('h3', { text: 'Vendor' }));
       main.append(h('p', { class: 'small muted', text: 'Offers from your last run. They vanish when the next run starts.' }));
@@ -1027,7 +1066,19 @@
       rerollButton(main);
     }
 
-    main.append(h('h3', { text: 'Talents' }));
+    const grant = debugOn() ? speciesBook() || Object.keys(C.books)[0] : null;   // debug only: the Dungeon drops books (specs/21 section 7)
+    if (grant) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[grant].name,
+      onclick: () => { const r = run.acct('debugGrantBook', grant, 1); if (!r.ok) toast(r.reason); render(); } }));
+
+    // The start button sticks to the bottom of the screen, so it is in reach from anywhere in the species list (not while it is
+    // disabled: a faded button over the cards only gets in the way).
+    const pickName = ui.pick ? speciesDef(ui.pick).name : null;
+    main.append(h('button', { class: 'btn primary block' + (ui.pick && over <= 0 ? ' sticky-start' : ''), type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
+      text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run with ' + pickName : 'Pick a species', onclick: startRun }));
+  }
+  function homeTalents(main) {
+    const acct = run.account;
+    homeHeader(main, 'Talents');
     const now = talentSummary(acct.mods);
     main.append(h('p', { class: 'small muted', 'data-id': 'talent-now', text: 'Talent ranks are sold by the vendor after each run. They apply from the next run on. Untick a talent to leave it out of the next run (free); ' +
       C.consts.legendarySlots + ' legendary talent' + (C.consts.legendarySlots === 1 ? '' : 's') + ' can be on per run. Next run: ' + (now.length ? now.join(', ') : 'no talents yet') + '.' }));
@@ -1043,8 +1094,10 @@
         h('span', { class: 'tag num', text: t.rank + '/' + def.maxRank })]));
     });
     main.append(tl);
-
-    main.append(h('h3', { text: 'Achievements' }));
+  }
+  function homeGoals(main) {
+    homeHeader(main, 'Goals');
+    main.append(h('p', { class: 'small muted', text: 'Achievements. Some unlock a species.' }));
     const al = h('div', { class: 'card' });
     C.achievements.forEach((d) => {
       const p = achievementProgress(d.id);
@@ -1056,19 +1109,18 @@
       ]));
     });
     main.append(al);
-
+  }
+  function homeDungeon(main) {
     const ti = run.towerInfo(run.towerDay());
-    main.append(h('h3', { text: 'Dungeon' }));
+    homeHeader(main, 'Dungeon');
     main.append(h('div', { class: 'card' }, [
       h('p', { class: 'small muted', text: 'Send a team of up to ' + ti.teamMax + ' Vault monsters through today\'s ' + ti.floors.length + ' boss floors. Each entry costs a ticket; every floor cleared pays shards and may drop a Skill Book. ' + ticketHelp(ti) }),
       h('div', { class: 'row between' }, [
         h('span', { class: 'small num', 'data-id': 'tower-tickets', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday + ' floors' }),
-        h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Dungeon',
-          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); main.scrollTop = 0; } }),
+        h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Enter',
+          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); $('main').scrollTop = 0; } }),
       ]),
     ]));
-
-    VAULT.render(main, $('modal'), vaultHelpers());   // the Vault list, its sort/filter/search, detail and compare (web/vault.js)
   }
 
   // ---- Dungeon (specs/21 section 8): today's lineup, a team of Vault monsters, one attempt at a time. The engine runs the
@@ -1491,7 +1543,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); stopEvolve(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.ticketGain = null; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; ui.treeOpen = {}; }
+  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); stopEvolve(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.ticketGain = null; ui.tab = 'train'; ui.homeTab = 'raise'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; ui.treeOpen = {}; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
