@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<linearGradient id="uk-bd-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8402c" stop-opacity="0.75"/><stop offset="0.6" stop-color="#efe3c8" stop-opacity="0"/></linearGradient>
+<pattern id="uk-bd-uroko" width="12" height="10" patternUnits="userSpaceOnUse"><rect width="12" height="10" fill="#c2452e"/><path d="M0 10L6 0L12 10Z" fill="#9e3322"/></pattern>
+<radialGradient id="uk-bd-glow"><stop offset="0" stop-color="#fff1b8"/><stop offset="0.5" stop-color="#ffb347"/><stop offset="1" stop-color="#e0702a"/></radialGradient>
+<filter id="uk-bd-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.15 0 0 0 0.5 -0.1"/></filter>
+</defs>
+<rect width="240" height="240" fill="#efe3c8"/>
+<rect width="240" height="240" fill="url(#uk-bd-sky)"/>
+<g stroke="#1b1712" stroke-width="2.5" stroke-linejoin="round">
+<path d="M70 222C40 190 70 160 54 120C74 136 86 130 80 104C104 124 120 110 108 76C140 100 150 82 140 44C180 76 170 108 164 124C184 112 196 96 190 70C224 104 222 170 196 222Z" fill="#e6957a"/>
+<path d="M94 222C76 196 98 176 90 146C106 160 118 150 116 126C134 146 146 132 146 108C166 130 168 160 158 176C172 168 182 156 182 140C198 168 196 200 180 222Z" fill="#f0c56e"/>
+<path d="M140 44C150 40 156 46 152 54C148 58 144 54 147 51" fill="none" stroke-width="2"/>
+<path d="M190 70C198 64 206 70 202 78C198 82 194 78 197 75" fill="none" stroke-width="2"/>
+<path d="M54 120C46 114 38 120 42 128C46 132 50 128 47 125" fill="none" stroke-width="2"/>
+</g>
+<path d="M18 212C80 204 170 204 222 212" stroke="#1b1712" stroke-width="2.5" fill="none"/>
+<g stroke="#1b1712" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+<path d="M176 176C200 180 214 160 208 138C204 124 214 112 224 114C214 104 196 110 194 128C192 144 186 156 168 158Z" fill="url(#uk-bd-uroko)"/>
+<path d="M224 114L230 100L218 104L214 92L206 108C212 108 220 110 224 114Z" fill="#a9b2c4"/>
+<path d="M150 174C166 168 186 176 186 194C186 204 180 210 170 210L148 210C140 200 140 184 150 174Z" fill="#c2452e"/>
+<path d="M146 210L176 210C180 204 178 198 172 196L150 196Z" fill="#4a4f5c"/>
+<path d="M80 136C82 108 112 94 146 98C180 102 198 128 190 160C184 184 160 196 128 196C100 196 80 182 80 136Z" fill="url(#uk-bd-uroko)"/>
+<path d="M98 114C112 92 158 88 186 118C174 126 158 126 148 118C134 128 112 128 98 114Z" fill="#4a4f5c" transform="translate(2,2)" stroke="none"/>
+<path d="M98 114C112 92 158 88 186 118C174 126 158 126 148 118C134 128 112 128 98 114Z" fill="#a9b2c4"/>
+<path d="M110 108C126 100 156 100 172 112" fill="none" stroke-width="1.6"/>
+<path d="M150 134C160 126 182 128 192 142C186 156 170 158 158 152C152 148 148 142 150 134Z" fill="#a9b2c4"/>
+<path d="M158 140C166 136 178 138 186 144" fill="none" stroke-width="1.5"/>
+<path d="M122 92L128 80L136 92Z M144 92L152 80L158 94Z M166 98L176 88L178 102Z" fill="#a9b2c4"/>
+<path d="M164 172C178 166 194 174 194 190C194 200 188 208 176 208L158 208C152 196 154 180 164 172Z" fill="#c2452e"/>
+<path d="M162 176C172 170 186 174 190 184C180 186 170 186 162 182Z" fill="#a9b2c4"/>
+<path d="M156 208L190 208C194 202 190 196 184 196L160 196Z" fill="#4a4f5c"/>
+<path d="M156 208C156 202 162 202 162 208M166 208C166 202 172 202 172 208M176 208C176 202 182 202 182 208" fill="#efe3c8" stroke-width="1.8"/>
+<path d="M84 140C90 154 96 172 110 186C96 194 80 182 76 166C72 154 76 144 84 140Z" fill="#a9b2c4"/>
+<path d="M90 148C108 140 124 150 126 166C126 180 116 190 102 188C90 186 82 174 84 162C84 156 86 152 90 148Z" fill="url(#uk-bd-glow)"/>
+<path d="M90 158C100 154 116 156 122 164M88 168C100 166 114 168 122 176M92 178C100 178 110 180 116 184" fill="none" stroke="#a0401e" stroke-width="2"/>
+<path d="M100 186C96 196 92 204 92 210L118 210C120 202 118 194 116 186Z" fill="#c2452e"/>
+<path d="M90 210L122 210C124 202 120 196 114 196L94 196C90 200 88 204 90 210Z" fill="#4a4f5c"/>
+<path d="M92 210C92 204 98 204 98 210M102 210C102 204 108 204 108 210M112 210C112 204 118 204 118 210" fill="#efe3c8" stroke-width="1.8"/>
+<path d="M84 128C80 112 82 102 90 94L110 104C104 112 100 122 102 132Z" fill="url(#uk-bd-uroko)"/>
+<path d="M36 110C32 92 46 74 68 72C88 70 104 80 104 98C104 112 92 120 76 120L52 122C42 122 38 118 36 110Z" fill="#c2452e"/>
+<path d="M50 84C56 70 76 62 96 72C102 78 104 86 102 92C90 86 70 86 50 84Z" fill="#4a4f5c" transform="translate(2,2)" stroke="none"/>
+<path d="M50 84C56 70 76 62 96 72C102 78 104 86 102 92C90 86 70 86 50 84Z" fill="#a9b2c4"/>
+<path d="M84 70C84 58 90 46 104 40C98 50 96 60 98 72Z" fill="#e8c27a"/>
+<path d="M70 68C66 58 66 50 72 42C74 52 78 60 80 68Z" fill="#e8c27a"/>
+<path d="M36 108C46 112 62 112 76 110C68 118 58 122 44 122C38 120 36 114 36 108Z" fill="#7a2418"/>
+<path d="M40 110L44 116L48 110M54 110L57 116L60 110" fill="#fff" stroke-width="1.2"/>
+<path d="M36 112C24 108 14 116 18 128C20 134 28 132 26 126C34 132 30 142 22 140C34 150 46 134 38 124C42 124 44 118 40 114Z" fill="#ffb347"/>
+<path d="M70 92C76 86 86 86 90 92C86 98 76 98 70 92Z" fill="#ffd23f"/>
+<circle cx="80" cy="92" r="2.6" fill="#1b1712" stroke="none"/>
+<path d="M66 86L92 84" fill="none" stroke-width="3"/>
+<circle cx="42" cy="96" r="1.8" fill="#1b1712" stroke="none"/>
+</g>
+<g fill="#1b1712"><circle cx="106" cy="110" r="1.8"/><circle cx="124" cy="104" r="1.8"/><circle cx="146" cy="104" r="1.8"/><circle cx="166" cy="108" r="1.8"/><circle cx="180" cy="116" r="1.8"/><circle cx="160" cy="146" r="1.6"/><circle cx="182" cy="148" r="1.6"/><circle cx="58" cy="80" r="1.6"/><circle cx="74" cy="74" r="1.6"/><circle cx="92" cy="76" r="1.6"/><circle cx="82" cy="152" r="1.5"/><circle cx="90" cy="172" r="1.5"/></g>
+<g transform="translate(204,14)"><rect width="22" height="40" fill="#f6eedb" stroke="#1b1712" stroke-width="2"/><rect x="3" y="3" width="16" height="34" fill="none" stroke="#1b1712" stroke-width="0.8"/><path d="M11 8L11 22M7 14L15 14" fill="none" stroke="#1b1712" stroke-width="1.6"/><rect x="7" y="26" width="8" height="8" fill="#c8402c"/></g>
+<rect width="240" height="240" filter="url(#uk-bd-grain)" opacity="0.35"/>
+<rect x="3" y="3" width="234" height="234" fill="none" stroke="#1b1712" stroke-width="3"/>
+</svg>

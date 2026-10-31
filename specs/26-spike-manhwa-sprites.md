@@ -67,3 +67,17 @@ Palette tokens that line up with any of them: a background, a raised surface, in
 2. **Route:** **AI generation** (kj). It needs an image-API key and network access in the cloud environment, which kj sets up; issue #116 has the steps and the generation plan. Prompts describe the style in words and never name an artist or series; a model licensed for commercial use only (section 2).
 3. **Where the art shows:** **both** (kj): portraits on the monster card, draft cards and apex reveals, and the battle sprites redrawn in the same style (bold outline, at most two tones, so they read at 48-64 px). The 12x12 pixel art in `web/sprites.js` stays until the generated set replaces it.
 4. **Chibi:** **not for now** (kj); maybe a later use case.
+
+## 7. Addendum: batch 2, anime and manga known for their art
+
+kj asked for a second batch of demos after section 6 was answered: creature styles inspired by anime and manga known for good art. Same method as section 4 (agent-drawn SVG, original creatures, rendering language only), drawn without the image API to save cost. The panel artifact shows batch 2 next to the chosen hunter style; the drawings are in `specs/assets/26/` (`ghibli_`, `abyss_`, `meshi_`, `berserk_`, `ukiyo_`). Research only: section 6 still stands.
+
+| Style | Inspired by | Known for | Fit |
+|---|---|---|---|
+| Forest-spirit watercolour | *Princess Mononoke*, *Spirited Away*, *My Neighbor Totoro* | Hand-painted nature spirits; the benchmark for warm, wondrous creature design. | Medium: charming but soft; suits the training screen more than fights. |
+| Abyss expedition watercolour | *Made in Abyss* | Delicate watercolour worlds; cute creatures with one unsettling detail. | High: cute-but-eerie fits a monster raiser and blends with the hunter style. |
+| Monster field guide | *Delicious in Dungeon* (*Dungeon Meshi*) | Monsters drawn as believable animals, like naturalist studies. | Medium: ideal for a bestiary or codex page. |
+| Grimdark pen and ink | *Berserk*, *Vagabond*, *Claymore* | Some of the most admired linework in manga: dense hatching, weight, scars. | Low as a main look: hatching dies at sprite size; strong for apex reveals. The agent drawings undersell it most (hatching too light). |
+| Woodblock print action | *Demon Slayer*, *Okami*, Edo-period yokai prints | Effects drawn as ukiyo-e prints: bold outline, pattern, waves and fire. | High for effects: skill and capstone flashes, rank-fight banners. |
+
+Possible uses next to the hunter style, none decided: the "one unsettling detail" from the abyss style as a creature-design rule, the field-guide style for a bestiary page, and woodblock motifs for skill effects.
