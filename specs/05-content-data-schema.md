@@ -16,7 +16,7 @@ ContentDb.Load(IContentSource)          at startup, once; verifies every file's 
    +--> IdleRng.Bots, IdleRng.Web
 ```
 
-The CSVs and the JSON are both committed so CI can rebuild `Content/` offline and fail when the committed JSON is stale (`content_build.py --check`, part of `./check.sh`). Any change to a `content_src/` file, even one string, changes `content_hash`, so the golden files embed a new hash and are regenerated (`specs/09` section 3).
+The CSVs and the JSON are both committed so CI can rebuild `Content/` offline and fail when the committed JSON is stale (`content_build.py --check`, part of `./check.sh`). `./check.sh` also compares the build with the `Content/` at the merge base with `origin/main` (`--baseline-ref`, section 4) so an id cannot be removed by accident. Any change to a `content_src/` file, even one string, changes `content_hash`, so the golden files embed a new hash and are regenerated (`specs/09` section 3).
 
 ## 2. Tables
 
@@ -63,7 +63,9 @@ One file per table, shape `{ "table": "...", "rows": [ ... ] }`: UTF-8 without B
 
 `manifest.json` lists `schema_version` (the layout version; the loader refuses unknown values, `E901`), `content_version`, `source_revision`, every table's file and sha256, and `content_hash` (sha256 over the table hashes in name order). There is no timestamp, so rebuilding the same CSVs gives the same bytes. The loader verifies every file against the manifest (`E900`).
 
-`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.1**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9). Bump MINOR for any value or addition; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches. The converter does not yet compare against the previous build (the `E09x` codes below are reserved).
+`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.1**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9). Bump MINOR for any value or addition; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches.
+
+**Previous-build rules.** Saves and Vault entries refer to ids (species, trees, nodes, skills, books, talents, enemies), so removing or renaming one breaks them. `content_build.py --baseline DIR` (an earlier `Content/`) or `--baseline-ref REF` (a git ref) compares the fresh build with it: `E090` when an id, or a whole table, is gone and MAJOR was not raised; `E091` when `content_version` is malformed or went backwards. `strings` keys are exempt (a missing key shows as itself, section 5). A MAJOR bump is the author saying "old saves may not fit": it comes with the decision in `specs/06` section 5 on what happens to them. Adding ids needs no bump. The tests are `tools/test_content_build.py`.
 
 ## 5. Strings
 
@@ -93,7 +95,9 @@ One line per error on stderr: `CONTENT <code> <location>: <message>`, where the 
 | `E064` | The last node of a tree must be a skill, trigger or rule (the chase trait) |
 | `E065` | A chase tree has no condition |
 | `E070`, `E071` | Bad colour / bad id or key format |
-| `E090` to `E093` | Reserved for version-bump checks against the previous build |
+| `E090` | An id (or a table) of the previous build is gone and MAJOR was not raised |
+| `E091` | `content_version` is malformed or lower than the previous build's |
+| `E092`, `E093` | Reserved for further version-bump checks |
 | `E900`, `E901`, `E902` | Loader: file hash mismatch / unknown schema version / manifest and files disagree |
 
 ## 7. `ContentDb`
@@ -102,10 +106,10 @@ One line per error on stderr: `CONTENT <code> <location>: <message>`, where the 
 
 ## 8. Tests
 
-`ContentDbTests`: the shipped content loads and has every table, the element wheel, every name key has text, a hash mismatch is `E900`, loading is culture-invariant, `IsCompatibleWith`. The builder's own validation is exercised by `./check.sh` (`content_build.py --check`) and by deliberately breaking a CSV when a rule changes.
+`ContentDbTests`: the shipped content loads and has every table, the element wheel, every name key has text, a hash mismatch is `E900`, loading is culture-invariant, `IsCompatibleWith`. The builder's own validation is exercised by `./check.sh` (`content_build.py --check`) and by deliberately breaking a CSV when a rule changes. The previous-build rules have unit tests in `tools/test_content_build.py` (`python3 tools/test_content_build.py`, a `check.sh` step).
 
 ## 9. Open
 
-- The `E09x` previous-build comparison.
+- Version-bump checks beyond `E090` and `E091` (`E092`, `E093`), for example requiring a MINOR bump whenever a value changes.
 - A scripted Google Sheet export (`tools/content_pull.py`); content is edited as CSV for now.
 - Localisation beyond `en`.

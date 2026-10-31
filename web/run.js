@@ -725,6 +725,7 @@
       ui.pick = C.species[0].id;
       ui.speed = loadSpeed();
       if (run.state) ui.view = 'run';
+      if (run.loadNotice) toast(run.loadNotice);
       if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
       render();
     } catch (e) {

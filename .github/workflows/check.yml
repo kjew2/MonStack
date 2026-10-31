@@ -28,6 +28,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # check.sh compares content ids with the merge base with origin/main (E090, E091)
 
       - uses: actions/setup-python@v5
         with:

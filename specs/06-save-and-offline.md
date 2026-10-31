@@ -43,13 +43,20 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 ## 4. Loading
 
-`AccountSave.Load(content, store, nowSec)` tries Primary, then Backup. A slot that is corrupt (`SaveCorruptException`) or invalid (`SaveInvalidException`: wrong `Kind`, newer schema, an active run that no longer replays to its stored hash) is quarantined and the next slot is tried. No slot present gives null (the caller creates a new account); slots present but none loadable throws `SaveInvalidException`.
+`AccountSave.Load(content, store, nowSec)` tries Primary, then Backup. A slot that is corrupt (`SaveCorruptException`) or invalid (`SaveInvalidException`: wrong `Kind`, newer schema) is quarantined and the next slot is tried. No slot present gives null (the caller creates a new account); slots present but none loadable throws `SaveInvalidException`.
 
 ## 5. Schema versions
 
 `AccountState.CurrentSchemaVersion` is 1. When a field changes after release, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation; a step uses frozen literals, never `ContentDb`. There are no migrations yet and no released saves.
 
-A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten. A content change that breaks an active run's replay is reported the same way; the Vault keeps its entries' replay recipes so they stay verifiable.
+A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
+
+**When content or rules change under a save** (decided 2026-10-31; **(agent)**, kj can veto). A rules or content change must never cost the player the account:
+
+- *Run in progress.* It is stored as a replay recipe, so a change can make it stop replaying (an id removed, a rule or the run hash changed). `Decode` then drops the run, returns every book it brought in to the inventory (as `AbandonRun` does), keeps `RunsStarted` (the next run gets a new seed) and loads the rest of the account. `Decode`/`Load` report a `notice` sentence for the player; the web client shows it and keeps the original save text under the backup key. Nothing is quarantined for this.
+- *Vault entries.* They store their result (grade, final stats, trees, gauntlet floor, killer, title and hash) as plain data, so listing and displaying them never replays anything. Only the parts that replay (`Fighter`, the gauntlet wheel) can stop working for an entry sealed under older rules; those return an error for that entry and nothing else is affected. The entry's `RunHash` and `GauntletHash` say which rules produced it. Entries are never deleted or rewritten by a load.
+- *Content version.* The account stores the `ContentVersion` it was last loaded with. A load under a different MAJOR adds a notice and re-stamps it. A MAJOR bump (`specs/05` section 4, `E090`) is where a real migration is written, if one is worth it.
+- *Newer schema* is the one case that still refuses: the file is kept and never overwritten.
 
 ## 6. Tests
 

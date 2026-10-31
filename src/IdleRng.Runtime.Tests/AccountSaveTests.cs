@@ -82,17 +82,77 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
-        public void Rejects_WrongKind_NewerSchema_AndARunThatNoLongerReplays()
+        public void Rejects_WrongKind_NewerSchema_AndDamage()
         {
             var db = TestContent.Db;
             Assert.Throws<SaveInvalidException>(() => AccountSave.Decode(db, SaveSerializer.EncodeBody("{\"Kind\":\"other\",\"SchemaVersion\":1}")));
             Assert.Throws<SaveInvalidException>(() => AccountSave.Decode(db, SaveSerializer.EncodeBody("{\"Kind\":\"monster_account\",\"SchemaVersion\":99,\"Account\":{}}")));
-            string json = Encoding.UTF8.GetString(AccountSave.Encode(Played()));
-            string body = json.Substring(json.IndexOf('\n') + 1);
-            int i = body.IndexOf("\"Hash\": \"", StringComparison.Ordinal) + 9;
-            string tampered = body.Substring(0, i) + (body[i] == '0' ? '1' : '0') + body.Substring(i + 1);
-            Assert.Throws<SaveInvalidException>(() => AccountSave.Decode(db, SaveSerializer.EncodeBody(tampered)));
             Assert.Throws<SaveCorruptException>(() => AccountSave.Decode(db, Encoding.UTF8.GetBytes("garbage")));
+        }
+
+        static byte[] WithTamperedRecipe(AccountState a, Func<string, string> edit)
+        {
+            string json = Encoding.UTF8.GetString(AccountSave.Encode(a));
+            return SaveSerializer.EncodeBody(edit(json.Substring(json.IndexOf('\n') + 1)));
+        }
+
+        [Test]
+        public void ARunThatNoLongerReplays_IsDropped_AndTheRestOfTheAccountLoads()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            int unusedBefore = a.Active.Books.Count;
+            var file = WithTamperedRecipe(a, body =>
+            {
+                int i = body.IndexOf("\"Hash\": \"", StringComparison.Ordinal) + 9;
+                return body.Substring(0, i) + (body[i] == '0' ? '1' : '0') + body.Substring(i + 1);
+            });
+            var b = AccountSave.Decode(db, file, out var notice);
+            Assert.That(b.Active, Is.Null, "the stale run is dropped");
+            Assert.That(notice, Does.Contain("older rules"));
+            Assert.That(b.Shards, Is.EqualTo(a.Shards));
+            Assert.That(b.Vault.Count, Is.EqualTo(a.Vault.Count), "the Vault is untouched");
+            Assert.That(b.Talents, Is.EqualTo(a.Talents));
+            Assert.That(b.BookCount("book_echoes"), Is.EqualTo(a.BookCount("book_echoes") + 2), "both books brought into the run come back");
+            Assert.That(b.RunsStarted, Is.EqualTo(a.RunsStarted), "the run stays counted, so the next run gets a new seed");
+        }
+
+        [Test]
+        public void ARunOfARemovedSpecies_IsDropped_NotFatal()
+        {
+            var a = Played();
+            var file = WithTamperedRecipe(a, body =>
+            {
+                int i = body.IndexOf("\"SpeciesId\": \"sprite\"", StringComparison.Ordinal);
+                Assert.That(i, Is.GreaterThan(0), "the active run is the sprite");
+                return body.Replace("\"SpeciesId\": \"sprite\"", "\"SpeciesId\": \"gone\"");
+            });
+            var b = AccountSave.Decode(TestContent.Db, file, out var notice);
+            Assert.That(b.Active, Is.Null);
+            Assert.That(notice, Is.Not.Null);
+            Assert.That(b.Vault.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ACleanLoad_HasNoNotice_AndTheStaleAccountIsPersistedOnceDropped()
+        {
+            var a = Played();
+            AccountSave.Decode(TestContent.Db, AccountSave.Encode(a), out var clean);
+            Assert.That(clean, Is.Null);
+            var dropped = AccountSave.Decode(TestContent.Db, WithTamperedRecipe(a, body => body.Replace("\"SpeciesId\": \"sprite\"", "\"SpeciesId\": \"gone\"")));
+            var again = AccountSave.Decode(TestContent.Db, AccountSave.Encode(dropped), out var second);
+            Assert.That(again.Active, Is.Null);
+            Assert.That(second, Is.Null, "once re-saved, the notice does not repeat");
+        }
+
+        [Test]
+        public void ANewerContentMajor_LoadsWithANotice_AndIsStamped()
+        {
+            var a = AccountOps.New(TestContent.Db, 5);
+            a.ContentVersion = "1.0";   // a MAJOR older than the shipped content
+            var b = AccountSave.Decode(TestContent.Db, AccountSave.Encode(a), out var notice);
+            Assert.That(notice, Does.Contain("1.0"));
+            Assert.That(b.ContentVersion, Is.EqualTo(TestContent.Db.Version));
         }
     }
 }
