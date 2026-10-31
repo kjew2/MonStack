@@ -434,7 +434,7 @@ What is in the repo (not in `check.sh`, because it needs credentials):
 - `server/ugs/deploy.sh`: `dotnet publish -c Release -r linux-x64`, zip to `IdleRngBattle.ccm`, create or update the module through the Cloud Code Admin API with the service account (Basic auth on `services.api.unity.com`). It uses `curl` instead of the `ugs` CLI: the CLI's npm installer downloads its binary from GitHub's release API and failed on the API's rate limit.
 - `server/ugs/SpikeClient`: the test script. It builds 47 fights: the 7 `BattleVectors` fights, and every floor of the `TowerVectors` all-species team run on days 0 and 20391 (40 floors, all four boss phase kinds and an entropy vent; each floor's rebuilt hash is checked against `TowerSim.Run`). `local` regenerates all four golden files on the module's runtime and binds each fight's JSON params into the module the way Cloud Code does (by parameter name, Newtonsoft.Json); `remote` signs in anonymously, calls the deployed endpoint for each fight, and times 20 warm calls of the smallest and the largest fight.
 
-Results so far:
+Results:
 
 | Check | Result |
 |---|---|
@@ -446,15 +446,15 @@ Results so far:
 | Remote, anonymous player | **47 of 47** hashes, outcomes and ticks match `IdleRng.Sim`. Anonymous sign-in 0.7 s. The worker reports .NET 10.0.13 on Ubuntu 24.04 x64 with the invariant culture. |
 | Time inside `Resolve` on the worker | Median 0.1 ms, worst 5.8 ms over the 47 fights (the worst includes JIT warm-up). |
 | Warm round trip, 20 calls | Smallest fight (1.4 KB of params): median 62 ms, worst 74 ms. Largest (5.1 KB, a phased boss floor): median 66 ms, worst 183 ms. Measured from a cloud container, so the round trip is mostly network and Cloud Code overhead, not the sim. |
-| Cold start | First call right after a deploy: 14.9 s. First call after 16 minutes without traffic: COLD_IDLE. |
+| Cold start | First call right after a deploy: 14.9 s. First call after 16 minutes without traffic: 12.0 s. Sign-in and warm calls were the same on both runs, and both runs matched 47 of 47. |
 
-Blockers for the shared code found so far: none. Notes for T12:
+Blockers for the shared code: none. Notes for T12:
 - **Floating point.** The sim uses only `+ - * /`, comparisons and `Math.Min`, `Max`, `Floor` and `Round`; it avoids `Math.Pow` and transcendental functions by design. Those operations are exact under IEEE 754 on every .NET runtime, which is why the golden files match across .NET 8 and .NET 10. Keep it that way: a `Math.Pow`, `Exp` or `Log` in the sim could differ between the browser (WebAssembly) and the server.
 - **Culture.** `StateHash` is a SHA-256 of a binary encoding of the state (raw double bits, no text formatting), so the worker's culture cannot move it. The reply still reports the culture.
 - **Seed.** A 64-bit seed travels as a decimal string: JSON numbers in a JavaScript client lose precision above 2^53.
 - **Input size.** Fight params are 1.4 to 5.1 KB of JSON (a four-monster team against a phased boss), far below any limit. Enums travel as integers and computed properties (`CombatSkill.Magical`, `TowerRules.Valid`) are ignored on the way in.
 - **Not covered here.** The browser client (the WebAssembly build of the same sources) against the server: the wasm run in `check.sh` plays the trainer but does not compare fight hashes with the golden files. Add that to T12's golden replay fixtures (#32).
-- **Cold start against the 15 s limit.** COLD_NOTE
+- **Cold start against the 15 s limit.** A cold worker took 12 to 15 s to answer, against a 15 s per-call limit, and the sim is not the cause (0.1 ms). T12 must plan for it: a client timeout above 15 s with one retry (a deterministic fight gives the same result again), and a scheduled keep-warm call once there are players. TODO(#109)
 - **Limits** (Cloud Code docs): 15 s per call, 512 MB per worker, 2 MiB response, 600 requests per minute per player, 20 modules per project.
 
 PvP load and cost at 10 k daily players. Assumptions: 10 ranked async PvP fights per player per day, each resolved by one module call, and 3 Daily Tower attempts certified server-side (one call per attempt if the endpoint runs the whole climb). That is about 130 k calls a day, 4 M a month.
@@ -467,7 +467,7 @@ PvP load and cost at 10 k daily players. Assumptions: 10 ranked async PvP fights
 
 About 5 to 10 USD a month for the battles, plus sign-in and Cloud Save, which have their own free tiers. Re-check against the pricing page before launch; a forum post reports that compute is billed by CPU time scheduled rather than wall time. The spike could not confirm it: the dashboard's usage page is the place to check once there is real traffic.
 
-Decision (2026-10-31): **UGS Cloud Code stands as the v1 server for battles.** Every remote hash matches with no change to `IdleRng.Sim`, warm calls take about 65 ms, and the PvP load costs about 5 to 10 USD a month. Open decision 5 is closed. The fallbacks in 10.2 stay on file for the vendor-terms risk in section 10.
+Decision (2026-10-31): **UGS Cloud Code stands as the v1 server for battles.** Every remote hash matches with no change to `IdleRng.Sim`, warm calls take about 65 ms, and the PvP load costs about 5 to 10 USD a month. The one caveat is the 12 to 15 s cold start, which T12 handles in the client (#109). Open decision 5 is closed. The fallbacks in 10.2 stay on file for the vendor-terms risk in section 10.
 
 ### 10.2 Fallbacks (if Unity's terms move)
 
