@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.8",
+  "content_version": "3.9",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -21,7 +21,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "7823b45616ca4b49c1197ca36311f2769c7b783923def9fc497438c8d2f981f9"
+      "sha256": "50b3075892036fd98d8ba91c9149e17a889c0886aa5ae8b9de4f396801b10652"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -37,7 +37,7 @@
     },
     "gauntlet_enemies": {
       "file": "gauntlet_enemies.json",
-      "sha256": "9c7a262dac6c01e53e6e2883df392372efb92099048d656ecbb876d357fa8de5"
+      "sha256": "cf99dde59efdf1fc4be07a411b8259b9117f3fef9e8d39758e91e35d2b8cbb6f"
     },
     "legacy_titles": {
       "file": "legacy_titles.json",
@@ -84,5 +84,5 @@
       "sha256": "370640e02d9e08c1199e4631879604ebb782f53687f1d65c7d37f4e08f53c539"
     }
   },
-  "content_hash": "24d60f626e84597a747d48134a5d40d1364a0005b9f00f20dcde047dd300c0f0"
+  "content_hash": "1e09d206e544373f1d151ba28fce3ae564e75e93140c219f9ae75d06894d385b"
 }

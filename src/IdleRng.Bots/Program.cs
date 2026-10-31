@@ -42,6 +42,7 @@ namespace IdleRng.Bots
         const string Usage =
             "usage: IdleRng.Bots <train|golden|help> [options]\n" +
             "  train      --species ID --policy balanced|focus|reckless|hoarder --seed N --books a,b --content dir   (one training run, specs/14-15)\n" +
+            "  gauntlet   --seeds N --policies a,b --content dir   (where bot monsters stall in the gauntlet, specs/19 section 6)\n" +
             "  golden     --check|--update --golden-dir path --content dir   (specs/09 section 11)\n";
 
         public static int Main(string[] argv)
@@ -54,6 +55,7 @@ namespace IdleRng.Bots
                 {
                     case "golden": return GoldenCmd(a);
                     case "train": return Train(a);
+                    case "gauntlet": return Gauntlet(a);
                     case "help": case "--help": Console.Out.Write(Usage); return 0;
                     default: Console.Error.Write($"unknown verb '{a.Verb}'\n" + Usage); return 2;
                 }
@@ -97,6 +99,18 @@ namespace IdleRng.Bots
             sb.Append(IdleRng.Bots.Training.RunBot.Summary(db, s)).Append('\n');
             sb.Append("hash ").Append(IdleRng.Sim.Training.TrainingRun.StateHash(s)).Append('\n');
             Emit(a, sb.ToString());
+            return 0;
+        }
+
+        static int Gauntlet(CliArgs a)
+        {
+            var db = LoadContent(a);
+            var policies = a.Str("policies", string.Join(",", IdleRng.Bots.Training.RunPolicies.Names))
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            int seeds = a.Int("seeds", 10);
+            if (seeds < 1) throw new ArgumentException("--seeds must be at least 1");
+            var r = IdleRng.Bots.Training.GauntletSpread.Collect(db, policies, seeds);
+            Emit(a, IdleRng.Bots.Training.GauntletSpread.Report(r));
             return 0;
         }
 

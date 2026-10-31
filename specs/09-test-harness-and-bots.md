@@ -51,10 +51,11 @@ Regenerate with `dotnet run -c Release --project src/IdleRng.Bots -- golden --up
 
 ```
 dotnet run -c Release --project src/IdleRng.Bots -- train  --species ID --policy P --seed N [--books a,b]
+dotnet run -c Release --project src/IdleRng.Bots -- gauntlet [--seeds N] [--policies a,b]
 dotnet run -c Release --project src/IdleRng.Bots -- golden --check | --update [--golden-dir path] [--content dir]
 ```
 
-`train` prints every command, a summary and the run hash. `--content` defaults to the repo's `Content/`.
+`train` prints every command, a summary and the run hash. `gauntlet` plays every species x policy (default all) x seeds 1..N (default 10) and reports where the monsters stall in the gauntlet (`specs/19` section 6). `--content` defaults to the repo's `Content/`.
 
 ## 6. Tests and `check.sh`
 
@@ -68,4 +69,4 @@ When the `CI` environment variable is set (anything but empty or `false`; GitHub
 
 ## 7. Open
 
-- A run-balance harness (score distributions over many seeds per policy and species) when balance resumes.
+- A run-balance harness (score distributions over many seeds per policy and species) when balance resumes. Started: `gauntlet` (section 5) gives the gauntlet floor spread; no targets yet.

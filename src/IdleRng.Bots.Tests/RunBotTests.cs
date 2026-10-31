@@ -30,6 +30,19 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void GauntletSpread_CountsEveryMonster_AndReports()
+        {
+            var db = Content.Db;
+            var r = GauntletSpread.Collect(db, new[] { "focus" }, 2);
+            Assert.That(r.Floors.Count, Is.EqualTo(db.SpeciesList.Count * 2));
+            int digits = 0;
+            foreach (var d in r.ByDigit) digits += d;
+            Assert.That(digits + r.Cleared, Is.EqualTo(r.Floors.Count), "every stall lands in one floor digit");
+            Assert.That(r.OnBoss, Is.LessThanOrEqualTo(digits));
+            StringAssert.Contains("stalls on boss floors", GauntletSpread.Report(r));
+        }
+
+        [Test]
         public void UnknownPolicy_Throws() => Assert.Throws<ArgumentException>(() => RunPolicies.Create("nope"));
     }
 }

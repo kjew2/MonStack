@@ -1,9 +1,9 @@
 id,name_key,element,boss,hp,str,int,wis,dex,def,spd,luk,#notes
-slimeling,gauntlet.slimeling.name,water,false,1.2,0.8,0.8,1.0,0.8,1.0,0.9,1.0,"end-of-run gauntlet (specs/19): stat = weight x floor level. Placeholder enemies and weights"
-imp,gauntlet.imp.name,fire,false,0.8,1.2,1.0,0.8,1.1,0.8,1.2,1.0,Placeholder
-golem,gauntlet.golem.name,nature,false,1.4,1.1,0.5,0.9,0.6,1.4,0.6,0.8,Placeholder
-wisp,gauntlet.wisp.name,light,false,0.7,0.5,1.3,1.2,1.2,0.7,1.3,1.1,Placeholder
-shade,gauntlet.shade.name,dark,false,0.9,1.1,1.1,0.9,1.3,0.8,1.1,1.2,Placeholder
+slimeling,gauntlet.slimeling.name,water,false,1.47,0.98,0.98,1.23,0.98,1.23,1.1,1.23,end-of-run gauntlet (specs/19): stat = weight x floor level. Placeholder enemies and weights
+imp,gauntlet.imp.name,fire,false,0.93,1.4,1.16,0.93,1.28,0.93,1.4,1.16,Placeholder
+golem,gauntlet.golem.name,nature,false,1.76,1.39,0.63,1.13,0.76,1.76,0.76,1.01,Placeholder
+wisp,gauntlet.wisp.name,light,false,0.8,0.57,1.49,1.38,1.38,0.8,1.49,1.26,Placeholder
+shade,gauntlet.shade.name,dark,false,0.99,1.2,1.2,0.99,1.42,0.88,1.2,1.31,Placeholder
 apex_chimera,gauntlet.apex_chimera.name,fire,true,1.5,1.3,1.1,1.0,1.0,1.2,1.0,1.0,boss every GAUNTLET_BOSS_EVERY floors; bosses rotate. Placeholder
 void_hydra,gauntlet.void_hydra.name,dark,true,1.8,1.2,1.2,1.1,0.9,1.1,0.9,1.0,Placeholder
 storm_titan,gauntlet.storm_titan.name,light,true,1.6,1.4,1.0,1.0,1.1,1.3,1.1,0.9,Placeholder
