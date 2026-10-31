@@ -29,7 +29,7 @@
     {
       "key": "AI_HEAL_BELOW",
       "type": "double",
-      "value": 0.65
+      "value": 0.25
     },
     {
       "key": "AI_SHIELD_BELOW",

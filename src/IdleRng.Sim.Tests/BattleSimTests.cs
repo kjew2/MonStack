@@ -236,7 +236,7 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void Healer_HealsOnlyWhenAnAllyIsLow()
+        public void Healer_HealsOnlyWhenTheWholeHealLands()
         {
             var mend = new CombatSkill { Id = "mend", Kind = SkillKind.Heal, Target = SkillTarget.LowestAlly, Scales = StatIds.Wis, Power = 1, Cooldown = 1 };
             var log = new List<FightAction>();
@@ -244,7 +244,7 @@ namespace IdleRng.Sim.Tests
             var heals = log.Where(a => a.Skill?.Id == "mend").ToList();
             Assert.That(heals, Is.Not.Empty);
             Assert.That(r.Final.Units[0].Tally.HealingDone, Is.EqualTo(heals.Sum(a => a.Amount)).Within(1e-9));
-            Assert.That(log.First(a => a.Actor == "healer").Skill?.Id, Is.Not.EqualTo("mend"), "nobody is hurt at the first action");
+            Assert.That(heals.Select(a => a.Amount), Has.All.EqualTo(300).Within(1e-9), "every heal lands in full: 1 x WIS 300");
         }
 
         [Test]
@@ -257,6 +257,61 @@ namespace IdleRng.Sim.Tests
             var rng = new RngStream(BattleSim.StreamName, 5);
             while (!log.Any(a => a.Actor == "healer")) BattleSim.Step(Rules, s, rng, log.Add);
             Assert.That(log.First(a => a.Actor == "healer").Skill?.Id, Is.EqualTo("mend"));
+        }
+
+        /// <summary>The healer (fast, WIS 300, mend = 1 x WIS = 300 HP) and its allies against a harmless enemy; returns its first action.</summary>
+        static FightAction FirstHealerAction(double power, Action<FightState> hurt, params Fighter[] allies)
+        {
+            var mend = new CombatSkill { Id = "mend", Kind = SkillKind.Heal, Target = SkillTarget.LowestAlly, Scales = StatIds.Wis, Power = power, Cooldown = 1 };
+            var healer = Mon("healer", 300, null, x => { x.Spd = 900; x.Str = 0; x.Int = 0; }, Strike(), mend);
+            var s = BattleSim.Start(Rules, Side(new[] { healer }.Concat(allies).ToArray()), Side(Harmless("enemy", 10)));
+            hurt(s);
+            var log = new List<FightAction>();
+            while (!log.Any(a => a.Actor == "healer")) BattleSim.Step(Rules, s, new Fixed(0.99), log.Add);
+            return log.First(a => a.Actor == "healer");
+        }
+
+        [Test]
+        public void Healer_WaitsUntilTheWholeHealFits()
+        {
+            double amt = 300 * 1.0;   // WIS x power, no tower heal cut
+            var tooEarly = FirstHealerAction(1, s => s.Units[1].Hp = s.Units[1].MaxHp - amt + 1, Mon("buddy", 300));
+            Assert.That(tooEarly.Skill?.Id, Is.EqualTo("strike"), "missing 1 HP less than the heal: it would waste some, so wait");
+            var fits = FirstHealerAction(1, s => s.Units[1].Hp = s.Units[1].MaxHp - amt, Mon("buddy", 300));
+            Assert.That(fits.Skill?.Id, Is.EqualTo("mend"), "missing exactly the heal: cast it");
+            Assert.That(fits.Target, Is.EqualTo("buddy"));
+            Assert.That(fits.Amount, Is.EqualTo(amt).Within(1e-9), "no overheal");
+            var self = FirstHealerAction(1, s => s.Units[0].Hp = s.Units[0].MaxHp - amt, Mon("buddy", 300));
+            Assert.That(self.Skill?.Id, Is.EqualTo("mend"));
+            Assert.That(self.Target, Is.EqualTo("healer"), "the healer is one of its allies");
+        }
+
+        [Test]
+        public void Healer_TargetsTheLowestAllyTheWholeHealFits()
+        {
+            // small: 200 max HP at 30%, missing 140 (< 300, and < the 75% cap for a heal bigger than it); big: 3000 max HP at 50%, missing 1500
+            Action<FightState> hurt = s => { s.Units[1].Hp = s.Units[1].MaxHp * 0.3; s.Units[2].Hp = s.Units[2].MaxHp * 0.5; };
+            var a = FirstHealerAction(1, hurt, Mon("small", 20), Mon("big", 300));
+            Assert.That(a.Skill?.Id, Is.EqualTo("mend"));
+            Assert.That(a.Target, Is.EqualTo("big"), "the lower ally would waste half the heal");
+            // both fit: the lower HP fraction wins
+            var b = FirstHealerAction(1, s => { s.Units[1].Hp = s.Units[1].MaxHp * 0.6; s.Units[2].Hp = s.Units[2].MaxHp * 0.5; },
+                                      Mon("mid", 300), Mon("low", 300));
+            Assert.That(b.Target, Is.EqualTo("low"));
+        }
+
+        [Test]
+        public void Healer_AHealBiggerThanTheGapWaitsForAiHealBelow()
+        {
+            var r = Rules;
+            Assert.That(r.AiHealBelow, Is.GreaterThan(0).And.LessThan(1));
+            // power 10: 3000 HP, the buddy's whole max HP, can never land in full
+            double below = r.AiHealBelow * 3000;
+            var above = FirstHealerAction(10, s => s.Units[1].Hp = below + 1, Mon("buddy", 300));
+            Assert.That(above.Skill?.Id, Is.EqualTo("strike"));
+            var at = FirstHealerAction(10, s => s.Units[1].Hp = below, Mon("buddy", 300));
+            Assert.That(at.Skill?.Id, Is.EqualTo("mend"));
+            Assert.That(at.Target, Is.EqualTo("buddy"));
         }
 
         [Test]

@@ -30,6 +30,8 @@ Tools (Python 3.7+, no dependencies):
 
 - `tools/content_build.py` - builds `Content/` from `content_src/` and validates it (`--check` in `check.sh`).
 
+Server spike: `server/ugs/` holds the UGS Cloud Code module that resolves battles with `IdleRng.Sim` (issue #17, `specs/08` section 10.1). It needs credentials and the .NET 10 SDK, so it is not part of `check.sh`; see `server/ugs/README.md`.
+
 ## Running the web client
 
 The web client is the real C# game core (`src/IdleRng.Sim`, the code the bots use), compiled to WebAssembly by `src/IdleRng.Web` and played through the browser UI in `web/`. Everything runs on your own computer; no Claude session is needed.

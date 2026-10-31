@@ -65,6 +65,8 @@ namespace IdleRng.Bots.Tests
             Assert.That(s.Grades, Is.EqualTo(new[] { 1, 0, 2, 0, 0, 1 }));
             Assert.That((s.Completed, s.Injured, s.InjuryRate), Is.EqualTo((4, 2, 0.5)), "injured = runs with at least one injury");
             Assert.That((s.Injuries.Mean, s.Injuries.Max, s.CyclesLost.Mean), Is.EqualTo((1.0, 3.0, 1.0)));
+            Assert.That(s.InjuryLoss.Max, Is.EqualTo(1.0), "6 of 2 cycles caps at the whole run");
+            Assert.That(s.InjuryLoss.Mean, Is.EqualTo((1.0 + 2.0 / 12) / 4).Within(1e-12));
             Assert.That(s.FightWinRate, Is.EqualTo(9.0 / 37));
             Assert.That(s.FightsLost.Mean, Is.EqualTo((1 + 10 + 10 + 7) / 4.0));
             Assert.That(s.Cycles.Min, Is.EqualTo(2));

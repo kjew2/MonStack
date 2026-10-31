@@ -78,8 +78,9 @@ dotnet build IdleRng.sln -c Release
 
 BOTS="dotnet run -c Release --no-build --project src/IdleRng.Bots --"
 
-# The balance report is not a gate (specs/09 section 7): this only keeps the verb and its output forms from rotting.
-step "Bots: balance report smoke run (2 seeds; no thresholds)"
+# The balance report is not a gate (specs/09 section 7): this only keeps the verb and its output forms from rotting. Its sanity
+# checks may print WARN here; that exits 0 by design (no --strict).
+step "Bots: balance report smoke run (2 seeds; WARNs do not fail)"
 $BOTS balance --seeds 2 > /dev/null
 $BOTS balance --seeds 2 --format json | python3 -c 'import json, sys; json.load(sys.stdin)'
 $BOTS balance --seeds 2 --format csv > /dev/null

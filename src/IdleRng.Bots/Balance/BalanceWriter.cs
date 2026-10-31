@@ -29,13 +29,23 @@ namespace IdleRng.Bots.Balance
         {
             var o = r.Options;
             var sb = new StringBuilder();
-            sb.Append("# balance report (specs/09 section 7). A report, not a gate: no targets are agreed yet.\n");
+            sb.Append("# balance report (specs/09 section 7). A report, not a gate: the sanity checks are loose and a WARN fails nothing.\n");
             sb.Append($"# content {TableWriter.ContentTag(r.ContentVersion, r.ContentHash)}, seeds {o.SeedBase}..{o.SeedBase + (ulong)o.Seeds - 1} ")
               .Append($"({o.Seeds} runs per species x policy), books {(o.Books == null || o.Books.Count == 0 ? "none" : string.Join(",", o.Books))}, ")
               .Append("fresh account (no talents)\n");
 
+            sb.Append("\n## Sanity checks: \"absolutely unplayable\" guards only, not balance targets (issue #89)\n");
+            var t = new Table(2, textLast: true);
+            t.Row("status", "check", "value", "limit", "n", "rule; worst");
+            foreach (var k in r.Checks)
+                t.Row(BalanceChecks.StatusName(k.Status), k.Id, double.IsNaN(k.Value) ? "-" : Num(k.Value), Num(k.Limit), k.N.ToString(Inv),
+                      $"{k.Rule}; {k.Detail}");
+            t.AppendTo(sb);
+            sb.Append($"{r.Checks.Count(k => k.Status == CheckStatus.Pass)} pass, {r.Checks.Count(k => k.Status == CheckStatus.Warn)} warn, ")
+              .Append($"{r.Checks.Count(k => k.Status == CheckStatus.Skip)} skip\n");
+
             sb.Append("\n## Grades: % of runs ending at each rank (mean is the rank index, E = 0)\n");
-            var t = new Table(2);
+            t = new Table(2);
             t.Row(new[] { "species", "policy", "runs" }.Concat(r.RankIds.Select(id => id.ToUpperInvariant())).Concat(new[] { "mean", "p10/p50/p90" }));
             foreach (var c in r.Cells)
                 t.Row(new[] { c.Species, c.Policy, c.N.ToString(Inv) }
@@ -60,6 +70,19 @@ namespace IdleRng.Bots.Balance
                       Num(c.GauntletFloor.Max), Pct(c.GauntletClearRate), Pct(c.GauntletBossStallRate),
                       c.Killers.Count == 0 ? "-" : string.Join(" ", c.Killers.Take(3).Select(k => $"{k.Key} {Pct(c.N == 0 ? 0 : (double)k.Count / c.N)}%")));
             t.AppendTo(sb);
+
+            if (r.BookCells.Count > 0)
+            {
+                sb.Append("\n## Book canary: mean rank with every skill book vs none (no tower)\n");
+                t = new Table(2);
+                t.Row("species", "policy", "none", "all books", "change");
+                foreach (var b in r.BookCells)
+                {
+                    var n = r.Cells.First(c => c.Species == b.Species && c.Policy == b.Policy);
+                    t.Row(b.Species, b.Policy, Num(n.Grade.Mean), Num(b.Grade.Mean), (b.Grade.Mean - n.Grade.Mean).ToString("+0.##;-0.##;0", Inv));
+                }
+                t.AppendTo(sb);
+            }
 
             if (o.Tower)
             {
@@ -132,9 +155,18 @@ namespace IdleRng.Bots.Balance
             j.Key("options").Open('{')
              .Key("seeds").Num(o.Seeds).Key("seedBase").Num(o.SeedBase)
              .Key("books").Strs(o.Books ?? new string[0]).Key("tower").Bool(o.Tower).Key("towerDayBase").Num(o.TowerDayBase)
+             .Key("bookCanary").Bool(r.BookCells.Count > 0)
              .Close('}');
             j.Key("ranks").Strs(r.RankIds);
-            j.Key("gauntletFloors").Num(r.GauntletFloors).Key("towerFloors").Num(r.TowerFloors);
+            j.Key("gauntletFloors").Num(r.GauntletFloors).Key("towerFloors").Num(r.TowerFloors).Key("gauntletBossEvery").Num(r.GauntletBossEvery);
+            j.Key("checks").Open('[');
+            foreach (var k in r.Checks)
+            {
+                j.Open('{').Key("id").Str(k.Id).Key("status").Str(BalanceChecks.StatusName(k.Status)).Key("value");
+                if (double.IsNaN(k.Value)) j.Null(); else j.Num(k.Value);
+                j.Key("limit").Num(k.Limit).Key("n").Num(k.N).Key("rule").Str(k.Rule).Key("detail").Str(k.Detail).Close('}');
+            }
+            j.Close(']');
             j.Key("cells").Open('[');
             foreach (var c in r.Cells)
             {
@@ -149,6 +181,8 @@ namespace IdleRng.Bots.Balance
                 j.Key("cycles"); Dist(j, c.Cycles);
                 j.Key("fightsWon"); Dist(j, c.FightsWon);
                 j.Key("fightsLost"); Dist(j, c.FightsLost);
+                j.Key("rests"); Dist(j, c.Rests);
+                j.Key("injuryLoss"); Dist(j, c.InjuryLoss);
                 j.Key("fightWinRate").Num(c.FightWinRate);
                 j.Key("shards"); Dist(j, c.Shards);
                 j.Key("gauntletFloor"); Dist(j, c.GauntletFloor);
@@ -168,6 +202,14 @@ namespace IdleRng.Bots.Balance
                 j.Key("cleared").Num(w.Cleared).Key("clearRate").Num(w.ClearRate);
                 j.Key("shards"); Dist(j, w.Shards);
                 j.Key("books"); Dist(j, w.Books);
+                j.Close('}');
+            }
+            j.Close(']');
+            j.Key("bookCells").Open('[');
+            foreach (var b in r.BookCells)
+            {
+                j.Open('{').Key("species").Str(b.Species).Key("policy").Str(b.Policy).Key("n").Num(b.N);
+                j.Key("grade"); Dist(j, b.Grade);
                 j.Close('}');
             }
             j.Close(']');
@@ -191,6 +233,7 @@ namespace IdleRng.Bots.Balance
             public JsonOut Close(char ch) { _sb.Append(ch); _needComma = true; return this; }
             public JsonOut Key(string k) { Sep(); Quote(k); _sb.Append(':'); return this; }
             public JsonOut Str(string s) { Sep(); if (s == null) _sb.Append("null"); else Quote(s); _needComma = true; return this; }
+            public JsonOut Null() { Sep(); _sb.Append("null"); _needComma = true; return this; }
             public JsonOut Bool(bool b) { Sep(); _sb.Append(b ? "true" : "false"); _needComma = true; return this; }
             public JsonOut Num(double x) { Sep(); _sb.Append(x.ToString("0.######", Inv)); _needComma = true; return this; }
             public JsonOut Num(ulong x) { Sep(); _sb.Append(x.ToString(Inv)); _needComma = true; return this; }
@@ -221,7 +264,9 @@ namespace IdleRng.Bots.Balance
 
         /// <summary>
         /// Long form, one metric per row: section,species,policy,team,metric,n,mean,sd,min,p10,p50,p90,max. Rates and grade shares
-        /// put the fraction in mean and leave the spread columns empty.
+        /// put the fraction in mean and leave the spread columns empty. Each sanity check gives two rows in section "check":
+        /// metric = its id (mean = the measured value, empty when skipped) and id + "_warn" (mean 1 on WARN, 0 on PASS, empty
+        /// when skipped); n is what the check looked at. The book canary's grades are section "books".
         /// </summary>
         public static string Csv(BalanceReport r)
         {
@@ -243,12 +288,19 @@ namespace IdleRng.Bots.Balance
                 Rate(sb, "gauntlet", c.Species, c.Policy, "", "boss_stall_rate", c.N - c.GauntletCleared, c.GauntletBossStallRate);
                 foreach (var k in c.Killers) Rate(sb, "gauntlet", c.Species, c.Policy, "", "killer_" + k.Key, c.N, c.N == 0 ? 0 : (double)k.Count / c.N);
             }
+            foreach (var b in r.BookCells) Row(sb, "books", b.Species, b.Policy, "", "grade", b.Grade);
             foreach (var w in r.Tower)
             {
                 Row(sb, "tower", "", w.Policy, w.Team, "floors_cleared", w.FloorsCleared);
                 Rate(sb, "tower", "", w.Policy, w.Team, "clear_rate", w.N, w.ClearRate);
                 Row(sb, "tower", "", w.Policy, w.Team, "shards", w.Shards);
                 Row(sb, "tower", "", w.Policy, w.Team, "books", w.Books);
+            }
+            foreach (var k in r.Checks)
+            {
+                bool skip = k.Status == CheckStatus.Skip;
+                Check(sb, k.Id, k.N, skip ? "" : F(k.Value));
+                Check(sb, k.Id + "_warn", k.N, skip ? "" : k.Status == CheckStatus.Warn ? "1" : "0");
             }
             return sb.ToString();
         }
@@ -259,6 +311,9 @@ namespace IdleRng.Bots.Balance
 
         static void Rate(StringBuilder sb, string section, string species, string policy, string team, string metric, int n, double rate) =>
             sb.Append(string.Join(",", section, species, policy, team, metric, n.ToString(Inv), F(rate), "", "", "", "", "", "")).Append('\n');
+
+        static void Check(StringBuilder sb, string metric, int n, string mean) =>
+            sb.Append(string.Join(",", "check", "", "", "", metric, n.ToString(Inv), mean, "", "", "", "", "", "")).Append('\n');
 
         static string F(double x) => x.ToString("0.######", Inv);
     }
