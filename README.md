@@ -21,7 +21,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/16-battle.md` | Monster battle engine: sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
 | `specs/18-meta-progression.md` | Account: species unlocks by achievement, Vault (cap, lock, dismantle), Training Shards, the post-run talent vendor, run modifiers, abandon, account save |
 | `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
-| `specs/21-daily-tower.md` | Daily Tower (T10): daily 4v1 boss floors with a Vault team, entropy gauge, boss phases, environmental clock, shard and Skill Book rewards |
+| `specs/21-dungeon.md` | Dungeon (T10): 4v1 boss floors with a Vault team, a daily lineup, tickets (one free a day, more from runs), entropy gauge, boss phases, environmental clock, shard and Skill Book rewards |
 | `specs/20-roadmap.md` | Proposed roadmap: fixes, features and tech by priority, every open issue mapped |
 | `specs/22-spike-higher-tier-trees.md` | Spike report (#110): skill trees and capstones for higher-tier creatures, measurements of capstone reach, a mechanics catalogue (games, anime, manhwa, donghua, web and light novels; *Lord of the Mysteries* in section 8) and questions for kj |
 | `specs/23-spike-point-economy.md` | Spike report (#112): point economies with variance and dynamism, a baseline of how little runs vary today, a mechanics catalogue (management, strategy, RPG, roguelite) and a first package for kj |

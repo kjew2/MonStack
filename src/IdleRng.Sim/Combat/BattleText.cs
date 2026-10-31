@@ -92,7 +92,7 @@ namespace IdleRng.Sim.Combat
         public static string RuleDesc(ContentDb db, string ruleId) => TextTemplate.Fill(db, db.Text("rule." + ruleId + ".desc"));
 
         /// <summary>
-        /// Daily Tower playback tooltips (specs/21 section 8) as (key, name, text): "entropy" (the gauge), "vent.&lt;kind&gt;" for each
+        /// Dungeon playback tooltips (specs/21 section 8) as (key, name, text): "entropy" (the gauge), "vent.&lt;kind&gt;" for each
         /// vent kind (BattleSim.NextVent; convert reads the entropy_convert rule), "corruption" (the meter; {start_turns} and
         /// {every_turns} are CORRUPT_START_TICK and CORRUPT_EVERY_TICKS in turns) and "phase.&lt;kind&gt;" for each boss phase kind.
         /// </summary>

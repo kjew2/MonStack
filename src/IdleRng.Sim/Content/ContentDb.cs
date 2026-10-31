@@ -93,7 +93,7 @@ namespace IdleRng.Sim.Content
         /// <summary>Legacy titles by increasing MinFloor; the first has MinFloor 1.</summary>
         public IReadOnlyList<LegacyTitleDef> LegacyTitles { get; private set; }
 
-        // Daily Tower (specs/21)
+        // Dungeon (specs/21)
         /// <summary>Every tower boss row by id (regular, marquee and add).</summary>
         public IReadOnlyDictionary<string, TowerBossDef> TowerBosses { get; private set; }
 
@@ -243,6 +243,7 @@ namespace IdleRng.Sim.Content
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
                 GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
                 TowerSeed = I("TOWER_SEED"), TowerFloors = I("TOWER_FLOORS"), TowerAttemptsPerDay = I("TOWER_ATTEMPTS_PER_DAY"),
+                TowerTicketCap = I("TOWER_TICKET_CAP"), TowerTicketPieces = I("TOWER_TICKET_PIECES"),
                 TowerBase = D("TOWER_BASE"), TowerGrowth = D("TOWER_GROWTH"), TowerBossHpMult = D("TOWER_BOSS_HP_MULT"),
                 TowerMilestoneEvery = I("TOWER_MILESTONE_EVERY"), TowerShardsPerFloor = I("TOWER_SHARDS_PER_FLOOR"),
                 TowerBookChance = D("TOWER_BOOK_CHANCE"), TowerBookChancePerFloor = D("TOWER_BOOK_CHANCE_PER_FLOOR"),
@@ -362,6 +363,7 @@ namespace IdleRng.Sim.Content
             {
                 Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"), Element = r.Str("element"),
                 Stats = StatsFrom(r, ""), DismantleShards = r.Int("dismantle_shards"),
+                TicketPieces = r.Int("ticket_pieces"),
             }).OrderBy(x => x.SortOrder).ToList().AsReadOnly();
             if (FightRanks.Count == 0) errors.Add(new ContentError("E044", "fight_ranks", "at least one rank is required"));
             if (!FightRanks.Select(x => x.SortOrder).SequenceEqual(Enumerable.Range(0, FightRanks.Count)))
@@ -371,6 +373,7 @@ namespace IdleRng.Sim.Content
                 if (!Elements.ContainsKey(fr.Element)) errors.Add(new ContentError("E023", $"fight_ranks[{fr.Id}]", $"element '{fr.Element}' is not an element id"));
                 if (!StatsOk(fr.Stats, 0, k.StatMax, false)) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "stats must be in [0, STAT_MAX]"));
                 if (fr.DismantleShards < 0) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "dismantle_shards must be >= 0"));
+                if (fr.TicketPieces < 0) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "ticket_pieces must be >= 0"));
             }
 
             BuildTrees(t, errors);
@@ -693,18 +696,18 @@ namespace IdleRng.Sim.Content
         static List<string> SplitIds(string s) =>
             string.IsNullOrEmpty(s) ? new List<string>() : s.Split('|').Where(x => x.Length > 0).ToList();
 
-        /// <summary>Daily Tower (specs/21 section 5). Mirrors validate_tower in tools/content_build.py.</summary>
+        /// <summary>Dungeon (specs/21 section 5). Mirrors validate_tower in tools/content_build.py.</summary>
         void BuildTower(Dictionary<string, List<Row>> t, List<ContentError> errors)
         {
             var k = Constants;
             bool In01(double v) => v >= 0 && v <= 1;
-            if (!(k.TowerFloors > 0 && k.TowerAttemptsPerDay > 0 && k.TowerBase > 0 && k.TowerGrowth >= 1 && k.TowerBossHpMult > 0
+            if (!(k.TowerFloors > 0 && k.TowerAttemptsPerDay > 0 && k.TowerTicketCap > 0 && k.TowerTicketPieces > 0 && k.TowerBase > 0 && k.TowerGrowth >= 1 && k.TowerBossHpMult > 0
                   && k.TowerMilestoneEvery > 0 && k.TowerShardsPerFloor >= 0 && In01(k.TowerBookChance) && k.TowerBookChancePerFloor >= 0
                   && k.EntropyCap > 0 && k.EntropyPerTrigger >= 0 && k.EntropyPerEcho >= 0 && k.EntropyPerCounter >= 0 && k.EntropyDecay >= 0
                   && In01(k.EntropyRecoilFrac) && k.EntropyStunGauge >= 0 && k.EntropyEnrageFrac >= 0 && k.EntropyEnrageTurns > 0
                   && k.EntropyConvertShield >= 0 && k.EntropyConvertTurns > 0 && k.CorruptStartTick >= 0 && k.CorruptEveryTicks > 0
                   && k.CorruptHealPerLevel >= 0 && In01(k.CorruptHealFloor) && k.CorruptDmgPerLevel >= 0))
-                errors.Add(new ContentError("E043", "constants", "Daily Tower constants out of range (specs/21 section 5)"));
+                errors.Add(new ContentError("E043", "constants", "Dungeon constants out of range (specs/21 section 5)"));
 
             var phases = t["boss_phases"].Select(r => new BossPhaseDef
             {

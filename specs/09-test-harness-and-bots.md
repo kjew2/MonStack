@@ -18,7 +18,7 @@ src/IdleRng.Bots/
   Golden/GoldenFiles.cs     the list of golden files, compare and write
   Golden/BattleVectors.cs   fixed fights through BattleSim
   Golden/GauntletVectors.cs each species' bot-trained monster up the gauntlet
-  Golden/TowerVectors.cs    the same monsters, alone and together, up the Daily Tower on two days
+  Golden/TowerVectors.cs    the same monsters, alone and together, up the Dungeon on two days
   Balance/BalanceHarness.cs the run-balance harness: options, samples, per-cell and tower summaries (section 7)
   Balance/Distribution.cs   mean, sd, min, max and nearest-rank p10/p50/p90 of one metric
   Balance/BalanceWriter.cs  the balance report as a text table, JSON or long-form CSV
@@ -35,7 +35,7 @@ src/IdleRng.Bots.Tests/     RunBotTests, BalanceTests
 | `golden/battle-sim-vectors.txt` | Five fixed fights (1v1, 4v1, 4v4, 2v3) with every skill kind, a trigger and a rule modifier: outcome, ticks, tallies, hash (`specs/16` section 8) |
 | `golden/training-run-vectors.txt` | Every species x run policy at seed 7, plus a run with every book: summary and run hash (`specs/14` section 9) |
 | `golden/gauntlet-vectors.txt` | Each species after a `focus` bot run, sent up the gauntlet: floor, killer, title, hash (`specs/19` section 6) |
-| `golden/tower-vectors.txt` | The same monsters, alone and up to four together, up the Daily Tower on days 0 and 20391: lineup, floor, cleared, vents, phases, hash (`specs/21` section 9) |
+| `golden/tower-vectors.txt` | The same monsters, alone and up to four together, up the Dungeon on days 0 and 20391: lineup, floor, cleared, vents, phases, hash (`specs/21` section 9) |
 
 Each file's first line carries the content version and short hash (`content=3.0/b7ba908c`). Any change to a `content_src/` file changes the hash, so every golden is regenerated and the merge commit says so.
 
@@ -76,7 +76,7 @@ When the `CI` environment variable is set (anything but empty or `false`; GitHub
 
 **A report, not a gate, and not a golden.** `balance` measures the placeholder numbers and runs a few **loose sanity checks** over them (below); it exits 0 whatever they say unless `--strict` is passed. There are **no balance targets** (issue #89, kj 2026-10-31): meta-progression is still being added and will move the tuning, so for now the harness only asks "is anything absolutely unplayable?". Tight targets wait until kj asks for them, and any large retune still needs targets agreed with kj first (`CLAUDE.md`).
 
-**What it plays.** For every species x run policy (default: every species in content order and every policy in section 4), `--seeds` runs (default 200) on seeds `--seed-base` (default 1), `--seed-base` + 1, ... Each run is `RunBot.Play` from a fresh account (no talents, `RunModifiers` defaults), bringing the `--books` (default none; `all` = every skill book), then sealed the way `AccountOps.FinishRun` seals it: `AccountOps.Payout` shards and `GauntletSim.Run` on the run seed. Unless `--no-tower`, each policy's monsters then climb the Daily Tower (`TowerSim.Run`): each species alone, and one of each species (the first `MON_SIDE_SIZE`) from the same seed as one team, on day `--tower-day` (default 0) + the seed's index, so the lineups vary across the sample. A tower sample's shards are `TOWER_SHARDS_PER_FLOOR` x floors cleared (a first attempt that day) and its books the `TowerSim.BookDrop` hits on the cleared floors.
+**What it plays.** For every species x run policy (default: every species in content order and every policy in section 4), `--seeds` runs (default 200) on seeds `--seed-base` (default 1), `--seed-base` + 1, ... Each run is `RunBot.Play` from a fresh account (no talents, `RunModifiers` defaults), bringing the `--books` (default none; `all` = every skill book), then sealed the way `AccountOps.FinishRun` seals it: `AccountOps.Payout` shards and `GauntletSim.Run` on the run seed. Unless `--no-tower`, each policy's monsters then climb the Dungeon (`TowerSim.Run`): each species alone, and one of each species (the first `MON_SIDE_SIZE`) from the same seed as one team, on day `--tower-day` (default 0) + the seed's index, so the lineups vary across the sample. A tower sample's shards are `TOWER_SHARDS_PER_FLOOR` x floors cleared (a first attempt that day) and its books the `TowerSim.BookDrop` hits on the cleared floors.
 
 **What it reports.** Per species x policy:
 
@@ -86,7 +86,7 @@ When the `CI` environment variable is set (anything but empty or `false`; GitHub
 | Runs | injury rate (runs with at least one injury), injuries per run and whole cycles sat out (`specs/14` section 4.1), rank fights won and lost, fight win rate (won / fought over the cell), shard payout |
 | Gauntlet | floor reached (`GAUNTLET_FLOORS` + 1 = cleared), clear rate, boss-floor stall rate (share of the runs that did not clear that ended on a boss floor; about 1/`GAUNTLET_BOSS_EVERY` when the curve is smooth, `specs/19` section 2), stall floors (of the runs that did not clear, how many ended on each floor reached mod `GAUNTLET_BOSS_EVERY`; x0 = boss floors; issue #99), the killers that ended most runs |
 | Chase capstones | capstone rate (runs that end with a chase tree's capstone, its last node, bought) and the capstone cycle (per capstoned run, the earliest cycle a capstone it ended with was bought); per chase tree of the species: unlock rate (every condition held at once at some point), capstone rate and cycle, and each condition's hit rate (it held at some point of the run). Issue #111; a report only, no check reads it |
-| Daily Tower | per policy x team: floors cleared, clear rate, shards, books |
+| Dungeon | per policy x team: floors cleared, clear rate, shards, books |
 | Book canary | per species x policy: mean rank and capstone rate with every skill book vs none, and the canary pass's chase capstone table (below) |
 
 Every spread is a `Distribution`: mean, population standard deviation, min, max and nearest-rank p10/p50/p90 (the value at sorted index `ceil(p x n / 100) - 1`, computed in integers).

@@ -14,7 +14,8 @@
       "def": 100.0,
       "spd": 100.0,
       "luk": 100.0,
-      "dismantle_shards": 5
+      "dismantle_shards": 5,
+      "ticket_pieces": 0
     },
     {
       "id": "d",
@@ -29,7 +30,8 @@
       "def": 160.0,
       "spd": 160.0,
       "luk": 160.0,
-      "dismantle_shards": 10
+      "dismantle_shards": 10,
+      "ticket_pieces": 1
     },
     {
       "id": "c",
@@ -44,7 +46,8 @@
       "def": 230.0,
       "spd": 230.0,
       "luk": 230.0,
-      "dismantle_shards": 15
+      "dismantle_shards": 15,
+      "ticket_pieces": 1
     },
     {
       "id": "b",
@@ -59,7 +62,8 @@
       "def": 310.0,
       "spd": 310.0,
       "luk": 310.0,
-      "dismantle_shards": 25
+      "dismantle_shards": 25,
+      "ticket_pieces": 2
     },
     {
       "id": "a",
@@ -74,7 +78,8 @@
       "def": 400.0,
       "spd": 400.0,
       "luk": 400.0,
-      "dismantle_shards": 40
+      "dismantle_shards": 40,
+      "ticket_pieces": 3
     },
     {
       "id": "s",
@@ -89,7 +94,8 @@
       "def": 500.0,
       "spd": 500.0,
       "luk": 500.0,
-      "dismantle_shards": 60
+      "dismantle_shards": 60,
+      "ticket_pieces": 4
     }
   ]
 }

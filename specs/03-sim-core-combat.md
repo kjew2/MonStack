@@ -1,6 +1,6 @@
 # 03 - Sim Core
 
-Scope: the `IdleRng.Sim` assembly. Pure C#, no `UnityEngine` reference, no IO, clock or JSON. It holds the monster battle (`specs/16`), the training run (`specs/14`, `specs/15`), the account (`specs/18`), the gauntlet (`specs/19`), the Daily Tower (`specs/21`), the content database (`specs/05`) and the RNG. The web bridge (`src/IdleRng.Web`), the bots (`specs/09`) and the save layer (`IdleRng.Runtime`, `specs/06`) all drive this one assembly.
+Scope: the `IdleRng.Sim` assembly. Pure C#, no `UnityEngine` reference, no IO, clock or JSON. It holds the monster battle (`specs/16`), the training run (`specs/14`, `specs/15`), the account (`specs/18`), the gauntlet (`specs/19`), the Dungeon (`specs/21`), the content database (`specs/05`) and the RNG. The web bridge (`src/IdleRng.Web`), the bots (`specs/09`) and the save layer (`IdleRng.Runtime`, `specs/06`) all drive this one assembly.
 
 This spec was the idle game's tick-loop spec until the pivot (`specs/13` T7 removed that game). It now keeps what every part of the sim still shares: the design rules, the numeric model and the RNG.
 

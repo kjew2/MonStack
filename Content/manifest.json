@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.15",
+  "content_version": "3.16",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -21,7 +21,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "230a4db787e5ab2de1c1844d815e623ae550339e0ef3b86234a5684213bdfc7d"
+      "sha256": "ba5f4d0f5e48e0b6eaf90d37a9e10d7a9cf334f3c092db32b276b98673170bec"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -33,7 +33,7 @@
     },
     "fight_ranks": {
       "file": "fight_ranks.json",
-      "sha256": "81a0c38d7c77ba049cd0d986a4dda9658f9bc940c78bfb1bbfb1d43fff2025d4"
+      "sha256": "d1ee83fc925ae5e71c52e4ae97edf9b91caac6c0b20c7e327aceacb08a087c5c"
     },
     "gauntlet_enemies": {
       "file": "gauntlet_enemies.json",
@@ -61,7 +61,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "a159e342ec5e04d4ea7689ae91f30c45720dba68e553ac50b611b67328740400"
+      "sha256": "85b4764e3879940f18e7dad7e6b9e415364355b08175734b45b05803725c3d36"
     },
     "talents": {
       "file": "talents.json",
@@ -84,5 +84,5 @@
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "ba6e2743e272ea4770ce24cdddd9bffc0e4d6b124c94cb1bda8eb2c0932d8b16"
+  "content_hash": "ac3140bb57a5b57bead55578eb8f1ffcb2192be617ff2b92876e0fef2aa989b7"
 }

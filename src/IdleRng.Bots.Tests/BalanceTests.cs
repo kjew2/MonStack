@@ -272,7 +272,7 @@ namespace IdleRng.Bots.Tests
             StringAssert.Contains("## Chase capstones", text);
             StringAssert.Contains("## Grades", text);
             StringAssert.Contains("## Gauntlet stall floors", text);
-            StringAssert.Contains("## Daily Tower", text);
+            StringAssert.Contains("## Dungeon", text);
             Assert.Throws<ArgumentException>(() => BalanceWriter.Write(r, "xml"));
         }
     }

@@ -118,7 +118,7 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 |---|---|
 | `species` | at least one row (`E044`); `element` is an element id (`E023`); base stats in `[0, STAT_MAX]`, growth `> 0` (`E043`) |
 | `drill_tiers` | exactly `fail`, `success`, `super` (`E044`); `0 <= gain_min <= gain_max` (`E043`). Placeholders: fail 0-2, success 8-15, super 20-30 |
-| `fight_ranks` | at least one row (`E044`); `sort_order` exactly `0..N-1` (`E047`); element id (`E023`); stats in `[0, STAT_MAX]` (`E043`); `dismantle_shards` (the Vault refund for that grade, `specs/18` section 7) `>= 0` (`E043`) |
+| `fight_ranks` | at least one row (`E044`); `sort_order` exactly `0..N-1` (`E047`); element id (`E023`); stats in `[0, STAT_MAX]` (`E043`); `dismantle_shards` (the Vault refund for that grade, `specs/18` section 7) and `ticket_pieces` (Dungeon ticket pieces for that grade, `specs/21` section 7) `>= 0` (`E043`) |
 | `stat_milestones` | thresholds `> 0`, strictly increasing (`E032`) |
 
 ## 9. Bots and goldens

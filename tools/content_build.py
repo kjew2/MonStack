@@ -63,8 +63,8 @@ REQUIRED_CONSTANTS = {
     # end-of-run gauntlet (specs/19)
     "GAUNTLET_FLOORS": "int", "GAUNTLET_BASE": "double", "GAUNTLET_GROWTH": "double", "GAUNTLET_BOSS_EVERY": "int",
     "GAUNTLET_BOSS_MULT": "double",
-    # Daily Tower (specs/21 section 5)
-    "TOWER_SEED": "int", "TOWER_FLOORS": "int", "TOWER_ATTEMPTS_PER_DAY": "int", "TOWER_BASE": "double", "TOWER_GROWTH": "double",
+    # Dungeon (specs/21 section 5)
+    "TOWER_SEED": "int", "TOWER_FLOORS": "int", "TOWER_ATTEMPTS_PER_DAY": "int", "TOWER_TICKET_CAP": "int", "TOWER_TICKET_PIECES": "int", "TOWER_BASE": "double", "TOWER_GROWTH": "double",
     "TOWER_BOSS_HP_MULT": "double", "TOWER_MILESTONE_EVERY": "int", "TOWER_SHARDS_PER_FLOOR": "int", "TOWER_BOOK_CHANCE": "double",
     "TOWER_BOOK_CHANCE_PER_FLOOR": "double",
     "ENTROPY_CAP": "double", "ENTROPY_PER_TRIGGER": "double", "ENTROPY_PER_ECHO": "double", "ENTROPY_PER_COUNTER": "double",
@@ -111,6 +111,7 @@ MON_RANGES = {
     "GAUNTLET_GROWTH": (">= 1", lambda v: v >= 1), "GAUNTLET_BOSS_EVERY": ("> 0", lambda v: v > 0),
     "GAUNTLET_BOSS_MULT": ("> 0", lambda v: v > 0),
     "TOWER_FLOORS": ("> 0", lambda v: v > 0), "TOWER_ATTEMPTS_PER_DAY": ("> 0", lambda v: v > 0),
+    "TOWER_TICKET_CAP": ("> 0", lambda v: v > 0), "TOWER_TICKET_PIECES": ("> 0", lambda v: v > 0),
     "TOWER_BASE": ("> 0", lambda v: v > 0), "TOWER_GROWTH": (">= 1", lambda v: v >= 1),
     "TOWER_BOSS_HP_MULT": ("> 0", lambda v: v > 0), "TOWER_MILESTONE_EVERY": ("> 0", lambda v: v > 0),
     "TOWER_SHARDS_PER_FLOOR": (">= 0", lambda v: v >= 0), "TOWER_BOOK_CHANCE": ("[0, 1]", lambda v: 0 <= v <= 1),
@@ -146,7 +147,7 @@ SCHEMA = {
                   + [c("base_" + s, "double") for s in STATS] + [c("grow_" + s, "double") for s in STATS], key="id"),
     "drill_tiers": T([c("id", "id"), c("gain_min", "int"), c("gain_max", "int"), c("name_key", "key")], key="id"),
     "fight_ranks": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("element", "id")]
-                     + [c(s, "double") for s in STATS] + [c("dismantle_shards", "int")], key="id"),
+                     + [c(s, "double") for s in STATS] + [c("dismantle_shards", "int"), c("ticket_pieces", "int")], key="id"),
     "stat_milestones": T([c("threshold", "int")], key="threshold"),
     "monster_skills": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:SkillKind"),
                          c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
@@ -418,7 +419,7 @@ def split_ids(text):
 
 
 def validate_tower(t, keys, errs):
-    """Daily Tower (specs/21 section 5). Mirrors ContentDb.BuildTower."""
+    """Dungeon (specs/21 section 5). Mirrors ContentDb.BuildTower."""
     elements = {r["id"] for r in t["elements"]}
     skills = {r["id"] for r in t["monster_skills"]}
     bosses = {r["id"]: r for r in t["tower_bosses"]}
@@ -579,6 +580,8 @@ def validate_training(t, keys, errs):
                 errs.add("E043", loc, f"{s} must be in [0, STAT_MAX]")
         if r["dismantle_shards"] < 0:
             errs.add("E043", loc, "dismantle_shards must be >= 0")
+        if r["ticket_pieces"] < 0:
+            errs.add("E043", loc, "ticket_pieces must be >= 0")
     validate_trees(t, errs)
     validate_talents(t, errs)
     validate_unlocks(t, errs)

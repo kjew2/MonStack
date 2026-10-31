@@ -307,7 +307,7 @@
       onclick: () => { st.compare = [st.compare[1], st.compare[0]]; X.rerender(); } }));
   }
 
-  // The Vault's search, sort and filters for another screen's list of Vault monsters (the Daily Tower team picker, issue #98).
+  // The Vault's search, sort and filters for another screen's list of Vault monsters (the Dungeon team picker, issue #98).
   // They share the Vault's remembered sort and filters. fill(rows, vaultSize) draws [entry, vault index] pairs in display order;
   // it runs now and whenever the controls change. Returns the controls element.
   function browse(helpers, fill) {

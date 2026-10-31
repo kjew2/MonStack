@@ -30,7 +30,7 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
  End-of-run gauntlet ──> Legacy Title, monster certified into the Vault
       │
       ▼
- Towers and PvP with Vault teams (4v1 Daily Tower, 4v4 Endless Tower, 4v4 async PvP)
+ Towers and PvP with Vault teams (4v1 Dungeon, 4v4 Endless Tower, 4v4 async PvP)
       │
       ├── Training Shards ──> post-run vendor: talent ranks (cheaper, stronger future runs)
       ├── Achievements ─────> new species
@@ -148,7 +148,7 @@ Some unlocks need in-run actions, e.g. "deal X fire damage" or "execute Y perfec
 ### 5.6 Skill Books
 
 - **Uber rare and uber strong (kj, 2026-10-31, #112):** a book is a rare event, and the book-gated chase tree it opens must be among the strongest things a run can get. Drop rates: `specs/21` section 5.
-- Earned in the Daily Tower (section 8.2), kept in the account inventory. **The main premium gate (kj, T9):** books are target-farmed as RNG drops from the Daily Tower (T10). How books are sold, if at all, is open (#49, #77).
+- Earned in the Dungeon (section 8.2), kept in the account inventory. **The main premium gate (kj, T9):** books are target-farmed as RNG drops from the Dungeon (T10). How books are sold, if at all, is open (#49, #77).
 - Consuming a book at the start of (or during) a run opens its **Book Tree** for that run.
 - A book-gated chase tree unlocks when all of these hold: points in named Book Tree nodes, points in named nodes of other trees, and a playstyle condition.
 
@@ -182,7 +182,7 @@ Some unlocks need in-run actions, e.g. "deal X fire damage" or "execute Y perfec
 | Mode | Format | Focus | Rewards |
 |---|---|---|---|
 | End-of-run Gauntlet | 1 monster vs 100 floors | How far one build goes | Legacy Title, shards |
-| Daily Tower ("Daily Challenge Tower", "Daily Tower Dive") | 4v1 boss floors, daily | Single-target DPS, taunts, survivability, status mitigation, boss phases | Star-Gems on first clears and milestones; Skill Books (RNG per floor/boss, rarer books deeper) |
+| Dungeon (drafts: "Daily Challenge Tower", "Daily Tower Dive"; built as the Daily Tower, renamed by kj 2026-10-31) | 4v1 boss floors, a daily lineup; one free ticket a day, more ground from runs (`specs/21` section 7) | Single-target DPS, taunts, survivability, status mitigation, boss phases | Star-Gems on first clears and milestones; Skill Books (RNG per floor/boss, rarer books deeper) |
 | Endless Tower | 4v4, escalating, with mutators | Team synergy, turn-order control, AoE burst, rulebooks | Shards, gems |
 | Offline Ranked PvP | 4v4 async against stored teams | Rulebook tactics | Cosmetic only: titles, skins, recolors, auras, badges, borders |
 
@@ -214,7 +214,7 @@ The drafts had a gacha that unlocked species (with duplicates raising Genetic Ap
 |---|---|---|
 | Training Shards (soft) | Completed and failed runs, dismantling, gauntlets, towers | Post-run vendor offers (talent ranks) |
 | Star-Gems (premium) | First-time tower clears, daily milestones, achievement ladders | Open: there are no gacha pulls (#49, #77) |
-| Skill Books (items, the premium gate) | Daily Tower drops, target-farmed | Book Trees in runs |
+| Skill Books (items, the premium gate) | Dungeon drops, target-farmed | Book Trees in runs |
 
 ## 11. Monetization and operations
 
@@ -237,7 +237,7 @@ Estimated 150-200 hours (8-12 weeks part time with AI help).
 - Rank fights during the run; the rank reached is the grade (instead of towers and the gauntlet).
 - Score screen with the rank and a stat breakdown.
 
-- Added to the MVP (kj, 2026-10-31): T9 (planned as the species gacha; re-scoped by kj to species unlocks by achievement and the post-run vendor, `specs/13` T9) and the Daily Tower (T10). The hour estimate above predates this and has not been revisited.
+- Added to the MVP (kj, 2026-10-31): T9 (planned as the species gacha; re-scoped by kj to species unlocks by achievement and the post-run vendor, `specs/13` T9) and the Dungeon (T10). The hour estimate above predates this and has not been revisited.
 
 Not in the MVP: multiplayer and database, Endless Tower scaling, PvP.
 
@@ -257,7 +257,7 @@ Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeat
 3. **What trees give.** Decided (kj, 2026-10-30): about 75% filler (growth and flat stats), the rest skills and effects, chase traits last (section 5).
 4. **Stats.** Decided (kj, 2026-10-30): HP, STR, INT, WIS, DEX, DEF, SPD, LUK. Proposed: milestones on all eight.
 5. **Duplicates.** Moot: the species gacha was scrapped at T9 (kj, 2026-10-30), so there are no duplicates or aptitude (section 5.7).
-6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode. Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.
+6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode, built as the Daily Tower and renamed the **Dungeon** (kj, 2026-10-31). Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.
 7. **Dodges in an auto-battle.** "Perfect dodges" implies action input. Proposed: combat stays automatic and the condition counts evasions.
 8. **Where in-run fights come from.** Decided (kj, 2026-10-30): the rank fight after each cycle's AP (section 4.2).
 9. **Failed runs.** Decided (kj, 2026-10-30): section 4.5.

@@ -53,7 +53,8 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 |---|---|
 | v1 -> v2 | Vault entries gain `Locked` (`false`), issue #82 (`specs/18` section 7) |
 | v2 -> v3 | `Achievements` (empty), `Records` and `Vendor` (null), issue #73 (`specs/18` sections 4 and 8). Owned species and talents are kept. After materialisation `Decode` rebuilds `Records` from the Vault entries (`AccountOps.RebuildRecords`) |
-| v3 -> v4 | `Tower` (Daily Tower progress: `Day` -1, no attempts, nothing cleared), `specs/21` section 7. A `Tower` read as null is replaced by the same empty progress |
+| v3 -> v4 | `Tower` (Dungeon progress: `Day` -1, no attempts, nothing cleared), `specs/21` section 7. A `Tower` read as null is replaced by the same empty progress |
+| v4 -> v5 | `Tower` gains `Tickets` 0, `TicketPieces` 0 and `GrantDay` -1 (no tickets yet; the first free ticket is due on the next visit), `specs/21` section 7 |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
 

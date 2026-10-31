@@ -12,7 +12,7 @@ namespace IdleRng.Bots.Golden
 {
     /// <summary>
     /// golden/tower-vectors.txt (specs/21 section 9): each species' monster after a `focus` bot run at seed 7, alone and all of
-    /// them as one team, sent up the Daily Tower on two fixed days. Moves when the tower, the battle, the run or their content change.
+    /// them as one team, sent up the Dungeon on two fixed days. Moves when the tower, the battle, the run or their content change.
     /// </summary>
     public static class TowerVectors
     {

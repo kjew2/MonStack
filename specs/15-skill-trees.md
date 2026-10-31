@@ -54,7 +54,7 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 ## 4. Offers and overwriting
 
 - **Milestone draft.** When a stat crosses a `stat_milestones` threshold (by a drill or a flat stat node), the run offers up to `DRAFT_SIZE` distinct generic trees whose `offer_stat` is that stat or empty and whose `offer_threshold` is at most the threshold, excluding trees already slotted or offered. They are picked by partial shuffle on the run's `draft` stream, one draw per pick. No eligible tree, no offer. Each stat and threshold pair drafts once per run.
-- **Skill book.** `UseBook` offers the book's tree. Books come from the Daily Tower (post-MVP); until then a run is started with a list of books (`TrainingRun.Start(..., books)`), the debug grant `specs/13` T3 planned.
+- **Skill book.** `UseBook` offers the book's tree. Books come from the Dungeon (post-MVP); until then a run is started with a list of books (`TrainingRun.Start(..., books)`), the debug grant `specs/13` T3 planned.
 - **Chase tree.** Section 5.
 - Offers queue oldest first.
 - **Overwriting** (kj, 2026-10-31; it was "points are lost" until then): `TREE_REFUND` (0.5, half) of the SP spent in the overwritten tree comes back, rounded down **(agent)**. **(agent)** Its effects go with it: its flat stat boosts are subtracted again (never below 0), its growth bonus stops applying, its skills leave the kit. Gains already made from its growth bonus stay. Milestones already recorded stay recorded.
