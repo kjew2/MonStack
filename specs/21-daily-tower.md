@@ -1,6 +1,6 @@
 # 21 - Daily Tower
 
-Status: **in progress (T10 of `specs/13`, P0)**. Build steps 1 and 2 are **live** (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`), and the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`). Steps 3 (account and rewards, section 7) and 4 (web, section 8) are design only.
+Status: **in progress (T10 of `specs/13`, P0)**. Build steps 1 to 3 are **live** (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4). Step 4, the web client (section 8), is design only.
 
 The design is `specs/12` sections 8.2 and 8.3 and the Skill Book rules in section 5.6. This spec turns it into rules, data and build steps.
 
@@ -142,21 +142,20 @@ string book = TowerSim.BookDrop(content, day, floor);     // the floor's drop th
 
 ## 7. Account and rewards
 
-`AccountState.Tower` (new, saved; account save schema v3, a v2 save migrates with an empty tower):
+`AccountState.Tower` (`TowerProgress`, saved; account save schema v4, an older save migrates with no progress). Floors are counted as floors cleared:
 
 | Field | Meaning |
 |---|---|
-| `Day` | The last day an attempt was made; a new day resets the three below |
-| `AttemptsUsed` | This day's attempts |
-| `BestFloorToday` | Best floor reached today |
-| `ClaimedToday` | Highest floor whose rewards were already paid today |
-| `BestFloorEver` | Best floor ever reached (decides first clears) |
+| `Day` | UTC day of the last attempt, -1 before the first; a later day resets the next two |
+| `AttemptsUsed` | That day's attempts |
+| `ClearedToday` | Most floors one attempt cleared that day; every floor up to it has been paid that day |
+| `ClearedEver` | Most floors one attempt ever cleared (a floor above it is a first clear) |
 
-`AccountOps.RunTower(teamIndices, day)` (rejected commands throw and change nothing): requires `AttemptsUsed < TOWER_ATTEMPTS_PER_DAY`, and 1 to 4 distinct valid Vault indices. A run in progress does not block it: a tower attempt never touches the active run. It runs `TowerSim`, counts the attempt, then pays for each floor **above** `ClaimedToday` that was cleared:
+`AccountOps.RunTower(c, a, vaultIndices, day)` returns a `TowerRunResult` (the `TowerResult`, shards, books by floor, first clears, attempts left). Rejected commands throw and change nothing: no attempts left (`AccountOps.TowerAttemptsLeft`), not 1 to `MON_SIDE_SIZE` distinct valid Vault indices, a negative day, or a day before `Day` **(agent: the clock went back; refusing it stops replaying an earlier day's rewards)**. A run in progress does not block it: a tower attempt never touches the active run. It runs `TowerSim`, counts the attempt, then pays for each floor cleared **above** `ClearedToday`:
 
 - **Shards:** `TOWER_SHARDS_PER_FLOOR` per floor.
 - **Skill Books:** on each floor cleared, one roll with chance `TOWER_BOOK_CHANCE + TOWER_BOOK_CHANCE_PER_FLOOR x (floor - 1)`; on a hit, the book is drawn from `book_drops` rows with `min_floor <= floor`, by weight, so rarer books sit deeper. The roll's seed is `Derive(StreamSeed(seed, "drop"), floor)` (`TowerSim.BookDrop`, built with step 2): fixed by (day, floor), so a retry cannot re-roll a floor and the books are reproducible. Granted through `GrantBooks`.
-- **Star-Gems:** the first clear ever of a floor (above `BestFloorEver`) and each `TOWER_MILESTONE_EVERY` floor cleared in a day pay gems **once Star-Gems exist**: T9 scrapped the species gacha and added no gems, so what gems buy is open (#49, #77; `specs/18` section 1). Until then the tower pays shards and books only. Amounts are decided with the gacha economy (question 5).
+- **Star-Gems:** the first clear ever of a floor (above `ClearedEver`, reported in `TowerRunResult.FirstClears`) and each `TOWER_MILESTONE_EVERY` floor cleared in a day pay gems **once Star-Gems exist**: T9 scrapped the species gacha and added no gems, so what gems buy is open (#49, #77; `specs/18` section 1). Until then the tower pays shards and books only. Amounts are decided with the gacha economy (question 5).
 
 The test button that grants books (`specs/13` T3) stays as a debug-only control, hidden behind the debug flag, once the tower grants them **(agent)**.
 
@@ -176,7 +175,7 @@ A **Tower** tab beside the Vault (`web/`), all through the bridge (`web/wasm/BRI
 - No clock, IO, reflection or `Math.Pow`; every draw comes from a named stream (`specs/00` section 5). New streams: `tower` (lineup), and the per-floor `tower_fight` and `drop` seeds.
 - `TowerBattleTests` (step 1): each phase kind changes the fight as its row says and fires once; entropy gains, decays, vents in the fixed rotation and `entropy_convert` shields instead; corruption level and its multipliers; tower rules off leave fights unchanged.
 - `TowerTests` (step 2): content loads; the lineup is fixed for a day, differs across days, puts marquees on milestones and uses the whole regular pool before repeating; boss scaling (adds skip the HP multiplier); the same (team, day) gives the same result and hash, different days differ, slot order matters, duplicate monster ids are fine; bad teams are rejected; a strong team clears and sees phases on every marquee floor; observers change nothing; drops are fixed by (day, floor), only eligible books drop, and the rate follows the constants.
-- Step 3 adds: attempts cap; a new day resets; a retry pays nothing twice; account save round-trips and a v2 save migrates.
+- `TowerAccountTests` (step 3): an attempt pays each cleared floor once (shards, the floor's book, first clears) and matches the sim; a retry pays nothing twice; attempts cap and a refused attempt changes nothing; a new day resets; an earlier day, a bad team and a negative day are refused; a run in progress is untouched. `AccountSaveTests`: tower progress round-trips and a v3 save migrates.
 - `golden/tower-vectors.txt` (`TowerVectors`): each species after a `focus` bot run at seed 7, alone and up to four together, on days 0 and 20391: the lineup, then floor, cleared, vents, phases, hash. Regenerated through the bot CLI (`golden --update`), never by hand. **(agent)** No `tower` CLI verb yet; add one with the balance harness (`specs/09` section 7).
 - No balance harness: whether floors are fair is balance work and waits (`CLAUDE.md`).
 
@@ -186,7 +185,7 @@ Each step merges on its own with `./check.sh` green.
 
 1. **Engine hooks** (`BattleSim`): `TowerRules`, entropy, the four phase kinds, the clock, tests. Rank fights and the gauntlet unchanged. **Done** (`TowerBattleTests`; no golden moved).
 2. **Tower sim and content:** the three tables, constants, validators in both `content_build.py` and `ContentDb`, `TowerSim`, goldens. **Done** (content 3.6, `TowerTests`, `golden/tower-vectors.txt`).
-3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v3, tests.
+3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v4, tests. **Done** (`TowerAccountTests`, `AccountSaveTests`).
 4. **Web:** the Tower tab, the bridge, tooltips, the debug-only book button. Publish the artifact (`CLAUDE.md`).
 
 ## 11. Questions for kj

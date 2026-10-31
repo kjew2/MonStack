@@ -58,7 +58,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^[0-9a-f]{4,}(\+dirty)? · \d{4}-\d\d-\d\d$/.test(stamp), 'the header shows the build stamp: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 3, 'a new account owns only the starter species (slime), schema v3');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 4, 'a new account owns only the starter species (slime), schema v4');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -357,7 +357,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 3 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v3 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 4 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v4 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap && (await page.locator('[data-id=vault-over]').count()) === 0, 'back at the cap, the warning goes');
   check(await act('start').isEnabled(), 'and a run can start again at the cap');

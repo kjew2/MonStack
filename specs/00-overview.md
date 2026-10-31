@@ -13,13 +13,13 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
 | Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
-| Daily Tower sim: daily lineup of 4v1 boss floors, Skill Book drops (account and web not yet) | `src/IdleRng.Sim/Tower` | `21` |
+| Daily Tower: daily lineup of 4v1 boss floors, attempts and rewards (shards, Skill Book drops); no web screen yet | `src/IdleRng.Sim/Tower`, `AccountOps.RunTower` | `21` |
 | Content database and pipeline | `content_src/` -> `Content/` -> `ContentDb` | `05` |
 | Account save lineage and stores | `src/IdleRng.Runtime/Save` | `06`, `18` |
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the Daily Tower's account rewards and screen (rules: `21`; its battle hooks and tower sim are built; it drops Skill Books, the premium gate), the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the Daily Tower's screen (rules: `21`; its battle hooks, tower sim and account rewards are built; it drops Skill Books, the premium gate), the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 
