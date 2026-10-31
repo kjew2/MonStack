@@ -153,7 +153,7 @@ SCHEMA = {
                          c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
                          c("power", "double"), c("cooldown", "int"), c("duration", "int"), c("element", "id", True)], key="id"),
     "trees": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:TreeKind"), c("offer_stat", "string", True),
-                c("offer_threshold", "int", True)], key="id"),
+                c("offer_threshold", "int", True), c("apex_name_key", "key", True)], key="id"),
     "tree_nodes": T([c("id", "id"), c("tree_id", "id"), c("index", "int"), c("cost", "int"), c("kind", "enum:NodeKind"),
                      c("stat", "string", True), c("amount", "double", True), c("skill_id", "id", True),
                      c("trigger", "enum:FightTrigger", True), c("rule_id", "id", True)], key="id"),
@@ -289,6 +289,8 @@ def validate_trees(t, errs):
                 errs.add("E023", loc, f"offer_stat '{r['offer_stat']}' is not a trained stat")
         elif r["offer_stat"] is not None or r["offer_threshold"] is not None:
             errs.add("E043", loc, "only generic trees have offer_stat and offer_threshold")
+        if (r["kind"] == "chase") != (r["apex_name_key"] is not None):
+            errs.add("E043", loc, "chase trees, and only chase trees, have an apex_name_key")
     by_tree = {}
     nodes = {}
     for n in t["tree_nodes"]:

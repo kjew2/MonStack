@@ -34,7 +34,11 @@
   }
 
   // ------------------------------------------------------------ entry facts
-  const spDef = (e) => X.C.species.find((s) => s.id === e.species) || { name: e.species, element: null };
+  // The entry's species, named by its apex form when it has one (specs/15 section 5.3); speciesName keeps the species' own name.
+  const spDef = (e) => {
+    const sp = X.C.species.find((s) => s.id === e.species) || { name: e.species, element: null };
+    return { name: e.name || sp.name, speciesName: sp.name, element: sp.element };
+  };
   const total = (e) => Object.keys(e.stats).reduce((a, k) => a + e.stats[k], 0);
   const floorOf = (e) => (e.gauntlet ? e.gauntlet.floor : -1);   // a cleared tower stores GAUNTLET_FLOORS + 1, so it sorts on top
   const rankName = (e) => (X.C.ranks[e.rank] ? X.C.ranks[e.rank].name : e.grade);
@@ -60,13 +64,13 @@
     if (sort === 'grade') return desc((e) => e.rank);
     if (sort === 'floor') return desc(floorOf);
     if (sort === 'total') return desc(total);
-    if (sort === 'species') return (a, b) => spDef(a[0]).name.localeCompare(spDef(b[0]).name) || b[0].rank - a[0].rank || newest(a, b);
+    if (sort === 'species') return (a, b) => spDef(a[0]).speciesName.localeCompare(spDef(b[0]).speciesName) || b[0].rank - a[0].rank || newest(a, b);
     if (sort.startsWith('stat:')) { const k = sort.slice(5); return desc((e) => e.stats[k] || 0); }
     return newest;
   }
   function searchText(e) {
     const sp = spDef(e), g = e.gauntlet;
-    return [sp.name, elementName(sp.element), e.grade, rankName(e), g ? g.title : '', g ? g.label : '', g && g.killerName ? g.killerName : '',
+    return [sp.name, sp.speciesName, elementName(sp.element), e.grade, rankName(e), g ? g.title : '', g ? g.label : '', g && g.killerName ? g.killerName : '',
       e.end, ...e.trees.map((t) => treeName(t.id))].join(' \n ').toLowerCase();
   }
   function matches(e) {

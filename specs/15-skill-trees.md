@@ -16,7 +16,7 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 
 ## 2. Trees and nodes
 
-Content table `trees`: `id`, `name_key`, `kind` (`native`, `generic`, `chase`, `book`), and for generic trees `offer_stat` (a trained stat, or empty for any stat) and `offer_threshold`.
+Content table `trees`: `id`, `name_key`, `kind` (`native`, `generic`, `chase`, `book`), for generic trees `offer_stat` (a trained stat, or empty for any stat) and `offer_threshold`, and for chase trees `apex_name_key`, the name of the apex form the tree's capstone gives (section 5.3).
 
 Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree), `cost` (SP, `>= 1`), `kind` and its arguments:
 
@@ -94,6 +94,23 @@ Taking a chase tree into the slot of one of its own prerequisites makes it lock 
 
 A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a book tree (*Arcane Overflow* needs a Tome of Echoes node, a Spellcraft node and 3 crits).
 
+### 5.3 Apex forms (kj, 2026-10-31, `specs/24` section 6)
+
+A monster that owns a chase tree's capstone takes that tree's **apex form**: the tree's apex name (`apex_name_key`) replaces the species name wherever the monster is shown (the run, the Vault, gauntlet and tower playback), and the web client draws the species' art with the apex palette and overlay (`web/sprites.js`). It is cosmetic: no fight reads it.
+
+- The apex form is the **first slotted chase tree, in slot order, with every node bought** (`ApexForm.TreeOf`). **(agent)** Slot order, rather than the last capstone bought, because a Vault entry keeps its trees but not the order they were maxed.
+- A run loses the form when the chase tree leaves its slot (overwritten, or locked again because a prerequisite was overwritten). A Vault entry keeps the form it was sealed with.
+- The web client toasts once when the run's monster takes the form ("Bastion Drake became the Aegis Wyrm!").
+
+| Chase tree | Apex form |
+|---|---|
+| *Living Ocean* | Solaris Tide |
+| *Abyssal Bloom* | Abyssal Siphonophore |
+| *Unbreakable Will* | Aegis Wyrm |
+| *Inferno Sovereign* | Surtr Drake |
+| *Starlit Ascension* | Comet Moth |
+| *Arcane Overflow* | Gemini Moth |
+
 ## 6. Run tally
 
 The run adds up the monster's battle tallies (`specs/16` section 6.3) across its rank fights: damage dealt, evades, crits, kills and damage per element. `wins` is the rank fights won. These feed `tally_at_least` conditions, the drafts' "deal X fire damage" style playstyle conditions (`specs/12` section 5.5).
@@ -142,7 +159,7 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | Table | Rules |
 |---|---|
 | `monster_skills` | effect stat for buff/debuff/passive, trained `scales` for damage/heal/shield (`E023`); power, cooldown, duration `>= 0` (`E043`); element id or empty (`E023`) |
-| `trees` | generic trees need `offer_threshold > 0` and a trained or empty `offer_stat`; other kinds have neither (`E043`, `E023`) |
+| `trees` | generic trees need `offer_threshold > 0` and a trained or empty `offer_stat`; other kinds have neither (`E043`, `E023`). Chase trees, and only chase trees, have an `apex_name_key` (`E043`) |
 | `tree_nodes` | known tree (`E023`); index `0..N-1` (`E060`); at least 2 nodes (`E044`); cost `>= 1`; growth/stat need a trained stat and `amount > 0`; skill/trigger need a monster skill; trigger nodes need a trigger and cannot fire a passive; rule nodes need a known rule id, and a `fire_pierce` node needs the `fire` element (`E023`); last node skill/trigger/rule (`E064`) |
 | `species` | `native_tree_1`, `native_tree_2`: two different native trees (`E023`, `E043`); `chase_tree_run`, `chase_tree_book`: two different chase trees (`E023`, `E043`); the in-run one names no book tree in its conditions, the book-gated one names at least one (`E043`); no chase tree belongs to two species and every chase tree belongs to one (`E043`) |
 | `chase_conditions` | a chase tree (`E023`); refs by type (`E023`); `amount >= 0` for stat and tally (`E043`); every chase tree has a condition (`E065`) |

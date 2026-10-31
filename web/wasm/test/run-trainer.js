@@ -484,6 +484,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       mk('sprite', 's', 5, 101, 'title.tower_breaker', 400, false, 5),
     ];
     base.Account.Vault[1].Trees[0].Bought = 3;                         // a part-bought tree for the detail sheet
+    base.Account.Vault[5].Trees.push({ TreeId: 'starlit_ascension', Bought: 8 });   // a capstone owned: the apex form (specs/15 section 5.3)
     const body = Buffer.from(JSON.stringify(base), 'utf8');
     const saveTxt = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(body) >>> 0).toString(16).padStart(8, '0') + ' len=' + body.length + '\n' + body.toString('utf8');
     await page.evaluate((t) => { localStorage.setItem('idle-rng-account-v1', t); localStorage.removeItem('idle-rng-vault-view'); }, saveTxt);
@@ -493,6 +494,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     const sortBy = async (v) => { await page.selectOption('[data-act=vault-sort]', v); return order(); };
     check(same(await order(), [5, 4, 3, 2, 1, 0]), 'the Vault lists newest first by default');
+    const apexName = await page.$eval('[data-id=vault-entry][data-index="5"] [data-id=vault-species]', (el) => el.textContent);
+    check(apexName === 'Comet Moth', 'a monster that owns a chase capstone shows its apex name in the Vault: ' + apexName);
     check(same(await sortBy('grade'), [5, 1, 3, 0, 4, 2]), 'sort by grade, best first');
     check(same(await sortBy('floor'), [5, 1, 3, 0, 4, 2]), 'sort by gauntlet floor, a cleared tower on top and no title last');
     check(same(await sortBy('species'), [1, 4, 3, 0, 5, 2]), 'sort by species A to Z, best grade first within one');

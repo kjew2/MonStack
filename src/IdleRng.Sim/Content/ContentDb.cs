@@ -476,7 +476,7 @@ namespace IdleRng.Sim.Content
                 return new TreeDef
                 {
                     Id = id, NameKey = r.Str("name_key"), Kind = ParseTreeKind(r.Str("kind")), OfferStat = r.NStr("offer_stat"),
-                    OfferThreshold = r.NInt("offer_threshold") ?? 0,
+                    OfferThreshold = r.NInt("offer_threshold") ?? 0, ApexNameKey = r.NStr("apex_name_key"),
                     Nodes = (ns ?? new List<TreeNodeDef>()).OrderBy(n => n.Index).ToList().AsReadOnly(),
                     Conditions = (cs ?? new List<ChaseConditionDef>()).AsReadOnly(),
                 };
@@ -493,6 +493,8 @@ namespace IdleRng.Sim.Content
                 }
                 else if (tr.OfferStat != null || hasThreshold.Contains(tr.Id))
                     errors.Add(new ContentError("E043", loc, "only generic trees have offer_stat and offer_threshold"));
+                if ((tr.Kind == TreeKind.Chase) != (tr.ApexNameKey != null))
+                    errors.Add(new ContentError("E043", loc, "chase trees, and only chase trees, have an apex_name_key"));
                 if (tr.Nodes.Count < 2) { errors.Add(new ContentError("E044", loc, "a tree needs at least 2 nodes")); continue; }
                 for (int i = 0; i < tr.Nodes.Count; i++)
                     if (tr.Nodes[i].Index != i) { errors.Add(new ContentError("E060", loc, "node index must be 0..N-1 contiguous")); break; }

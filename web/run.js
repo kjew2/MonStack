@@ -49,9 +49,9 @@
     return el;
   }
   function hash(str) { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
-  function sprite(key) {
+  function sprite(key, apex) {
     const cv = h('canvas', { class: 'sprite', 'aria-hidden': 'true' });
-    SP.draw(cv, SP.species(key) || SP.enemy(hash(key) % 100000, false, 0));   // hand-drawn species art, else a seeded sprite
+    SP.draw(cv, SP.species(key, apex) || SP.enemy(hash(key) % 100000, false, 0));   // hand-drawn species art (apex form), else a seeded sprite
     return cv;
   }
   function toast(msg) {
@@ -154,16 +154,24 @@
     });
   }
 
+  // Apex forms (specs/15 section 5.3): toast once when the run's monster takes one (not on a reload of a run already in it).
+  let apexSeen = null;
+  function noticeApex(s) {
+    if (apexSeen && apexSeen.seed === s.seed && s.apex && s.apex !== apexSeen.apex) toast(speciesDef(s.species).name + ' became the ' + s.name + '!');
+    apexSeen = { seed: s.seed, apex: s.apex };
+  }
+
   function renderHud(s) {
     const sp = speciesDef(s.species), r = rank(s.rank), k = C.consts;
+    noticeApex(s);
     const low = s.energy / k.energyMax < 0.3;
     const pips = h('div', { class: 'pips', 'aria-label': s.ap + ' action points left' });
     for (let i = 0; i < k.runAp; i++) pips.append(h('span', { class: 'pip' + (i < s.ap ? ' full' : '') }));
     return h('div', { class: 'card hud' }, [
-      sprite(s.species),
+      sprite(s.species, s.apex),
       h('div', null, [
         h('div', { class: 'hud-line' }, [
-          h('span', { text: sp.name }), elementTag(sp.element), h('span', { class: 'tag', text: r.name, 'data-id': 'rank' }),
+          h('span', { text: s.name || sp.name, 'data-id': 'monster-name' }), elementTag(sp.element), h('span', { class: 'tag', text: r.name, 'data-id': 'rank' }),
         ]),
         h('div', { class: 'hud-line small muted' }, [
           h('span', { text: 'Cycle ' + s.cycle + '/' + k.runCycles, 'data-id': 'cycle' }),
@@ -1120,7 +1128,7 @@
   // The comic defeat: the killer strikes and the monster is launched off screen or turned to ash (picked from the result hash,
   // cosmetic only); a cleared tower gets a victory hop instead.
   function climbArena(g, e, sp) {
-    const you = h('div', { class: 'fighter you' }, [sprite(e.species), h('span', { text: sp.name })]);
+    const you = h('div', { class: 'fighter you' }, [sprite(e.species, e.apex), h('span', { text: e.name || sp.name })]);
     if (g.cleared) {
       you.classList.add('hop');
       return h('div', { class: 'arena', 'data-id': 'climb-arena' }, [you, h('div', { class: 'pow', style: 'left:auto;right:10%', text: '★ CLEARED ★' })]);

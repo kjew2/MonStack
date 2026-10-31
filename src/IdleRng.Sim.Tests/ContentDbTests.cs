@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("3.17"));
+            Assert.That(db.Version, Is.EqualTo("3.18"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -81,6 +81,17 @@ namespace IdleRng.Sim.Tests
             Assert.That(msgs, Has.Some.Contains("already belongs to species"));
             Assert.That(msgs, Has.Some.Contains("in-run chase tree 'arcane_overflow' must not need a book tree"));
             Assert.That(msgs, Has.Some.Contains("trees[unbreakable_will]: a chase tree must belong to a species"));
+        }
+
+        [Test]
+        public void ApexNames_AreOnChaseTreesOnly()
+        {
+            string dir = FileContentSource.FindContentDirectory(TestContext.CurrentContext.TestDirectory);
+            var files = Directory.GetFiles(dir, "*.json").ToDictionary(Path.GetFileName, File.ReadAllText);
+            files["trees.json"] = files["trees.json"].Replace("\"apex_name_key\": \"tree.living_ocean.apex\"", "\"apex_name_key\": null");
+            Assert.That(files["trees.json"], Does.Not.Contain("tree.living_ocean.apex"), "the test edit applied");
+            var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false));
+            Assert.That(ex.Errors.Select(e => e.Location + ": " + e.Message), Has.Some.EqualTo("trees[living_ocean]: chase trees, and only chase trees, have an apex_name_key"));
         }
 
         [Test]
