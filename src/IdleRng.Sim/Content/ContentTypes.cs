@@ -66,6 +66,34 @@ namespace IdleRng.Sim.Content
         public int GauntletBossEvery { get; internal set; }      // GAUNTLET_BOSS_EVERY
         public double GauntletBossMult { get; internal set; }    // GAUNTLET_BOSS_MULT
 
+        // Daily Tower (specs/21 section 5). Placeholders.
+        public int TowerSeed { get; internal set; }              // TOWER_SEED
+        public int TowerFloors { get; internal set; }            // TOWER_FLOORS
+        public int TowerAttemptsPerDay { get; internal set; }    // TOWER_ATTEMPTS_PER_DAY
+        public double TowerBase { get; internal set; }           // TOWER_BASE
+        public double TowerGrowth { get; internal set; }         // TOWER_GROWTH
+        public double TowerBossHpMult { get; internal set; }     // TOWER_BOSS_HP_MULT
+        public int TowerMilestoneEvery { get; internal set; }    // TOWER_MILESTONE_EVERY
+        public int TowerShardsPerFloor { get; internal set; }    // TOWER_SHARDS_PER_FLOOR
+        public double TowerBookChance { get; internal set; }     // TOWER_BOOK_CHANCE
+        public double TowerBookChancePerFloor { get; internal set; } // TOWER_BOOK_CHANCE_PER_FLOOR
+        public double EntropyCap { get; internal set; }          // ENTROPY_CAP
+        public double EntropyPerTrigger { get; internal set; }   // ENTROPY_PER_TRIGGER
+        public double EntropyPerEcho { get; internal set; }      // ENTROPY_PER_ECHO
+        public double EntropyPerCounter { get; internal set; }   // ENTROPY_PER_COUNTER
+        public double EntropyDecay { get; internal set; }        // ENTROPY_DECAY
+        public double EntropyRecoilFrac { get; internal set; }   // ENTROPY_RECOIL_FRAC
+        public double EntropyStunGauge { get; internal set; }    // ENTROPY_STUN_GAUGE
+        public double EntropyEnrageFrac { get; internal set; }   // ENTROPY_ENRAGE_FRAC
+        public int EntropyEnrageTurns { get; internal set; }     // ENTROPY_ENRAGE_TURNS
+        public double EntropyConvertShield { get; internal set; } // ENTROPY_CONVERT_SHIELD
+        public int EntropyConvertTurns { get; internal set; }    // ENTROPY_CONVERT_TURNS
+        public int CorruptStartTick { get; internal set; }       // CORRUPT_START_TICK
+        public int CorruptEveryTicks { get; internal set; }      // CORRUPT_EVERY_TICKS
+        public double CorruptHealPerLevel { get; internal set; } // CORRUPT_HEAL_PER_LEVEL
+        public double CorruptHealFloor { get; internal set; }    // CORRUPT_HEAL_FLOOR
+        public double CorruptDmgPerLevel { get; internal set; }  // CORRUPT_DMG_PER_LEVEL
+
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
 
@@ -323,6 +351,54 @@ namespace IdleRng.Sim.Content
         public string Element { get; internal set; }
         public bool Boss { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Weights { get; internal set; }
+    }
+
+    /// <summary>Which Daily Tower pool a boss row belongs to (specs/21 section 4).</summary>
+    public enum TowerRole { Regular, Marquee, Add }
+
+    /// <summary>A Daily Tower boss (specs/21 section 4): stats are Weights x the floor level (hp also x TOWER_BOSS_HP_MULT, not for adds).</summary>
+    public sealed class TowerBossDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string Element { get; internal set; }
+        public TowerRole Role { get; internal set; }
+        public IdleRng.Sim.Combat.MonsterStats Weights { get; internal set; }
+
+        /// <summary>monster_skills ids, in AI priority order.</summary>
+        public IReadOnlyList<string> Skills { get; internal set; }
+
+        /// <summary>Phases in order (highest enter_hp first). Empty for regular bosses unless content gives them some.</summary>
+        public IReadOnlyList<BossPhaseDef> Phases { get; internal set; }
+    }
+
+    /// <summary>A boss_phases row (specs/21 section 3.2).</summary>
+    public sealed class BossPhaseDef
+    {
+        public string Id { get; internal set; }
+        public string BossId { get; internal set; }
+        public int Order { get; internal set; }
+        public double EnterHp { get; internal set; }
+        public string Kind { get; internal set; }
+        public double Power { get; internal set; }
+        public int Duration { get; internal set; }
+        public int Count { get; internal set; }
+        public double Guard { get; internal set; }
+        public double HealFrac { get; internal set; }
+        public double Strike { get; internal set; }
+        public double Buff { get; internal set; }
+
+        /// <summary>tower_bosses id (role add) a split phase spawns, or null.</summary>
+        public string Adds { get; internal set; }
+        public IReadOnlyList<string> AddSkills { get; internal set; }
+    }
+
+    /// <summary>A Skill Book the Daily Tower can drop from MinFloor on, by weight (specs/21 section 7).</summary>
+    public sealed class BookDropDef
+    {
+        public string BookId { get; internal set; }
+        public int MinFloor { get; internal set; }
+        public double Weight { get; internal set; }
     }
 
     /// <summary>A Legacy Title band (specs/19 section 3). TitleKey's text may contain {killer}.</summary>

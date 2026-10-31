@@ -43,3 +43,5 @@ brine_wall,mskill.brine_wall.name,shield,self,,hp,0.2,4,3,
 abyssal_surge,mskill.abyssal_surge.name,damage,all_enemies,,wis,1.0,3,0,water
 sovereign_flame,mskill.sovereign_flame.name,damage,all_enemies,,str,1.2,3,0,fire
 star_lance,mskill.star_lance.name,damage,enemy,,spd,1.6,2,0,light
+boss_cleave,mskill.boss_cleave.name,damage,all_enemies,,str,0.7,3,0,
+boss_roar,mskill.boss_roar.name,debuff,all_enemies,def,,0.25,5,2,

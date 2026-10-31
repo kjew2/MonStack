@@ -1,0 +1,12 @@
+id,name_key,element,role,hp,str,int,wis,dex,def,spd,luk,skills,#notes
+mire_brute,tower.mire_brute.name,nature,regular,1.3,1.2,0.6,0.9,0.7,1.2,0.8,0.9,smash|iron_hide,"Daily Tower (specs/21 section 4): stat = weight x floor level; hp also x TOWER_BOSS_HP_MULT. role regular/marquee are drawn into the lineup, add rows only spawn from split phases. Placeholder bosses and weights"
+cinder_wyrm,tower.cinder_wyrm.name,fire,regular,1.1,1.2,0.9,0.8,0.9,1.0,1.0,1.0,flame_breath,Placeholder
+tide_warden,tower.tide_warden.name,water,regular,1.2,0.8,1.1,1.2,0.8,1.0,0.9,1.0,ward|aether_bolt,Placeholder
+gloom_stalker,tower.gloom_stalker.name,dark,regular,0.9,1.2,1.0,0.8,1.3,0.8,1.2,1.2,quick_jab|confuse,Placeholder
+sun_idol,tower.sun_idol.name,light,regular,1.0,0.7,1.3,1.2,0.8,1.0,1.0,1.0,arcane_blast|second_wind,Placeholder
+bramble_king,tower.bramble_king.name,nature,regular,1.4,1.0,0.8,1.0,0.6,1.3,0.7,0.9,provoke|boss_cleave,Placeholder
+apex_chimera,tower.apex_chimera.name,fire,marquee,1.5,1.3,1.1,1.0,1.0,1.2,1.0,1.0,boss_cleave|smash,"marquee: every TOWER_MILESTONE_EVERY-th floor, with phases (boss_phases). Placeholder"
+void_hydra,tower.void_hydra.name,dark,marquee,1.8,1.2,1.2,1.1,0.9,1.1,0.9,1.0,boss_roar|aether_bolt,Placeholder
+storm_titan,tower.storm_titan.name,light,marquee,1.6,1.4,1.0,1.0,1.1,1.3,1.1,0.9,boss_cleave|rally_cry,Placeholder
+hydra_head,tower.hydra_head.name,dark,add,0.3,0.6,0.6,0.5,0.6,0.5,0.9,0.8,quick_jab,add spawned by a split phase. Placeholder
+cinder_whelp,tower.cinder_whelp.name,fire,add,0.25,0.7,0.4,0.4,0.8,0.4,1.1,0.8,,Placeholder

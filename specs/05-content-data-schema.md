@@ -36,7 +36,7 @@ The CSVs and the JSON are both committed so CI can rebuild `Content/` offline an
 | `vendor_rarities` | the post-run vendor's rarities: ranks, price multiplier, weight by grade | `18` section 4 |
 | `achievements` | account achievements and the species they unlock | `18` section 8 |
 | `gauntlet_enemies`, `legacy_titles` | gauntlet enemies and title bands | `19` |
-| `tower_bosses`, `boss_phases`, `book_drops` | Daily Tower bosses, phases and book drops (designed, not built) | `21` section 5 |
+| `tower_bosses`, `boss_phases`, `book_drops` | Daily Tower bosses (regular, marquee, add), their phases and Skill Book drops | `21` section 5 |
 | `strings` (optional) | `key`, `en`: every player-visible name and description | section 5 |
 
 `tools/content_build.py` (`SCHEMA`, `REQUIRED_CONSTANTS`, the `validate_*` functions) and `ContentDb` (`Build*`) hold the exact columns and rules; both must change together. `REQUIRED_CONSTANTS` is the complete constant list: an unknown or missing constant is an error.

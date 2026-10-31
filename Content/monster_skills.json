@@ -528,6 +528,30 @@
       "cooldown": 2,
       "duration": 0,
       "element": "light"
+    },
+    {
+      "id": "boss_cleave",
+      "name_key": "mskill.boss_cleave.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "str",
+      "power": 0.7,
+      "cooldown": 3,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "boss_roar",
+      "name_key": "mskill.boss_roar.name",
+      "kind": "debuff",
+      "target": "all_enemies",
+      "stat": "def",
+      "scales": null,
+      "power": 0.25,
+      "cooldown": 5,
+      "duration": 2,
+      "element": null
     }
   ]
 }
