@@ -8,13 +8,17 @@ AI_HEAL_BELOW,double,0.25,"AI casts a heal once a target is missing the whole am
 AI_SHIELD_BELOW,double,0.7,companion AI shields when an ally is below this HP fraction
 MON_HP_PER_POINT,double,10,monster battle (specs/16): max HP = HP stat x this. Placeholder
 MON_DEF_K,double,300,monster battle: damage x K/(K+DEF) physical or K/(K+WIS) magical. Placeholder
-MON_EVADE_BASE,double,0.05,monster battle: evade chance vs physical hits = base + (target DEX - attacker DEX) x per_dex. Placeholder
-MON_EVADE_PER_DEX,double,0.0005,Placeholder
+MON_EVADE_BASE,double,0.05,monster battle: evade chance (physical hits miss; magical hits graze) = base + (target DEX - attacker DEX) x per_dex. Placeholder
+MON_EVADE_PER_DEX,double,0.001,Placeholder
 MON_EVADE_CAP,double,0.5,evade chance is clamped to [0; cap]. Placeholder
 MON_CRIT_BASE,double,0.05,monster battle: crit chance = base + LUK x per_luk + effects. Placeholder
 MON_CRIT_PER_LUK,double,0.0005,Placeholder
 MON_CRIT_CAP,double,0.75,crit chance is clamped to [0; cap]. Placeholder
-MON_CRIT_DMG,double,1.5,monster battle: crit damage multiplier before effects. Placeholder
+MON_CRIT_DMG,double,1.5,monster battle: crit damage multiplier before DEX and effects. Placeholder
+MON_CRIT_DMG_PER_DEX,double,0.001,monster battle: crit damage multiplier added per point of the attacker's DEX (specs/16 section 5.3). Placeholder
+MON_GRAZE_MULT,double,0.25,monster battle: share of its damage a magical hit deals when it rolls under the evade chance (a graze). Placeholder
+MON_FORTUNE_K,double,1000,monster battle: fortune (reroll chance) = min(cap; LUK / (LUK + K)). Placeholder
+MON_FORTUNE_CAP,double,0.5,monster battle: fortune ceiling. Placeholder
 MON_SPD_MIN,double,10,monster battle: minimum ATB gauge fill per tick so SPD 0 still acts. Placeholder
 MON_TIME_LIMIT_TICKS,int,900,monster battle: turn limit (90 s); reaching it is a timeout. Placeholder
 MON_SIDE_SIZE,int,4,monster battle: most units per side

@@ -438,7 +438,7 @@
     else if (x.kind === 'buff' || x.kind === 'debuff' || x.kind === 'passive' || x.kind === 'taunt') body = 'applied';   // amount is the effect size, not damage
     else if (x.amount > 0) body = Math.round(x.amount) + ' dmg';
     else body = 'applied';
-    return body + (x.crit ? ' CRIT' : '');
+    return body + (x.graze ? ' (grazed)' : '') + (x.crit ? ' CRIT' : '') + (x.lucky ? ' · lucky!' : '');
   }
 
   function fightModal(modal, f, s) {

@@ -54,7 +54,7 @@
     {
       "key": "MON_EVADE_PER_DEX",
       "type": "double",
-      "value": 0.0005
+      "value": 0.001
     },
     {
       "key": "MON_EVADE_CAP",
@@ -80,6 +80,26 @@
       "key": "MON_CRIT_DMG",
       "type": "double",
       "value": 1.5
+    },
+    {
+      "key": "MON_CRIT_DMG_PER_DEX",
+      "type": "double",
+      "value": 0.001
+    },
+    {
+      "key": "MON_GRAZE_MULT",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_FORTUNE_K",
+      "type": "double",
+      "value": 1000.0
+    },
+    {
+      "key": "MON_FORTUNE_CAP",
+      "type": "double",
+      "value": 0.5
     },
     {
       "key": "MON_SPD_MIN",

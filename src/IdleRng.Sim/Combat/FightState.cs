@@ -161,6 +161,9 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>Hits this unit evaded.</summary>
         public int Evades { get; set; }
+
+        /// <summary>Magical hits this unit grazed (rolled under its evade chance, took MON_GRAZE_MULT of the damage).</summary>
+        public int Grazes { get; set; }
         public int Kills { get; set; }
         public int Counters { get; set; }
 
@@ -178,17 +181,18 @@ namespace IdleRng.Sim.Combat
     /// <summary>One thing that happened, for the UI's battle log and tests. Skill is null for a basic attack or a counter.</summary>
     public readonly struct FightAction
     {
-        public FightAction(string actor, CombatSkill skill, string target, double amount, bool crit, bool evaded, bool aoe, bool counter)
+        public FightAction(string actor, CombatSkill skill, string target, double amount, bool crit, bool evaded, bool aoe, bool counter,
+                           bool graze = false, bool lucky = false)
         {
             Actor = actor; Skill = skill; Target = target; Amount = amount; Crit = crit; Evaded = evaded; Aoe = aoe; Counter = counter;
-            Event = null;
+            Graze = graze; Lucky = lucky; Event = null;
         }
 
         /// <summary>A rule modifier or tower event (specs/16 section 6.2, specs/21 section 6): see <see cref="Event"/>.</summary>
         public FightAction(string actor, string evt, string target, double amount)
         {
             Actor = actor; Skill = null; Target = target; Amount = amount; Crit = false; Evaded = false; Aoe = false; Counter = false;
-            Event = evt;
+            Graze = false; Lucky = false; Event = evt;
         }
 
         /// <summary>A rule modifier's event: "rule:" + the rule id (specs/16 section 6.2).</summary>
@@ -227,6 +231,12 @@ namespace IdleRng.Sim.Combat
         public bool Evaded { get; }
         public bool Aoe { get; }
         public bool Counter { get; }
+
+        /// <summary>A magical hit that rolled under the target's evade chance and dealt MON_GRAZE_MULT of its damage.</summary>
+        public bool Graze { get; }
+
+        /// <summary>Fortune changed this hit: an evade or a crit came from a reroll, or the target's reroll took a crit away.</summary>
+        public bool Lucky { get; }
     }
 
     /// <summary>The end of a resolved fight. Hash covers the whole final state (BattleSim.StateHash).</summary>

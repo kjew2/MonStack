@@ -236,14 +236,14 @@ stat.str.name,Strength
 stat.str.desc,"Physical damage. The basic attack hits for {BASIC_ATTACK_POWER} x the higher of STR and INT, and STR-scaled skills deal physical damage. Physical hits can be dodged (DEX) and the target's DEF reduces them."
 stat.str.now,Basic attack: {basic} damage before defences ({basic_type})
 stat.int.name,Intelligence
-stat.int.desc,"Magical damage. INT-scaled skills deal magical damage, which cannot be dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
+stat.int.desc,"Magical damage. INT-scaled skills deal magical damage, which can be grazed but not dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
 stat.int.now,Basic attack: {basic} damage before defences ({basic_type})
 stat.wis.name,Wisdom
 stat.wis.desc,"Magic defence: magical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + WIS), so {MON_DEF_K} WIS halves it. WIS also sets the amount of WIS-scaled heals and shields."
 stat.wis.now,Takes {wis_taken:pct} of magical damage
 stat.dex.name,Dexterity
-stat.dex.desc,"Dodging physical hits. Dodge chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. DEX also makes the unit's own physical hits harder to dodge. Magical hits cannot be dodged."
-stat.dex.now,Dodges {evade:pct} of {foe}'s physical hits; {foe} dodges {foe_evade:pct} of the physical hits it takes
+stat.dex.desc,"Dodging and precision. Evade chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. A physical hit that rolls under it misses; a magical hit is grazed instead: it deals {MON_GRAZE_MULT:pct} of its damage and cannot crit. DEX also makes the unit's own hits harder to evade, and each point adds {MON_CRIT_DMG_PER_DEX:pct} to its crit damage (a x{MON_CRIT_DMG} crit deals {MON_CRIT_DMG:pct})."
+stat.dex.now,Evades {evade:pct} of {foe}'s hits (spells are grazed); {foe} evades {foe_evade:pct} of the hits it takes; crits deal x{crit_dmg}
 stat.def.name,Defence
 stat.def.desc,"Physical defence: physical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + DEF), so {MON_DEF_K} DEF halves it."
 stat.def.now,Takes {def_taken:pct} of physical damage
@@ -251,8 +251,8 @@ stat.spd.name,Speed
 stat.spd.desc,Turn speed. Each tick the action gauge fills by SPD (at least {MON_SPD_MIN}) and the unit acts each time it reaches {BATTLE_GAUGE}. SPD {SPD_REF} acts once per turn; twice the SPD acts twice as often.
 stat.spd.now,{acts} actions per turn
 stat.luk.name,Luck
-stat.luk.desc,"Critical hits. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage (plus crit damage effects). Physical and magical hits can both crit."
-stat.luk.now,{crit:pct} crit chance
+stat.luk.desc,"Critical hits and fortune. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage plus the attacker's DEX bonus (and crit damage effects). Fortune is LUK / (LUK + {MON_FORTUNE_K}), up to {MON_FORTUNE_CAP:pct}: the chance to reroll the unit's own failed evade or failed crit, and to make a crit against it roll again."
+stat.luk.now,"{crit:pct} crit chance, {fortune:pct} fortune"
 stat.crit_rate.label,crit chance
 stat.crit_dmg.label,crit damage
 trigger.battle_start.name,battle start
@@ -288,7 +288,7 @@ tip.tag.stat,Flat stat
 tip.tag.rule,Rule
 tip.tag.chase,Chase trait
 tip.physical,"Physical: DEX can dodge it, the target's DEF reduces it"
-tip.magical,"Magical: cannot be dodged, the target's WIS reduces it"
+tip.magical,"Magical: grazed instead of dodged, the target's WIS reduces it"
 tip.element.own,The user's element
 tip.effect.damage,"Hits for the amount; then a crit (LUK), the element (x{ELEMENT_STRONG_MULT} when strong, x{ELEMENT_WEAK_MULT} when weak) and the target's defence apply. Shields absorb it first."
 tip.effect.heal,"Restores HP, never above max HP."
@@ -426,7 +426,7 @@ rule.root_rebirth.desc,"Once per fight, a blow that would fell it leaves it stan
 rule.wail_stagger.name,Uprooting Scream
 rule.wail_stagger.desc,"Each of its actions pushes every enemy's next turn back by {MON_WAIL_STAGGER:pct} of a turn and withers it for {MON_WAIL_WITHER:pct} of its max HP (true damage)."
 rule.umbral_veil.name,Umbral Veil
-rule.umbral_veil.desc,"It can evade spells as well as physical hits, gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+rule.umbral_veil.desc,"Spells that roll under its evade chance miss instead of grazing; it gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
 rule.night_feast.name,Night Feast
 rule.night_feast.desc,"It starts every fight with {MON_FEAST_START:pct} more damage. Every hit it lands adds {MON_FEAST_DMG:pct} more damage and {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
 tree.geyser_heart.name,Geyser Heart

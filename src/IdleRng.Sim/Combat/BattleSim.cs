@@ -14,7 +14,7 @@ namespace IdleRng.Sim.Combat
     public static class BattleSim
     {
         public const string StreamName = "battle_sim";
-        public const int HashVersion = 1;
+        public const int HashVersion = 2;   // v2: UnitTally.Grazes (specs/25)
         const int MaxActionsPerTick = 64;
         static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-FIGHTHASH-v1");
 
@@ -38,7 +38,7 @@ namespace IdleRng.Sim.Combat
         static void Validate(FightRules r)
         {
             if (!(r.GaugeSize > 0 && r.TurnTicks > 0 && r.TimeLimitTicks > 0 && r.SideSize > 0 && r.HpPerPoint > 0 && r.DefK > 0
-                  && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1 && r.StackCap >= 1))
+                  && r.SpdMin > 0 && r.CritDmg >= 1 && r.CritDmgPerDex >= 0 && In01(r.GrazeMult) && r.FortuneK > 0 && In01(r.FortuneCap) && r.StatFloor > 0 && r.StatFloor <= 1 && r.StackCap >= 1))
                 throw new ArgumentException("fight rules out of range (specs/16 section 7)", nameof(r));
             if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && r.DrainFrac >= 0 && In01(r.FirePierce) && r.DoubleTurns >= 0
                   && In01(r.RebirthHeal) && In01(r.WailStagger) && In01(r.WailWither) && In01(r.VeilEvadeCap) && r.FeastStr >= 0
@@ -501,9 +501,10 @@ namespace IdleRng.Sim.Combat
         // ------------------------------------------------------------------ damage
 
         /// <summary>
-        /// One hit (specs/16 section 5.3): evade roll (physical only), crit roll, element, mitigation K/(K+DEF or WIS), shield,
-        /// tallies, then OnEvade / OnHitTaken / OnCrit triggers and the counter rule. Draws: evade then crit, each only when its
-        /// chance is above zero. Returns the damage dealt.
+        /// One hit (specs/16 section 5.3): avoid roll (a physical hit misses, a magical one grazes unless umbral_veil makes it a
+        /// miss), crit roll (none on a graze), element, mitigation K/(K+DEF or WIS), shield, tallies, then OnEvade / OnHitTaken /
+        /// OnCrit triggers and the counter rule. Fortune (LUK) rerolls a failed evade and a failed crit of its owner, and a crit
+        /// landed against its owner. Draw order: see <see cref="Roll"/>. Returns the damage dealt.
         /// </summary>
         static double Hit(FightRules r, FightState s, FightUnit src, FightUnit tgt, double raw, bool magical, string element, CombatSkill sk,
                           bool aoe, IRandomSource rng, Action<FightAction> onAction)
@@ -516,22 +517,37 @@ namespace IdleRng.Sim.Combat
                 return 0;
             }
             bool veil = Has(tgt, RuleModifiers.UmbralVeil);
-            if (!magical || veil)
+            double tgtFortune = Fortune(r, Eff(r, tgt, StatIds.Luk));
+            bool lucky = false, graze = false;
+            double evade = veil ? Clamp(EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex), 1) + r.VeilEvadeBonus, 0, r.VeilEvadeCap)
+                                : EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
+            if (Roll(rng, evade, tgtFortune, ref lucky))
             {
-                double evade = veil ? Clamp(EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex), 1) + r.VeilEvadeBonus, 0, r.VeilEvadeCap)
-                                    : EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
-                if (evade > 0 && Draw(rng) < evade)
+                if (magical && !veil) graze = true;
+                else
                 {
                     tgt.Tally.Evades++;
-                    onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, 0, false, true, aoe, false));
+                    onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, 0, false, true, aoe, false, false, lucky));
                     Fire(r, s, tgt, FightTrigger.OnEvade, rng, onAction);
                     return 0;
                 }
             }
 
             bool crit = false;
-            double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate));
-            if (rate > 0 && Draw(rng) < rate) { crit = true; raw *= Math.Max(1.0, r.CritDmg + Bonus(src, StatIds.CritDmg)); }
+            if (graze) { raw *= r.GrazeMult; tgt.Tally.Grazes++; }
+            else
+            {
+                double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate));
+                bool critLucky = false, deniedLucky = false;
+                crit = Roll(rng, rate, Fortune(r, Eff(r, src, StatIds.Luk)), ref critLucky);
+                if (crit && tgtFortune > 0 && Draw(rng) < tgtFortune)   // the target's fortune makes a landed crit roll again
+                {
+                    crit = Draw(rng) < rate;
+                    deniedLucky = !crit;
+                }
+                lucky |= crit ? critLucky : deniedLucky;
+                if (crit) raw *= CritMult(r, Eff(r, src, StatIds.Dex), Bonus(src, StatIds.CritDmg));
+            }
             bool pierce = element == RuleModifiers.FireElement && Has(src, RuleModifiers.FirePierce);
             double elementMult = r.ElementMult(element, tgt.Source.Element);
             raw *= pierce ? Math.Max(1.0, elementMult) * (1 + r.FireBonus) : elementMult;
@@ -549,7 +565,7 @@ namespace IdleRng.Sim.Combat
             double dealt = Absorb(src, tgt, after, element);
 
             if (crit) src.Tally.Crits++;
-            onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false));
+            onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false, graze, lucky));
             if (dealt > 0 && r.DrainFrac > 0 && src.Alive && Has(src, RuleModifiers.AbyssalDrain))
             {
                 double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealMult(r, s), ref shield, r.DrainShieldCap);
@@ -937,6 +953,28 @@ namespace IdleRng.Sim.Combat
         public static double EvadeChance(FightRules r, double targetDex, double attackerDex, double cap) =>
             Clamp(r.EvadeBase + (targetDex - attackerDex) * r.EvadePerDex, 0, cap);
 
+        /// <summary>Crit damage multiplier: max(1, MON_CRIT_DMG + DEX x MON_CRIT_DMG_PER_DEX + crit_dmg effects).</summary>
+        public static double CritMult(FightRules r, double dex, double critDmgBonus) => Math.Max(1.0, r.CritDmg + dex * r.CritDmgPerDex + critDmgBonus);
+
+        /// <summary>Fortune: min(MON_FORTUNE_CAP, LUK / (LUK + MON_FORTUNE_K)), the chance to reroll a roll that went against the unit.</summary>
+        public static double Fortune(FightRules r, double luk) => luk <= 0 ? 0 : Math.Min(r.FortuneCap, luk / (luk + r.FortuneK));
+
+        /// <summary>
+        /// A roll the unit wants to succeed (its evade, its crit), with fortune: draw against <paramref name="chance"/>; on a
+        /// failure, draw against <paramref name="fortune"/> and, on a success there, draw once more against the chance. Nothing is
+        /// drawn when the chance is zero, and the fortune draw is skipped when fortune is zero. <paramref name="lucky"/> is set
+        /// when the reroll turned the failure into a success.
+        /// </summary>
+        static bool Roll(IRandomSource rng, double chance, double fortune, ref bool lucky)
+        {
+            if (chance <= 0) return false;
+            if (Draw(rng) < chance) return true;
+            if (fortune <= 0 || Draw(rng) >= fortune) return false;
+            bool ok = Draw(rng) < chance;
+            lucky |= ok;
+            return ok;
+        }
+
         /// <summary>Crit chance: clamp(base + LUK x per_luk + crit_rate effects, 0, cap).</summary>
         public static double CritChance(FightRules r, double luk, double critRateBonus) =>
             Clamp(r.CritBase + luk * r.CritPerLuk + critRateBonus, 0, r.CritCap);
@@ -1047,7 +1085,7 @@ namespace IdleRng.Sim.Combat
                 foreach (var e in u.Effects) { w.Str(e.Stat); w.F64(e.Frac); w.I32(e.TicksLeft); w.Str(e.Source); }
                 var t = u.Tally;
                 w.I32(t.Actions); w.F64(t.DamageDealt); w.F64(t.DamageTaken); w.F64(t.HealingDone);
-                w.I32(t.Crits); w.I32(t.Evades); w.I32(t.Kills); w.I32(t.Counters);
+                w.I32(t.Crits); w.I32(t.Evades); w.I32(t.Grazes); w.I32(t.Kills); w.I32(t.Counters);
                 w.I32(t.DamageByElement.Count);
                 foreach (var kv in t.DamageByElement) { w.Str(kv.Key); w.F64(kv.Value); }
                 // Rule state is hashed only for units that carry the rule, so every other fight keeps its hash.

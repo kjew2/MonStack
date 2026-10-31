@@ -38,10 +38,10 @@ Eight trained stats (kj, 2026-10-30), on the 0-999 training scale:
 | `STR` | Physical damage: basic attack and STR-scaled skills |
 | `INT` | Magical damage: INT-scaled skills; the basic attack is magical when INT > STR |
 | `WIS` | Mitigates magical damage; WIS-scaled skills (heals, shields) are magical if they deal damage |
-| `DEX` | Evasion of physical hits, both sides' DEX count |
+| `DEX` | Evasion (physical hits miss, magical hits graze), both sides' DEX count; crit damage (`MON_CRIT_DMG_PER_DEX` per point). Retuned in content 4.6 (kj, 2026-10-31, `specs/25` section 6) |
 | `DEF` | Mitigates physical damage |
 | `SPD` | ATB gauge fill per tick, at least `MON_SPD_MIN` |
-| `LUK` | Crit chance |
+| `LUK` | Crit chance; fortune: rerolls the unit's own failed evade and failed crit, and makes a crit against it roll again (content 4.6, `specs/25` section 6) |
 
 Effects can also add to `crit_rate` and `crit_dmg` directly. The current value of a trained stat is `base x max(STAT_FLOOR_FRAC, 1 + sum of effect fractions)`: however many debuffs stack, it never drops below `STAT_FLOOR_FRAC` (0.1) of its base. HP effects work on max HP (issue #83, kj 2026-10-31): a permanent HP effect (a passive) multiplies base max HP by `max(STAT_FLOOR_FRAC, 1 + fraction)`, and max HP is `base max HP x max(STAT_FLOOR_FRAC, 1 + sum of timed HP effect fractions)`. Whenever max HP changes (a passive, a timed HP buff or debuff landing or expiring), current HP is scaled with it, so the unit keeps its fraction of max HP: a full unit stays full, and an expiring buff cannot kill.
 
@@ -85,14 +85,18 @@ Otherwise it fires `OnBasicAttack` triggers and makes a basic attack: `BASIC_ATT
 ### 5.3 A hit
 
 ```
-evade  = clamp(MON_EVADE_BASE + (DEX_target - DEX_attacker) x MON_EVADE_PER_DEX, 0, MON_EVADE_CAP)   physical only
-crit   = clamp(MON_CRIT_BASE + LUK x MON_CRIT_PER_LUK + crit_rate effects, 0, MON_CRIT_CAP)
-damage = raw x (crit ? max(1, MON_CRIT_DMG + crit_dmg effects) : 1) x element x K / (K + DEF or WIS)
+evade   = clamp(MON_EVADE_BASE + (DEX_target - DEX_attacker) x MON_EVADE_PER_DEX, 0, MON_EVADE_CAP)
+fortune = min(MON_FORTUNE_CAP, LUK / (LUK + MON_FORTUNE_K))                                    0 at LUK 0
+crit    = clamp(MON_CRIT_BASE + LUK x MON_CRIT_PER_LUK + crit_rate effects, 0, MON_CRIT_CAP)
+damage  = raw x (graze ? MON_GRAZE_MULT : 1) x (crit ? max(1, MON_CRIT_DMG + DEX_attacker x MON_CRIT_DMG_PER_DEX + crit_dmg effects) : 1)
+          x element x K / (K + DEF or WIS)
 K      = MON_DEF_K
 element = ELEMENT_STRONG_MULT if the attack's element beats the target's, ELEMENT_WEAK_MULT if the reverse, else 1
 ```
 
-- Draw order: the evade roll, then the crit roll, each only when its chance is above zero. An evaded hit deals nothing and skips the crit roll.
+- **Avoid roll** (kj, 2026-10-31, `specs/25`): every hit rolls against the target's evade chance. A physical hit that rolls under it is evaded: it deals nothing. A magical hit that rolls under it is **grazed**: it deals `MON_GRAZE_MULT` of its damage, cannot crit, is not an evade (no `OnEvade`, no evade tally; it counts in the target's `Grazes`) and otherwise lands like any hit. `umbral_veil` turns the target's grazes into evades.
+- **Fortune** (the same decision): a roll a unit wants (its own evade when it is hit, its own crit when it hits) that fails is rerolled once with chance = its fortune. A crit that lands against a unit rolls again with chance = that unit's fortune, and stands only if the new roll also crits. `FightAction.Lucky` marks a hit whose outcome a reroll changed (an evade or graze saved, a crit gained or denied).
+- Draw order: evade (when its chance is above zero), then on a failed evade the target's fortune draw (when its fortune is above zero) and, on a success there, the evade again; then, unless evaded or grazed, the crit roll (when its chance is above zero), on a failed crit the attacker's fortune draw and maybe the crit again, and on a landed crit the target's fortune draw and maybe the crit again. An evaded hit deals nothing and skips the crit roll.
 - The shield absorbs first, then HP. Damage dealt is capped at the target's remaining HP (no overkill in tallies).
 - After the hit: the target's `OnHitTaken` triggers, then the attacker's `OnCrit` triggers on a crit. An evade fires the target's `OnEvade` triggers.
 
@@ -116,7 +120,7 @@ Behaviour a table row cannot express is coded once and referenced by id from con
 | `double_turn_start` | Each of the unit's first `MON_DOUBLE_TURNS` actions of the fight is followed at once by an extra full action (cooldowns tick, `OnAction` triggers fire, the AI picks again) without spending gauge. Logged as `rule:double_turn_start` before the extra action. The *Starlit Ascension* chase capstone. |
 | `root_rebirth` | Once per fight, damage from another unit (a hit, a counter or a channel strike; not its own entropy recoil) that would bring the unit to 0 HP leaves it at `MON_REBIRTH_HEAL` of its max HP instead; no kill is counted. Logged as `rule:root_rebirth` after the action that triggered it, with the HP it came back with. Its remaining rebirth is hashed only for units that carry the rule. The *World Root* chase capstone (Mandrake). |
 | `wail_stagger` | At the start of each of the unit's actions (before its `OnAction` triggers), every living enemy loses `MON_WAIL_STAGGER` of a full ATB gauge (never below 0) and takes `MON_WAIL_WITHER` of its own max HP as true damage. Logged as `rule:wail_stagger` per enemy with the damage dealt. The *Mandragora Scream* chase capstone (Mandrake). |
-| `umbral_veil` | The unit's evade roll also applies to magical hits, gains `MON_VEIL_EVADE_BONUS` evade chance, and its evade chance is capped at `MON_VEIL_EVADE_CAP` instead of `MON_EVADE_CAP`. The *Umbral Veil* chase capstone (Shade Hound). |
+| `umbral_veil` | Magical hits that roll under the unit's evade chance are evaded instead of grazed, gains `MON_VEIL_EVADE_BONUS` evade chance, and its evade chance is capped at `MON_VEIL_EVADE_CAP` instead of `MON_EVADE_CAP`. The *Umbral Veil* chase capstone (Shade Hound). |
 | `night_feast` | The unit starts every fight with `MON_FEAST_START` damage dealt (like a `dmg_dealt` effect), and each hit it lands that deals damage adds `MON_FEAST_DMG` more damage dealt and `MON_FEAST_STR` of its base STR for the rest of the fight, with no cap (they count like permanent effects, outside `EFFECT_STACK_CAP`). Logged as `rule:night_feast` with the STR plus damage bonus so far; hashed only for units that carry the rule. The *Night Feast* chase capstone (Shade Hound). |
 | `entropy_convert` | Tower fights only (`specs/21` section 3.1): instead of venting its entropy gauge, the unit gains a shield. Inert in other fights. |
 
@@ -124,7 +128,7 @@ The entropy gauge, boss phases and the environmental clock (`specs/12` section 8
 
 ### 6.3 Tallies
 
-Each unit records actions, damage dealt and taken, healing done, crits, evades (hits it evaded), kills, counters and damage dealt per element. The run engine reads them for playstyle conditions such as "deal X fire damage" or "evade N attacks" (`specs/12` section 5.5).
+Each unit records actions, damage dealt and taken, healing done, crits, evades (hits it evaded), grazes (magical hits it grazed; not evades, so "evade N attacks" does not count them), kills, counters and damage dealt per element. The run engine reads them for playstyle conditions such as "deal X fire damage" or "evade N attacks" (`specs/12` section 5.5).
 
 ## 7. Constants
 
@@ -135,12 +139,16 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_HP_PER_POINT` | 10 | `> 0` | Max HP per HP point |
 | `MON_DEF_K` | 300 | `> 0` | Mitigation constant: DEF or WIS 300 halves damage |
 | `MON_EVADE_BASE` | 0.05 | `[0, 1]` | Evade chance at equal DEX |
-| `MON_EVADE_PER_DEX` | 0.0005 | `>= 0` | Evade per point of DEX difference |
+| `MON_EVADE_PER_DEX` | 0.001 | `>= 0` | Evade per point of DEX difference (0.0005 before content `4.6`) |
 | `MON_EVADE_CAP` | 0.5 | `[0, 1]` | Evade ceiling |
 | `MON_CRIT_BASE` | 0.05 | `[0, 1]` | Crit chance at LUK 0 |
 | `MON_CRIT_PER_LUK` | 0.0005 | `>= 0` | Crit chance per LUK |
 | `MON_CRIT_CAP` | 0.75 | `[0, 1]` | Crit ceiling |
-| `MON_CRIT_DMG` | 1.5 | `>= 1` | Crit damage multiplier |
+| `MON_CRIT_DMG` | 1.5 | `>= 1` | Crit damage multiplier before DEX |
+| `MON_CRIT_DMG_PER_DEX` | 0.001 | `>= 0` | Crit damage multiplier per point of the attacker's DEX (content `4.6`) |
+| `MON_GRAZE_MULT` | 0.25 | `[0, 1]` | Damage share of a grazed magical hit (content `4.6`) |
+| `MON_FORTUNE_K` | 1000 | `> 0` | Fortune = LUK / (LUK + K): LUK 1000 gives half (content `4.6`) |
+| `MON_FORTUNE_CAP` | 0.5 | `[0, 1]` | Fortune ceiling (content `4.6`) |
 | `MON_SPD_MIN` | 10 | `> 0` | Minimum gauge fill per tick |
 | `MON_TIME_LIMIT_TICKS` | 900 | `> 0` | Turn limit (90 s) |
 | `MON_SIDE_SIZE` | 4 | `> 0` | Most units per side |
@@ -170,7 +178,7 @@ Range violations are `E043` in both `tools/content_build.py` and `ContentDb`. `B
 ## 8. Determinism and goldens
 
 - No clock, IO, reflection or `Math.Pow`; every draw comes from the `IRandomSource` passed in (`specs/00` section 5).
-- `BattleSim.StateHash` is SHA-256 over a canonical encoding of the whole fight (`StateHasher` conventions; version `HashVersion` = 1). Changing the encoding bumps the version.
+- `BattleSim.StateHash` is SHA-256 over a canonical encoding of the whole fight (`StateHasher` conventions; version `HashVersion` = 2: v2 added `UnitTally.Grazes`). Changing the encoding bumps the version.
 - `golden/battle-sim-vectors.txt` resolves seven fixed fights (1v1 twice, 4v1, 4v4, 2v3, a 1v1 and a 2v2 of chase capstone carriers) with placeholder fighters defined in `src/IdleRng.Bots/Golden/BattleVectors.cs`, printing outcome, ticks, each unit's HP and tallies, and the hash. It covers every skill kind, a trigger and every chase capstone rule modifier. Any rule or content change that moves it is regenerated with `golden --update` and noted in the merge commit.
 
 ## 9. Descriptions (tooltips)
@@ -178,7 +186,7 @@ Range violations are `E043` in both `tools/content_build.py` and `ContentDb`. `B
 The web client explains stats and abilities in tooltips (issue #80). The words are content strings and every number comes from the data or formula it describes, so the text cannot drift from the fight. `BattleText` (`src/IdleRng.Sim/Combat/BattleText.cs`) builds them; `BattleTextTests` checks that every placeholder resolves.
 
 - **Formulas.** The fight's own formulas are public helpers on `BattleSim` (`MaxHp`, `GaugeFill`, `BasicAttackRaw`, `BasicAttackMagical`, `EvadeChance`, `CritChance`, `Mitigate`); the battle and the tooltips both call them.
-- **Stats.** `stat.<id>.name` ("Strength"), `stat.<id>.desc` (what the stat does, with constants such as `{MON_DEF_K}` filled in) and `stat.<id>.now` (what the current value does against the coming opponent: `{max_hp}`, `{basic}`, `{basic_type}`, `{def_taken}`, `{wis_taken}`, `{evade}`, `{foe_evade}`, `{acts}` actions per turn, `{crit}`, `{foe}`), under the heading `tip.now`. "Now" lines use the raw stat sheets: before buffs, debuffs and passives. `stat.<id>.label` names a stat inside a sentence where the upper-case id would read wrong (`hp`: "max HP", `crit_rate`, `crit_dmg`).
+- **Stats.** `stat.<id>.name` ("Strength"), `stat.<id>.desc` (what the stat does, with constants such as `{MON_DEF_K}` filled in) and `stat.<id>.now` (what the current value does against the coming opponent: `{max_hp}`, `{basic}`, `{basic_type}`, `{def_taken}`, `{wis_taken}`, `{evade}`, `{foe_evade}`, `{acts}` actions per turn, `{crit}`, `{crit_dmg}` (the crit multiplier from DEX), `{fortune}`, `{foe}`), under the heading `tip.now`. "Now" lines use the raw stat sheets: before buffs, debuffs and passives. `stat.<id>.label` names a stat inside a sentence where the upper-case id would read wrong (`hp`: "max HP", `crit_rate`, `crit_dmg`).
 - **Skills.** `mskill.<id>.desc` is a template over the skill's own row: `{power}` (or `{power:pct}`), `{scales}`, `{stat}`, `{cooldown}`, `{duration}`, `{ticks}`, `{element}`. A tree node's tooltip adds tags (kind, physical or magical, element, trigger, chase trait) and facts from the row and the rules above: effect, amount, damage type, element, target, duration, cooldown and the AI condition for active skills, when it fires for triggers and passives (`trigger.<id>.name`, `tip.fires.<id>`), stacking for triggered buffs and debuffs (`tip.stacks.triggered` names `{EFFECT_STACK_CAP}`), and the node's SP cost. A rank fight opponent's skill (`specs/14` section 5) gets the same tooltip without the node parts (no trigger, chase tag or SP cost): `BattleText.SkillTip`. The vocabulary is `tip.*`, with constants filled in (`tip.effect.debuff` names `{STAT_FLOOR_FRAC:pct}`). Abilities have no energy cost: energy is a training resource (`specs/14`); a skill's cost is its node's SP.
 - **Rules.** `rule.<id>.desc`, with constants filled in (`echo_cast` names `{MON_ECHO_POWER:pct}`). A rule modifier's log event (`FightAction.Event` `rule:<id>`) shows under `rule.<id>.name` in the battle log.
 
