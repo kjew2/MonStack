@@ -18,6 +18,12 @@ namespace IdleRng.Sim.Combat
 
         public FightOutcome Outcome { get; set; }
 
+        /// <summary>True when the fight runs with tower rules: the tower fields below are then hashed (specs/21 section 3).</summary>
+        public bool Tower { get; set; }
+
+        /// <summary>Highest corruption level reached so far (tower fights).</summary>
+        public int PeakCorruption { get; set; }
+
         /// <summary>Side A in slot order, then side B in slot order. This order breaks every tie.</summary>
         public List<FightUnit> Units { get; set; } = new List<FightUnit>();
 
@@ -59,6 +65,40 @@ namespace IdleRng.Sim.Combat
         public UnitTally Tally { get; set; } = new UnitTally();
 
         public bool Alive => Hp > 0;
+
+        // ---- tower fields (specs/21 section 3), all zero outside tower fights
+
+        /// <summary>Entropy gauge, 0 to the cap.</summary>
+        public double Entropy { get; set; }
+
+        /// <summary>Times the gauge has vented; the vent kind rotates with it.</summary>
+        public int Vents { get; set; }
+
+        /// <summary>Index of the next boss phase to enter.</summary>
+        public int PhaseNext { get; set; }
+
+        /// <summary>An add summoned by a split phase: it never counts as keeping its side alive.</summary>
+        public bool IsAdd { get; set; }
+
+        /// <summary>Adds spawned so far (for their ids).</summary>
+        public int Spawned { get; set; }
+
+        /// <summary>Damage the unit takes less while one of its side's adds lives (split phase).</summary>
+        public double Guard { get; set; }
+
+        /// <summary>A shield_check phase is waiting for its shield to break or expire.</summary>
+        public bool CheckPending { get; set; }
+        public double CheckHealFrac { get; set; }
+        public double CheckBuff { get; set; }
+
+        /// <summary>A channel in progress: ticks left, damage still to deal to interrupt it, and the strike if it lands.</summary>
+        public int ChannelTicks { get; set; }
+        public double ChannelNeed { get; set; }
+        public double ChannelStrike { get; set; }
+        public double ChannelDealt { get; set; }
+
+        /// <summary>enrage phase: damage buff added to the unit each turn.</summary>
+        public double EnrageStep { get; set; }
 
         public FightUnit Clone()
         {
@@ -120,7 +160,22 @@ namespace IdleRng.Sim.Combat
         public FightAction(string actor, CombatSkill skill, string target, double amount, bool crit, bool evaded, bool aoe, bool counter)
         {
             Actor = actor; Skill = skill; Target = target; Amount = amount; Crit = crit; Evaded = evaded; Aoe = aoe; Counter = counter;
+            Event = null;
         }
+
+        /// <summary>A tower event (specs/21 section 6): see <see cref="Event"/>.</summary>
+        public FightAction(string actor, string evt, string target, double amount)
+        {
+            Actor = actor; Skill = null; Target = target; Amount = amount; Crit = false; Evaded = false; Aoe = false; Counter = false;
+            Event = evt;
+        }
+
+        /// <summary>
+        /// Null for an ordinary action. Otherwise a tower event: "phase:&lt;kind&gt;" (a boss entered a phase), "vent:recoil|stun|enrage|convert"
+        /// (a unit's entropy gauge vented), "check_failed" (a shield_check shield expired unbroken), "channel_broken" or
+        /// "channel_strike" (a channel was interrupted or landed). Actor is the unit; Amount is damage, heal or shield where there is one.
+        /// </summary>
+        public string Event { get; }
 
         public string Actor { get; }
         public CombatSkill Skill { get; }

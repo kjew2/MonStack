@@ -19,7 +19,7 @@ Status: **proposal** (agent draft, 2026-10-30; kj has not reviewed it). A high-l
 | R0.3 | **Pick the game's name**, then do the one mechanical `IdleRng` rename (`specs/13` section 1). Cheaper the earlier it happens; store listing, site and community channels wait on it. | Fix / Tech | S + decision | #47 (name part) |
 | R0.4 | **Answer the open design questions** in `specs/13` section 9 (what overwriting removes, one energy meter, roles and elements). Not blocking, but each is a rule the next specs build on. | Fix | decision | none |
 | R0.5 | **Done.** **T9** (moved up from P1, kj 2026-10-31), **re-scoped by kj (2026-10-30): species unlock from achievements and talents come from a post-run vendor** (5 random offers, rarity by the run's grade). The species gacha and aptitude ranks are scrapped; Skill Books are the premium gate (selling them is R1.9). | Feature | M | #73 |
-| R0.6 | **T10 Daily Tower** (moved up from P1, kj 2026-10-31): 4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button. Spec written: `specs/21` (kj's questions 1 and 2 there come first). | Feature | L | #74 |
+| R0.6 | **T10 Daily Tower** (moved up from P1, kj 2026-10-31): 4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button. Spec: `specs/21`. Step 1 (battle hooks) done; tower sim and content, account, web next. | Feature | L | #74 |
 
 ## P1 - Next: the game toward 1.0
 

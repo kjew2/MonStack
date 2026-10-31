@@ -1,10 +1,10 @@
 # 21 - Daily Tower
 
-Status: **design, not built (T10 of `specs/13`, P0)**. Nothing here exists in code yet. When a part lands, mark it live in this header and in `specs/13`. Planned code: `src/IdleRng.Sim/Tower` (tower sim), additions to `src/IdleRng.Sim/Combat` (entropy, phases, clock), `AccountOps` and `AccountSave` (attempts, rewards). Planned tests: `TowerTests`, `BattleSim` additions. Planned golden: `golden/tower-vectors.txt`.
+Status: **in progress (T10 of `specs/13`, P0)**. Build step 1 is **live**: the battle hooks of section 3 (code: `src/IdleRng.Sim/Combat`, tests: `src/IdleRng.Sim.Tests/TowerBattleTests.cs`). Steps 2 to 4 (section 10) are design only. Planned code: `src/IdleRng.Sim/Tower` (tower sim), `AccountOps` and `AccountSave` (attempts, rewards). Planned tests: `TowerTests`. Planned golden: `golden/tower-vectors.txt`.
 
 The design is `specs/12` sections 8.2 and 8.3 and the Skill Book rules in section 5.6. This spec turns it into rules, data and build steps.
 
-> **Numbers and content are placeholders** until balance resumes (`CLAUDE.md`). Anything marked **(agent)** is a decision made while writing, easy to veto; section 11 lists the questions that are kj's.
+> **Numbers and content are placeholders** until balance resumes (`CLAUDE.md`). Anything marked **(agent)** is a decision made while writing, easy to veto; section 11 lists the questions that are kj's and the answers so far.
 
 ## 1. What it is
 
@@ -38,19 +38,19 @@ pay rewards (section 7)
 
 ## 3. Anti-trivialization (all in `BattleSim`)
 
-Three mechanisms, each a field of `FightRules` and `FightState` (the "future hooks" of `specs/16` section 6.2). They are **off in rank fights and the gauntlet** and on only when the caller passes `TowerRules`, so existing fights, hashes and golden files do not move: the new state is hashed only when `TowerRules` is set, and `HashVersion` stays 1 **(agent)**.
+Three mechanisms, each a field of `FightRules` and `FightState` (the "future hooks" of `specs/16` section 6.2). They are **off in rank fights and the gauntlet** and on only when the caller sets `FightRules.Tower` (a `TowerRules`), so existing fights, hashes and golden files do not move: the new state is hashed only when `Tower` is set (`FightState.Tower`), and `HashVersion` stays 1 **(agent)**. Boss phases need `Tower`: `BattleSim.Start` rejects a fighter with phases when it is null. `TowerRules` is plain data like `FightRules`; building it from content constants comes with step 2.
 
 ### 3.1 Entropy gauge
 
 Per unit, `0` to `ENTROPY_CAP` (100). It measures how much a build leans on free extra effects.
 
-- **Gain.** `ENTROPY_PER_TRIGGER` for each triggered effect that fires (`specs/16` section 6.1), `ENTROPY_PER_ECHO` for each `echo_cast` repeat, `ENTROPY_PER_COUNTER` for each `counter_mitigated` counterattack, plus any `entropy_gain` effect on the unit (a fraction; negative reduces gain, floor 0).
+- **Gain.** `ENTROPY_PER_TRIGGER` for each triggered effect that fires (`specs/16` section 6.1) **except `BattleStart` passives**, which would start every unit with a build-up **(agent)**; `ENTROPY_PER_ECHO` for each `echo_cast` repeat; `ENTROPY_PER_COUNTER` for each `counter_mitigated` counterattack. Gain is scaled by `max(0, 1 + sum of entropy_gain effects)`: a new bonus-only effect stat, so a debuff or node that lowers it cuts gain, down to nothing.
 - **Decay.** `ENTROPY_DECAY` at the start of the unit's own action.
-- **Vent.** When a unit's entropy reaches `ENTROPY_CAP`, the excess vents and entropy drops to 0. The vent kind rotates with the unit's vent count, with no random draw: recoil, then stun, then enrage.
+- **Vent.** When a unit's entropy reaches `ENTROPY_CAP`, the gauge vents and drops to 0 (the vent has a fixed size; it does not scale with the overshoot **(agent)**). The vent kind rotates with the unit's vent count, with no random draw: recoil, then stun, then enrage.
   - `recoil`: the unit takes `ENTROPY_RECOIL_FRAC` of its max HP as true damage (a shield absorbs it).
   - `stun`: the unit loses `ENTROPY_STUN_GAUGE` of its ATB gauge (floored at 0).
-  - `enrage`: every enemy gains a `+ENTROPY_ENRAGE_FRAC` damage buff for `ENTROPY_ENRAGE_TURNS` turns.
-- **Management.** A new rule modifier `entropy_convert` (a chase capstone candidate): instead of venting, the excess becomes a shield of `excess x ENTROPY_CONVERT_SHIELD` of max HP. A node effect `entropy_gain` lowers gain. Both are content, so a build can plan for entropy.
+  - `enrage`: every enemy gains a `+ENTROPY_ENRAGE_FRAC` damage buff for `ENTROPY_ENRAGE_TURNS` turns. The buff is the new bonus-only effect stat `dmg_dealt`: damage before mitigation is multiplied by `max(0, 1 + sum of dmg_dealt effects)`. Boss phases use it too.
+- **Management.** A new rule modifier `entropy_convert` (a chase capstone candidate): instead of venting, the unit gains a shield of `ENTROPY_CONVERT_SHIELD` of its max HP for `ENTROPY_CONVERT_TURNS` turns. A node effect on `entropy_gain` lowers gain. Both are content, so a build can plan for entropy.
 - Bosses use the same gauge only if their row lists loop skills; by default they gain none.
 - The UI shows each unit's gauge and the vent that is next.
 
@@ -60,13 +60,13 @@ A boss row has ordered phases. Each is entered once, when the boss's HP first fa
 
 | Kind | Effect on entry | What it checks |
 |---|---|---|
-| `shield_check` | The boss gains a shield of `power` x its max HP for `duration` turns. When the shield expires unbroken, the boss heals `heal_frac` of max HP and gets a damage buff. | Burst: a single-target DPS check |
+| `shield_check` | The boss gains a shield of `power` x its max HP for `duration` turns (replacing any shield it had). When the shield expires unbroken (checked at the end of each tick), the boss heals `heal_frac` of max HP and gets a permanent `buff` damage buff. | Burst: a single-target DPS check |
 | `split` | `count` adds join the boss's side (up to `MON_SIDE_SIZE`), built from the `adds` row. While any add lives the boss takes `guard` less damage (not immunity). | AoE and multi-target damage, taunts |
-| `channel` | The boss charges for `duration` turns. If the team has not dealt `power` x boss max HP to it since the channel began, it ends by hitting every ally for `strike` x boss `STR` (or `INT`) as true damage. | Interrupt: focus fire in a window |
-| `enrage` | From entry the boss gains a stacking `+enrage_per_turn` damage buff each turn, forever. | A survival clock on the last phase |
+| `channel` | The boss charges for `duration` turns. If the team has not dealt `power` x boss max HP to it (shield absorption counts) since the channel began, it ends by hitting every enemy for `strike` x the boss's `STR` or `INT` (the higher) as true damage (shields still absorb). Interrupted, it stops and strikes nothing. | Interrupt: focus fire in a window |
+| `enrage` | From entry the boss's damage buff grows by `buff` every turn, forever (one permanent effect). | A survival clock on the last phase |
 
-- A phase may also add skills or triggers to the boss (`add_skills`, ids from `monster_skills`), applied on entry.
-- Adds are ordinary fighters with no phase of their own. Killing the boss with adds alive wins the fight (the side's last unit counts only the boss: "boss dead" is the win condition **(agent)**).
+- A phase may also add skills to the boss (`add_skills`, ids from `monster_skills`, passives included) on entry; they go after its own, so existing cooldowns are kept, and passives apply at once. The fighter snapshot is not changed: the unit gets a copy.
+- Adds are ordinary fighters with no phase of their own, named `<boss id>#<n>`. They never keep a side alive: killing the boss with adds still up wins the fight **(agent)**. A channel strike that wipes the team ends the fight, the boss's side winning.
 - Phases only advance forward. A boss healed above a threshold does not re-enter it.
 
 ### 3.3 Environmental clock
@@ -93,7 +93,7 @@ New tables (a new table is a MINOR bump, `CLAUDE.md`). Ids are added, never rena
 | Table | Columns |
 |---|---|
 | `tower_bosses` | `id`, `name_key`, `element`, `marquee` (bool), eight stat weights, `skills` (ids, `\|`-separated) |
-| `boss_phases` | `boss_id`, `order`, `enter_hp`, `kind` (section 3.2), `power`, `duration`, `count`, `guard`, `heal_frac`, `strike`, `enrage_per_turn`, `adds` (a `tower_bosses` id), `add_skills` |
+| `boss_phases` | `boss_id`, `order`, `enter_hp`, `kind` (section 3.2), `power`, `duration`, `count`, `guard`, `heal_frac`, `strike`, `buff`, `adds` (a `tower_bosses` id), `add_skills` |
 | `book_drops` | `book_id`, `min_floor`, `weight` |
 
 Strings for names, phase banners and tooltips (`rule.entropy_convert.desc`, `phase.<kind>.name`, `phase.<kind>.desc`, `stat.entropy_gain.*`), with constants filled in as in `specs/16` section 9. `skill_books` gains no column.
@@ -115,7 +115,8 @@ Constants (all placeholders; range violations are `E043` in both `tools/content_
 | `ENTROPY_RECOIL_FRAC` | 0.15 | `[0, 1]` |
 | `ENTROPY_STUN_GAUGE` | 100 | `>= 0` |
 | `ENTROPY_ENRAGE_FRAC` / `_TURNS` | 0.25 / 3 | `>= 0` / `> 0` |
-| `ENTROPY_CONVERT_SHIELD` | 0.5 | `>= 0` |
+| `ENTROPY_CONVERT_SHIELD` | 0.2 | `>= 0` |
+| `ENTROPY_CONVERT_TURNS` | 3 | `> 0` |
 | `CORRUPT_START_TICK` | 300 | `>= 0` |
 | `CORRUPT_EVERY_TICKS` | 100 | `> 0` |
 | `CORRUPT_HEAL_PER_LEVEL` / `_FLOOR` | 0.2 / 0.2 | `>= 0` / `[0, 1]` |
@@ -135,7 +136,7 @@ TowerResult r = TowerSim.Run(content, team /* IReadOnlyList<Fighter> */, day, on
 TowerLineup l = TowerSim.Lineup(content, day);          // bosses and phases per floor, for the preview screen
 ```
 
-`FightRules.FromContent(content, tower: true)` carries the three mechanisms; `BattleSim.Start` validates the new fields (known phase kinds, `adds` within the side-size cap). `FightAction` gains `Phase`, `Vent` and `Corruption` fields so playback can show banners, entropy bars and the corruption meter; observers only read, as before.
+`FightRules.FromContent(content, tower: true)` carries the three mechanisms; `BattleSim.Start` validates the new fields (known phase kinds, `adds` within the side-size cap). `FightAction` gains one field, `Event` (null for an ordinary action): `phase:<kind>`, `vent:recoil|stun|enrage|convert`, `check_failed`, `channel_broken`, `channel_strike`, with the unit in `Actor` and the amount where there is one. Playback also reads `FightUnit.Entropy`, `FightState.PeakCorruption` and `BattleSim.CorruptionLevel(rules, ticks)` from the live state; observers only read, as before.
 
 ## 7. Account and rewards
 
@@ -179,18 +180,18 @@ A **Tower** tab beside the Vault (`web/`), all through the bridge (`web/wasm/BRI
 
 Each step merges on its own with `./check.sh` green.
 
-1. **Engine hooks** (`BattleSim`): `TowerRules`, entropy, the four phase kinds, the clock, tests. Rank fights and the gauntlet unchanged.
+1. **Engine hooks** (`BattleSim`): `TowerRules`, entropy, the four phase kinds, the clock, tests. Rank fights and the gauntlet unchanged. **Done** (`TowerBattleTests`; no golden moved).
 2. **Tower sim and content:** the three tables, constants, validators in both `content_build.py` and `ContentDb`, `TowerSim`, goldens.
 3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v3, tests.
 4. **Web:** the Tower tab, the bridge, tooltips, the debug-only book button. Publish the artifact (`CLAUDE.md`).
 
 ## 11. Questions for kj
 
-Recommendations first. Questions 1 and 2 block step 2; the rest can wait.
+Recommendations first. **Answered (kj, 2026-10-31):** questions 1 and 2. The rest can wait.
 
-1. **Team rule.** Teams of 1 to 4 Vault monsters, no Mercenaries (recommended: simplest, and a new player with one monster can climb a few floors). Alternative: build the Mercenaries of `specs/12` section 7 so a team is always four.
-2. **Floor model.** Full heal each floor, 3 attempts a day (recommended: fresh fights, easy to reason about). Alternative: HP carries over, so healing and shields decide depth.
+1. **Team rule. Answered:** teams of 1 to 4 Vault monsters, no Mercenaries. (Alternative not taken: build the Mercenaries of `specs/12` section 7 so a team is always four.)
+2. **Floor model. Answered:** full heal each floor, 3 attempts a day. (Alternative not taken: HP carries over.)
 3. **A practice mode** (an undated tower with no rewards, always available) so there is something to try with a new team after the day's attempts are spent? Recommended: yes, later; it is the same sim with a free seed.
 4. **Entropy on bosses.** By default bosses build none. Should marquee bosses have entropy so they can be stunned or enraged on purpose? Recommended: no for the MVP.
-5. **Gem amounts and book rarity** wait for the T9 economy and the monetization call (`specs/13` section 9 item 4). The placeholders here only prove the pipeline.
+5. **Gems and book rarity** wait for the monetization call (`specs/13` section 9 item 4, R1.9 in `specs/20`): T9 scrapped the gacha, so there are no gems yet, and Skill Books are the premium gate. The placeholders here only prove the pipeline.
 6. **Daily reset time.** UTC midnight (recommended) or the player's local midnight.
