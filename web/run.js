@@ -756,7 +756,7 @@
   }
 
   const refundShare = () => { const p = C.consts.treeRefund; return p === 0.5 ? 'half' : Math.round(p * 100) + '%'; };
-  // A tree offer (Awakening, skill book or chase unlock) as an arcade card pick: a banner, one compact card per tree (its node path,
+  // A tree offer (Awakening, skill book or chase unlock) as a card pick: a banner, one compact card per tree (its node path,
   // its stat boosts summed and its skills and capstone in one line each), then big slot tiles on the picked card. Every node's full
   // text stays one tap away (the path tiles' tooltips, or "All nodes").
   const offerKey = (o) => [o.source, o.stat, o.threshold].concat(o.trees).join('|');
