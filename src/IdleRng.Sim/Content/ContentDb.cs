@@ -285,6 +285,7 @@ namespace IdleRng.Sim.Content
             {
                 Id = r.Str("id"), NameKey = r.Str("name_key"), Element = r.Str("element"),
                 NativeTree1 = r.Str("native_tree_1"), NativeTree2 = r.Str("native_tree_2"),
+                ChaseTreeRun = r.Str("chase_tree_run"), ChaseTreeBook = r.Str("chase_tree_book"),
                 Base = StatsFrom(r, "base_"), Growth = StatsFrom(r, "grow_"),
             }).ToList().AsReadOnly();
             Species = new ReadOnlyDictionary<string, SpeciesDef>(SpeciesList.ToDictionary(x => x.Id, StringComparer.Ordinal));
@@ -486,7 +487,26 @@ namespace IdleRng.Sim.Content
                     if (!Trees.TryGetValue(nt, out var tr) || tr.Kind != TreeKind.Native)
                         errors.Add(new ContentError("E023", $"species[{sp.Id}]", $"'{nt}' is not a native tree id"));
                 if (sp.NativeTree1 == sp.NativeTree2) errors.Add(new ContentError("E043", $"species[{sp.Id}]", "native trees must differ"));
+
+                // Each species owns two chase trees: one in-run, one book-gated (specs/15 section 5.1).
+                foreach (var (col, id, book) in new[] { ("chase_tree_run", sp.ChaseTreeRun, false), ("chase_tree_book", sp.ChaseTreeBook, true) })
+                {
+                    if (!Trees.TryGetValue(id, out var ct) || ct.Kind != TreeKind.Chase)
+                    {
+                        errors.Add(new ContentError("E023", $"species[{sp.Id}]", $"{col} '{id}' is not a chase tree id"));
+                        continue;
+                    }
+                    if (ct.Species != null) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"chase tree '{id}' already belongs to species '{ct.Species}'"));
+                    else { ct.Species = sp.Id; ct.BookGated = book; }
+                    int needs = BookTreesNeeded(ct).Count();
+                    if (!book && needs > 0) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"in-run chase tree '{id}' must not need a book tree"));
+                    if (book && needs == 0) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"book-gated chase tree '{id}' needs a condition on a book tree"));
+                }
+                if (sp.ChaseTreeRun == sp.ChaseTreeBook) errors.Add(new ContentError("E043", $"species[{sp.Id}]", "chase trees must differ"));
             }
+            foreach (var tr in TreeList)
+                if (tr.Kind == TreeKind.Chase && tr.Species == null)
+                    errors.Add(new ContentError("E043", $"trees[{tr.Id}]", "a chase tree must belong to a species (chase_tree_run or chase_tree_book)"));
 
             SkillBooks = new ReadOnlyDictionary<string, SkillBookDef>(t["skill_books"].Select(r => new SkillBookDef
             {
@@ -558,6 +578,17 @@ namespace IdleRng.Sim.Content
                 case "draft_size": return TalentEffect.DraftSize;
                 case "start_sp": return TalentEffect.StartSp;
                 default: throw new FormatException($"unknown talent effect '{s}'");
+            }
+        }
+
+        /// <summary>The book trees a chase tree's conditions name (tree_maxed, or node_owned on one of its nodes), in condition order.</summary>
+        public IEnumerable<string> BookTreesNeeded(TreeDef chase)
+        {
+            foreach (var cd in chase.Conditions)
+            {
+                string tree = cd.Type == ConditionType.TreeMaxed ? cd.Ref
+                    : cd.Type == ConditionType.NodeOwned && TreeNodes.TryGetValue(cd.Ref, out var n) ? n.TreeId : null;
+                if (tree != null && Trees.TryGetValue(tree, out var t) && t.Kind == TreeKind.Book) yield return tree;
             }
         }
 

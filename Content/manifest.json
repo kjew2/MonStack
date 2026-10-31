@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "content_version": "3.2",
+  "content_version": "3.3",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "chase_conditions": {
       "file": "chase_conditions.json",
-      "sha256": "ee6a2e9836e037b540f7a05ca2025673d208a877bd57abedba354481bc80c4c4"
+      "sha256": "be21843bf38c4333ca2dde514f173a208660932b38af33504adca2890ddff92c"
     },
     "constants": {
       "file": "constants.json",
@@ -33,15 +33,15 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "424793245077a54f2617c220cb62f1930814c44d66e702ed63383f2bd121e9c8"
+      "sha256": "f890b11ba02af0e47512ac5f620c76abef3db159498dfa69baf49310f6c12560"
     },
     "skill_books": {
       "file": "skill_books.json",
-      "sha256": "878767de678ca926e1a609d9eef5ca33e3822f1e2da2a42a3fd23f1e20cd83d2"
+      "sha256": "788e638052e10b1ab4fac78e098dd4bd3272bfce495bb67a498bd87adf427e94"
     },
     "species": {
       "file": "species.json",
-      "sha256": "6d241cdf8c425b8ed8d4dc48047c7232d8a20758931acef494633930281d8bcd"
+      "sha256": "6421a564773ae9241b29d29f023b3442c8c17e46821ebc1552d052ac9328e954"
     },
     "stat_milestones": {
       "file": "stat_milestones.json",
@@ -49,7 +49,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "e60fd7c0bee16bff76971bcf4275e44875dae76ca8247ad06e8ed20111d71f99"
+      "sha256": "3d31a133225c758dd8641bd5915bfd80d98a2534cd4a787c49331066feb2be0e"
     },
     "talents": {
       "file": "talents.json",
@@ -57,12 +57,12 @@
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
-      "sha256": "84953720015d40072374b9d345129b58b0c6cc43734be5538a35ed1455a31606"
+      "sha256": "f3c3504f9f162b3e7867d0305f96c596150c0f8645de5bf5b9b083a76fa558bc"
     },
     "trees": {
       "file": "trees.json",
-      "sha256": "3a3706172d7fb80dea79a6154b0b135e6a4b9600396de12549ae708f7bb46c72"
+      "sha256": "4464edbbf2e19b6f54caf34b4e898616a48b04abc519ee43d03cee72108e240e"
     }
   },
-  "content_hash": "1bb95f426629da0f228aab4c12bd09876465c2d72d405c15b5c64d383ff910fe"
+  "content_hash": "edda79512bccab2b96f2d6c427247e3b227a5450ea62fafb0b0adf88d0d0daf2"
 }

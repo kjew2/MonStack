@@ -11,6 +11,7 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 - A monster has `TREE_SLOTS` (4) slots. A run starts with its species' two **native** trees in slots 0 and 1 and two empty slots.
 - **Skill points** (SP): `SP_PER_CYCLE` at the start of every cycle (cycle 1 included) plus `SP_PER_WIN` for each rank fight won.
 - SP buy a tree's **nodes in order**. About 75% of nodes are **filler** (a growth bonus or a flat stat boost); the rest grant skills, triggered effects or rule modifiers. The **last node is the tree's chase trait**.
+- Each species owns **two chase trees** of its own: one unlocked in-run, one gated behind a skill book tree (section 5.1).
 - New trees arrive as **offers**: a milestone draft, a skill book, or an unlocked chase tree. Any offered tree may go into an empty slot or **overwrite any slot**, native trees included; or the offer is discarded.
 
 ## 2. Trees and nodes
@@ -28,7 +29,7 @@ Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree
 | `rule` | `rule_id` | Adds a coded rule modifier (`specs/16` section 6.2) |
 
 - The last node must be `skill`, `trigger` or `rule` (`E064`): it is the chase trait.
-- **Chase trees' capstones must be significantly more impactful and unique** than a normal tree's chase trait (kj). In the placeholder content they are coded rule modifiers: *Unbreakable Will* ends in `counter_mitigated`, *Arcane Overflow* in `echo_cast`.
+- **Chase trees' capstones must be significantly more impactful and unique** than a normal tree's chase trait (kj). In the placeholder content they are coded rule modifiers: *Unbreakable Will*, *Living Ocean* and *Starlit Ascension* end in `counter_mitigated`; *Arcane Overflow*, *Abyssal Bloom* and *Inferno Sovereign* in `echo_cast`. Only two rule modifiers are coded so far, so six chase trees share them (TODO(#92): a unique capstone per chase tree).
 - Placeholder shape **(agent)**: 8 nodes per tree: growth, stat, growth, stat, skill (cost 2), growth, stat, chase trait (cost 3); filler nodes cost 1, so a tree costs 11 SP. Trees can be any length; kj suggested longer ones with about 75% filler.
 
 Content table `monster_skills`: the skills nodes grant, in the battle vocabulary (`specs/16` section 5.1): `id`, `name_key`, `kind`, `target`, `stat`, `scales`, `power`, `cooldown`, `duration`, `element`. The description is the string `mskill.<id>.desc` by convention (there is no `desc_key` column; dropped in content `3.2`), a template over the row (`{power:pct}`, `{cooldown}`, ...; `specs/16` section 9), so its numbers cannot drift from the data.
@@ -60,6 +61,17 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 
 ## 5. Chase trees
 
+### 5.1 Two per species (kj, 2026-10-30, issue #78)
+
+Every species owns exactly two chase trees, named in `species`:
+
+- `chase_tree_run`, the **in-run** chase tree: unlocks from the species' own native trees plus stat thresholds and a playstyle tally (the normal chase rules). Its conditions name no book tree.
+- `chase_tree_book`, the **book-gated** chase tree, the one that rewards planning a run: its conditions also need nodes in a species-specific skill book tree (`specs/12` section 5.3), plus nodes in other trees and a playstyle tally. Each species has its own placeholder book.
+
+Only the owner's runs unlock a chase tree: another species meeting its conditions is never offered it. Every chase tree belongs to exactly one species. **(agent)** Books are not species-locked: any species may use any book and slot its tree as an ordinary tree; only the owner unlocks the chase tree that needs it.
+
+### 5.2 Conditions
+
 Content table `chase_conditions`: `id`, `tree_id` (a chase tree), `type`, `ref`, `amount`. All of a chase tree's conditions must hold (AND); every chase tree has at least one (`E065`).
 
 | Type | `ref` | Holds when |
@@ -69,30 +81,39 @@ Content table `chase_conditions`: `id`, `tree_id` (a chase tree), `type`, `ref`,
 | `stat_at_least` | trained stat | the stat is at least `amount` |
 | `tally_at_least` | `damage_dealt`, `evades`, `crits`, `kills`, `wins`, or `damage_<element>` | the run tally (section 6) is at least `amount` |
 
-**Source hints (kj).** The Trees tab shows, under each chase tree, where every tree its conditions name comes from (the bridge's `source` text per tree: a species' native tree, the stat threshold that drafts a generic tree, or the book that holds a book tree), so a player can tell how to obtain what a condition asks for.
+**Source hints (kj).** The Trees tab lists the run species' two chase trees, tagged in-run or book-gated, and shows under each where every tree its conditions name comes from (the bridge's `source` text per tree: a species' native tree, the stat threshold that drafts a generic tree, or the book that holds a book tree), so a player can tell how to obtain what a condition asks for.
 
 After every command the run reconciles chase trees, in this order:
 
 1. A slotted chase tree whose conditions no longer hold **locks again** and leaves its slot (kj: an unlocked chase tree does not survive losing its prerequisites). **(agent)** It leaves like an overwritten tree (section 4). Repeat until nothing changes, since one removal can break another chase tree.
 2. A pending chase offer whose conditions no longer hold is withdrawn.
-3. A chase tree whose conditions hold, that is neither slotted nor already offered since it last unlocked, is offered. A discarded chase offer is not repeated while the tree stays unlocked; once it locks again it can be offered again.
+3. A chase tree of the run's species whose conditions hold, that is neither slotted nor already offered since it last unlocked, is offered. A discarded chase offer is not repeated while the tree stays unlocked; once it locks again it can be offered again.
 
 Taking a chase tree into the slot of one of its own prerequisites makes it lock at once. The UI should warn before that.
 
-Book-gated chase trees are chase trees whose conditions include `node_owned` on a book tree's nodes (*Arcane Overflow* needs a Tome of Echoes node, a Spellcraft node and 3 crits).
+A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a book tree (*Arcane Overflow* needs a Tome of Echoes node, a Spellcraft node and 3 crits).
 
 ## 6. Run tally
 
 The run adds up the monster's battle tallies (`specs/16` section 6.3) across its rank fights: damage dealt, evades, crits, kills and damage per element. `wins` is the rank fights won. These feed `tally_at_least` conditions, the drafts' "deal X fire damage" style playstyle conditions (`specs/12` section 5.5).
 
-## 7. Placeholder content (content `2.5`)
+## 7. Placeholder content (content `2.5`, per-species chase trees in `3.3`)
 
 | Kind | Trees |
 |---|---|
 | Native | slime: *Slime Fundamentals*, *Gel Armor*; drake: *Pyromancy*, *Heavy Armor*; sprite: *Aether Striker*, *Mind Warp* |
 | Generic | one per stat at 300 (*Vital Core*, *Brute Force*, *Spellcraft*, *Sage Mind*, *Nimble Feet*, *Bulwark*, *Overclock*, *Fortune*), two for any stat at 500 (*Battle Instinct*, *Survivor*) |
-| Book | *Tome of Echoes* (book `book_echoes`) |
-| Chase | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; capstone `counter_mitigated`. *Arcane Overflow*: Tome of Echoes node 5, Spellcraft node 4, 3 crits; capstone `echo_cast` |
+| Book | *Codex of Tides* (book `book_tides`, slime), *Ember Codex* (`book_embers`, drake), *Tome of Echoes* (`book_echoes`, sprite) |
+
+Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
+
+| Species | In-run | Book-gated |
+|---|---|---|
+| slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `counter_mitigated` | *Abyssal Bloom*: Codex of Tides node 5, Slime Fundamentals node 4, 2000 water damage; `echo_cast` |
+| drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Codex node 5, Pyromancy node 4, 2000 fire damage; `echo_cast` |
+| sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `counter_mitigated` | *Arcane Overflow*: Tome of Echoes node 5, Spellcraft node 4, 3 crits; `echo_cast` |
+
+The two original chase trees were shared by every species until issue #78 assigned them: *Unbreakable Will* to drake, *Arcane Overflow* to sprite. Every tree and threshold is a placeholder.
 
 Generated once by a script; the CSVs in `content_src/` are the source of truth and are edited by hand from now on.
 
@@ -102,7 +123,7 @@ Run policies resolve offers (take into an empty slot; a chase tree overwrites th
 
 ## 9. Content rules
 
-New in content `2.5`, checked by `tools/content_build.py` (`validate_trees`) and `ContentDb.BuildTrees`.
+New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_build.py` (`validate_trees`) and `ContentDb.BuildTrees`.
 
 | Constant | Value | Range |
 |---|---|---|
@@ -117,7 +138,7 @@ New in content `2.5`, checked by `tools/content_build.py` (`validate_trees`) and
 | `monster_skills` | effect stat for buff/debuff/passive, trained `scales` for damage/heal/shield (`E023`); power, cooldown, duration `>= 0` (`E043`); element id or empty (`E023`) |
 | `trees` | generic trees need `offer_threshold > 0` and a trained or empty `offer_stat`; other kinds have neither (`E043`, `E023`) |
 | `tree_nodes` | known tree (`E023`); index `0..N-1` (`E060`); at least 2 nodes (`E044`); cost `>= 1`; growth/stat need a trained stat and `amount > 0`; skill/trigger need a monster skill; trigger nodes need a trigger and cannot fire a passive; rule nodes need a known rule id; last node skill/trigger/rule (`E064`) |
-| `species` | `native_tree_1`, `native_tree_2`: two different native trees (`E023`, `E043`) |
+| `species` | `native_tree_1`, `native_tree_2`: two different native trees (`E023`, `E043`); `chase_tree_run`, `chase_tree_book`: two different chase trees (`E023`, `E043`); the in-run one names no book tree in its conditions, the book-gated one names at least one (`E043`); no chase tree belongs to two species and every chase tree belongs to one (`E043`) |
 | `chase_conditions` | a chase tree (`E023`); refs by type (`E023`); `amount >= 0` for stat and tally (`E043`); every chase tree has a condition (`E065`) |
 | `skill_books` | `tree_id` is a book tree (`E023`) |
 

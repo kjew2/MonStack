@@ -432,6 +432,102 @@
       "cooldown": 3,
       "duration": 0,
       "element": null
+    },
+    {
+      "id": "tide_pool",
+      "name_key": "mskill.tide_pool.name",
+      "kind": "heal",
+      "target": "self",
+      "stat": null,
+      "scales": "wis",
+      "power": 1.0,
+      "cooldown": 3,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "undertow",
+      "name_key": "mskill.undertow.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "wis",
+      "power": 0.3,
+      "cooldown": 0,
+      "duration": 0,
+      "element": "water"
+    },
+    {
+      "id": "ember_lance",
+      "name_key": "mskill.ember_lance.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "str",
+      "power": 1.6,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "fire"
+    },
+    {
+      "id": "kindle",
+      "name_key": "mskill.kindle.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "str",
+      "scales": null,
+      "power": 0.15,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
+    },
+    {
+      "id": "brine_wall",
+      "name_key": "mskill.brine_wall.name",
+      "kind": "shield",
+      "target": "self",
+      "stat": null,
+      "scales": "hp",
+      "power": 0.2,
+      "cooldown": 4,
+      "duration": 3,
+      "element": null
+    },
+    {
+      "id": "abyssal_surge",
+      "name_key": "mskill.abyssal_surge.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "wis",
+      "power": 1.0,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "water"
+    },
+    {
+      "id": "sovereign_flame",
+      "name_key": "mskill.sovereign_flame.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "str",
+      "power": 1.2,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "fire"
+    },
+    {
+      "id": "star_lance",
+      "name_key": "mskill.star_lance.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "spd",
+      "power": 1.6,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "light"
     }
   ]
 }

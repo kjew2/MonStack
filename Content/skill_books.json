@@ -5,6 +5,16 @@
       "id": "book_echoes",
       "name_key": "book.book_echoes.name",
       "tree_id": "tome_of_echoes"
+    },
+    {
+      "id": "book_tides",
+      "name_key": "book.book_tides.name",
+      "tree_id": "tidal_codex"
+    },
+    {
+      "id": "book_embers",
+      "name_key": "book.book_embers.name",
+      "tree_id": "ember_codex"
     }
   ]
 }

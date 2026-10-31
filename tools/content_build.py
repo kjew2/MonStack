@@ -104,7 +104,8 @@ SCHEMA = {
     "constants": T([c("key", "string"), c("type", "enum:ConstantType"), c("value", "constval")], key="key"),
     "elements": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("display_color", "color"),
                    c("strong_vs", "id")], key="id"),
-    "species": T([c("id", "id"), c("name_key", "key"), c("element", "id"), c("native_tree_1", "id"), c("native_tree_2", "id")]
+    "species": T([c("id", "id"), c("name_key", "key"), c("element", "id"), c("native_tree_1", "id"), c("native_tree_2", "id"),
+                  c("chase_tree_run", "id"), c("chase_tree_book", "id")]
                   + [c("base_" + s, "double") for s in STATS] + [c("grow_" + s, "double") for s in STATS], key="id"),
     "drill_tiers": T([c("id", "id"), c("gain_min", "int"), c("gain_max", "int"), c("name_key", "key")], key="id"),
     "fight_ranks": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("element", "id")]
@@ -304,6 +305,40 @@ def validate_trees(t, errs):
     for tid, r in trees.items():
         if r["kind"] == "chase" and tid not in with_conds:
             errs.add("E065", f"trees[{tid}]", "a chase tree needs at least one condition")
+    # Each species owns two chase trees: one in-run, one book-gated (specs/15 section 5.1).
+    def book_refs(tid):
+        out = 0
+        for cd in t["chase_conditions"]:
+            if cd["tree_id"] != tid:
+                continue
+            ref = cd["ref"]
+            if cd["type"] == "node_owned" and ref in nodes:
+                ref = nodes[ref]["tree_id"]
+            elif cd["type"] != "tree_maxed":
+                continue
+            if ref in trees and trees[ref]["kind"] == "book":
+                out += 1
+        return out
+    owner = {}
+    for sp in t["species"]:
+        loc = f"species[{sp['id']}]"
+        for col in ("chase_tree_run", "chase_tree_book"):
+            tid = sp[col]
+            if tid not in trees or trees[tid]["kind"] != "chase":
+                errs.add("E023", loc, f"{col} '{tid}' is not a chase tree id")
+                continue
+            if tid in owner:
+                errs.add("E043", loc, f"chase tree '{tid}' already belongs to species '{owner[tid]}'")
+            owner.setdefault(tid, sp["id"])
+            if col == "chase_tree_run" and book_refs(tid) > 0:
+                errs.add("E043", loc, f"in-run chase tree '{tid}' must not need a book tree")
+            if col == "chase_tree_book" and book_refs(tid) == 0:
+                errs.add("E043", loc, f"book-gated chase tree '{tid}' needs a condition on a book tree")
+        if sp["chase_tree_run"] == sp["chase_tree_book"]:
+            errs.add("E043", loc, "chase trees must differ")
+    for tid, r in trees.items():
+        if r["kind"] == "chase" and tid not in owner:
+            errs.add("E043", f"trees[{tid}]", "a chase tree must belong to a species (chase_tree_run or chase_tree_book)")
     for b in t["skill_books"]:
         if b["tree_id"] not in trees or trees[b["tree_id"]]["kind"] != "book":
             errs.add("E023", f"skill_books[{b['id']}]", f"tree_id '{b['tree_id']}' is not a book tree id")

@@ -45,6 +45,56 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Content_EachSpeciesOwnsAnInRunAndABookGatedChaseTree()
+        {
+            var owned = Db.SpeciesList.SelectMany(sp => new[] { sp.ChaseTreeRun, sp.ChaseTreeBook }).ToList();
+            Assert.That(owned, Is.Unique, "no chase tree is shared between species (kj, issue #78)");
+            Assert.That(owned, Is.EquivalentTo(Db.TreeList.Where(t => t.Kind == TreeKind.Chase).Select(t => t.Id)), "every chase tree has an owner");
+            foreach (var sp in Db.SpeciesList)
+            {
+                var run = Db.Trees[sp.ChaseTreeRun];
+                var book = Db.Trees[sp.ChaseTreeBook];
+                Assert.That((run.Species, run.BookGated, book.Species, book.BookGated), Is.EqualTo((sp.Id, false, sp.Id, true)), sp.Id);
+                Assert.That(Db.BookTreesNeeded(run), Is.Empty, sp.Id + ": the in-run tree needs no book");
+                var needs = Db.BookTreesNeeded(book).ToList();
+                Assert.That(needs, Is.Not.Empty, sp.Id + ": the book-gated tree needs a book tree");
+                Assert.That(needs.All(tree => Db.SkillBooks.Values.Any(b => b.TreeId == tree)), Is.True, sp.Id + ": and a skill book opens it");
+                var natives = new[] { sp.NativeTree1, sp.NativeTree2 };
+                Assert.That(run.Conditions.Any(cd => cd.Type == ConditionType.TreeMaxed && natives.Contains(cd.Ref)), Is.True,
+                    sp.Id + ": the in-run tree builds on a native tree (kj)");
+            }
+        }
+
+        [Test]
+        public void ChaseTree_OfAnotherSpecies_IsNeverOffered()
+        {
+            var s = TrainingRun.Start(Db, "slime", 7);       // Unbreakable Will is drake's
+            s.Stats.Def = 600;
+            s.FightsWon = 2;
+            Offer(s, "heavy_armor");
+            TrainingRun.TakeTree(Db, s, 0, 2);
+            Max(s, 2);
+            Assert.That(TrainingRun.ChaseConditionsHold(Db, s, Db.Trees["unbreakable_will"]), Is.True);
+            Assert.That(s.Offers, Is.Empty);
+        }
+
+        [Test]
+        public void BookGatedChaseTree_NeedsItsBookTree()
+        {
+            var s = TrainingRun.Start(Db, "sprite", 7, new[] { "book_echoes" });
+            s.Tally.Crits = 3;
+            Offer(s, "spellcraft");
+            TrainingRun.TakeTree(Db, s, 0, 2);
+            Max(s, 2);
+            Assert.That(s.Offers, Is.Empty, "Arcane Overflow also needs a Tome of Echoes node");
+            TrainingRun.UseBook(Db, s, "book_echoes");
+            TrainingRun.TakeTree(Db, s, 0, 3);
+            Max(s, 3);
+            var offer = s.Offers.Single();
+            Assert.That((offer.Source, offer.Trees.Single()), Is.EqualTo((OfferSource.Chase, "arcane_overflow")));
+        }
+
+        [Test]
         public void Start_NativeTreesInSlots0And1_TwoEmpty_CycleSp()
         {
             var s = Drake();

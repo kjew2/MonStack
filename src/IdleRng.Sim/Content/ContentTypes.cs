@@ -159,6 +159,12 @@ namespace IdleRng.Sim.Content
         public string Element { get; internal set; }
         public string NativeTree1 { get; internal set; }
         public string NativeTree2 { get; internal set; }
+
+        /// <summary>The species' in-run chase tree: unlocks from its own trees and stats (specs/15 section 5.1).</summary>
+        public string ChaseTreeRun { get; internal set; }
+
+        /// <summary>The species' book-gated chase tree: its conditions also need a skill book tree (specs/15 section 5.1).</summary>
+        public string ChaseTreeBook { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Base { get; internal set; }
         public IdleRng.Sim.Combat.MonsterStats Growth { get; internal set; }
     }
@@ -205,6 +211,12 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Chase trees: all must hold for the tree to unlock.</summary>
         public IReadOnlyList<ChaseConditionDef> Conditions { get; internal set; }
+
+        /// <summary>Chase trees: the species that owns it; only that species' runs unlock it (specs/15 section 5.1). Null otherwise.</summary>
+        public string Species { get; internal set; }
+
+        /// <summary>Chase trees: true for the species' book-gated chase tree, false for its in-run one.</summary>
+        public bool BookGated { get; internal set; }
     }
 
     public sealed class TreeNodeDef
