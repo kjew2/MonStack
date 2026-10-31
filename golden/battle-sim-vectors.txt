@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v1 content=3.7/7e31c8fa
+# battle-sim vectors, hash v1 content=3.8/24d60f62
 
 1v1 brawler vs mage seed=1 outcome=SideBWon ticks=32
   A0 brawler  hp      0.00/  3200.00 act   7 dealt    2290.91 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
@@ -27,7 +27,7 @@
   B1 b_brawler hp    355.74/  3200.00 act  13 dealt    3118.21 taken    3768.26 heal      0.00 crit  1 evade  0 kill 0 counter  0
   B2 b_mage   hp   2205.00/  2400.00 act  12 dealt    4982.53 taken     567.00 heal      0.00 crit  4 evade  0 kill 3 counter  0
   B3 b_healer hp   3000.00/  3000.00 act  12 dealt     778.33 taken     218.25 heal   3950.25 crit  1 evade  0 kill 0 counter  0
-  hash 7c2313e6a697e68e827b62fa380899f5e5c596804ed6b9bfe55c3c47d9f7d006
+  hash 2eb0fd8ecdb0c7a31f43b864af759de884b39e44655c6cbcb835dcc7a72470b6
 
 2v3 uneven seed=5 outcome=SideBWon ticks=32
   A0 a_brawler hp      0.00/  3200.00 act   7 dealt    4101.34 taken    3200.00 heal      0.00 crit  2 evade  0 kill 0 counter  0

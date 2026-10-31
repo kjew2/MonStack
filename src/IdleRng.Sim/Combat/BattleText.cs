@@ -192,7 +192,7 @@ namespace IdleRng.Sim.Combat
             {
                 tip.Fact(L("fires"), db.Text("tip.fires." + Snake(trigger.Value.ToString())));
                 tip.Fact(L("cooldown"), db.Text("tip.cooldown.triggered"));
-                if (sk.Kind == SkillKind.Buff || sk.Kind == SkillKind.Debuff) tip.Fact(L("stacks"), db.Text("tip.stacks.triggered"));
+                if (sk.Kind == SkillKind.Buff || sk.Kind == SkillKind.Debuff) tip.Fact(L("stacks"), T("tip.stacks.triggered", res));
             }
             else
             {

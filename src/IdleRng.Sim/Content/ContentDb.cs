@@ -229,7 +229,7 @@ namespace IdleRng.Sim.Content
                 MonEvadePerDex = D("MON_EVADE_PER_DEX"), MonEvadeCap = D("MON_EVADE_CAP"), MonCritBase = D("MON_CRIT_BASE"),
                 MonCritPerLuk = D("MON_CRIT_PER_LUK"), MonCritCap = D("MON_CRIT_CAP"), MonCritDmg = D("MON_CRIT_DMG"),
                 MonSpdMin = D("MON_SPD_MIN"), MonTimeLimitTicks = I("MON_TIME_LIMIT_TICKS"), MonSideSize = I("MON_SIDE_SIZE"),
-                StatFloorFrac = D("STAT_FLOOR_FRAC"),
+                StatFloorFrac = D("STAT_FLOOR_FRAC"), EffectStackCap = I("EFFECT_STACK_CAP"),
                 RunCycles = I("RUN_CYCLES"), RunAp = I("RUN_AP"), RunEnergyMax = D("RUN_ENERGY_MAX"),
                 RunEnergyStart = D("RUN_ENERGY_START"), DrillEnergyCost = D("DRILL_ENERGY_COST"), RestEnergy = D("REST_ENERGY"),
                 DrillFailMin = D("DRILL_FAIL_MIN"), DrillFailMax = D("DRILL_FAIL_MAX"), DrillSuperP = D("DRILL_SUPER_P"),
@@ -277,7 +277,7 @@ namespace IdleRng.Sim.Content
             bool In01(double v) => v >= 0 && v <= 1;
             if (!(mk.MonHpPerPoint > 0 && mk.MonDefK > 0 && In01(mk.MonEvadeBase) && mk.MonEvadePerDex >= 0 && In01(mk.MonEvadeCap)
                   && In01(mk.MonCritBase) && mk.MonCritPerLuk >= 0 && In01(mk.MonCritCap) && mk.MonCritDmg >= 1 && mk.MonSpdMin > 0
-                  && mk.MonTimeLimitTicks > 0 && mk.MonSideSize > 0 && mk.StatFloorFrac > 0 && mk.StatFloorFrac <= 1))
+                  && mk.MonTimeLimitTicks > 0 && mk.MonSideSize > 0 && mk.StatFloorFrac > 0 && mk.StatFloorFrac <= 1 && mk.EffectStackCap >= 1))
                 errors.Add(new ContentError("E043", "constants", "monster battle constants out of range (specs/16 section 7)"));
 
             BuildTraining(t, errors);
