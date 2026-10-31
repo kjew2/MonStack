@@ -108,31 +108,38 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     'drill odds shown as chips: ' + odds0.join(' | '));
   const oddsTops = await page.$$eval('[data-id=odds] .ochip', (els) => new Set(els.map((e) => Math.round(e.getBoundingClientRect().top))).size);
   check(oddsTops === 1, 'the odds fit on one line');
-  // The stat list fits a phone screen: all eight rows (and the result line above them) in under 480px
-  const listH = await page.evaluate(() => document.querySelector('.card.stats').getBoundingClientRect().height);
-  check(listH < 480, 'the eight stat rows fit in ' + Math.round(listH) + 'px');
+  // The Train tab (the stage layout): the monster in the middle on a stage, the eight drill tiles in a 4x2 grid under it, and the
+  // whole screen down to the Rest button fits a 390x844 phone without scrolling
+  const lay = await page.evaluate(() => {
+    const box = (e) => e.getBoundingClientRect();
+    const stage = box(document.querySelector('[data-id=stage]')), mon = box(document.querySelector('[data-id=stage-mon] .sprite'));
+    const tiles = [...document.querySelectorAll('.pad .dtile')].map(box), rest = box(document.querySelector('[data-act="rest"]'));
+    return { monMid: Math.abs((mon.left + mon.right) / 2 - (stage.left + stage.right) / 2), monW: mon.width, stageBottom: stage.bottom,
+      cols: new Set(tiles.map((r) => Math.round(r.left))).size, rows: new Set(tiles.map((r) => Math.round(r.top))).size, padTop: Math.min(...tiles.map((r) => r.top)),
+      restBottom: rest.bottom, mainBottom: box(document.getElementById('main')).bottom, hudSprite: !!document.querySelector('.hud .sprite'),
+      energy: !!document.querySelector('[data-id=stage] .bar.energy'), pips: document.querySelectorAll('[data-id=stage] .pip').length };
+  });
+  check(lay.monMid <= 2 && lay.monW >= 120 && !lay.hudSprite, 'the monster stands big in the middle of the stage, not in the HUD: ' + JSON.stringify(lay));
+  check(lay.energy && lay.pips === 5, 'the stage carries the energy bar and the action pips');
+  check(lay.cols === 4 && lay.rows === 2 && lay.padTop > lay.stageBottom, 'the drill tiles sit under the stage in a 4x2 grid');
+  check(lay.restBottom <= lay.mainBottom, 'the train screen fits the phone down to the Rest button (' + Math.round(lay.restBottom) + ' <= ' + Math.round(lay.mainBottom) + ')');
   check(/Drill a stat/.test(await text('[data-id=result-hint]')), 'before the first action, the result line explains Drill and Rest');
   // Stat gauges (issue #115): each bar takes its stat's colour and has a tick per milestone, none reached at the start
-  const statGauges = await page.evaluate(() => [...document.querySelectorAll('.stat')].map((row) => ({
+  const statGauges = await page.evaluate(() => [...document.querySelectorAll('.dtile')].map((row) => ({
     fill: getComputedStyle(row.querySelector('.bar.gauge .fill')).backgroundColor,
     st: getComputedStyle(row).getPropertyValue('--st').trim(),
     ticks: [...row.querySelectorAll('.bar.gauge .tick')].map((t) => +t.dataset.at),
     hit: row.querySelectorAll('.bar.gauge .tick.hit').length,
     text: /\d/.test(row.querySelector('.meta small').textContent.replace(/^x[\d.]+$/, '')),
+    inBtn: !!row.querySelector('[data-act^="drill-"] .bar.gauge') && !row.querySelector('[data-act^="drill-"] [data-tip]'),
   })));
   check(statGauges.length === 8 && new Set(statGauges.map((g) => g.fill)).size === 8 && statGauges.every((g) => g.st !== ''), 'each stat gauge is filled in its own stat colour: ' + statGauges.map((g) => g.fill).join(' '));
   check(statGauges.every((g) => g.ticks.length === 4 && g.ticks.every((v, i) => i === 0 || v > g.ticks[i - 1]) && g.hit === 0 && !g.text),
     'each gauge carries the milestones as ticks (' + statGauges[0].ticks.join(' ') + '), none reached, and no milestone numbers as text');
-  // Stat rows (issue #96): each Drill button is vertically centred in its stat's row, and the rows are divided
-  const rows = await page.evaluate(() => [...document.querySelectorAll('.stat')].map((row) => {
-    const r = row.getBoundingClientRect(), b = row.querySelector('[data-act^="drill-"]').getBoundingClientRect();
-    return { off: Math.abs((b.top + b.height / 2) - (r.top + r.height / 2)), inside: b.top >= r.top && b.bottom <= r.bottom, line: getComputedStyle(row).borderTopWidth };
-  }));
-  check(rows.length === 8 && rows.every((r) => r.off <= 1 && r.inside), 'each Drill button is centred in its stat row: ' + rows.map((r) => r.off.toFixed(1)).join(' '));
-  check(rows.slice(1).every((r) => r.line === '1px'), 'a divider separates the stat rows');
+  check(statGauges.every((g) => g.inBtn), 'each tile\'s value and gauge are its Drill button, and its tooltip label sits outside the button');
   await act('drill-str').click();
   check(/Drill|Fail|Success|Super/.test(await text('[data-id=result]')), 'a drill result appears');
-  // Drill outcome pop (issue #95): "+x" over the drilled row, its class the drill tier
+  // Drill outcome pop (issue #95): "+x" over the monster, its class the drill tier
   const pop = await page.evaluate(() => { const e = document.querySelector('#floats [data-id=drill-pop]'); return e && { cls: e.className, text: e.textContent }; });
   const tier0 = (/^(\w+)/.exec(await text('[data-id=result] b')) || [])[1];
   check(!!pop && /^dpop (fail|success|super)$/.test(pop.cls) && /^\+\d+(\.\d)?$/.test(pop.text) && pop.cls.endsWith(tier0.toLowerCase()),
@@ -142,13 +149,13 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await shot('02-train');
 
   // ---- mid-run reload restores the same run (replay save)
-  const before = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.stat .bar span')].map((e) => e.textContent).join('|') }));
+  const before = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.dtile .val')].map((e) => e.textContent).join('|') }));
   const saved = await readAccount();
   check(saved && saved.Kind === 'monster_account', 'the save is the C# account save');
   check(saved && saved.ActiveRun && saved.ActiveRun.SpeciesId === 'drake' && saved.ActiveRun.Log.length === 2, 'the active run is stored as species + seed + command log (' + (saved && saved.ActiveRun && saved.ActiveRun.Log.length) + ' commands)');
   await page.reload();
   await act('drill-str').waitFor({ timeout: 90000 });
-  const after = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.stat .bar span')].map((e) => e.textContent).join('|') }));
+  const after = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.dtile .val')].map((e) => e.textContent).join('|') }));
   check(JSON.stringify(before) === JSON.stringify(after), 'reload restores cycle and stats exactly');
 
   // ---- tooltips (specs/16 section 9): a stat and an ability, from the engine's text, inside a 390px screen

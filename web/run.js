@@ -176,15 +176,16 @@
     });
   }
 
-  // ---- drill outcome pop (issue #95): "+x" over the drilled stat's bar, styled by the tier (fail, success, super). Like the SP
-  // gains it lives in #floats and waits out a modal (a milestone's Awakening).
+  // ---- drill outcome pop (issue #95): "+x" over the monster on the stage, styled by the tier (fail, success, super), and the monster
+  // hops on a gain. Like the SP gains it lives in #floats and waits out a modal (a milestone's Awakening).
   function showDrillPop() {
-    const p = ui.drillPop, row = p && document.querySelector('#main [data-id="stat-' + p.stat + '"]');
-    if (!row) { if (ui.tab !== 'train') ui.drillPop = null; return; }
+    const p = ui.drillPop, mon = p && document.querySelector('#main [data-id=stage-mon]');
+    if (!mon) { if (ui.tab !== 'train') ui.drillPop = null; return; }
     ui.drillPop = null;
-    const layer = $('floats'), app = $('app').getBoundingClientRect(), r = (row.querySelector('.bar') || row).getBoundingClientRect();
-    const pane = $('main').getBoundingClientRect();   // a fight card drawn above can push the row down: keep the pop on screen
-    const y = Math.min(Math.max(r.top, pane.top + 40), pane.bottom - 30);
+    if (p.gain) mon.classList.add('hop');
+    const layer = $('floats'), app = $('app').getBoundingClientRect(), r = mon.getBoundingClientRect();
+    const pane = $('main').getBoundingClientRect();   // a fight card drawn above can push the stage down: keep the pop on screen
+    const y = Math.min(Math.max(r.top + r.height * 0.4, pane.top + 40), pane.bottom - 30);
     layer.querySelectorAll('.dpop').forEach((e) => e.remove());   // one at a time: a fast second drill replaces the first
     const el = h('div', { class: 'dpop ' + p.tier, 'data-id': 'drill-pop',
       text: '+' + num(p.gain), style: 'left:' + (r.left + r.width / 2 - app.left) + 'px;top:' + (y - app.top) + 'px' });
@@ -214,14 +215,24 @@
     apexSeen = { seed: s.seed, apex: s.apex };
   }
 
+  // Actions left (pips) and energy: in the HUD on the other tabs, in the corners of the Train tab's stage.
+  function apPips(s) {
+    const pips = h('div', { class: 'pips', 'aria-label': s.ap + ' action points left' });
+    for (let i = 0; i < C.consts.runAp; i++) pips.append(h('span', { class: 'pip' + (i < s.ap ? ' full' : '') }));
+    return pips;
+  }
+  function energyBar(s) {
+    const k = C.consts;
+    return bar(s.energy, k.energyMax, 'Energy ' + Math.round(s.energy) + '/' + k.energyMax, 'energy' + (s.energy / k.energyMax < 0.3 ? ' low' : ''));
+  }
+
+  // The HUD over every tab. The Train tab shows the monster and the meters on its stage instead, so its HUD is the text lines only.
   function renderHud(s) {
     const sp = speciesDef(s.species), r = rank(s.rank), k = C.consts;
     noticeApex(s);
-    const low = s.energy / k.energyMax < 0.3;
-    const pips = h('div', { class: 'pips', 'aria-label': s.ap + ' action points left' });
-    for (let i = 0; i < k.runAp; i++) pips.append(h('span', { class: 'pip' + (i < s.ap ? ' full' : '') }));
-    return h('div', { class: 'card hud' }, [
-      sprite(s.species, s.apex),
+    const staged = ui.tab === 'train';
+    return h('div', { class: 'card hud' + (staged ? ' staged' : '') }, [
+      staged ? null : sprite(s.species, s.apex),
       h('div', null, [
         h('div', { class: 'hud-line' }, [
           h('span', { text: s.name || sp.name, 'data-id': 'monster-name' }), elementTag(sp.element),
@@ -234,11 +245,7 @@
           h('span', { text: s.fightsWon + '/' + s.fightsFought + ' fights won' }),
         ]),
       ]),
-      // Actions left and energy share one line (the Train screen's compact layout).
-      h('div', { class: 'hud-meters' }, [
-        h('span', { class: 'small muted', text: 'Actions' }), pips,
-        bar(s.energy, k.energyMax, 'Energy ' + Math.round(s.energy) + '/' + k.energyMax, 'energy' + (low ? ' low' : '')),
-      ]),
+      staged ? null : h('div', { class: 'hud-meters' }, [h('span', { class: 'small muted', text: 'Actions' }), apPips(s), energyBar(s)]),
     ]);
   }
 
@@ -261,23 +268,32 @@
       h('b', { class: 'bad', text: ui.last && ui.last.injury ? 'Injured!' : 'Back from injury' }), h('div', { class: 'small', text: injuryText(hurt) }),
     ]));
     const busy = s.phase !== 'training' || s.offers.length > 0;
+    // The monster on a stage in the middle: actions and energy in its top corners, the last action's result under it (a fixed line,
+    // so feedback stays in view and nothing shifts), and the drill's "+x" pops over it (showDrillPop).
+    main.append(h('div', { class: 'card stage', 'data-id': 'stage' }, [
+      h('div', { class: 'stage-meters' }, [
+        h('div', { class: 'stage-ap' }, [h('span', { class: 'small muted', text: 'Actions' }), apPips(s)]),
+        energyBar(s),
+      ]),
+      h('div', { class: 'stage-mon', 'data-id': 'stage-mon' }, [sprite(s.species, s.apex)]),
+      resultLine(ui.last, s),
+    ]));
     main.append(oddsChips(s));
-    // One compact row per stat: label with its growth under it, the gauge (value, milestone ticks), a Drill button. The last
-    // action's result sits in a fixed line at the top of the card, so feedback stays in view and the rows never shift.
-    const card = h('div', { class: 'card stats' }, [resultLine(ui.last, s)]);
+    // The drill pad in the thumb zone: a 4x2 grid of stat tiles. The tile's label strip opens the stat's tooltip; the rest of the
+    // tile (value and gauge with milestone ticks) is the Drill button.
+    const pad = h('div', { class: 'pad', 'data-id': 'pad' });
     C.stats.forEach((st) => {
-      const row = h('div', { class: 'stat st-' + st + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
-        h('div', { class: 'meta' }, [
-          h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }),
+      const v = s.stats[st];
+      pad.append(h('div', { class: 'dtile st-' + st + (busy ? ' off' : '') + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
+        h('div', { class: 'meta', ...TIP.attrs('stat:' + st), 'aria-label': up(st) + ': what it does' }, [
+          h('span', { class: 'lbl', text: up(st) }),
           h('small', { class: 'num', text: 'x' + s.growth[st].toFixed(2), title: 'Growth: drill gains are multiplied by ' + s.growth[st].toFixed(2) }),
         ]),
-        statGauge(s, st),
-        h('button', { class: 'btn primary small', type: 'button', 'data-act': 'drill-' + st, text: 'Drill', disabled: busy,
-          'aria-label': 'Drill ' + up(st), onclick: () => drill(st) }),
-      ]);
-      card.append(row);
+        h('button', { class: 'drill', type: 'button', 'data-act': 'drill-' + st, disabled: busy, 'aria-label': 'Drill ' + up(st) + ', now ' + num(v),
+          onclick: () => drill(st) }, [h('span', { class: 'val num', text: num(v) }), statGauge(s, st)]),
+      ]));
     });
-    main.append(card);
+    main.append(pad);
     if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
       text: 'Rest (+' + num(s.restEnergy) + ' energy)', onclick: rest }));
@@ -301,19 +317,17 @@
     ]);
   }
 
-  // A stat as a gauge in its colour (issue #115): the value against the stat cap, and a tick at each milestone this run crosses
-  // (RunState milestoneAt, lowered by Early Bloom), lit once the stat has reached it.
+  // A stat as a gauge in its colour (issue #115): the value against the stat cap (the tile shows the number above it), and a tick at
+  // each milestone this run crosses (RunState milestoneAt, lowered by Early Bloom), lit once the stat has reached it.
   function statGauge(s, st) {
     const max = C.consts.statMax, v = s.stats[st];
-    const g = bar(v, max, num(v), 'gauge');
-    g.setAttribute('title', num(v) + ' / ' + max);
-    const label = g.querySelector('span');
-    s.milestoneAt.forEach((m) => g.insertBefore(h('i', { class: 'tick' + (v >= m ? ' hit' : ''), 'data-at': num(m), title: 'Milestone ' + num(m) + (v >= m ? ' (reached)' : ''),
-      style: 'left:' + Math.max(0, Math.min(100, (m / max) * 100)) + '%' }), label));
+    const g = h('div', { class: 'bar gauge', title: num(v) + ' / ' + max }, [h('div', { class: 'fill', style: 'width:' + Math.max(0, Math.min(100, (v / max) * 100)) + '%' })]);
+    s.milestoneAt.forEach((m) => g.append(h('i', { class: 'tick' + (v >= m ? ' hit' : ''), 'data-at': num(m), title: 'Milestone ' + num(m) + (v >= m ? ' (reached)' : ''),
+      style: 'left:' + Math.max(0, Math.min(100, (m / max) * 100)) + '%' })));
     return g;
   }
 
-  // The last action's outcome, a fixed line at the top of the stats card; before the first action of a visit, a hint.
+  // The last action's outcome, a fixed line under the monster on the stage; before the first action of a visit, a hint.
   function resultLine(r, s) {
     if (!r) return h('div', { class: 'result hint small muted', 'data-id': 'result-hint',
       text: s.phase === 'training' && s.ap > 0 ? 'Drill a stat or Rest. ' + s.ap + ' action' + (s.ap === 1 ? '' : 's') + ' left this cycle.' : 'No actions left this cycle.' });
