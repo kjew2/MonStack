@@ -27,23 +27,224 @@ namespace IdleRng.Sim.Tests
 
         static TalentDef Talent(TalentEffect e) => Db.TalentList.First(t => t.Effect == e);
 
+        /// <summary>A new account with every species unlocked, for tests about other rules.</summary>
+        static AccountState NewAll(ulong seed)
+        {
+            var a = AccountOps.New(Db, seed);
+            foreach (var sp in Db.SpeciesList) AccountOps.UnlockSpecies(Db, a, sp.Id);
+            return a;
+        }
+
+        /// <summary>A Vault entry with the given grade index, final stats and gauntlet floors cleared, for record tests.</summary>
+        static VaultEntry Sealed(int rank, double stat = 100, int floorsCleared = 0) => new VaultEntry
+        {
+            Grade = Db.FightRanks[rank].Id, RankIndex = rank, LegacyTitle = "t", GauntletFloor = floorsCleared + 1,
+            Stats = new MonsterStats { Hp = stat, Str = stat, Int = stat, Wis = stat, Dex = stat, Def = stat, Spd = stat, Luk = stat },
+        };
+
         [Test]
-        public void New_OwnsEverySpecies_NothingElse()
+        public void New_OwnsOnlyTheStarter_NothingElse()
         {
             var a = AccountOps.New(Db, 5);
-            Assert.That(a.OwnedSpecies, Is.EqualTo(Db.SpeciesList.Select(s => s.Id)));
+            Assert.That(a.OwnedSpecies, Is.EqualTo(new[] { Db.SpeciesList[0].Id }), "the first species in content is the starter");
+            Assert.That(Db.StarterSpecies.Id, Is.EqualTo("slime"));
             Assert.That(a.Shards, Is.EqualTo(0));
             Assert.That(a.Books, Is.Empty);
             Assert.That(a.Talents, Is.Empty);
+            Assert.That(a.Achievements, Is.Empty);
+            Assert.That(a.Records.RunsFinished, Is.EqualTo(0));
+            Assert.That(a.Vendor, Is.Null);
             Assert.That(a.Vault, Is.Empty);
             Assert.That(a.Active, Is.Null);
             Assert.That(a.ContentVersion, Is.EqualTo(Db.Version));
+            Assert.Throws<InvalidOperationException>(() => AccountOps.StartRun(Db, a, "drake"), "drake is locked");
+            Assert.That(a.RunsStarted, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void EveryOtherSpecies_HasAnAchievementThatUnlocksIt()
+        {
+            foreach (var sp in Db.SpeciesList.Skip(1))
+                Assert.That(Db.AchievementList.Any(d => d.UnlocksSpecies == sp.Id), Is.True, sp.Id);
+            Assert.That(Db.AchievementList.Any(d => d.UnlocksSpecies == Db.StarterSpecies.Id), Is.False);
+        }
+
+        [Test]
+        public void Achievements_EarnedFromRecords_UnlockSpecies_InContentOrder()
+        {
+            var a = AccountOps.New(Db, 5);
+            var rankC = Db.AchievementList.First(d => d.Kind == AchievementKind.RankReached);
+            int c = Db.FightRanks.ToList().FindIndex(r => r.Id == rankC.Ref);
+            var stat = Db.AchievementList.First(d => d.Kind == AchievementKind.StatReached);
+            var runs = Db.AchievementList.First(d => d.Kind == AchievementKind.RunsFinished);
+            var floors = Db.AchievementList.First(d => d.Kind == AchievementKind.GauntletFloors);
+
+            AccountOps.Record(a, Sealed(c - 1));
+            Assert.That(AccountOps.CheckAchievements(Db, a), Is.Empty);
+            Assert.That(AccountOps.AchievementProgress(Db, a, rankC), Is.EqualTo(((double)c, (double)c + 1)), "ranks count from 1");
+
+            AccountOps.Record(a, Sealed(c, stat.Amount, (int)floors.Amount));
+            var got = AccountOps.CheckAchievements(Db, a).Select(d => d.Id).ToList();
+            Assert.That(got, Is.EqualTo(new[] { rankC.Id, stat.Id, floors.Id }), "content order; runs_finished not yet");
+            Assert.That(a.OwnedSpecies, Is.EqualTo(Db.SpeciesList.Select(s => s.Id).Where(id => id == "slime" || id == rankC.UnlocksSpecies || id == stat.UnlocksSpecies)));
+            Assert.That(AccountOps.CheckAchievements(Db, a), Is.Empty, "each achievement is earned once");
+
+            for (int i = a.Records.RunsFinished; i < runs.Amount; i++) AccountOps.Record(a, Sealed(0));
+            Assert.That(AccountOps.CheckAchievements(Db, a).Single().Id, Is.EqualTo(runs.Id));
+            Assert.That(a.Records.BestRank, Is.EqualTo(c), "a worse run never lowers a best");
+        }
+
+        [Test]
+        public void StatAchievement_CountsTheNamedStatOnly()
+        {
+            var a = AccountOps.New(Db, 5);
+            var any = Db.AchievementList.First(d => d.Kind == AchievementKind.StatReached);
+            Assert.That(any.Ref, Is.Null, "the placeholder counts any stat");
+            var e = Sealed(0, 10);
+            e.Stats.Luk = any.Amount;
+            AccountOps.Record(a, e);
+            Assert.That(AccountOps.AchievementHolds(Db, a, any), Is.True);
+            Assert.That(a.Records.BestStat(StatIds.Luk), Is.EqualTo(any.Amount));
+            Assert.That(a.Records.BestStat(StatIds.Str), Is.EqualTo(10));
+        }
+
+        [Test]
+        public void FinishRun_RecordsTheRun_ReportsAchievementsAndUnlocks()
+        {
+            var a = AccountOps.New(Db, 5);
+            // Five finished runs earn Veteran; the starter's runs here never reach rank C, so drake stays locked unless they do.
+            FinishResult last = null;
+            var runs = Db.AchievementList.First(d => d.Kind == AchievementKind.RunsFinished);
+            for (int i = 0; i < runs.Amount; i++)
+            {
+                var run = AccountOps.StartRun(Db, a, "slime");
+                PlayOut(run);
+                last = AccountOps.FinishRun(Db, a);
+            }
+            Assert.That(a.Records.RunsFinished, Is.EqualTo((int)runs.Amount));
+            Assert.That(last.Achievements, Does.Contain(runs.Id));
+            Assert.That(a.Achievements, Does.Contain(runs.Id));
+            foreach (var sp in last.SpeciesUnlocked) Assert.That(a.OwnedSpecies, Does.Contain(sp));
+            int best = a.Vault.Max(v => v.RankIndex);
+            Assert.That(a.Records.BestRank, Is.EqualTo(best));
+
+            // An abandoned run does not count.
+            AccountOps.StartRun(Db, a, "slime");
+            AccountOps.AbandonRun(Db, a);
+            Assert.That(a.Records.RunsFinished, Is.EqualTo((int)runs.Amount));
+        }
+
+        [Test]
+        public void FinishRun_ReportsASpeciesUnlockOnce()
+        {
+            var a = AccountOps.New(Db, 5);
+            var rankC = Db.AchievementList.First(d => d.Kind == AchievementKind.RankReached);
+            a.Records.BestRank = Db.FightRanks.Count - 1;   // already met: the next seal earns it
+            var run = AccountOps.StartRun(Db, a, "slime");
+            PlayOut(run);
+            var f = AccountOps.FinishRun(Db, a);
+            Assert.That(f.Achievements, Does.Contain(rankC.Id));
+            Assert.That(f.SpeciesUnlocked, Does.Contain(rankC.UnlocksSpecies));
+            Assert.That(f.SpeciesUnlocked, Is.Unique);
+            Assert.That(AccountOps.UnlockSpecies(Db, a, rankC.UnlocksSpecies), Is.False, "already owned");
+            Assert.Throws<ArgumentException>(() => AccountOps.UnlockSpecies(Db, a, "nope"));
+        }
+
+        // ------------------------------------------------------------------ the post-run vendor
+
+        [Test]
+        public void FinishRun_RollsTheVendor_Deterministic_StartRunClearsIt()
+        {
+            var a = AccountOps.New(Db, 5);
+            var run = AccountOps.StartRun(Db, a, "slime");
+            PlayOut(run);
+            var f = AccountOps.FinishRun(Db, a);
+            Assert.That(a.Vendor, Is.Not.Null);
+            Assert.That(a.Vendor.Grade, Is.EqualTo(f.Entry.Grade));
+            Assert.That(a.Vendor.Offers, Has.Count.EqualTo(K.VendorOffers));
+            foreach (var o in a.Vendor.Offers)
+            {
+                Assert.That(Db.Talents.ContainsKey(o.Talent), Is.True);
+                Assert.That(Db.VendorRarities.Any(r => r.Id == o.Rarity), Is.True);
+                Assert.That(o.Bought, Is.False);
+            }
+            var again = AccountOps.RollVendor(Db, AccountOps.New(Db, 5), f.Entry.RankIndex, 0);
+            Assert.That(again.Offers.Select(o => o.Talent + "/" + o.Rarity), Is.EqualTo(a.Vendor.Offers.Select(o => o.Talent + "/" + o.Rarity)),
+                "the offers derive from the account seed and the run index");
+            var other = AccountOps.RollVendor(Db, AccountOps.New(Db, 5), f.Entry.RankIndex, 1);
+            Assert.That(other.Offers.Select(o => o.Talent + "/" + o.Rarity), Is.Not.EqualTo(again.Offers.Select(o => o.Talent + "/" + o.Rarity)));
+
+            AccountOps.StartRun(Db, a, "slime");
+            Assert.That(a.Vendor, Is.Null, "unbought offers vanish when the next run starts");
+            Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 0));
+        }
+
+        [Test]
+        public void Vendor_HigherGrades_RollRarerOffers()
+        {
+            var a = AccountOps.New(Db, 11);
+            double Avg(int grade)
+            {
+                double sum = 0; int n = 0;
+                for (int run = 0; run < 200; run++)
+                    foreach (var o in AccountOps.RollVendor(Db, a, grade, run).Offers) { sum += Db.VendorRarities.First(r => r.Id == o.Rarity).SortOrder; n++; }
+                return sum / n;
+            }
+            Assert.That(Avg(Db.FightRanks.Count - 1), Is.GreaterThan(Avg(0)));
+        }
+
+        [Test]
+        public void BuyOffer_SpendsShards_AddsTheRaritysRanks_SellsOnce()
+        {
+            var a = AccountOps.New(Db, 5);
+            var t = Db.TalentList.First(x => x.MaxRank >= 3);
+            var epic = Db.VendorRarities.OrderByDescending(r => r.Ranks).First();
+            var common = Db.VendorRarities.OrderBy(r => r.Ranks).First();
+            a.Vendor = new VendorState
+            {
+                Grade = "e",
+                Offers = { new VendorOffer { Talent = t.Id, Rarity = epic.Id }, new VendorOffer { Talent = t.Id, Rarity = common.Id } },
+            };
+            int n = Math.Min(epic.Ranks, t.MaxRank);
+            long full = 0;
+            for (int i = 0; i < n; i++) full += AccountOps.TalentCost(t, i);
+            long price = (long)Math.Floor(epic.PriceMult * full + 0.5);
+            Assert.That(AccountOps.OfferRanks(Db, a, a.Vendor.Offers[0]), Is.EqualTo(n));
+            Assert.That(AccountOps.OfferPrice(Db, a, a.Vendor.Offers[0]), Is.EqualTo(price));
+
+            Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 0), "no shards");
+            Assert.That(a.TalentRank(t.Id), Is.EqualTo(0));
+            a.Shards = price + 1000;
+            Assert.That(AccountOps.BuyOffer(Db, a, 0), Is.EqualTo(price));
+            Assert.That(a.Shards, Is.EqualTo(1000));
+            Assert.That(a.TalentRank(t.Id), Is.EqualTo(n));
+            Assert.That(a.Vendor.Offers[0].Bought, Is.True);
+            Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 0), "sold");
+            Assert.Throws<ArgumentException>(() => AccountOps.BuyOffer(Db, a, 2));
+
+            // The second offer's price follows the talent's rank now; at max rank it cannot be bought.
+            if (n < t.MaxRank)
+                Assert.That(AccountOps.OfferPrice(Db, a, a.Vendor.Offers[1]), Is.EqualTo((long)Math.Floor(common.PriceMult * AccountOps.TalentCost(t, n) + 0.5)));
+            a.Talents[t.Id] = t.MaxRank;
+            Assert.That(AccountOps.OfferRanks(Db, a, a.Vendor.Offers[1]), Is.EqualTo(0));
+            Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 1), "maxed");
+        }
+
+        [Test]
+        public void Vendor_OffersOnlyTalentsNotMaxed_NoneWhenAllAre()
+        {
+            var a = AccountOps.New(Db, 5);
+            foreach (var t in Db.TalentList.Skip(1)) a.Talents[t.Id] = t.MaxRank;
+            var v = AccountOps.RollVendor(Db, a, 2, 0);
+            Assert.That(v.Offers.Select(o => o.Talent).Distinct(), Is.EqualTo(new[] { Db.TalentList[0].Id }));
+            a.Talents[Db.TalentList[0].Id] = Db.TalentList[0].MaxRank;
+            Assert.That(AccountOps.RollVendor(Db, a, 2, 0).Offers, Is.Empty);
         }
 
         [Test]
         public void StartRun_DerivesSeeds_OneAtATime_ChecksSpeciesAndBooks()
         {
-            var a = AccountOps.New(Db, 5);
+            var a = NewAll(5);
             var r1 = AccountOps.StartRun(Db, a, "drake");
             Assert.That(r1.Seed, Is.EqualTo(AccountOps.RunSeed(5, 0)));
             Assert.That(a.Active, Is.SameAs(r1));
@@ -55,7 +256,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(r2.Seed, Is.EqualTo(AccountOps.RunSeed(5, 1)));
             Assert.That(r2.Seed, Is.Not.EqualTo(r1.Seed));
 
-            var b = AccountOps.New(Db, 5);
+            var b = NewAll(5);
             b.OwnedSpecies.Remove("sprite");
             Assert.Throws<InvalidOperationException>(() => AccountOps.StartRun(Db, b, "sprite"), "not owned");
             Assert.Throws<InvalidOperationException>(() => AccountOps.StartRun(Db, b, "drake", new[] { "book_echoes" }), "no books");
@@ -66,7 +267,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void Books_LeaveTheInventoryAtStart_UnusedOnesComeBack()
         {
-            var a = AccountOps.New(Db, 5);
+            var a = NewAll(5);
             AccountOps.GrantBooks(Db, a, "book_echoes", 2);
             var run = AccountOps.StartRun(Db, a, "sprite", new[] { "book_echoes", "book_echoes" });
             Assert.That(a.BookCount("book_echoes"), Is.EqualTo(0));
@@ -83,7 +284,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void FinishRun_PaysShards_VaultsTheMonster_ClearsTheRun()
         {
-            var a = AccountOps.New(Db, 5);
+            var a = NewAll(5);
             var run = AccountOps.StartRun(Db, a, "drake");
             Assert.Throws<InvalidOperationException>(() => AccountOps.FinishRun(Db, a), "not over yet");
             PlayOut(run);
@@ -101,7 +302,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void InjuredRun_StillPays()
         {
-            var a = AccountOps.New(Db, 9);
+            var a = NewAll(9);
             var run = AccountOps.StartRun(Db, a, "slime");
             while (run.Phase != RunPhase.Finished) { run.Energy = 0; TrainingRun.Drill(Db, run, StatIds.Def); }
             Assert.That(run.End, Is.EqualTo(RunEnd.Injured));
@@ -111,31 +312,17 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void BuyTalent_CostsEscalate_UntilMaxed()
+        public void TalentCost_Escalates()
         {
             var t = Db.TalentList[0];
-            var a = AccountOps.New(Db, 5);
-            a.Shards = 100000;
-            for (int r = 0; r < t.MaxRank; r++)
-            {
-                long before = a.Shards;
-                Assert.That(AccountOps.BuyTalent(Db, a, t.Id), Is.EqualTo(t.CostBase + (long)t.CostStep * r));
-                Assert.That(a.Shards, Is.EqualTo(before - AccountOps.TalentCost(t, r)));
-                Assert.That(a.TalentRank(t.Id), Is.EqualTo(r + 1));
-            }
-            Assert.Throws<InvalidOperationException>(() => AccountOps.BuyTalent(Db, a, t.Id), "maxed");
-            var poor = AccountOps.New(Db, 5);
-            Assert.Throws<InvalidOperationException>(() => AccountOps.BuyTalent(Db, poor, t.Id), "no shards");
-            Assert.That(poor.TalentRank(t.Id), Is.EqualTo(0));
-            Assert.Throws<ArgumentException>(() => AccountOps.BuyTalent(Db, poor, "nope"));
+            for (int r = 0; r < t.MaxRank; r++) Assert.That(AccountOps.TalentCost(t, r), Is.EqualTo(t.CostBase + (long)t.CostStep * r));
         }
 
         [Test]
         public void Talents_ShapeTheNextRun()
         {
-            var a = AccountOps.New(Db, 5);
-            a.Shards = 100000;
-            foreach (var t in Db.TalentList) AccountOps.BuyTalent(Db, a, t.Id);
+            var a = NewAll(5);
+            foreach (var t in Db.TalentList) a.Talents[t.Id] = 1;
             var m = AccountOps.Modifiers(Db, a);
             Assert.That(m.DrillCostMult, Is.EqualTo(1 + Talent(TalentEffect.DrillCost).PerRank).Within(1e-12));
             Assert.That(m.StatFloorMult, Is.EqualTo(1 + Talent(TalentEffect.StatFloor).PerRank).Within(1e-12));
@@ -149,8 +336,8 @@ namespace IdleRng.Sim.Tests
             TrainingRun.Drill(Db, run, StatIds.Str);
             Assert.That(run.Energy, Is.EqualTo(K.RunEnergyStart - K.DrillEnergyCost * m.DrillCostMult).Within(1e-9));
 
-            // a talent bought mid-run waits for the next run
-            AccountOps.BuyTalent(Db, a, Talent(TalentEffect.StartSp).Id);
+            // a talent gained mid-run waits for the next run
+            a.Talents[Talent(TalentEffect.StartSp).Id] = 2;
             Assert.That(run.Mods.StartSp, Is.EqualTo(m.StartSp));
 
             // a vaulted talented monster still replays to its sealed run
@@ -192,7 +379,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void VaultCap_FinishSealsOverTheCap_StartWaitsForDismantling()
         {
-            var a = AccountOps.New(Db, 9);
+            var a = NewAll(9);
             for (int i = 0; i < K.VaultCap; i++) a.Vault.Add(new VaultEntry { Grade = "e" });
             Assert.That(AccountOps.VaultOver(Db, a), Is.EqualTo(0), "at the cap is not over it");
             var run = AccountOps.StartRun(Db, a, "drake");   // a run may start at the cap
@@ -217,7 +404,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void Dismantle_RefundsByGrade_RemovesTheEntry_RefusesLockedOnes()
         {
-            var a = AccountOps.New(Db, 9);
+            var a = NewAll(9);
             var low = new VaultEntry { Grade = Db.FightRanks[0].Id };
             var top = new VaultEntry { Grade = Db.FightRanks[Db.FightRanks.Count - 1].Id };
             var mid = new VaultEntry { Grade = Db.FightRanks[1].Id };
@@ -249,7 +436,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void Dismantle_WorksDuringARun_AndLockDoesNotTouchTheRunHash()
         {
-            var a = AccountOps.New(Db, 4);
+            var a = NewAll(4);
             PlayOut(AccountOps.StartRun(Db, a, "slime"));
             var e = AccountOps.FinishRun(Db, a).Entry;
             string hash = e.RunHash;
@@ -265,7 +452,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void AbandonRun_PaysNothing_SealsNothing_ReturnsUnusedBooks_KeepsTheSeedMoving()
         {
-            var a = AccountOps.New(Db, 5);
+            var a = NewAll(5);
             AccountOps.GrantBooks(Db, a, "book_echoes", 2);
             var run = AccountOps.StartRun(Db, a, "sprite", new[] { "book_echoes", "book_echoes" });
             TrainingRun.UseBook(Db, run, "book_echoes");

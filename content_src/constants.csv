@@ -38,6 +38,7 @@ DRAFT_SIZE,int,3,most trees offered by one milestone draft. Placeholder
 MON_ECHO_POWER,double,0.5,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder
 SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/18; injured runs pay too). Placeholder
 SHARDS_PER_RANK,int,10,training shards per rank index reached (E = 0). Placeholder
+VENDOR_OFFERS,int,5,offers the post-run vendor rolls after each sealed run (specs/18 section 4). Placeholder
 VAULT_CAP,int,50,most Vault entries a new run may start with (specs/18 section 7; a finished run still seals over it). Placeholder
 GAUNTLET_FLOORS,int,100,end-of-run gauntlet (specs/19): floors in the tower. Placeholder
 GAUNTLET_BASE,double,60,floor 1 level: enemy stat = weight x level. Placeholder

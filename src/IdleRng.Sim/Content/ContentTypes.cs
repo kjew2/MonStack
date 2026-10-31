@@ -57,6 +57,7 @@ namespace IdleRng.Sim.Content
         public int ShardsPerCycle { get; internal set; }         // SHARDS_PER_CYCLE
         public int ShardsPerRank { get; internal set; }          // SHARDS_PER_RANK
         public int VaultCap { get; internal set; }               // VAULT_CAP
+        public int VendorOffers { get; internal set; }           // VENDOR_OFFERS: offers the post-run vendor rolls (specs/18 section 4)
 
         // End-of-run gauntlet (specs/19 section 4). Placeholders.
         public int GauntletFloors { get; internal set; }         // GAUNTLET_FLOORS
@@ -276,6 +277,42 @@ namespace IdleRng.Sim.Content
         public int MaxRank { get; internal set; }
         public int CostBase { get; internal set; }
         public int CostStep { get; internal set; }
+    }
+
+    public enum AchievementKind { RunsFinished, RankReached, StatReached, GauntletFloors }
+
+    /// <summary>
+    /// An account achievement (specs/18 section 8): checked when a run is sealed; earning it may unlock a species.
+    /// Ref: a fight rank id (RankReached), a stat id or null for any stat (StatReached), null otherwise. Amount: the count, stat
+    /// value or floors cleared (0 for RankReached).
+    /// </summary>
+    public sealed class AchievementDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public AchievementKind Kind { get; internal set; }
+        public string Ref { get; internal set; }
+        public double Amount { get; internal set; }
+
+        /// <summary>The species earning it unlocks, or null.</summary>
+        public string UnlocksSpecies { get; internal set; }
+    }
+
+    /// <summary>
+    /// A rarity of the post-run vendor's offers (specs/18 section 4). An offer grants up to Ranks talent ranks for PriceMult x
+    /// their normal cost; its weight at grade index g is max(0, WeightBase + WeightPerRank x g).
+    /// </summary>
+    public sealed class VendorRarityDef
+    {
+        public string Id { get; internal set; }
+        public int SortOrder { get; internal set; }
+        public string NameKey { get; internal set; }
+        public int Ranks { get; internal set; }
+        public double PriceMult { get; internal set; }
+        public double WeightBase { get; internal set; }
+        public double WeightPerRank { get; internal set; }
+
+        public double Weight(int gradeIndex) => System.Math.Max(0, WeightBase + WeightPerRank * gradeIndex);
     }
 
     /// <summary>A gauntlet enemy (specs/19 section 2): its stats are Weights x the floor's level.</summary>

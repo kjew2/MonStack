@@ -144,6 +144,13 @@ talent.wide_scouting.name,Wide Scouting
 talent.wide_scouting.desc,Milestone drafts offer one more tree per rank.
 talent.head_start.name,Head Start
 talent.head_start.desc,Start each run with one extra skill point per rank.
+achievement.rank_c.name,Contender
+achievement.stat_500.name,Prodigy
+achievement.veteran.name,Veteran
+achievement.climber.name,Climber
+rarity.common.name,Common
+rarity.rare.name,Rare
+rarity.epic.name,Epic
 gauntlet.slimeling.name,Slimeling
 gauntlet.imp.name,Imp
 gauntlet.golem.name,Golem

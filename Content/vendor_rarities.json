@@ -1,0 +1,32 @@
+{
+  "table": "vendor_rarities",
+  "rows": [
+    {
+      "id": "common",
+      "sort_order": 0,
+      "name_key": "rarity.common.name",
+      "ranks": 1,
+      "price_mult": 1.0,
+      "weight_base": 80.0,
+      "weight_per_rank": -10.0
+    },
+    {
+      "id": "rare",
+      "sort_order": 1,
+      "name_key": "rarity.rare.name",
+      "ranks": 2,
+      "price_mult": 0.8,
+      "weight_base": 18.0,
+      "weight_per_rank": 4.0
+    },
+    {
+      "id": "epic",
+      "sort_order": 2,
+      "name_key": "rarity.epic.name",
+      "ranks": 3,
+      "price_mult": 0.6,
+      "weight_base": 2.0,
+      "weight_per_rank": 6.0
+    }
+  ]
+}

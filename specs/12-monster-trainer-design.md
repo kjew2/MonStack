@@ -1,6 +1,6 @@
 # 12 - Monster Trainer: Consolidated Game Design
 
-Status: **target design, not built.** This is the game the project is pivoting to. `specs/13` is the plan for getting there from the current idle game. Until a system here is built, the older specs still describe the code.
+Status: **target design, partly built** (`specs/13` section 6 has each phase). **T9 change (kj, 2026-10-30, issue #73):** the species gacha is scrapped; species unlock from achievements, Skill Books are the main premium gate, and the talent tree is bought from a random post-run vendor. Sections 3, 5.6, 5.7, 9, 10 and 13 are updated for it. This is the game the project is pivoting to. `specs/13` is the plan for getting there from the current idle game. Until a system here is built, the older specs still describe the code.
 
 Source: five design drafts kj wrote on 2026-10-30 ("Fast-Paced Monster Raising & Tower Battles", "Monster Skill Trees & Skill Book System", "Project Monster Trainer", "Rogue-Lite Systems Trainer", "Systems-First Monster Trainer"). This spec merges them: every idea in them is here once. Where they disagreed, section 13 lists the conflict and a proposed resolution. Anything marked **(proposed)** is an agent's reconciliation and needs kj's confirmation; everything else is stated in the drafts.
 
@@ -8,7 +8,7 @@ Source: five design drafts kj wrote on 2026-10-30 ("Fast-Paced Monster Raising &
 
 ## 1. Pitch
 
-A fast, systems-driven monster-raising game in the line of *Monster Rancher* and *Dragon Quest Monsters*, with rogue-lite meta-progression and gacha collection. It is a reaction to story-heavy raising sims (*Uma Musume*, *Star Savior*): no visual novel, no event text, no cutscenes. A training run is an 8-10 minute sprint of pure decisions, and the fun is finding broken builds, in the spirit of *The Exiled Heavy Knight Knows How to Game the System* ("legalized cheating").
+A fast, systems-driven monster-raising game in the line of *Monster Rancher* and *Dragon Quest Monsters*, with rogue-lite meta-progression and a roster unlocked through achievements. It is a reaction to story-heavy raising sims (*Uma Musume*, *Star Savior*): no visual novel, no event text, no cutscenes. A training run is an 8-10 minute sprint of pure decisions, and the fun is finding broken builds, in the spirit of *The Exiled Heavy Knight Knows How to Game the System* ("legalized cheating").
 
 ## 2. Pillars
 
@@ -21,7 +21,7 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
 ## 3. Core loop
 
 ```
- Gacha pull ──> species unlocked (base stats, 2 native trees, aptitudes)
+ Achievements ──> species unlocked (base stats, 2 native trees)
       │
       ▼
  Training run (12 epochs, 8-10 min) ──> stats, skill trees, chase traits
@@ -32,16 +32,16 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
       ▼
  Towers and PvP with Vault teams (4v1 Daily Tower, 4v4 Endless Tower, 4v4 async PvP)
       │
-      ├── Training Shards ──> account talent tree (cheaper, stronger future runs)
-      ├── Star-Gems ────────> gacha pulls (new species, aptitude ranks, cosmetics)
-      └── Skill Books ──────> book-gated trees in future runs
+      ├── Training Shards ──> post-run vendor: talent ranks (cheaper, stronger future runs)
+      ├── Achievements ─────> new species
+      └── Skill Books ──────> book-gated trees in future runs (the premium gate)
 ```
 
-1. **Summon** a species from the gacha.
+1. **Unlock** a species: one to start, the rest from achievements.
 2. **Train** it in a run: raise stats, manage energy and fatigue, build skill trees.
 3. **Evaluate**: the gauntlet finds how far it gets and mints a Legacy Title. The monster joins the Vault.
 4. **Challenge** towers and PvP with Vault teams.
-5. **Progress**: shards buy permanent talents; gems buy pulls; books open new trees.
+5. **Progress**: after each run a vendor offers talent upgrades for shards; achievements unlock species; books open new trees.
 
 ## 4. Training run
 
@@ -125,13 +125,13 @@ Some unlocks need in-run actions, e.g. "deal X fire damage" or "execute Y perfec
 
 ### 5.6 Skill Books
 
-- Earned in the Daily Tower (section 8.2), kept in the account inventory.
+- Earned in the Daily Tower (section 8.2), kept in the account inventory. **The main premium gate (kj, T9):** books are target-farmed as RNG drops from the Daily Tower (T10). How books are sold, if at all, is open (#49, #77).
 - Consuming a book at the start of (or during) a run opens its **Book Tree** for that run.
 - A book-gated chase tree unlocks when all of these hold: points in named Book Tree nodes, points in named nodes of other trees, and a playstyle condition.
 
-### 5.7 Genetic aptitude
+### 5.7 Genetic aptitude (dropped)
 
-Duplicate pulls raise a species' **Genetic Aptitude rank**, which raises the odds that rare drafts and chase trees appear in that species' future runs (example: +15% chance for Fire chase trees). Aptitude never adds raw stats. One draft also mentions "Hidden Aptitude Trees" from duplicates (section 13 item 5).
+**Dropped at T9 (kj, 2026-10-30):** with no species gacha there are no duplicate pulls, so there are no Genetic Aptitude ranks. The drafts had duplicates raise the odds of rare drafts and chase trees in that species' runs.
 
 ## 6. End-of-run gauntlet and Legacy Titles
 
@@ -173,29 +173,32 @@ Bosses never get hard immunities ("immune to stun", "immune to magic"). Broken b
 
 ## 9. Meta-progression
 
-The account-wide rogue-lite talent tree, bought with Training Shards. Named examples: -5% energy cost per action, +10% base stat floors, more milestone draft slots, access to more skill trees.
+The account-wide rogue-lite talents, bought with Training Shards. Named examples: -5% energy cost per action, +10% base stat floors, more milestone draft slots, access to more skill trees.
 
-## 10. Gacha and currencies
+**Post-run vendor (kj, T9):** talents are not an always-on shop. After each run a vendor offers a random assortment of upgrades (5 offers), with rarities tied to the run's score; unbought offers vanish when the next run starts. Rules: `specs/18` section 4.
 
-### 10.1 Gacha
+**Species unlocks (kj, T9):** a new account owns one species; the others unlock from account achievements with varied conditions (rank reached, a stat reached, runs finished, gauntlet floors). Rules: `specs/18` section 8.
 
-- Pulls unlock **species** (base stats, 2 native trees, aptitudes) and cosmetic variants.
-- **Duplicates** raise Genetic Aptitude ranks and give alternate skins or utility shards, never raw stat inflation.
+## 10. Currencies
+
+### 10.1 No species gacha
+
+The drafts had a gacha that unlocked species (with duplicates raising Genetic Aptitude). **kj scrapped it at T9 (2026-10-30):** "scrap the gacha for creatures. make them unlock through other random achievements. the skill book become the main premium gate since they are target farmed as rng drops from daily towers." `specs/01` is retired.
 
 ### 10.2 Currencies
 
 | Currency | Earned from | Spent on |
 |---|---|---|
-| Training Shards (soft) | Completed and failed runs, gauntlets, towers | Talent tree |
-| Star-Gems (premium) | First-time tower clears, daily milestones, achievement ladders | Gacha pulls |
-| Skill Books (items) | Daily Tower drops | Book Trees in runs |
+| Training Shards (soft) | Completed and failed runs, dismantling, gauntlets, towers | Post-run vendor offers (talent ranks) |
+| Star-Gems (premium) | First-time tower clears, daily milestones, achievement ladders | Open: there are no gacha pulls (#49, #77) |
+| Skill Books (items, the premium gate) | Daily Tower drops, target-farmed | Book Trees in runs |
 
 ## 11. Monetization and operations
 
 - **Free to play plus a one-time ad-removal pass** ($4.99-$9.99).
 - Free tier: opt-in ads for utilities only (reroll a starting run trait, double earned shards, quick stamina refill). No forced interstitials.
 - The pass removes ad prompts and grants the ad utilities automatically.
-- Gacha pulls and cosmetics as above. No draft says gems are sold for money (section 13 item 10).
+- Cosmetics as above. No draft says gems are sold for money (section 13 item 10). Skill Books are the premium gate; how they are sold is open (#49, #77).
 - **Server cost:** offline 4v4 teams are static JSON (~1 KB). Estimated under $30-$50/month for 10,000-50,000 active players.
 - **Platform:** PC (Steam) and web with a clean, spreadsheet-transparent UI (section 13 item 11).
 
@@ -211,7 +214,7 @@ Estimated 150-200 hours (8-12 weeks part time with AI help).
 - Rank fights during the run; the rank reached is the grade (instead of towers and the gauntlet).
 - Score screen with the rank and a stat breakdown.
 
-- Added to the MVP (kj, 2026-10-31): the species gacha with dupes feeding aptitude ranks (`specs/13` T9) and the Daily Tower (T10). The hour estimate above predates this and has not been revisited.
+- Added to the MVP (kj, 2026-10-31): T9 (planned as the species gacha; re-scoped by kj to species unlocks by achievement and the post-run vendor, `specs/13` T9) and the Daily Tower (T10). The hour estimate above predates this and has not been revisited.
 
 Not in the MVP: multiplayer and database, Endless Tower scaling, PvP.
 
@@ -219,7 +222,7 @@ Not in the MVP: multiplayer and database, Endless Tower scaling, PvP.
 
 - Async 4v4 PvP sync.
 - Endless Tower with mutators.
-- Ad-removal integration.
+- Ad-removal integration. (The gacha was scrapped at T9.)
 - Steam and web launch.
 
 ## 13. Conflicts between the drafts and open questions
@@ -230,12 +233,12 @@ Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeat
 2. **Tree slots.** Decided (kj, 2026-10-30): 4 slots, 2 native + 2 empty at the start, any new tree may fill an empty slot or overwrite any slot (section 5.1). Still proposed: a chase trait at the top of every tree (section 5.2).
 3. **What trees give.** Decided (kj, 2026-10-30): about 75% filler (growth and flat stats), the rest skills and effects, chase traits last (section 5).
 4. **Stats.** Decided (kj, 2026-10-30): HP, STR, INT, WIS, DEX, DEF, SPD, LUK. Proposed: milestones on all eight.
-5. **Duplicates.** "Raise chase-tree odds" (four drafts) vs "Hidden Aptitude Trees" (one). Proposed: odds only, no extra tree.
+5. **Duplicates.** Moot: the species gacha was scrapped at T9 (kj, 2026-10-30), so there are no duplicates or aptitude (section 5.7).
 6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode. Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.
 7. **Dodges in an auto-battle.** "Perfect dodges" implies action input. Proposed: combat stays automatic and the condition counts evasions.
 8. **Where in-run fights come from.** Decided (kj, 2026-10-30): the rank fight after each cycle's AP (section 4.2).
 9. **Failed runs.** Decided (kj, 2026-10-30): section 4.5.
-10. **Gem sales.** The drafts describe a gacha with premium currency but only an ad-removal pass as revenue. Proposed: no gem sales at launch; revenue is the pass and cosmetics. Monetization is kj's call.
+10. **Gem sales.** The drafts describe a gacha with premium currency but only an ad-removal pass as revenue. Since T9 there is no gacha and Skill Books are the premium gate (kj). Proposed: no gem sales at launch; revenue is the pass and cosmetics. How books (or gems) are sold is kj's call (#49, #77).
 11. **Platform.** Decided: web first (kj, 2026-10-30, with the client technology left to the agent). `specs/13` section 1 records the call.
 12. **Stamina.** "Quick stamina refills" implies an account stamina gate on runs; no draft describes it. Proposed: no stamina gate in the MVP.
 13. **Idle.** No draft has an idle or offline layer. Proposed: drop it (offline catch-up, idle chest, stage push).

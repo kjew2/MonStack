@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
 using IdleRng.Sim.Rng;
 using IdleRng.Sim.Training;
@@ -7,19 +8,24 @@ using IdleRng.Sim.Training;
 namespace IdleRng.Sim.Account
 {
     /// <summary>
-    /// Account commands (specs/18): start and finish runs, pay Training Shards, buy talents, hold skill books. Pure functions
+    /// Account commands (specs/18): start and finish runs, pay Training Shards, achievements and species unlocks, the post-run
+    /// vendor that sells talent ranks, skill books. Pure functions
     /// over an AccountState: no clock (the caller passes the time a run is sealed), no IO.
     /// </summary>
     public static class AccountOps
     {
         public const string RunStream = "run";
+        public const string VendorStream = "vendor";
 
-        /// <summary>A new account: every species owned (until the gacha), no shards, books or talents.</summary>
+        /// <summary>
+        /// A new account: owns only the starter species (the first in content; the others unlock from achievements, section 8),
+        /// no shards, books, talents or achievements.
+        /// </summary>
         public static AccountState New(ContentDb c, ulong seed)
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
             var a = new AccountState { Seed = seed, ContentVersion = c.Version };
-            foreach (var sp in c.SpeciesList) a.OwnedSpecies.Add(sp.Id);
+            a.OwnedSpecies.Add(c.StarterSpecies.Id);
             return a;
         }
 
@@ -56,12 +62,14 @@ namespace IdleRng.Sim.Account
             foreach (var kv in need) AddBooks(a, kv.Key, -kv.Value);
             a.RunsStarted++;
             a.Active = run;
+            a.Vendor = null;   // unbought offers from the last run are gone (specs/18 section 4)
             return run;
         }
 
         /// <summary>
         /// Finish the active run once it is over (completed or injured): pay shards (<see cref="Payout"/>), return unused books,
-        /// seal the monster into the Vault (Vault.Seal, specs/13 T4) and clear the active run. It seals even when the Vault is
+        /// seal the monster into the Vault (Vault.Seal, specs/13 T4), record it and check achievements (which may unlock species),
+        /// roll the post-run vendor's offers (<see cref="RollVendor"/>) and clear the active run. It seals even when the Vault is
         /// at or over VAULT_CAP (no monster is lost); the next StartRun waits until the player dismantles down to the cap.
         /// </summary>
         public static FinishResult FinishRun(ContentDb c, AccountState a, long sealedUtcMs = 0)
@@ -75,6 +83,14 @@ namespace IdleRng.Sim.Account
             foreach (var b in run.Books) { AddBooks(a, b, 1); result.BooksReturned.Add(b); }
             a.Vault.Add(result.Entry);
             a.Active = null;
+            Record(a, result.Entry);
+            var ownedBefore = new HashSet<string>(a.OwnedSpecies, StringComparer.Ordinal);
+            foreach (var d in CheckAchievements(c, a))
+            {
+                result.Achievements.Add(d.Id);
+                if (d.UnlocksSpecies != null && ownedBefore.Add(d.UnlocksSpecies)) result.SpeciesUnlocked.Add(d.UnlocksSpecies);
+            }
+            a.Vendor = RollVendor(c, a, result.Entry.RankIndex, Math.Max(0, a.RunsStarted - 1));
             return result;
         }
 
@@ -137,23 +153,178 @@ namespace IdleRng.Sim.Account
             return a.Vault[index];
         }
 
-        // ------------------------------------------------------------------ talents
+        // ------------------------------------------------------------------ achievements and species (specs/18 section 8)
 
-        /// <summary>Shards to buy the next rank of a talent from <paramref name="rank"/>.</summary>
+        /// <summary>Add a sealed monster to the account's records (runs finished, best rank, floors cleared, best stats).</summary>
+        public static void Record(AccountState a, VaultEntry e)
+        {
+            var r = a.Records ?? (a.Records = new AccountRecords());
+            r.RunsFinished++;
+            r.BestRank = Math.Max(r.BestRank, e.RankIndex);
+            if (e.LegacyTitle != null) r.BestFloorsCleared = Math.Max(r.BestFloorsCleared, Math.Max(0, e.GauntletFloor - 1));
+            foreach (var id in StatIds.Trained)
+            {
+                double v = e.Stats.Get(id);
+                if (v > r.BestStat(id)) r.BestStats[id] = v;
+            }
+        }
+
+        /// <summary>
+        /// Records rebuilt from the Vault (each entry one finished run). For saves from before records existed (schema v2):
+        /// dismantled monsters are not counted, so the result is a lower bound.
+        /// </summary>
+        public static void RebuildRecords(AccountState a)
+        {
+            a.Records = new AccountRecords();
+            foreach (var e in a.Vault) Record(a, e);
+        }
+
+        /// <summary>Progress towards an achievement: (current, target), current capped at target. Holds when current >= target.</summary>
+        public static (double current, double target) AchievementProgress(ContentDb c, AccountState a, AchievementDef d)
+        {
+            var r = a.Records ?? new AccountRecords();
+            double cur, target = d.Amount;
+            switch (d.Kind)
+            {
+                case AchievementKind.RunsFinished: cur = r.RunsFinished; break;
+                case AchievementKind.GauntletFloors: cur = r.BestFloorsCleared; break;
+                case AchievementKind.StatReached:
+                    cur = 0;
+                    foreach (var id in StatIds.Trained) if (d.Ref == null || d.Ref == id) cur = Math.Max(cur, r.BestStat(id));
+                    break;
+                default:   // RankReached: counted in ranks from 1 (E = 1), so a run that reached E counts and none yet is 0
+                    target = double.MaxValue;   // a rank no longer in content is never reached
+                    for (int i = 0; i < c.FightRanks.Count; i++) if (c.FightRanks[i].Id == d.Ref) target = i + 1;
+                    cur = r.BestRank + 1;
+                    break;
+            }
+            return (Math.Min(cur, target), target);
+        }
+
+        public static bool AchievementHolds(ContentDb c, AccountState a, AchievementDef d)
+        {
+            var (cur, target) = AchievementProgress(c, a, d);
+            return cur >= target;
+        }
+
+        /// <summary>
+        /// Earn every achievement whose condition now holds (content order) and unlock the species they name. Returns the newly
+        /// earned ones. Called when a run is sealed and when an account loads (so an achievement added to content later is
+        /// granted to accounts that already meet it).
+        /// </summary>
+        public static List<AchievementDef> CheckAchievements(ContentDb c, AccountState a)
+        {
+            var earned = new List<AchievementDef>();
+            if (a.Achievements == null) a.Achievements = new List<string>();
+            foreach (var d in c.AchievementList)
+            {
+                if (a.Achievements.Contains(d.Id) || !AchievementHolds(c, a, d)) continue;
+                a.Achievements.Add(d.Id);
+                earned.Add(d);
+                if (d.UnlocksSpecies != null) UnlockSpecies(c, a, d.UnlocksSpecies);
+            }
+            return earned;
+        }
+
+        /// <summary>Add a species to the owned list, kept in content order. False when it was already owned.</summary>
+        public static bool UnlockSpecies(ContentDb c, AccountState a, string speciesId)
+        {
+            if (speciesId == null || !c.Species.ContainsKey(speciesId)) throw new ArgumentException($"unknown species '{speciesId}'", nameof(speciesId));
+            if (a.OwnedSpecies.Contains(speciesId)) return false;
+            a.OwnedSpecies.Add(speciesId);
+            var order = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < c.SpeciesList.Count; i++) order[c.SpeciesList[i].Id] = i;
+            a.OwnedSpecies.Sort((x, y) => (order.TryGetValue(x, out var i) ? i : int.MaxValue).CompareTo(order.TryGetValue(y, out var j) ? j : int.MaxValue));
+            return true;
+        }
+
+        // ------------------------------------------------------------------ talents and the post-run vendor (specs/18 section 4)
+
+        /// <summary>Shards one rank of a talent costs from <paramref name="rank"/>, before the vendor's rarity multiplier.</summary>
         public static long TalentCost(TalentDef t, int rank) => t.CostBase + (long)t.CostStep * rank;
 
-        /// <summary>Buy one rank of a talent. Talents apply from the next run on (a run keeps the bonuses it started with).</summary>
-        public static long BuyTalent(ContentDb c, AccountState a, string talentId)
+        /// <summary>Seed of the vendor rolled after the account's <paramref name="runIndex"/>-th run (0-based).</summary>
+        public static ulong VendorSeed(ulong accountSeed, int runIndex) =>
+            SplitMix64.Derive(StreamNames.StreamSeed(accountSeed, VendorStream), (ulong)runIndex);
+
+        /// <summary>
+        /// Roll VENDOR_OFFERS offers for a run that reached grade index <paramref name="gradeIndex"/>. Each offer draws a rarity
+        /// (weights by grade, <see cref="VendorRarityDef.Weight"/>) then a talent uniformly among those not maxed; the same
+        /// talent may be offered twice. No offers once every talent is maxed. Deterministic from the account seed and the run index.
+        /// </summary>
+        public static VendorState RollVendor(ContentDb c, AccountState a, int gradeIndex, int runIndex)
+        {
+            int g = Math.Max(0, Math.Min(gradeIndex, c.FightRanks.Count - 1));
+            var v = new VendorState { Grade = c.FightRanks[g].Id };
+            var candidates = new List<TalentDef>();
+            foreach (var t in c.TalentList) if (a.TalentRank(t.Id) < t.MaxRank) candidates.Add(t);
+            if (candidates.Count == 0) return v;
+            double total = 0;
+            foreach (var r in c.VendorRarities) total += r.Weight(g);
+            var rng = new RngStream(VendorStream, VendorSeed(a.Seed, runIndex));
+            for (int i = 0; i < c.Constants.VendorOffers; i++)
+            {
+                double u = rng.NextDouble() * total;
+                VendorRarityDef rarity = null;
+                foreach (var r in c.VendorRarities)
+                {
+                    double w = r.Weight(g);
+                    if (w <= 0) continue;
+                    rarity = r;            // the last rarity with weight absorbs any rounding residue
+                    if (u < w) break;
+                    u -= w;
+                }
+                var talent = candidates[rng.NextIndex(candidates.Count)];
+                v.Offers.Add(new VendorOffer { Talent = talent.Id, Rarity = rarity.Id });
+            }
+            return v;
+        }
+
+        static VendorRarityDef Rarity(ContentDb c, string id)
+        {
+            foreach (var r in c.VendorRarities) if (r.Id == id) return r;
+            return null;
+        }
+
+        /// <summary>Ranks buying this offer would add now: the rarity's ranks, capped at the talent's max. 0 when maxed (or its ids left content).</summary>
+        public static int OfferRanks(ContentDb c, AccountState a, VendorOffer o)
+        {
+            var r = Rarity(c, o.Rarity);
+            if (r == null || o.Talent == null || !c.Talents.TryGetValue(o.Talent, out var t)) return 0;
+            return Math.Max(0, Math.Min(r.Ranks, t.MaxRank - a.TalentRank(o.Talent)));
+        }
+
+        /// <summary>Shards the offer costs now: the rarity's price multiplier x the normal cost of the ranks it adds, rounded half up.</summary>
+        public static long OfferPrice(ContentDb c, AccountState a, VendorOffer o)
+        {
+            int n = OfferRanks(c, a, o);
+            if (n == 0) return 0;
+            var t = c.Talents[o.Talent];
+            int rank = a.TalentRank(o.Talent);
+            long sum = 0;
+            for (int i = 0; i < n; i++) sum += TalentCost(t, rank + i);
+            return (long)Math.Floor(Rarity(c, o.Rarity).PriceMult * sum + 0.5);
+        }
+
+        /// <summary>
+        /// Buy vendor offer <paramref name="index"/>: costs its price (<see cref="OfferPrice"/>) and adds its ranks (<see cref="OfferRanks"/>).
+        /// Each offer sells once. Talents apply from the next run on. Returns the shards spent.
+        /// </summary>
+        public static long BuyOffer(ContentDb c, AccountState a, int index)
         {
             if (a == null) throw new ArgumentNullException(nameof(a));
-            if (talentId == null || !c.Talents.TryGetValue(talentId, out var t)) throw new ArgumentException($"unknown talent '{talentId}'", nameof(talentId));
-            int rank = a.TalentRank(talentId);
-            if (rank >= t.MaxRank) throw new InvalidOperationException($"{talentId} is maxed");
-            long cost = TalentCost(t, rank);
-            if (a.Shards < cost) throw new InvalidOperationException($"{talentId} rank {rank + 1} costs {cost} shards, have {a.Shards}");
-            a.Shards -= cost;
-            a.Talents[talentId] = rank + 1;
-            return cost;
+            var v = a.Vendor ?? throw new InvalidOperationException("the vendor has no offers: finish a run first");
+            if (index < 0 || index >= v.Offers.Count) throw new ArgumentException($"no vendor offer {index}", nameof(index));
+            var o = v.Offers[index];
+            if (o.Bought) throw new InvalidOperationException("that offer is sold");
+            int n = OfferRanks(c, a, o);
+            if (n == 0) throw new InvalidOperationException($"{o.Talent} is maxed");
+            long price = OfferPrice(c, a, o);
+            if (a.Shards < price) throw new InvalidOperationException($"that offer costs {price} shards, have {a.Shards}");
+            a.Shards -= price;
+            a.Talents[o.Talent] = a.TalentRank(o.Talent) + n;
+            o.Bought = true;
+            return price;
         }
 
         /// <summary>The run bonuses the account's talents give (specs/18 section 4).</summary>

@@ -1,9 +1,10 @@
 // Facade over the C# monster-trainer engine (IdleRng.Web.Engine.Run*/Account*, contract in web/wasm/BRIDGE.md, "Run bridge").
 // RunEngine.create(opts) -> Promise<run>. No game rule lives here: every number and label comes from the C# engine.
-// The whole save is the C# AccountSave text (account, shards, talents, vault, and the active run as its replay recipe) in one
-// localStorage key. A save that no longer loads is kept aside under its own timestamped backup key and reported in `loadError`
-// (damaged) or `loadNotice` (its run in progress was dropped). At most BAD_KEEP backups are kept: the oldest one (most likely the
-// real account) is never evicted; a new backup evicts the second oldest. A backup key is never overwritten (specs/06 section 5).
+// The whole save is the C# AccountSave text (account, shards, talents, achievements, vendor offers, vault, and the active run as its
+// replay recipe) in one localStorage key. A save that no longer loads is kept aside under its own timestamped backup key and
+// reported in `loadError` (damaged) or `loadNotice` (its run in progress was dropped). At most BAD_KEEP backups are kept: the oldest
+// one (most likely the real account) is never evicted; a new backup evicts the second oldest. A backup key is never overwritten
+// (specs/06 section 5).
 (function (root) {
   'use strict';
 
@@ -65,7 +66,7 @@
       get account() { if (acctCache === undefined) acctCache = parse(host.AccountView()); return acctCache; },
       get state() { if (runCache === undefined) runCache = parse(host.RunState()); return runCache; },   // the active run, or null
       persist() { const t = host.AccountSave(); if (t && t !== 'null') ls.set(SAVE_KEY, t); },
-      // Account command (startRun, finishRun, buyTalent, abandon, dismantle, lock, debugGrantBook); returns the result,
+      // Account command (startRun, finishRun, buyOffer, abandon, dismantle, lock, debugGrantBook); returns the result,
       // ok:false when refused.
       acct(name) {
         const r = parse(host.AccountCmd(name, JSON.stringify([].slice.call(arguments, 1))));

@@ -583,6 +583,34 @@
       "text": "Start each run with one extra skill point per rank."
     },
     {
+      "key": "achievement.rank_c.name",
+      "text": "Contender"
+    },
+    {
+      "key": "achievement.stat_500.name",
+      "text": "Prodigy"
+    },
+    {
+      "key": "achievement.veteran.name",
+      "text": "Veteran"
+    },
+    {
+      "key": "achievement.climber.name",
+      "text": "Climber"
+    },
+    {
+      "key": "rarity.common.name",
+      "text": "Common"
+    },
+    {
+      "key": "rarity.rare.name",
+      "text": "Rare"
+    },
+    {
+      "key": "rarity.epic.name",
+      "text": "Epic"
+    },
+    {
       "key": "gauntlet.slimeling.name",
       "text": "Slimeling"
     },

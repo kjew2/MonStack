@@ -11,8 +11,11 @@ namespace IdleRng.Sim.Account
     /// </summary>
     public sealed class AccountState
     {
-        /// <summary>The account save lineage (specs/18 section 6). v2: Vault entries carry Locked (AccountSave migrates v1).</summary>
-        public const int CurrentSchemaVersion = 2;
+        /// <summary>
+        /// The account save lineage (specs/18 section 6). v2: Vault entries carry Locked. v3: achievements, records and the post-run
+        /// vendor (AccountSave migrates v1 and v2).
+        /// </summary>
+        public const int CurrentSchemaVersion = 3;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";
@@ -23,7 +26,7 @@ namespace IdleRng.Sim.Account
         public int RunsStarted { get; set; }
         public long Shards { get; set; }
 
-        /// <summary>Species the player can train, in content order. All MVP species until the gacha (specs/13 T9).</summary>
+        /// <summary>Species the player can train, in content order: the starter plus those achievements unlocked (specs/18 section 8).</summary>
         public List<string> OwnedSpecies { get; set; } = new List<string>();
 
         /// <summary>Skill books by id and count.</summary>
@@ -35,11 +38,54 @@ namespace IdleRng.Sim.Account
         /// <summary>Finished monsters, oldest first.</summary>
         public List<VaultEntry> Vault { get; set; } = new List<VaultEntry>();
 
+        /// <summary>Achievement ids earned, in the order they were earned (specs/18 section 8).</summary>
+        public List<string> Achievements { get; set; } = new List<string>();
+
+        /// <summary>Lifetime bests the achievements are checked against.</summary>
+        public AccountRecords Records { get; set; } = new AccountRecords();
+
+        /// <summary>The post-run vendor's offers from the last sealed run, or null (specs/18 section 4). Gone when the next run starts.</summary>
+        public VendorState Vendor { get; set; }
+
         /// <summary>The run in progress, or null.</summary>
         public RunState Active { get; set; }
 
         public int TalentRank(string id) => Talents.TryGetValue(id, out var r) ? r : 0;
         public int BookCount(string id) => Books.TryGetValue(id, out var n) ? n : 0;
+    }
+
+    /// <summary>Lifetime records of sealed runs (abandoned runs do not count): what achievements are checked against.</summary>
+    public sealed class AccountRecords
+    {
+        public int RunsFinished { get; set; }
+
+        /// <summary>Highest grade index (rank) a sealed run reached; -1 before the first.</summary>
+        public int BestRank { get; set; } = -1;
+
+        /// <summary>Most gauntlet floors a sealed monster cleared.</summary>
+        public int BestFloorsCleared { get; set; }
+
+        /// <summary>Highest final value of each stat over sealed monsters, by stat id.</summary>
+        public SortedDictionary<string, double> BestStats { get; set; } = new SortedDictionary<string, double>(StringComparer.Ordinal);
+
+        public double BestStat(string id) => BestStats.TryGetValue(id, out var v) ? v : 0;
+    }
+
+    /// <summary>The post-run vendor (specs/18 section 4): offers rolled when a run is sealed, rarity odds by its grade.</summary>
+    public sealed class VendorState
+    {
+        /// <summary>Grade id of the run that rolled these offers.</summary>
+        public string Grade { get; set; }
+
+        public List<VendorOffer> Offers { get; set; } = new List<VendorOffer>();
+    }
+
+    /// <summary>One vendor offer: up to the rarity's rank count of one talent. Ranks and price are worked out when bought.</summary>
+    public sealed class VendorOffer
+    {
+        public string Talent { get; set; }
+        public string Rarity { get; set; }
+        public bool Bought { get; set; }
     }
 
     /// <summary>What finishing a run paid out.</summary>
@@ -50,5 +96,11 @@ namespace IdleRng.Sim.Account
 
         /// <summary>Books brought into the run but not used, now back in the inventory.</summary>
         public List<string> BooksReturned { get; set; } = new List<string>();
+
+        /// <summary>Achievements this run earned, in content order.</summary>
+        public List<string> Achievements { get; set; } = new List<string>();
+
+        /// <summary>Species those achievements unlocked.</summary>
+        public List<string> SpeciesUnlocked { get; set; } = new List<string>();
     }
 }

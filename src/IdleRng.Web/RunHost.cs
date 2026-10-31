@@ -46,7 +46,7 @@ namespace IdleRng.Web
                 .P("runCycles", k.RunCycles).P("runAp", k.RunAp).P("energyMax", k.RunEnergyMax).P("fightEvery", k.FightEvery)
                 .P("statMax", k.StatMax).P("treeSlots", k.TreeSlots).P("drillEnergyCost", k.DrillEnergyCost).P("restEnergy", k.RestEnergy)
                 .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("superP", k.DrillSuperP)
-                .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap)
+                .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap).P("vendorOffers", k.VendorOffers)
                 .EndObj();
             w.Key("stats").Arr();
             foreach (var id in StatIds.Trained) w.Str(id);
@@ -66,6 +66,10 @@ namespace IdleRng.Web
                 w.Key("trees").Arr().Str(sp.NativeTree1).Str(sp.NativeTree2).EndArr();
                 w.Key("chase").Arr().Str(sp.ChaseTreeRun).Str(sp.ChaseTreeBook).EndArr();   // in-run, then book-gated
                 w.P("book", SpeciesBook(sp));
+                w.P("starter", sp.Id == _db.StarterSpecies.Id);
+                var unlock = _db.AchievementList.FirstOrDefault(x => x.UnlocksSpecies == sp.Id);   // how a locked species is unlocked
+                if (unlock == null) w.Key("unlock").Null();
+                else w.Key("unlock").Obj().P("achievement", unlock.Id).P("name", _db.Text(unlock.NameKey)).P("text", AchievementText(unlock)).EndObj();
                 w.EndObj();
             }
             w.EndArr();
@@ -87,6 +91,13 @@ namespace IdleRng.Web
             foreach (var t in _db.TalentList)
                 w.Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("desc", _db.Text(t.DescKey)).P("effect", t.Effect.ToString().ToLowerInvariant())
                     .P("maxRank", t.MaxRank).EndObj();
+            w.EndArr();
+            w.Key("achievements").Arr();
+            foreach (var d in _db.AchievementList)
+                w.Obj().P("id", d.Id).P("name", _db.Text(d.NameKey)).P("text", AchievementText(d)).P("species", d.UnlocksSpecies).EndObj();
+            w.EndArr();
+            w.Key("rarities").Arr();
+            foreach (var r in _db.VendorRarities) w.Obj().P("id", r.Id).P("name", _db.Text(r.NameKey)).P("ranks", r.Ranks).P("priceMult", r.PriceMult).EndObj();
             w.EndArr();
             w.Key("gauntlet").Obj().P("floors", k.GauntletFloors).P("bossEvery", k.GauntletBossEvery);
             w.Key("enemies").Obj();
@@ -181,6 +192,18 @@ namespace IdleRng.Web
             return null;
         }
 
+        /// <summary>An achievement's condition in words (specs/18 section 8).</summary>
+        private string AchievementText(AchievementDef d)
+        {
+            switch (d.Kind)
+            {
+                case AchievementKind.RunsFinished: return "Finish " + Num(d.Amount) + (d.Amount == 1 ? " run" : " runs");
+                case AchievementKind.RankReached: return "Reach rank " + (d.Ref ?? "?").ToUpperInvariant() + " in a run";
+                case AchievementKind.StatReached: return "Finish a run with " + (d.Ref == null ? "any stat" : d.Ref.ToUpperInvariant()) + " at " + Num(d.Amount) + " or more";
+                default: return "Clear " + Num(d.Amount) + " gauntlet floors";
+            }
+        }
+
         private string ConditionText(ChaseConditionDef c)
         {
             switch (c.Type)
@@ -240,14 +263,29 @@ namespace IdleRng.Web
                         w.Key("booksReturned").Arr();
                         foreach (var b in r.BooksReturned) w.Str(b);
                         w.EndArr();
+                        w.Key("achievements").Arr();   // earned by this run, for the unlock notice
+                        foreach (var id in r.Achievements)
+                        {
+                            var d = _db.Achievements[id];
+                            bool unlocked = d.UnlocksSpecies != null && r.SpeciesUnlocked.Contains(d.UnlocksSpecies);
+                            w.Obj().P("id", id).P("name", _db.Text(d.NameKey)).P("text", AchievementText(d))
+                                .P("species", unlocked ? d.UnlocksSpecies : null)
+                                .P("speciesName", unlocked ? _db.Text(_db.Species[d.UnlocksSpecies].NameKey) : null).EndObj();
+                        }
+                        w.EndArr();
                         break;
                     }
                     case "gauntlet":
                         Climb(w, a.Int(0));
                         break;
-                    case "buyTalent":
-                        w.P("ok", true).P("cost", AccountOps.BuyTalent(_db, _acct, a.Str(0)));
+                    case "buyOffer":
+                    {
+                        int i = a.Int(0);
+                        var offer = _acct.Vendor != null && i >= 0 && i < _acct.Vendor.Offers.Count ? _acct.Vendor.Offers[i] : null;
+                        int ranks = offer == null ? 0 : AccountOps.OfferRanks(_db, _acct, offer);
+                        w.P("ok", true).P("cost", AccountOps.BuyOffer(_db, _acct, i)).P("talent", offer.Talent).P("ranks", ranks);
                         break;
+                    }
                     case "abandon":
                         AccountOps.AbandonRun(_db, _acct);
                         w.P("ok", true);
@@ -295,7 +333,10 @@ namespace IdleRng.Web
             return list;
         }
 
-        /// <summary>The account without the active run: shards, books, talents (with the next rank's cost), the Vault, the bonuses runs start with.</summary>
+        /// <summary>
+        /// The account without the active run: shards, owned species, achievements with progress, books, talent ranks, the post-run
+        /// vendor's offers with their current price, the Vault, the bonuses runs start with.
+        /// </summary>
         public string AccountView(string notice = null)
         {
             if (_acct == null) return "null";
@@ -309,15 +350,30 @@ namespace IdleRng.Web
             w.Key("books").Obj();
             foreach (var kv in ac.Books) w.P(kv.Key, kv.Value);
             w.EndObj();
-            w.Key("talents").Arr();
-            foreach (var t in _db.TalentList)
+            w.Key("achievements").Arr();
+            foreach (var d in _db.AchievementList)
             {
-                int rank = ac.TalentRank(t.Id);
-                w.Obj().P("id", t.Id).P("rank", rank);
-                if (rank < t.MaxRank) w.P("nextCost", AccountOps.TalentCost(t, rank)); else w.Key("nextCost").Null();
-                w.EndObj();
+                var (cur, target) = AccountOps.AchievementProgress(_db, ac, d);
+                w.Obj().P("id", d.Id).P("earned", ac.Achievements.Contains(d.Id)).P("current", cur).P("target", target).EndObj();
             }
             w.EndArr();
+            w.Key("talents").Arr();
+            foreach (var t in _db.TalentList) w.Obj().P("id", t.Id).P("rank", ac.TalentRank(t.Id)).EndObj();
+            w.EndArr();
+            w.Key("vendor");
+            if (ac.Vendor == null) w.Null();
+            else
+            {
+                w.Obj().P("grade", ac.Vendor.Grade);
+                w.Key("offers").Arr();
+                foreach (var o in ac.Vendor.Offers)
+                {
+                    int n = AccountOps.OfferRanks(_db, ac, o);
+                    w.Obj().P("talent", o.Talent).P("rarity", o.Rarity).P("bought", o.Bought).P("ranks", n).P("rank", ac.TalentRank(o.Talent))
+                        .P("price", AccountOps.OfferPrice(_db, ac, o)).P("maxed", n == 0).EndObj();
+                }
+                w.EndArr().EndObj();
+            }
             w.Key("mods").Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("draftSizeBonus", m.DraftSizeBonus).P("startSp", m.StartSp).EndObj();
             w.P("vaultCap", _db.Constants.VaultCap).P("vaultOver", AccountOps.VaultOver(_db, ac));
             w.Key("vault").Arr();

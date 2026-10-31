@@ -1,4 +1,4 @@
-// Vault screen (issue #81, specs/18 section 8): the list of sealed monsters on the home screen, with sort, filter and search, a
+// Vault screen (issue #81, specs/18 section 9): the list of sealed monsters on the home screen, with sort, filter and search, a
 // detail sheet for one entry and a side-by-side compare of two. Lock and dismantle (issue #82, specs/18 section 7) always address
 // an entry by its real index in the engine's oldest-first Vault, never by its position in the sorted or filtered list.
 // UI only: every value comes from the engine's account view and content; nothing here is a game rule.

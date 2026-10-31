@@ -1,13 +1,13 @@
 # Idle RNG (working title) - monster trainer
 
-A fast, systems-driven monster-raising game (the working title is a leftover from the idle game this repo started as, which was removed on 2026-10-30). You train a monster in a 12-cycle run of Drill and Rest taps, fight rank fights, build four skill trees toward rule-breaking chase traits, then watch it climb the gauntlet tower. Finished monsters go into your Vault; runs pay Training Shards that buy permanent talents. No story, no cutscenes.
+A fast, systems-driven monster-raising game (the working title is a leftover from the idle game this repo started as, which was removed on 2026-10-30). You train a monster in a 12-cycle run of Drill and Rest taps, fight rank fights, build four skill trees toward rule-breaking chase traits, then watch it climb the gauntlet tower. Finished monsters go into your Vault; runs pay Training Shards, and after each run a vendor offers random talent upgrades to buy with them. New species unlock from achievements. No story, no cutscenes.
 
 The design is `specs/12`; the plan and what is built is `specs/13`. Start with `specs/00-overview.md`: it lists what exists and the contracts every spec follows.
 
 | Spec | Covers |
 |---|---|
 | `specs/00-overview.md` | What exists, constant groups, vocabulary, cross-spec contracts, layout |
-| `specs/01-gacha-math.md` | Rates, pity, 10-pull guarantee: the math kept for the species gacha (T9) |
+| `specs/01-gacha-math.md` | Retired: rates, pity and the 10-pull guarantee of the scrapped species gacha (kept as history) |
 | `specs/03-sim-core-combat.md` | Sim design rules, numeric model, RNG and the streams in use |
 | `specs/05-content-data-schema.md` | Content pipeline, conventions, error codes, `ContentDb` |
 | `specs/06-save-and-offline.md` | Save file format, stores, loading, schema versions |
@@ -19,7 +19,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/14-training-run.md` | Training run: AP cycles of Drill and Rest, drill rolls, energy and injury, rank fights, milestones |
 | `specs/15-skill-trees.md` | Skill trees: 4 slots, skill points, nodes with ~75% filler, milestone/book/chase offers, overwriting, chase unlock and re-lock |
 | `specs/16-battle.md` | Monster battle engine: sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
-| `specs/18-meta-progression.md` | Account: owned species, Vault (cap, lock, dismantle), Training Shards, talents, run modifiers, abandon, account save |
+| `specs/18-meta-progression.md` | Account: species unlocks by achievement, Vault (cap, lock, dismantle), Training Shards, the post-run talent vendor, run modifiers, abandon, account save |
 | `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
 | `specs/20-roadmap.md` | Proposed roadmap: fixes, features and tech by priority, every open issue mapped |
 
@@ -28,7 +28,6 @@ Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, 
 Tools (Python 3.7+, no dependencies):
 
 - `tools/content_build.py` - builds `Content/` from `content_src/` and validates it (`--check` in `check.sh`).
-- `tools/gacha_model.py` - exact pity distribution and consolidated rates for the species gacha. `python3 tools/gacha_model.py`
 
 ## Running the web client
 

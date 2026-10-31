@@ -1,6 +1,6 @@
 # 01 - Gacha Math
 
-> **Status after the pivot (`specs/13` T7):** the idle game's gacha code, banners and tests were removed; this math and `tools/gacha_model.py` are kept for the **species gacha (T9)**. Read "hero" as "species" and "level from copies" as "genetic aptitude rank" (`specs/12` section 5.7, 10.1). The pity, rate and guarantee design carries over; the numbers will be revisited then.
+> **Retired (T9, kj 2026-10-30, issue #73): the species gacha is scrapped.** Species unlock from account achievements and talents come from the post-run vendor (`specs/18` sections 4 and 8); Skill Books are the premium gate. Nothing in the game uses this spec. It is kept as history and as a reference should a paid random draw ever return (how books are sold is open, #49 and #77). `tools/gacha_model.py` was deleted with the scrap; git history has it. The idle game's gacha code, banners and tests had already gone at T7.
 
 
 Scope: the P0 hero banner. Pet banner (P1) and rate-up banners (P1) reuse every mechanism here with a different table.

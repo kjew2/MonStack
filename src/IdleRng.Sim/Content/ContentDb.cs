@@ -19,6 +19,7 @@ namespace IdleRng.Sim.Content
         {
             "constants", "elements", "species", "drill_tiers", "fight_ranks", "stat_milestones", "monster_skills", "trees",
             "tree_nodes", "chase_conditions", "skill_books", "talents", "gauntlet_enemies", "legacy_titles",
+            "achievements", "vendor_rarities",
         };
 
 
@@ -70,6 +71,17 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Talents in CSV order.</summary>
         public IReadOnlyList<TalentDef> TalentList { get; private set; }
+
+        /// <summary>Account achievements in CSV order (specs/18 section 8).</summary>
+        public IReadOnlyList<AchievementDef> AchievementList { get; private set; }
+
+        public IReadOnlyDictionary<string, AchievementDef> Achievements { get; private set; }
+
+        /// <summary>Post-run vendor rarities by sort_order (specs/18 section 4).</summary>
+        public IReadOnlyList<VendorRarityDef> VendorRarities { get; private set; }
+
+        /// <summary>The species every account owns from the start: the first in species.csv (specs/18 section 1).</summary>
+        public SpeciesDef StarterSpecies => SpeciesList[0];
 
         // End-of-run gauntlet (specs/19)
         /// <summary>Normal gauntlet enemies in CSV order (floors rotate through them).</summary>
@@ -211,7 +223,7 @@ namespace IdleRng.Sim.Content
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
                 MonEchoPower = D("MON_ECHO_POWER"), ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
-                VaultCap = I("VAULT_CAP"),
+                VaultCap = I("VAULT_CAP"), VendorOffers = I("VENDOR_OFFERS"),
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
                 GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
             };
@@ -266,7 +278,7 @@ namespace IdleRng.Sim.Content
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0
                   && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)
-                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
+                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.VendorOffers > 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
                   && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
 
@@ -334,6 +346,7 @@ namespace IdleRng.Sim.Content
 
             BuildTrees(t, errors);
             BuildAccount(t, errors);
+            BuildUnlocks(t, errors);
             BuildGauntlet(t, errors);
 
             StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
@@ -542,6 +555,78 @@ namespace IdleRng.Sim.Content
                     default: ok = p >= 0 && p == Math.Floor(p); break;
                 }
                 if (!ok) errors.Add(new ContentError("E043", loc, $"per_rank {p} out of range for {d.Effect}"));
+            }
+        }
+
+        /// <summary>Achievements and the post-run vendor (specs/18 sections 4 and 8). Mirrors validate_unlocks in tools/content_build.py.</summary>
+        void BuildUnlocks(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            var trained = new HashSet<string>(IdleRng.Sim.Combat.StatIds.Trained, StringComparer.Ordinal);
+            var unlocked = new HashSet<string>(StringComparer.Ordinal);
+            var list = new List<AchievementDef>();
+            foreach (var r in t["achievements"])
+            {
+                double? amount = r.NDbl("amount");
+                var d = new AchievementDef
+                {
+                    Id = r.Str("id"), NameKey = r.Str("name_key"), Kind = ParseAchievementKind(r.Str("kind")), Ref = r.NStr("ref"),
+                    Amount = amount ?? 0, UnlocksSpecies = r.NStr("unlocks_species"),
+                };
+                list.Add(d);
+                string loc = $"achievements[{d.Id}]";
+                if (d.Kind == AchievementKind.RankReached)
+                {
+                    if (!FightRanks.Any(x => x.Id == d.Ref)) errors.Add(new ContentError("E023", loc, $"ref '{d.Ref}' is not a fight rank id"));
+                    if (amount.HasValue) errors.Add(new ContentError("E043", loc, "rank_reached takes no amount"));
+                }
+                else
+                {
+                    if (d.Kind == AchievementKind.StatReached)
+                    {
+                        if (d.Ref != null && !trained.Contains(d.Ref)) errors.Add(new ContentError("E023", loc, $"ref '{d.Ref}' is not a trained stat (or empty for any stat)"));
+                    }
+                    else if (d.Ref != null) errors.Add(new ContentError("E043", loc, $"{d.Kind} takes no ref"));
+                    if (!amount.HasValue || !(d.Amount > 0) || (d.Kind != AchievementKind.StatReached && d.Amount != Math.Floor(d.Amount)))
+                        errors.Add(new ContentError("E043", loc, $"{d.Kind} needs an amount > 0"));
+                }
+                if (d.UnlocksSpecies != null)
+                {
+                    if (!Species.ContainsKey(d.UnlocksSpecies)) errors.Add(new ContentError("E023", loc, $"unlocks_species '{d.UnlocksSpecies}' is not a species id"));
+                    else if (SpeciesList.Count > 0 && d.UnlocksSpecies == SpeciesList[0].Id)
+                        errors.Add(new ContentError("E043", loc, $"'{d.UnlocksSpecies}' is the starter species: every account owns it"));
+                    unlocked.Add(d.UnlocksSpecies);
+                }
+            }
+            AchievementList = list.AsReadOnly();
+            Achievements = new ReadOnlyDictionary<string, AchievementDef>(AchievementList.ToDictionary(x => x.Id, StringComparer.Ordinal));
+            foreach (var sp in SpeciesList.Skip(1))
+                if (!unlocked.Contains(sp.Id))
+                    errors.Add(new ContentError("E044", $"species[{sp.Id}]", "only the first species is owned from the start: every other species needs an achievement that unlocks it"));
+
+            VendorRarities = t["vendor_rarities"].Select(r => new VendorRarityDef
+            {
+                Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"), Ranks = r.Int("ranks"),
+                PriceMult = r.Dbl("price_mult"), WeightBase = r.Dbl("weight_base"), WeightPerRank = r.Dbl("weight_per_rank"),
+            }).OrderBy(x => x.SortOrder).ToList().AsReadOnly();
+            if (VendorRarities.Count == 0) errors.Add(new ContentError("E044", "vendor_rarities", "at least one rarity is required"));
+            if (!VendorRarities.Select(x => x.SortOrder).SequenceEqual(Enumerable.Range(0, VendorRarities.Count)))
+                errors.Add(new ContentError("E047", "vendor_rarities", "sort_order must be exactly 0..N-1"));
+            foreach (var r in VendorRarities)
+                if (r.Ranks < 1 || r.PriceMult < 0) errors.Add(new ContentError("E043", $"vendor_rarities[{r.Id}]", "need ranks >= 1 and price_mult >= 0"));
+            for (int g = 0; g < FightRanks.Count && VendorRarities.Count > 0; g++)
+                if (!(VendorRarities.Sum(r => r.Weight(g)) > 0))
+                    errors.Add(new ContentError("E043", "vendor_rarities", $"the weights must not all be 0 at grade index {g}"));
+        }
+
+        static AchievementKind ParseAchievementKind(string s)
+        {
+            switch (s)
+            {
+                case "runs_finished": return AchievementKind.RunsFinished;
+                case "rank_reached": return AchievementKind.RankReached;
+                case "stat_reached": return AchievementKind.StatReached;
+                case "gauntlet_floors": return AchievementKind.GauntletFloors;
+                default: throw new FormatException($"unknown achievement kind '{s}'");
             }
         }
 

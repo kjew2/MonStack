@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Browser checks of the monster-trainer page beyond the main run (web/wasm/test/run-trainer.js), at phone width 390x844:
-// - issue #87: each main screen (pick, run, fight playback, tree draft, end, gauntlet wheel, grade, Vault) has no horizontal scroll
+// - issue #87: each main screen (pick, run, fight playback, tree draft, end, gauntlet wheel, grade, vendor, Vault) has no horizontal scroll
 //   and no page/console error; a tree draft overwrites an occupied slot (specs/12 section 5.1: its spent points are lost).
 // - issue #88: save, reload and resume. A run reloaded mid-way (also with a draft waiting) comes back with the same state hash and
 //   is then finished; a save whose run in progress no longer replays drops only that run, with a notice, its books returned and
@@ -135,7 +135,10 @@ const H = require('./harness.js');
   check(sealed.ActiveRun === null && sealed.Account.Vault.length === 1 && entry.Log.length > 20, 'the resumed run was sealed into the Vault');
   check(entry.RunHash === finalHash, 'the Vault entry\'s run hash is the hash of the run resumed across the reloads (' + finalHash.slice(0, 12) + ')');
   check((await text('#main')).includes('Run hash ' + finalHash.slice(0, 16)), 'and the grade screen shows it');
-  await act('new-run').click();
+  await act('to-vendor').click();                   // the grade screen leads to the post-run vendor (specs/18 section 4)
+  await page.locator('[data-id=vendor-offer]').first().waitFor();
+  await t.layout('vendor screen');
+  await act('vendor-done').click();
   await act('start').waitFor();
   await t.layout('Vault (home after a run)');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'the Vault lists the sealed monster');

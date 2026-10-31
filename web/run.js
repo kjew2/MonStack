@@ -10,7 +10,7 @@
 
   let run = null, C = null, shownView = null;   // shownView: the view the last render drew
   const ui = {
-    view: 'home',            // home | run | climb | grade
+    view: 'home',            // home | run | climb | grade | vendor
     tab: 'train',            // train | trees | log
     pick: null,              // species chosen on the home screen
     book: false,             // test option: start with a skill book
@@ -26,6 +26,7 @@
     climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf }
     spGains: [],             // skill point gains not yet shown by the HUD (issue #86): [{n, why, cycle}], shown once no modal covers it
     fightGains: [],          // the gains the shown fight brought, for its result badge
+    earned: [],              // achievements the sealed run earned (specs/18 section 8), shown on the grade screen
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -80,6 +81,7 @@
     const s = run.state;
     if (ui.view === 'grade') { tabs.hidden = true; modal.hidden = true; renderGrade(main); return; }
     if (ui.view === 'climb') { tabs.hidden = true; modal.hidden = true; renderClimb(main); return; }
+    if (ui.view === 'vendor') { tabs.hidden = true; modal.hidden = true; renderVendor(main); return; }
     tabs.hidden = false;
     main.append(renderHud(s));
     if (ui.tab === 'train') renderTrain(main, s);
@@ -517,13 +519,19 @@
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Raise a monster' }),
         h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
       h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up, spend skill points on trees, and avoid injury.' }));
+    if (!owned(ui.pick)) ui.pick = acct.owned[0] || null;
     C.species.forEach((sp) => {
-      const sel = ui.pick === sp.id;
+      const sel = ui.pick === sp.id, have = owned(sp.id);
       const mini = h('div', { class: 'mini' });
       C.stats.forEach((st) => mini.append(h('span', null, [up(st) + ' ', h('b', { text: num(sp.base[st]) })])));
-      main.append(h('button', { class: 'card species' + (sel ? ' sel' : ''), type: 'button', 'data-act': 'species-' + sp.id, onclick: () => { ui.pick = sp.id; render(); } }, [
+      // A locked species (specs/18 section 8) shows the achievement that unlocks it and the progress towards it.
+      const lock = !have && sp.unlock ? achievementProgress(sp.unlock.achievement) : null;
+      main.append(h('button', { class: 'card species' + (sel ? ' sel' : '') + (have ? '' : ' locked'), type: 'button', 'data-act': 'species-' + sp.id,
+        'data-locked': have ? null : 'true', disabled: !have, 'aria-disabled': have ? null : 'true', onclick: () => { if (have) { ui.pick = sp.id; render(); } } }, [
         sprite(sp.id),
-        h('div', null, [h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element)]), mini,
+        h('div', null, [h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element), have ? null : h('span', { class: 'tag', text: '🔒 Locked' })]), mini,
+          have ? null : h('small', { class: 'gold', 'data-id': 'unlock-' + sp.id,
+            text: sp.unlock ? 'Unlock: ' + sp.unlock.name + ' — ' + sp.unlock.text + (lock ? ' (' + num(lock.current) + '/' + num(lock.target) + ')' : '') : 'Not available yet' }),
           h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') }),
           h('small', { class: 'muted', 'data-id': 'chase-' + sp.id, text: 'Chase trees: ' + treeName(sp.chase[0]) + ', ' + treeName(sp.chase[1]) +
             (sp.book ? ' (needs ' + C.books[sp.book].name + ')' : '') })]),
@@ -544,19 +552,34 @@
     if (grant) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[grant].name,
       onclick: () => { const r = run.acct('debugGrantBook', grant, 1); if (!r.ok) toast(r.reason); render(); } }));
 
+    if (acct.vendor && acct.vendor.offers.length) {
+      main.append(h('h3', { text: 'Vendor' }));
+      main.append(h('p', { class: 'small muted', text: 'Offers from your last run. They vanish when the next run starts.' }));
+      vendorOffers(main);
+    }
+
     main.append(h('h3', { text: 'Talents' }));
     const m = acct.mods;
-    main.append(h('p', { class: 'small muted', text: 'Bought with shards from finished runs. They apply from the next run on. Now: drills cost x' + m.drillCostMult.toFixed(2) + ', start stats x' + m.statFloorMult.toFixed(2) + ', +' + m.draftSizeBonus + ' draft size, +' + m.startSp + ' starting SP.' }));
+    main.append(h('p', { class: 'small muted', text: 'Talent ranks are sold by the vendor after each run. They apply from the next run on. Now: drills cost x' + m.drillCostMult.toFixed(2) + ', start stats x' + m.statFloorMult.toFixed(2) + ', +' + m.draftSizeBonus + ' draft size, +' + m.startSp + ' starting SP.' }));
+    const tl = h('div', { class: 'card' });
     acct.talents.forEach((t) => {
       const def = C.talents.find((x) => x.id === t.id);
-      main.append(h('div', { class: 'card', 'data-id': 'talent-' + t.id }, [
-        h('div', { class: 'row between' }, [h('b', { text: def.name }), h('span', { class: 'tag num', text: t.rank + '/' + def.maxRank })]),
-        h('div', { class: 'small muted', text: def.desc }),
-        t.nextCost === null ? h('div', { class: 'small ok', text: 'Maxed' })
-          : h('button', { class: 'btn small gemsy', type: 'button', 'data-act': 'talent-' + t.id, disabled: acct.shards < t.nextCost, text: 'Buy rank ' + (t.rank + 1) + ' · ' + t.nextCost + ' shards',
-            onclick: () => { const r = run.acct('buyTalent', t.id); if (!r.ok) toast(r.reason); render(); } }),
+      tl.append(h('div', { class: 'row between', 'data-id': 'talent-' + t.id, title: def.desc }, [h('span', { text: def.name }), h('span', { class: 'tag num', text: t.rank + '/' + def.maxRank })]));
+    });
+    main.append(tl);
+
+    main.append(h('h3', { text: 'Achievements' }));
+    const al = h('div', { class: 'card' });
+    C.achievements.forEach((d) => {
+      const p = achievementProgress(d.id);
+      const sp = d.species ? speciesDef(d.species) : null;
+      al.append(h('div', { class: 'ach' + (p.earned ? ' got' : ''), 'data-id': 'ach-' + d.id }, [
+        h('span', { class: 'chk', 'aria-hidden': 'true', text: p.earned ? '✓' : '' }),
+        h('div', null, [h('b', { text: d.name }), h('div', { class: 'small muted', text: d.text + (sp ? ' · unlocks ' + sp.name : '') })]),
+        h('span', { class: 'small num ' + (p.earned ? 'ok' : 'muted'), text: p.earned ? 'Done' : num(p.current) + '/' + num(p.target) }),
       ]));
     });
+    main.append(al);
 
     VAULT.render(main, $('modal'), vaultHelpers());   // the Vault list, its sort/filter/search, detail and compare (web/vault.js)
   }
@@ -581,12 +604,58 @@
     main.append(card);
     main.append(h('div', { class: 'card' }, [h('h3', { text: 'Trees' }),
       ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
+    ui.earned.forEach((a) => main.append(h('div', { class: 'card alert', 'data-id': 'earned-' + a.id }, [
+      h('b', { text: '🏆 Achievement: ' + a.name }),
+      h('div', { class: 'small muted', text: a.text }),
+      a.species ? h('div', { class: 'small gold', 'data-id': 'unlocked-' + a.species, text: a.speciesName + ' unlocked! Pick it on the next run.' }) : null,
+    ])));
     main.append(h('div', { class: 'small muted center', text: 'Run hash ' + e.hash.slice(0, 16) }));
     const acct = run.account;
     if (acct.vaultOver > 0) main.append(h('p', { class: 'small bad center', 'data-id': 'grade-vault-over', role: 'status',
       text: 'Sealed over the Vault cap (' + acct.vault.length + '/' + acct.vaultCap + '). Dismantle ' + acct.vaultOver + ' before the next run.' }));
     if (ui.climb) main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-replay', text: 'Watch the gauntlet again', onclick: () => openClimb(ui.climb.data) }));
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
+    if (acct.vendor && acct.vendor.offers.length)
+      main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'to-vendor', text: 'Visit the vendor', onclick: () => { stopClimb(); ui.view = 'vendor'; render(); } }));
+    else main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
+  }
+
+  // ---- post-run vendor (specs/18 section 4): offers rolled when the run was sealed, rarer with a better grade, bought with shards.
+  const rarityDef = (id) => C.rarities.find((r) => r.id === id) || { id: id, name: id, ranks: 1 };
+  function achievementProgress(id) { return run.account.achievements.find((x) => x.id === id) || { earned: false, current: 0, target: 1 }; }
+  function owned(id) { return !!id && run.account.owned.indexOf(id) >= 0; }
+  function vendorOffers(main) {
+    const acct = run.account;
+    acct.vendor.offers.forEach((o, i) => {
+      const def = C.talents.find((x) => x.id === o.talent) || { name: o.talent, desc: '', maxRank: 0 };
+      const rar = rarityDef(o.rarity), tier = C.rarities.indexOf(rar);
+      const status = o.bought ? h('div', { class: 'small ok', text: 'Sold' })
+        : o.maxed ? h('div', { class: 'small muted', text: 'Maxed' })
+        : h('button', { class: 'btn small gemsy', type: 'button', 'data-act': 'buy-offer-' + i, disabled: acct.shards < o.price,
+          text: 'Buy · ' + o.price + ' shards', onclick: () => buyOffer(i) });
+      main.append(h('div', { class: 'card offer r' + Math.max(0, tier) + (o.bought ? ' sold' : ''), 'data-id': 'vendor-offer' }, [
+        h('div', { class: 'row between' }, [h('b', { text: def.name }), h('span', { class: 'tag rarity', text: rar.name })]),
+        h('div', { class: 'small muted', text: def.desc }),
+        h('div', { class: 'row between' }, [
+          h('span', { class: 'small num', text: o.bought || o.maxed ? 'Rank ' + o.rank + '/' + def.maxRank : '+' + o.ranks + (o.ranks === 1 ? ' rank' : ' ranks') + ' · ' + o.rank + ' → ' + (o.rank + o.ranks) + '/' + def.maxRank }),
+          status]),
+      ]));
+    });
+  }
+  function buyOffer(i) {
+    const r = run.acct('buyOffer', i);
+    if (!r.ok) toast(r.reason);
+    else { const def = C.talents.find((x) => x.id === r.talent); toast('Bought ' + (def ? def.name : r.talent) + ' +' + r.ranks + ' for ' + r.cost + ' shards'); }
+    render();
+  }
+  function renderVendor(main) {
+    const acct = run.account, v = acct.vendor;
+    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Vendor' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]));
+    if (!v || !v.offers.length) main.append(h('p', { class: 'muted', text: 'Every talent is maxed: nothing to sell.' }));
+    else {
+      main.append(h('p', { class: 'small muted', text: v.offers.length + ' offers for your grade ' + up(v.grade) + ' run: a better grade rolls rarer offers, which add more ranks for less. Talents apply from the next run on. Unbought offers vanish when the next run starts.' }));
+      vendorOffers(main);
+    }
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
   }
 
   // ---- gauntlet wheel (specs/19, specs/12 section 6): a slowing reel of the floors climbed lands on the floor and the enemy
@@ -692,7 +761,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.fightGains = []; }
+  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.fightGains = []; ui.earned = []; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
@@ -786,7 +855,8 @@
   function seal() {
     const r = run.finishRun();
     if (!r.ok) { toast(r.reason); return; }
-    ui.sealed = r.entry; ui.payout = r.shards; ui.view = 'grade';
+    ui.sealed = r.entry; ui.payout = r.shards; ui.view = 'grade'; ui.earned = r.achievements || [];
+    ui.earned.forEach((a) => toast('Achievement: ' + a.name + (a.species ? '. ' + a.speciesName + ' unlocked!' : '')));
     if (r.entry.gauntlet) {   // the wheel replays the new entry's climb (read only); without it the grade screen still works
       try {
         const g = run.gauntlet(run.account.vault.length - 1);

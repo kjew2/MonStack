@@ -197,6 +197,11 @@
       "value": 10
     },
     {
+      "key": "VENDOR_OFFERS",
+      "type": "int",
+      "value": 5
+    },
+    {
       "key": "VAULT_CAP",
       "type": "int",
       "value": 50
