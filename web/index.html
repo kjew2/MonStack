@@ -6,64 +6,64 @@
 <title>MonStack</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=Caveat:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@400;600;700;800&family=Caveat:wght@600&display=swap">
 <style>
-/* One phone-height column: header, scrolling body, tab bar. Dark palette.
+/* One phone-height column: header, scrolling body, tab bar. Light palette (daylight).
    Theme tokens (issue #115): every colour, font, radius and shadow the page uses, and the shared motion timings, are variables here, so an art
    direction is mostly a swap of this block (plus assets). No colour literal lives outside :root; a light base only needs new
-   values here. Per-element colours come from the engine (RunContent elements), not from here. */
+   values here (the daylight base is one). Per-element colours come from the engine (RunContent elements), not from here. */
 :root {
-  /* Art direction: hunter / system dark (specs/26 sections 4.1 and 6.1, issue #115), matching the creature art: near-black navy,
-     "system window" panels with thin glowing borders and cut corners, a blue system glow, gold for rare things. */
+  /* Art direction: daylight (kj, 2026-10-31; specs/26 section 4.1): a light sky-blue base, white rounded cards with soft blue
+     shadows, chunky buttons that press down, pill tabs, a rounded friendly title face. The creature art stays hunter (section 6). */
   /* base: background, surfaces, lines, ink */
-  --bg: #05070d; --bg-top: #0a1122;  /* near-black, a little navy light from above */
-  --panel: #0a0f1b; --panel-hi: #0f1728; --panel-2: #121b2e; --line: #23406a; --line-soft: #172338; --line-faint: #111a2a;
-  --text: #e6eefc; --muted: #8796ae; --shade: #000000;
-  --track: #18233a;                 /* an empty bar */
-  --tile: #111a2c; --tile-mix: #080d18;   /* a node tile, and the dark a stat tint is mixed into */
-  --scrim: rgba(3, 5, 10, .94);     /* behind the modal */
-  --toast-bg: #0f1728; --cd-veil: rgba(4, 7, 14, .82); --keycap: #020409; --arena-top: #0d1a33;
-  --grid: rgba(62, 166, 255, .05);  /* the faint system grid behind everything */
-  /* accents: --gems is the one accent (focus, selection, skill points): the system blue; --gold for rare things */
-  --gold: #ffc44d; --gems: #3ea6ff; --ok: #4fd18b; --bad: #ff5c6c; --warn: #ff9f43; --epic: #b06bff;
+  --bg: #f4f9ff; --bg-top: #cfe6ff;  /* pale sky, a deeper blue at the top */
+  --cloud: rgba(255, 255, 255, .9);  /* the soft clouds in the sky behind everything */
+  --panel: #ffffff; --panel-hi: #ffffff; --panel-2: #eef5fd; --line: #d3e2f4; --line-soft: #e3edf8; --line-faint: #edf3fa;
+  --text: #1d3557; --muted: #5f7896; --shade: #ffffff;   /* --shade is the halo behind text drawn over fills (light here) */
+  --track: #e3ecf7;                 /* an empty bar */
+  --tile: #f1f6fc; --tile-mix: #ffffff;   /* a node tile, and the white a stat tint is mixed into */
+  --scrim: rgba(236, 244, 253, .99); /* behind the modal */
+  --toast-bg: #ffffff; --cd-veil: rgba(29, 53, 87, .55); --keycap: #c9daf0; --arena-top: #dcebff;
+  /* accents: --gems is the one accent (focus, selection, skill points): sky blue; --gold for rare things. Text-strength shades, so
+     they read on white; --gold-pop is the bright gold for big loud text with an outline. */
+  --gold: #b77b00; --gold-pop: #ffc23d; --gems: #2b6fd6; --ok: #1f9d5c; --bad: #e0384c; --warn: #e06a1b; --epic: #8a4fe0;
   --accent: var(--gems);
   /* accent tints for filled buttons, badges and flashes */
-  --ok-bg: #0f2a22; --ok-bg-2: #0b1f1a; --ok-flash: #12392b; --ok-keycap: #06140f; --on-ok: #000000; --ok-pop: #8affc1;
-  --gems-bg: #0d2240; --gems-keycap: #061428; --gems-deep: #08142a; --gems-light: #cfe8ff; --gems-stroke: #0b2d57; --gems-shadow: #0d3a70;
-  --warn-bg: #2e1d10; --foe-ink: #ff9aa5;
-  --gold-bg: #3a2a0c; --gold-bg-2: #4a3611; --gold-deep: #140f05; --gold-mid: #5c4310; --gold-dark: #211806; --gold-stroke: #6b4300;
-  --epic-deep: #140b24; --epic-light: #e6d2ff; --epic-stroke: #3a1d6b; --epic-shadow: #4c2590;
-  --pop-red: #8a1424;               /* the offset shadow under loud text (super drill, POW) */
-  --fail-ink: #9fb0c8; --fail-bg: #141d2e;
-  --tick: rgba(230, 238, 252, .35); --tick-hit: #ffffff;   /* milestone ticks on a stat gauge, before and after they are reached */
+  --ok-bg: #e3f7ec; --ok-bg-2: #d3f1e1; --ok-flash: #c9f0da; --ok-keycap: #9fd9b8; --on-ok: #ffffff; --ok-pop: #1f9d5c;
+  --gems-bg: #e1efff; --gems-keycap: #b8d3f5; --gems-deep: #d2e6ff; --gems-light: #e1efff; --gems-stroke: #1f5bb5; --gems-shadow: #9cc2f0;
+  --warn-bg: #ffeede; --warn-keycap: #f5c49c; --fight: #ff6b4a; --fight-keycap: #d44a2b; --on-fight: #ffffff; --foe-ink: #d0283e;
+  --gold-bg: #fff3d1; --gold-bg-2: #ffe7a8; --gold-deep: #fff8e6; --gold-mid: #fff0c2; --gold-dark: #ffe1a0; --gold-stroke: #8a5a00;
+  --epic-deep: #f3ebff; --epic-light: #ede3ff; --epic-stroke: #4c2590; --epic-shadow: #d6c2fb;
+  --pop-red: #e0384c;               /* the offset shadow under loud text (super drill, POW) */
+  --fail-ink: #6f84a3; --fail-bg: #e9eef5;
+  --tick: rgba(29, 53, 87, .22); --tick-hit: #ffffff;   /* milestone ticks on a stat gauge, before and after they are reached */
   /* per-stat colours (--st): the stat gauges, chips and node tiles take them through .st-<stat> */
-  --st-hp: #ff5c6c; --st-str: #ff8a3d; --st-int: #3ea6ff; --st-wis: #b06bff;
-  --st-dex: #4fd18b; --st-def: #9aa8bf; --st-spd: #2ee6e6; --st-luk: #ffc44d;
-  --on-st: #05070d;                 /* text on a solid stat colour */
-  /* skill tiles take a per-skill hue from the page; these are the saturation and lightness it is drawn at */
-  --skill-bg: 45%, 22%; --skill-edge: 70%, 58%; --skill-tile: 40%, 24%;
-  /* glows: the system window's border glows inward; text and rare things glow outward */
-  --glow-in: 30%;                   /* how strongly a window's border colour glows into it */
-  --glow-gems: 0 0 12px rgba(62, 166, 255, .55); --glow-gold: 0 0 14px rgba(255, 196, 77, .55);
-  /* type: a squared tech face for labels and numbers, a heavy display face for titles, a plain body face */
-  --font-display: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
-  --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-title: 'Black Han Sans', 'Chakra Petch', 'Arial Black', sans-serif;
+  --st-hp: #e0384c; --st-str: #e8742a; --st-int: #2b6fd6; --st-wis: #8a4fe0;
+  --st-dex: #1f9d5c; --st-def: #6c7a93; --st-spd: #0fa3b1; --st-luk: #c99400;
+  --on-st: #ffffff;                 /* text on a solid stat colour */
+  /* skill tiles take a per-skill hue from the page; these are the saturation and lightness it is drawn at (pastel, dark ink on top) */
+  --skill-bg: 70%, 88%; --skill-edge: 60%, 55%; --skill-tile: 65%, 86%;
+  /* glows: soft coloured lifts instead of neon */
+  --glow-gems: 0 2px 8px rgba(43, 111, 214, .25); --glow-gold: 0 2px 10px rgba(201, 148, 0, .35);
+  /* type: a rounded display face for titles and loud text, one friendly rounded sans for labels, numbers and body */
+  --font-display: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-title: 'Fredoka', 'Nunito', 'Arial Rounded MT Bold', sans-serif;
   --font-comic: var(--font-title);
   --font-hand: 'Caveat', 'Comic Sans MS', 'Segoe Print', cursive;
-  /* shape: windows have two cut corners (top left, bottom right) instead of rounding */
-  --r-xs: 2px; --r-sm: 3px; --r: 4px; --r-lg: 5px; --r-xl: 6px; --r-pill: 999px;
-  --cut: 10px; --cut-s: 6px;
-  --shadow-float: 0 2px 10px rgba(0, 0, 0, .6);
-  --shadow-pop: 0 6px 18px rgba(0, 0, 0, .6);
-  --shadow-tip: 0 8px 24px rgba(0, 0, 0, .7);
-  --shadow-key: none; --shadow-key-down: none;
-  --text-shade: 0 1px 2px var(--shade);
+  /* shape: generous rounding */
+  --r-xs: 6px; --r-sm: 8px; --r: 14px; --r-lg: 16px; --r-xl: 20px; --r-pill: 999px;
+  --shadow-card: 0 4px 14px rgba(40, 90, 160, .09); --shadow-bar: 0 -4px 14px rgba(40, 90, 160, .06);
+  --shadow-float: 0 4px 14px rgba(40, 90, 160, .18);
+  --shadow-pop: 0 8px 22px rgba(40, 90, 160, .2);
+  --shadow-tip: 0 10px 28px rgba(40, 90, 160, .25);
+  --shadow-key: 0 3px 0 var(--keycap); --shadow-key-down: 0 1px 0 var(--keycap);
+  --text-shade: 0 1px 0 rgba(255, 255, 255, .7);
   /* motion (prefers-reduced-motion sets these to 0s at the end of the sheet) */
   --dur-fast: .12s; --dur: .25s; --dur-slow: .5s;
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
-  color-scheme: dark;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -434,64 +434,55 @@ small, .small { font-size: 12px; }
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; background: var(--toast-bg); box-shadow: var(--shadow-pop); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }
-/* ---- Skin: hunter / system dark (specs/26 section 4.1). Every panel is a "system window": a thin border in its colour (--bc) that
-   glows inward, two cut corners (clip-path, with the border redrawn along each cut by --corners), uppercase labels, a faint
-   blue grid behind everything. Colours come from :root only. Outer glows would be clipped by the cut, so windows glow inward. */
-body, #app { background: radial-gradient(ellipse 120% 50% at 50% -10%, color-mix(in srgb, var(--gems) 14%, transparent), transparent 60%),
-  repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 28px), repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 28px),
-  linear-gradient(var(--bg-top), var(--bg) 60%); }
-#top { background: linear-gradient(var(--panel-hi), var(--panel)); border-bottom-color: var(--line); box-shadow: 0 1px 0 color-mix(in srgb, var(--gems) 25%, transparent); }
-#top .title { font: 400 20px/1 var(--font-title); letter-spacing: .08em; text-transform: uppercase; color: var(--text); text-shadow: var(--glow-gems); }
-#tabs { background: linear-gradient(var(--panel), var(--bg)); border-top-color: var(--line); }
-#tabs button { text-transform: uppercase; letter-spacing: .1em; font-size: 12px; }
-#tabs button[aria-selected="true"] { color: var(--gems); box-shadow: inset 0 2px 0 var(--gems), inset 0 14px 14px -14px var(--gems); text-shadow: var(--glow-gems); }
-h2 { font: 400 20px/1.15 var(--font-title); letter-spacing: .04em; text-transform: uppercase; }
-h3 { font-family: var(--font-display); color: var(--gems); letter-spacing: .14em; }
-.tag { text-transform: uppercase; border-radius: var(--r-xs); background: color-mix(in srgb, var(--panel-2) 85%, transparent); }
-/* the window */
-.card:not(.offer), .tcard, .obanner, .btn, .stile, .toast, .now {
-  --bc: var(--line); --c: var(--cut); --surface: linear-gradient(170deg, var(--panel-hi), var(--panel) 70%);
-  --corners: linear-gradient(135deg, var(--bc) 0 calc(var(--c) * .7071 + 1px), transparent 0), linear-gradient(-45deg, var(--bc) 0 calc(var(--c) * .7071 + 1px), transparent 0);
-  border-color: var(--bc); border-radius: 0; background: var(--corners), var(--surface); background-origin: border-box;
-  clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
-  box-shadow: inset 0 0 18px -6px color-mix(in srgb, var(--bc) var(--glow-in), transparent), inset 0 1px 0 color-mix(in srgb, var(--bc) 45%, transparent); }
-.btn, .stile, .toast { --c: var(--cut-s); }
-/* windows in another colour: the variants that set their own border or fill take it through --bc and --surface */
-.card.alert, .rung.current, .species.sel, .tcard.sel { --bc: var(--gems); --glow-in: 45%; }
-.card.injury { --bc: var(--bad); }
-.tcard.k-chase { --bc: color-mix(in srgb, var(--epic) 60%, var(--line)); } .tcard.k-book { --bc: color-mix(in srgb, var(--gems) 45%, var(--line)); }
-.tcard.sel.k-chase { --bc: var(--epic); }
-.btn.primary { --bc: var(--ok); --surface: linear-gradient(var(--ok-bg), var(--ok-bg-2)); }
-.btn.gemsy { --bc: var(--gems); --surface: linear-gradient(var(--gems-bg), var(--gems-deep)); }
-.btn.warn { --bc: var(--warn); --surface: linear-gradient(var(--warn-bg), var(--gold-dark)); }
-.btn.ghost { --surface: linear-gradient(transparent, transparent); }
-.stile.empty { --bc: var(--ok); --surface: linear-gradient(var(--ok-bg), var(--ok-bg-2)); }
-.stile.risky { --bc: var(--bad); }
-.now.you { --bc: var(--ok); } .now.foe { --bc: var(--bad); } .now.event { --bc: var(--gold); }
-.card.alert, .card.injury, .rung.current, .species.sel, .tcard.sel, .tcard.k-chase, .tcard.k-book, .btn.primary, .btn.gemsy, .btn.warn, .btn.ghost, .stile.empty, .stile.risky, .now.you, .now.foe, .now.event {
-  border-color: var(--bc); background: var(--corners), var(--surface); background-origin: border-box;
-  box-shadow: inset 0 0 18px -6px color-mix(in srgb, var(--bc) var(--glow-in), transparent), inset 0 1px 0 color-mix(in srgb, var(--bc) 45%, transparent); }
-.btn { text-transform: uppercase; letter-spacing: .06em; font-family: var(--font-display); font-weight: 700; transition: filter var(--dur-fast); }
-.btn:not(:disabled):active { filter: brightness(1.35); }
-.btn.ghost { border-style: solid; color: var(--muted); }
-.tcard:not(.sel):active { transform: none; filter: brightness(1.25); }
-.offer:not(.back) { border-radius: var(--r); box-shadow: inset 0 0 16px -6px color-mix(in srgb, var(--tier) 40%, transparent); }
-.sprite:not(.art) { background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--gems) 16%, var(--panel-2)), var(--panel-2) 70%); border: 1px solid var(--line-soft); }
-.sprite.art { background: radial-gradient(circle at 50% 75%, color-mix(in srgb, var(--gems) 22%, transparent), transparent 70%); border: 1px solid var(--line-soft); }
-.grade { font-family: var(--font-title); font-weight: 400; text-shadow: 0 0 22px currentColor; }
-.bar.energy .fill { box-shadow: 0 0 8px var(--gems); }
-/* tree offers: a system alert */
-.obanner { --bc: var(--gold); --glow-in: 45%; padding-top: 10px; --surface: radial-gradient(ellipse 80% 90% at 50% 120%, color-mix(in srgb, var(--bc) 22%, transparent), transparent 70%), linear-gradient(var(--panel-hi), var(--bg)); }
-.obanner.book { --bc: var(--gems); } .obanner.chase { --bc: var(--epic); }
-.obanner, .obanner.book, .obanner.chase { border: 1px solid var(--bc); background: var(--corners), var(--surface); background-origin: border-box; }
-.obanner::before { content: '\25C6  System message  \25C6'; display: block; margin-bottom: 4px; font: 700 10px var(--font-display); letter-spacing: .3em; text-transform: uppercase; color: var(--bc); opacity: .85; }
-.obanner .big, .obanner.book .big, .obanner.chase .big { font: 400 36px/1.05 var(--font-title); letter-spacing: .06em; text-transform: uppercase; color: var(--text); -webkit-text-stroke: 0;
-  text-shadow: 0 0 16px color-mix(in srgb, var(--bc) 80%, transparent), 0 0 3px var(--bc); }
-.tcard .tname { font: 400 19px/1.1 var(--font-title); letter-spacing: .04em; text-transform: uppercase; }
-.nt { border-radius: var(--r-sm); }
-.nt.cap { box-shadow: var(--glow-gold); }
+/* ---- Skin: daylight (specs/26 section 4.1). A pale sky with soft clouds; every panel a white rounded card with a soft blue shadow;
+   buttons are chunky keys that press down (a solid shadow under them); the tab bar is a row of pills. Colours come from :root only. */
+body, #app { background: radial-gradient(ellipse 60% 90px at 18% 40px, var(--cloud), transparent 70%), radial-gradient(ellipse 45% 70px at 86% 90px, var(--cloud), transparent 70%),
+  linear-gradient(var(--bg-top), var(--bg) 320px); background-attachment: local; }
+#top { background: transparent; border-bottom: 0; padding-top: 12px; padding-bottom: 6px; }
+#top .title { font: 700 26px/1 var(--font-title); letter-spacing: .01em; color: var(--text); }
+.link-btn { border-radius: var(--r-pill); background: var(--panel); box-shadow: var(--shadow-key); font-weight: 700; }
+#tabs { background: var(--panel); border-top: 1px solid var(--line); gap: 6px; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); box-shadow: var(--shadow-bar); }
+#tabs button { border-radius: var(--r); padding-top: 10px; padding-bottom: 10px; font-weight: 800; color: var(--muted); }
+#tabs button[aria-selected="true"] { color: var(--gems); background: var(--gems-bg); box-shadow: none; }
+h2 { font: 700 21px/1.15 var(--font-title); letter-spacing: .01em; }
+h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); letter-spacing: .1em; }
+.tag { border-radius: var(--r-pill); font-weight: 800; padding: 2px 8px; }
+/* cards */
+.card, .tcard, .obanner, .now, .reel, .arena { border-color: var(--line); box-shadow: var(--shadow-card); }
+.card.alert, .rung.current, .species.sel, .tcard.sel { box-shadow: 0 0 0 2px var(--gems), var(--shadow-card); border-color: var(--gems); }
+.tcard.sel { box-shadow: 0 0 0 2px var(--gems), 0 4px 0 var(--gems-keycap); }
+/* buttons: keys that press down */
+.btn { font-family: var(--font-display); font-weight: 800; border-radius: var(--r-sm); background: var(--panel); color: var(--text); border-color: var(--keycap);
+  box-shadow: 0 3px 0 var(--keycap); transition: transform var(--dur-fast), box-shadow var(--dur-fast), filter var(--dur-fast); }
+.btn:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 var(--keycap); }
+.btn.primary { background: var(--ok); border-color: var(--ok); color: var(--on-ok); box-shadow: 0 3px 0 var(--ok-keycap); }
+.btn.gemsy { background: var(--gems); border-color: var(--gems); color: var(--on-ok); box-shadow: 0 3px 0 var(--gems-stroke); }
+.btn.warn { background: var(--fight); border-color: var(--fight); color: var(--on-fight); box-shadow: 0 3px 0 var(--fight-keycap); }
+.btn.primary:not(:disabled):active { box-shadow: 0 1px 0 var(--ok-keycap); } .btn.gemsy:not(:disabled):active { box-shadow: 0 1px 0 var(--gems-stroke); }
+.btn.warn:not(:disabled):active { box-shadow: 0 1px 0 var(--fight-keycap); }
+.btn.ghost { background: transparent; box-shadow: none; border-style: dashed; color: var(--muted); }
+.btn.ghost:not(:disabled):active { box-shadow: none; }
+.speed button { border-radius: var(--r-pill); font-weight: 800; }
+.stile { border-width: 1px; }
+.ochip { border-radius: var(--r-sm); }
+.bar { border-radius: var(--r-pill); }
+.bar span { font-weight: 800; }
+.sprite:not(.art) { background: radial-gradient(circle at 50% 70%, var(--gems-bg), var(--panel-2) 70%); border: 1px solid var(--line-soft); }
+.sprite.art { background: radial-gradient(circle at 50% 75%, var(--gems-bg), transparent 70%); border: 1px solid var(--line-soft); }
+.hud .sprite, .species .sprite { border-radius: var(--r-lg); }
+.grade { font-family: var(--font-title); font-weight: 700; }
+/* loud text: bright gold with a dark outline so it pops on a light page */
+.dpop.super, .obanner .big, .pow { color: var(--gold-pop); -webkit-text-stroke: 1.5px var(--gold-stroke); }
+.obanner .big { font: 700 38px/1.05 var(--font-title); letter-spacing: .02em; text-shadow: 3px 3px 0 var(--pop-red); }
+.obanner.book .big { color: var(--gems); -webkit-text-stroke: 0; text-shadow: 3px 3px 0 var(--gems-shadow); }
+.obanner.chase .big { color: var(--epic); -webkit-text-stroke: 0; text-shadow: 3px 3px 0 var(--epic-shadow); }
+.obanner .more { background: var(--panel); }
+.tcard .tname { font: 700 19px/1.1 var(--font-title); }
+.legacy, .climb-now { font-family: var(--font-title); }
 .spgain, .spbadge { box-shadow: var(--glow-gems); }
-.toast { border: 1px solid var(--line); }
+.spgain { border-radius: var(--r-pill); }
+.nt.cap { box-shadow: var(--glow-gold); }
+.toast { border: 1px solid var(--line); border-radius: var(--r); }
 
 @media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0s; --dur: 0s; --dur-slow: 0s; } .flash, .dtile.flash.t-super, .dtile.flash.t-fail, .stage-mon .sprite, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain, .dpop { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
 @keyframes spfade { to { opacity: 0; } }

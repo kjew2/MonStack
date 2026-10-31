@@ -55,7 +55,7 @@ Asked by the UI overhaul (issue #115): could a family dress the whole UI, not ju
 
 Palette tokens that line up with any of them: a background, a raised surface, ink (text), muted text, one accent, plus the existing per-stat and per-element colours, which every family keeps. Hunter-dark and flat both work with today's dark phone palette; ink and painterly want a light, paper-coloured base.
 
-**Live: the UI chrome is hunter / system dark (kj, 2026-10-31, matching the creature art; issue #115).** `web/index.html` carries it: the `:root` tokens hold the palette (near-black navy base, steel-blue lines, the system blue `--gems` as the accent, gold for rare things), the fonts (Black Han Sans for titles, Chakra Petch for labels and numbers, Barlow for body), the cut size and the inward glow; a skin block at the end of the sheet makes every panel a system window: a thin border in its colour (`--bc`) glowing inward, top-left and bottom-right corners cut with `clip-path` and the border redrawn along each cut, uppercase labels, a faint blue grid behind the page, and a "System message" alert for tree offers. Outer glows would be clipped by the cut, so windows glow inward; the vendor's offer cards keep their rounded corners so their reveal burst is not clipped.
+**Live: the UI chrome is daylight (kj, 2026-10-31), replacing hunter / system dark.** kj compared seven chrome themes and sixteen title fonts on a mock Train screen and picked daylight with its own font. `web/index.html` carries it: the `:root` tokens hold the palette (a pale sky-blue base, white surfaces, soft blue lines, navy ink, sky blue `--gems` as the accent, text-strength accent shades that read on white, a bright `--gold-pop` for loud outlined text), the fonts (Fredoka for titles, banners and grades; Nunito for labels, numbers and body; Caveat stays for the fail pop), generous radii and soft blue shadows; a skin block at the end of the sheet draws the sky with two soft clouds, makes every panel a white rounded card with a soft shadow, every button a chunky key that presses down (Fight in coral, primary in green, the accent in blue), and the tab bar a row of pills. The creature art stays hunter (section 6); only the chrome changed. **Before (hunter / system dark, live until 2026-10-31):** near-black navy windows with a thin inward-glowing border, cut corners, uppercase labels, a faint blue grid and a "System message" alert for tree offers; Black Han Sans, Chakra Petch and Barlow.
 
 ## 5. Recommendation
 
@@ -65,7 +65,7 @@ Palette tokens that line up with any of them: a background, a raised surface, in
 
 ## 6. Questions for kj (answered 2026-10-31)
 
-1. **Style:** **hunter / system dark action** (kj, final). kj tried the abyss expedition watercolour style (section 7) in between, compared AI drafts of both (section 8) and settled on hunter. It is the art direction for the creatures. Whether the UI chrome follows it is for the UI overhaul, issue #115 (sections 4.1 and 7.1).
+1. **Style:** **hunter / system dark action** (kj, final). kj tried the abyss expedition watercolour style (section 7) in between, compared AI drafts of both (section 8) and settled on hunter. It is the art direction for the creatures. Whether the UI chrome follows it is for the UI overhaul, issue #115 (sections 4.1 and 7.1): it did for a while, then kj moved the chrome to daylight (section 4.1).
 2. **Route:** **AI generation** (kj). It needs an image-API key and network access in the cloud environment (done by kj, 2026-10-31); issue #116 has the steps and the generation plan. Prompts describe the style in words and never name an artist or series; a model licensed for commercial use only (section 2).
 3. **Where the art shows:** **both** (kj): portraits on the monster card, draft cards and apex reveals, and the battle sprites redrawn in the same style. Sprites use a bold outline and simple two-tone shading so they read at 32-88 px, keeping the glowing accents (eyes, nucleus, eyespots). The 12x12 pixel art in `web/sprites.js` stays until the generated set replaces it.
 4. **Chibi:** **not for now** (kj); maybe a later use case.
@@ -88,7 +88,7 @@ Possible uses next to the abyss style, none decided: the field-guide style for a
 
 For issue #115, in the terms of section 4.1: mostly CSS, a few small assets. Panels read as deep layers: dark teal-to-ink backgrounds with a soft vertical depth gradient, thin sepia borders with a hand-drawn wobble (an SVG border image or `feTurbulence` displacement), paper grain at low opacity, and bioluminescent glows (teal, amber) on focus, rare events and capstones. Assets: a few hanging-root and glowing-flora corner ornaments as SVG. Fonts (Google Fonts): a hand-lettered display face such as Amatic SC or Caveat (already loaded), with a soft humanist body face such as Nunito or Gothic A1. It keeps a dark base, so today's dark palette and per-stat and per-element colours carry over.
 
-**Was live briefly, then replaced (kj, 2026-10-31):** the UI wore this style for a while; when the creature art settled on hunter / system dark, kj moved the UI to hunter too (section 4.1).
+**Was live briefly, then replaced (kj, 2026-10-31):** the UI wore this style for a while; when the creature art settled on hunter / system dark, kj moved the UI to hunter too, and later to daylight (section 4.1).
 
 ## 8. Generation (issue #116)
 
