@@ -1,6 +1,6 @@
 # 22 - Spike: skill trees and capstones for higher-tier creatures
 
-Status: **spike report (agent, 2026-10-31; issue #110); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for research on skill trees and capstones for higher-tier creatures, then widened it: any interesting mechanic, interaction or synergy from RPG-like games, anime, manga or LitRPG that could inspire a tree or capstone. The starting point is *The Exiled Heavy Knight Knows How to Game the System*, which inspired the game. Section 6 records kj's answers, which are copied into `specs/12` section 5.8 and `specs/15` section 10.
+Status: **spike report (agent, 2026-10-31; issue #110); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for research on skill trees and capstones for higher-tier creatures, then widened it: any interesting mechanic, interaction or synergy from RPG-like games, anime, manga or LitRPG that could inspire a tree or capstone. The starting point is *The Exiled Heavy Knight Knows How to Game the System*, which inspired the game. Section 6 records kj's answers, which are copied into `specs/12` section 5.2.1 and `specs/15` section 10. **Section 8 is an addendum (agent, 2026-10-31)**: kj asked to widen the research beyond anime, to manhwa and webtoons, donghua and Chinese web novels, and light novels, *Lord of the Mysteries* in particular. Section 8 is research only; its questions are open.
 
 ## 1. Questions
 
@@ -222,3 +222,87 @@ These options can be combined. Effort assumes today's engine: a new chase capsto
 
 - Gap found during the spike: the bots never reach the drake and sprite chase capstones, and "every book" runs crowd out the species' own book. Filed as issue #111.
 - The measurement harness was throwaway. If kj wants these numbers tracked, add capstone rate, capstone cycle and chase-condition hit rates to `balance` (`specs/09` section 7).
+
+## 8. Addendum: manhwa, donghua, web novels and light novels (agent, 2026-10-31)
+
+kj asked to widen section 3 beyond anime and Western games, to manhwa and webtoons, donghua and Chinese web novels, and light novels, which often have more detailed power systems. *Lord of the Mysteries* came first. The same caveats as section 3 apply. Sources are fan wikis, fan guides and reviews found by web search (the fan wikis could not be fetched from the session, so some details come from search summaries). Rules the sources did not confirm are marked **(unconfirmed)**. The sketches use today's vocabulary (trees, nodes, tallies, rule modifiers, rank fights) with placeholder numbers.
+
+### 8.1 Does *Lord of the Mysteries* apply?
+
+**Partly, and the useful part is the most unusual one.** The setting (22 pathways, Sequences 9 to 0, gods, Uniqueness) is cosmology, and MonStack does not need that. But four of its rules map onto systems MonStack already has ([Acting Method](https://lordofthemysteries.fandom.com/wiki/Acting_Method), [Sequence](https://lordofthemysteries.fandom.com/wiki/Sequence), [Above the Sequence](https://lordofthemysteries.fandom.com/wiki/Above_the_Sequence), [Moegirl: pathways](https://zh.moegirl.org.cn/en/%E9%9D%9E%E5%87%A1%E9%80%94%E5%BE%84)):
+
+| LotM rule | What it does there | MonStack idea |
+|---|---|---|
+| **Acting method** | A potion is digested by living out its name (a Seer acts as a seer). Only a digested potion lets you advance safely. | **Digestion.** A tree's deep nodes (or its capstone) need a run tally that fits the tree's role, not only SP. A tank tree digests through damage mitigated, *Pyromancy* through fire damage, a speed tree through evades. Tallies exist already (`specs/15` section 6); today they gate only chase trees. |
+| **Loss of control** | Advancing before the potion is digested risks madness. | **Overreach.** Buying a node before it is digested is allowed. Each overreached node gives a chance per rank fight that the monster goes berserk for 2 turns (random target, no skills). It is a drawback the player chooses, like the agreed keystone capstones (section 6.4), and it reuses the Frenzy shape from section 3.1. |
+| **Named Sequence ladder** | Each step on a pathway has a title (Seer, Clown, Magician, Faceless...). | **Titled skill nodes.** A tree's skill nodes carry names that read as a rank ladder, and the deepest one reached goes into the Legacy Title. This is presentation only, and cheap. |
+| **Neighbouring pathways** | From Sequence 4, a Beyonder can switch to a neighbouring pathway in the same group; any other switch risks madness and stops advancement. | **Lateral swap.** Each tree lists 1 or 2 neighbours. Overwriting a tree with one of its neighbours keeps half the SP spent (today overwriting loses all of it, `specs/12` section 5.1). The UI draws the links. It fits kj's "fusion only for specific, clearly shown pairs" (section 6.5), with a lighter rule. |
+
+A fifth rule is for later: when a Beyonder dies, their **characteristic** stays behind, and related characteristics are drawn to each other (convergence). In MonStack, dismantling a Vault monster could leave its deepest tree as a one-use book. That belongs with inheritance (option F), which kj put far out (section 6.1).
+
+**Tension with the point dump.** Digestion spends tallies over time, while the stat-wall point dump (`specs/12` section 5.4) spends SP in one burst. The two fit if digestion **banks like SP**: the tally is counted from the run's start, not from when the tree was slotted. A player who drilled and fought "in role" before the 700 draft can still dump every point at once. That is also a skill-expression lever for spike #112: two runs with the same SP can reach different depths.
+
+### 8.2 Catalogue
+
+**Loot from the fallen: rank fights drop power, and the player chooses it.**
+- *Soul Land* spirit rings ([fables.gg](https://fables.gg/worlds/soul-land-fpclts81ic9f/lore/soul-rings), [Anibase](https://anibase.net/en/anime/l3aRN/Soul-Land)): rings come from slain spirit beasts and are coloured by the beast's age (white 10 years, yellow 100, purple 1,000, black 10,000, red 100,000). Each soul master has an absorption limit; going over it is "limit surpassing", possible but dangerous. **Rank rings:** each rank-fight win offers the opponent's ring, coloured by the opponent's rank (E white up to S red). A monster has a few ring slots, each a small passive from that opponent. Taking a ring above the limit (a WIS- or HP-based number) is an injury roll for a bigger ring. Spirit bones drop rarely; the source says resentment or a willing death raises the odds. **Bone drop:** a decisive win (no damage taken, or a KO in 3 turns) has a chance to drop a permanent bonus.
+- *Reincarnated as a Sword* ([Wikipedia](https://en.wikipedia.org/wiki/Reincarnated_as_a_Sword), [ANN](https://animenewsnetwork.com/review/reincarnated-as-a-sword/ebook-1/.147368)): breaking a beaten monster's magic stone absorbs one of its skills, and repeated skills level up into Superior versions. **Absorb:** a win lets the monster copy one opponent skill at level 1. Copying the same skill again levels it, and level 5 upgrades it. This differs from *Devour* (section 3.2), which takes stats.
+- *Battle Through the Heavens* ([fandom](https://battle-through-the-heavens.fandom.com/wiki/Yan_Clan), [chapter 1048](https://www.wuxiaworld.com/novel/battle-through-the-heavens/btth-chapter-1048)): 23 ranked Heavenly Flames, and a flame that devours the others becomes rank 1. **Ranked uniques:** a short, numbered list of elemental cores that only rare chase conditions drop; each extra core a monster takes in merges and stacks. It is a collection the player can see (pattern 7, uniqueness).
+
+**Breakthroughs: the milestone becomes an event.**
+- Xianxia cultivation in general ([BladeRPG](https://www.bladerpg.com/en/spirit-roots/), [Substack overview](https://jabberwocko.substack.com/p/xianxia-the-path-to-immortality)): realms advance by passing a qi threshold, major steps bring a **tribulation**, and rushing causes **qi deviation**. Spirit-root quality sets how fast someone cultivates and where they hit a bottleneck. **Tribulation fight:** crossing 700 or 900 in a stat (`specs/12` section 4.4) does not draft at once; it starts a special fight against a "heavenly" foe that scales with that stat. A win drafts 4 cards instead of 3, or gives the drafted tree its first node free. A loss drafts as usual and costs energy. The player can hold at 699 until ready, a planning choice the player can see. Spirit roots are today's species growth rates; MonStack already has them.
+- *DanMachi* Falna ([fandom](https://danmachi.fandom.com/wiki/Falna), [guide](https://myanimethoughts.com/danmachi-levelling-ranks-detail)): stats grow from normal excelia, but a **level up** needs a basic stat at rank D **and** a "great feat", and every level up offers a development ability. **Upset promotion:** a rank-fight win over a clearly stronger opponent (by a power-rating gap) also offers a 3-card pick of small passives. It rewards fighting above your weight rather than grinding.
+
+**Earned titles: deeds grant skills outside the tree slots.**
+- *So I'm a Spider, So What?* ([fandom: Taboo](https://kumodesu.fandom.com/wiki/Taboo)): titles such as *Kin Eater*, *Merciless* or *Assassin* are "enhancement codes obtained by satisfying conditions", each granting up to two skills. *Taboo* is a hidden skill that grows from forbidden acts and shows only at level 10. **Deed titles:** tally conditions (10 crits, 3 wins below 25% HP, 0 Rests in 4 cycles) grant a named title with one small skill, outside the 4 tree slots, kept for the run. **Hidden counter:** one secret tally per species shows only when it pays out. It works like a chase trait without a tree.
+- *Overlord* job classes ([Overlord wiki](https://overlordmaruyama.fandom.com/wiki/Skeleton_Mage)): each class caps at 15 levels, so level 100 needs at least 7 classes, and racial classes chain (Skeleton Mage, then Elder Lich, then Overlord). **Racial tax:** this is a balance lever for stronger higher-tier species (section 6.2). Part of a high-tier species' SP budget goes into a fixed racial tree that cannot be overwritten. The species is stronger, but has fewer free points to build with.
+
+**Patrons and outside goals.**
+- *Omniscient Reader's Viewpoint* ([epicdope](https://www.epicdope.com/whom-does-dokja-choose-as-his-sponsor-in-orv/), [SV quest summary](https://directforums.sufficientvelocity.com/threads/ways-of-perishing-on-the-apocalypse-orv-quest.95800/all/reader)): constellations sponsor incarnations with coins, and "probability" makes unlikely deeds cost more. Hidden scenarios appear only when conditions are met in sequence. **Patron:** at run start, pick 1 of 3 patrons. Every 3 cycles the patron sets a side goal (win without resting, cross 500 INT by cycle 6) that pays SP or AP. **Probability bonus:** a win the odds said you should lose pays extra SP, so underdog species earn more. Both add the run-to-run variance kj asked for (section 6.3).
+
+**Upkeep: power that has to be fed.**
+- *Reverend Insanity* ([Wikipedia](https://en.wikipedia.org/wiki/Reverend_Insanity)): power is a collection of Gu worms. Each Gu must be fed or it dies, and Gu are combined by recipes into stronger ones **(unconfirmed: the feeding and recipe rules come from general knowledge of the novel, not a source found in the spike)**. Aperture grade, the innate talent, caps how fast essence comes back. **Upkeep node:** a very strong node that costs 1 energy (or 1 SP) per cycle and goes dormant for a cycle when unpaid. It turns every Rest into an ongoing decision. There is a risk of tedium in an 8-10 minute run, so use it for 1 or 2 nodes at most.
+
+**Teams: a role that comes from the build, not the species.**
+- *Tower of God* positions ([fandom](https://towerofgod.fandom.com/wiki/Position), [animehunch](https://animehunch.com/positions-in-tower-of-god-anime-explained/)): Fisherman (melee offence), Spear Bearer (ranged), Light Bearer (information and command), Scout (forward recon), Wave Controller (shinsu support, rare). People change position: Lero-Ro was a top Fisherman and became a better Light Bearer. **Positions:** a Vault monster's trees give it a position, and a 4v4 team that covers distinct positions gets a small team bonus. The Light Bearer reveals the boss's next phase (`specs/12` section 8.3) to the team's gambits. This belongs to the Endless Tower and PvP rulebooks (T11), not to the run.
+
+**Account knowledge that compounds.**
+- *The Rising of the Shield Hero* ([fandom: Legendary Jewel](https://shield-hero.fandom.com/wiki/Legendary_Jewel), [Bubbleblabber](https://www.bubbleblabber.com/english-dub-review-the-rising-of-the-shield-hero-four-heroes-council)): the heroes' power-up methods work for everyone once they are shared, and knowing one makes the others stronger. Naofumi unlocks a new shield just by touching it. **Tree mastery:** maxing a tree in any run marks it "known" on the account. A known tree's first node is free in later runs, for every species. Seeing a tree in a draft adds it to a codex. This is meta-progression (`specs/18`), and it rewards trying new trees.
+
+**Rewinds.**
+- *Re:Zero*'s Return by Death and the "regressor" manhwa (ORV's *Regressor* stigma, *Second Life Ranker*): failure resets to a checkpoint with knowledge kept. **Regressor:** a rare capstone that, once per run, replays a cycle that ended in an injury or a lost rank fight. The run's RNG must stay deterministic: the replay draws fresh rolls from the same seeded stream. This needs checking against the run streams (`specs/14`) and the bot goldens.
+
+**Already covered in section 3:** *Solo Leveling*'s Shadow Extraction and *Tensura*'s Predator and skill fusion. *Perfect World*'s supreme bone and *The Beginning After the End*'s core stages and Beast Will ([TBATE wiki](https://tbate.fandom.com/wiki/Magic_and_Objects), [Sportskeeda](https://www.sportskeeda.com/anime/what-beast-will-the-beginning-after-end-everything-know-sylvia-s-gift-arthur)) are innate talent and inheritance again. The one new idea: a bound beast's will works in phases (a passive boost first, a transformation later). A Vault parent could lend its capstone at half strength, unlocking fully on a condition. That waits for inheritance (section 6.1).
+
+### 8.3 New patterns (adding to section 3.3)
+
+8. **Digestion** (LotM acting method, DanMachi great feats): power gated by playing the role, not by points. It is what most separates these sources from Western games and anime.
+9. **Loot from the fallen** (*Soul Land*, *Reincarnated as a Sword*, BTTH): each win offers a choice from the opponent. Runs diverge by who you fought and what you took.
+10. **Breakthrough events** (xianxia tribulations): a threshold is a moment with stakes, not a number crossing.
+11. **Outside goals** (ORV patrons, hidden scenarios): side goals that change from run to run push each run a different way.
+12. **Deed titles** (*So I'm a Spider*): small rewards for how you played, outside the tree budget.
+13. **Compounding knowledge** (*Shield Hero*): the account learns, so later runs start smarter.
+
+### 8.4 Pitfalls (adding to section 3.4)
+
+- **Digestion against the point dump:** solved only if digestion banks from run start (section 8.1). Otherwise it kills the signature moment.
+- **Loot needs content:** rank rings and Absorb need every rank opponent to carry a distinct, readable ring or skill. That is content work per opponent and per rank, and it makes balance depend on the opponent roster.
+- **More fights, longer runs:** a tribulation adds fights to a 12-cycle, 8-10 minute run. Cap it at 2 per run (700 and 900 only).
+- **Chores:** patron goals and upkeep can feel like homework. Keep goals optional and few, and make the reward something the player can see.
+- **Rewinds and determinism:** a replayed cycle must not let a player re-roll until lucky. One per run, and fresh rolls from the same stream, so the bots and goldens stay deterministic.
+
+### 8.5 Recommendation (agent)
+
+1. **Digestion plus overreach for chase and keystone capstones** (8.1). It is the best fit of the batch. It reuses tallies, gives the agreed drawback keystones (section 6.4) a mechanism, and makes runs diverge through skill. Prototype it on the drake book chase tree next to the section 5 item 5 prototype, and measure it with the `balance` capstone report (#111).
+2. **Hand rank rings, patrons and tribulation fights to spike #112** as candidate sources of run variance. Rank rings (loot from the fallen) look strongest, because each fight's result changes the build.
+3. **Lateral swap** (8.1) is a cheap, readable partner to the agreed fusion pairs.
+4. **Hold:** racial tax (until higher tiers exist and dominate), positions (T11 rulebooks), tree mastery (meta-progression), characteristics, Beast Will and Regressor (inheritance and determinism work).
+
+### 8.6 Questions for kj (open)
+
+None blocks the current phase.
+
+1. **Digestion:** may a deep node or capstone need a role tally as well as SP, with the tally banked from run start so the point dump still works?
+2. **Rank-fight loot:** should rank-fight wins offer something from the opponent (a ring, a copied skill)? It adds content to every opponent.
+3. **Tribulation fights** at 700 and 900: worth the extra run length?
+4. **Lateral swap:** should overwriting a tree with a listed neighbour keep half its SP?
