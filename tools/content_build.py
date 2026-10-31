@@ -63,7 +63,7 @@ REQUIRED_CONSTANTS = {
     "MON_FEAST_STR": "double", "MON_COUNTER_MULT": "double", "MON_FIRE_BONUS": "double", "MON_VEIL_EVADE_BONUS": "double",
     "MON_FEAST_DMG": "double", "MON_FEAST_START": "double", "MON_ECHO_DECOYS": "int", "MON_DRAIN_SHIELD_CAP": "double",
     # account and meta-progression (specs/18)
-    "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int",
+    "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int", "REROLL_BASE": "int", "REROLL_STEP": "int",
     # end-of-run gauntlet (specs/19)
     "GAUNTLET_FLOORS": "int", "GAUNTLET_BASE": "double", "GAUNTLET_GROWTH": "double", "GAUNTLET_BOSS_EVERY": "int",
     "GAUNTLET_BOSS_MULT": "double",
@@ -118,6 +118,7 @@ MON_RANGES = {
     "MON_DRAIN_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
     "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
+    "REROLL_BASE": (">= 0", lambda v: v >= 0), "REROLL_STEP": (">= 0", lambda v: v >= 0),
     "GAUNTLET_FLOORS": ("> 0", lambda v: v > 0), "GAUNTLET_BASE": ("> 0", lambda v: v > 0),
     "GAUNTLET_GROWTH": (">= 1", lambda v: v >= 1), "GAUNTLET_BOSS_EVERY": ("> 0", lambda v: v > 0),
     "GAUNTLET_BOSS_MULT": ("> 0", lambda v: v > 0),

@@ -200,7 +200,7 @@
     '.alog li[data-tip]::after { content: " \\24D8"; color: var(--muted, #9e9e9e); }',
     '.tip { position: fixed; z-index: 30; box-sizing: border-box; overflow-y: auto; padding: 10px 12px; border-radius: 8px;',
     '  background: var(--panel-2, #262626); color: var(--text, #eee); border: 1px solid var(--gems, #4dd0e1);',
-    '  box-shadow: 0 6px 20px rgba(0,0,0,.6); font-size: 13px; line-height: 1.4; display: flex; flex-direction: column; gap: 6px; }',
+    '  box-shadow: var(--shadow-tip, 0 6px 20px rgba(0,0,0,.6)); font-size: 13px; line-height: 1.4; display: flex; flex-direction: column; gap: 6px; }',
     '.tip[hidden] { display: none; }',
     '.tip p { margin: 0; }',
     '.tip-title { font: 600 15px var(--font-display, system-ui); }',

@@ -47,7 +47,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 ## 5. Schema versions
 
-`AccountState.CurrentSchemaVersion` is 4. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
+`AccountState.CurrentSchemaVersion` is 6. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
 
 | Step | Change |
 |---|---|
@@ -55,6 +55,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 | v2 -> v3 | `Achievements` (empty), `Records` and `Vendor` (null), issue #73 (`specs/18` sections 4 and 8). Owned species and talents are kept. After materialisation `Decode` rebuilds `Records` from the Vault entries (`AccountOps.RebuildRecords`) |
 | v3 -> v4 | `Tower` (Dungeon progress: `Day` -1, no attempts, nothing cleared), `specs/21` section 7. A `Tower` read as null is replaced by the same empty progress |
 | v4 -> v5 | `Tower` gains `Tickets` 0, `TicketPieces` 0 and `GrantDay` -1 (no tickets yet; the first free ticket is due on the next visit), `specs/21` section 7 |
+| v5 -> v6 | `Vendor` (when not null) gains `Rerolls` 0, issue #104 (`specs/18` section 4) |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
 
@@ -69,7 +70,7 @@ A save written by a newer schema is not loaded (`SaveInvalidException`) and neve
 
 ## 6. Tests
 
-`src/IdleRng.Runtime.Tests`: `SaveSerializerTests` (header, CRC, truncation, hex seeds), `SaveStoreTests` (rotation, tmp cleanup, crash between renames, quarantine), `AccountSaveTests` (round trip, backup fallback, rejection, the v1 -> v2, v2 -> v3 and v3 -> v4 migrations, tower progress round trip).
+`src/IdleRng.Runtime.Tests`: `SaveSerializerTests` (header, CRC, truncation, hex seeds), `SaveStoreTests` (rotation, tmp cleanup, crash between renames, quarantine), `AccountSaveTests` (round trip, backup fallback, rejection, the v1 -> v2 to v5 -> v6 migrations, tower progress and vendor reroll round trips).
 
 ## 7. Open
 

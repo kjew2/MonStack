@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=4.7/a1cfc254
+# battle-sim vectors, hash v2 content=4.9/8f1b530c
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -8,7 +8,7 @@
 1v1 brawler vs counter tank seed=2 outcome=SideBWon ticks=17
   A0 brawler  hp      0.00/  3200.00 act   4 dealt    1121.92 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   B0 tank     hp   4078.08/  5200.00 act   2 dealt    3200.00 taken    1121.92 heal      0.00 crit  0 evade  0 kill 1 counter  4
-  hash 4a5cf8bc02c9ff6c5954c6951f3d7c13d2d048de504bec4fff68000658f3f285
+  hash 16468fb60b4b658daed37f7f38d4f0ef3160a6bc6634805c931b94a3720cfe13
 
 4v1 party vs boss seed=3 outcome=SideAWon ticks=31
   A0 tank     hp   4377.48/  5200.00 act   4 dealt    5885.35 taken    2218.30 heal      0.00 crit  2 evade  0 kill 1 counter  6

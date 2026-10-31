@@ -13,9 +13,9 @@ namespace IdleRng.Sim.Account
     {
         /// <summary>
         /// The account save lineage (specs/18 section 6). v2: Vault entries carry Locked. v3: achievements, records and the post-run
-        /// vendor. v4: Dungeon progress. v5: Dungeon tickets (AccountSave migrates v1 to v5).
+        /// vendor. v4: Dungeon progress. v5: Dungeon tickets. v6: the vendor's reroll count (AccountSave migrates v1 to v6).
         /// </summary>
-        public const int CurrentSchemaVersion = 5;
+        public const int CurrentSchemaVersion = 6;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";
@@ -123,6 +123,9 @@ namespace IdleRng.Sim.Account
     {
         /// <summary>Grade id of the run that rolled these offers.</summary>
         public string Grade { get; set; }
+
+        /// <summary>Rerolls bought this visit (issue #104): the next one's price and the key of its roll. 0 when rolled at seal time.</summary>
+        public int Rerolls { get; set; }
 
         public List<VendorOffer> Offers { get; set; } = new List<VendorOffer>();
     }

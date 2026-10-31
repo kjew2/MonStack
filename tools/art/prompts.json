@@ -1,0 +1,92 @@
+{
+ "_doc": "Creature art prompts for tools/art/generate.py (specs/26 section 6, issue #116). Style is described in words only: never name an artist or a series.",
+ "styles": {
+  "abyss": {
+   "name": "Abyss expedition watercolour (specs/26 section 7)",
+   "details": true,
+   "prompt": "Original creature illustration for a monster-raising game, single creature centred and fully in frame, three-quarter view, full body. Soft hand-painted watercolour with layered translucent washes and visible paper grain, a fine delicate sepia pencil line with light hatching in the shadows. Background: a vast, misty, vertical chasm deep underground with hanging roots, glowing bioluminescent flora and soft light falling from far above, fading into luminous haze. Rich, saturated colours with deep contrast and bright glowing accents; the creature is crisp, sharply lit and clearly separated from the misty background, never washed out. The creature is endearing and cute, but has exactly one subtly unsettling detail, as if sketched by an expedition researcher. No text, no letters, no signature, no frame, no border."
+  },
+  "hunter": {
+   "name": "Hunter / system dark (specs/26 section 3)",
+   "details": false,
+   "prompt": "Original creature illustration for a monster-raising game, single creature centred and fully in frame, three-quarter view, full body, dramatic low angle. Polished Korean action-webtoon rendering: crisp digital cel shading with two or three hard-edged tone steps per colour, thin dark linework, a strong rim light in electric blue or violet along one edge, and glowing eyes with a soft bloom. Background: a near-black navy void with faint vertical light streaks, drifting embers and dust, and a glowing rune circle on the ground like a dungeon gate. High contrast, saturated colours, a sense of power and menace even when the creature is cute. No text, no letters, no signature, no frame, no border."
+  }
+ },
+ "species": {
+  "slime": {
+   "name": "Coremote",
+   "prompt": "A round, translucent blue jelly creature (deep blue to sky blue) with a glossy highlight and two small dark eyes. A glowing golden nucleus floats inside the gel. Unsettling detail: the nucleus has a slit pupil like an eye, and a tiny fish skeleton drifts inside the gel."
+  },
+  "drake": {
+   "name": "Bastion Drake",
+   "prompt": "A squat, heavy young dragon with a red-orange body, small cream horns and yellow eyes, covered in riveted grey steel forge plates like a siege tower. Fire glows orange through a ribbed, bellows-like chest. Unsettling detail: the plates are riveted straight into its flesh, with dark trickles under the rivets."
+  },
+  "sprite": {
+   "name": "Mirage Moth",
+   "prompt": "A small, luminous moth creature with large gold and cream wings, feathery antennae and a fuzzy cream body, hovering in a faint halo of glowing dust. The wings carry hypnotic eyespots, dark purple ringed with orange. Unsettling detail: the eyespots look like real eyes, with irises, lids and catchlights."
+  },
+  "mandrake": {
+   "name": "Mandrake",
+   "prompt": "A small root creature shaped like a little person: a tan and brown gnarled root body, root legs and root arms flung up, a sprout of fresh green leaves on its head, half pulled out of the dark soil. Its mouth is wide open in a scream. Unsettling detail: the screaming mouth is lined with rings of tiny needle teeth."
+  },
+  "shade_hound": {
+   "name": "Shade Hound",
+   "prompt": "A dog made purely of shadow, deep purple-black with soft violet edges, in a real canine pose with a lean body and four jointed legs, its tail dissolving into drifting smoke. Bright acid-green eyes and small white fangs. Unsettling detail: a short row of tiny extra acid-green eyes along its cheek."
+  }
+ },
+ "refresh": "Repaint this exact image: keep the same creature, design, pose, composition, background and unsettling detail. Make the colours richer and more saturated, deepen the contrast and the shadows, make the sepia linework crisper, and clear the haze in front of the creature so it stands out sharply from the misty background. Do not add text.",
+ "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face, colours and unsettling detail), but grander and more powerful, in the same watercolour and sepia pencil style and the same kind of misty chasm background, with richer colours and deep contrast. Do not add text. The change:",
+ "sprite": "Redraw this exact creature as a small game battle sprite: the same design, pose and colours, full body, alone on a fully transparent background with no scenery, no ground and no shadow. Bold, even sepia outline, simple two-tone shading, flat saturated colours, glowing parts kept bright, readable when shrunk to 64 pixels. No text.",
+ "apex": {
+  "living_ocean": {
+   "species": "slime",
+   "name": "Solaris Tide",
+   "prompt": "the jelly has become a small living sea in teal and sea-green with its own weather: a tiny rain cloud above it and a curling wave-wall of water rising around it; the slit-pupil nucleus now glows white-gold."
+  },
+  "abyssal_bloom": {
+   "species": "slime",
+   "name": "Abyssal Siphonophore",
+   "prompt": "the jelly has become a glowing deep-sea colony in deep violet and magenta: long translucent tendrils bloom out of it, pulsing pink light; many tiny nuclei drift inside like a string of pearls."
+  },
+  "unbreakable_will": {
+   "species": "drake",
+   "name": "Aegis Wyrm",
+   "prompt": "the forge plates have turned to gold-rimmed armour, cracked open to show a molten core; orange-gold light flares out of every crack as if blows were bouncing back."
+  },
+  "inferno_sovereign": {
+   "species": "drake",
+   "name": "Surtr Drake",
+   "prompt": "the armour has gone dark iron and its fire has turned black and violet; it wears a crown of black flame with violet edges that no water could put out."
+  },
+  "starlit_ascension": {
+   "species": "sprite",
+   "name": "Comet Moth",
+   "prompt": "the moth glows pale blue and white like a falling star, trailing a long comet tail of light and stardust behind it; its eyespots shine icy blue."
+  },
+  "arcane_overflow": {
+   "species": "sprite",
+   "name": "Gemini Moth",
+   "prompt": "the moth is violet and lilac, and a translucent mirror twin of it hovers a half-beat behind, repeating its pose; pink sparks of magic arc between the two."
+  },
+  "world_root": {
+   "species": "mandrake",
+   "name": "Worldroot Colossus",
+   "prompt": "the root creature has grown huge and ancient, with dark bark, a small tree crown of leaves and golden blossoms on its head, and roots spreading far into the ground around it."
+  },
+  "mandragora_scream": {
+   "species": "mandrake",
+   "name": "Mandragora Queen",
+   "prompt": "the root creature is regal, pink and magenta, with a crown of blooming petals instead of leaves; its scream sends visible rings of pink sound out around it."
+  },
+  "umbral_veil": {
+   "species": "shade_hound",
+   "name": "Grave Shuck",
+   "prompt": "the shadow dog has gone nearly black and tattered like an old shroud, wreathed in grave mist, and all its eyes now glow pale cyan."
+  },
+  "night_feast": {
+   "species": "shade_hound",
+   "name": "Eclipse Hound",
+   "prompt": "the shadow dog is crimson and black, a golden eclipse ring burns like a halo behind its head, and all its eyes glow gold."
+  }
+ }
+}

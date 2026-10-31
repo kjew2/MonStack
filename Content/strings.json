@@ -339,6 +339,22 @@
       "text": "Chase trait. On evade: strike back for {power:pct} {scales}."
     },
     {
+      "key": "mskill.iron_press.name",
+      "text": "Iron Press"
+    },
+    {
+      "key": "mskill.iron_press.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.smite.name",
+      "text": "Smite"
+    },
+    {
+      "key": "mskill.smite.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
       "key": "mskill.provoke.name",
       "text": "Provoke"
     },
@@ -1288,7 +1304,7 @@
     },
     {
       "key": "tip.ai.taunt",
-      "text": "It is not taunting already"
+      "text": "It is not taunting already, and an ally is alive for it to protect"
     },
     {
       "key": "tip.ai.buff",

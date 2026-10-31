@@ -84,15 +84,17 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void BookGatedChaseTree_NeedsItsBookTree()
         {
+            // Arcane Overflow (content 4.9, issue #111): Tome of Echoes node 0, Mind Warp node 4, 2 crits.
             var s = TrainingRun.Start(Db, "sprite", 7, new[] { "book_echoes" });
-            s.Tally.Crits = 3;
-            Offer(s, "spellcraft");
-            TrainingRun.TakeTree(Db, s, 0, 2);
-            Max(s, 2);
+            s.Tally.Crits = 2;
+            Assert.That(s.Slots[1].TreeId, Is.EqualTo("mind_warp"));
+            Max(s, 1);
             Assert.That(s.Offers, Is.Empty, "Arcane Overflow also needs a Tome of Echoes node");
             TrainingRun.UseBook(Db, s, "book_echoes");
-            TrainingRun.TakeTree(Db, s, 0, 3);
-            Max(s, 3);
+            TrainingRun.TakeTree(Db, s, 0, 2);
+            Assert.That(s.Offers, Is.Empty, "the book tree is slotted but none of its nodes is bought");
+            s.Sp = Math.Max(s.Sp, 1);
+            TrainingRun.SpendPoint(Db, s, 2);
             var offer = s.Offers.Single();
             Assert.That((offer.Source, offer.Trees.Single()), Is.EqualTo((OfferSource.Chase, "arcane_overflow")));
         }

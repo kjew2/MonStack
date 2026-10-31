@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<linearGradient id="ab-mm-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1830"/><stop offset=".5" stop-color="#3d3a5a"/><stop offset="1" stop-color="#e9c98a"/></linearGradient>
+<radialGradient id="ab-mm-deep" cx=".5" cy=".55" r=".6"><stop offset="0" stop-color="#fff1c8" stop-opacity=".8"/><stop offset=".5" stop-color="#e8c47a" stop-opacity=".3"/><stop offset="1" stop-color="#b08850" stop-opacity="0"/></radialGradient>
+<radialGradient id="ab-mm-wing" cx=".85" cy=".7" r="1"><stop offset="0" stop-color="#fff6dc"/><stop offset=".5" stop-color="#f6db8a"/><stop offset="1" stop-color="#e0a83a"/></radialGradient>
+<radialGradient id="ab-mm-wing2" cx=".15" cy=".7" r="1"><stop offset="0" stop-color="#fff6dc"/><stop offset=".5" stop-color="#f2c94c"/><stop offset="1" stop-color="#c78a2c"/></radialGradient>
+<radialGradient id="ab-mm-iris" cx=".45" cy=".4" r=".6"><stop offset="0" stop-color="#7a5aa8"/><stop offset=".6" stop-color="#3a2a5a"/><stop offset="1" stop-color="#1a1028"/></radialGradient>
+<radialGradient id="ab-mm-fur" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fffaf0"/><stop offset=".6" stop-color="#f0dcb4"/><stop offset="1" stop-color="#b89466"/></radialGradient>
+<filter id="ab-mm-wc" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="3" seed="21" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="7"/><feGaussianBlur stdDeviation=".9"/></filter>
+<filter id="ab-mm-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+<filter id="ab-mm-glw" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="ab-mm-paper" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 .3 0 0 0 0 .2 0 0 0 0 .1 1.3 0 0 0 -.62"/></filter>
+<g id="ab-mm-eye"><circle r="15" fill="#ff9f43" stroke="#2a1d14" stroke-width="1"/><circle r="11.5" fill="#f6e2b0"/><circle r="9.5" fill="url(#ab-mm-iris)"/><circle r="4" fill="#0c0612"/><path d="M-13-6C-6-14 6-14 13-6C6-10-6-10-13-6Z" fill="#5a3418" opacity=".7"/><path d="M-12 6C-6 11 6 11 12 6" fill="none" stroke="#5a3418" stroke-width=".8" opacity=".6"/><circle cx="-3.5" cy="-3.5" r="2.4" fill="#fff"/><circle cx="3" cy="3" r=".9" fill="#fff" opacity=".8"/></g>
+</defs>
+<rect width="240" height="240" fill="url(#ab-mm-bg)"/>
+<rect width="240" height="240" fill="url(#ab-mm-deep)"/>
+<path d="M92 0C84 60 70 120 60 240H184C170 120 156 60 146 0Z" fill="#fff0cc" opacity=".14" filter="url(#ab-mm-soft)"/>
+<g filter="url(#ab-mm-wc)">
+<path d="M0 0H58C50 34 70 62 52 98C40 128 60 160 42 196C36 214 44 228 38 240H0Z" fill="#2a2440" opacity=".6"/>
+<path d="M240 0H180C190 30 172 66 194 100C208 126 188 162 204 198C210 216 202 230 206 240H240Z" fill="#2a2440" opacity=".6"/>
+<path d="M0 0H32C24 30 40 66 24 104C14 134 28 172 14 240H0Z" fill="#141226" opacity=".85"/>
+<path d="M240 0H212C222 40 206 74 222 112C232 140 216 180 226 240H240Z" fill="#141226" opacity=".85"/>
+</g>
+<g fill="none" stroke="#1e1424" stroke-linecap="round" opacity=".85">
+<path d="M150 0C148 14 154 24 150 38C148 48 152 56 150 62" stroke-width="1.3"/>
+<path d="M60 0C62 14 58 24 60 36" stroke-width=".9"/><path d="M186 0C184 18 190 30 186 46" stroke-width=".9"/>
+</g>
+<g filter="url(#ab-mm-glw)" fill="#fff0c0"><circle cx="60" cy="38" r="1.8"/><circle cx="186" cy="48" r="2"/><circle cx="28" cy="120" r="1.6"/><circle cx="214" cy="140" r="1.6"/><circle cx="34" cy="180" r="1.2"/></g>
+<ellipse cx="120" cy="214" rx="70" ry="8" fill="#3d2c1e" opacity=".25" filter="url(#ab-mm-soft)"/>
+<g transform="rotate(-9 120 130)">
+<g stroke="#2a1d14" stroke-width="1.1" stroke-linejoin="round">
+<path d="M126 110C146 70 190 56 206 74C218 92 196 118 166 128C148 134 134 128 126 120Z" fill="url(#ab-mm-wing2)" opacity=".92"/>
+<path d="M126 128C146 140 174 156 170 180C166 196 140 190 130 170C124 158 124 144 126 134Z" fill="url(#ab-mm-wing2)" opacity=".92"/>
+<path d="M118 112C92 66 38 48 22 72C10 94 36 122 68 132C90 138 108 132 118 122Z" fill="url(#ab-mm-wing)"/>
+<path d="M116 128C92 138 52 156 54 184C56 204 92 200 108 178C116 166 120 148 118 134Z" fill="url(#ab-mm-wing)"/>
+</g>
+<g fill="none" stroke="#8a5a24" stroke-width="2.4" opacity=".35" filter="url(#ab-mm-wc)">
+<path d="M22 72C10 94 36 122 68 132"/><path d="M54 184C56 204 92 200 108 178"/><path d="M206 74C218 92 196 118 166 128"/>
+</g>
+<g fill="none" stroke="#6a4420" stroke-width=".6" opacity=".7" stroke-linecap="round">
+<path d="M116 116C96 96 66 78 34 70M116 118C90 108 60 104 26 98M116 120C96 120 74 124 50 124"/>
+<path d="M116 132C100 146 80 164 64 186M116 134C108 154 100 172 92 194"/>
+<path d="M128 114C146 96 170 82 198 74M128 116C150 110 176 108 204 100M128 120C146 122 162 124 180 122"/>
+<path d="M128 132C140 146 152 160 162 182M128 134C132 152 138 170 146 186"/>
+</g>
+<g fill="#7a4a1e" opacity=".55"><circle cx="30" cy="80" r="1.2"/><circle cx="26" cy="90" r="1.2"/><circle cx="34" cy="104" r="1.2"/><circle cx="62" cy="190" r="1.2"/><circle cx="70" cy="196" r="1.2"/><circle cx="200" cy="82" r="1"/><circle cx="196" cy="98" r="1"/></g>
+<use href="#ab-mm-eye" transform="translate(62 96) rotate(-12)"/>
+<use href="#ab-mm-eye" transform="translate(174 92) rotate(14) scale(.72 .82)"/>
+<use href="#ab-mm-eye" transform="translate(84 174) rotate(-20) scale(.55)"/>
+<use href="#ab-mm-eye" transform="translate(150 166) rotate(18) scale(.42 .5)"/>
+<g stroke="#2a1d14" stroke-width=".7" opacity=".45"><path d="M96 124l5-5M100 128l6-6M104 130l6-6M100 150l5-5M104 154l5-5M140 126l5-5M142 150l5-5"/></g>
+<g stroke="#2a1d14" stroke-width="1" fill="none" stroke-linecap="round"><path d="M114 150C108 158 106 166 104 172M116 156C112 164 112 172 110 178M128 150C134 158 136 166 138 170"/></g>
+<path d="M122 120C132 120 136 140 134 158C132 172 126 182 122 184C118 182 112 172 110 158C108 140 112 120 122 120Z" fill="url(#ab-mm-fur)" stroke="#2a1d14" stroke-width="1.1"/>
+<g fill="none" stroke="#a08058" stroke-width=".8" opacity=".8"><path d="M112 140C118 144 126 144 133 140M111 152C118 156 126 156 134 152M113 164C118 168 126 168 132 164M116 175C120 178 124 178 128 175"/></g>
+<path d="M108 112C104 100 112 92 122 92C132 92 140 100 136 112C134 122 128 126 122 126C116 126 110 122 108 112Z" fill="url(#ab-mm-fur)" stroke="#2a1d14" stroke-width="1.1"/>
+<g stroke="#fffaf0" stroke-width="1.2" stroke-linecap="round" fill="none"><path d="M106 108l-4-2M106 114l-4 1M108 120l-3 3M138 108l4-2M138 114l4 1M136 120l3 3M114 124l-1 4M130 124l1 4"/></g>
+<circle cx="122" cy="88" r="10" fill="url(#ab-mm-fur)" stroke="#2a1d14" stroke-width="1.1"/>
+<ellipse cx="116.5" cy="88" rx="3.6" ry="4.4" fill="#1a1028"/><ellipse cx="128.5" cy="87.5" rx="3" ry="4" fill="#1a1028"/>
+<circle cx="115.5" cy="86.5" r="1.3" fill="#fff"/><circle cx="127.8" cy="86" r="1.1" fill="#fff"/>
+<ellipse cx="117" cy="90" rx="2" ry="1.6" fill="#c9a8ff" opacity=".6" filter="url(#ab-mm-glw)"/><ellipse cx="129" cy="89.5" rx="1.7" ry="1.4" fill="#c9a8ff" opacity=".6" filter="url(#ab-mm-glw)"/>
+<g fill="none" stroke="#2a1d14" stroke-linecap="round">
+<path d="M117 80C110 64 98 52 82 46" stroke-width="1.1"/>
+<path d="M127 79C134 62 148 52 164 48" stroke-width="1.1"/>
+<path d="M114 74l-6 2M111 68l-7 1M107 62l-7 0M102 57l-6-2M96 53l-5-3M90 50l-4-4M114 74l1-6M111 68l2-6M107 62l2-6M102 57l3-6M96 53l3-5M90 50l3-5" stroke-width=".6" opacity=".85"/>
+<path d="M130 73l6 2M133 67l7 1M137 61l7 0M142 57l6-1M148 53l5-2M155 50l4-3M130 73l-1-6M133 67l-2-6M137 61l-1-6M142 57l-2-6M148 53l-2-5M155 50l-2-5" stroke-width=".6" opacity=".85"/>
+</g>
+</g>
+<g filter="url(#ab-mm-glw)" fill="#fff4c8"><circle cx="50" cy="150" r="1.3"/><circle cx="40" cy="138" r=".9"/><circle cx="186" cy="146" r="1.2"/><circle cx="196" cy="160" r=".8"/><circle cx="96" cy="210" r="1"/><circle cx="148" cy="206" r=".9"/><circle cx="74" cy="40" r=".8"/><circle cx="178" cy="36" r="1"/></g>
+<rect width="240" height="240" filter="url(#ab-mm-paper)" opacity=".22"/>
+</svg>
