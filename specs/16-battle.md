@@ -109,7 +109,7 @@ Behaviour a table row cannot express is coded once and referenced by id from con
 | `counter_mitigated` | After taking a single-target physical hit and surviving, counterattack the attacker at once for the damage DEF mitigated, as true damage (no evade, crit, element or mitigation; shields still absorb), regardless of gauge. The drafts' *Heavy Armor* + *Unbreakable Will* passive (`specs/12` section 5.3); the *Unbreakable Will* chase capstone. |
 | `echo_cast` | Every active damage, heal or shield skill the unit uses is cast again at once, at `MON_ECHO_POWER` of its power, within the same action. Passives, triggered effects and basic attacks do not echo. The *Arcane Overflow* chase capstone (`specs/15`). |
 
-Future hooks, not built: the entropy gauge, boss phase shifts and the environmental clock (`specs/12` section 8.3, `specs/13` T10) will be fields of `FightRules` and `FightState`.
+Future hooks, not built: the entropy gauge, boss phase shifts and the environmental clock (`specs/12` section 8.3, `specs/13` T10) will be fields of `FightRules` and `FightState`, designed in `specs/21` section 3 (off unless the caller passes tower rules, so existing hashes do not move).
 
 ### 6.3 Tallies
 

@@ -66,4 +66,4 @@ After `finishRun` seals the monster, `web/run.js` asks the bridge for the entry'
 - Done: `Vault.Seal` runs the gauntlet with the run's final fighter and the run seed, and stores `GauntletFloor`, `GauntletCleared`, `GauntletKiller`, `LegacyTitle` (string key) and `GauntletHash` on the `VaultEntry`. The wheel gets the floor list by running `GauntletSim.Run(c, entry.Fighter(c), entry.Seed)` again; the result is identical.
 - Pay shards by floor instead of by rank once the gauntlet replaces the rank as the grade (kj's call; the rank stays the MVP grade).
 - Done: the wheel spin and the comic defeat animation in the web client (section 7).
-- Enemy skills and boss phases (they share the Daily Tower work, `specs/13` T10).
+- Enemy skills and boss phases (they share the Daily Tower work, `specs/13` T10; boss skills and phases are designed in `specs/21`).

@@ -33,7 +33,7 @@ Gems (premium currency) arrive with the gacha (T9).
 | `BuyTalent(talent)` | Not maxed; enough shards. Costs shards, adds a rank. Applies from the next run: a run keeps the bonuses it started with |
 | `Dismantle(index)` | Removes Vault entry `index` (oldest first) for good and pays its grade's refund (section 7). Refused for a locked entry. Allowed during a run |
 | `SetLocked(index, locked)` | Locks or unlocks Vault entry `index`. Account state only: not part of the sealed monster or its `RunHash` |
-| `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower will grant books through it (T10); tests and debug use it now |
+| `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower will grant books through it (T10, `specs/21` section 7); tests and debug use it now |
 
 Rejected commands throw and change nothing. The sim has no clock: the caller passes the seal time.
 

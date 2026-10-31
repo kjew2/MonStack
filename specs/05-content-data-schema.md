@@ -34,6 +34,7 @@ The CSVs and the JSON are both committed so CI can rebuild `Content/` offline an
 | `skill_books` | books and the book tree each opens | `15` section 4 |
 | `talents` | the account talent list | `18` section 4 |
 | `gauntlet_enemies`, `legacy_titles` | gauntlet enemies and title bands | `19` |
+| `tower_bosses`, `boss_phases`, `book_drops` | Daily Tower bosses, phases and book drops (designed, not built) | `21` section 5 |
 | `strings` (optional) | `key`, `en`: every player-visible name and description | section 5 |
 
 `tools/content_build.py` (`SCHEMA`, `REQUIRED_CONSTANTS`, the `validate_*` functions) and `ContentDb` (`Build*`) hold the exact columns and rules; both must change together. `REQUIRED_CONSTANTS` is the complete constant list: an unknown or missing constant is an error.
