@@ -359,6 +359,70 @@
       "text": "Damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
     },
     {
+      "key": "mskill.tide_pool.name",
+      "text": "Tide Pool"
+    },
+    {
+      "key": "mskill.tide_pool.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.undertow.name",
+      "text": "Undertow"
+    },
+    {
+      "key": "mskill.undertow.desc",
+      "text": "Chase trait. When hit: {element} damage for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.ember_lance.name",
+      "text": "Ember Lance"
+    },
+    {
+      "key": "mskill.ember_lance.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.kindle.name",
+      "text": "Kindle"
+    },
+    {
+      "key": "mskill.kindle.desc",
+      "text": "Chase trait. On crit: +{power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "mskill.brine_wall.name",
+      "text": "Brine Wall"
+    },
+    {
+      "key": "mskill.brine_wall.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.abyssal_surge.name",
+      "text": "Abyssal Surge"
+    },
+    {
+      "key": "mskill.abyssal_surge.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.sovereign_flame.name",
+      "text": "Sovereign Flame"
+    },
+    {
+      "key": "mskill.sovereign_flame.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.star_lance.name",
+      "text": "Star Lance"
+    },
+    {
+      "key": "mskill.star_lance.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
       "key": "tree.slime_fundamentals.name",
       "text": "Slime Fundamentals"
     },
@@ -435,8 +499,40 @@
       "text": "Arcane Overflow"
     },
     {
+      "key": "tree.tidal_codex.name",
+      "text": "Codex of Tides"
+    },
+    {
+      "key": "tree.ember_codex.name",
+      "text": "Ember Codex"
+    },
+    {
+      "key": "tree.living_ocean.name",
+      "text": "Living Ocean"
+    },
+    {
+      "key": "tree.abyssal_bloom.name",
+      "text": "Abyssal Bloom"
+    },
+    {
+      "key": "tree.inferno_sovereign.name",
+      "text": "Inferno Sovereign"
+    },
+    {
+      "key": "tree.starlit_ascension.name",
+      "text": "Starlit Ascension"
+    },
+    {
       "key": "book.book_echoes.name",
       "text": "Skill Book: Tome of Echoes"
+    },
+    {
+      "key": "book.book_tides.name",
+      "text": "Skill Book: Codex of Tides"
+    },
+    {
+      "key": "book.book_embers.name",
+      "text": "Skill Book: Ember Codex"
     },
     {
       "key": "rule.counter_mitigated.name",

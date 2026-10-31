@@ -100,10 +100,12 @@ Every tree has a hidden capstone, its **chase trait**, that breaks a standard ru
 
 ### 5.3 Chase trees
 
-Rare trees unlocked mid-run by meeting conditions across trees and stats. Two unlock routes:
+Rare trees unlocked mid-run by meeting conditions across trees and stats. **Each species has two chase trees of its own** (kj, 2026-10-30): one per unlock route below. Only that species can unlock them. Two unlock routes:
 
 - **In-run:** stat thresholds plus nodes in other trees. Examples: maxing *Pyromancy* + *Geomancy* unlocks *Magma Overlord SP*; maxing *Heavy Armor* and reaching 500 DEF unlocks *Unbreakable Will*.
-- **Book-gated:** a Skill Book tree plus nodes in other trees plus a playstyle condition (section 5.6).
+- **Book-gated:** a Skill Book tree plus nodes in other trees plus a playstyle condition (section 5.6). Each species has its own Skill Book for this tree; this is the chase tree that rewards planning a run around it.
+
+Rules and placeholder content: `specs/15` section 5.
 
 Rule-breaking synergy passive example: maxing *Heavy Armor* and *Unbreakable Will* gives "Counterattacks deal damage equal to 100% of mitigated defense, bypassing range and speed rules."
 

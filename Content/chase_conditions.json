@@ -42,6 +42,90 @@
       "type": "tally_at_least",
       "ref": "crits",
       "amount": 3.0
+    },
+    {
+      "id": "living_ocean_c0",
+      "tree_id": "living_ocean",
+      "type": "tree_maxed",
+      "ref": "gel_armor",
+      "amount": null
+    },
+    {
+      "id": "living_ocean_c1",
+      "tree_id": "living_ocean",
+      "type": "stat_at_least",
+      "ref": "hp",
+      "amount": 500.0
+    },
+    {
+      "id": "living_ocean_c2",
+      "tree_id": "living_ocean",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "abyssal_bloom_c0",
+      "tree_id": "abyssal_bloom",
+      "type": "node_owned",
+      "ref": "tidal_codex_n5",
+      "amount": null
+    },
+    {
+      "id": "abyssal_bloom_c1",
+      "tree_id": "abyssal_bloom",
+      "type": "node_owned",
+      "ref": "slime_fundamentals_n4",
+      "amount": null
+    },
+    {
+      "id": "abyssal_bloom_c2",
+      "tree_id": "abyssal_bloom",
+      "type": "tally_at_least",
+      "ref": "damage_water",
+      "amount": 2000.0
+    },
+    {
+      "id": "inferno_sovereign_c0",
+      "tree_id": "inferno_sovereign",
+      "type": "node_owned",
+      "ref": "ember_codex_n5",
+      "amount": null
+    },
+    {
+      "id": "inferno_sovereign_c1",
+      "tree_id": "inferno_sovereign",
+      "type": "node_owned",
+      "ref": "pyromancy_n4",
+      "amount": null
+    },
+    {
+      "id": "inferno_sovereign_c2",
+      "tree_id": "inferno_sovereign",
+      "type": "tally_at_least",
+      "ref": "damage_fire",
+      "amount": 2000.0
+    },
+    {
+      "id": "starlit_ascension_c0",
+      "tree_id": "starlit_ascension",
+      "type": "tree_maxed",
+      "ref": "aether_striker",
+      "amount": null
+    },
+    {
+      "id": "starlit_ascension_c1",
+      "tree_id": "starlit_ascension",
+      "type": "stat_at_least",
+      "ref": "spd",
+      "amount": 500.0
+    },
+    {
+      "id": "starlit_ascension_c2",
+      "tree_id": "starlit_ascension",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
     }
   ]
 }

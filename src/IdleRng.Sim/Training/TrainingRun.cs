@@ -395,7 +395,8 @@ namespace IdleRng.Sim.Training
         /// <summary>
         /// Keep chase trees consistent with their conditions (specs/15 section 5): a slotted chase tree whose conditions fail
         /// locks again and leaves its slot (repeated until stable, since one removal can break another); a pending chase offer
-        /// whose conditions fail is withdrawn; a chase tree that holds and is neither slotted nor already offered is offered.
+        /// whose conditions fail is withdrawn; one of the run species' own chase trees (specs/15 section 5.1) that holds and is
+        /// neither slotted nor already offered is offered.
         /// </summary>
         static void Reconcile(ContentDb c, RunState s, List<string> removed)
         {
@@ -420,7 +421,7 @@ namespace IdleRng.Sim.Training
             s.ChaseOffered.RemoveAll(id => !ChaseConditionsHold(c, s, c.Trees[id]));
             foreach (var t in c.TreeList)
             {
-                if (t.Kind != TreeKind.Chase || s.ChaseOffered.Contains(t.Id) || Slotted(s, t.Id) >= 0) continue;
+                if (t.Kind != TreeKind.Chase || t.Species != s.SpeciesId || s.ChaseOffered.Contains(t.Id) || Slotted(s, t.Id) >= 0) continue;
                 if (!ChaseConditionsHold(c, s, t)) continue;
                 s.Offers.Add(new TreeOffer { Source = OfferSource.Chase, Trees = { t.Id } });
                 s.ChaseOffered.Add(t.Id);

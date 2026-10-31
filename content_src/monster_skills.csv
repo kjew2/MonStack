@@ -35,3 +35,11 @@ echo_bolt,mskill.echo_bolt.name,mskill.echo_bolt.desc,damage,enemy,,int,1.4,2,0,
 resonance,mskill.resonance.name,mskill.resonance.desc,buff,self,int,,0.1,0,3,
 stand_firm,mskill.stand_firm.name,mskill.stand_firm.desc,shield,self,,def,1.5,4,3,
 overflow_beam,mskill.overflow_beam.name,mskill.overflow_beam.desc,damage,all_enemies,,int,1.2,3,0,
+tide_pool,mskill.tide_pool.name,mskill.tide_pool.desc,heal,self,,wis,1.0,3,0,
+undertow,mskill.undertow.name,mskill.undertow.desc,damage,enemy,,wis,0.3,0,0,water
+ember_lance,mskill.ember_lance.name,mskill.ember_lance.desc,damage,enemy,,str,1.6,2,0,fire
+kindle,mskill.kindle.name,mskill.kindle.desc,buff,self,str,,0.15,0,2,
+brine_wall,mskill.brine_wall.name,mskill.brine_wall.desc,shield,self,,hp,0.2,4,3,
+abyssal_surge,mskill.abyssal_surge.name,mskill.abyssal_surge.desc,damage,all_enemies,,wis,1.0,3,0,water
+sovereign_flame,mskill.sovereign_flame.name,mskill.sovereign_flame.desc,damage,all_enemies,,str,1.2,3,0,fire
+star_lance,mskill.star_lance.name,mskill.star_lance.desc,damage,enemy,,spd,1.6,2,0,light

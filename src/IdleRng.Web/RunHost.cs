@@ -64,6 +64,8 @@ namespace IdleRng.Web
                 w.Key("base"); Stats(w, sp.Base);
                 w.Key("growth"); Stats(w, sp.Growth);
                 w.Key("trees").Arr().Str(sp.NativeTree1).Str(sp.NativeTree2).EndArr();
+                w.Key("chase").Arr().Str(sp.ChaseTreeRun).Str(sp.ChaseTreeBook).EndArr();   // in-run, then book-gated
+                w.P("book", SpeciesBook(sp));
                 w.EndObj();
             }
             w.EndArr();
@@ -109,6 +111,7 @@ namespace IdleRng.Web
             }
             w.EndArr();
             w.P("source", TreeSource(t));
+            if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated);
             w.Key("conditions").Arr();
             if (t.Conditions != null) foreach (var cd in t.Conditions) w.Str(ConditionText(cd));
             w.EndArr();
@@ -157,8 +160,25 @@ namespace IdleRng.Web
                     var b = _db.SkillBooks.Values.FirstOrDefault(x => x.TreeId == t.Id);
                     return b == null ? "From a skill book" : "From the skill book " + _db.Text(b.NameKey) + " (bring it into a run)";
                 }
-                default: return "Unlocks when its chase conditions hold";
+                default:
+                {
+                    string owner = t.Species != null && _db.Species.TryGetValue(t.Species, out var sp) ? _db.Text(sp.NameKey) : "its species";
+                    return t.BookGated ? "Book-gated chase tree of " + owner + ": unlocks when its conditions hold, one of which needs a skill book tree"
+                        : "Chase tree of " + owner + ": unlocks when its conditions hold";
+                }
             }
+        }
+
+        /// <summary>The skill book whose tree the species' book-gated chase tree needs (the first one), or null.</summary>
+        private string SpeciesBook(SpeciesDef sp)
+        {
+            if (!_db.Trees.TryGetValue(sp.ChaseTreeBook, out var t)) return null;
+            foreach (var tree in _db.BookTreesNeeded(t))
+            {
+                var b = _db.SkillBooks.Values.Where(x => x.TreeId == tree).OrderBy(x => x.Id, StringComparer.Ordinal).FirstOrDefault();
+                if (b != null) return b.Id;
+            }
+            return null;
         }
 
         private string ConditionText(ChaseConditionDef c)
@@ -514,8 +534,8 @@ namespace IdleRng.Web
             w.Key("books").Arr();
             foreach (var b in s.Books) w.Str(b);
             w.EndArr();
-            w.Key("chase").Arr();   // chase trees not yet unlocked: what is still missing
-            foreach (var t in _db.Trees.Values.Where(t => t.Kind == TreeKind.Chase).OrderBy(t => t.Id, StringComparer.Ordinal))
+            w.Key("chase").Arr();   // the species' own chase trees (in-run, then book-gated) and which conditions hold
+            foreach (var t in new[] { sp.ChaseTreeRun, sp.ChaseTreeBook }.Select(id => _db.Trees[id]))
             {
                 w.Obj().P("tree", t.Id).P("unlocked", TrainingRun.ChaseConditionsHold(_db, s, t));
                 w.Key("met").Arr();

@@ -5,3 +5,15 @@ unbreakable_will_c2,unbreakable_will,tally_at_least,wins,2
 arcane_overflow_c3,arcane_overflow,node_owned,tome_of_echoes_n5,
 arcane_overflow_c4,arcane_overflow,node_owned,spellcraft_n4,
 arcane_overflow_c5,arcane_overflow,tally_at_least,crits,3
+living_ocean_c0,living_ocean,tree_maxed,gel_armor,
+living_ocean_c1,living_ocean,stat_at_least,hp,500
+living_ocean_c2,living_ocean,tally_at_least,wins,2
+abyssal_bloom_c0,abyssal_bloom,node_owned,tidal_codex_n5,
+abyssal_bloom_c1,abyssal_bloom,node_owned,slime_fundamentals_n4,
+abyssal_bloom_c2,abyssal_bloom,tally_at_least,damage_water,2000
+inferno_sovereign_c0,inferno_sovereign,node_owned,ember_codex_n5,
+inferno_sovereign_c1,inferno_sovereign,node_owned,pyromancy_n4,
+inferno_sovereign_c2,inferno_sovereign,tally_at_least,damage_fire,2000
+starlit_ascension_c0,starlit_ascension,tree_maxed,aether_striker,
+starlit_ascension_c1,starlit_ascension,stat_at_least,spd,500
+starlit_ascension_c2,starlit_ascension,tally_at_least,wins,2

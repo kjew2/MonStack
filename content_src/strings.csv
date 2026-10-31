@@ -88,6 +88,22 @@ mskill.stand_firm.name,Stand Firm
 mskill.stand_firm.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 mskill.overflow_beam.name,Overflow Beam
 mskill.overflow_beam.desc,Damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.tide_pool.name,Tide Pool
+mskill.tide_pool.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.undertow.name,Undertow
+mskill.undertow.desc,Chase trait. When hit: {element} damage for {power:pct} {scales}.
+mskill.ember_lance.name,Ember Lance
+mskill.ember_lance.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.kindle.name,Kindle
+mskill.kindle.desc,Chase trait. On crit: +{power:pct} {stat} for {duration} turns.
+mskill.brine_wall.name,Brine Wall
+mskill.brine_wall.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.abyssal_surge.name,Abyssal Surge
+mskill.abyssal_surge.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.sovereign_flame.name,Sovereign Flame
+mskill.sovereign_flame.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.star_lance.name,Star Lance
+mskill.star_lance.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
 tree.slime_fundamentals.name,Slime Fundamentals
 tree.gel_armor.name,Gel Armor
 tree.pyromancy.name,Pyromancy
@@ -107,7 +123,15 @@ tree.survivor.name,Survivor
 tree.tome_of_echoes.name,Tome of Echoes
 tree.unbreakable_will.name,Unbreakable Will
 tree.arcane_overflow.name,Arcane Overflow
+tree.tidal_codex.name,Codex of Tides
+tree.ember_codex.name,Ember Codex
+tree.living_ocean.name,Living Ocean
+tree.abyssal_bloom.name,Abyssal Bloom
+tree.inferno_sovereign.name,Inferno Sovereign
+tree.starlit_ascension.name,Starlit Ascension
 book.book_echoes.name,Skill Book: Tome of Echoes
+book.book_tides.name,Skill Book: Codex of Tides
+book.book_embers.name,Skill Book: Ember Codex
 rule.counter_mitigated.name,Mitigation Counter
 rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage).
 rule.echo_cast.name,Echo Cast

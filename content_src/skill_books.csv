@@ -1,2 +1,4 @@
 id,name_key,tree_id
 book_echoes,book.book_echoes.name,tome_of_echoes
+book_tides,book.book_tides.name,tidal_codex
+book_embers,book.book_embers.name,ember_codex

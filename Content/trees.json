@@ -121,6 +121,20 @@
       "offer_threshold": null
     },
     {
+      "id": "tidal_codex",
+      "name_key": "tree.tidal_codex.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "ember_codex",
+      "name_key": "tree.ember_codex.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
       "id": "unbreakable_will",
       "name_key": "tree.unbreakable_will.name",
       "kind": "chase",
@@ -130,6 +144,34 @@
     {
       "id": "arcane_overflow",
       "name_key": "tree.arcane_overflow.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "living_ocean",
+      "name_key": "tree.living_ocean.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "abyssal_bloom",
+      "name_key": "tree.abyssal_bloom.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "inferno_sovereign",
+      "name_key": "tree.inferno_sovereign.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null
+    },
+    {
+      "id": "starlit_ascension",
+      "name_key": "tree.starlit_ascension.name",
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null

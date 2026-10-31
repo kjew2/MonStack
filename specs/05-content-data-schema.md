@@ -24,7 +24,7 @@ The CSVs and the JSON are both committed so CI can rebuild `Content/` offline an
 |---|---|---|
 | `constants` | every scalar: `key`, `type` (`int`, `double`, `bool`), `value` | the system specs list their constants: `14`, `15`, `16`, `18`, `19` |
 | `elements` | the five elements and the wheel (`strong_vs`) | `16` section 5.3 |
-| `species` | element, base stats, growth multipliers, two native trees | `14` section 3, `15` |
+| `species` | element, base stats, growth multipliers, two native trees, two chase trees (in-run, book-gated) | `14` section 3, `15` |
 | `drill_tiers` | fail, success, super gain ranges | `14` section 4 |
 | `fight_ranks` | the rank fight opponents, E to S | `14` section 5 |
 | `stat_milestones` | the thresholds that open tree drafts | `14` section 6 |
@@ -63,7 +63,7 @@ One file per table, shape `{ "table": "...", "rows": [ ... ] }`: UTF-8 without B
 
 `manifest.json` lists `schema_version` (the layout version; the loader refuses unknown values, `E901`), `content_version`, `source_revision`, every table's file and sha256, and `content_hash` (sha256 over the table hashes in name order). There is no timestamp, so rebuilding the same CSVs gives the same bytes. The loader verifies every file against the manifest (`E900`).
 
-`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.1**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9). Bump MINOR for any value or addition; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches. The converter does not yet compare against the previous build (the `E09x` codes below are reserved).
+`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.2**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9); 3.2 gave each species two chase trees and a skill book of its own (`specs/15` section 5.1). Bump MINOR for any value or addition; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches. The converter does not yet compare against the previous build (the `E09x` codes below are reserved).
 
 ## 5. Strings
 

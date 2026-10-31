@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("3.1"));
+            Assert.That(db.Version, Is.EqualTo("3.2"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -61,6 +61,20 @@ namespace IdleRng.Sim.Tests
             Assert.That(files["species.json"], Is.Not.EqualTo(File.ReadAllText(Path.Combine(dir, "species.json"))), "the test edit applied");
             var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files)));
             Assert.That(ex.Errors[0].Code, Is.EqualTo("E900"));
+        }
+
+        [Test]
+        public void ChaseTreeOwnership_IsValidated()
+        {
+            string dir = FileContentSource.FindContentDirectory(TestContext.CurrentContext.TestDirectory);
+            var files = Directory.GetFiles(dir, "*.json").ToDictionary(Path.GetFileName, File.ReadAllText);
+            // Drake's in-run chase tree becomes sprite's book-gated one: owned twice, needs a book, and Unbreakable Will is orphaned.
+            files["species.json"] = files["species.json"].Replace("\"chase_tree_run\": \"unbreakable_will\"", "\"chase_tree_run\": \"arcane_overflow\"");
+            var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false));
+            var msgs = ex.Errors.Where(e => e.Code == "E043").Select(e => e.Location + ": " + e.Message).ToList();
+            Assert.That(msgs, Has.Some.Contains("already belongs to species"));
+            Assert.That(msgs, Has.Some.Contains("in-run chase tree 'arcane_overflow' must not need a book tree"));
+            Assert.That(msgs, Has.Some.Contains("trees[unbreakable_will]: a chase tree must belong to a species"));
         }
 
         [Test]

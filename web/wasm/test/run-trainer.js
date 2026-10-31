@@ -244,7 +244,9 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(((await readAccount()).ActiveRun) === null, 'abandoning ends the run without sealing');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'and the Vault is unchanged');
 
-  // ---- the book option and drafts
+  // ---- the book option and drafts (the test book is the picked species' own: drake's Ember Codex)
+  await act('species-drake').click();
+  check(/Ember Codex/.test(await text('[data-id=chase-drake]')), 'the species card names its chase trees and the book one needs');
   await act('grant-book').click();
   await act('book-toggle').check();
   await act('start').click();
@@ -257,6 +259,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-id=offer-title]').count()) === 0, 'taking the tree closes the draft');
   check((await page.locator('[data-id^="slot-"]').count()) === 3, 'the book tree now fills slot 3');
   check((await page.locator('[data-act^="book-"]:not([data-act="book-toggle"])').count()) === 0, 'the used book is gone');
+  check((await page.locator('[data-id^="chasecard-"]').count()) === 2, 'the Trees tab lists the drake\'s own two chase trees');
+  check(/Ember Codex/.test(await text('[data-id=chasecard-inferno_sovereign]')), 'the book-gated chase tree says which skill book it needs');
 
   check(errors.length === 0, 'no page/console errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
   await browser.close();

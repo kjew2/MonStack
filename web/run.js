@@ -222,12 +222,14 @@
     });
 
     main.append(h('h3', { text: 'Chase trees' }));
-    main.append(h('p', { class: 'small muted', text: 'A chase tree unlocks when every condition holds, then it is offered as a draft. It locks again if a condition stops holding.' }));
+    main.append(h('p', { class: 'small muted', text: 'Each species has two chase trees of its own: one unlocks from its own trees and stats, the other also needs a skill book tree. A chase tree unlocks when every condition holds, then it is offered as a draft. It locks again if a condition stops holding.' }));
     s.chase.forEach((c) => {
       const t = C.trees[c.tree];
       const slotted = s.slots.some((x) => x && x.tree === c.tree);
-      main.append(h('div', { class: 'card' }, [
-        h('div', { class: 'row between' }, [h('b', { text: t.name }), h('span', { class: 'tag', text: slotted ? 'slotted' : c.unlocked ? 'unlocked' : 'locked' })]),
+      main.append(h('div', { class: 'card', 'data-id': 'chasecard-' + c.tree }, [
+        h('div', { class: 'row between' }, [h('b', { text: t.name }), h('span', null, [
+          h('span', { class: 'tag', text: t.bookGated ? 'book-gated' : 'in-run' }), ' ',
+          h('span', { class: 'tag', text: slotted ? 'slotted' : c.unlocked ? 'unlocked' : 'locked' })])]),
         ...t.conditions.map((txt, i) => h('div', { class: 'cond' + (c.met[i] ? ' met' : '') }, [h('span', { text: c.met[i] ? '✓' : '○' }), h('span', { text: txt })])),
         ...conditionSources(t),
       ]));
@@ -467,19 +469,21 @@
       main.append(h('button', { class: 'card species' + (sel ? ' sel' : ''), type: 'button', 'data-act': 'species-' + sp.id, onclick: () => { ui.pick = sp.id; render(); } }, [
         sprite(sp.id),
         h('div', null, [h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element)]), mini,
-          h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') })]),
+          h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') }),
+          h('small', { class: 'muted', 'data-id': 'chase-' + sp.id, text: 'Chase trees: ' + treeName(sp.chase[0]) + ', ' + treeName(sp.chase[1]) +
+            (sp.book ? ' (needs ' + C.books[sp.book].name + ')' : '') })]),
       ]));
     });
-    const bookIds = Object.keys(C.books);
-    const owned = bookIds.filter((id) => (acct.books[id] || 0) > 0);
-    if (owned.length) {
+    const bring = bookToBring();
+    if (bring) {
       const cb = h('input', { type: 'checkbox', 'data-act': 'book-toggle', onchange: (e) => { ui.book = e.target.checked; } });
       cb.checked = ui.book;
-      main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[owned[0]].name + ' (you have ' + acct.books[owned[0]] + ')' })]));
+      main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[bring].name + ' (you have ' + acct.books[bring] + ')' })]));
     }
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'start', disabled: !ui.pick, text: ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
-    if (bookIds.length) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[bookIds[0]].name,
-      onclick: () => { const r = run.acct('debugGrantBook', bookIds[0], 1); if (!r.ok) toast(r.reason); render(); } }));
+    const grant = speciesBook() || Object.keys(C.books)[0];
+    if (grant) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[grant].name,
+      onclick: () => { const r = run.acct('debugGrantBook', grant, 1); if (!r.ok) toast(r.reason); render(); } }));
 
     main.append(h('h3', { text: 'Talents' }));
     const m = acct.mods;
@@ -642,11 +646,20 @@
   function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
   const log = (line) => { ui.feed.unshift(line); };
 
+  // The book the picked species' book-gated chase tree needs, if any.
+  function speciesBook() { const sp = C.species.find((x) => x.id === ui.pick); return sp ? sp.book : null; }
+  // The book the start screen offers to bring: the picked species' own book if owned, else the first owned book.
+  function bookToBring() {
+    const has = (id) => (run.account.books[id] || 0) > 0;
+    const own = speciesBook();
+    return own && has(own) ? own : Object.keys(C.books).find(has) || null;
+  }
+
   function startRun() {
     if (!ui.pick) return;
     resetRunUi();
-    const owned = Object.keys(C.books).filter((id) => (run.account.books[id] || 0) > 0);
-    const r = run.startRun(ui.pick, ui.book && owned.length ? [owned[0]] : []);
+    const bring = bookToBring();
+    const r = run.startRun(ui.pick, ui.book && bring ? [bring] : []);
     if (!r.ok) { toast(r.reason); render(); return; }
     ui.book = false;
     ui.view = 'run';
