@@ -656,7 +656,7 @@
     },
     {
       "key": "rule.counter_mitigated.desc",
-      "text": "After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage)."
+      "text": "After surviving a single-target physical hit it counterattacks at once for {MON_COUNTER_MULT:pct} of the damage DEF mitigated (true damage)."
     },
     {
       "key": "rule.echo_cast.name",
@@ -664,7 +664,7 @@
     },
     {
       "key": "rule.echo_cast.desc",
-      "text": "Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power."
+      "text": "Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power. Its mirror twin takes the first {MON_ECHO_DECOYS} hit(s) aimed at it each fight."
     },
     {
       "key": "rule.tidal_overflow.name",
@@ -680,7 +680,7 @@
     },
     {
       "key": "rule.abyssal_drain.desc",
-      "text": "Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt."
+      "text": "Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt. Draining beyond max HP becomes a shield, up to {MON_DRAIN_SHIELD_CAP:pct} of max HP."
     },
     {
       "key": "rule.fire_pierce.name",
@@ -688,7 +688,7 @@
     },
     {
       "key": "rule.fire_pierce.desc",
-      "text": "Its fire damage ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element."
+      "text": "Its fire damage is {MON_FIRE_BONUS:pct} stronger, ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element."
     },
     {
       "key": "rule.double_turn_start.name",
@@ -1704,7 +1704,7 @@
     },
     {
       "key": "rule.wail_stagger.desc",
-      "text": "Every hit it lands pushes the target's next turn back by {MON_WAIL_STAGGER:pct} of a turn."
+      "text": "Each of its actions pushes every enemy's next turn back by {MON_WAIL_STAGGER:pct} of a turn and withers it for {MON_WAIL_WITHER:pct} of its max HP (true damage)."
     },
     {
       "key": "rule.umbral_veil.name",
@@ -1712,7 +1712,7 @@
     },
     {
       "key": "rule.umbral_veil.desc",
-      "text": "It can evade spells as well as physical hits, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+      "text": "It can evade spells as well as physical hits, gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
     },
     {
       "key": "rule.night_feast.name",
@@ -1720,7 +1720,7 @@
     },
     {
       "key": "rule.night_feast.desc",
-      "text": "Every hit it lands adds {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
+      "text": "It starts every fight with {MON_FEAST_START:pct} more damage. Every hit it lands adds {MON_FEAST_DMG:pct} more damage and {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
     }
   ]
 }

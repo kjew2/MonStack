@@ -40,8 +40,10 @@ namespace IdleRng.Sim.Combat
             if (!(r.GaugeSize > 0 && r.TurnTicks > 0 && r.TimeLimitTicks > 0 && r.SideSize > 0 && r.HpPerPoint > 0 && r.DefK > 0
                   && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1 && r.StackCap >= 1))
                 throw new ArgumentException("fight rules out of range (specs/16 section 7)", nameof(r));
-            if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && In01(r.DrainFrac) && In01(r.FirePierce) && r.DoubleTurns >= 0
-                  && In01(r.RebirthHeal) && In01(r.WailStagger) && In01(r.VeilEvadeCap) && r.FeastStr >= 0))
+            if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && r.DrainFrac >= 0 && In01(r.FirePierce) && r.DoubleTurns >= 0
+                  && In01(r.RebirthHeal) && In01(r.WailStagger) && In01(r.WailWither) && In01(r.VeilEvadeCap) && r.FeastStr >= 0
+                  && r.CounterMult >= 0 && r.FireBonus >= 0 && In01(r.VeilEvadeBonus) && r.FeastDmg >= 0 && r.FeastStart >= 0 && r.EchoDecoys >= 0
+                  && In01(r.DrainShieldCap)))
                 throw new ArgumentException("rule modifier constants out of range (specs/16 section 7)", nameof(r));
             if (r.Tower != null && !r.Tower.Valid) throw new ArgumentException("tower rules out of range (specs/21 section 5)", nameof(r));
         }
@@ -71,6 +73,8 @@ namespace IdleRng.Sim.Combat
             u.BaseMaxHp = u.MaxHp;
             u.Hp = u.MaxHp;
             if (Has(u, RuleModifiers.RootRebirth)) u.RebirthHeal = rules.RebirthHeal;
+            if (Has(u, RuleModifiers.EchoCast)) u.DecoysLeft = rules.EchoDecoys;
+            if (Has(u, RuleModifiers.NightFeast)) u.FeastDmgBonus = rules.FeastStart;
             return u;
         }
 
@@ -343,6 +347,17 @@ namespace IdleRng.Sim.Combat
                 u.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(u.Id, FightAction.TideEvent, u.Id, healed + shield));
             }
+            if ((r.WailStagger > 0 || r.WailWither > 0) && Has(u, RuleModifiers.WailStagger))
+            {
+                foreach (var e in Enemies(s, u))
+                {
+                    e.Gauge -= Math.Min(e.Gauge, r.WailStagger * r.GaugeSize);
+                    double dmg = Absorb(u, e, r.WailWither * e.MaxHp, null);
+                    onAction?.Invoke(new FightAction(u.Id, FightAction.StaggerEvent, e.Id, dmg));
+                    Reborn(e, onAction);
+                }
+                if (!SideAlive(s, 1 - u.Side)) return;
+            }
             Fire(r, s, u, FightTrigger.OnAction, rng, onAction);
             if (!u.Alive) return;
             for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
@@ -493,10 +508,18 @@ namespace IdleRng.Sim.Combat
         static double Hit(FightRules r, FightState s, FightUnit src, FightUnit tgt, double raw, bool magical, string element, CombatSkill sk,
                           bool aoe, IRandomSource rng, Action<FightAction> onAction)
         {
+            if (tgt.DecoysLeft > 0)   // echo_cast's mirror twin takes the hit instead
+            {
+                tgt.DecoysLeft--;
+                onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, 0, false, true, aoe, false));
+                onAction?.Invoke(new FightAction(tgt.Id, FightAction.DecoyEvent, tgt.Id, tgt.DecoysLeft));
+                return 0;
+            }
             bool veil = Has(tgt, RuleModifiers.UmbralVeil);
             if (!magical || veil)
             {
-                double evade = EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex), veil ? r.VeilEvadeCap : r.EvadeCap);
+                double evade = veil ? Clamp(EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex), 1) + r.VeilEvadeBonus, 0, r.VeilEvadeCap)
+                                    : EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
                 if (evade > 0 && Draw(rng) < evade)
                 {
                     tgt.Tally.Evades++;
@@ -511,7 +534,7 @@ namespace IdleRng.Sim.Combat
             if (rate > 0 && Draw(rng) < rate) { crit = true; raw *= Math.Max(1.0, r.CritDmg + Bonus(src, StatIds.CritDmg)); }
             bool pierce = element == RuleModifiers.FireElement && Has(src, RuleModifiers.FirePierce);
             double elementMult = r.ElementMult(element, tgt.Source.Element);
-            raw *= pierce ? Math.Max(1.0, elementMult) : elementMult;
+            raw *= pierce ? Math.Max(1.0, elementMult) * (1 + r.FireBonus) : elementMult;
             double dmgBonus = Bonus(src, StatIds.DmgDealt);
             if (dmgBonus != 0) raw *= Math.Max(0.0, 1 + dmgBonus);
             double mitStat = Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def);
@@ -529,21 +552,16 @@ namespace IdleRng.Sim.Combat
             onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false));
             if (dealt > 0 && r.DrainFrac > 0 && src.Alive && Has(src, RuleModifiers.AbyssalDrain))
             {
-                double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealMult(r, s), ref shield);
+                double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealMult(r, s), ref shield, r.DrainShieldCap);
                 src.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.DrainEvent, src.Id, healed + shield));
             }
             Reborn(tgt, onAction);
-            if (dealt > 0 && r.WailStagger > 0 && src.Alive && tgt.Alive && Has(src, RuleModifiers.WailStagger))
-            {
-                double lost = Math.Min(tgt.Gauge, r.WailStagger * r.GaugeSize);
-                tgt.Gauge -= lost;
-                if (lost > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.StaggerEvent, tgt.Id, lost));
-            }
-            if (dealt > 0 && r.FeastStr > 0 && src.Alive && Has(src, RuleModifiers.NightFeast))
+            if (dealt > 0 && (r.FeastStr > 0 || r.FeastDmg > 0) && src.Alive && Has(src, RuleModifiers.NightFeast))
             {
                 src.FeastBonus += r.FeastStr;
-                onAction?.Invoke(new FightAction(src.Id, FightAction.FeastEvent, src.Id, src.FeastBonus));
+                src.FeastDmgBonus += r.FeastDmg;
+                onAction?.Invoke(new FightAction(src.Id, FightAction.FeastEvent, src.Id, src.FeastBonus + src.FeastDmgBonus));
             }
             Fire(r, s, tgt, FightTrigger.OnHitTaken, rng, onAction);
             if (crit) Fire(r, s, src, FightTrigger.OnCrit, rng, onAction);
@@ -551,7 +569,7 @@ namespace IdleRng.Sim.Combat
             if (!magical && !aoe && mitigated > 0 && tgt.Alive && src.Alive && Has(tgt, RuleModifiers.CounterMitigated))
             {
                 tgt.Tally.Counters++;
-                double c = Absorb(tgt, src, mitigated, null);
+                double c = Absorb(tgt, src, mitigated * r.CounterMult, null);
                 onAction?.Invoke(new FightAction(tgt.Id, null, src.Id, c, false, false, false, true));
                 Reborn(src, onAction);
                 GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, onAction);
@@ -564,14 +582,15 @@ namespace IdleRng.Sim.Combat
         /// tidal_overflow the overflow becomes shield, up to TideShieldCap of max HP (added to <paramref name="shield"/>). It joins the
         /// unit's one shield pool, so a timed shield's expiry clears it too.
         /// </summary>
-        static double Heal(FightRules r, FightUnit t, double amount, ref double shield)
+        static double Heal(FightRules r, FightUnit t, double amount, ref double shield, double overflowCap = 0)
         {
             double before = t.Hp, sum = t.Hp + amount;
             t.Hp = Math.Min(t.MaxHp, sum);
             double over = sum - t.MaxHp;
-            if (over > 0 && Has(t, RuleModifiers.TidalOverflow))
+            double capFrac = Math.Max(overflowCap, Has(t, RuleModifiers.TidalOverflow) ? r.TideShieldCap : 0);
+            if (over > 0 && capFrac > 0)
             {
-                double cap = r.TideShieldCap * t.MaxHp;
+                double cap = capFrac * t.MaxHp;
                 if (t.Shield < cap)
                 {
                     double add = Math.Min(cap - t.Shield, over);
@@ -993,7 +1012,7 @@ namespace IdleRng.Sim.Combat
         /// <summary>Sum of effect values (plus night_feast's STR) on <paramref name="stat"/> (the whole value for crit_rate and crit_dmg bonuses).</summary>
         static double Bonus(FightUnit u, string stat)
         {
-            double sum = stat == StatIds.Str ? u.FeastBonus : 0;   // night_feast's STR counts like a permanent effect
+            double sum = stat == StatIds.Str ? u.FeastBonus : stat == StatIds.DmgDealt ? u.FeastDmgBonus : 0;   // night_feast counts like a permanent effect
             foreach (var e in u.Effects) if (e.Stat == stat) sum += e.Frac;
             return sum;
         }
@@ -1033,7 +1052,8 @@ namespace IdleRng.Sim.Combat
                 foreach (var kv in t.DamageByElement) { w.Str(kv.Key); w.F64(kv.Value); }
                 // Rule state is hashed only for units that carry the rule, so every other fight keeps its hash.
                 if (Has(u, RuleModifiers.RootRebirth)) w.F64(u.RebirthHeal);
-                if (Has(u, RuleModifiers.NightFeast)) w.F64(u.FeastBonus);
+                if (Has(u, RuleModifiers.NightFeast)) { w.F64(u.FeastBonus); w.F64(u.FeastDmgBonus); }
+                if (Has(u, RuleModifiers.EchoCast)) w.I32(u.DecoysLeft);
                 if (s.Tower)   // only tower fights hash the tower fields, so every other fight keeps its hash
                 {
                     w.F64(u.Entropy); w.I32(u.Vents); w.I32(u.PhaseNext); w.Bool(u.IsAdd); w.I32(u.Spawned); w.F64(u.Guard);

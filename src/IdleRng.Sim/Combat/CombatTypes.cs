@@ -276,14 +276,38 @@ namespace IdleRng.Sim.Combat
         /// <summary>root_rebirth: the fraction of max HP the unit comes back with after its one killing blow.</summary>
         public double RebirthHeal { get; set; }
 
-        /// <summary>wail_stagger: the fraction of a full ATB gauge each hit takes from the target.</summary>
+        /// <summary>wail_stagger: the fraction of a full ATB gauge each of the unit's actions takes from every enemy.</summary>
         public double WailStagger { get; set; }
+
+        /// <summary>wail_stagger: true damage, a fraction of each enemy's max HP, each of the unit's actions deals to every enemy.</summary>
+        public double WailWither { get; set; }
 
         /// <summary>umbral_veil: the unit's evade cap (its evade roll also covers magical hits).</summary>
         public double VeilEvadeCap { get; set; }
 
         /// <summary>night_feast: the STR (fraction of base) each landed hit adds for the rest of the fight.</summary>
         public double FeastStr { get; set; }
+
+        /// <summary>counter_mitigated: the counter deals this multiple of the damage DEF mitigated.</summary>
+        public double CounterMult { get; set; } = 1;
+
+        /// <summary>fire_pierce: the unit's fire damage is multiplied by 1 + this.</summary>
+        public double FireBonus { get; set; }
+
+        /// <summary>umbral_veil: flat evade chance added before the cap.</summary>
+        public double VeilEvadeBonus { get; set; }
+
+        /// <summary>night_feast: the damage-dealt bonus each landed hit adds for the rest of the fight.</summary>
+        public double FeastDmg { get; set; }
+
+        /// <summary>night_feast: the damage-dealt bonus the unit starts every fight with.</summary>
+        public double FeastStart { get; set; }
+
+        /// <summary>echo_cast: hits per fight its mirror twin takes instead of it.</summary>
+        public int EchoDecoys { get; set; }
+
+        /// <summary>abyssal_drain: draining beyond max HP becomes shield up to this fraction of max HP.</summary>
+        public double DrainShieldCap { get; set; }
 
         /// <summary>The Dungeon's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
         public TowerRules Tower { get; set; }
@@ -308,8 +332,9 @@ namespace IdleRng.Sim.Combat
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
                 CritDmg = k.MonCritDmg, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
                 TideRegen = k.MonTideRegen, TideShieldCap = k.MonTideShieldCap, DrainFrac = k.MonDrainFrac, FirePierce = k.MonFirePierce,
-                DoubleTurns = k.MonDoubleTurns, RebirthHeal = k.MonRebirthHeal, WailStagger = k.MonWailStagger,
-                VeilEvadeCap = k.MonVeilEvadeCap, FeastStr = k.MonFeastStr,
+                DoubleTurns = k.MonDoubleTurns, RebirthHeal = k.MonRebirthHeal, WailStagger = k.MonWailStagger, WailWither = k.MonWailWither,
+                VeilEvadeCap = k.MonVeilEvadeCap, FeastStr = k.MonFeastStr, CounterMult = k.MonCounterMult, FireBonus = k.MonFireBonus,
+                VeilEvadeBonus = k.MonVeilEvadeBonus, FeastDmg = k.MonFeastDmg, FeastStart = k.MonFeastStart, EchoDecoys = k.MonEchoDecoys, DrainShieldCap = k.MonDrainShieldCap,
             };
             foreach (var e in c.ElementList) r.StrongVs[e.Id] = e.StrongVs;
             return r;

@@ -1,4 +1,4 @@
-# training-run vectors, hash v7 content=4.4/f80b5079
+# training-run vectors, hash v7 content=4.4/535036dd
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8 injuries=0
@@ -28,7 +28,7 @@ slime chaser seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 808 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
   trees slime_fundamentals:7/8 gel_armor:8/8 living_ocean:8/8 survivor:0/8
-  hash f56e95ebce3a93c34a0ae063a8ad2030296ac8daa36473177ab286538d48c6ef
+  hash 554d2b4c73f4d3d6d8d6bc00833b2e27d45dc7439842562fad99ab1e7ae2f5ca
 
 slime focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=s fights=6/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
@@ -98,9 +98,9 @@ sprite hoarder seed=7
 
 sprite chaser seed=7
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
-  stats hp 105 str 60 int 518 wis 170 dex 155 def 70 spd 519 luk 110
-  trees aether_striker:8/8 mind_warp:7/8 starlit_ascension:8/8 survivor:4/8
-  hash 32205245639faaac5cf9357bde4aaf5bb8caa5c7e065879fa15e4cef2d3fe857
+  stats hp 90 str 60 int 518 wis 155 dex 155 def 70 spd 519 luk 110
+  trees aether_striker:8/8 mind_warp:8/8 starlit_ascension:8/8 survivor:1/8
+  hash 62ce863593a59d58b74cef1f29f0087c785824864e3c1c6fd6039a765d8fcfc3
 
 sprite focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0

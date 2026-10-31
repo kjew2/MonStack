@@ -209,12 +209,12 @@
     {
       "key": "MON_ECHO_POWER",
       "type": "double",
-      "value": 0.5
+      "value": 1.0
     },
     {
       "key": "MON_TIDE_REGEN",
       "type": "double",
-      "value": 0.05
+      "value": 0.02
     },
     {
       "key": "MON_TIDE_SHIELD_CAP",
@@ -224,27 +224,32 @@
     {
       "key": "MON_DRAIN_FRAC",
       "type": "double",
-      "value": 0.3
+      "value": 2.5
     },
     {
       "key": "MON_FIRE_PIERCE",
       "type": "double",
-      "value": 0.5
+      "value": 1.0
     },
     {
       "key": "MON_DOUBLE_TURNS",
       "type": "int",
-      "value": 1
+      "value": 2
     },
     {
       "key": "MON_REBIRTH_HEAL",
       "type": "double",
-      "value": 0.4
+      "value": 0.05
     },
     {
       "key": "MON_WAIL_STAGGER",
       "type": "double",
-      "value": 0.25
+      "value": 0.6
+    },
+    {
+      "key": "MON_WAIL_WITHER",
+      "type": "double",
+      "value": 0.09
     },
     {
       "key": "MON_VEIL_EVADE_CAP",
@@ -255,6 +260,41 @@
       "key": "MON_FEAST_STR",
       "type": "double",
       "value": 0.04
+    },
+    {
+      "key": "MON_COUNTER_MULT",
+      "type": "double",
+      "value": 2.0
+    },
+    {
+      "key": "MON_FIRE_BONUS",
+      "type": "double",
+      "value": 1.5
+    },
+    {
+      "key": "MON_VEIL_EVADE_BONUS",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "MON_FEAST_DMG",
+      "type": "double",
+      "value": 0.15
+    },
+    {
+      "key": "MON_FEAST_START",
+      "type": "double",
+      "value": 1.5
+    },
+    {
+      "key": "MON_ECHO_DECOYS",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "MON_DRAIN_SHIELD_CAP",
+      "type": "double",
+      "value": 1.0
     },
     {
       "key": "SHARDS_PER_CYCLE",

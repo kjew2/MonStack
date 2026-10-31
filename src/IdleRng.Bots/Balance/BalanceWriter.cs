@@ -73,6 +73,14 @@ namespace IdleRng.Bots.Balance
                       c.Killers.Count == 0 ? "-" : string.Join(" ", c.Killers.Take(3).Select(k => $"{k.Key} {Pct(c.N == 0 ? 0 : (double)k.Count / c.N)}%")));
             t.AppendTo(sb);
 
+            sb.Append("\n## Chase power: gauntlet floors a whole chase tree adds, capstone included (specs/15 section 5.5)\n");
+            t = new Table(2);
+            t.Row("species", "policy", "base floor", "in-run +", "in-run p10/p50/p90", "book +", "book p10/p50/p90");
+            foreach (var c in r.Cells)
+                t.Row(c.Species, c.Policy, Num(c.CapstoneBase.Mean), Num(c.CapstoneGainRun.Mean), Pcts(c.CapstoneGainRun),
+                      Num(c.CapstoneGainBook.Mean), Pcts(c.CapstoneGainBook));
+            t.AppendTo(sb);
+
             if (r.GauntletBossEvery > 0)
             {
                 sb.Append($"\n## Gauntlet stall floors: % of the runs that did not clear, by floor reached mod {r.GauntletBossEvery} (x0 = boss floor; issue #99)\n");
@@ -250,6 +258,9 @@ namespace IdleRng.Bots.Balance
                 j.Key("shards"); Dist(j, c.Shards);
                 j.Key("gauntletFloor"); Dist(j, c.GauntletFloor);
                 j.Key("gauntletCleared").Num(c.GauntletCleared).Key("gauntletClearRate").Num(c.GauntletClearRate);
+                j.Key("capstoneBase"); Dist(j, c.CapstoneBase);
+                j.Key("capstoneGainRun"); Dist(j, c.CapstoneGainRun);
+                j.Key("capstoneGainBook"); Dist(j, c.CapstoneGainBook);
                 j.Key("gauntletBossStalls").Num(c.GauntletBossStalls).Key("gauntletBossStallRate").Num(c.GauntletBossStallRate);
                 j.Key("gauntletStallMod").Open('[');
                 foreach (var k in c.GauntletStallMod) j.Num(k);
@@ -386,6 +397,9 @@ namespace IdleRng.Bots.Balance
                 for (int i = 0; i < c.GauntletStallMod.Length; i++)
                     Rate(sb, "gauntlet", c.Species, c.Policy, "", "stall_mod_" + i.ToString(Inv), c.N - c.GauntletCleared,
                          c.N == c.GauntletCleared ? 0 : (double)c.GauntletStallMod[i] / (c.N - c.GauntletCleared));
+                Row(sb, "capstone", c.Species, c.Policy, "", "base_floor", c.CapstoneBase);
+                Row(sb, "capstone", c.Species, c.Policy, "", "gain_run", c.CapstoneGainRun);
+                Row(sb, "capstone", c.Species, c.Policy, "", "gain_book", c.CapstoneGainBook);
                 foreach (var k in c.Killers) Rate(sb, "gauntlet", c.Species, c.Policy, "", "killer_" + k.Key, c.N, c.N == 0 ? 0 : (double)k.Count / c.N);
                 ChaseCsv(sb, "chase", c);
                 foreach (var x in c.Opponents)

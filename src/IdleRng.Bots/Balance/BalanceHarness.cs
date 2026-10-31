@@ -72,6 +72,15 @@ namespace IdleRng.Bots.Balance
         /// <summary>The gauntlet ended on a boss floor (GauntletSim.IsBoss); false when cleared. Issue #99.</summary>
         public bool GauntletBossStall { get; set; }
 
+        /// <summary>
+        /// Chase power (specs/15 section 5.5): the gauntlet floor of the run's monster without any chase tree (its chase tree
+        /// nodes, flat stats included, taken out), then with its species' in-run, or its book-gated, chase tree fully bought on
+        /// top (same seed).
+        /// </summary>
+        public int CapstoneBaseFloor { get; set; }
+        public int CapstoneRunFloor { get; set; }
+        public int CapstoneBookFloor { get; set; }
+
         /// <summary>The species' chase trees in content order: conditions held, unlocked, capstone and its cycle (ChaseTracker).</summary>
         public List<ChaseOutcome> Chase { get; set; } = new List<ChaseOutcome>();
 
@@ -203,6 +212,11 @@ namespace IdleRng.Bots.Balance
         /// <summary>Per capstoned run, the earliest cycle a capstone it ended with was bought.</summary>
         public Distribution CapstoneCycle { get; set; }
 
+        /// <summary>Chase power (specs/15 section 5.5): the gauntlet floor without a chase tree, and the floors each whole chase tree adds.</summary>
+        public Distribution CapstoneBase { get; set; }
+        public Distribution CapstoneGainRun { get; set; }
+        public Distribution CapstoneGainBook { get; set; }
+
         /// <summary>Per chase tree of the species, in the order the runs list them (content order).</summary>
         public List<ChaseSummary> Chase { get; set; }
 
@@ -242,6 +256,9 @@ namespace IdleRng.Bots.Balance
             s.Killers = Count(runs.Where(r => r.GauntletKiller != null).Select(r => r.GauntletKiller));
             s.Capstoned = runs.Count(r => r.CapstoneCycle > 0);
             s.CapstoneCycle = Distribution.Of(runs.Where(r => r.CapstoneCycle > 0).Select(r => r.CapstoneCycle));
+            s.CapstoneBase = Distribution.Of(runs.Select(r => r.CapstoneBaseFloor));
+            s.CapstoneGainRun = Distribution.Of(runs.Select(r => r.CapstoneRunFloor - r.CapstoneBaseFloor));
+            s.CapstoneGainBook = Distribution.Of(runs.Select(r => r.CapstoneBookFloor - r.CapstoneBaseFloor));
             s.Chase = SummariseChase(runs);
             s.Opponents = SummariseOpponents(runs);
             return s;
@@ -449,9 +466,14 @@ namespace IdleRng.Bots.Balance
             var chase = new ChaseTracker(c, species);
             var fights = new FightTracker();
             var s = RunBot.Play(c, RunPolicies.Create(policy), species, seed, null, books, st => { chase.Observe(st); fights.Observe(st); });
-            var g = GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
+            var monster = TrainingRun.MonsterFighter(c, s);
+            var g = GauntletSim.Run(c, monster, s.Seed);
+            var sp = c.Species[species];
             return new RunSample
             {
+                CapstoneBaseFloor = GauntletSim.Run(c, ChaseFighter(c, s, null), s.Seed).FloorReached,
+                CapstoneRunFloor = GauntletSim.Run(c, ChaseFighter(c, s, sp.ChaseTreeRun), s.Seed).FloorReached,
+                CapstoneBookFloor = GauntletSim.Run(c, ChaseFighter(c, s, sp.ChaseTreeBook), s.Seed).FloorReached,
                 Species = species, Policy = policy, Seed = seed, RankIndex = s.Rank, End = s.End, Cycles = s.Cycle,
                 FightsFought = s.FightsFought, FightsWon = s.FightsWon, Drills = s.Drills, Rests = s.Rests,
                 Milestones = s.Milestones.Count, Shards = AccountOps.Payout(c, s),
@@ -460,6 +482,55 @@ namespace IdleRng.Bots.Balance
                 GauntletBossStall = !g.Cleared && GauntletSim.IsBoss(c, g.FloorReached), State = s, Chase = chase.Outcomes.ToList(),
                 Ladder = new List<string>(s.Ladder), Fights = fights.Fights,
             };
+        }
+
+        /// <summary>
+        /// The run's monster (TrainingRun.MonsterFighter) without its slotted chase trees, their flat stats taken back out, plus
+        /// <paramref name="chaseTree"/> fully bought on top (null = none): its flat stats (capped at STAT_MAX), skills, triggers and rule.
+        /// </summary>
+        public static Fighter ChaseFighter(ContentDb c, RunState s, string chaseTree)
+        {
+            var stats = s.Stats.Clone();
+            var slots = s.Slots.Where(t => t != null && c.Trees[t.TreeId].Kind != TreeKind.Chase).Select(t => (t.TreeId, t.Bought)).ToList();
+            foreach (var t in s.Slots)
+                if (t != null && c.Trees[t.TreeId].Kind == TreeKind.Chase)
+                    for (int i = 0; i < StatIds.Trained.Length; i++) AddStat(stats, StatIds.Trained[i], -t.FlatAdded[i]);
+            if (chaseTree != null)
+            {
+                var tree = c.Trees[chaseTree];
+                foreach (var n in tree.Nodes)
+                    if (n.Kind == NodeKind.Stat) AddStat(stats, n.Stat, Math.Max(0, Math.Min(n.Amount, c.Constants.StatMax - stats.Get(n.Stat))));
+                slots.Add((chaseTree, tree.Nodes.Count));
+            }
+            var f = new Fighter { Id = TrainingRun.MonsterId, Element = c.Species[s.SpeciesId].Element, Stats = stats };
+            foreach (var (id, bought) in slots)
+            {
+                var nodes = c.Trees[id].Nodes;
+                for (int i = 0; i < bought; i++)
+                {
+                    var n = nodes[i];
+                    if (n.Kind == NodeKind.Skill) f.Skills.Add(n.Skill);
+                    else if (n.Kind == NodeKind.Trigger) f.Triggers.Add(new TriggeredSkill(n.Trigger.Value, n.Skill));
+                    else if (n.Kind == NodeKind.Rule && !f.Rules.Contains(n.RuleId)) f.Rules.Add(n.RuleId);
+                }
+            }
+            return f;
+        }
+
+        static void AddStat(MonsterStats st, string id, double v)
+        {
+            switch (id)
+            {
+                case StatIds.Hp: st.Hp += v; break;
+                case StatIds.Str: st.Str += v; break;
+                case StatIds.Int: st.Int += v; break;
+                case StatIds.Wis: st.Wis += v; break;
+                case StatIds.Dex: st.Dex += v; break;
+                case StatIds.Def: st.Def += v; break;
+                case StatIds.Spd: st.Spd += v; break;
+                case StatIds.Luk: st.Luk += v; break;
+                default: throw new ArgumentException($"not a trained stat: {id}");
+            }
         }
 
         public static TowerSample ClimbTower(ContentDb c, string policy, string team, ulong seed, int day, IReadOnlyList<Fighter> fighters)
