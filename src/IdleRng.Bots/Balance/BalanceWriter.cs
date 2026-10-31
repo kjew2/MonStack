@@ -31,7 +31,7 @@ namespace IdleRng.Bots.Balance
             var sb = new StringBuilder();
             sb.Append("# balance report (specs/09 section 7). A report, not a gate: the sanity checks are loose and a WARN fails nothing.\n");
             sb.Append($"# content {TableWriter.ContentTag(r.ContentVersion, r.ContentHash)}, seeds {o.SeedBase}..{o.SeedBase + (ulong)o.Seeds - 1} ")
-              .Append($"({o.Seeds} runs per species x policy), books {(o.Books == null || o.Books.Count == 0 ? "none" : string.Join(",", o.Books))}, ")
+              .Append($"({o.Seeds} runs per species x policy), books {(o.OwnBooks ? "own (each species' own books)" : o.Books == null || o.Books.Count == 0 ? "none" : string.Join(",", o.Books))}, ")
               .Append("fresh account (no talents)\n");
 
             sb.Append("\n## Sanity checks: \"absolutely unplayable\" guards only, not balance targets (issue #89)\n");
@@ -225,7 +225,7 @@ namespace IdleRng.Bots.Balance
             j.Key("content").Open('{').Key("version").Str(r.ContentVersion).Key("hash").Str(r.ContentHash).Close('}');
             j.Key("options").Open('{')
              .Key("seeds").Num(o.Seeds).Key("seedBase").Num(o.SeedBase)
-             .Key("books").Strs(o.Books ?? new string[0]).Key("tower").Bool(o.Tower).Key("towerDayBase").Num(o.TowerDayBase)
+             .Key("books").Strs(o.Books ?? new string[0]).Key("ownBooks").Bool(o.OwnBooks).Key("tower").Bool(o.Tower).Key("towerDayBase").Num(o.TowerDayBase)
              .Key("bookCanary").Bool(r.BookCells.Count > 0)
              .Close('}');
             j.Key("ranks").Strs(r.RankIds);

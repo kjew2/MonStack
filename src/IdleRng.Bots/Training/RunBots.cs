@@ -19,10 +19,11 @@ namespace IdleRng.Bots.Training
 
     /// <summary>
     /// Resolve offers, use books, buy nodes once the cycle reaches <c>spendFrom</c>, fight when due, rest below a threshold
-    /// energy fraction, else drill the stat the pick function chooses. Without <c>chase</c>: take offers into an empty slot (a
-    /// chase tree overwrites the least-invested slot that is not one of its prerequisites; otherwise discard), use every book,
-    /// buy the first affordable next node in slot order. With <c>chase</c> (issue #111) the policy works toward its
-    /// <see cref="ChaseTarget"/>: it uses only the species' own book; a draft that holds a tree the target needs gives that tree,
+    /// energy fraction, else drill the stat the pick function chooses. An overwrite never takes a chase tree's slot or a slot
+    /// a slotted chase tree needs. Without <c>chase</c>: take offers into an empty slot (a chase tree overwrites the
+    /// least-invested slot that is not one of its prerequisites; otherwise discard), use every book, buy a slotted chase
+    /// tree's nodes first (banking for them), else the first affordable next node in slot order. With <c>chase</c> (issue
+    /// #111) the policy works toward its <see cref="ChaseTarget"/>: it uses only the species' own book; a draft that holds a tree the target needs gives that tree,
     /// and a needed tree, an own book tree or a chase tree overwrites the least-invested slot the target does not need; it buys
     /// the target's nodes first (prerequisites in condition order, then the chase tree) and other nodes only while the points
     /// left plus the cycle points still to come cover what the target needs; and it drills the target's unmet stats before the
@@ -53,7 +54,7 @@ namespace IdleRng.Bots.Training
             var target = _chase ? ChaseTarget.Of(c, s) : null;
             if (s.Cycle >= _spendFrom || s.Phase == RunPhase.Finished)
             {
-                var spend = target == null ? FirstAffordable(c, s, 0) : PlannedSpend(c, s, target);
+                var spend = target == null ? ChaseFirst(c, s) : PlannedSpend(c, s, target);
                 if (spend != null) return spend;
             }
             if (s.Phase == RunPhase.Finished) return null;
@@ -63,6 +64,26 @@ namespace IdleRng.Bots.Training
                 foreach (var (stat, _) in target.StatGoals)
                     if (s.Stats.Get(stat) < c.Constants.StatMax) return new RunCommand(RunCommandKind.Drill, stat);
             return new RunCommand(RunCommandKind.Drill, _pick(c, s));
+        }
+
+        /// <summary>
+        /// The non-planning spend (issue #111): a slotted chase tree comes first, since its capstone is the run's jackpot. Its
+        /// next node is bought when affordable; while it is not, the points are banked for it (nothing else is bought) until the
+        /// run is finished. With no unfinished chase tree slotted, the first affordable node in slot order.
+        /// </summary>
+        static RunCommand ChaseFirst(ContentDb c, RunState s)
+        {
+            bool banking = false;
+            for (int i = 0; i < s.Slots.Length; i++)
+            {
+                var ts = s.Slots[i];
+                if (ts == null) continue;
+                var tree = c.Trees[ts.TreeId];
+                if (tree.Kind != TreeKind.Chase || ts.Bought >= tree.Nodes.Count) continue;
+                if (tree.Nodes[ts.Bought].Cost <= s.Sp) return new RunCommand(RunCommandKind.SpendPoint) { Slot = i };
+                banking = true;
+            }
+            return banking && s.Phase != RunPhase.Finished ? null : FirstAffordable(c, s, 0);
         }
 
         /// <summary>The first slot whose next node is affordable with <paramref name="reserve"/> SP left over.</summary>
@@ -129,9 +150,15 @@ namespace IdleRng.Bots.Training
             return Overwrite(c, s, wanted, protect);
         }
 
-        /// <summary>Take offer tree <paramref name="choice"/> over the least-invested slot that is neither a chase tree nor protected; else discard.</summary>
+        /// <summary>
+        /// Take offer tree <paramref name="choice"/> over the least-invested slot that is neither a chase tree, nor a prerequisite
+        /// of a slotted chase tree (overwriting it would lock that chase tree again, specs/15 section 5.2), nor protected; else discard.
+        /// </summary>
         static RunCommand Overwrite(ContentDb c, RunState s, int choice, HashSet<string> protect)
         {
+            protect = new HashSet<string>(protect, StringComparer.Ordinal);
+            foreach (var ts in s.Slots)
+                if (ts != null && c.Trees[ts.TreeId].Kind == TreeKind.Chase) protect.UnionWith(Prereqs(c, c.Trees[ts.TreeId]));
             int best = -1;
             for (int i = 0; i < s.Slots.Length; i++)
             {

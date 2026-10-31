@@ -230,7 +230,90 @@ namespace IdleRng.Bots.Tests
             Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Species = new[] { sp, sp } }));
             Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Policies = new[] { "nope" } }));
             Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Books = new[] { "nope" } }));
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Books = new[] { db.SkillBooks.Keys.First() }, OwnBooks = true }));
         }
+
+        [Test]
+        public void OwnBooks_EachSpeciesBringsOnlyItsOwnBook_AndSkipsTheCanary()
+        {
+            var db = Content.Db;
+            var species = db.SpeciesList.Select(s => s.Id).ToArray();
+            var r = BalanceHarness.Run(db, new BalanceOptions { Seeds = 2, Tower = false, OwnBooks = true, Species = species, Policies = new[] { "focus" } });
+            Assert.That(r.BookCells, Is.Empty, "own books is a main pass with books: no canary");
+            Assert.That(r.Checks.Single(k => k.Id == "books").Status, Is.EqualTo(CheckStatus.Skip));
+            foreach (var sp in db.SpeciesList)
+            {
+                var own = db.SkillBooks.Keys.Where(b => ChaseTarget.IsOwnBook(db, sp.Id, b)).ToList();
+                Assert.That(own, Has.Count.EqualTo(1), sp.Id + " has one own book");
+                var cell = r.Cells.Single(c => c.Species == sp.Id);
+                var want = CellSummary.From(sp.Id, "focus", db.FightRanks.Count,
+                    new[] { BalanceHarness.Play(db, "focus", sp.Id, 1, own), BalanceHarness.Play(db, "focus", sp.Id, 2, own) });
+                Assert.That(cell.Grade.Mean, Is.EqualTo(want.Grade.Mean), sp.Id + ": same runs as bringing its own book");
+                Assert.That(cell.CapstoneRate, Is.EqualTo(want.CapstoneRate), sp.Id);
+            }
+            StringAssert.Contains("books own", BalanceWriter.Text(r));
+        }
+
+        [Test]
+        public void NonPlanningPolicies_PutPointsIntoASlottedChaseTreeFirst()
+        {
+            // Issue #111: once a chase tree is slotted, focus buys its nodes before any other tree's, banking for a node it
+            // cannot afford yet; the old slot-order spend left it only what the trees before it did not take.
+            var db = Content.Db;
+            int chaseBuys = 0;
+            foreach (var sp in db.SpeciesList)
+                for (ulong seed = 1; seed <= 3; seed++)
+                {
+                    RunState prev = null;
+                    RunBot.Play(db, RunPolicies.Create("focus"), sp.Id, seed, null, null, st =>
+                    {
+                        if (prev != null && prev.Phase != RunPhase.Finished && st.Sp < prev.Sp)
+                        {
+                            // A node was bought: if the previous state held an unfinished chase tree, it went there.
+                            var open = Enumerable.Range(0, prev.Slots.Length).Where(i => prev.Slots[i] != null
+                                && db.Trees[prev.Slots[i].TreeId].Kind == TreeKind.Chase
+                                && prev.Slots[i].Bought < db.Trees[prev.Slots[i].TreeId].Nodes.Count).ToList();
+                            if (open.Count > 0 && open.All(i => st.Slots[i] != null && st.Slots[i].TreeId == prev.Slots[i].TreeId))
+                            {
+                                chaseBuys++;
+                                Assert.That(open.Any(i => st.Slots[i].Bought == prev.Slots[i].Bought + 1), Is.True, $"{sp.Id} seed {seed} cycle {st.Cycle}");
+                            }
+                        }
+                        prev = Snapshot(st);
+                    });
+                }
+            Assert.That(chaseBuys, Is.GreaterThan(0), "some focus run slotted a chase tree and bought into it");
+        }
+
+        [Test]
+        public void Policies_NeverOverwriteAPrerequisiteOfASlottedChaseTree()
+        {
+            // A chase offer used to overwrite the least-invested slot even when it held another slotted chase tree's prerequisite,
+            // which locked that tree again and threw its capstone away (issue #111). So a capstone, once bought, stays.
+            var db = Content.Db;
+            foreach (var sp in db.SpeciesList)
+            {
+                var own = db.SkillBooks.Keys.Where(b => ChaseTarget.IsOwnBook(db, sp.Id, b)).ToList();
+                foreach (var policy in new[] { "focus", "hoarder", "chaser" })
+                    for (ulong seed = 1; seed <= 4; seed++)
+                    {
+                        var maxed = new HashSet<string>();
+                        var end = RunBot.Play(db, RunPolicies.Create(policy), sp.Id, seed, null, own, st =>
+                        {
+                            foreach (var t in st.Slots)
+                                if (t != null && db.Trees[t.TreeId].Kind == TreeKind.Chase && t.Bought == db.Trees[t.TreeId].Nodes.Count) maxed.Add(t.TreeId);
+                        });
+                        foreach (var id in maxed)
+                            Assert.That(end.Slots.Any(t => t != null && t.TreeId == id), Is.True, $"{sp.Id} {policy} seed {seed}: {id} kept");
+                    }
+            }
+        }
+
+        static RunState Snapshot(RunState s) => new RunState
+        {
+            Sp = s.Sp, Phase = s.Phase, Cycle = s.Cycle,
+            Slots = s.Slots.Select(t => t == null ? null : new TreeSlot { TreeId = t.TreeId, Bought = t.Bought }).ToArray(),
+        };
 
         [Test]
         public void Writers_ProduceParseableJson_AndOneCsvRowPerMetric()

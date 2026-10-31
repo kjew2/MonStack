@@ -28,6 +28,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>Skill books every run brings; null or empty = none.</summary>
         public IList<string> Books { get; set; }
 
+        /// <summary>
+        /// Each run brings only its species' own skill books: those whose tree a chase tree of the species names (the measure of
+        /// the book chase capstone target, specs/15 section 10; issue #111). Not with Books.
+        /// </summary>
+        public bool OwnBooks { get; set; }
+
         /// <summary>Also send the sealed monsters up the Dungeon (alone, and one of each species as a team).</summary>
         public bool Tower { get; set; } = true;
 
@@ -36,7 +42,7 @@ namespace IdleRng.Bots.Balance
 
         /// <summary>
         /// When the main pass brings no books, replay every species x policy with every skill book (no tower) for the books
-        /// sanity check (BalanceChecks). Ignored when Books is set.
+        /// sanity check (BalanceChecks). Ignored when Books or OwnBooks is set.
         /// </summary>
         public bool BookCanary { get; set; } = true;
 
@@ -401,6 +407,7 @@ namespace IdleRng.Bots.Balance
             if (books != null)
                 foreach (var b in books)
                     if (!c.SkillBooks.ContainsKey(b)) throw new ArgumentException($"unknown skill book '{b}'");
+            if (books != null && o.OwnBooks) throw new ArgumentException("pass either a list of books or own books, not both");
 
             var runs = PlayAll(c, o, policies, species, books);
             var report = new BalanceReport
@@ -411,7 +418,7 @@ namespace IdleRng.Bots.Balance
                 GauntletBossEvery = c.Constants.GauntletBossEvery,
             };
             report.Cells = Summarise(c, o, policies, species, runs);
-            if (books == null && o.BookCanary && c.SkillBooks.Count > 0)
+            if (books == null && !o.OwnBooks && o.BookCanary && c.SkillBooks.Count > 0)
             {
                 var all = c.SkillBooks.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
                 report.BookCells = Summarise(c, o, policies, species, PlayAll(c, o, policies, species, all));
@@ -426,12 +433,15 @@ namespace IdleRng.Bots.Balance
         {
             int perPolicy = species.Count * o.Seeds;
             var runs = new RunSample[policies.Count * perPolicy];
+            var own = o.OwnBooks && books == null
+                ? species.ToDictionary(sp => sp, sp => c.SkillBooks.Keys.Where(b => ChaseTarget.IsOwnBook(c, sp, b)).OrderBy(b => b, StringComparer.Ordinal).ToList(), StringComparer.Ordinal)
+                : null;
             For(runs.Length, o.Jobs, i =>
             {
                 string policy = policies[i / perPolicy];
                 string sp = species[i % perPolicy / o.Seeds];
                 ulong seed = o.SeedBase + (ulong)(i % o.Seeds);
-                runs[i] = Play(c, policy, sp, seed, books);
+                runs[i] = Play(c, policy, sp, seed, own != null ? own[sp] : books);
             });
             return runs;
         }

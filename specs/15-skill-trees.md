@@ -30,7 +30,7 @@ Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree
 
 - The last node must be `skill`, `trigger` or `rule` (`E064`): it is the chase trait.
 - **Chase trees' capstones must be significantly more impactful and unique** than a normal tree's chase trait (kj). Each chase tree ends in a coded rule modifier of its own, and no two chase trees share one (kj, 2026-10-31, issue #92): *Unbreakable Will* `counter_mitigated`, *Arcane Overflow* `echo_cast`, *Living Ocean* `tidal_overflow`, *Abyssal Bloom* `abyssal_drain`, *Inferno Sovereign* `fire_pierce`, *Starlit Ascension* `double_turn_start` (`specs/16` section 6.2). Their numbers are placeholders and can be fleshed out later.
-- Placeholder shape **(agent)**: 8 nodes per tree: growth, stat, growth, stat, skill (cost 2), growth, stat, chase trait (cost 3); filler nodes cost 1, so a tree costs 11 SP. Trees can be any length; kj suggested longer ones with about 75% filler.
+- Placeholder shape **(agent)**: 8 nodes per tree: growth, stat, growth, stat, skill (cost 2), growth, stat, chase trait (cost 3); filler nodes cost 1, so a tree costs 11 SP. Trees can be any length; kj suggested longer ones with about 75% filler. Chase trees are priced for the reachability targets of section 10 (content `4.10`, issue #111): *Arcane Overflow*, *Inferno Sovereign* and *Mandragora Scream* cost 9 (skill 1, capstone 2), *Night Feast* 10 (capstone 2), *Umbral Veil* 13 (node 5 costs 2, capstone 4); the others 11.
 
 Content table `monster_skills`: the skills nodes grant, in the battle vocabulary (`specs/16` section 5.1): `id`, `name_key`, `kind`, `target`, `stat`, `scales`, `power`, `cooldown`, `duration`, `element`. The description is the string `mskill.<id>.desc` by convention (there is no `desc_key` column; dropped in content `3.2`), a template over the row (`{power:pct}`, `{cooldown}`, ...; `specs/16` section 9), so its numbers cannot drift from the data.
 
@@ -104,7 +104,7 @@ After every command the run reconciles chase trees, in this order:
 
 Taking a chase tree into the slot of one of its own prerequisites makes it lock at once. The offer screen flags that slot ("Locks it!"), and a slot holding a prerequisite of a slotted chase tree ("Chase needs it"); it still allows the take.
 
-A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a book tree (*Arcane Overflow* needs a Tome of Echoes node, a Spellcraft node and 3 crits).
+A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a book tree (*Arcane Overflow* needs a Tome of Echoes node, a Mind Warp node and 2 crits). Since content `4.10` (issue #111) every book-gated chase tree needs only the **first node** of its book tree (it was node 5), so bringing the book and starting its tree opens the chase.
 
 ### 5.3 Apex forms (kj, 2026-10-31, `specs/24` section 6)
 
@@ -178,19 +178,19 @@ Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
 
 | Species | In-run | Book-gated |
 |---|---|---|
-| slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `tidal_overflow` | *Abyssal Bloom*: Codex of Tides node 5, Slime Fundamentals node 4, 2000 water damage; `abyssal_drain` |
-| drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Codex node 5, Pyromancy node 4, 2000 fire damage; `fire_pierce` |
-| sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `double_turn_start` | *Arcane Overflow*: Tome of Echoes node 5, Spellcraft node 4, 3 crits; `echo_cast` |
-| mandrake | *World Root*: Rootbound maxed, HP >= 500, 2 wins; `root_rebirth` | *Mandragora Scream*: Verdant Herbarium node 5, Mandrake Wail node 4, 2000 nature damage; `wail_stagger` |
-| shade_hound | *Umbral Veil*: Umbral Step maxed, DEX >= 500, 2 wins; `umbral_veil` | *Night Feast*: Umbral Grimoire node 5, Shadow Harvest node 4, 2000 dark damage; `night_feast` |
+| slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `tidal_overflow` | *Abyssal Bloom*: Codex of Tides node 0, Slime Fundamentals node 4, 2000 water damage; `abyssal_drain` |
+| drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Codex node 0, Pyromancy node 4, 2000 fire damage; `fire_pierce` |
+| sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `double_turn_start` | *Arcane Overflow*: Tome of Echoes node 0, Mind Warp node 4, 2 crits; `echo_cast` |
+| mandrake | *World Root*: Rootbound maxed, HP >= 500, 2 wins; `root_rebirth` | *Mandragora Scream*: Verdant Herbarium node 0, Mandrake Wail node 4, 2000 nature damage; `wail_stagger` |
+| shade_hound | *Umbral Veil*: Umbral Step maxed, DEX >= 500, 2 wins; `umbral_veil` | *Night Feast*: Umbral Grimoire node 0, Shadow Harvest node 4, 7000 dark damage; `night_feast` |
 
-The two original chase trees were shared by every species until issue #78 assigned them: *Unbreakable Will* to drake, *Arcane Overflow* to sprite. Every tree and threshold is a placeholder.
+The two original chase trees were shared by every species until issue #78 assigned them: *Unbreakable Will* to drake, *Arcane Overflow* to sprite. Every tree and threshold is a placeholder. Content `4.10` (issue #111) retuned the book-gated conditions and the chase tree costs toward the reachability targets of section 10; *Arcane Overflow* named the generic *Spellcraft* until then, which a sprite run slotted in under 6% of runs.
 
 Generated once by a script; the CSVs in `content_src/` are the source of truth and are edited by hand from now on.
 
 ## 8. Bots
 
-Run policies resolve offers (take into an empty slot; a chase tree overwrites the least-invested slot that is not one of its prerequisites; otherwise discard), use their books at once, and buy the first affordable next node in slot order. `hoarder` banks SP until cycle 9, then dumps them (`specs/12` section 5.4). `golden/training-run-vectors.txt` adds a run with every book per species.
+Run policies resolve offers (take into an empty slot; a chase tree overwrites the least-invested slot that is neither one of its prerequisites nor a prerequisite of a chase tree already slotted; otherwise discard), use their books at once, and buy the first affordable next node in slot order. **(agent, issue #111)** Once a chase tree is slotted and not maxed, its next node comes first: bought when affordable, else the SP are banked for it until the run ends. Before content `4.10` the four non-planning policies bought it in slot order, so a chase tree (in the last slot) got only what the trees before it left, and a chase offer could overwrite another slotted chase tree's prerequisite and lock it again. `hoarder` banks SP until cycle 9, then dumps them (`specs/12` section 5.4). `golden/training-run-vectors.txt` adds a run with every book per species.
 
 `chaser` (issue #111) plans toward one of its species' own chase capstones, read from `chase_conditions` (nothing hard-coded). Its **target** is a slotted own chase tree whose capstone is not bought yet; otherwise, among the own chase trees whose prerequisite trees can still be had (slotted, pending, a book tree whose book the run still holds, or a generic tree that a milestone not yet crossed would draft), the one with the fewest stat goals (unmet stat conditions, plus the offer stat of a generic prerequisite still below the milestone that drafts it), then the fewest SP still needed, then content order. It uses only its species' own book (a book whose tree is a prerequisite of one of its chase trees) and leaves other books unused. A draft holding a tree the target needs gives that tree; a needed tree, the own book tree or a chase offer takes an empty slot or overwrites the least-invested slot the target does not need. It buys the target's nodes first (prerequisites in condition order, then the chase tree) and other nodes only while the SP left plus the cycle SP still to come cover what the target needs. It drills the target's unmet stat conditions (and the offer stat of a generic prerequisite up to the milestone that drafts it) before its best-growth pick. The other four policies do not plan for chase trees, so what they measure stays comparable.
 
@@ -226,7 +226,9 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 - **Capstone reachability targets (kj, 2026-10-31, #110):**
   - the in-run chase capstone is bought in about the top 10% of runs (attunement, section 5.4, caps it at about half the runs with maxed meta progression, kj);
   - the book chase capstone in about 50% of runs that bring the species' own book.
-  - **(agent)** Measured under the `focus` and `hoarder` policies. Today it is 0-69% for in-run and 0% for book (`specs/22` section 2), so content and the SP economy need retuning. The bots must first play toward their chase conditions (#111).
+  - **(agent)** Measured with `balance` (`specs/09` section 7), 200 seeds, as the mean of the `focus` and `hoarder` cells: the in-run tree in the main pass (no books), the book-gated tree with `--books own`. `chaser` (which plans for it) is reported for reference. Bots are always attuned, so this is the rate among attuned runs.
+  - **Retune, content `4.10` (#111):** book-gated chase trees need only their book tree's first node, *Arcane Overflow* a Mind Warp node instead of Spellcraft, some chase trees were repriced (section 3), and every policy buys a slotted chase tree first (section 8). Measured (in-run / book, focus+hoarder mean): slime 5% / 55%, drake 0% / 44%, sprite 0% / 44%, mandrake 13.5% / 44%, shade_hound 16% / 54% (before: 0-7% / 0%). `chaser` reaches 74-100% in-run and 87-100% book. Book capstones land in cycle 11-12 under `focus` and `hoarder`, in cycle 7.5-8 under `chaser` for drake, sprite and mandrake.
+  - Open: drake's DEF >= 500 and sprite's SPD >= 500 in-run conditions ask for a stat their growth does not favour, so the non-planning bots never meet them (0% at any SP price); only `chaser` does. Issue #118.
 - **Book chase capstones must be uber strong** (kj, 2026-10-31, #112): books are uber rare (`specs/21` section 5), so a run that gets its book should get a jackpot. The 50% target is for runs that have the book.
 - **Drawback capstones** and **fusion of specific tree pairs** are allowed (kj, 2026-10-31; `specs/12` section 5.2.1).
 - **Digestion and rank-fight loot** are agreed, tribulation fights are not; overwriting refunds half (built, content 3.15) and there are no tree neighbours (kj, 2026-10-31; `specs/12` section 5.2.1, `specs/22` section 8.6). Open **(agent)**: the content shape for digestion tallies on nodes, and what rank-fight loot drops.

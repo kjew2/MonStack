@@ -1,8 +1,8 @@
-# gauntlet vectors, hash v1 content=4.9/cc4e0b63
+# gauntlet vectors, hash v1 content=4.10/4fcb57be
 
 slime focus seed=7 rank=a
-  floor=53 cleared=False killer=golem title=title.professional_punching_bag
-  hash 7e6c876ba484d8c735861805550d168cdac95acd8a34320b9932924020ecc45b
+  floor=48 cleared=False killer=golem title=title.professional_punching_bag
+  hash 32f71ecbb07493f161377b7b9f109d1a83f84b9cd57028166aa5a345a3d34798
 
 drake focus seed=7 rank=c
   floor=30 cleared=False killer=storm_titan title=title.respectable_brawler
@@ -14,8 +14,8 @@ sprite focus seed=7 rank=b
 
 mandrake focus seed=7 rank=c
   floor=37 cleared=False killer=imp title=title.respectable_brawler
-  hash af1ca1bbe6e5b6c6e2985a67679c518e7e41c3b88a222fc2759e57ae99cc6083
+  hash cf4d38925f4505a72f579a3bafc696ed870703d6f15d6584b77b45bb060f84e3
 
-shade_hound focus seed=7 rank=a
-  floor=44 cleared=False killer=wisp title=title.professional_punching_bag
-  hash 51be5856451feb9a84991d2bdd22a6418a0cc1e3ee0d8bcb946307f22c9d833a
+shade_hound focus seed=7 rank=s
+  floor=46 cleared=False killer=slimeling title=title.professional_punching_bag
+  hash 4d373b173002fa17c5a31c031897fc9fc3173aa01c4cba130252767acae7dabd
