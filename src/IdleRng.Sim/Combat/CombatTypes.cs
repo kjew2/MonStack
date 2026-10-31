@@ -231,7 +231,6 @@ namespace IdleRng.Sim.Combat
         public int SideSize { get; set; }
         public double BasicAttackPower { get; set; }
         public double AiHealBelow { get; set; }
-        public double AiShieldBelow { get; set; }
         public double ElementStrongMult { get; set; }
         public double ElementWeakMult { get; set; }
 
@@ -336,7 +335,7 @@ namespace IdleRng.Sim.Combat
             var r = new FightRules
             {
                 GaugeSize = k.BattleGauge, TurnTicks = k.TurnTicks, TimeLimitTicks = k.MonTimeLimitTicks, SideSize = k.MonSideSize,
-                BasicAttackPower = k.BasicAttackPower, AiHealBelow = k.AiHealBelow, AiShieldBelow = k.AiShieldBelow,
+                BasicAttackPower = k.BasicAttackPower, AiHealBelow = k.AiHealBelow,
                 ElementStrongMult = k.ElementStrongMult, ElementWeakMult = k.ElementWeakMult,
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,

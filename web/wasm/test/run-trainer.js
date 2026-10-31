@@ -270,6 +270,18 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
 
   const speedSaved = () => page.evaluate(() => localStorage.getItem('idle-rng-fight-speed'));
 
+  // A unit with a shield skill (the AI casts it before taking damage, specs/16 section 5.2) shows the shield as a band on its HP
+  // bar and in the bar's label while the fight plays back. Skipped when neither side has one.
+  async function shieldShown(which) {
+    if (!(await page.locator('[data-id^="skill-"][data-kind=shield]').count())) { console.log('(no shield skill in ' + which + ')'); return; }
+    const sh = await (await page.waitForFunction(() => {
+      const b = document.querySelector('[data-id^="unit-"] .bar.hp.shielded');
+      return b && { w: b.querySelector('.shield').getBoundingClientRect().width, label: b.querySelector('span').textContent };
+    }, null, { timeout: 15000 })).jsonValue();
+    check(sh.w > 0 && /🛡\d+$/.test(sh.label), which + ': a shield shows as a band on the HP bar and in its label: ' + sh.label);
+    await shot('04s-fight-shield');
+  }
+
   // ---- the first rank fight plays back action by action (issue #79), then the speed toggle
   await playUntil('fight');
   check(await act('fight').isEnabled(), 'a rank fight is due after ' + played.steps + ' steps');
@@ -286,6 +298,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-id^="unit-"] .bar').count()) === 2, 'both units have live HP bars');
   check(/^Action \d+ of \d+$/.test(await text('[data-id=fight-progress]')), 'playback progress: ' + (await text('[data-id=fight-progress]')));
   await shot('04a-fight-play');
+  await shieldShown('the first fight');
   await act('speed-2').click();
   check((await speedSaved()) === '2' && (await act('speed-2').getAttribute('aria-pressed')) === 'true', '2x is selected and remembered');
   await act('speed-skip').click();
@@ -333,6 +346,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     }, used.id, { timeout: 15000 })).jsonValue();
     check(+fill2.st > 0 && +fill2.st < cdLen && Math.abs(fill2.hgt - (fill2.st / cdLen) * 100) < 0.01, 'as the cooldown runs down the overlay recedes (' + fill2.st + ' left, ' + fill2.hgt.toFixed(0) + '% high)');
   }
+  await shieldShown('a later fight');
   await act('fight-continue').waitFor({ timeout: 60000 });                 // plays to the end at 2x
   check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the result keeps the skill tiles with their final cooldowns');
   await shot('04c-fight-result');

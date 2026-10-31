@@ -753,6 +753,7 @@ namespace IdleRng.Web
             {
                 public FightAction X;
                 public double[] Hp;
+                public double[] Sh;        // every unit's shield after the action
                 public int[] Cd;
                 public int Si;
                 public double[] Entropy;   // tower fights only, else null
@@ -774,12 +775,13 @@ namespace IdleRng.Web
                 Count++;
                 if (Entries.Count >= MaxLoggedActions || _live == null) return;
                 int n = _live.Units.Count;
-                var e = new Entry { X = x, Hp = new double[n], Si = -1 };
+                var e = new Entry { X = x, Hp = new double[n], Sh = new double[n], Si = -1 };
                 FightUnit actor = null;
                 for (int i = 0; i < n; i++)
                 {
                     var u = _live.Units[i];
                     e.Hp[i] = Math.Max(0, u.Hp);
+                    e.Sh[i] = Math.Max(0, u.Shield);
                     if (u.Id == x.Actor) actor = u;
                 }
                 // the actor's skill (by id, so an echo counts) this action used; -1 for basic attacks, counters and triggers not in its list
@@ -804,7 +806,7 @@ namespace IdleRng.Web
 
         private void FightUnitOut(JsonOut w, FightUnit u, Action<JsonOut> extra = null)
         {
-            w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp)
+            w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp).P("shield", Math.Max(0, u.Shield))
                 .P("damage", u.Tally.DamageDealt).P("crits", u.Tally.Crits).P("evades", u.Tally.Evades);
             w.Key("skills").Arr();   // in the fighter's skill order, the index the actions' "cd" and "si" use
             foreach (var sk in u.Source.Skills)
@@ -832,6 +834,9 @@ namespace IdleRng.Web
             w.P("si", e.Si);
             w.Key("hp").Arr();
             foreach (var v in e.Hp) w.Num(v);
+            w.EndArr();
+            w.Key("sh").Arr();
+            foreach (var v in e.Sh) w.Num(v);
             w.EndArr();
             w.Key("cd").Arr();
             foreach (var c in e.Cd) w.Int(c);

@@ -1,40 +1,40 @@
-# training-run vectors, hash v8 content=5.0/9d3842a0
+# training-run vectors, hash v8 content=5.0/b9e411ad
 
 slime balanced seed=7
-  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8 injuries=0
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
   stats hp 174 str 170 int 177 wis 173 dex 178 def 187 spd 170 luk 171
   trees slime_fundamentals:8/8 gel_armor:8/8 - -
-  hash b2991178ddc07db0927417bceac43b6265a69db40ff00b6eaf93e977ba11d3c0
+  hash 4ecb6447687a58a782e43f2be463799cf979ad07b7464b4690026db9e639f6ac
 
 slime focus seed=7
-  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=1 injuries=0
-  stats hp 870 str 90 int 100 wis 145 dex 90 def 155 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:4/8 living_ocean:4/8
-  hash e014b49b351e0a550f3831583d8fbf86d8aec88f033db0b0f2cee8411ad09ca7
+  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
+  stats hp 869 str 90 int 100 wis 145 dex 90 def 140 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:6/8 living_ocean:3/8
+  hash 115c20846962e9f9b7f3b486c843e2ec45009b9879c4906d7e65d6da589de827
 
 slime reckless seed=7
   end=Completed cycle=12 rank=d fights=1/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
   stats hp 607 str 90 int 100 wis 145 dex 90 def 140 spd 100 luk 155
   trees slime_fundamentals:7/8 gel_armor:7/8 vital_core:4/8 survivor:0/8
-  hash f9ba97526a8b1589949db5b1657040a7940ce7b7b712219ec791d714a5ad510b
+  hash 60be6c09f5ea7660147cd9d45829fd67c9ced7a39b1018f97c4e1009dd929953
 
 slime hoarder seed=7
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 816 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:2/8 living_ocean:7/8
-  hash 3545d820e535b9a7c907bd02d7d7dbf7658406f178e793db031fdc97c0b824df
+  hash 31271f661f322dc12ce2a8cb60fc0e10b4aa3180bb7723f62ff8924cc00835da
 
 slime chaser seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 821 str 90 int 100 wis 125 dex 90 def 160 spd 100 luk 155
-  trees slime_fundamentals:5/8 gel_armor:8/8 living_ocean:8/8 survivor:2/8
-  hash b7c9b34ef952d47485972fc43b85eac3f4ebdabc37e7661786ded47f29ee1c8b
+  stats hp 782 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
+  trees slime_fundamentals:7/8 gel_armor:8/8 living_ocean:8/8 survivor:0/8
+  hash e27903c85978e527083a5546ff91d5657cc0b50bd846dc8985f257eba15cd83f
 
 slime focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=3 sp=1 injuries=0
   stats hp 832 str 90 int 115 wis 160 dex 90 def 140 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:4/8 living_ocean:4/8
-  hash fb138cc6e9d32006ce23ef825105f5f1561c45e124e1396b6d8f42c05307905e
+  hash cf397d39a159013a88b44687a4f3dd3cac52a0ae6fc282c8d642e892f320a253
 
 drake balanced seed=7
   end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=0 sp=4 injuries=0
@@ -130,13 +130,13 @@ mandrake hoarder seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 821 str 90 int 135 wis 145 dex 70 def 190 spd 70 luk 100
   trees rootbound:8/8 mandrake_wail:7/8 vital_core:1/8 world_root:7/8
-  hash cc31683de1ec2bb73875853e22190d7b799a8d4145ccf022e0639cca6e063443
+  hash 78572acdc6d78a230f3cea1737989a014cb5e4ad394cc9536e87835399ab8cbc
 
 mandrake chaser seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
   stats hp 910 str 90 int 115 wis 145 dex 70 def 190 spd 70 luk 100
   trees rootbound:8/8 mandrake_wail:4/8 world_root:8/8 survivor:2/8
-  hash 1514273cc301c0f7e98e0241ae93c8d7e7839a0822f5c396b4b225b72a24f843
+  hash 030882b2f009d0c0f82e5cf34d59077cea57bf3b1e795e526f42c4b5fa38d1cb
 
 mandrake focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0

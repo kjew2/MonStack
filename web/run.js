@@ -676,12 +676,12 @@
   // also its entropy and next vent, and whether it is in the fight yet (a split phase's adds join later, BRIDGE.md).
   function unitsAt(f, upto) {
     return f.units.map((u, k) => {
-      if (upto === null) return { hp: u.hp, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
+      if (upto === null) return { hp: u.hp, sh: u.shield || 0, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
       let cd = [];                                 // no action yet: every skill starts ready
       for (let j = upto - 1; j >= 0; j--) if (f.actions[j].actor === u.id) { cd = f.actions[j].cd; break; }
       const x = upto ? f.actions[upto - 1] : null;
       const here = x ? k < x.hp.length : !u.add;
-      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
+      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, sh: x && here && x.sh ? x.sh[k] : 0, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
     });
   }
   const corruptionAt = (f, upto) => (upto === null ? f.corruption : upto ? f.actions[upto - 1].corruption : 0);
@@ -702,13 +702,14 @@
   function fightUnits(f, you, foe, upto, art) {
     const refs = [], tower = f.entropyCap > 0;
     const root = h('div', { class: 'units' + (tower ? ' tower' : '') }, f.units.map((u, k) => {
-      const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + (tower ? k : u.side) + '-' + si }, [
+      const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + (tower ? k : u.side) + '-' + si, 'data-kind': sk.kind }, [
         h('div', { class: 'tile', style: '--hue:' + (hash(sk.name) % 360) }, [
           h('div', { class: 'cdfill' }), h('span', { class: 'ab', 'aria-hidden': 'true', text: skillAbbr(sk.name) }), h('span', { class: 'st num', 'aria-hidden': 'true' }),
         ]),
         h('span', { class: 'nm', text: sk.name }),
       ])));
-      const hpBar = bar(0, 1, '', '');
+      const hpBar = bar(0, 1, '', 'hp');
+      hpBar.insertBefore(h('div', { class: 'shield', 'data-id': 'shield-' + (tower ? k : u.side) }), hpBar.querySelector('span'));
       let entropy = null;
       if (tower) {
         entropy = { bar: bar(0, f.entropyCap, '', 'ent'), vent: h('span', { class: 'vent small tipword', 'data-id': 'vent-' + k }) };
@@ -728,10 +729,15 @@
   }
   function paintUnits(refs, now, x, cap) {
     refs.forEach((r, k) => {
-      const hp = now[k].hp, max = r.u.maxHp;
+      const hp = now[k].hp, sh = now[k].sh || 0, max = r.u.maxHp;
       r.el.hidden = !now[k].here;
       r.hpBar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (hp / max) * 100)) + '%';
-      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max);
+      // the shield is a band along the bar's bottom, sized against max HP (a shield can exceed what HP is missing)
+      const shEl = r.hpBar.querySelector('.shield'), shown = Math.round(sh) > 0;
+      shEl.style.width = (shown ? Math.min(100, (sh / max) * 100) : 0) + '%';
+      r.hpBar.classList.toggle('shielded', shown);
+      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max) + (shown ? '  🛡' + Math.round(sh) : '');
+      r.hpBar.title = shown ? 'Shield ' + Math.round(sh) + ': absorbs damage before HP' : '';
       if (r.entropy) {
         const en = now[k].en || 0, vent = now[k].vent;
         r.entropy.bar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (en / cap) * 100)) + '%';
