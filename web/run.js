@@ -31,6 +31,7 @@
     earned: [],              // achievements the sealed run earned (specs/18 section 8), shown on the grade screen
     towerTeam: [],           // Dungeon team: Vault indices in slot order (specs/21 section 8)
     towerResult: null,       // the last attempt's result from the engine (run.runTower) plus its day and team, shown on the tower screen
+    offer: { key: null, pick: 0, open: false },   // the tree offer on screen: its key, the picked card, the node list open
     towerFight: null,        // the tower floor fight shown in the playback modal (issue #98), or null
     reveal: null,            // the merchant's card reveal on the vendor screen (issue #108): {i, phase: 'hint'|'flip', timer}, or null
   };
@@ -687,28 +688,91 @@
   }
 
   const refundShare = () => { const p = C.consts.treeRefund; return p === 0.5 ? 'half' : Math.round(p * 100) + '%'; };
+  // A tree offer (Awakening, skill book or chase unlock) as an arcade card pick: a banner, one compact card per tree (its node path,
+  // its stat boosts summed and its skills and capstone in one line each), then big slot tiles on the picked card. Every node's full
+  // text stays one tap away (the path tiles' tooltips, or "All nodes").
+  const offerKey = (o) => [o.source, o.stat, o.threshold].concat(o.trees).join('|');
+  const signed = (v) => (v > 0 ? '+' : '') + String(Math.round(v * 100) / 100);
   function offerModal(modal, s) {
-    const o = s.offers[0];
-    const why = o.source === 'milestone' ? 'Awakening: ' + up(o.stat) + ' reached ' + o.threshold + ', choose a tree'
-      : o.source === 'book' ? 'Skill book: take its tree' : 'A chase tree unlocked';
-    modal.append(h('h2', { text: why, 'data-id': 'offer-title' }),
-      h('p', { class: 'small muted', text: 'Put it in a slot. An occupied slot is overwritten: ' + refundShare() + ' of the skill points spent in it come back, its flat boosts are lost, and a chase tree that depended on it locks again (refunded the same way).' +
-        (s.offers.length > 1 ? ' (' + (s.offers.length - 1) + ' more waiting)' : '') }));
-    o.trees.forEach((id, choice) => {
-      const t = C.trees[id];
-      const card = h('div', { class: 'card', 'data-id': 'offer-' + id }, [h('div', { class: 'row between' }, [h('b', { text: t.name }), h('span', { class: 'tag', text: t.kind })])]);
-      t.nodes.forEach((n) => card.append(nodeRow(n, 'locked')));
-      card.append(h('div', { class: 'small muted', text: 'Put it in:' }));
-      const picks = h('div', { class: 'row', style: 'flex-wrap:wrap' });
-      s.slots.forEach((slot, i) => picks.append(h('button', { class: 'btn small ' + (slot ? '' : 'primary'), type: 'button', 'data-act': 'take-' + choice + '-' + i,
-        text: (slot ? 'Slot ' + (i + 1) + ' (replaces ' + treeName(slot.tree) + ')' : 'Slot ' + (i + 1) + ' (empty)'),
-        onclick: () => take(choice, i) })));
-      card.append(picks);
-      modal.append(card);
-    });
+    const o = s.offers[0], key = offerKey(o), fresh = ui.offer.key !== key;
+    if (fresh) ui.offer = { key, pick: 0, open: false };   // the banner pops once per offer, not on every re-render
+    const banner = o.source === 'milestone' ? { cls: 'milestone', big: 'Awakening!' }
+      : o.source === 'book' ? { cls: 'book', big: 'Skill book!' } : { cls: 'chase', big: 'Chase unlocked!' };
+    const sub = o.source === 'milestone'
+      ? [h('span', { class: 'stchip st-' + o.stat, text: up(o.stat) }), ' reached ', h('b', { class: 'num', text: String(o.threshold) })]
+      : [o.source === 'book' ? 'Its tree is yours to slot' : 'A chase tree is ready'];
+    if (o.trees.length > 1) sub.push(' · pick 1 of ' + o.trees.length);
+    modal.append(h('div', { class: 'obanner ' + banner.cls + (fresh && !reducedMotion() ? ' anim' : '') }, [
+      h('div', { class: 'big', text: banner.big, 'data-id': 'offer-title' }),
+      h('div', { class: 'sub' }, sub),
+      s.offers.length > 1 ? h('span', { class: 'more', text: '+' + (s.offers.length - 1) + ' more' }) : null,
+    ]));
+    o.trees.forEach((id, choice) => modal.append(offerCard(s, id, choice, choice === ui.offer.pick)));
     if (s.canReroll) modal.append(h('button', { class: 'btn block gemsy', type: 'button', 'data-act': 'reroll',
-      text: 'Second Look: reroll into trees of any stat (' + s.rerollsLeft + ' left this run)', onclick: reroll }));
-    modal.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'discard', text: 'Discard this offer', onclick: discard }));
+      text: '🎲 Second Look: reroll, any stat (' + s.rerollsLeft + ' left)', onclick: reroll }));
+    modal.append(h('button', { class: 'btn ghost block', type: 'button', 'data-act': 'discard',
+      text: o.source === 'milestone' ? 'Skip — keep my trees' : 'Discard this offer', onclick: discard }));
+  }
+
+  function offerCard(s, id, choice, sel) {
+    const t = C.trees[id];
+    const card = h('div', { class: 'tcard k-' + t.kind + (sel ? ' sel' : ''), 'data-id': 'offer-' + id },
+      [h('div', { class: 'row between' }, [h('b', { class: 'tname', text: t.name }), h('span', { class: 'tag kind', text: t.kind })])]);
+    if (!sel) {
+      card.setAttribute('role', 'button'); card.setAttribute('tabindex', '0'); card.setAttribute('data-act', 'pick-' + choice);
+      const pick = () => { ui.offer.pick = choice; ui.offer.open = false; render(); };
+      card.addEventListener('click', (e) => { if (!e.target.closest('[data-tip]')) pick(); });
+      card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+    }
+    card.append(nodePath(t));
+    if (t.boosts && t.boosts.length) card.append(h('div', { class: 'chips' }, t.boosts.map((b) => h('span', { class: 'bchip st-' + b.stat }, [
+      h('b', { text: up(b.stat) }),
+      b.growth ? h('span', { class: 'num', text: '▲' + signed(b.growth) }) : null,
+      b.flat ? h('span', { class: 'num', text: signed(b.flat) }) : null,
+    ]))));
+    const perks = t.nodes.filter((n) => n.last || (n.kind !== 'growth' && n.kind !== 'stat'));
+    card.append(h('div', { class: 'perks' }, perks.map((n) => h('div', { class: 'perk' + (n.last ? ' cap' : '') }, [
+      h('span', { class: 'pg', 'aria-hidden': 'true', text: n.last ? '★' : n.kind === 'trigger' ? '⚡' : n.kind === 'rule' ? '◆' : '✦' }),
+      h('span', null, [h('b', { text: n.name, ...TIP.attrs('node:' + n.id) }), ' ', h('span', { class: 'muted', text: n.desc.replace(/^Chase trait\.\s*/, '') })]),
+    ]))));
+    if (!sel) return card;
+
+    const grid = h('div', { class: 'slotgrid', style: 'grid-template-columns:repeat(' + (s.slots.length === 5 ? 5 : 4) + ',minmax(0,1fr))' });   // one row of 4 or 5
+    // Warn on a slot whose tree a chase tree needs (specs/15 section 5.2): the offered chase tree itself, which would lock at once,
+    // or a slotted chase tree, which would lock again.
+    const needs = (chaseId, treeId) => (C.trees[chaseId].conditionTrees || []).indexOf(treeId) >= 0;
+    s.slots.forEach((slot, i) => {
+      const warn = !slot ? null : needs(id, slot.tree) ? 'Locks it!'
+        : s.slots.some((x) => x && x !== slot && C.trees[x.tree].kind === 'chase' && needs(x.tree, slot.tree)) ? 'Chase needs it' : null;
+      const label = 'Put ' + t.name + ' in slot ' + (i + 1) + (slot ? ' (replaces ' + treeName(slot.tree) + (warn ? '; ' + warn.toLowerCase().replace('!', '') : '') + ')' : ' (empty)');
+      grid.append(h('button', { class: 'stile ' + (slot ? 'full' : 'empty') + (warn ? ' risky' : ''), type: 'button', 'data-act': 'take-' + choice + '-' + i, 'aria-label': label,
+        onclick: () => take(choice, i) }, [
+        h('span', { class: 'sn num', text: String(i + 1) }),
+        h('span', { class: 'sl', text: slot ? treeName(slot.tree) : 'Empty' }),
+        h('span', { class: 'sw', text: warn ? '⚠ ' + warn : slot ? (slot.bought ? '↺ ' + slot.bought + '/' + C.trees[slot.tree].nodes.length : 'Replace') : 'Slot it' }),
+      ]));
+    });
+    card.append(h('div', { class: 'small muted', text: 'Tap a slot:' }), grid);
+    if (s.slots.some((x) => x && x.bought))
+      card.append(h('div', { class: 'small muted', text: 'Replacing gives back ' + refundShare() + ' of the SP spent in it. Its flat boosts are lost, and a chase tree that needs it locks again.' }));
+    card.append(h('button', { class: 'linkish', type: 'button', 'data-act': 'offer-nodes', 'aria-expanded': String(ui.offer.open),
+      text: (ui.offer.open ? 'Hide nodes ▴' : 'All ' + t.nodes.length + ' nodes ▾'), onclick: () => { ui.offer.open = !ui.offer.open; render(); } }));
+    if (ui.offer.open) card.append(h('div', null, t.nodes.map((n) => nodeRow(n, 'locked'))));
+    return card;
+  }
+
+  // A tree's nodes as a strip of tiles in buy order: stat nodes show their stat (▲ growth, + flat), skills their initials, the
+  // capstone a star. Each tile opens its node's tooltip.
+  function nodePath(t) {
+    return h('div', { class: 'npath', 'aria-label': t.nodes.length + ' nodes' }, t.nodes.map((n) => {
+      const filler = n.kind === 'growth' || n.kind === 'stat';
+      const cls = 'nt ' + (n.last ? 'cap' : filler ? 'fill st-' + n.stat : 'sk k-' + n.kind);
+      const face = n.last ? '★' : filler ? up(n.stat) : skillAbbr(n.name);
+      return h('span', { class: cls, ...TIP.attrs('node:' + n.id), style: !filler && !n.last ? '--hue:' + (hash(n.name) % 360) : null }, [
+        h('span', { class: 'f', text: face }),
+        filler ? h('span', { class: 'm', text: n.kind === 'growth' ? '▲' : '+' }) : null,
+      ]);
+    }));
   }
 
   // The run bonuses the account's talents give now (specs/18 section 3), only those that change something.

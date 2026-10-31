@@ -60,6 +60,8 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 - **Overwriting** (kj, 2026-10-31; it was "points are lost" until then): `TREE_REFUND` (0.5, half) of the SP spent in the overwritten tree comes back, rounded down **(agent)**. **(agent)** Its effects go with it: its flat stat boosts are subtracted again (never below 0), its growth bonus stops applying, its skills leave the kit. Gains already made from its growth bonus stay. Milestones already recorded stay recorded.
 - **(agent)** A chase tree that locks again (section 5.2) leaves the same way, so it is refunded too. Each tree is rounded down on its own. `TakeTree` reports the trees removed and the SP refunded.
 
+**Offer screen (web, 2026-10-31, kj: the old full node list per tree was too clunky).** An offer is an arcade card pick: a banner (Awakening with the stat and threshold, Skill book, or Chase unlocked) and one compact card per offered tree. A card shows the node path as a strip of tiles in buy order (a stat node as its stat, ▲ for growth and + for flat; a skill, trigger or rule node as its initials; the chase trait as a star; each tile opens its node tooltip), the filler nodes summed per stat as chips (the bridge's `boosts`), and the skill, trigger, rule and chase trait nodes one line each. The first card starts picked; tapping another picks it. The picked card shows a tile per slot (empty slots highlighted, an occupied one its tree and nodes bought) and the full node list behind "All nodes". Tapping a slot takes the tree. A slot whose tree a chase tree needs is flagged (section 5.2). Skip discards the offer.
+
 ## 5. Chase trees
 
 ### 5.1 Two per species (kj, 2026-10-30, issue #78)
@@ -100,7 +102,7 @@ After every command the run reconciles chase trees, in this order:
 2. A pending chase offer whose conditions no longer hold is withdrawn.
 3. A chase tree of the run's species whose conditions hold, that is neither slotted nor already offered since it last unlocked, is offered. A discarded chase offer is not repeated while the tree stays unlocked; once it locks again it can be offered again.
 
-Taking a chase tree into the slot of one of its own prerequisites makes it lock at once. The UI should warn before that.
+Taking a chase tree into the slot of one of its own prerequisites makes it lock at once. The offer screen flags that slot ("Locks it!"), and a slot holding a prerequisite of a slotted chase tree ("Chase needs it"); it still allows the take.
 
 A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a book tree (*Arcane Overflow* needs a Tome of Echoes node, a Spellcraft node and 3 crits).
 
