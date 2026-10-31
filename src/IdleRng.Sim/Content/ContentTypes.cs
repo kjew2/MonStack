@@ -86,6 +86,7 @@ namespace IdleRng.Sim.Content
         public int VendorOffers { get; internal set; }           // VENDOR_OFFERS: offers the post-run vendor rolls (specs/18 section 4)
         public int RerollBase { get; internal set; }             // REROLL_BASE: the first vendor reroll's price in a visit
         public int RerollStep { get; internal set; }             // REROLL_STEP: added to the price per reroll already made in the visit
+        public int LegendarySlots { get; internal set; }         // LEGENDARY_SLOTS: legendary-slot talents active in one run (issue #106)
 
         // End-of-run gauntlet (specs/19 section 4). Placeholders.
         public int GauntletFloors { get; internal set; }         // GAUNTLET_FLOORS
@@ -423,6 +424,9 @@ namespace IdleRng.Sim.Content
         public string NameKey { get; internal set; }
         public double WeightBase { get; internal set; }
         public double WeightPerRank { get; internal set; }
+
+        /// <summary>Talents of this tier take a legendary slot: at most LEGENDARY_SLOTS of them are active in a run (issue #106).</summary>
+        public bool LegendarySlot { get; internal set; }
 
         public double Weight(int gradeIndex) => System.Math.Max(0, WeightBase + WeightPerRank * gradeIndex);
     }

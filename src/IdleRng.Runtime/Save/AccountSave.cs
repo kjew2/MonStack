@@ -12,7 +12,7 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 6, "Account": { ...AccountState without Active... },
+    /// { "Kind": "monster_account", "SchemaVersion": 7, "Account": { ...AccountState without Active... },
     ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Ladder", "Log", "Hash" } | null }
     /// </code>
     /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
@@ -66,6 +66,7 @@ namespace IdleRng.Runtime.Save
             if (a.Achievements == null) a.Achievements = new List<string>();   // a null in the file reads as none
             if (a.Records == null) AccountOps.RebuildRecords(a);
             if (a.Tower == null) a.Tower = new TowerProgress();   // a null in the file reads as no attempts yet
+            if (a.TalentsOff == null) a.TalentsOff = new List<string>();   // a null in the file reads as every talent on
 
             if (body["ActiveRun"] is JObject run)
             {
@@ -142,6 +143,12 @@ namespace IdleRng.Runtime.Save
                 // v5 -> v6 (issue #104): the vendor counts its rerolls; a vendor saved before rerolls existed has made none.
                 if (acct["Vendor"] is JObject vendor) vendor["Rerolls"] = 0;
                 version = 6;
+            }
+            if (version == 6)
+            {
+                // v6 -> v7 (issue #106): the talent loadout. Every owned talent was always on, so none is switched off.
+                acct["TalentsOff"] = new JArray();
+                version = 7;
             }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;

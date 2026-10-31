@@ -6,21 +6,24 @@
       "sort_order": 0,
       "name_key": "rarity.common.name",
       "weight_base": 80.0,
-      "weight_per_rank": -10.0
+      "weight_per_rank": -10.0,
+      "legendary_slot": false
     },
     {
       "id": "rare",
       "sort_order": 1,
       "name_key": "rarity.rare.name",
       "weight_base": 18.0,
-      "weight_per_rank": 4.0
+      "weight_per_rank": 4.0,
+      "legendary_slot": false
     },
     {
       "id": "epic",
       "sort_order": 2,
       "name_key": "rarity.epic.name",
       "weight_base": 2.0,
-      "weight_per_rank": 6.0
+      "weight_per_rank": 6.0,
+      "legendary_slot": false
     }
   ]
 }
