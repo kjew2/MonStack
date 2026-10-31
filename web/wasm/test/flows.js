@@ -159,8 +159,10 @@ const H = require('./harness.js');
   await t.layout('vendor screen');
   await act('vendor-done').click();
   await act('start').waitFor();
+  await act('hometab-vault').click();
   await t.layout('Vault (home after a run)');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'the Vault lists the sealed monster');
+  await act('hometab-raise').click();
 
   // ---- a save whose run in progress no longer replays (specs/06 section 5): only that run is dropped
   await act('species-' + speciesId).click();
@@ -234,8 +236,10 @@ const H = require('./harness.js');
   check(bad2.length === 2 && bad2[0] === staleText && bad2[1] === damaged, 'the damaged save is kept aside, unchanged, next to the stale save kept before (issue #93)');
   const fresh = await t.readAccount();
   check(fresh && fresh.Kind === 'monster_account' && fresh.ActiveRun === null && fresh.Account.Vault.length === 0 && fresh.Account.Shards === 0, 'a fresh account replaces it');
-  check((await page.locator('[data-id=vault-entry]').count()) === 0 && (await text('[data-id=shards]')).startsWith('0 '), 'the home screen shows the fresh account');
   await t.layout('home after a damaged save');
+  await act('hometab-vault').click();
+  check((await page.locator('[data-id=vault-entry]').count()) === 0 && (await text('[data-id=shards]')).startsWith('0 '), 'the home screen shows the fresh account');
+  await act('hometab-raise').click();
   await act('start').click();
   await act('drill-str').waitFor();
   await act('drill-str').click();
@@ -265,6 +269,7 @@ const H = require('./harness.js');
   // bonuses, the run shows a fifth tree slot and the bigger rest, and a milestone draft can be rerolled once (Second Look)
   const talented = await t.readAccount();
   talented.ActiveRun = null;
+  await act('hometab-talents').click();
   const talentIds = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"]')].map((e) => e.getAttribute('data-id').slice(7))
     .filter((id) => id !== 'now'));
   const maxRanks = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"] .tag.num')].map((e) => +e.textContent.split('/')[1]));
@@ -274,9 +279,11 @@ const H = require('./harness.js');
   talentIds.forEach((id, i) => { if (!['iron_constitution', 'gamblers_blood', 'glass_cannon', 'echo_training'].includes(id)) talented.Account.Talents[id] = maxRanks[i]; });
   await t.writeSaveText(H.encodeSave(talented));
   await t.reload();
+  await act('hometab-talents').click();
   const now = await text('[data-id=talent-now]');
   check(['rests +30 energy', 'a free drill after each Super', '+1 tree slot', '1 injury prevented per run', '+2 AP in the last cycle',
     'milestones at x0.80', '1 Awakening reroll per run', 'shards x1.50', '+2 SP per lost fight'].every((x) => now.includes(x)), 'the home screen sums every talent bonus: ' + now);
+  await act('hometab-raise').click();
   await act('start').click();
   await act('drill-hp').waitFor();
   check(/^Rest \(\+80 energy\)$/.test(await text('[data-act="rest"]')), 'the rest button shows Deep Rest\'s bigger rest: ' + await text('[data-act="rest"]'));

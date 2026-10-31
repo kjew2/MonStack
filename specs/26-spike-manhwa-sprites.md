@@ -107,4 +107,4 @@ For issue #115, in the terms of section 4.1: mostly CSS, a few small assets. Pan
 ### 8.3 In the web client
 
 - Every species sprite (home cards, run HUD, fights, tower and gauntlet playback, Vault) is the generated sprite of the monster's apex form, else of its species (`IdleSprites.art`, `run.js` `sprite()`). An image that fails to load falls back to the 12x12 pixel art, which also stays for species without art. Rank opponents keep their seeded sprites.
-- The home screen shows the picked species' portrait above the species list. **(agent)** Other portrait spots (an apex reveal, a monster card) are not built yet; the UI overhaul (#115) is the natural place for them.
+- The home screen's Raise tab shows the picked species' portrait above the species list. **(agent)** Other portrait spots (an apex reveal, a monster card) are not built yet; the UI overhaul (#115) is the natural place for them.

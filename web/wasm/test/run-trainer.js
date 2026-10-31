@@ -44,6 +44,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   });
   const shot = async (n) => { if (shotsDir) { fs.mkdirSync(shotsDir, { recursive: true }); await page.screenshot({ path: path.join(shotsDir, n + '.png') }); } };
   const act = (a) => page.locator('[data-act="' + a + '"]');
+  const homeTab = (id) => act('hometab-' + id).click();   // the home screen's tabs: raise, vault, talents, dungeon, goals
   const text = (sel) => page.locator(sel).first().innerText();
   const tc = (sel) => page.locator(sel).first().textContent();   // as written, before CSS text-transform
   const url = srv.url + 'index.html';
@@ -83,9 +84,12 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const artFiles = (d) => fs.readdirSync(path.join(WEB, 'art', d)).map((f) => f.replace(/\.webp$/, '')).sort();
   check(JSON.stringify(artFiles('sprite')) === JSON.stringify(artKeys) && JSON.stringify(artFiles('portrait')) === JSON.stringify(artKeys),
     'web/art/ holds a sprite and a portrait for exactly the keys sprites.js lists (' + artKeys.length + ')');
-  check((await page.locator('[data-id^="ach-"]').count()) >= 2, 'the home screen lists the achievements');
   check((await page.locator('[data-act^="talent-"]').count()) === 0, 'there is no always-on talent shop');
   await shot('01-home');
+  await homeTab('goals');
+  check((await page.locator('[data-id^="ach-"]').count()) >= 2, 'the Goals tab lists the achievements');
+  check(/^\d+\/\d+$/.test(await text('[data-id=hometab-goals-n]')), 'and its tab counts the goals done: ' + (await text('[data-id=hometab-goals-n]')));
+  await homeTab('raise');
   // The rest of the run plays drake: the account save gets drake unlocked and spare shards, as if earned.
   const SHARDS0 = 1000;
   fresh.Account.OwnedSpecies = ['slime', 'drake'];
@@ -450,6 +454,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(vw0 <= 390, 'the vendor fits the phone width (' + vw0 + 'px)');
   await act('vendor-done').click();
   check((await page.locator('[data-id=vendor-offer]').count()) === 5, 'home keeps the unbought offers until the next run');
+  await homeTab('talents');
   check(new RegExp('^' + afterBuy.Account.Talents[talentId] + '/').test(await text('[data-id=talent-' + talentId + '] .tag.num')), 'the talent list shows the new rank');
   // ---- the talent loadout (issue #106): an owned talent can be switched off for the next run, free, and back on
   const toggle = act('talent-toggle-' + talentId);
@@ -464,6 +469,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
 
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
+  await homeTab('vault');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'a reload after sealing keeps one Vault entry (no double seal)');
   check((await text('[data-id=shards]')).startsWith((SHARDS0 + payout - price - rerollSpent) + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
   check((await text('[data-id=vault-title]')) === legacy, 'the Vault card shows the Legacy Title: ' + legacy);
@@ -472,6 +478,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   // ---- the Dungeon (specs/21 section 8): one attempt with the sealed monster, paid and saved by the engine
   const towerShards0 = (await readAccount()).Account.Shards;
   const ticketsSaved = (await readAccount()).Account.Tower.Tickets;
+  await homeTab('dungeon');
   const ticketsBefore = /^(\d+) tickets? · (\d+)\/(\d+) pieces/.exec(await text('[data-id=tower-tickets]'));
   check(!!ticketsBefore && +ticketsBefore[1] === ticketsSaved + 1, 'home shows the Dungeon card with the tickets held plus today\'s free one: ' + (await text('[data-id=tower-tickets]')));
   await act('tower').click();
@@ -535,11 +542,13 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(tw <= 390, 'the tower screen fits the phone width (' + tw + 'px)');
   await shot('06b-tower');
   await act('tower-back').click();
-  await act('start').waitFor();
+  await act('tower').waitFor();
+  check((await act('hometab-dungeon').getAttribute('aria-selected')) === 'true', 'Back returns to the Dungeon tab');
   const ticketsAfter = /^(\d+) ticket/.exec(await text('[data-id=tower-tickets]'));
   check(!!ticketsAfter && +ticketsAfter[1] === +ticketsBefore[1] - 1, 'back home, the card shows one ticket used: ' + (await text('[data-id=tower-tickets]')));
 
   // ---- the next run: the vendor's offers go, and a bought Frugal Drills cuts the drill cost
+  await homeTab('raise');
   await act('start').click();
   await act('drill-str').waitFor();
   check((await readAccount()).Account.Vendor === null, 'starting the next run clears the vendor');
@@ -554,6 +563,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('abandon-yes').click();
   await act('start').waitFor();
   check(((await readAccount()).ActiveRun) === null, 'abandoning ends the run without sealing');
+  await homeTab('vault');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'and the Vault is unchanged');
 
   // ---- Vault cap, lock and dismantle (issue #82, specs/18 section 7)
@@ -577,6 +587,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await writeAccount(legend);
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
+  await homeTab('talents');
   check((await page.locator('[data-id=talent-glass_cannon] .tag.gold').count()) === 1 && (await page.locator('[data-id=talent-echo_training] .tag.gold').count()) === 1, 'legendary talents carry a Legendary tag');
   check(await act('talent-toggle-glass_cannon').isChecked() && !(await act('talent-toggle-echo_training').isChecked()), 'with one slot, only the first legendary is on by default');
   await act('talent-toggle-echo_training').check();
@@ -601,11 +612,14 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   check((await page.evaluate(() => RunEngine.badKeys().length)) === 0, 'a v1 save loads (migrated), not kept aside');
-  check((await page.locator('[data-id=vault-entry]').count()) === cap + 1, 'all ' + (cap + 1) + ' monsters are in the Vault');
-  check((await tc('[data-id=vault-count]')) === 'Vault ' + (cap + 1) + '/' + cap, 'the count shows it over the cap');
+  check((await page.locator('[data-act=vault-over-open]').count()) === 1, 'the start screen links to the Vault');
   check(await act('start').isDisabled() && /dismantle 1/i.test(await act('start').innerText()), 'starting a run is blocked: ' + (await act('start').innerText()));
   check(/Dismantle 1 monster/.test(await text('[data-id=vault-over]')), 'with a clear message: ' + (await text('[data-id=vault-over]')));
   await shot('09-vault-over-cap');
+  await act('vault-over-open').click();
+  check((await page.locator('[data-id=vault-entry]').count()) === cap + 1, 'all ' + (cap + 1) + ' monsters are in the Vault');
+  check((await tc('[data-id=vault-count]')) === 'Vault ' + (cap + 1) + '/' + cap, 'the count shows it over the cap');
+  check(await page.locator('[data-id=hometab-vault-n].bad').count() === 1, 'and the Vault tab\'s count is red');
   const shardsBefore = (await readAccount()).Account.Shards;
   const refund = +(/\+(\d+) shards/.exec(await act('dismantle-' + cap).innerText()) || [])[1];
   await act('dismantle-' + cap).click();
@@ -613,10 +627,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const afterDismantle = await readAccount();
   check(afterDismantle.SchemaVersion === 7 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v7 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
-  check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap && (await page.locator('[data-id=vault-over]').count()) === 0, 'back at the cap, the warning goes');
-  check(await act('start').isEnabled(), 'and a run can start again at the cap');
+  check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap, 'back at the cap');
   const vw = await page.evaluate(() => document.documentElement.scrollWidth);
   check(vw <= 390, 'the Vault fits the phone width (' + vw + 'px)');
+  await homeTab('raise');
+  check((await page.locator('[data-id=vault-over]').count()) === 0 && await act('start').isEnabled(), 'the warning goes, and a run can start again at the cap');
 
   // ---- Vault browsing (issue #81): sort, filter, search, detail and compare over a varied Vault, and lock/dismantle under a
   // filter still address the real Vault index. The six entries are copies of the sealed one with species, grade, title, STR,
@@ -644,6 +659,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     await page.evaluate((t) => { localStorage.setItem('idle-rng-account-v1', t); localStorage.removeItem('idle-rng-vault-view'); }, saveTxt);
     await page.reload();
     await act('start').waitFor({ timeout: 90000 });
+    await homeTab('vault');
     const order = () => page.$$eval('[data-id=vault-entry]', (els) => els.map((e) => +e.dataset.index));
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     const sortBy = async (v) => { await page.selectOption('[data-act=vault-sort]', v); return order(); };
@@ -658,6 +674,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     check(JSON.parse(await page.evaluate(() => localStorage.getItem('idle-rng-vault-view'))).sort === 'stat:str', 'the sort is remembered for this viewer');
     await page.reload();
     await act('start').waitFor({ timeout: 90000 });
+    await homeTab('vault');
     check((await page.locator('[data-act=vault-sort]').inputValue()) === 'stat:str' && same(await order(), [5, 1, 3, 4, 0, 2]), 'and survives a reload');
 
     await act('vault-filters').click();
@@ -760,6 +777,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   // ---- the Dungeon team picker (issue #98) over the varied Vault: the Vault's search narrows the list, picks fill the slots
   // in order, and a slot moves up or down or comes off; the picks address the real Vault index under a search
   {
+    await homeTab('dungeon');
     await act('tower').click();
     await act('tower-climb').waitFor();
     if (await act('tower-clear').count()) await act('tower-clear').click();   // the Vault's remembered filters apply here too
@@ -785,6 +803,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     check(tw2 <= 390, 'the team picker fits the phone width (' + tw2 + 'px)');
     await shot('06e-tower-team');
     await act('tower-back').click();
+    await homeTab('raise');
     await act('start').waitFor();
   }
 
