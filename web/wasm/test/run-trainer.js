@@ -31,6 +31,12 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  // Read text as written: the skin uppercases labels with CSS (specs/26 section 4.1), and innerText would return the uppercased form.
+  await ctx.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
+    const st = document.createElement('style');
+    st.textContent = '*, *::before, *::after { text-transform: none !important; }';
+    document.head.append(st);
+  }));
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => {
