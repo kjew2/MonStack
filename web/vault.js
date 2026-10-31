@@ -103,14 +103,15 @@
     if (!acct.vault.length) { main.append(h('p', { class: 'small muted', text: 'Sealed monsters appear here.' })); return renderSheet(modal); }
     main.append(h('p', { class: 'small muted', text: 'Dismantle a monster for Training Shards; lock your favourites so they cannot be dismantled. Tap Details for its stats and trees, or Compare on two monsters.' }));
     const list = h('div', { class: 'vlist', 'data-id': 'vault-list' });
-    main.append(controls(list), list);
+    main.append(controls(() => fillList(list)), list);
     fillList(list);
     renderSheet(modal);
   }
 
-  function controls(list) {
+  // The search, sort and filter controls; refresh() redraws the list they drive.
+  function controls(refresh) {
     const h = X.h, v = st.view;
-    const refill = () => { saveView(); fillList(list); };
+    const refill = () => { saveView(); refresh(); };
     const select = (id, label, options, value, onchange) => {
       const s = h('select', { 'data-act': id, 'aria-label': label, onchange: (ev) => onchange(ev.target.value) },
         options.map((o) => h('option', { value: o[0], text: o[1] })));
@@ -118,7 +119,7 @@
       return h('label', { class: 'vfield' }, [h('span', { class: 'small muted', text: label }), s]);
     };
     const search = h('input', { type: 'search', 'data-act': 'vault-search', placeholder: 'Search species, title, tree…', 'aria-label': 'Search the Vault', autocomplete: 'off',
-      oninput: (ev) => { st.search = ev.target.value; fillList(list); syncFilterButton(); } });
+      oninput: (ev) => { st.search = ev.target.value; refresh(); syncFilterButton(); } });
     search.value = st.search;
     const filterBtn = h('button', { class: 'btn small', type: 'button', 'data-act': 'vault-filters', 'aria-expanded': st.showFilters ? 'true' : 'false',
       onclick: () => { st.showFilters = !st.showFilters; X.rerender(); } });
@@ -306,8 +307,19 @@
       onclick: () => { st.compare = [st.compare[1], st.compare[0]]; X.rerender(); } }));
   }
 
+  // The Vault's search, sort and filters for another screen's list of Vault monsters (the Daily Tower team picker, issue #98).
+  // They share the Vault's remembered sort and filters. fill(rows, vaultSize) draws [entry, vault index] pairs in display order;
+  // it runs now and whenever the controls change. Returns the controls element.
+  function browse(helpers, fill) {
+    X = helpers;
+    const refresh = () => fill(shown(), X.run.account.vault.length);
+    const box = controls(refresh);
+    refresh();
+    return box;
+  }
+
   // Called when a run starts or ends: drop the transient picks (the sort and filters stay).
   function reset() { st.confirm = null; st.detail = null; st.pick = null; st.compare = null; }
 
-  window.VaultView = { render: render, reset: reset, VIEW_KEY: VIEW_KEY };
+  window.VaultView = { render: render, browse: browse, clear: clearFilters, reset: reset, VIEW_KEY: VIEW_KEY, total: total };
 })();

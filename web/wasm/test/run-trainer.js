@@ -10,7 +10,8 @@
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
 // condition; the run is played on an account save that has drake unlocked; after the run the vendor offers 5 talent offers and
 // buying one spends shards. The Daily Tower: one climb, its result card, and floor playback (entropy gauges, the next vent, the
-// corruption meter and their tooltips, an earlier floor replayed by towerFloor with the same fight hash; issue #98).
+// corruption meter and their tooltips, an earlier floor replayed by towerFloor with the same fight hash; issue #98), and the
+// team picker over a varied Vault (the Vault's search, slot reordering); the test book button is debug only.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
 'use strict';
@@ -582,9 +583,44 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   }
 
 
+  // ---- the Daily Tower team picker (issue #98) over the varied Vault: the Vault's search narrows the list, picks fill the slots
+  // in order, and a slot moves up or down or comes off; the picks address the real Vault index under a search
+  {
+    await act('tower').click();
+    await act('tower-climb').waitFor();
+    if (await act('tower-clear').count()) await act('tower-clear').click();   // the Vault's remembered filters apply here too
+    const all = await page.locator('[data-id=tower-entry]').count();
+    check(all === (await readAccount()).Account.Vault.length, 'the team picker lists the whole Vault (' + all + ')');
+    await act('vault-search').fill('sprite');
+    const hits = await page.locator('[data-id=tower-entry]').evaluateAll((els) => els.map((e) => +e.dataset.index));
+    check(hits.length > 0 && hits.length < all && /Showing \d+ of \d+/.test(await text('[data-id=tower-showing]')), 'the Vault search narrows the team picker: ' + hits.join(','));
+    await act('tower-pick-' + hits[0]).check();
+    await act('vault-search').fill('');
+    const other = (await page.locator('[data-id=tower-entry]').evaluateAll((els) => els.map((e) => +e.dataset.index))).find((i) => i !== hits[0]);
+    await act('tower-pick-' + other).check();
+    const slotNames = async () => [await text('[data-id=tower-slot-0] b'), await text('[data-id=tower-slot-1] b')];
+    const before = await slotNames();
+    check(await act('tower-slot-up-0').isDisabled() && await act('tower-slot-down-1').isDisabled(), 'the first slot cannot move up nor the last down');
+    await act('tower-slot-down-0').click();
+    const after = await slotNames();
+    check(after[0] === before[1] && after[1] === before[0], 'moving slot 1 down swaps the first two slots: ' + before.join(', ') + ' → ' + after.join(', '));
+    check(/Slot 1/.test(await text('[data-index="' + other + '"] .tag.num')), 'the list shows the new slot of each pick');
+    await act('tower-slot-remove-0').click();
+    check((await page.locator('[data-id=tower-slot-1].empty').count()) === 1 && (await text('[data-id=tower-slot-0] b')) === before[0], 'taking a monster off the team closes the gap');
+    const tw2 = await page.evaluate(() => document.documentElement.scrollWidth);
+    check(tw2 <= 390, 'the team picker fits the phone width (' + tw2 + 'px)');
+    await shot('06e-tower-team');
+    await act('tower-back').click();
+    await act('start').waitFor();
+  }
+
   // ---- the book option and drafts (the test book is the picked species' own: drake's Ember Codex)
   await act('species-drake').click();
   check(/Ember Codex/.test(await text('[data-id=chase-drake]')), 'the species card names its chase trees and the book one needs');
+  check((await act('grant-book').count()) === 0, 'the "Test: add a book" button is debug only (specs/21 section 7)');
+  for (let k = 0; k < 5; k++) await page.locator('#build').click();     // five taps on the build stamp turn the debug controls on
+  await act('grant-book').waitFor();
+  check(true, 'five taps on the build stamp show the debug-only book button');
   await act('grant-book').click();
   await act('book-toggle').check();
   await act('start').click();

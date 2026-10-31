@@ -1,6 +1,6 @@
 # 21 - Daily Tower
 
-Status: **live (T10 of `specs/13`, P0)**, all four build steps (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4); the web screen with floor playback, section 8 (`web/run.js`, browser test in `web/wasm/test/run-trainer.js`). Section 8 lists what the screen does not do yet.
+Status: **live (T10 of `specs/13`, P0)**, all four build steps (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4); the web screen with floor playback, section 8 (`web/run.js`, browser test in `web/wasm/test/run-trainer.js`).
 
 The design is `specs/12` sections 8.2 and 8.3 and the Skill Book rules in section 5.6. This spec turns it into rules, data and build steps.
 
@@ -157,7 +157,7 @@ string book = TowerSim.BookDrop(content, day, floor);     // the floor's drop th
 - **Skill Books:** on each floor cleared, one roll with chance `TOWER_BOOK_CHANCE + TOWER_BOOK_CHANCE_PER_FLOOR x (floor - 1)`; on a hit, the book is drawn from `book_drops` rows with `min_floor <= floor`, by weight, so rarer books sit deeper. The roll's seed is `Derive(StreamSeed(seed, "drop"), floor)` (`TowerSim.BookDrop`, built with step 2): fixed by (day, floor), so a retry cannot re-roll a floor and the books are reproducible. Granted through `GrantBooks`.
 - **Star-Gems:** the first clear ever of a floor (above `ClearedEver`, reported in `TowerRunResult.FirstClears`) and each `TOWER_MILESTONE_EVERY` floor cleared in a day pay gems **once Star-Gems exist**: T9 scrapped the species gacha and added no gems, so what gems buy is open (#49, #77; `specs/18` section 1). Until then the tower pays shards and books only. Amounts are decided with the gacha economy (question 5).
 
-The test button that grants books (`specs/13` T3) stays as a debug-only control, hidden behind the debug flag, once the tower grants them **(agent)**.
+The test button that grants books (`specs/13` T3) stays as a debug-only control now that the tower grants them **(agent)**: the home screen shows it only with `?debug` in the page URL, or after five quick taps on the header's build stamp (remembered on the device in `localStorage['idle-rng-debug']`; five more taps turn it off). The bridge command `debugGrantBook` is unchanged.
 
 The day number is read from the device clock by the caller. The sim cannot tell if the clock is wrong, so a player who moves it forward can claim more days. Accepted while the game is single-player and offline-first; the server-checked day arrives with T12 (`specs/10`) **(agent)**.
 
@@ -166,14 +166,14 @@ The day number is read from the device clock by the caller. The sim cannot tell 
 **Built (first version).** A **Daily Tower** card on the home screen (attempts left today, today's best) opens the tower screen; everything comes through the bridge (`AccountCmd` `towerInfo` and `runTower`, `web/wasm/BRIDGE.md`), and the page computes no rule. The day is the UTC day number from the device clock (`run.towerDay()`).
 
 - Status line: attempts left, floors cleared today and ever.
-- Team: every Vault entry with a checkbox, up to `MON_SIDE_SIZE`; the order picked is the slot order, shown as "Slot n". Climb runs one attempt.
+- Team (issue #98): `MON_SIDE_SIZE` slots in order, each with up, down and remove (slot order breaks ATB ties and sets default targets, section 2; a pick goes into the first free slot), then the Vault with its search, sort and filters (`web/vault.js`, the Vault's remembered sort and filters) and a checkbox per monster. Climb runs one attempt.
 - Result card: where the team fell (or a full clear), the shards paid, the Skill Books dropped and on which floor, first clears, every floor fought (won or lost, phases entered, vents, peak corruption) with a **Watch** button, and the last floor's fight as a collapsible log in which the tower events (phase entered, entropy vent, shield check failed, channel broken or landed) are highlighted lines.
 - Today's floors: each floor's boss, element, marquee bosses in gold, their phases in order (each opens its tooltip) and the floor level.
 - **Floor playback** (issue #98): a floor's fight plays in the rank fight's view (`fightPlayView`; 1x, 2x or Skip, the same remembered speed): every unit's HP and skill cooldown tiles, and for each unit its entropy gauge (out of `ENTROPY_CAP`) with the vent that is next, a corruption meter (level out of the level the time limit reaches), and a gold banner for each tower event. A split phase's adds appear when they join. Right after a climb the last floor (the one that decided the attempt) plays unless the speed is Skip; Watch plays any floor fought, at 1x when the speed is Skip, and the view steps to the floor before or after. Skip shows the floor's end. Every number is the engine's per-action snapshot (`web/wasm/BRIDGE.md`, `en`, `vent`, `corruption`); the next vent is `BattleSim.NextVent`, so the page computes no rule.
 - **Bridge (agent):** the last floor's fight comes with `runTower`; any other floor comes from the read-only `towerFloor(day, team, floor)`, which replays the attempt and logs only that floor. Chosen over putting every floor's log in `runTower`: a 20-floor attempt with per-action snapshots would be megabytes in a result the page keeps, while players watch one or two floors. The replay is the same fight (a result is a pure function of content, team, day and slot order, section 2); each floor's fight `hash` is in both results and the browser test checks they match. The page calls it only for an attempt already made; since the sim runs on the device, it does not stop a player from trying a team on the day's floors before spending an attempt (as with the clock, section 7, the server check comes with T12).
 - **Tooltips** (`BattleText.TowerTips`, RunContent `towerTips`): the entropy gauge (`tower.entropy.*`), each vent kind (`vent.<kind>.*`; convert uses `rule.entropy_convert.desc`), the corruption meter (`tower.corruption.*`, its start and step given in turns) and each phase kind (`phase.<kind>.*`), constants filled in (content 3.10).
 
-**Not yet** (issue #98): the Vault's sort, filters and search in the team picker and reordering the team; moving the "Test: add a book" button behind a debug flag (it is still on the home screen).
+Issue #98's polish is all built. Not planned yet: a practice mode (question 3).
 
 ## 9. Determinism and tests
 
@@ -191,7 +191,7 @@ Each step merges on its own with `./check.sh` green.
 1. **Engine hooks** (`BattleSim`): `TowerRules`, entropy, the four phase kinds, the clock, tests. Rank fights and the gauntlet unchanged. **Done** (`TowerBattleTests`; no golden moved).
 2. **Tower sim and content:** the three tables, constants, validators in both `content_build.py` and `ContentDb`, `TowerSim`, goldens. **Done** (content 3.6, `TowerTests`, `golden/tower-vectors.txt`).
 3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v4, tests. **Done** (`TowerAccountTests`, `AccountSaveTests`).
-4. **Web:** the tower screen and the bridge. **Done** (section 8): the first version, then floor playback with the entropy and corruption meters and tooltips (issue #98); its open items are listed in section 8.
+4. **Web:** the tower screen and the bridge. **Done** (section 8): the first version, then floor playback with the entropy and corruption meters and tooltips, the team picker and the debug-only book button (issue #98).
 
 ## 11. Questions for kj
 
