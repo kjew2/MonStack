@@ -279,7 +279,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   async function shieldShown(which) {
     if (!(await page.locator('[data-id^="skill-"][data-kind=shield]').count())) { console.log('(no shield skill in ' + which + ')'); return; }
     const sh = await (await page.waitForFunction(() => {
-      const b = document.querySelector('[data-id^="unit-"] .bar.hp.shielded');
+      // wait for a band with width: it grows from 0 (a .2s CSS transition), so the first frame can measure 0
+      const b = [...document.querySelectorAll('[data-id^="unit-"] .bar.hp.shielded')].find((x) => x.querySelector('.shield').getBoundingClientRect().width > 0);
       return b && { w: b.querySelector('.shield').getBoundingClientRect().width, label: b.querySelector('span').textContent };
     }, null, { timeout: 15000 })).jsonValue();
     check(sh.w > 0 && /🛡\d+$/.test(sh.label), which + ': a shield shows as a band on the HP bar and in its label: ' + sh.label);
