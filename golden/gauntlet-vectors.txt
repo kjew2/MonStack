@@ -1,4 +1,4 @@
-# gauntlet vectors, hash v1 content=3.7/7e31c8fa
+# gauntlet vectors, hash v1 content=3.8/24d60f62
 
 slime focus seed=7 rank=s
   floor=73 cleared=False killer=golem title=title.food
@@ -10,4 +10,4 @@ drake focus seed=7 rank=b
 
 sprite focus seed=7 rank=b
   floor=40 cleared=False killer=apex_chimera title=title.respectable_brawler
-  hash 1528c8e1985795a49e825c59eadcc34413c4a3f36ac8e2f15277dfe8ed6fbd60
+  hash 01ce57be9743f732f604060ccefb97bba8bc6b023494e0565692d531ee8665f4

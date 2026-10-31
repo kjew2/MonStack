@@ -38,7 +38,7 @@ namespace IdleRng.Sim.Combat
         static void Validate(FightRules r)
         {
             if (!(r.GaugeSize > 0 && r.TurnTicks > 0 && r.TimeLimitTicks > 0 && r.SideSize > 0 && r.HpPerPoint > 0 && r.DefK > 0
-                  && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1))
+                  && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1 && r.StackCap >= 1))
                 throw new ArgumentException("fight rules out of range (specs/16 section 7)", nameof(r));
             if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && In01(r.DrainFrac) && In01(r.FirePierce) && r.DoubleTurns >= 0))
                 throw new ArgumentException("rule modifier constants out of range (specs/16 section 7)", nameof(r));
@@ -67,6 +67,7 @@ namespace IdleRng.Sim.Combat
                 MaxHp = MaxHp(rules, f.Stats.Hp),
                 Cooldowns = new int[f.Skills.Count],
             };
+            u.BaseMaxHp = u.MaxHp;
             u.Hp = u.MaxHp;
             return u;
         }
@@ -237,7 +238,7 @@ namespace IdleRng.Sim.Combat
             foreach (var u in s.Units)
             {
                 if (u.EnrageStep > 0 && u.Alive && s.Ticks % r.TurnTicks == 0) BumpEnrage(r, u);
-                Age(u);
+                Age(r, u);
                 if (u.CheckPending && u.Shield <= 0) u.CheckPending = false;   // broken in time
                 if (u.ShieldTicks > 0 && --u.ShieldTicks == 0)
                 {
@@ -264,14 +265,20 @@ namespace IdleRng.Sim.Combat
             return strikeSide;
         }
 
-        static void Age(FightUnit u)
+        static void Age(FightRules r, FightUnit u)
         {
+            bool hpChanged = false;
             for (int i = u.Effects.Count - 1; i >= 0; i--)
             {
                 var e = u.Effects[i];
                 if (e.TicksLeft < 0) continue;
-                if (--e.TicksLeft <= 0) u.Effects.RemoveAt(i);
+                if (--e.TicksLeft <= 0)
+                {
+                    u.Effects.RemoveAt(i);
+                    hpChanged |= e.Stat == StatIds.Hp;
+                }
             }
+            if (hpChanged) RecalcMaxHp(r, u);
             if (u.TauntTicks > 0) u.TauntTicks--;
         }
 
@@ -454,7 +461,7 @@ namespace IdleRng.Sim.Combat
                         foreach (var t in Enemies(s, src)) AddEffect(r, t, sk.Stat, -sk.Power, ticks, sk.Id);
                     else
                     {
-                        var t = PickEnemy(s, src, rng);
+                        var t = PickDebuffTarget(s, src, sk.Id, rng);
                         if (t != null) AddEffect(r, t, sk.Stat, -sk.Power, ticks, sk.Id);
                     }
                     onAction?.Invoke(new FightAction(src.Id, sk, null, sk.Power, false, false, aoe, false));
@@ -592,6 +599,20 @@ namespace IdleRng.Sim.Combat
             foreach (var e in s.Units) if (e.Side != u.Side && e.Alive && e.TauntTicks > 0) return e;
             var list = Enemies(s, u);
             if (list.Count == 0) return null;
+            if (list.Count == 1 || rng == null) return list[0];
+            return list[Math.Min(list.Count - 1, (int)(rng.NextDouble() * list.Count))];
+        }
+
+        /// <summary>
+        /// A single-target debuff's target (specs/16 section 5.2): the living enemies that lack its effect, or every living enemy when
+        /// none does; among them a taunting one (lowest slot), else a random one (one draw; no draw when only one is left).
+        /// </summary>
+        static FightUnit PickDebuffTarget(FightState s, FightUnit u, string source, IRandomSource rng)
+        {
+            var list = new List<FightUnit>(4);
+            foreach (var e in s.Units) if (e.Side != u.Side && e.Alive && !HasEffectFrom(e, source)) list.Add(e);
+            if (list.Count == 0) return PickEnemy(s, u, rng);
+            foreach (var e in list) if (e.TauntTicks > 0) return e;
             if (list.Count == 1 || rng == null) return list[0];
             return list[Math.Min(list.Count - 1, (int)(rng.NextDouble() * list.Count))];
         }
@@ -822,17 +843,48 @@ namespace IdleRng.Sim.Combat
 
         // ------------------------------------------------------------------ stats
 
+        /// <summary>
+        /// Add a stat effect (specs/16 section 3). A permanent HP effect multiplies the unit's base max HP. A timed effect stacks
+        /// up to EFFECT_STACK_CAP copies per source and stat; at the cap, the copy with the fewest ticks left is refreshed to the
+        /// new duration instead. Any HP change rescales current HP so the unit keeps its HP fraction.
+        /// </summary>
         static void AddEffect(FightRules r, FightUnit u, string stat, double frac, int ticks, string source)
         {
             if (stat == StatIds.Hp && ticks < 0)
             {
-                // a permanent HP bonus raises max HP and current HP together
-                double m = Math.Max(r.StatFloor, 1 + frac);
-                u.MaxHp *= m;
-                u.Hp *= m;
+                u.BaseMaxHp *= Math.Max(r.StatFloor, 1 + frac);
+                RecalcMaxHp(r, u);
                 return;
             }
+            if (ticks >= 0)
+            {
+                FightEffect oldest = null;
+                int copies = 0;
+                foreach (var e in u.Effects)
+                {
+                    if (e.Source != source || e.Stat != stat || e.TicksLeft < 0) continue;
+                    copies++;
+                    if (oldest == null || e.TicksLeft < oldest.TicksLeft) oldest = e;
+                }
+                if (copies >= r.StackCap)
+                {
+                    oldest.TicksLeft = Math.Max(oldest.TicksLeft, ticks);
+                    return;
+                }
+            }
             u.Effects.Add(new FightEffect { Stat = stat, Frac = frac, TicksLeft = ticks, Source = source });
+            if (stat == StatIds.Hp) RecalcMaxHp(r, u);
+        }
+
+        /// <summary>
+        /// Max HP = base max HP x max(STAT_FLOOR_FRAC, 1 + timed HP effects); current HP scales with it, keeping its fraction of max.
+        /// </summary>
+        static void RecalcMaxHp(FightRules r, FightUnit u)
+        {
+            double max = u.BaseMaxHp * Math.Max(r.StatFloor, 1 + Bonus(u, StatIds.Hp));
+            if (max == u.MaxHp) return;
+            u.Hp *= max / u.MaxHp;
+            u.MaxHp = max;
         }
 
         /// <summary>The echo_cast copy of a skill: same skill at <paramref name="power"/> of its power.</summary>
@@ -845,7 +897,8 @@ namespace IdleRng.Sim.Combat
         static double Scaled(FightRules r, FightUnit src, CombatSkill sk) => (sk.Scales == StatIds.Hp ? src.MaxHp : Eff(r, src, sk.Scales)) * sk.Power;
 
         /// <summary>
-        /// Current value of a trained stat: base x (1 + sum of effect fractions), floored at STAT_FLOOR_FRAC of base. "hp" is max HP.
+        /// Current value of a trained stat: base x (1 + sum of effect fractions), floored at STAT_FLOOR_FRAC of base. "hp" is max HP,
+        /// which already carries the HP effects (RecalcMaxHp).
         /// </summary>
         public static double Eff(FightRules r, FightUnit u, string stat)
         {

@@ -1060,7 +1060,7 @@
     },
     {
       "key": "tip.stacks.triggered",
-      "text": "Each trigger adds another stack"
+      "text": "Each trigger adds a stack, up to {EFFECT_STACK_CAP}; at the cap it renews the stack with the least time left instead"
     },
     {
       "key": "tip.ai.damage",
@@ -1084,7 +1084,7 @@
     },
     {
       "key": "tip.ai.debuff",
-      "text": "An enemy does not have this debuff"
+      "text": "An enemy does not have this debuff, and it lands on one that does not"
     },
     {
       "key": "tip.priority",

@@ -30,6 +30,7 @@ namespace IdleRng.Sim.Content
         public int MonTimeLimitTicks { get; internal set; }      // MON_TIME_LIMIT_TICKS
         public int MonSideSize { get; internal set; }            // MON_SIDE_SIZE
         public double StatFloorFrac { get; internal set; }       // STAT_FLOOR_FRAC: a trained stat never drops below this x base
+        public int EffectStackCap { get; internal set; }         // EFFECT_STACK_CAP: most copies of one timed effect on a unit
 
         // Training run (specs/14 section 8). Placeholders.
         public int RunCycles { get; internal set; }              // RUN_CYCLES

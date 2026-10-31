@@ -260,6 +260,81 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void TriggeredBuff_StacksUpToTheCap_ThenRefreshesTheShortestCopy()
+        {
+            var r = Rules;
+            Assert.That(r.StackCap, Is.EqualTo(TestContent.Db.Constants.EffectStackCap).And.GreaterThanOrEqualTo(1));
+            var res = new CombatSkill { Id = "res", Kind = SkillKind.Buff, Target = SkillTarget.Self, Stat = StatIds.Int, Power = 0.1, Duration = 3 };
+            var a = Mon("a", 300, null, x => { x.Spd = 500; x.Str = 1; x.Int = 1; });
+            a.Triggers.Add(new TriggeredSkill(FightTrigger.OnAction, res));
+            var s = BattleSim.Start(r, Side(a), Side(Mon("b", 999, null, x => x.Spd = 10)));
+            int ticks = res.Duration * r.TurnTicks, fired = 0;
+            List<FightEffect> Copies() => s.Units[0].Effects.Where(e => e.Source == "res").ToList();
+            Action<FightAction> check = x =>
+            {
+                if (x.Skill?.Id != "res") return;
+                fired++;
+                var c = Copies();
+                Assert.That(c.Count, Is.EqualTo(Math.Min(fired, r.StackCap)), "one copy per trigger, never more than the cap");
+                Assert.That(c.Count(e => e.TicksLeft == ticks), Is.EqualTo(1), "the new or refreshed copy has the full duration");
+            };
+            var rng = new Fixed(0.99);
+            while (fired < r.StackCap + 3) BattleSim.Step(r, s, rng, check);
+            Assert.That(BattleSim.Eff(r, s.Units[0], StatIds.Int), Is.EqualTo(1 * (1 + 0.1 * r.StackCap)).Within(1e-9));
+
+            var capped = Rules;
+            capped.StackCap = 0;   // a hand-built FightRules must set it
+            Assert.Throws<ArgumentException>(() => BattleSim.Start(capped, Side(Mon("a")), Side(Mon("b"))));
+        }
+
+        [Test]
+        public void TimedHpEffects_ChangeMaxHp_KeepTheHpFraction_AndExpire()
+        {
+            var r = Rules;
+            var bulk = new CombatSkill { Id = "bulk", Kind = SkillKind.Buff, Target = SkillTarget.Self, Stat = StatIds.Hp, Power = 0.5, Duration = 2, Cooldown = 99 };
+            var sap = new CombatSkill { Id = "sap", Kind = SkillKind.Debuff, Target = SkillTarget.Enemy, Stat = StatIds.Hp, Power = 0.4, Duration = 2, Cooldown = 99 };
+            var a = Mon("a", 300, null, x => { x.Spd = 500; x.Str = 1; x.Int = 1; }, bulk, sap);
+            var s = BattleSim.Start(r, Side(a), Side(Mon("b", 300, null, x => x.Spd = 10)));
+            var me = s.Units[0];
+            var foe = s.Units[1];
+            double baseHp = 300 * r.HpPerPoint;
+            me.Hp = baseHp / 2;
+            var log = new List<FightAction>();
+            var rng = new Fixed(0.99);
+            while (!log.Any(x => x.Skill?.Id == "sap")) BattleSim.Step(r, s, rng, log.Add);
+
+            Assert.That(me.MaxHp, Is.EqualTo(baseHp * 1.5).Within(1e-9), "a timed HP buff raises max HP");
+            Assert.That(me.Hp / me.MaxHp, Is.EqualTo(0.5).Within(1e-9), "current HP keeps its fraction");
+            Assert.That(BattleSim.Eff(r, me, StatIds.Hp), Is.EqualTo(me.MaxHp));
+            Assert.That(foe.MaxHp, Is.EqualTo(baseHp * 0.6).Within(1e-9), "a timed HP debuff lowers max HP");
+            Assert.That(foe.Hp, Is.EqualTo(foe.MaxHp).Within(1e-6), "a full-HP target stays full");
+
+            while (me.Effects.Count > 0 || foe.Effects.Count > 0) BattleSim.Step(r, s, rng, log.Add);
+            Assert.That(me.MaxHp, Is.EqualTo(baseHp).Within(1e-9), "max HP returns when the buff expires");
+            Assert.That(me.Hp / me.MaxHp, Is.EqualTo(0.5).Within(1e-9));
+            Assert.That(foe.MaxHp, Is.EqualTo(baseHp).Within(1e-9));
+            Assert.That(foe.Hp / foe.MaxHp, Is.GreaterThan(0.99), "a's 1-STR basic attacks barely scratch b");
+        }
+
+        [Test]
+        public void SingleTargetDebuff_LandsOnAnEnemyWithoutIt_EvenPastATaunter()
+        {
+            var r = Rules;
+            var sap = new CombatSkill { Id = "sap", Kind = SkillKind.Debuff, Target = SkillTarget.Enemy, Stat = StatIds.Def, Power = 0.2, Duration = 5 };
+            var a = Mon("a", 300, null, x => { x.Spd = 500; x.Str = 1; x.Int = 1; }, sap);
+            Fighter Foe(string id) => Mon(id, 300, null, x => x.Spd = 10);
+            var s = BattleSim.Start(r, Side(a), Side(Foe("b1"), Foe("b2"), Foe("b3")));
+            s.Units[2].TauntTicks = 1000;   // b2 taunts: it takes the first debuff, then the others get theirs
+            var log = new List<FightAction>();
+            var rng = new Fixed(0.99);   // a random pick would always take the last candidate
+            while (log.Count(x => x.Skill?.Id == "sap") < 3) BattleSim.Step(r, s, rng, log.Add);
+            foreach (var u in s.Units.Skip(1))
+                Assert.That(u.Effects.Count(e => e.Source == "sap"), Is.EqualTo(1), u.Id);
+            Assert.That(s.Units[2].Effects.Single(e => e.Source == "sap").TicksLeft,
+                        Is.LessThan(s.Units[1].Effects.Single(e => e.Source == "sap").TicksLeft), "the taunter was debuffed first");
+        }
+
+        [Test]
         public void Passive_AppliesAtStart_AndTriggersFire()
         {
             var tough = new CombatSkill { Id = "tough", Kind = SkillKind.Passive, Target = SkillTarget.Self, Stat = StatIds.Hp, Power = 0.5 };

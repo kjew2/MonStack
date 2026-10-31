@@ -49,7 +49,7 @@ Per unit, `0` to `ENTROPY_CAP` (100). It measures how much a build leans on free
 - **Vent.** When a unit's entropy reaches `ENTROPY_CAP`, the gauge vents and drops to 0 (the vent has a fixed size; it does not scale with the overshoot **(agent)**). The vent kind rotates with the unit's vent count, with no random draw: recoil, then stun, then enrage.
   - `recoil`: the unit takes `ENTROPY_RECOIL_FRAC` of its max HP as true damage (a shield absorbs it).
   - `stun`: the unit loses `ENTROPY_STUN_GAUGE` of its ATB gauge (floored at 0).
-  - `enrage`: every enemy gains a `+ENTROPY_ENRAGE_FRAC` damage buff for `ENTROPY_ENRAGE_TURNS` turns. The buff is the new bonus-only effect stat `dmg_dealt`: damage before mitigation is multiplied by `max(0, 1 + sum of dmg_dealt effects)`. Boss phases use it too.
+  - `enrage`: every enemy gains a `+ENTROPY_ENRAGE_FRAC` damage buff for `ENTROPY_ENRAGE_TURNS` turns. The buff is the new bonus-only effect stat `dmg_dealt`: damage before mitigation is multiplied by `max(0, 1 + sum of dmg_dealt effects)`. Boss phases use it too. A unit carries at most `EFFECT_STACK_CAP` enrage buffs from vents at once (`specs/16` section 3).
 - **Management.** A new rule modifier `entropy_convert` (a chase capstone candidate): instead of venting, the unit gains a shield of `ENTROPY_CONVERT_SHIELD` of its max HP for `ENTROPY_CONVERT_TURNS` turns. A node effect on `entropy_gain` lowers gain. Both are content, so a build can plan for entropy.
 - Bosses use the same gauge only if their row lists loop skills; by default they gain none.
 - The UI shows each unit's gauge and the vent that is next.
