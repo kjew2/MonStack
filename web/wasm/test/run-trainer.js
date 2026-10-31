@@ -9,7 +9,8 @@
 // Also checks the header build stamp from dist/build-info.json, and that a missing stamp shows "dev".
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
 // condition; the run is played on an account save that has drake unlocked; after the run the vendor offers 5 talent offers and
-// buying one spends shards.
+// buying one spends shards. The Daily Tower: one climb, its result card, and floor playback (entropy gauges, the next vent, the
+// corruption meter and their tooltips, an earlier floor replayed by towerFloor with the same fight hash; issue #98).
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
 'use strict';
@@ -317,6 +318,44 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/Climb with 1 monster/.test(await act('tower-climb').innerText()), 'picking a Vault monster puts it on the team');
   await act('tower-climb').click();
   await page.locator('[data-id=tower-result]').waitFor();
+  check(await page.locator('#modal').isHidden(), 'at Skip the climb shows the result at once, with no playback');
+  // ---- tower floor playback (issue #98): the rank fight's view with entropy gauges, the next vent, the corruption meter and tips
+  const fought = await page.locator('[data-id^=tower-fought-]').evaluateAll((els) => els.map((e) => ({ floor: +e.dataset.id.slice(13), hash: e.dataset.hash })));
+  const lastFloor = fought[fought.length - 1];
+  check(fought.length >= 1 && fought.every((f) => /^[0-9a-f]{64}$/.test(f.hash)), 'each floor fought has a Watch button and its fight hash (' + fought.length + ' floors)');
+  await act('tower-watch-' + lastFloor.floor).click();
+  await page.locator('[data-id=fight-play]').waitFor();
+  check(/^Floor \d+: /.test(await text('[data-id=fight-play]')), 'Watch plays the floor back in the fight view: ' + (await text('[data-id=fight-play]')));
+  check((await page.locator('[data-id=fight-play]').getAttribute('data-hash')) === lastFloor.hash, 'it is the floor the attempt fought (same fight hash)');
+  await page.waitForFunction(() => /^Action [1-9]/.test(document.querySelector('[data-id=fight-progress]').textContent), null, { timeout: 15000 });
+  check(await act('speed-skip').getAttribute('aria-pressed') === 'true', 'Watch plays even at Skip, and Skip stays the remembered speed');
+  const gauges = await page.locator('.unit:not([hidden]) [data-id^=entropy-] .bar span').allTextContents();
+  check(gauges.length >= 2 && gauges.every((g) => /^\d+\/\d+$/.test(g)), 'every unit in the fight shows its entropy gauge: ' + gauges.join(', '));
+  await page.waitForFunction(() => /^next: \S/.test(document.querySelector('[data-id=vent-0]').textContent), null, { timeout: 15000 });
+  check(true, 'the team slot shows its next vent: ' + (await tc('[data-id=vent-0]')));
+  check(/^lv \d+$/.test(await tc('[data-id=corruption] .bar span')), 'the corruption meter shows the level: ' + (await tc('[data-id=corruption] .bar span')));
+  for (const [sel, want] of [['[data-id=entropy-0] .tipword', /Entropy[\s\S]*vents/], ['[data-id=vent-0]', /\S/], ['[data-id=corruption] .tipword', /Corruption[\s\S]*turn \d+/]]) {
+    await page.locator(sel).first().click();
+    await page.locator('#tip').waitFor({ state: 'visible' });
+    const tip = await page.locator('#tip').innerText();
+    check(want.test(tip) && !/[{}]/.test(tip), 'the ' + sel + ' tooltip opens with filled text: ' + tip.replace(/\s+/g, ' ').slice(0, 90));
+    await page.keyboard.press('Escape');
+  }
+  const pw = await page.evaluate(() => document.documentElement.scrollWidth);
+  check(pw <= 390, 'the tower playback fits the phone width (' + pw + 'px)');
+  await shot('06c-tower-play');
+  await act('speed-skip').click();                                         // Skip stops it and shows the floor's end
+  await act('tower-replay').waitFor();
+  check(/^(Won|Lost) · \d+ actions$/.test(await text('[data-id=fight-progress]')), 'Skip shows the end of the floor: ' + (await text('[data-id=fight-progress]')));
+  await shot('06d-tower-play-end');
+  if (fought.length > 1) {                                                 // an earlier floor comes from the engine's towerFloor replay
+    await act('tower-prev').click();
+    await page.waitForFunction((f) => document.querySelector('[data-id=fight-play]').textContent.startsWith('Floor ' + f + ':'), fought[fought.length - 2].floor);
+    check((await page.locator('[data-id=fight-play]').getAttribute('data-hash')) === fought[fought.length - 2].hash, 'the previous floor replays the same fight the attempt fought (towerFloor)');
+    check(await act('tower-next').isVisible(), 'and offers the next floor');
+  }
+  await act('tower-play-close').click();
+  check(await page.locator('#modal').isHidden(), 'Close returns to the tower result');
   const tower = await readAccount();
   check(tower.Account.Tower.AttemptsUsed === 1 && tower.Account.Tower.Day >= 0, 'the attempt is counted and saved (day ' + tower.Account.Tower.Day + ')');
   check((await text('[data-id=shards]')).startsWith(tower.Account.Shards + ' ') && tower.Account.Shards >= towerShards0,

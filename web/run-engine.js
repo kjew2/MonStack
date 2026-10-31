@@ -87,6 +87,8 @@
       towerDay() { return Math.floor(Date.now() / 86400000); },
       towerInfo(day) { return parse(host.AccountCmd('towerInfo', JSON.stringify([day]))); },   // read only
       runTower(day, vaultIndices) { return run.acct('runTower', day, vaultIndices); },
+      // Read only: one floor's fight of that day's attempt by that team, for playback (the same fight runTower fought).
+      towerFloor(day, vaultIndices, floor) { return parse(host.AccountCmd('towerFloor', JSON.stringify([day, vaultIndices, floor]))); },
       startRun(speciesId, books) { return run.acct('startRun', speciesId, books || []); },
       finishRun() { return run.acct('finishRun', Date.now()); },
       randomSeedHex: randomSeedHex,

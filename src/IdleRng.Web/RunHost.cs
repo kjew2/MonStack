@@ -107,6 +107,7 @@ namespace IdleRng.Web
             w.EndObj().EndObj();
             TipJson.StatInfo(w, _db);
             TipJson.NodeTips(w, _db, NodeText);
+            TipJson.TowerTips(w, _db);
             return w.EndObj().ToString();
         }
 
@@ -285,6 +286,9 @@ namespace IdleRng.Web
                     case "runTower":
                         RunTower(w, a.Int(0), a.El(1));
                         break;
+                    case "towerFloor":
+                        TowerFloorFight(w, a.Int(0), a.El(1), a.Int(2));
+                        break;
                     case "buyOffer":
                     {
                         int i = a.Int(0);
@@ -359,21 +363,17 @@ namespace IdleRng.Web
         }
 
         /// <summary>
-        /// One Daily Tower attempt (AccountOps.RunTower): the rewards, each floor fought, and the last floor's fight for playback
-        /// (the same shape as a rank fight, plus each unit's name and each tower event). The fight log comes from replaying the
-        /// attempt with observers, which gives the identical result (the hash is checked).
+        /// One Daily Tower attempt (AccountOps.RunTower): the rewards, each floor fought (with its fight hash), and the last floor's
+        /// fight for playback (TowerFight). The fight log comes from replaying the attempt with observers, which gives the identical
+        /// result (the hash is checked). The other floors' fights come from towerFloor, on demand.
         /// </summary>
         private void RunTower(JsonOut w, int day, JsonElement indices)
         {
-            var idx = new List<int>();
-            foreach (var e in indices.EnumerateArray()) idx.Add(e.GetInt32());
+            var idx = Indices(indices);
             var r = AccountOps.RunTower(_db, _acct, idx, day);
             var res = r.Result;
-
-            FightLog log = null;
-            FightState final = null;
-            var team = idx.Select(i => _acct.Vault[i].Fighter(_db)).ToList();
-            var again = TowerSim.Run(_db, team, day, x => log?.Record(x), (plan, s) => { log = new FightLog(); log.Watch(s); final = s; });
+            var last = res.Floors[res.Floors.Count - 1];
+            var (again, log, final) = ReplayTower(idx, day, last.Floor);
             if (again.Hash != res.Hash) throw new InvalidOperationException("the tower replay differs from the attempt");
 
             w.P("ok", true).P("shards", r.Shards).P("attemptsLeft", r.AttemptsLeft).P("floorReached", res.FloorReached)
@@ -388,23 +388,84 @@ namespace IdleRng.Web
             foreach (var f in res.Floors)
             {
                 w.Obj().P("floor", f.Floor).P("boss", f.BossId).P("name", TowerSim.BossName(_db, f.BossId)).P("marquee", f.Marquee)
-                    .P("won", f.Won).P("ticks", f.Ticks).P("vents", f.Vents).P("corruption", f.PeakCorruption);
+                    .P("won", f.Won).P("ticks", f.Ticks).P("vents", f.Vents).P("corruption", f.PeakCorruption).P("hash", f.FightHash);
                 w.Key("phases").Arr();
                 foreach (var p in f.Phases) w.Str(_db.Text("phase." + p + ".name"));
                 w.EndArr().EndObj();
             }
             w.EndArr();
-            w.Key("final").Obj().P("floor", res.Floors[res.Floors.Count - 1].Floor);
+            w.Key("final").Obj();
+            TowerFight(w, last, idx, log, final);
+            w.EndObj();
+        }
+
+        /// <summary>
+        /// One floor's fight of a Daily Tower attempt for playback, read only (specs/21 section 8). The same team (Vault indices in
+        /// slot order) on the same day replays the same fights, since a result is a pure function of them (specs/21 section 2), so
+        /// this pays and counts nothing. Refused when the team does not reach that floor.
+        /// </summary>
+        private void TowerFloorFight(JsonOut w, int day, JsonElement indices, int floor)
+        {
+            if (day < 0) throw new ArgumentException("the day must not be negative");
+            var idx = Indices(indices);
+            var (res, log, final) = ReplayTower(idx, day, floor);
+            var f = res.Floors.FirstOrDefault(x => x.Floor == floor) ?? throw new ArgumentException("the team does not reach floor " + floor);
+            w.P("ok", true);
+            TowerFight(w, f, idx, log, final);
+        }
+
+        private List<int> Indices(JsonElement indices)
+        {
+            var idx = new List<int>();
+            foreach (var e in indices.EnumerateArray()) idx.Add(e.GetInt32());
+            foreach (var i in idx)
+                if (i < 0 || i >= _acct.Vault.Count) throw new ArgumentException("no Vault entry " + i);
+            return idx;
+        }
+
+        /// <summary>Replays a tower attempt with observers, logging only one floor's fight (a null log when it is not reached).</summary>
+        private (TowerResult res, FightLog log, FightState final) ReplayTower(List<int> idx, int day, int floor)
+        {
+            FightLog log = null, cur = null;
+            FightState final = null;
+            var rules = FightRules.FromContent(_db, tower: true);
+            var team = idx.Select(i => _acct.Vault[i].Fighter(_db)).ToList();
+            var res = TowerSim.Run(_db, team, day, x => cur?.Record(x), (plan, s) =>
+            {
+                cur = null;
+                if (plan.Floor != floor) return;
+                cur = log = new FightLog(rules);
+                cur.Watch(s);
+                final = s;
+            });
+            return (res, log, final);
+        }
+
+        /// <summary>
+        /// A tower floor's fight in the rank fight's shape (FightUnitOut, Action) plus the floor, boss, won and fight hash, each
+        /// unit's name, add flag, and entropy and next vent at the end, the entropy cap, and the corruption level at the end and
+        /// at the time limit (corruptMax). Its actions carry the tower events and the entropy and corruption snapshots (FightLog).
+        /// </summary>
+        private void TowerFight(JsonOut w, TowerFloor f, List<int> idx, FightLog log, FightState final)
+        {
+            var rules = FightRules.FromContent(_db, tower: true);
+            w.P("floor", f.Floor).P("boss", f.BossId).P("name", TowerSim.BossName(_db, f.BossId)).P("marquee", f.Marquee).P("won", f.Won)
+                .P("ticks", f.Ticks).P("hash", f.FightHash).P("entropyCap", rules.Tower.EntropyCap)
+                .P("corruptMax", BattleSim.CorruptionLevel(rules, rules.TimeLimitTicks)).P("corruption", BattleSim.CorruptionLevel(rules, final.Ticks));
             w.Key("units").Arr();
-            foreach (var u in final.Units) FightUnitOut(w, u, o => o.P("name", TowerUnitName(u.Id, idx)).P("add", u.IsAdd));
+            foreach (var u in final.Units)
+                FightUnitOut(w, u, o => o.P("name", TowerUnitName(u.Id, idx)).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u)));
             w.EndArr();
             w.P("actionCount", log.Count);
             w.Key("actions").Arr();
             foreach (var x in log.Entries) Action(w, x);
-            w.EndArr().EndObj();
+            w.EndArr();
         }
 
-        /// <summary>A tower fighter's display name: "t0_monster" is the first team slot's species, "boss_x" and "boss_x#2" the boss row x.</summary>
+        /// <summary>
+        /// A tower fighter's display name: "t0_monster" is the first team slot's species, "boss_x" the boss row x, and "boss_x#2"
+        /// its second add, named after the add row of x's split phase plus "#2" (the first split phase's row, if x has several).
+        /// </summary>
         private string TowerUnitName(string id, List<int> idx)
         {
             if (id.StartsWith("t", StringComparison.Ordinal) && id.Length > 1 && char.IsDigit(id[1]))
@@ -416,7 +477,11 @@ namespace IdleRng.Web
             {
                 string row = id.Substring(5);
                 int hash = row.IndexOf('#');
-                return TowerSim.BossName(_db, hash < 0 ? row : row.Substring(0, hash));
+                if (hash < 0) return TowerSim.BossName(_db, row);
+                string boss = row.Substring(0, hash);
+                string add = _db.TowerBosses.TryGetValue(boss, out var d)
+                    ? d.Phases.FirstOrDefault(p => p.Kind == PhaseKinds.Split && !string.IsNullOrEmpty(p.Adds))?.Adds : null;
+                return TowerSim.BossName(_db, add ?? boss) + " " + row.Substring(hash);
             }
             return id;
         }
@@ -585,14 +650,29 @@ namespace IdleRng.Web
 
         /// <summary>
         /// The fight's action log for playback (specs/16 section 2): each action with a snapshot of the live fight taken as the
-        /// sim reports it (every unit's HP, the actor's cooldowns), so the UI shows exact HP and cooldown state without
-        /// computing any rule. Reads only; caps the stored entries at MaxLoggedActions and counts the rest.
+        /// sim reports it (every unit's HP, the actor's cooldowns; in a tower fight also every unit's entropy and next vent, and
+        /// the corruption level), so the UI shows exact state without computing any rule. Reads only; caps the stored entries at
+        /// MaxLoggedActions and counts the rest.
         /// </summary>
         private sealed class FightLog
         {
+            public sealed class Entry
+            {
+                public FightAction X;
+                public double[] Hp;
+                public int[] Cd;
+                public int Si;
+                public double[] Entropy;   // tower fights only, else null
+                public string[] NextVent;
+                public int Corruption;
+            }
+
+            private readonly FightRules _tower;   // the fight's rules when it has tower rules, else null
             private FightState _live;
-            public readonly List<(FightAction x, double[] hp, int[] cd, int si)> Entries = new List<(FightAction, double[], int[], int)>();
+            public readonly List<Entry> Entries = new List<Entry>();
             public int Count;
+
+            public FightLog(FightRules rules = null) { _tower = rules?.Tower != null ? rules : null; }
 
             public void Watch(FightState s) => _live = s;
 
@@ -600,19 +680,32 @@ namespace IdleRng.Web
             {
                 Count++;
                 if (Entries.Count >= MaxLoggedActions || _live == null) return;
-                var hp = new double[_live.Units.Count];
+                int n = _live.Units.Count;
+                var e = new Entry { X = x, Hp = new double[n], Si = -1 };
                 FightUnit actor = null;
-                for (int i = 0; i < hp.Length; i++)
+                for (int i = 0; i < n; i++)
                 {
                     var u = _live.Units[i];
-                    hp[i] = Math.Max(0, u.Hp);
+                    e.Hp[i] = Math.Max(0, u.Hp);
                     if (u.Id == x.Actor) actor = u;
                 }
-                int si = -1;   // the actor's skill (by id, so an echo counts) this action used; -1 for basic attacks, counters and triggers not in its list
+                // the actor's skill (by id, so an echo counts) this action used; -1 for basic attacks, counters and triggers not in its list
                 if (actor != null && x.Skill != null)
-                    for (int i = 0; i < actor.Source.Skills.Count && si < 0; i++)
-                        if (actor.Source.Skills[i].Id == x.Skill.Id && actor.Source.Skills[i].Kind != SkillKind.Passive) si = i;
-                Entries.Add((x, hp, actor == null ? new int[0] : (int[])actor.Cooldowns.Clone(), si));
+                    for (int i = 0; i < actor.Source.Skills.Count && e.Si < 0; i++)
+                        if (actor.Source.Skills[i].Id == x.Skill.Id && actor.Source.Skills[i].Kind != SkillKind.Passive) e.Si = i;
+                e.Cd = actor == null ? new int[0] : (int[])actor.Cooldowns.Clone();
+                if (_tower != null)
+                {
+                    e.Entropy = new double[n];
+                    e.NextVent = new string[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        e.Entropy[i] = _live.Units[i].Entropy;
+                        e.NextVent[i] = BattleSim.NextVent(_live.Units[i]);
+                    }
+                    e.Corruption = BattleSim.CorruptionLevel(_tower, _live.Ticks);
+                }
+                Entries.Add(e);
             }
         }
 
@@ -631,9 +724,9 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
-        private void Action(JsonOut w, (FightAction x, double[] hp, int[] cd, int si) e)
+        private void Action(JsonOut w, FightLog.Entry e)
         {
-            var x = e.x;
+            var x = e.X;
             w.Obj().P("actor", x.Actor).P("target", x.Target).P("amount", x.Amount).P("crit", x.Crit).P("evaded", x.Evaded).P("aoe", x.Aoe).P("counter", x.Counter);
             if (x.Skill != null) w.P("skill", _db.Text("mskill." + x.Skill.Id + ".name")).P("skillId", x.Skill.Id).P("kind", x.Skill.Kind.ToString().ToLowerInvariant());
             if (x.Event != null)
@@ -642,13 +735,23 @@ namespace IdleRng.Web
                 if (x.Event.StartsWith(FightAction.RulePrefix, StringComparison.Ordinal))
                     w.P("skill", _db.Text("rule." + x.Event.Substring(FightAction.RulePrefix.Length) + ".name"));
             }
-            w.P("si", e.si);
+            w.P("si", e.Si);
             w.Key("hp").Arr();
-            foreach (var v in e.hp) w.Num(v);
+            foreach (var v in e.Hp) w.Num(v);
             w.EndArr();
             w.Key("cd").Arr();
-            foreach (var c in e.cd) w.Int(c);
+            foreach (var c in e.Cd) w.Int(c);
             w.EndArr();
+            if (e.Entropy != null)   // tower fights only: every unit's entropy and next vent, and the corruption level
+            {
+                w.Key("en").Arr();
+                foreach (var v in e.Entropy) w.Num(v);
+                w.EndArr();
+                w.Key("vent").Arr();
+                foreach (var v in e.NextVent) w.Str(v);
+                w.EndArr();
+                w.P("corruption", e.Corruption);
+            }
             w.EndObj();
         }
 

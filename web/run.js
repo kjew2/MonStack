@@ -18,7 +18,7 @@
     last: null,              // last drill/rest result, shown under the stats
     flash: null,             // stat to flash after a drill
     fight: null,             // fight result shown in the modal
-    play: null,              // fight playback in progress: {i: actions shown, timer, dom}; null when showing the result
+    play: null,              // fight playback in progress: {f: the fight, i: actions shown, timer, dom}; null when showing the result
     speed: '1',              // fight playback speed: '1', '2' or 'skip' (remembered, see loadSpeed)
     showAll: false,          // fight log expanded
     sealed: null,            // Vault entry of the finished run
@@ -28,7 +28,8 @@
     fightGains: [],          // the gains the shown fight brought, for its result badge
     earned: [],              // achievements the sealed run earned (specs/18 section 8), shown on the grade screen
     towerTeam: [],           // Daily Tower team: Vault indices in slot order (specs/21 section 8)
-    towerResult: null,       // the last attempt's result from the engine (run.runTower), shown on the tower screen
+    towerResult: null,       // the last attempt's result from the engine (run.runTower) plus its day and team, shown on the tower screen
+    towerFight: null,        // the tower floor fight shown in the playback modal (issue #98), or null
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -80,7 +81,11 @@
       if (wasView === 'home') main.scrollTop = prevScroll;   // a lock or dismantle deep in a long Vault keeps the place
       return;
     }
-    if (ui.view === 'tower') { tabs.hidden = true; modal.hidden = true; renderTower(main); return; }
+    if (ui.view === 'tower') {   // a floor playback (issue #98) opens in the modal over the tower screen
+      tabs.hidden = true; modal.hidden = true; modal.replaceChildren(); renderTower(main, modal);
+      if (wasView === 'tower') main.scrollTop = prevScroll;
+      return;
+    }
     const s = run.state;
     if (ui.view === 'grade') { tabs.hidden = true; modal.hidden = true; renderGrade(main); return; }
     if (ui.view === 'climb') { tabs.hidden = true; modal.hidden = true; renderClimb(main); return; }
@@ -308,7 +313,7 @@
   // ---- modal: fight result and tree drafts
   function renderModal(modal, s) {
     modal.replaceChildren();
-    if (ui.fight && ui.play) { modal.hidden = false; fightPlayView(modal, ui.fight, s); return; }
+    if (ui.fight && ui.play) { modal.hidden = false; fightPlayView(modal, ui.fight, rankView(ui.fight, s)); return; }
     if (ui.fight) { modal.hidden = false; fightModal(modal, ui.fight, s); return; }
     if (s.offers.length) { modal.hidden = false; offerModal(modal, s); return; }
     modal.hidden = true;
@@ -364,8 +369,9 @@
 
   // ------------------------------------------------------------ fight playback (issue #79): presentation only
   // The engine has already resolved the fight; this replays its action log one action at a time so the player sees which ability
-  // each unit uses and every skill's cooldown. HP and cooldowns come from the engine's per-action snapshots (BRIDGE.md, fight),
-  // never computed here. Skip shows the result at once, as before.
+  // each unit uses and every skill's cooldown. HP, cooldowns and (in Daily Tower fights, issue #98) entropy, the next vent and the
+  // corruption level come from the engine's per-action snapshots (BRIDGE.md, fight), never computed here. Skip shows the result at
+  // once, as before. The same view plays a rank fight (ui.fight) and a tower floor (ui.towerFight); ui.play.f is the one playing.
   const FIGHT_STEP_MS = 350;   // PLACEHOLDER: time per logged action at 1x (2x halves it). Presentation only, not a game rule.
   const SPEED_KEY = 'idle-rng-fight-speed';
   const SPEEDS = [['1', '1x'], ['2', '2x'], ['skip', 'Skip']];
@@ -392,9 +398,15 @@
     ]);
   }
 
-  function startPlayback() {
+  // Plays fight f (a rank fight by default) unless the speed is Skip. `force` plays it even at Skip, at 1x (the tower's Watch
+  // button); tapping Skip then stops it.
+  function startPlayback(f, force) {
     stopPlayback();
-    if (ui.speed !== 'skip' && ui.fight && ui.fight.actions.length) { ui.play = { i: 0, timer: null, dom: null }; schedulePlayback(); }
+    f = f || ui.fight;
+    if ((force || ui.speed !== 'skip') && f && f.actions.length) {
+      ui.play = { f: f, i: 0, timer: null, dom: null };
+      schedulePlayback();
+    }
   }
   function stopPlayback() {
     if (ui.play) clearTimeout(ui.play.timer);
@@ -406,21 +418,25 @@
   function stepPlayback() {
     const p = ui.play;
     if (!p) return;
-    if (p.i >= ui.fight.actions.length) { stopPlayback(); render(); return; }   // the last action stays up for one step
+    if (p.i >= p.f.actions.length) { stopPlayback(); render(); return; }   // the last action stays up for one step
     p.i++;
     if (p.dom && p.dom.root.isConnected) updatePlay(); else render();
     schedulePlayback();
   }
 
-  // Each unit's HP and cooldowns after the first `upto` logged actions (null: at the end of the fight).
+  // Each unit's state after the first `upto` logged actions (null: at the end of the fight): HP and cooldowns; in a tower fight
+  // also its entropy and next vent, and whether it is in the fight yet (a split phase's adds join later, BRIDGE.md).
   function unitsAt(f, upto) {
     return f.units.map((u, k) => {
-      if (upto === null) return { hp: u.hp, cd: u.cd };
+      if (upto === null) return { hp: u.hp, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
       let cd = [];                                 // no action yet: every skill starts ready
       for (let j = upto - 1; j >= 0; j--) if (f.actions[j].actor === u.id) { cd = f.actions[j].cd; break; }
-      return { hp: upto ? f.actions[upto - 1].hp[k] : u.maxHp, cd: cd };
+      const x = upto ? f.actions[upto - 1] : null;
+      const here = x ? k < x.hp.length : !u.add;
+      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
     });
   }
+  const corruptionAt = (f, upto) => (upto === null ? f.corruption : upto ? f.actions[upto - 1].corruption : 0);
 
   // A skill tile's label: the initials of a multi-word name ("Flame Breath" -> FB), else its first two letters.
   function skillAbbr(name) {
@@ -428,33 +444,57 @@
     return (words.length > 1 ? words.slice(0, 3).map((w) => w[0]).join('') : (words[0] || '?').slice(0, 2)).toUpperCase();
   }
 
+  // A Daily Tower tooltip trigger (specs/21 section 8): text from BattleText through RunContent's towerTips (web/tooltips.js).
+  const towerTip = (key) => (C.towerTips && C.towerTips[key] ? TIP.attrs('tower:' + key) : null);
+  const tipName = (key) => (C.towerTips && C.towerTips[key] ? C.towerTips[key].name : key);
+
   // The unit panels: name, HP bar, and a square tile per active skill (issue #85) whose grey overlay shows the cooldown left and
-  // recedes downward as it runs out. Returns the element and refs for repainting.
+  // recedes downward as it runs out; a tower fight adds each unit's entropy gauge and next vent. A unit's own `name` (tower
+  // fights) wins over you/foe. Returns the element and refs for repainting.
   function fightUnits(f, you, foe, upto) {
-    const refs = [];
-    const root = h('div', { class: 'units' }, f.units.map((u) => {
-      const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + u.side + '-' + si }, [
+    const refs = [], tower = f.entropyCap > 0;
+    const root = h('div', { class: 'units' + (tower ? ' tower' : '') }, f.units.map((u, k) => {
+      const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + (tower ? k : u.side) + '-' + si }, [
         h('div', { class: 'tile', style: '--hue:' + (hash(sk.name) % 360) }, [
           h('div', { class: 'cdfill' }), h('span', { class: 'ab', 'aria-hidden': 'true', text: skillAbbr(sk.name) }), h('span', { class: 'st num', 'aria-hidden': 'true' }),
         ]),
         h('span', { class: 'nm', text: sk.name }),
       ])));
       const hpBar = bar(0, 1, '', '');
-      refs.push({ u: u, hpBar: hpBar, chips: chips });
-      return h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + u.side }, [
-        h('b', { text: u.side ? foe : you }), hpBar,
+      let entropy = null;
+      if (tower) {
+        entropy = { bar: bar(0, f.entropyCap, '', 'ent'), vent: h('span', { class: 'vent small tipword', 'data-id': 'vent-' + k }) };
+        entropy.row = h('div', { class: 'entrow', 'data-id': 'entropy-' + k }, [h('span', { class: 'small muted tipword', text: 'EN', ...towerTip('entropy') }), entropy.bar, entropy.vent]);
+      }
+      const el = h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + (tower ? k : u.side) }, [
+        h('b', { text: u.name || (u.side ? foe : you) }), hpBar, entropy ? entropy.row : null,
         upto === null ? h('small', { class: 'muted', text: Math.round(u.damage) + ' dmg · ' + u.crits + ' crits · ' + u.evades + ' dodges' }) : null,
-        h('div', { class: 'skills', 'data-id': 'skills-' + u.side }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]),
+        h('div', { class: 'skills', 'data-id': 'skills-' + (tower ? k : u.side) }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]),
       ]);
+      refs.push({ u: u, el: el, hpBar: hpBar, chips: chips, entropy: entropy });
+      return el;
     }));
-    paintUnits(refs, unitsAt(f, upto), null);
+    paintUnits(refs, unitsAt(f, upto), null, f.entropyCap);
     return { root: root, refs: refs };
   }
-  function paintUnits(refs, now, x) {
+  function paintUnits(refs, now, x, cap) {
     refs.forEach((r, k) => {
       const hp = now[k].hp, max = r.u.maxHp;
+      r.el.hidden = !now[k].here;
       r.hpBar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (hp / max) * 100)) + '%';
       r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max);
+      if (r.entropy) {
+        const en = now[k].en || 0, vent = now[k].vent;
+        r.entropy.bar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (en / cap) * 100)) + '%';
+        r.entropy.bar.querySelector('span').textContent = Math.round(en) + '/' + Math.round(cap);
+        if ((r.entropy.vent.dataset.kind || '') !== (vent || '')) {   // the next vent's name opens its tooltip
+          r.entropy.vent.dataset.kind = vent || '';
+          r.entropy.vent.textContent = vent ? 'next: ' + tipName('vent.' + vent) : '';
+          const a = vent ? towerTip('vent.' + vent) : null;
+          if (a) for (const n in a) r.entropy.vent.setAttribute(n, a[n]);
+          else ['data-tip', 'role', 'tabindex', 'aria-expanded'].forEach((n) => r.entropy.vent.removeAttribute(n));
+        }
+      }
       r.chips.forEach((c, si) => {
         if (!c) return;
         const sk = r.u.skills[si], left = now[k].cd[si] || 0;
@@ -479,33 +519,69 @@
     } else el.style.height = pct + '%';
   }
 
-  function fightPlayView(modal, f, s) {
+  // How a fight is labelled: the rank fight's monster and rank opponent, or a tower floor's units by their own names.
+  function rankView(f, s) {
     const you = speciesDef(s.species).name, foe = rank(f.rankBefore).name;
-    const units = fightUnits(f, you, foe, ui.play.i);
+    return { you: you, foe: foe, title: 'Rank fight: ' + foe, name: (id) => (id === 'monster' ? you : foe), ours: (id) => id === 'monster',
+      line: (x) => { const l = actionLine(x, foe, you); return { cls: l.you ? 'you' : 'foe', text: l.text }; } };
+  }
+  function towerView(f) {
+    const nameOf = {}, sideOf = {};
+    f.units.forEach((u) => { nameOf[u.id] = u.name; sideOf[u.id] = u.side; });
+    const name = (id) => nameOf[id] || id;
+    return { you: '', foe: '', title: 'Floor ' + f.floor + ': ' + f.name, name: name, ours: (id) => sideOf[id] === 0, line: (x) => towerLine(x, name, sideOf) };
+  }
+
+  // The playback view. While ui.play runs it shows the action reached; otherwise (Skip, or the tower floor once played) the end.
+  function fightPlayView(modal, f, v, extra) {
+    const playing = ui.play && ui.play.f === f;
+    const units = fightUnits(f, v.you, v.foe, playing ? ui.play.i : null);
     const now = h('div', { class: 'now', 'data-id': 'fight-now' });
     const progress = h('span', { class: 'small muted num', 'data-id': 'fight-progress' });
     const recent = h('ul', { class: 'alog' });
-    modal.append(
-      h('div', { class: 'row between' }, [h('h2', { text: 'Rank fight: ' + foe, 'data-id': 'fight-play' }), progress]),
-      units.root, now, speedToggle(), h('h3', { text: 'Latest' }), recent,
-    );
-    ui.play.dom = { root: units.root, units: units, now: now, progress: progress, recent: recent, you: you, foe: foe };
-    updatePlay();
+    let corruption = null;
+    if (f.entropyCap > 0) {
+      corruption = bar(0, Math.max(1, f.corruptMax), '', 'corrupt');
+      modal.append(h('h2', { text: v.title, 'data-id': 'fight-play', 'data-hash': f.hash }),
+        h('div', { class: 'row between' }, [progress, h('div', { class: 'corrow', 'data-id': 'corruption' }, [h('span', { class: 'small muted tipword', text: tipName('corruption'), ...towerTip('corruption') }), corruption])]));
+    } else modal.append(h('div', { class: 'row between' }, [h('h2', { text: v.title, 'data-id': 'fight-play' }), progress]));
+    modal.append(units.root, now, speedToggle(), h('h3', { text: 'Latest' }), recent);
+    if (extra) modal.append(extra);
+    const dom = { root: units.root, units: units, now: now, progress: progress, recent: recent, corruption: corruption, v: v };
+    if (playing) { ui.play.dom = dom; updatePlay(); } else paintPlay(f, null, dom);
   }
   function updatePlay() {
-    const f = ui.fight, p = ui.play, d = p.dom;
-    const x = p.i ? f.actions[p.i - 1] : null;
-    paintUnits(d.units.refs, unitsAt(f, p.i), x);
-    d.progress.textContent = 'Action ' + p.i + ' of ' + f.actions.length;
-    const side = x && x.actor === 'monster' ? 'you' : 'foe';
-    d.now.className = 'now' + (x ? ' ' + side : '');
-    d.now.replaceChildren(...(x ? [
-      h('small', { text: side === 'you' ? d.you : d.foe }),
+    const p = ui.play;
+    paintPlay(p.f, p.i, p.dom);
+  }
+  function paintPlay(f, i, d) {
+    const n = i === null ? f.actions.length : i;
+    const x = n ? f.actions[n - 1] : null;
+    paintUnits(d.units.refs, unitsAt(f, i), i === null ? null : x, f.entropyCap);
+    d.progress.textContent = i === null ? (f.won ? 'Won' : 'Lost') + ' · ' + f.actionCount + ' actions' : 'Action ' + i + ' of ' + f.actions.length;
+    if (d.corruption) {
+      const lv = corruptionAt(f, i);
+      d.corruption.querySelector('.fill').style.width = Math.min(100, (lv / Math.max(1, f.corruptMax)) * 100) + '%';
+      d.corruption.querySelector('span').textContent = 'lv ' + lv;
+    }
+    const side = x && d.v.ours(x.actor) ? 'you' : 'foe';
+    const ev = x && x.event && x.event.indexOf('rule:') !== 0 ? x.event : null;   // a tower event (rule events read like actions)
+    d.now.className = 'now' + (x ? ' ' + (ev ? 'event' : side) : '');
+    d.now.replaceChildren(...(x ? (ev ? eventBanner(x, d.v.name) : [
+      h('small', { text: d.v.name(x.actor) }),
       h('b', { text: actionName(x) }),
-      h('span', { text: (x.target ? '→ ' + (x.target === 'monster' ? d.you : d.foe) + ': ' : '') + actionResult(x) }),
-    ] : [h('b', { text: 'Fight!' })]));
-    const lines = f.actions.slice(Math.max(0, p.i - 5), p.i).reverse().map((a) => actionLine(a, d.foe, d.you));
-    d.recent.replaceChildren(...lines.map((l) => h('li', { class: l.you ? 'you' : 'foe', text: l.text })));
+      h('span', { text: (x.target ? '→ ' + d.v.name(x.target) + ': ' : '') + actionResult(x) }),
+    ]) : [h('b', { text: 'Fight!' })]));
+    const lines = f.actions.slice(Math.max(0, n - 5), n).reverse().map(d.v.line);
+    d.recent.replaceChildren(...lines.map((l) => h('li', { class: l.cls, text: l.text })));
+  }
+
+  // A tower event's banner: what happened, with the phase or vent kind opening its tooltip.
+  function eventBanner(x, name) {
+    const key = x.event.indexOf('phase:') === 0 ? 'phase.' + x.event.slice(6) : x.event.indexOf('vent:') === 0 ? 'vent.' + x.event.slice(5)
+      : x.event === 'channel_broken' || x.event === 'channel_strike' ? 'phase.channel' : x.event === 'check_failed' ? 'phase.shield_check' : null;
+    const title = x.event.indexOf('vent:') === 0 ? 'Entropy vent: ' + tipName(key) : key ? tipName(key) : x.event;
+    return [h('small', { text: name(x.actor) }), h('b', { text: title, 'data-id': 'fight-event', ...(key ? towerTip(key) : null) }), h('span', { text: towerEventText(x, name(x.actor)) })];
   }
 
   function offerModal(modal, s) {
@@ -605,7 +681,7 @@
       h('div', { class: 'row between' }, [
         h('span', { class: 'small num', 'data-id': 'tower-attempts', text: ti.attemptsLeft + '/' + ti.attemptsPerDay + ' attempts left today · best today ' + ti.clearedToday + ' floors' }),
         h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Daily Tower',
-          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); main.scrollTop = 0; } }),
+          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); main.scrollTop = 0; } }),
       ]),
     ]));
 
@@ -613,13 +689,15 @@
   }
 
   // ---- Daily Tower (specs/21 section 8): today's lineup, a team of Vault monsters, one attempt at a time. The engine runs the
-  // climb and pays the rewards (run.runTower); this screen only lays out what it returns.
-  function renderTower(main) {
+  // climb and pays the rewards (run.runTower); this screen only lays out what it returns. A floor's fight plays back in the rank
+  // fight's view (issue #98): the last floor right after the climb (unless the speed is Skip), any floor fought from its Watch
+  // button (run.towerFloor replays it, read only).
+  function renderTower(main, modal) {
     const acct = run.account, day = run.towerDay(), ti = run.towerInfo(day);
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Daily Tower' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
       h('p', { class: 'small muted', 'data-id': 'tower-status', text: ti.attemptsLeft + '/' + ti.attemptsPerDay + ' attempts left today · best today ' + ti.clearedToday +
         ' of ' + ti.floors.length + ' floors · best ever ' + ti.clearedEver }));
-    if (ui.towerResult) towerResult(main, ui.towerResult, ti);
+    if (ui.towerResult) towerResult(main, ui.towerResult);
 
     main.append(h('h3', { text: 'Team' }));
     if (!acct.vault.length) main.append(h('p', { class: 'muted', text: 'Finish a run first: the team comes from your Vault.' }));
@@ -640,7 +718,11 @@
       onclick: () => {
         const r = run.runTower(day, ui.towerTeam.slice());
         if (!r.ok) { toast(r.reason); render(); return; }
+        r.day = day; r.team = ui.towerTeam.slice();   // what towerFloor needs to replay this attempt's other floors
         ui.towerResult = r;
+        stopPlayback();
+        ui.towerFight = ui.speed === 'skip' ? null : r.final;   // the deciding floor plays at once, unless the speed is Skip
+        if (ui.towerFight) startPlayback(r.final);
         render();
         $('main').scrollTop = 0;
       } }));
@@ -649,13 +731,19 @@
     const fl = h('div', { class: 'card' });
     ti.floors.forEach((f) => fl.append(h('div', { class: 'row between small', 'data-id': 'tower-floor-' + f.floor }, [
       h('span', { class: 'row' }, [h('span', { class: 'num muted', text: 'F' + f.floor }), h('b', { class: f.marquee ? 'gold' : '', text: f.name }), elementTag(f.element)]),
-      h('span', { class: 'muted', text: (f.phases.length ? f.phases.map((p) => p.name).join(' → ') + ' · ' : '') + 'lv ' + f.level }),
+      h('span', { class: 'muted' }, [
+        ...f.phases.flatMap((p, k) => [k ? ' → ' : null, h('span', { class: 'tipword', text: p.name, ...towerTip('phase.' + p.kind) })]).filter(Boolean),
+        (f.phases.length ? ' · ' : '') + 'lv ' + f.level,
+      ]),
     ])));
     main.append(fl);
-    main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'tower-back', text: 'Back', onclick: () => { ui.view = 'home'; ui.towerResult = null; render(); } }));
+    main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'tower-back', text: 'Back',
+      onclick: () => { stopPlayback(); ui.view = 'home'; ui.towerResult = null; ui.towerFight = null; render(); } }));
+
+    if (ui.towerFight) { modal.hidden = false; towerPlayModal(modal, ui.towerFight); }
   }
 
-  function towerResult(main, r, ti) {
+  function towerResult(main, r) {
     const last = r.floors[r.floors.length - 1];
     const card = h('div', { class: 'card alert', 'data-id': 'tower-result' }, [
       h('b', { text: r.cleared ? 'Cleared all ' + r.floorsCleared + ' floors!' : 'Fell on floor ' + r.floorReached + ' to ' + last.name + ' (' + r.floorsCleared + ' cleared)' }),
@@ -663,31 +751,56 @@
       r.books.length ? h('span', { class: 'gold', 'data-id': 'tower-books', text: 'Skill Books: ' + r.books.map((b) => b.name + ' (F' + b.floor + ')').join(', ') }) : null,
       r.firstClears.length ? h('span', { class: 'small muted', text: 'First clears: floors ' + r.firstClears.join(', ') }) : null,
     ]);
-    const rows = h('div', { class: 'small' });
-    r.floors.forEach((f) => rows.append(h('div', { class: 'row between' }, [
-      h('span', { class: f.won ? 'ok' : 'bad', text: (f.won ? '✓ ' : '✗ ') + 'F' + f.floor + ' ' + f.name }),
-      h('span', { class: 'muted', text: [f.phases.join(' → '), f.vents ? f.vents + ' vents' : '', f.corruption ? 'corruption ' + f.corruption : ''].filter(Boolean).join(' · ') }),
+    const rows = h('div', { class: 'small floors-fought' });
+    r.floors.forEach((f) => rows.append(h('div', { class: 'row between', 'data-id': 'tower-fought-' + f.floor, 'data-hash': f.hash }, [
+      h('span', null, [
+        h('span', { class: f.won ? 'ok' : 'bad', text: (f.won ? '✓ ' : '✗ ') + 'F' + f.floor + ' ' + f.name }),
+        h('span', { class: 'muted', text: [f.phases.join(' → '), f.vents ? f.vents + ' vents' : '', f.corruption ? 'corruption ' + f.corruption : ''].filter(Boolean).map((t) => ' · ' + t).join('') }),
+      ]),
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-watch-' + f.floor, text: 'Watch', onclick: () => watchFloor(f.floor) }),
     ])));
     card.append(rows);
     // The last floor's fight, as a log: ordinary actions plus the tower's events (phases, entropy vents, channels).
-    const f = r.final, nameOf = {};
-    f.units.forEach((u) => { nameOf[u.id] = u.name; });
-    const phaseName = {};
-    ti.floors.forEach((fl) => fl.phases.forEach((p) => { phaseName[p.kind] = p.name; }));
-    const lines = f.actions.map((x) => {
-      const a = nameOf[x.actor] || x.actor, ours = f.units.some((u) => u.id === x.actor && u.side === 0);
-      if (x.event && x.event.indexOf('rule:') !== 0) return { cls: 'gold', text: towerEventText(x, a, phaseName) };   // rule events read like actions
-      return { cls: ours ? 'you' : 'foe', text: a + ' · ' + actionName(x) + ' → ' + (x.target ? nameOf[x.target] || x.target : 'all') + ': ' + actionResult(x) };
-    });
+    const f = r.final, v = towerView(f);
     const list = h('ul', { class: 'alog', 'data-id': 'tower-log' });
-    lines.forEach((l) => list.append(h('li', { class: l.cls, text: l.text })));
+    f.actions.forEach((x) => { const l = v.line(x); list.append(h('li', { class: l.cls, text: l.text })); });
     card.append(h('details', null, [h('summary', { class: 'small', text: 'Floor ' + f.floor + ' fight log (' + f.actionCount + ' actions' + (f.actionCount > f.actions.length ? ', first ' + f.actions.length + ' shown' : '') + ')' }), list]));
     main.append(card);
   }
 
-  function towerEventText(x, who, phaseName) {
+  // Plays one floor of the shown attempt: the last floor is in the attempt's result; the engine replays any other (read only).
+  function watchFloor(floor) {
+    const r = ui.towerResult;
+    if (!r) return;
+    const f = floor === r.final.floor ? r.final : run.towerFloor(r.day, r.team, floor);
+    if (f.ok === false) { toast(f.reason); return; }
+    ui.towerFight = f;
+    startPlayback(f, true);
+    render();
+  }
+
+  // The tower floor playback modal: the rank fight's view, plus watch again, the floors either side and close.
+  function towerPlayModal(modal, f) {
+    const r = ui.towerResult, at = r ? r.floors.findIndex((x) => x.floor === f.floor) : -1;
+    const prev = at > 0 ? r.floors[at - 1] : null, next = r && at >= 0 && at < r.floors.length - 1 ? r.floors[at + 1] : null;
+    const close = () => { stopPlayback(); ui.towerFight = null; render(); };
+    fightPlayView(modal, f, towerView(f), h('div', { class: 'row', style: 'flex-wrap:wrap' }, [
+      ui.play ? null : h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-replay', text: 'Watch again', onclick: () => watchFloor(f.floor) }),
+      prev ? h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-prev', text: '← Floor ' + prev.floor, onclick: () => watchFloor(prev.floor) }) : null,
+      next ? h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-next', text: 'Floor ' + next.floor + ' →', onclick: () => watchFloor(next.floor) }) : null,
+    ]));
+    modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-play-close', text: 'Close', onclick: close }));
+  }
+
+  // One line of a tower fight's log: an ordinary action, or a tower event (rule events read like actions).
+  function towerLine(x, name, sideOf) {
+    if (x.event && x.event.indexOf('rule:') !== 0) return { cls: 'gold', text: towerEventText(x, name(x.actor)) };
+    return { cls: sideOf[x.actor] === 0 ? 'you' : 'foe', text: name(x.actor) + ' · ' + actionName(x) + ' → ' + (x.target ? name(x.target) : 'all') + ': ' + actionResult(x) };
+  }
+
+  function towerEventText(x, who) {
     const n = Math.round(x.amount);
-    if (x.event.indexOf('phase:') === 0) { const k = x.event.slice(6); return '⚠ ' + who + ' enters ' + (phaseName[k] || k); }
+    if (x.event.indexOf('phase:') === 0) return '⚠ ' + who + ' enters ' + tipName('phase.' + x.event.slice(6));
     if (x.event.indexOf('vent:') === 0) {
       const k = x.event.slice(5);
       return '⚡ ' + who + "'s entropy vents: " + (k === 'recoil' ? 'recoil, ' + n + ' dmg to itself' : k === 'stun' ? 'stunned' : k === 'enrage' ? 'its foes are enraged' : 'converted into a shield of ' + n);

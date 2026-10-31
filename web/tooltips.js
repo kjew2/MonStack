@@ -1,11 +1,12 @@
 // Tap-to-open tooltips ("toggletips") for stats and skill-tree abilities. No game rule lives here: every word and number comes
-// from the C# engine (RunContent: statInfo, nodeTips, skillNode; RunState: statNow, nowTitle), see web/wasm/BRIDGE.md, "Tooltips".
+// from the C# engine (RunContent: statInfo, nodeTips, skillNode, towerTips; RunState: statNow, nowTitle), see web/wasm/BRIDGE.md, "Tooltips".
 //
 //   Tips.init(() => content, () => runState)       once, after the engine loaded
 //   h('span', { text: 'STR', ...Tips.attrs('stat:str') })
 //
 // Refs: 'stat:<id>' (the stat, with the monster's "now" line), 'stat:<id>:vs' (also the rank opponent's), 'node:<nodeId>',
-// 'skill:<skillId>' (the tree node that grants the skill). Tap, Enter or Space opens one; a long press opens it too; tapping
+// 'skill:<skillId>' (the tree node that grants the skill), 'tower:<key>' (a Daily Tower playback tip: entropy, vent.<kind>,
+// corruption, phase.<kind>). Tap, Enter or Space opens one; a long press opens it too; tapping
 // elsewhere, Escape, scrolling or resizing closes it. One shared role="tooltip" element; the open trigger gets aria-describedby.
 (function (root) {
   'use strict';
@@ -66,6 +67,15 @@
     return f;
   }
 
+  // A Daily Tower playback tip (towerTips: entropy, vent.<kind>, corruption, phase.<kind>).
+  function towerContent(C, key) {
+    const t = C.towerTips && C.towerTips[key];
+    if (!t) return null;
+    const f = document.createDocumentFragment();
+    f.append(el('div', 'tip-title', t.name), el('p', null, t.text));
+    return f;
+  }
+
   function content(ref) {
     const C = getContent();
     if (!C) return null;
@@ -73,6 +83,7 @@
     if (kind === 'stat') return statContent(C, getState(), id, mode === 'vs');
     if (kind === 'node') return nodeContent(C, id);
     if (kind === 'skill') return C.skillNode && C.skillNode[id] ? nodeContent(C, C.skillNode[id]) : null;
+    if (kind === 'tower') return towerContent(C, id);
     return null;
   }
 

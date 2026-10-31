@@ -1193,6 +1193,50 @@
     {
       "key": "phase.enrage.desc",
       "text": "The boss hits harder every turn until the fight ends."
+    },
+    {
+      "key": "tower.entropy.name",
+      "text": "Entropy"
+    },
+    {
+      "key": "tower.entropy.desc",
+      "text": "Daily Tower: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
+    },
+    {
+      "key": "vent.recoil.name",
+      "text": "Recoil"
+    },
+    {
+      "key": "vent.recoil.desc",
+      "text": "The unit takes {ENTROPY_RECOIL_FRAC:pct} of its max HP as true damage (a shield absorbs it)."
+    },
+    {
+      "key": "vent.stun.name",
+      "text": "Stun"
+    },
+    {
+      "key": "vent.stun.desc",
+      "text": "The unit loses {ENTROPY_STUN_GAUGE} of its action gauge and acts later."
+    },
+    {
+      "key": "vent.enrage.name",
+      "text": "Enrage"
+    },
+    {
+      "key": "vent.enrage.desc",
+      "text": "Every enemy deals {ENTROPY_ENRAGE_FRAC:pct} more damage for {ENTROPY_ENRAGE_TURNS} turns."
+    },
+    {
+      "key": "vent.convert.name",
+      "text": "Shield"
+    },
+    {
+      "key": "tower.corruption.name",
+      "text": "Corruption"
+    },
+    {
+      "key": "tower.corruption.desc",
+      "text": "Daily Tower: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
     }
   ]
 }

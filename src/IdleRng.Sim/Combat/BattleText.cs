@@ -91,6 +91,30 @@ namespace IdleRng.Sim.Combat
         /// <summary>A rule modifier's description (<c>rule.&lt;id&gt;.desc</c>) with constants filled in.</summary>
         public static string RuleDesc(ContentDb db, string ruleId) => TextTemplate.Fill(db, db.Text("rule." + ruleId + ".desc"));
 
+        /// <summary>
+        /// Daily Tower playback tooltips (specs/21 section 8) as (key, name, text): "entropy" (the gauge), "vent.&lt;kind&gt;" for each
+        /// vent kind (BattleSim.NextVent; convert reads the entropy_convert rule), "corruption" (the meter; {start_turns} and
+        /// {every_turns} are CORRUPT_START_TICK and CORRUPT_EVERY_TICKS in turns) and "phase.&lt;kind&gt;" for each boss phase kind.
+        /// </summary>
+        public static List<(string key, string name, string text)> TowerTips(ContentDb db)
+        {
+            var k = db.Constants;
+            double turn = k.TurnTicks;
+            var list = new List<(string, string, string)>
+            {
+                ("entropy", db.Text("tower.entropy.name"), TextTemplate.Fill(db, db.Text("tower.entropy.desc"))),
+            };
+            foreach (var v in new[] { BattleSim.VentRecoil, BattleSim.VentStun, BattleSim.VentEnrage })
+                list.Add(("vent." + v, db.Text("vent." + v + ".name"), TextTemplate.Fill(db, db.Text("vent." + v + ".desc"))));
+            list.Add(("vent." + BattleSim.VentConvert, db.Text("vent." + BattleSim.VentConvert + ".name"), RuleDesc(db, RuleModifiers.EntropyConvert)));
+            list.Add(("corruption", db.Text("tower.corruption.name"), TextTemplate.Fill(db, db.Text("tower.corruption.desc"), (name, fmt) =>
+                name == "start_turns" ? TextTemplate.Number(k.CorruptStartTick / turn, fmt)
+                : name == "every_turns" ? TextTemplate.Number(k.CorruptEveryTicks / turn, fmt) : null)));
+            foreach (var p in PhaseKinds.Known)
+                list.Add(("phase." + p, db.Text("phase." + p + ".name"), TextTemplate.Fill(db, db.Text("phase." + p + ".desc"))));
+            return list;
+        }
+
         /// <summary>A battle trigger in a few words (<c>trigger.&lt;id&gt;.name</c>), e.g. "when hit".</summary>
         public static string TriggerName(ContentDb db, FightTrigger t) => db.Text("trigger." + Snake(t.ToString()) + ".name");
 

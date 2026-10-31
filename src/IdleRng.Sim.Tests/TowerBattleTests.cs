@@ -162,6 +162,31 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void NextVent_PredictsEachVentBeforeItHappens()
+        {
+            // what playback shows as the next vent (BattleSim.NextVent) is the vent that fires, for the rotation and for convert
+            foreach (bool convert in new[] { false, true })
+            {
+                var r = Rules();
+                var worker = Mon("a", hp: 999, str: 1, def: 999);
+                if (convert) worker.Rules.Add(RuleModifiers.EntropyConvert);
+                worker.Triggers.Add(new TriggeredSkill(FightTrigger.OnAction, Buff()));
+                var s = BattleSim.Start(r, new[] { worker }, new[] { Mon("b", hp: 999, str: 1, def: 999) });
+                string predicted = BattleSim.NextVent(s.Units[0]);
+                var seen = new List<(string predicted, string fired)>();
+                var rng = new Fixed();
+                while (seen.Count < 4 && BattleSim.Step(r, s, rng, a =>
+                {
+                    if (a.Event != null && a.Event.StartsWith("vent:")) seen.Add((predicted, a.Event.Substring(5)));
+                    predicted = BattleSim.NextVent(s.Units[0]);
+                }) == FightOutcome.Ongoing) { }
+                Assert.That(seen.Count, Is.EqualTo(4));
+                foreach (var (p, f) in seen) Assert.That(f, Is.EqualTo(p));
+                Assert.That(seen.Select(x => x.fired), Is.EqualTo(convert ? new[] { "convert", "convert", "convert", "convert" } : new[] { "recoil", "stun", "enrage", "recoil" }));
+            }
+        }
+
+        [Test]
         public void Entropy_DecaysAtTheStartOfTheUnitsAction()
         {
             var r = Rules();

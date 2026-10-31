@@ -130,6 +130,18 @@ small, .small { font-size: 12px; }
 .now.you { border-color: var(--ok); } .now.you b { color: var(--ok); }
 .now.foe { border-color: var(--bad); } .now.foe b { color: #ef9a9a; }
 @keyframes pop { from { transform: scale(1.15); opacity: .5; } }
+/* Daily Tower playback (issue #98): the boss side spans the row, each unit's entropy gauge and next vent, the corruption meter, event banners. */
+.units.tower .unit.foe { grid-column: 1 / -1; }
+.entrow { display: flex; align-items: center; gap: 4px; }
+.entrow .bar { flex: 1; height: 12px; }
+.entrow .bar span { font-size: 10px; line-height: 12px; }
+.unit .bar.ent .fill, .unit.foe .bar.ent .fill { background: var(--epic); }
+.entrow .vent { color: var(--gold); white-space: nowrap; }
+.corrow { display: flex; align-items: center; gap: 6px; min-width: 150px; }
+.corrow .bar { flex: 1; }
+.bar.corrupt .fill { background: var(--warn); transition: width .25s ease-out; }
+.now.event { border-color: var(--gold); } .now.event b { color: var(--gold); }
+.tipword { text-decoration: underline dotted; text-underline-offset: 2px; }
 .speed { display: flex; align-items: center; gap: 6px; }
 .speed > span { flex: 1; }
 .speed button { min-height: 44px; min-width: 56px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); font: 600 13px var(--font-display); color: var(--muted); }

@@ -657,6 +657,15 @@ namespace IdleRng.Sim.Combat
             return false;
         }
 
+        public const string VentRecoil = "recoil", VentStun = "stun", VentEnrage = "enrage", VentConvert = "convert";
+        static readonly string[] VentRotation = { VentRecoil, VentStun, VentEnrage };
+
+        /// <summary>
+        /// The kind the unit's entropy gauge vents as next time it fills (specs/21 section 3.1): convert with entropy_convert, else
+        /// recoil, stun, then enrage by its vent count. Pure: playback reads it to show the next vent.
+        /// </summary>
+        public static string NextVent(FightUnit u) => Has(u, RuleModifiers.EntropyConvert) ? VentConvert : VentRotation[u.Vents % VentRotation.Length];
+
         /// <summary>
         /// Add entropy to a unit (scaled by its entropy_gain effects). At the cap the gauge vents and resets: recoil, stun, then enrage,
         /// by the unit's vent count; a unit with entropy_convert shields itself instead.
@@ -668,8 +677,9 @@ namespace IdleRng.Sim.Combat
             u.Entropy += amount * Math.Max(0.0, 1 + Bonus(u, StatIds.EntropyGain));
             if (u.Entropy < t.EntropyCap) return;
             u.Entropy = 0;
-            int kind = u.Vents++ % 3;
-            if (Has(u, RuleModifiers.EntropyConvert))
+            string kind = NextVent(u);
+            u.Vents++;
+            if (kind == VentConvert)
             {
                 double amt = t.ConvertShield * u.MaxHp;
                 u.Shield = Math.Max(u.Shield, amt);
@@ -679,7 +689,7 @@ namespace IdleRng.Sim.Combat
             }
             switch (kind)
             {
-                case 0:
+                case VentRecoil:
                 {
                     double dmg = t.RecoilFrac * u.MaxHp;
                     double absorbed = Math.Min(u.Shield, dmg);
@@ -690,7 +700,7 @@ namespace IdleRng.Sim.Combat
                     onAction?.Invoke(new FightAction(u.Id, "vent:recoil", u.Id, lost));
                     break;
                 }
-                case 1:
+                case VentStun:
                     u.Gauge = Math.Max(0.0, u.Gauge - t.StunGauge);
                     onAction?.Invoke(new FightAction(u.Id, "vent:stun", u.Id, t.StunGauge));
                     break;
