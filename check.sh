@@ -94,6 +94,9 @@ else
 
     step "Web: monster trainer plays a full run in headless Chromium"
     node web/wasm/test/run-trainer.js
+
+    step "Web: phone-width screens, tree overwrite, save/reload/resume and stale or damaged saves in headless Chromium"
+    node web/wasm/test/flows.js
   else
     printf '\nSkipped WebAssembly checks (--no-wasm or wasm-tools workload not installed). Not a full pass.\n'
   fi

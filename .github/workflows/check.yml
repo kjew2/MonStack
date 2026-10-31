@@ -18,7 +18,7 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
-  # Playwright version for web/wasm/test/run-trainer.js. The repo has no package.json; the test does
+  # Playwright version for the browser tests (web/wasm/test/*.js). The repo has no package.json; the tests do
   # require('playwright') and CI provides it through NODE_PATH (see "Install Playwright" below).
   PLAYWRIGHT_VERSION: "1.63.0"
 
