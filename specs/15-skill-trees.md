@@ -1,6 +1,6 @@
 # 15 - Skill Trees
 
-Status: **live in the training run engine (T3 of `specs/13`)**, not yet in the web client (T6). Code: `src/IdleRng.Sim/Training/TrainingRun.cs` (tree commands), `src/IdleRng.Sim/Combat` (rule modifiers). Tests: `src/IdleRng.Sim.Tests/SkillTreeTests.cs`. Golden: `golden/training-run-vectors.txt`.
+Status: **live (T3 of `specs/13`)**, in the training run engine and the web client (T6: the tree screen, drafts, books and node tooltips in `web/run.js`). Code: `src/IdleRng.Sim/Training/TrainingRun.cs` (tree commands), `src/IdleRng.Sim/Combat` (rule modifiers). Tests: `src/IdleRng.Sim.Tests/SkillTreeTests.cs`. Golden: `golden/training-run-vectors.txt`.
 
 The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless marked **(agent)**.
 
@@ -31,7 +31,7 @@ Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree
 - **Chase trees' capstones must be significantly more impactful and unique** than a normal tree's chase trait (kj). In the placeholder content they are coded rule modifiers: *Unbreakable Will* ends in `counter_mitigated`, *Arcane Overflow* in `echo_cast`.
 - Placeholder shape **(agent)**: 8 nodes per tree: growth, stat, growth, stat, skill (cost 2), growth, stat, chase trait (cost 3); filler nodes cost 1, so a tree costs 11 SP. Trees can be any length; kj suggested longer ones with about 75% filler.
 
-Content table `monster_skills`: the skills nodes grant, in the battle vocabulary (`specs/16` section 5.1): `id`, `name_key`, `desc_key`, `kind`, `target`, `stat`, `scales`, `power`, `cooldown`, `duration`, `element`. The description string is a template over the row (`{power:pct}`, `{cooldown}`, ...; `specs/16` section 9), so its numbers cannot drift from the data.
+Content table `monster_skills`: the skills nodes grant, in the battle vocabulary (`specs/16` section 5.1): `id`, `name_key`, `kind`, `target`, `stat`, `scales`, `power`, `cooldown`, `duration`, `element`. The description is the string `mskill.<id>.desc` by convention (there is no `desc_key` column; dropped in content `3.2`), a template over the row (`{power:pct}`, `{cooldown}`, ...; `specs/16` section 9), so its numbers cannot drift from the data.
 
 The monster's fight kit (`TrainingRun.MonsterFighter`): the bought `skill`, `trigger` and `rule` nodes of its slotted trees, in slot order then node order. That order is the AI's skill priority.
 

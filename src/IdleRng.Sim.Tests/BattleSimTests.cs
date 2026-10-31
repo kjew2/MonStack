@@ -39,6 +39,21 @@ namespace IdleRng.Sim.Tests
             BattleSim.Resolve(Rules, a, b, seed, log == null ? null : (Action<FightAction>)log.Add);
 
         [Test]
+        public void StackedDebuffs_FloorAStatAtStatFloorFracOfBase()
+        {
+            var s = BattleSim.Start(Rules, Side(Mon("a")), Side(Mon("b")));
+            var b = s.Units[1];
+            b.Effects.Add(new FightEffect { Stat = StatIds.Def, Frac = -0.6, TicksLeft = 50, Source = "crush" });
+            b.Effects.Add(new FightEffect { Stat = StatIds.Def, Frac = -0.6, TicksLeft = 50, Source = "crush" });
+            Assert.That(Rules.StatFloor, Is.EqualTo(TestContent.Db.Constants.StatFloorFrac));
+            Assert.That(BattleSim.Eff(Rules, b, StatIds.Def), Is.EqualTo(300 * Rules.StatFloor).Within(1e-9));
+
+            var noFloor = Rules;
+            noFloor.StatFloor = 0;   // a hand-built FightRules (a server) must set it
+            Assert.Throws<ArgumentException>(() => BattleSim.Start(noFloor, Side(Mon("a")), Side(Mon("b"))));
+        }
+
+        [Test]
         public void Rules_ComeFromContent()
         {
             var k = TestContent.Db.Constants;
@@ -247,7 +262,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(s.Units[0].MaxHp, Is.EqualTo(300 * Rules.HpPerPoint * 1.5).Within(1e-9));
             while (!log.Any(a => a.Skill?.Id == "frenzy")) BattleSim.Step(Rules, s, new Fixed(0.0), log.Add);
             Assert.That(s.Units[0].Effects.Any(e => e.Source == "frenzy"), Is.True);
-            Assert.That(BattleSim.Eff(s.Units[0], StatIds.Str), Is.EqualTo(300 * 1.25).Within(1e-9));
+            Assert.That(BattleSim.Eff(Rules, s.Units[0], StatIds.Str), Is.EqualTo(300 * 1.25).Within(1e-9));
         }
 
         [Test]

@@ -63,7 +63,7 @@ One file per table, shape `{ "table": "...", "rows": [ ... ] }`: UTF-8 without B
 
 `manifest.json` lists `schema_version` (the layout version; the loader refuses unknown values, `E901`), `content_version`, `source_revision`, every table's file and sha256, and `content_hash` (sha256 over the table hashes in name order). There is no timestamp, so rebuilding the same CSVs gives the same bytes. The loader verifies every file against the manifest (`E900`).
 
-`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.1**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9). Bump MINOR for any value or addition; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches. The converter does not yet compare against the previous build (the `E09x` codes below are reserved).
+`content_version` is `MAJOR.MINOR` (`content_src/meta.csv`). The current version is **3.2**: MAJOR 3 at the removal of the idle game's tables; 3.1 added the tooltip strings and made skill descriptions templates (`specs/16` section 9); 3.2 added `STAT_FLOOR_FRAC` and dropped the unused `monster_skills.desc_key` column. Bump MINOR for any value or addition, or for dropping a column no code reads; bump MAJOR when ids or tables are removed or renamed. `ContentDb.IsCompatibleWith(v)` is true when the MAJOR matches. The converter does not yet compare against the previous build (the `E09x` codes below are reserved).
 
 ## 5. Strings
 

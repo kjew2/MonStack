@@ -4,7 +4,6 @@
     {
       "id": "gel_mend",
       "name_key": "mskill.gel_mend.name",
-      "desc_key": "mskill.gel_mend.desc",
       "kind": "heal",
       "target": "lowest_ally",
       "stat": null,
@@ -17,7 +16,6 @@
     {
       "id": "ooze_back",
       "name_key": "mskill.ooze_back.name",
-      "desc_key": "mskill.ooze_back.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -30,7 +28,6 @@
     {
       "id": "harden",
       "name_key": "mskill.harden.name",
-      "desc_key": "mskill.harden.desc",
       "kind": "shield",
       "target": "self",
       "stat": null,
@@ -43,7 +40,6 @@
     {
       "id": "lucky_rebound",
       "name_key": "mskill.lucky_rebound.name",
-      "desc_key": "mskill.lucky_rebound.desc",
       "kind": "buff",
       "target": "self",
       "stat": "crit_rate",
@@ -56,7 +52,6 @@
     {
       "id": "flame_breath",
       "name_key": "mskill.flame_breath.name",
-      "desc_key": "mskill.flame_breath.desc",
       "kind": "damage",
       "target": "all_enemies",
       "stat": null,
@@ -69,7 +64,6 @@
     {
       "id": "wildfire",
       "name_key": "mskill.wildfire.name",
-      "desc_key": "mskill.wildfire.desc",
       "kind": "damage",
       "target": "all_enemies",
       "stat": null,
@@ -82,7 +76,6 @@
     {
       "id": "iron_hide",
       "name_key": "mskill.iron_hide.name",
-      "desc_key": "mskill.iron_hide.desc",
       "kind": "buff",
       "target": "self",
       "stat": "def",
@@ -95,7 +88,6 @@
     {
       "id": "plate_mastery",
       "name_key": "mskill.plate_mastery.name",
-      "desc_key": "mskill.plate_mastery.desc",
       "kind": "passive",
       "target": "self",
       "stat": "def",
@@ -108,7 +100,6 @@
     {
       "id": "aether_bolt",
       "name_key": "mskill.aether_bolt.name",
-      "desc_key": "mskill.aether_bolt.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -121,7 +112,6 @@
     {
       "id": "overcharge",
       "name_key": "mskill.overcharge.name",
-      "desc_key": "mskill.overcharge.desc",
       "kind": "buff",
       "target": "self",
       "stat": "spd",
@@ -134,7 +124,6 @@
     {
       "id": "confuse",
       "name_key": "mskill.confuse.name",
-      "desc_key": "mskill.confuse.desc",
       "kind": "debuff",
       "target": "enemy",
       "stat": "dex",
@@ -147,7 +136,6 @@
     {
       "id": "phase_shift",
       "name_key": "mskill.phase_shift.name",
-      "desc_key": "mskill.phase_shift.desc",
       "kind": "heal",
       "target": "self",
       "stat": null,
@@ -160,7 +148,6 @@
     {
       "id": "second_wind",
       "name_key": "mskill.second_wind.name",
-      "desc_key": "mskill.second_wind.desc",
       "kind": "heal",
       "target": "self",
       "stat": null,
@@ -173,7 +160,6 @@
     {
       "id": "vital_surge",
       "name_key": "mskill.vital_surge.name",
-      "desc_key": "mskill.vital_surge.desc",
       "kind": "passive",
       "target": "self",
       "stat": "hp",
@@ -186,7 +172,6 @@
     {
       "id": "smash",
       "name_key": "mskill.smash.name",
-      "desc_key": "mskill.smash.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -199,7 +184,6 @@
     {
       "id": "follow_through",
       "name_key": "mskill.follow_through.name",
-      "desc_key": "mskill.follow_through.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -212,7 +196,6 @@
     {
       "id": "arcane_blast",
       "name_key": "mskill.arcane_blast.name",
-      "desc_key": "mskill.arcane_blast.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -225,7 +208,6 @@
     {
       "id": "mana_surge",
       "name_key": "mskill.mana_surge.name",
-      "desc_key": "mskill.mana_surge.desc",
       "kind": "buff",
       "target": "self",
       "stat": "int",
@@ -238,7 +220,6 @@
     {
       "id": "ward",
       "name_key": "mskill.ward.name",
-      "desc_key": "mskill.ward.desc",
       "kind": "shield",
       "target": "all_allies",
       "stat": null,
@@ -251,7 +232,6 @@
     {
       "id": "enlightened",
       "name_key": "mskill.enlightened.name",
-      "desc_key": "mskill.enlightened.desc",
       "kind": "passive",
       "target": "self",
       "stat": "wis",
@@ -264,7 +244,6 @@
     {
       "id": "quick_jab",
       "name_key": "mskill.quick_jab.name",
-      "desc_key": "mskill.quick_jab.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -277,7 +256,6 @@
     {
       "id": "riposte",
       "name_key": "mskill.riposte.name",
-      "desc_key": "mskill.riposte.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -290,7 +268,6 @@
     {
       "id": "provoke",
       "name_key": "mskill.provoke.name",
-      "desc_key": "mskill.provoke.desc",
       "kind": "taunt",
       "target": "self",
       "stat": null,
@@ -303,7 +280,6 @@
     {
       "id": "spiked_shell",
       "name_key": "mskill.spiked_shell.name",
-      "desc_key": "mskill.spiked_shell.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -316,7 +292,6 @@
     {
       "id": "blitz",
       "name_key": "mskill.blitz.name",
-      "desc_key": "mskill.blitz.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -329,7 +304,6 @@
     {
       "id": "afterimage",
       "name_key": "mskill.afterimage.name",
-      "desc_key": "mskill.afterimage.desc",
       "kind": "buff",
       "target": "self",
       "stat": "dex",
@@ -342,7 +316,6 @@
     {
       "id": "gamble",
       "name_key": "mskill.gamble.name",
-      "desc_key": "mskill.gamble.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -355,7 +328,6 @@
     {
       "id": "jackpot",
       "name_key": "mskill.jackpot.name",
-      "desc_key": "mskill.jackpot.desc",
       "kind": "passive",
       "target": "self",
       "stat": "crit_dmg",
@@ -368,7 +340,6 @@
     {
       "id": "rally_cry",
       "name_key": "mskill.rally_cry.name",
-      "desc_key": "mskill.rally_cry.desc",
       "kind": "buff",
       "target": "self",
       "stat": "str",
@@ -381,7 +352,6 @@
     {
       "id": "killer_instinct",
       "name_key": "mskill.killer_instinct.name",
-      "desc_key": "mskill.killer_instinct.desc",
       "kind": "passive",
       "target": "self",
       "stat": "crit_rate",
@@ -394,7 +364,6 @@
     {
       "id": "regenerate",
       "name_key": "mskill.regenerate.name",
-      "desc_key": "mskill.regenerate.desc",
       "kind": "heal",
       "target": "self",
       "stat": null,
@@ -407,7 +376,6 @@
     {
       "id": "adrenaline",
       "name_key": "mskill.adrenaline.name",
-      "desc_key": "mskill.adrenaline.desc",
       "kind": "buff",
       "target": "self",
       "stat": "spd",
@@ -420,7 +388,6 @@
     {
       "id": "echo_bolt",
       "name_key": "mskill.echo_bolt.name",
-      "desc_key": "mskill.echo_bolt.desc",
       "kind": "damage",
       "target": "enemy",
       "stat": null,
@@ -433,7 +400,6 @@
     {
       "id": "resonance",
       "name_key": "mskill.resonance.name",
-      "desc_key": "mskill.resonance.desc",
       "kind": "buff",
       "target": "self",
       "stat": "int",
@@ -446,7 +412,6 @@
     {
       "id": "stand_firm",
       "name_key": "mskill.stand_firm.name",
-      "desc_key": "mskill.stand_firm.desc",
       "kind": "shield",
       "target": "self",
       "stat": null,
@@ -459,7 +424,6 @@
     {
       "id": "overflow_beam",
       "name_key": "mskill.overflow_beam.name",
-      "desc_key": "mskill.overflow_beam.desc",
       "kind": "damage",
       "target": "all_enemies",
       "stat": null,

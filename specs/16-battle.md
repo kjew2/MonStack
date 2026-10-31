@@ -43,7 +43,7 @@ Eight trained stats (kj, 2026-10-30), on the 0-999 training scale:
 | `SPD` | ATB gauge fill per tick, at least `MON_SPD_MIN` |
 | `LUK` | Crit chance |
 
-Effects can also add to `crit_rate` and `crit_dmg` directly. The current value of a trained stat is `base x max(0.1, 1 + sum of effect fractions)`.
+Effects can also add to `crit_rate` and `crit_dmg` directly. The current value of a trained stat is `base x max(STAT_FLOOR_FRAC, 1 + sum of effect fractions)`: however many debuffs stack, it never drops below `STAT_FLOOR_FRAC` (0.1) of its base. A permanent HP effect (a passive) multiplies max HP and current HP by `max(STAT_FLOOR_FRAC, 1 + fraction)`.
 
 The player reads this table in each stat's tooltip (section 9).
 
@@ -133,6 +133,7 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_SPD_MIN` | 10 | `> 0` | Minimum gauge fill per tick |
 | `MON_TIME_LIMIT_TICKS` | 900 | `> 0` | Turn limit (90 s) |
 | `MON_SIDE_SIZE` | 4 | `> 0` | Most units per side |
+| `STAT_FLOOR_FRAC` | 0.1 | `(0, 1]` | A trained stat never drops below this fraction of its base (section 3; content `3.2`) |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` | `echo_cast` repeat power (content `2.5`) |
 
 Range violations are `E043` in both `tools/content_build.py` and `ContentDb`.
@@ -149,7 +150,7 @@ The web client explains stats and abilities in tooltips (issue #80). The words a
 
 - **Formulas.** The fight's own formulas are public helpers on `BattleSim` (`MaxHp`, `GaugeFill`, `BasicAttackRaw`, `BasicAttackMagical`, `EvadeChance`, `CritChance`, `Mitigate`); the battle and the tooltips both call them.
 - **Stats.** `stat.<id>.name` ("Strength"), `stat.<id>.desc` (what the stat does, with constants such as `{MON_DEF_K}` filled in) and `stat.<id>.now` (what the current value does against the coming opponent: `{max_hp}`, `{basic}`, `{basic_type}`, `{def_taken}`, `{wis_taken}`, `{evade}`, `{foe_evade}`, `{acts}` actions per turn, `{crit}`, `{foe}`), under the heading `tip.now`. "Now" lines use the raw stat sheets: before buffs, debuffs and passives. `stat.<id>.label` names a stat inside a sentence where the upper-case id would read wrong (`hp`: "max HP", `crit_rate`, `crit_dmg`).
-- **Skills.** `mskill.<id>.desc` is a template over the skill's own row: `{power}` (or `{power:pct}`), `{scales}`, `{stat}`, `{cooldown}`, `{duration}`, `{ticks}`, `{element}`. A tree node's tooltip adds tags (kind, physical or magical, element, trigger, chase trait) and facts from the row and the rules above: effect, amount, damage type, element, target, duration, cooldown and the AI condition for active skills, when it fires for triggers and passives (`trigger.<id>.name`, `tip.fires.<id>`), stacking for triggered buffs, and the node's SP cost. The vocabulary is `tip.*`. Abilities have no energy cost: energy is a training resource (`specs/14`); a skill's cost is its node's SP.
+- **Skills.** `mskill.<id>.desc` is a template over the skill's own row: `{power}` (or `{power:pct}`), `{scales}`, `{stat}`, `{cooldown}`, `{duration}`, `{ticks}`, `{element}`. A tree node's tooltip adds tags (kind, physical or magical, element, trigger, chase trait) and facts from the row and the rules above: effect, amount, damage type, element, target, duration, cooldown and the AI condition for active skills, when it fires for triggers and passives (`trigger.<id>.name`, `tip.fires.<id>`), stacking for triggered buffs, and the node's SP cost. The vocabulary is `tip.*`, with constants filled in (`tip.effect.debuff` names `{STAT_FLOOR_FRAC:pct}`). Abilities have no energy cost: energy is a training resource (`specs/14`); a skill's cost is its node's SP.
 - **Rules.** `rule.<id>.desc`, with constants filled in (`echo_cast` names `{MON_ECHO_POWER:pct}`).
 
 Template syntax and the constant lookup are `specs/05` section 5.

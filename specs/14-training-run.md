@@ -1,6 +1,6 @@
 # 14 - Training Run
 
-Status: **live as an engine (T2 of `specs/13`)**, not yet in the web client (T6) or saved in an account (T5). Code: `src/IdleRng.Sim/Training`. Tests: `src/IdleRng.Sim.Tests/TrainingRunTests.cs`, `src/IdleRng.Bots.Tests/RunBotTests.cs`. Golden: `golden/training-run-vectors.txt`.
+Status: **live (T2 of `specs/13`)**, played in the web client (T6); a finished run's monster is sealed into the account's Vault (T5, `specs/18`). Code: `src/IdleRng.Sim/Training`. Tests: `src/IdleRng.Sim.Tests/TrainingRunTests.cs`, `src/IdleRng.Bots.Tests/RunBotTests.cs`. Golden: `golden/training-run-vectors.txt`.
 
 The design is `specs/12` section 4; the cycle flow is kj's (2026-10-30). Skill points, tree offers and skill trees are `specs/15`.
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.1",
+  "content_version": "3.2",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "chase_conditions": {
@@ -9,7 +9,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "f8aa83b73b139cef94559615feb0daaaaf810eb8fefd91596845b5d041c33281"
+      "sha256": "172e18c43e3e5f0e9a6e6c1499c61f0dd1e3fb9f1ae877dfd05ef4ade0818008"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -33,7 +33,7 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "af5cc353414eb2f3884688864e4f6e213b478362cd0fa0cbc00024aef1ff4619"
+      "sha256": "424793245077a54f2617c220cb62f1930814c44d66e702ed63383f2bd121e9c8"
     },
     "skill_books": {
       "file": "skill_books.json",
@@ -49,7 +49,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "160fae6f13769b29b3e91a777c961b0498f5422902eaeb20f075fc299e69ce60"
+      "sha256": "e60fd7c0bee16bff76971bcf4275e44875dae76ca8247ad06e8ed20111d71f99"
     },
     "talents": {
       "file": "talents.json",
@@ -64,5 +64,5 @@
       "sha256": "3a3706172d7fb80dea79a6154b0b135e6a4b9600396de12549ae708f7bb46c72"
     }
   },
-  "content_hash": "c12098bdf689397cfc2931c9fe9a5011cb8cd9b8fa2483a1bbf32f4b61fa197a"
+  "content_hash": "1bb95f426629da0f228aab4c12bd09876465c2d72d405c15b5c64d383ff910fe"
 }
