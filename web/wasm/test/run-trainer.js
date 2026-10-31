@@ -4,7 +4,8 @@
 // nodes), watches two rank fights play back (current ability, live HP, skill cooldown tiles, the remembered 1x/2x/Skip speed),
 // checks the skill point gain indicators (HUD float-up, fight badge, Trees tab count, log lines), seals it, checks the grade
 // screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run,
-// locks and dismantles a Vault entry, and loads a v1 save over the Vault cap to check the migration and the blocked run start.
+// locks and dismantles a Vault entry, loads a v1 save over the Vault cap to check the migration and the blocked run start, and
+// browses a varied Vault (sort, filter, search, detail, compare; lock and dismantle under a filter hit the real Vault index).
 // Also checks the header build stamp from dist/build-info.json, and that a missing stamp shows "dev".
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/run-trainer.js [--shots dir]
@@ -317,6 +318,141 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await act('start').isEnabled(), 'and a run can start again at the cap');
   const vw = await page.evaluate(() => document.documentElement.scrollWidth);
   check(vw <= 390, 'the Vault fits the phone width (' + vw + 'px)');
+
+  // ---- Vault browsing (issue #81): sort, filter, search, detail and compare over a varied Vault, and lock/dismantle under a
+  // filter still address the real Vault index. The six entries are copies of the sealed one with species, grade, title, STR,
+  // date and lock rewritten (the account view reads these stored fields; nothing replays them here).
+  {
+    const base = await readAccount();
+    const tpl = base.Account.Vault[0];
+    const strKey = Object.keys(tpl.Stats).find((k) => k.toLowerCase() === 'str');
+    const mk = (species, grade, rank, floor, title, str, locked, i) => Object.assign(JSON.parse(JSON.stringify(tpl)), {
+      SpeciesId: species, Grade: grade, RankIndex: rank, GauntletFloor: floor, GauntletCleared: floor > 100, LegacyTitle: title,
+      GauntletKiller: floor > 100 || !title ? null : tpl.GauntletKiller, Locked: locked, SealedUtcMs: 1790000000000 + i * 86400000,
+      Stats: Object.assign({}, tpl.Stats, { [strKey]: str }) });
+    base.Account.Vault = [
+      mk('slime', 'c', 2, 30, 'title.respectable_brawler', 100, false, 0),
+      mk('drake', 'a', 4, 70, 'title.food', 300, false, 1),
+      mk('sprite', 'e', 0, 0, null, 50, false, 2),
+      mk('slime', 'b', 3, 50, 'title.professional_punching_bag', 200, true, 3),
+      mk('drake', 'd', 1, 12, 'title.warm_up_act', 150, false, 4),
+      mk('sprite', 's', 5, 101, 'title.tower_breaker', 400, false, 5),
+    ];
+    base.Account.Vault[1].Trees[0].Bought = 3;                         // a part-bought tree for the detail sheet
+    const body = Buffer.from(JSON.stringify(base), 'utf8');
+    const saveTxt = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(body) >>> 0).toString(16).padStart(8, '0') + ' len=' + body.length + '\n' + body.toString('utf8');
+    await page.evaluate((t) => { localStorage.setItem('idle-rng-account-v1', t); localStorage.removeItem('idle-rng-vault-view'); }, saveTxt);
+    await page.reload();
+    await act('start').waitFor({ timeout: 90000 });
+    const order = () => page.$$eval('[data-id=vault-entry]', (els) => els.map((e) => +e.dataset.index));
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    const sortBy = async (v) => { await page.selectOption('[data-act=vault-sort]', v); return order(); };
+    check(same(await order(), [5, 4, 3, 2, 1, 0]), 'the Vault lists newest first by default');
+    check(same(await sortBy('grade'), [5, 1, 3, 0, 4, 2]), 'sort by grade, best first');
+    check(same(await sortBy('floor'), [5, 1, 3, 0, 4, 2]), 'sort by gauntlet floor, a cleared tower on top and no title last');
+    check(same(await sortBy('species'), [1, 4, 3, 0, 5, 2]), 'sort by species A to Z, best grade first within one');
+    check(same(await sortBy('old'), [0, 1, 2, 3, 4, 5]), 'sort oldest first');
+    check(same(await sortBy('stat:str'), [5, 1, 3, 4, 0, 2]), 'sort by a chosen stat (STR)');
+    check(JSON.parse(await page.evaluate(() => localStorage.getItem('idle-rng-vault-view'))).sort === 'stat:str', 'the sort is remembered for this viewer');
+    await page.reload();
+    await act('start').waitFor({ timeout: 90000 });
+    check((await page.locator('[data-act=vault-sort]').inputValue()) === 'stat:str' && same(await order(), [5, 1, 3, 4, 0, 2]), 'and survives a reload');
+
+    await act('vault-filters').click();
+    check(await page.locator('[data-id=vault-filter-panel]').isVisible(), 'the Filters button opens the filter panel');
+    await page.selectOption('[data-act=vault-species]', 'slime');
+    check(same(await order(), [3, 0]), 'filter by species');
+    check((await text('[data-id=vault-showing]')).startsWith('Showing 2 of 6') && /Filters · 1/.test(await act('vault-filters').innerText()), 'it says how many it shows and counts the active filters');
+    await page.selectOption('[data-act=vault-species]', '');
+    await page.selectOption('[data-act=vault-element]', 'light');
+    check(same(await order(), [5, 2]), 'filter by element (Sprite is light)');
+    await page.selectOption('[data-act=vault-element]', '');
+    await page.selectOption('[data-act=vault-title]', { label: 'No title' });
+    check(same(await order(), [2]), 'filter: no Legacy Title');
+    await page.selectOption('[data-act=vault-title]', { label: 'Has a title' });
+    check(same(await order(), [5, 1, 3, 4, 0]), 'filter: has a Legacy Title');
+    await page.selectOption('[data-act=vault-title]', { label: 'Respectable Brawler' });
+    check(same(await order(), [0]), 'filter: one specific Legacy Title');
+    await page.selectOption('[data-act=vault-title]', '');
+    await page.selectOption('[data-act=vault-lock]', 'locked');
+    check(same(await order(), [3]), 'filter: locked only');
+    await page.selectOption('[data-act=vault-lock]', 'unlocked');
+    check(same(await order(), [5, 1, 4, 0, 2]), 'filter: unlocked only');
+    await page.selectOption('[data-act=vault-lock]', '');
+    await shot('10-vault-filters');
+
+    const search = page.locator('[data-act=vault-search]');
+    await search.fill('brawler');
+    check(same(await order(), [0]), 'search finds a monster by its Legacy Title');
+    await search.fill('tower breaker');
+    check(same(await order(), [5]), 'every word of a search must match');
+    await search.fill('drake');
+    check(same(await order(), [1, 4]), 'search by species name');
+    check(await search.evaluate((el) => el === document.activeElement), 'typing a search keeps the focus in the box');
+    await search.fill('zzz');
+    check((await page.locator('[data-id=vault-empty]').count()) === 1, 'a search with no match says so');
+    await act('vault-clear').click();
+    check(same(await order(), [5, 1, 3, 4, 0, 2]) && (await search.inputValue()) === '', 'Clear filters shows the whole Vault again, in the chosen sort');
+
+    // Lock and dismantle under a filter address the real Vault index, not the position in the filtered list.
+    await page.selectOption('[data-act=vault-species]', 'sprite');
+    await page.selectOption('[data-act=vault-sort]', 'new');
+    check(same(await order(), [5, 2]), 'filtered to the two Sprites');
+    const second = page.locator('[data-id=vault-entry]').nth(1);
+    check((await second.locator('[data-act^="lock-"]').getAttribute('data-act')) === 'lock-2', 'the second filtered card\'s lock button names Vault index 2');
+    await second.locator('[data-act^="lock-"]').click();
+    const locks = (await readAccount()).Account.Vault.map((e) => e.Locked);
+    check(same(locks, [false, false, true, true, false, false]), 'locking it under the filter locked Vault entry 2 only: ' + locks.join(','));
+    await page.selectOption('[data-act=vault-species]', 'drake');
+    check(same(await order(), [4, 1]), 'filtered to the two Drakes');
+    const shards0 = (await readAccount()).Account.Shards;
+    const first = page.locator('[data-id=vault-entry]').first();
+    const refundD = +(/\+(\d+)/.exec(await first.locator('[data-act^="dismantle-"]').innerText()) || [])[1];
+    await first.locator('[data-act="dismantle-4"]').click();
+    check((await page.locator('[data-id=vault-entry]').first().locator('[data-id=dismantle-confirm]').count()) === 1, 'the confirm opens on that card');
+    await act('dismantle-yes').click();
+    const left = (await readAccount()).Account;
+    check(same(left.Vault.map((e) => e.SpeciesId + ':' + e.Grade), ['slime:c', 'drake:a', 'sprite:e', 'slime:b', 'sprite:s']), 'dismantling the first filtered card removed Vault entry 4 (the D Drake) and no other');
+    check(left.Shards === shards0 + refundD, 'and paid its refund (' + refundD + ')');
+    check(same(await order(), [1]) && (await page.locator('[data-act=vault-species]').inputValue()) === 'drake', 'the filter stays on after the dismantle');
+    await act('vault-clear').click();
+
+    // Detail of one entry: stats, slotted trees with the bought nodes, rank, title and date.
+    await act('detail-1').click();
+    check(await page.locator('[data-id=detail-title]').isVisible(), 'Details opens the detail sheet');
+    const legacyLine = await text('[data-id=detail-legacy]');
+    check(/^Floor 70: .*Food$/.test(legacyLine), 'it shows the floor and Legacy Title: ' + legacyLine);
+    const statRows = page.locator('#modal [data-id=detail-stats] .stat');
+    check((await statRows.count()) === 8 && (await page.locator('#modal [data-id=detail-stats]').innerText()).includes('300'), 'it shows all eight stats');
+    check(/sealed /.test(await text('[data-id=detail-facts]')) && /Rank A/.test(await page.locator('#modal').innerText()), 'it shows the rank and seal date');
+    const trees = left.Vault[1].Trees;
+    let gotOk = (await page.locator('#modal [data-id^="detail-tree-"]').count()) === trees.length;
+    for (let k = 0; k < trees.length; k++) gotOk = gotOk && (await page.locator('#modal [data-id="detail-tree-' + k + '"] .node.got').count()) === trees[k].Bought;
+    check(gotOk && trees.length >= 2 && trees[0].Bought === 3, 'it lists each slotted tree with its bought nodes checked (' + trees.map((t) => t.Bought).join(', ') + ')');
+    check((await page.locator('#modal [data-id="detail-tree-0"] .node.locked').count()) > 0, 'and the nodes not bought unchecked');
+    const mw = await page.evaluate(() => { const m = document.getElementById('modal'); return m.scrollWidth - m.clientWidth; });
+    check(mw <= 0, 'the detail sheet fits the phone width');
+    await shot('11-vault-detail');
+    await act('detail-close').click();
+    check(await page.locator('#modal').isHidden(), 'Close returns to the Vault');
+
+    // Compare two entries side by side.
+    await act('compare-0').click();
+    check(await page.locator('[data-id=compare-pick]').isVisible(), 'Compare on one monster asks for a second');
+    await act('compare-4').click();                                    // after the dismantle, index 4 is the S Sprite
+    check(await page.locator('[data-id=compare-grid]').isVisible(), 'Compare on a second opens the compare sheet');
+    check((await text('[data-id=diff-str]')) === '+300' && (await text('[data-id=diff-rank]')) === '+3' && (await text('[data-id=diff-floor]')) === '+71', 'it shows B minus A per stat, rank and floor');
+    check((await text('[data-id=diff-hp]')) === '=', 'an equal stat shows =');
+    const cw = await page.evaluate(() => { const m = document.getElementById('modal'); return m.scrollWidth - m.clientWidth; });
+    check(cw <= 0, 'the compare sheet fits the phone width');
+    await shot('12-vault-compare');
+    await act('compare-swap').click();
+    check((await text('[data-id=diff-str]')) === '−300', 'Swap turns the diff around');
+    await act('compare-close').click();
+    await act('vault-filters').click();
+    const fw = await page.evaluate(() => document.documentElement.scrollWidth);
+    check(fw <= 390, 'the Vault with its filter panel open fits the phone width (' + fw + 'px)');
+  }
 
 
   // ---- the book option and drafts (the test book is the picked species' own: drake's Ember Codex)

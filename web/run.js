@@ -2,13 +2,13 @@
 // it sends commands, reads the engine's state and labels, and draws them (specs/13 T6, specs/14, specs/15).
 (function () {
   'use strict';
-  const RE = window.RunEngine, SP = window.IdleSprites, TIP = window.Tips;
+  const RE = window.RunEngine, SP = window.IdleSprites, TIP = window.Tips, VAULT = window.VaultView;
   const $ = (id) => document.getElementById(id);
   const pct = (x) => Math.round(x * 100) + '%';
   const up = (s) => String(s).toUpperCase();
   const num = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
 
-  let run = null, C = null;
+  let run = null, C = null, shownView = null;   // shownView: the view the last render drew
   const ui = {
     view: 'home',            // home | run | climb | grade
     tab: 'train',            // train | trees | log
@@ -26,7 +26,6 @@
     climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf }
     spGains: [],             // skill point gains not yet shown by the HUD (issue #86): [{n, why, cycle}], shown once no modal covers it
     fightGains: [],          // the gains the shown fight brought, for its result badge
-    confirmDismantle: null,  // Vault entry awaiting the dismantle confirm: { i (vault index), hash }
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -72,7 +71,12 @@
     const prevScroll = main.scrollTop;
     main.replaceChildren();
     if (ui.view !== 'run') $('floats').replaceChildren();
-    if (ui.view === 'home') { tabs.hidden = true; modal.hidden = true; renderHome(main); return; }
+    const wasView = shownView; shownView = ui.view;
+    if (ui.view === 'home') {   // the Vault's detail and compare sheets open in the modal over the home screen
+      tabs.hidden = true; modal.hidden = true; modal.replaceChildren(); renderHome(main);
+      if (wasView === 'home') main.scrollTop = prevScroll;   // a lock or dismantle deep in a long Vault keeps the place
+      return;
+    }
     const s = run.state;
     if (ui.view === 'grade') { tabs.hidden = true; modal.hidden = true; renderGrade(main); return; }
     if (ui.view === 'climb') { tabs.hidden = true; modal.hidden = true; renderClimb(main); return; }
@@ -554,52 +558,11 @@
       ]));
     });
 
-    main.append(h('h3', { class: over > 0 ? 'bad' : '', 'data-id': 'vault-count', text: 'Vault ' + acct.vault.length + '/' + acct.vaultCap }));
-    if (!acct.vault.length) main.append(h('p', { class: 'small muted', text: 'Sealed monsters appear here.' }));
-    else main.append(h('p', { class: 'small muted', text: 'Dismantle a monster for Training Shards; lock your favourites so they cannot be dismantled.' }));
-    for (let i = acct.vault.length - 1; i >= 0; i--) main.append(vaultCard(acct.vault[i], i));   // newest first
+    VAULT.render(main, $('modal'), vaultHelpers());   // the Vault list, its sort/filter/search, detail and compare (web/vault.js)
   }
 
-  // Lock toggle and dismantle (with an in-page confirm) for Vault entry i (its index in the engine's oldest-first list).
-  function vaultActions(e, i) {
-    const sp = speciesDef(e.species) || { name: e.species };
-    const c = ui.confirmDismantle;
-    if (c && c.i === i && c.hash === e.hash) {
-      return h('div', { class: 'card alert', 'data-id': 'dismantle-confirm' }, [
-        h('p', { class: 'small', text: 'Dismantle this ' + up(e.grade) + ' ' + sp.name + ' for ' + e.refund + ' Training Shards? It is gone for good.' }),
-        h('div', { class: 'row' }, [
-          h('button', { class: 'btn small warn', type: 'button', 'data-act': 'dismantle-yes', text: 'Yes, dismantle', onclick: () => {
-            ui.confirmDismantle = null;
-            const r = run.acct('dismantle', i);
-            toast(r.ok ? 'Dismantled ' + sp.name + ': +' + r.refund + ' shards' : r.reason);
-            render();
-          } }),
-          h('button', { class: 'btn small', type: 'button', 'data-act': 'dismantle-no', text: 'Keep it', onclick: () => { ui.confirmDismantle = null; render(); } }),
-        ]),
-      ]);
-    }
-    return h('div', { class: 'row', style: 'flex-wrap:wrap;margin-top:6px' }, [
-      h('button', { class: 'btn small', type: 'button', 'data-act': 'lock-' + i, 'aria-pressed': e.locked ? 'true' : 'false',
-        text: e.locked ? '🔒 Locked' : '🔓 Lock', title: e.locked ? 'Unlock so it can be dismantled' : 'Lock so it cannot be dismantled',
-        onclick: () => { ui.confirmDismantle = null; const r = run.acct('lock', i, !e.locked); if (!r.ok) toast(r.reason); render(); } }),
-      h('button', { class: 'btn small warn', type: 'button', 'data-act': 'dismantle-' + i, disabled: e.locked,
-        text: 'Dismantle · +' + e.refund + ' shards', onclick: () => { ui.confirmDismantle = { i: i, hash: e.hash }; render(); } }),
-    ]);
-  }
-
-  function vaultCard(e, i) {
-    const sp = speciesDef(e.species) || { name: e.species };
-    const total = Object.keys(e.stats).reduce((a, k) => a + e.stats[k], 0);
-    return h('div', { class: 'card', 'data-id': 'vault-entry' }, [
-      h('div', { class: 'row between' }, [
-        h('div', { class: 'row' }, [h('span', { class: 'num', style: 'font-size:28px;font-weight:700', text: up(e.grade) }), h('div', null, [h('b', { text: sp.name }), h('div', { class: 'small muted', text: (e.end === 'injured' ? 'Injured' : 'Completed') + ' · cycle ' + e.cycles + ' · ' + e.fightsWon + ' wins' })])]),
-        h('span', { class: 'small muted num', text: 'Σ ' + num(total) }),
-      ]),
-      e.gauntlet ? h('div', { class: 'small gold', 'data-id': 'vault-title', text: e.gauntlet.label }) : null,
-      h('div', { class: 'small muted', text: e.trees.map((t) => treeName(t.id) + ' ' + t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?')).join(' · ') }),
-      e.sealedUtcMs ? h('div', { class: 'small muted', text: new Date(e.sealedUtcMs).toLocaleString() }) : null,
-      vaultActions(e, i),
-    ]);
+  function vaultHelpers() {
+    return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, elementTag: elementTag, up: up, num: num, bar: bar, TIP: TIP };
   }
 
   function renderGrade(main) {
@@ -729,7 +692,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; ui.confirmDismantle = null; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.fightGains = []; }
+  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.fightGains = []; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
