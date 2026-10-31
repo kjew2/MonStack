@@ -183,6 +183,18 @@ small, .small { font-size: 12px; }
   .arena .sprite, .pow { animation: none !important; }
   .arena .you.launch .sprite, .arena .you.ash .sprite { filter: grayscale(1); transform: rotate(90deg); }
 }
+/* Vault browsing (issue #81): search, sort and filters over the list; detail and compare sheets in the modal */
+.vlist { display: flex; flex-direction: column; gap: 12px; }
+.vcontrols { display: flex; flex-direction: column; gap: 8px; }
+.vcontrols input, .vcontrols select { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font: inherit; font-size: 16px; }
+.vrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vfield { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vcmp-heads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vcmp-heads > .card { min-width: 0; padding: 10px; }
+.vcmp { display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 4px 10px; align-items: baseline; }
+.vcmp > :not(:nth-child(4n+1)) { text-align: right; }
+.vcmp .lbl { font: 700 13px var(--font-display); }
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; background: #333; box-shadow: 0 4px 12px rgba(0,0,0,.5); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }
@@ -205,6 +217,7 @@ small, .small { font-size: 12px; }
 <script src="run-engine.js"></script>
 <script src="sprites.js"></script>
 <script src="tooltips.js"></script>
+<script src="vault.js"></script>
 <script src="run.js"></script>
 </body>
 </html>

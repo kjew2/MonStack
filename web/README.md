@@ -6,7 +6,8 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 
 | File | What it is |
 |---|---|
-| `index.html`, `run.js` | The trainer screens: species pick, Drill and Rest with the odds shown, rank fights played back action by action (ability in use, a square tile per skill whose grey overlay recedes downward as its cooldown runs out, live HP; speed 1x/2x/Skip, `FIGHT_STEP_MS` is a placeholder) then the battle log, skill point gains made visible (a float-up and pulse at the HUD SP count, a badge on the fight result, the unspent count on the Trees tab, a log line per gain), tree drafts and buying, the gauntlet wheel after sealing (`specs/19` section 7), the grade screen with shard payout and Legacy Title, talents, the Vault list (count against the cap, lock toggle, dismantle with a confirm; a run start is blocked while over the cap). No game rules. |
+| `index.html`, `run.js` | The trainer screens: species pick, Drill and Rest with the odds shown, rank fights played back action by action (ability in use, a square tile per skill whose grey overlay recedes downward as its cooldown runs out, live HP; speed 1x/2x/Skip, `FIGHT_STEP_MS` is a placeholder) then the battle log, skill point gains made visible (a float-up and pulse at the HUD SP count, a badge on the fight result, the unspent count on the Trees tab, a log line per gain), tree drafts and buying, the gauntlet wheel after sealing (`specs/19` section 7), the grade screen with shard payout and Legacy Title, talents, and the Vault section's place on the home screen (`vault.js` draws it). No game rules. |
+| `vault.js` | The Vault list (`specs/18` sections 7 and 8): count against the cap, lock toggle, dismantle with a confirm (a run start is blocked while over the cap); sort, filters, search, a detail sheet and a side-by-side compare. Lock and dismantle always use the real Vault index. The sort and filters are remembered in `localStorage['idle-rng-vault-view']`. |
 | `tooltips.js` | Tap-to-open tooltips for stats and abilities (`role="tooltip"`, long press, Escape). Text and numbers come from the engine (`wasm/BRIDGE.md`, "Tooltips"). |
 | `run-engine.js` | Facade over the C# trainer bridge (`IdleRng.Web.Engine.Run*` / `Account*`): the account save (shards, talents, Vault, active run). |
 | `engine.js` | Loader for the .NET runtime and the content pack. |
@@ -15,7 +16,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `wasm/artifact-files.py` | Prints the `files` map for republishing the phone artifact (root README, "On a phone"). |
 | `wasm/pack-content.js` | Bundles `Content/*.json` into the content pack the engine loads and hash-checks. |
 | `wasm/BRIDGE.md` | The JS <-> C# contract: exports and JSON shapes. |
-| `wasm/test/run-trainer.js` | Headless-Chromium test that plays a full run through the buttons (part of `./check.sh`). |
+| `wasm/test/run-trainer.js` | Headless-Chromium test that plays a full run through the buttons and browses a varied Vault (part of `./check.sh`). |
 
 ## Where things come from
 
