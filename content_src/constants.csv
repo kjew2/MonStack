@@ -4,7 +4,7 @@ BATTLE_GAUGE,double,1000,ATB gauge size; a unit acts each time its gauge (filled
 ELEMENT_STRONG_MULT,double,1.3,damage when the attacker's element beats the defender's
 ELEMENT_WEAK_MULT,double,0.8,damage when the defender's element beats the attacker's
 BASIC_ATTACK_POWER,double,1,basic attack = this x ATK
-AI_HEAL_BELOW,double,0.65,companion AI heals when an ally is below this HP fraction
+AI_HEAL_BELOW,double,0.25,"AI casts a heal once a target is missing the whole amount it restores (#94); a heal bigger than (1 - this) of max HP waits until the target is at or below this HP fraction"
 AI_SHIELD_BELOW,double,0.7,companion AI shields when an ally is below this HP fraction
 MON_HP_PER_POINT,double,10,monster battle (specs/16): max HP = HP stat x this. Placeholder
 MON_DEF_K,double,300,monster battle: damage x K/(K+DEF) physical or K/(K+WIS) magical. Placeholder

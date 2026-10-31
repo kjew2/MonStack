@@ -1,16 +1,16 @@
-# training-run vectors, hash v3 content=3.10/a4f0eba3
+# training-run vectors, hash v3 content=3.11/6798e83f
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8
   stats hp 174 str 170 int 177 wis 173 dex 178 def 187 spd 170 luk 171
   trees slime_fundamentals:8/8 gel_armor:8/8 - -
-  hash eec3eb3155f42c59d9d1d1d4a409699f1e43a5ed26ec08b1f8268fb1811c38e1
+  hash 250985a995e20e5df92f6b5e35e51feaebe6eea57cb7f9b484b759fb4ed3c4da
 
 slime focus seed=7
-  end=Completed cycle=12 rank=s fights=6/12 drills=44 rests=16 energy=20 milestones=3 sp=0
-  stats hp 869 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:8/8 living_ocean:3/8
-  hash 59492fab53fb7272f4be3649e646da1da730a9073dad79a3915492b5a1513c3e
+  end=Completed cycle=12 rank=s fights=7/12 drills=44 rests=16 energy=20 milestones=3 sp=1
+  stats hp 871 str 90 int 100 wis 145 dex 90 def 175 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:8/8 living_ocean:4/8
+  hash 708e944f2c610c90771b08d40d3bc9c6f710cbc3d8a4e01bfb7fddcf76e57776
 
 slime reckless seed=7
   end=Injured cycle=2 rank=d fights=1/1 drills=6 rests=0 energy=0 milestones=0 sp=0
@@ -22,13 +22,13 @@ slime hoarder seed=7
   end=Completed cycle=12 rank=s fights=6/12 drills=44 rests=16 energy=20 milestones=3 sp=0
   stats hp 807 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 living_ocean:8/8 survivor:3/8
-  hash 514a04b0c588a98ed9d6480beb88b1e5848fab91cc298857fb9fb554e50713c0
+  hash 0ede92896ddf7edf4c665f39347bbd63c804eae90f1cba9da9144587caeed134
 
 slime focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=3 sp=0
-  stats hp 815 str 90 int 115 wis 180 dex 90 def 125 spd 100 luk 155
-  trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:8/8 living_ocean:1/8
-  hash 41efcf15bb2e6071eeb33d1c04e1f7d16c488843ad4d7475860cd9e068c5272f
+  stats hp 832 str 90 int 115 wis 180 dex 90 def 140 spd 100 luk 155
+  trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:7/8 living_ocean:4/8
+  hash ef1a9709cb7e59a9aaffb41f35ff01484c5ce2724509bfdb07a41f482e70fd63
 
 drake balanced seed=7
   end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=0 sp=4
