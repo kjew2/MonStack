@@ -9,6 +9,7 @@ using IdleRng.Sim.Account;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
 using IdleRng.Sim.Gauntlet;
+using IdleRng.Sim.Tower;
 using IdleRng.Sim.Training;
 
 namespace IdleRng.Web
@@ -278,6 +279,12 @@ namespace IdleRng.Web
                     case "gauntlet":
                         Climb(w, a.Int(0));
                         break;
+                    case "towerInfo":
+                        TowerInfo(w, a.Int(0));
+                        break;
+                    case "runTower":
+                        RunTower(w, a.Int(0), a.El(1));
+                        break;
                     case "buyOffer":
                     {
                         int i = a.Int(0);
@@ -324,6 +331,94 @@ namespace IdleRng.Web
             w.Key("floors").Arr();
             foreach (var f in g.Floors) w.Obj().P("floor", f.Floor).P("enemy", f.EnemyId).P("boss", f.Boss).P("won", f.Won).P("ticks", f.Ticks).EndObj();
             w.EndArr();
+        }
+
+        /// <summary>
+        /// The Daily Tower on a day (specs/21 section 8), read only: attempts left, today's and the best floors cleared, and the
+        /// day's lineup with each boss's name, element, level and phases.
+        /// </summary>
+        private void TowerInfo(JsonOut w, int day)
+        {
+            var t = _acct.Tower ?? new TowerProgress();
+            w.P("ok", true).P("day", day).P("attemptsLeft", AccountOps.TowerAttemptsLeft(_db, _acct, day))
+                .P("attemptsPerDay", _db.Constants.TowerAttemptsPerDay).P("clearedToday", day == t.Day ? t.ClearedToday : 0)
+                .P("clearedEver", t.ClearedEver).P("lastDay", t.Day).P("teamMax", _db.Constants.MonSideSize);
+            w.Key("floors").Arr();
+            foreach (var p in TowerSim.Lineup(_db, day))
+            {
+                var d = _db.TowerBosses[p.BossId];
+                w.Obj().P("floor", p.Floor).P("boss", p.BossId).P("name", _db.Text(d.NameKey)).P("element", d.Element)
+                    .P("marquee", p.Marquee).P("level", Math.Round(p.Level));
+                w.Key("phases").Arr();
+                foreach (var ph in d.Phases)
+                    w.Obj().P("kind", ph.Kind).P("name", _db.Text("phase." + ph.Kind + ".name")).P("desc", _db.Text("phase." + ph.Kind + ".desc"))
+                        .P("enterHp", ph.EnterHp).EndObj();
+                w.EndArr().EndObj();
+            }
+            w.EndArr();
+        }
+
+        /// <summary>
+        /// One Daily Tower attempt (AccountOps.RunTower): the rewards, each floor fought, and the last floor's fight for playback
+        /// (the same shape as a rank fight, plus each unit's name and each tower event). The fight log comes from replaying the
+        /// attempt with observers, which gives the identical result (the hash is checked).
+        /// </summary>
+        private void RunTower(JsonOut w, int day, JsonElement indices)
+        {
+            var idx = new List<int>();
+            foreach (var e in indices.EnumerateArray()) idx.Add(e.GetInt32());
+            var r = AccountOps.RunTower(_db, _acct, idx, day);
+            var res = r.Result;
+
+            FightLog log = null;
+            FightState final = null;
+            var team = idx.Select(i => _acct.Vault[i].Fighter(_db)).ToList();
+            var again = TowerSim.Run(_db, team, day, x => log?.Record(x), (plan, s) => { log = new FightLog(); log.Watch(s); final = s; });
+            if (again.Hash != res.Hash) throw new InvalidOperationException("the tower replay differs from the attempt");
+
+            w.P("ok", true).P("shards", r.Shards).P("attemptsLeft", r.AttemptsLeft).P("floorReached", res.FloorReached)
+                .P("cleared", res.Cleared).P("floorsCleared", res.FloorsCleared).P("hash", res.Hash);
+            w.Key("books").Arr();
+            foreach (var (floor, book) in r.Books) w.Obj().P("floor", floor).P("book", book).P("name", _db.Text(_db.SkillBooks[book].NameKey)).EndObj();
+            w.EndArr();
+            w.Key("firstClears").Arr();
+            foreach (var f in r.FirstClears) w.Int(f);
+            w.EndArr();
+            w.Key("floors").Arr();
+            foreach (var f in res.Floors)
+            {
+                w.Obj().P("floor", f.Floor).P("boss", f.BossId).P("name", TowerSim.BossName(_db, f.BossId)).P("marquee", f.Marquee)
+                    .P("won", f.Won).P("ticks", f.Ticks).P("vents", f.Vents).P("corruption", f.PeakCorruption);
+                w.Key("phases").Arr();
+                foreach (var p in f.Phases) w.Str(_db.Text("phase." + p + ".name"));
+                w.EndArr().EndObj();
+            }
+            w.EndArr();
+            w.Key("final").Obj().P("floor", res.Floors[res.Floors.Count - 1].Floor);
+            w.Key("units").Arr();
+            foreach (var u in final.Units) FightUnitOut(w, u, o => o.P("name", TowerUnitName(u.Id, idx)).P("add", u.IsAdd));
+            w.EndArr();
+            w.P("actionCount", log.Count);
+            w.Key("actions").Arr();
+            foreach (var x in log.Entries) Action(w, x);
+            w.EndArr().EndObj();
+        }
+
+        /// <summary>A tower fighter's display name: "t0_monster" is the first team slot's species, "boss_x" and "boss_x#2" the boss row x.</summary>
+        private string TowerUnitName(string id, List<int> idx)
+        {
+            if (id.StartsWith("t", StringComparison.Ordinal) && id.Length > 1 && char.IsDigit(id[1]))
+            {
+                int slot = id[1] - '0';
+                if (slot < idx.Count) return _db.Text(_db.Species[_acct.Vault[idx[slot]].SpeciesId].NameKey);
+            }
+            if (id.StartsWith("boss_", StringComparison.Ordinal))
+            {
+                string row = id.Substring(5);
+                int hash = row.IndexOf('#');
+                return TowerSim.BossName(_db, hash < 0 ? row : row.Substring(0, hash));
+            }
+            return id;
         }
 
         private static List<string> BookList(JsonElement arr)
@@ -521,7 +616,7 @@ namespace IdleRng.Web
             }
         }
 
-        private void FightUnitOut(JsonOut w, FightUnit u)
+        private void FightUnitOut(JsonOut w, FightUnit u, Action<JsonOut> extra = null)
         {
             w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp)
                 .P("damage", u.Tally.DamageDealt).P("crits", u.Tally.Crits).P("evades", u.Tally.Evades);
@@ -532,6 +627,7 @@ namespace IdleRng.Web
             w.Key("cd").Arr();       // cooldowns left when the fight ended
             foreach (var c in u.Cooldowns) w.Int(c);
             w.EndArr();
+            extra?.Invoke(w);
             w.EndObj();
         }
 
@@ -540,6 +636,7 @@ namespace IdleRng.Web
             var x = e.x;
             w.Obj().P("actor", x.Actor).P("target", x.Target).P("amount", x.Amount).P("crit", x.Crit).P("evaded", x.Evaded).P("aoe", x.Aoe).P("counter", x.Counter);
             if (x.Skill != null) w.P("skill", _db.Text("mskill." + x.Skill.Id + ".name")).P("skillId", x.Skill.Id).P("kind", x.Skill.Kind.ToString().ToLowerInvariant());
+            if (x.Event != null) w.P("event", x.Event);   // a Daily Tower event (specs/21 section 6)
             w.P("si", e.si);
             w.Key("hp").Arr();
             foreach (var v in e.hp) w.Num(v);

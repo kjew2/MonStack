@@ -21,7 +21,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/16-battle.md` | Monster battle engine: sides of 1-4, eight-stat sheet, ATB, default AI, triggers, rule modifiers |
 | `specs/18-meta-progression.md` | Account: species unlocks by achievement, Vault (cap, lock, dismantle), Training Shards, the post-run talent vendor, run modifiers, abandon, account save |
 | `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
-| `specs/21-daily-tower.md` | Daily Tower (T10, design only): 4v1 boss floors, entropy gauge, boss phases, environmental clock, Skill Book drops |
+| `specs/21-daily-tower.md` | Daily Tower (T10): daily 4v1 boss floors with a Vault team, entropy gauge, boss phases, environmental clock, shard and Skill Book rewards |
 | `specs/20-roadmap.md` | Proposed roadmap: fixes, features and tech by priority, every open issue mapped |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). CI (`.github/workflows/check.yml`) runs the full `./check.sh` on every pull request and push to `main`. Agent rules live in `CLAUDE.md`.
