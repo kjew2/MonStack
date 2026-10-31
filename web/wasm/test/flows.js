@@ -47,7 +47,7 @@ const H = require('./harness.js');
   };
 
   // ---- pick screen
-  await page.goto(t.url);
+  await page.goto(t.url + '?debug=1');               // ?debug shows the debug-only "Test: add a book" button (specs/21 section 7)
   await act('start').waitFor({ timeout: 90000 });
   await t.layout('pick screen');
   const species = page.locator('[data-act^="species-"]:not([disabled])').first();

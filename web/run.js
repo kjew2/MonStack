@@ -659,7 +659,7 @@
       text: 'The Vault holds ' + acct.vault.length + ' of ' + acct.vaultCap + ' monsters. Dismantle ' + over + (over === 1 ? ' monster' : ' monsters') + ' in the Vault below to start a run.' }));
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
       text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
-    const grant = speciesBook() || Object.keys(C.books)[0];
+    const grant = debugOn() ? speciesBook() || Object.keys(C.books)[0] : null;   // debug only: the Daily Tower drops books (specs/21 section 7)
     if (grant) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[grant].name,
       onclick: () => { const r = run.acct('debugGrantBook', grant, 1); if (!r.ok) toast(r.reason); render(); } }));
 
@@ -719,18 +719,7 @@
 
     main.append(h('h3', { text: 'Team' }));
     if (!acct.vault.length) main.append(h('p', { class: 'muted', text: 'Finish a run first: the team comes from your Vault.' }));
-    const team = h('div', { class: 'card' });
-    acct.vault.forEach((e, i) => {
-      const slot = ui.towerTeam.indexOf(i), sp = speciesDef(e.species) || { name: e.species };
-      const cb = h('input', { type: 'checkbox', 'data-act': 'tower-pick-' + i, disabled: slot < 0 && ui.towerTeam.length >= ti.teamMax,
-        onchange: (ev) => { if (ev.target.checked) ui.towerTeam.push(i); else ui.towerTeam.splice(ui.towerTeam.indexOf(i), 1); render(); } });
-      cb.checked = slot >= 0;
-      team.append(h('label', { class: 'row between small' }, [
-        h('span', { class: 'row' }, [cb, h('b', { text: sp.name }), h('span', { class: 'tag', text: up(e.grade) }), e.gauntlet ? h('span', { class: 'muted', text: e.gauntlet.label }) : null]),
-        h('span', { class: 'tag num', text: slot >= 0 ? 'Slot ' + (slot + 1) : '' }),
-      ]));
-    });
-    if (acct.vault.length) main.append(team);
+    else towerTeamPicker(main, ti.teamMax);
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-climb', disabled: !ui.towerTeam.length || ti.attemptsLeft <= 0,
       text: ti.attemptsLeft <= 0 ? 'No attempts left today' : ui.towerTeam.length ? 'Climb with ' + ui.towerTeam.length + (ui.towerTeam.length === 1 ? ' monster' : ' monsters') : 'Pick up to ' + ti.teamMax + ' monsters',
       onclick: () => {
@@ -759,6 +748,49 @@
       onclick: () => { stopPlayback(); ui.view = 'home'; ui.towerResult = null; ui.towerFight = null; render(); } }));
 
     if (ui.towerFight) { modal.hidden = false; towerPlayModal(modal, ui.towerFight); }
+  }
+
+  // The team (issue #98): the slots in order, each movable up or down (slot order breaks ATB ties and sets default targets,
+  // specs/21 section 2) or removable, then the Vault with its search, sort and filters (web/vault.js) to pick from.
+  function towerTeamPicker(main, teamMax) {
+    const acct = run.account, team = ui.towerTeam;
+    const name = (i) => { const e = acct.vault[i]; return (speciesDef(e.species) || { name: e.species }).name; };
+    const move = (k, d) => { const t = team[k]; team[k] = team[k + d]; team[k + d] = t; render(); };
+    const slots = h('div', { class: 'card tslots', 'data-id': 'tower-slots' });
+    for (let k = 0; k < teamMax; k++) {
+      const i = team[k], e = i === undefined ? null : acct.vault[i];
+      slots.append(h('div', { class: 'row between tslot' + (e ? '' : ' empty'), 'data-id': 'tower-slot-' + k }, e ? [
+        h('span', { class: 'row', style: 'min-width:0' }, [h('span', { class: 'tag num', text: String(k + 1) }), h('b', { text: name(i) }), h('span', { class: 'tag', text: up(e.grade) })]),
+        h('span', { class: 'row', style: 'gap:4px' }, [
+          h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-slot-up-' + k, 'aria-label': 'Move ' + name(i) + ' up', text: '↑', disabled: k === 0, onclick: () => move(k, -1) }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-slot-down-' + k, 'aria-label': 'Move ' + name(i) + ' down', text: '↓', disabled: k === team.length - 1, onclick: () => move(k, 1) }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-slot-remove-' + k, 'aria-label': 'Take ' + name(i) + ' off the team', text: '✕', onclick: () => { team.splice(k, 1); render(); } }),
+        ]),
+      ] : [h('span', { class: 'small muted', text: 'Slot ' + (k + 1) + ': empty' })]));
+    }
+    main.append(slots, h('p', { class: 'small muted', text: 'Slot 1 acts first on a tie and is the default target. Pick from the Vault:' }));
+    const list = h('div', { class: 'card', 'data-id': 'tower-vault' });
+    main.append(VAULT.browse(vaultHelpers(), (rows, size) => {
+      const kids = [];
+      if (rows.length !== size) kids.push(h('div', { class: 'row between small muted', 'data-id': 'tower-showing' }, [
+        h('span', { text: 'Showing ' + rows.length + ' of ' + size }),
+        h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-clear', text: 'Clear filters', onclick: VAULT.clear }),
+      ]));
+      if (!rows.length) kids.push(h('p', { class: 'small muted', text: 'No monster in the Vault matches.' }));
+      rows.forEach(([e, i]) => {
+        const slot = team.indexOf(i);
+        const cb = h('input', { type: 'checkbox', 'data-act': 'tower-pick-' + i, disabled: slot < 0 && team.length >= teamMax,
+          onchange: (ev) => { if (ev.target.checked) team.push(i); else team.splice(team.indexOf(i), 1); render(); } });
+        cb.checked = slot >= 0;
+        kids.push(h('label', { class: 'row between small', 'data-id': 'tower-entry', 'data-index': String(i) }, [
+          h('span', { class: 'row', style: 'min-width:0;flex-wrap:wrap' }, [cb, h('b', { text: name(i) }), h('span', { class: 'tag', text: up(e.grade) }),
+            e.gauntlet ? h('span', { class: 'muted', text: e.gauntlet.label }) : null]),
+          h('span', { class: 'row', style: 'gap:6px;flex-shrink:0' }, [h('span', { class: 'muted num', style: 'white-space:nowrap', text: 'Σ ' + num(VAULT.total(e)) }),
+            slot >= 0 ? h('span', { class: 'tag num', text: 'Slot ' + (slot + 1) }) : null]),
+        ]));
+      });
+      list.replaceChildren(...kids);
+    }), list);
   }
 
   function towerResult(main, r) {
@@ -1112,6 +1144,28 @@
     render();
   }
 
+  // ------------------------------------------------------------ debug controls
+  // Debug-only controls (specs/21 section 7): the home screen's "Test: add a book" button. On with ?debug in the page URL, or
+  // after five quick taps on the header's build stamp, which is remembered on this device (five more turn it off).
+  const DEBUG_KEY = 'idle-rng-debug';
+  function debugOn() {
+    if (/[?&]debug(=|&|$)/.test(location.search)) return true;
+    try { return localStorage.getItem(DEBUG_KEY) === '1'; } catch (e) { return false; }
+  }
+  function watchDebugTaps() {
+    let taps = [];
+    $('build').addEventListener('click', () => {
+      const now = Date.now();
+      taps = taps.filter((t) => now - t < 2000).concat(now);
+      if (taps.length < 5) return;
+      taps = [];
+      const on = !debugOn();
+      try { localStorage.setItem(DEBUG_KEY, on ? '1' : '0'); } catch (e) { /* storage blocked: ?debug still works */ }
+      toast(debugOn() ? 'Debug controls on' : 'Debug controls off');
+      render();
+    });
+  }
+
   // ------------------------------------------------------------ boot
   async function boot() {
     try {
@@ -1120,6 +1174,7 @@
       TIP.init(() => C, () => run.state);
       ui.pick = C.species[0].id;
       ui.speed = loadSpeed();
+      watchDebugTaps();
       if (run.state) ui.view = 'run';
       if (run.loadNotice) toast(run.loadNotice);
       if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
