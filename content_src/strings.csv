@@ -166,17 +166,17 @@ book.book_echoes.name,Skill Book: Tome of Echoes
 book.book_tides.name,Skill Book: Codex of Tides
 book.book_embers.name,Skill Book: Ember Codex
 rule.counter_mitigated.name,Mitigation Counter
-rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for {MON_COUNTER_MULT:pct} of the damage DEF mitigated (true damage).
+rule.counter_mitigated.desc,"When it survives a single-target physical hit, it strikes back for {MON_COUNTER_MULT:pct} of the damage its DEF blocked (true damage)."
 rule.echo_cast.name,Echo Cast
-rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power. Its mirror twin takes the first {MON_ECHO_DECOYS} hit(s) aimed at it each fight."
+rule.echo_cast.desc,"Active damage, heal and shield skills cast again at once at {MON_ECHO_POWER:pct} power. A mirror twin takes the first {MON_ECHO_DECOYS} hit(s) aimed at it each fight."
 rule.tidal_overflow.name,Tidal Overflow
-rule.tidal_overflow.desc,"Heals {MON_TIDE_REGEN:pct} of max HP at the start of each of its actions. Healing beyond max HP becomes a shield, up to {MON_TIDE_SHIELD_CAP:pct} of max HP."
+rule.tidal_overflow.desc,Heals {MON_TIDE_REGEN:pct} of max HP at the start of each action. Overheal becomes a shield (up to {MON_TIDE_SHIELD_CAP:pct} of max HP).
 rule.abyssal_drain.name,Abyssal Drain
-rule.abyssal_drain.desc,"Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt. Draining beyond max HP becomes a shield, up to {MON_DRAIN_SHIELD_CAP:pct} of max HP."
+rule.abyssal_drain.desc,Heals for {MON_DRAIN_FRAC:pct} of the damage it deals. Overheal becomes a shield (up to {MON_DRAIN_SHIELD_CAP:pct} of max HP).
 rule.fire_pierce.name,Unquenchable Flame
-rule.fire_pierce.desc,"Its fire damage is {MON_FIRE_BONUS:pct} stronger, ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element."
+rule.fire_pierce.desc,Fire damage +{MON_FIRE_BONUS:pct}. It ignores {MON_FIRE_PIERCE:pct} of DEF or WIS and is never resisted by element.
 rule.double_turn_start.name,Starlit Haste
-rule.double_turn_start.desc,Acts twice in a row on each of its first {MON_DOUBLE_TURNS} turn(s) of a fight.
+rule.double_turn_start.desc,Acts twice in a row on its first {MON_DOUBLE_TURNS} turn(s) of each fight.
 talent.frugal_drills.name,Frugal Drills
 talent.frugal_drills.desc,Drills cost 5% less energy per rank.
 talent.strong_stock.name,Strong Stock
@@ -241,28 +241,28 @@ title.god_slayer,God-Slayer
 title.tower_breaker,Tower Breaker
 stat.hp.name,Health
 stat.hp.label,max HP
-stat.hp.desc,Max HP in battle is HP x {MON_HP_PER_POINT}. Skills that scale with HP use max HP.
+stat.hp.desc,Max HP = HP x {MON_HP_PER_POINT}. HP-scaled skills use max HP.
 stat.hp.now,{max_hp} max HP
 stat.str.name,Strength
-stat.str.desc,"Physical damage. The basic attack hits for {BASIC_ATTACK_POWER} x the higher of STR and INT, and STR-scaled skills deal physical damage. Physical hits can be dodged (DEX) and the target's DEF reduces them."
-stat.str.now,Basic attack: {basic} damage before defences ({basic_type})
+stat.str.desc,"Physical power. Basic attack = {BASIC_ATTACK_POWER} x STR (or INT, if higher). STR skills deal physical damage."
+stat.str.now,"Basic attack: {basic} damage ({basic_type}, before defence)"
 stat.int.name,Intelligence
-stat.int.desc,"Magical damage. INT-scaled skills deal magical damage, which can be grazed but not dodged and which the target's WIS reduces. The basic attack uses INT instead of STR when INT is higher, and is then magical."
-stat.int.now,Basic attack: {basic} damage before defences ({basic_type})
+stat.int.desc,Magic power. INT skills deal magical damage. The basic attack uses INT if it beats STR.
+stat.int.now,"Basic attack: {basic} damage ({basic_type}, before defence)"
 stat.wis.name,Wisdom
-stat.wis.desc,"Magic defence: magical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + WIS), so {MON_DEF_K} WIS halves it. WIS also sets the amount of WIS-scaled heals and shields."
+stat.wis.desc,Magic defence. {MON_DEF_K} WIS halves magical damage taken. Also powers WIS heals and shields.
 stat.wis.now,Takes {wis_taken:pct} of magical damage
 stat.dex.name,Dexterity
-stat.dex.desc,"Dodging and precision. Evade chance is {MON_EVADE_BASE:pct} plus {MON_EVADE_PER_DEX:pct} per point of DEX above the attacker's (minus when below), from 0 to {MON_EVADE_CAP:pct}. A physical hit that rolls under it misses; a magical hit is grazed instead: it deals {MON_GRAZE_MULT:pct} of its damage and cannot crit. DEX also makes the unit's own hits harder to evade, and each point adds {MON_CRIT_DMG_PER_DEX:pct} to its crit damage (a x{MON_CRIT_DMG} crit deals {MON_CRIT_DMG:pct})."
-stat.dex.now,Evades {evade:pct} of {foe}'s hits (spells are grazed); {foe} evades {foe_evade:pct} of the hits it takes; crits deal x{crit_dmg}
+stat.dex.desc,"Dodge and precision. Evade chance: {MON_EVADE_BASE:pct}, +{MON_EVADE_PER_DEX:pct} per DEX above the attacker's (less if below), max {MON_EVADE_CAP:pct}. Spells are grazed instead ({MON_GRAZE_MULT:pct} damage, no crit). DEX also makes its own hits harder to dodge and adds {MON_CRIT_DMG_PER_DEX:pct} crit damage per point."
+stat.dex.now,Dodges {evade:pct} of {foe}'s hits; {foe} dodges {foe_evade:pct}; crits deal x{crit_dmg}
 stat.def.name,Defence
-stat.def.desc,"Physical defence: physical damage taken is multiplied by {MON_DEF_K} / ({MON_DEF_K} + DEF), so {MON_DEF_K} DEF halves it."
+stat.def.desc,Physical defence. {MON_DEF_K} DEF halves physical damage taken.
 stat.def.now,Takes {def_taken:pct} of physical damage
 stat.spd.name,Speed
-stat.spd.desc,Turn speed. Each tick the action gauge fills by SPD (at least {MON_SPD_MIN}) and the unit acts each time it reaches {BATTLE_GAUGE}. SPD {SPD_REF} acts once per turn; twice the SPD acts twice as often.
+stat.spd.desc,Turn speed. SPD {SPD_REF} acts once per turn; double SPD acts twice as often.
 stat.spd.now,{acts} actions per turn
 stat.luk.name,Luck
-stat.luk.desc,"Critical hits and fortune. Crit chance is {MON_CRIT_BASE:pct} plus {MON_CRIT_PER_LUK:pct} per LUK (plus crit chance effects), up to {MON_CRIT_CAP:pct}. A crit deals x{MON_CRIT_DMG} damage plus the attacker's DEX bonus (and crit damage effects). Fortune is LUK / (LUK + {MON_FORTUNE_K}), up to {MON_FORTUNE_CAP:pct}: the chance to reroll the unit's own failed evade or failed crit, and to make a crit against it roll again."
+stat.luk.desc,"Crits and fortune. Crit chance: {MON_CRIT_BASE:pct} + {MON_CRIT_PER_LUK:pct} per LUK, max {MON_CRIT_CAP:pct}. Crits deal x{MON_CRIT_DMG} (more with DEX). Fortune (max {MON_FORTUNE_CAP:pct}) gives a chance to reroll a failed dodge or crit, and to make an enemy crit on it roll again."
 stat.luk.now,"{crit:pct} crit chance, {fortune:pct} fortune"
 stat.crit_rate.label,crit chance
 stat.crit_dmg.label,crit damage
@@ -272,7 +272,7 @@ trigger.on_basic_attack.name,on basic attack
 trigger.on_crit.name,on crit
 trigger.on_hit_taken.name,when hit
 trigger.on_evade.name,on evade
-tip.now,"Now vs {foe}, before buffs and passives"
+tip.now,"Now vs {foe}, before buffs"
 tip.label.effect,Effect
 tip.label.amount,Amount
 tip.label.damage_type,Damage type
@@ -298,43 +298,43 @@ tip.tag.growth,Growth
 tip.tag.stat,Flat stat
 tip.tag.rule,Rule
 tip.tag.chase,Chase trait
-tip.physical,"Physical: DEX can dodge it, the target's DEF reduces it"
-tip.magical,"Magical: grazed instead of dodged, the target's WIS reduces it"
-tip.element.own,The user's element
-tip.effect.damage,"Hits for the amount; then a crit (LUK), the element (x{ELEMENT_STRONG_MULT} when strong, x{ELEMENT_WEAK_MULT} when weak) and the target's defence apply. Shields absorb it first."
-tip.effect.heal,"Restores HP, never above max HP."
-tip.effect.shield,Absorbs damage before HP while it lasts. A new shield replaces a smaller one; shields do not add up.
-tip.effect.taunt,Single-target enemy actions must target this unit while it lasts.
-tip.effect.buff,"Raises a stat while it lasts: a trained stat by a share of its base value, crit chance and crit damage by the amount itself."
-tip.effect.debuff,"Lowers a stat while it lasts, by a share of its base value. A stat never drops below {STAT_FLOOR_FRAC:pct} of its base."
-tip.effect.passive,"Raises a stat for the whole fight: a trained stat by a share of its base value (max HP raises current HP too), crit chance and crit damage by the amount itself."
+tip.physical,Physical: can be dodged. DEF reduces it.
+tip.magical,"Magical: can't be dodged, only grazed. WIS reduces it."
+tip.element.own,Its own element
+tip.effect.damage,"Deals damage and can crit. x{ELEMENT_STRONG_MULT} if its element is strong vs the target, x{ELEMENT_WEAK_MULT} if weak. Defence reduces it; shields absorb it first."
+tip.effect.heal,"Restores HP, up to max HP."
+tip.effect.shield,Blocks damage before HP. Shields don't stack: the bigger one stays.
+tip.effect.taunt,Enemies must aim single-target moves at it.
+tip.effect.buff,Raises a stat by a share of its base value. Crit chance and crit damage rise by the amount itself.
+tip.effect.debuff,Lowers a stat by a share of its base value. Never below {STAT_FLOOR_FRAC:pct} of its base.
+tip.effect.passive,"Raises a stat for the whole fight, by a share of its base value. Crit chance and crit damage rise by the amount itself. Extra max HP is added to current HP too."
 tip.amount.scaled,{power:pct} of {scales}
 tip.amount.raise,+{power:pct} {stat}
 tip.amount.lower,-{power:pct} {stat}
-tip.target.enemy,"One enemy: a taunting enemy if there is one, else a random one"
+tip.target.enemy,"One enemy (a taunter first, else random)"
 tip.target.all_enemies,All enemies
 tip.target.self,Itself
-tip.target.lowest_ally,The ally with the lowest share of max HP
+tip.target.lowest_ally,The most hurt ally (lowest % HP)
 tip.target.all_allies,All allies
-tip.duration,{duration} turns ({ticks} ticks)
+tip.duration,{duration} turns
 tip.duration.permanent,The whole fight
-tip.fires.battle_start,"At battle start, before anyone acts"
+tip.fires.battle_start,At battle start
 tip.fires.on_action,At the start of each of its actions
-tip.fires.on_basic_attack,Before each of its basic attacks
-tip.fires.on_crit,Each time it lands a critical hit
-tip.fires.on_hit_taken,"Each time it is hit and survives, after the damage"
-tip.fires.on_evade,Each time it dodges a hit
-tip.cooldown.none,None: usable on every action
-tip.cooldown.n,At most once every {cooldown} of its own actions
-tip.cooldown.triggered,None: fires every time
-tip.stacks.triggered,"Each trigger adds a stack, up to {EFFECT_STACK_CAP}; at the cap it renews the stack with the least time left instead"
+tip.fires.on_basic_attack,Before each basic attack
+tip.fires.on_crit,Each time it crits
+tip.fires.on_hit_taken,Each time it survives a hit
+tip.fires.on_evade,Each time it dodges
+tip.cooldown.none,None
+tip.cooldown.n,Once every {cooldown} actions
+tip.cooldown.triggered,None
+tip.stacks.triggered,"Up to {EFFECT_STACK_CAP} stacks; at max, renews the one closest to running out"
 tip.ai.damage,An enemy is alive
-tip.ai.heal,"It or an ally is missing at least the HP it restores, so none is wasted (a heal too big for that: at or below {AI_HEAL_BELOW:pct} of max HP)"
-tip.ai.shield,"An enemy is alive, and the target has less shield than this would give (it does not wait for damage)"
-tip.ai.taunt,"It is not taunting already, and an ally is alive for it to protect"
-tip.ai.buff,The target does not have this buff
-tip.ai.debuff,"An enemy does not have this debuff, and it lands on one that does not"
-tip.priority,"Each action uses the first ready heal or shield whose condition holds, else the first ready other skill, in slot then node order; otherwise a basic attack"
+tip.ai.heal,A target is missing the full heal (big heals: at {AI_HEAL_BELOW:pct} HP or less)
+tip.ai.shield,The target's shield is smaller than this one (it doesn't wait for damage)
+tip.ai.taunt,"Not taunting yet, and an ally is alive to protect"
+tip.ai.buff,The target lacks this buff
+tip.ai.debuff,An enemy lacks this debuff (it targets that one)
+tip.priority,"Ready heals and shields first, then other ready skills (slot order), else a basic attack"
 tip.cost,{cost} SP
 tower.mire_brute.name,Mire Brute
 tower.cinder_wyrm.name,Cinder Wyrm
@@ -362,7 +362,7 @@ mskill.focus_mind.desc,+{power:pct} {stat} for {duration} turns. Used again when
 mskill.tailwind.name,Tailwind
 mskill.tailwind.desc,+{power:pct} {stat} for {duration} turns. Used again when it runs out.
 rule.entropy_convert.name,Entropy Convert
-rule.entropy_convert.desc,"Dungeon: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
+rule.entropy_convert.desc,"Dungeon: instead of venting, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns."
 phase.shield_check.name,Shield Check
 phase.shield_check.desc,"The boss raises a shield. Break it before it fades, or the boss heals and hits harder."
 phase.split.name,Split
@@ -372,16 +372,16 @@ phase.channel.desc,The boss charges a strike on your whole team. Deal enough dam
 phase.enrage.name,Enrage
 phase.enrage.desc,The boss hits harder every turn until the fight ends.
 tower.entropy.name,Entropy
-tower.entropy.desc,"Dungeon: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
+tower.entropy.desc,"Dungeon: fills as free extra effects fire (+{ENTROPY_PER_TRIGGER} per trigger, +{ENTROPY_PER_ECHO} per echo, +{ENTROPY_PER_COUNTER} per counter) and drains {ENTROPY_DECAY} at the start of the unit's action. At {ENTROPY_CAP} it vents and empties: recoil, then stun, then enrage, in turn."
 vent.recoil.name,Recoil
-vent.recoil.desc,The unit takes {ENTROPY_RECOIL_FRAC:pct} of its max HP as true damage (a shield absorbs it).
+vent.recoil.desc,The unit takes {ENTROPY_RECOIL_FRAC:pct} of its max HP as true damage (shields absorb it).
 vent.stun.name,Stun
-vent.stun.desc,The unit loses {ENTROPY_STUN_GAUGE} of its action gauge and acts later.
+vent.stun.desc,The unit loses {ENTROPY_STUN_GAUGE} action gauge and acts later.
 vent.enrage.name,Enrage
 vent.enrage.desc,Every enemy deals {ENTROPY_ENRAGE_FRAC:pct} more damage for {ENTROPY_ENRAGE_TURNS} turns.
 vent.convert.name,Shield
 tower.corruption.name,Corruption
-tower.corruption.desc,"Dungeon: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
+tower.corruption.desc,"Dungeon: from turn {start_turns} the arena gains a corruption level every {every_turns} turns, for both sides. Each level: +{CORRUPT_DMG_PER_LEVEL:pct} damage, -{CORRUPT_HEAL_PER_LEVEL:pct} healing and shields (down to {CORRUPT_HEAL_FLOOR:pct})."
 species.mandrake.name,Mandrake
 species.shade_hound.name,Shade Hound
 tree.rootbound.name,Rootbound
@@ -433,13 +433,13 @@ mskill.shade_cloak.desc,+{power:pct} {stat} for {duration} turns. Cooldown {cool
 mskill.devour.name,Devour
 mskill.devour.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
 rule.root_rebirth.name,Root Rebirth
-rule.root_rebirth.desc,"Once per fight, a blow that would fell it leaves it standing at {MON_REBIRTH_HEAL:pct} of max HP instead."
+rule.root_rebirth.desc,"Once per fight, it survives a killing blow at {MON_REBIRTH_HEAL:pct} of max HP."
 rule.wail_stagger.name,Uprooting Scream
-rule.wail_stagger.desc,"Each of its actions pushes every enemy's next turn back by {MON_WAIL_STAGGER:pct} of a turn and withers it for {MON_WAIL_WITHER:pct} of its max HP (true damage)."
+rule.wail_stagger.desc,Each action delays every enemy's next turn by {MON_WAIL_STAGGER:pct} of a turn and hits them for {MON_WAIL_WITHER:pct} of their max HP (true damage).
 rule.umbral_veil.name,Umbral Veil
-rule.umbral_veil.desc,"Spells that roll under its evade chance miss instead of grazing; it gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+rule.umbral_veil.desc,"Spells that would graze it miss instead. +{MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade cap is {MON_VEIL_EVADE_CAP:pct} (not {MON_EVADE_CAP:pct})."
 rule.night_feast.name,Night Feast
-rule.night_feast.desc,"It starts every fight with {MON_FEAST_START:pct} more damage. Every hit it lands adds {MON_FEAST_DMG:pct} more damage and {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
+rule.night_feast.desc,"Starts each fight with +{MON_FEAST_START:pct} damage. Each hit it lands adds +{MON_FEAST_DMG:pct} damage and {MON_FEAST_STR:pct} of its base STR, with no limit."
 tree.geyser_heart.name,Geyser Heart
 tree.living_fortress.name,Living Fortress
 tree.hall_of_mirrors.name,Hall of Mirrors
