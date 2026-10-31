@@ -75,6 +75,7 @@ content_src/*.csv            the content source of truth (specs/05)
 Content/*.json               built by tools/content_build.py, committed, checked for drift
 golden/                      generated reference outputs (bot CLI only)
 tools/content_build.py       CSV -> JSON converter and validator
+tools/test_content_build.py  tests for the converter's previous-build rules (E090, E091)
 tools/gacha_model.py         exact pity math for the species gacha (specs/01)
 src/IdleRng.Sim/             pure sim: Combat, Training, Account, Gauntlet, Content, Rng, Replay (hashing)
 src/IdleRng.Runtime/         save format, stores, account save

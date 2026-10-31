@@ -33,6 +33,7 @@
     const run = {
       content: content,
       saveKey: SAVE_KEY,
+      loadNotice: null,          // set when a saved account loaded but gave something up (its run in progress was dropped)
       loadError: null,           // set when a saved account could not be loaded (it is kept under BAD_KEY)
       version() { return host.Version(); },
       get account() { if (acctCache === undefined) acctCache = parse(host.AccountView()); return acctCache; },
@@ -63,7 +64,12 @@
     const saved = ls.get(SAVE_KEY);
     let loaded = false;
     if (saved) {
-      try { parse(host.AccountLoad(saved)); loaded = true; }
+      try {
+        const view = parse(host.AccountLoad(saved));
+        loaded = true;
+        // The save loaded but gave something up (a run saved under older rules was dropped): tell the player, and save the result.
+        if (view.notice) { run.loadNotice = view.notice; ls.set(BAD_KEY, saved); }   // the original stays under BAD_KEY
+      }
       catch (e) {
         run.loadError = e.message;
         console.warn('Saved account not loaded:', e);
@@ -72,6 +78,7 @@
       }
     }
     if (!loaded) { parse(host.AccountNew(randomSeedHex())); run.persist(); }
+    else if (run.loadNotice) run.persist();
     dirty();
     return run;
   }

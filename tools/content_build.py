@@ -2,9 +2,13 @@
 """Content converter: content_src/<table>.csv -> Content/<table>.json + manifest.json (specs/05).
 
 Prototype scope: type checks, key uniqueness, enum values and the handful of cross-table rules the sim
-depends on. Version-bump rules (specs/05 section 6.3) and the full error-code catalogue are not built yet.
+depends on, plus the previous-build rules E090 and E091 (specs/05 section 6). The full error-code catalogue is not built yet.
 
     python3 tools/content_build.py [--src content_src] [--out Content] [--check] [--copy-to DIR]
+                                   [--baseline DIR | --baseline-ref GITREF]
+
+--baseline compares the fresh build with an earlier Content/ directory; --baseline-ref reads that Content/ from a git ref
+(for example the merge base with origin/main).
 
 Exit codes: 0 ok, 1 validation errors (all listed), 2 usage / IO error. Stdlib only.
 """
@@ -15,6 +19,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 
 SCHEMA_VERSION = 1
@@ -490,12 +495,74 @@ def build(src):
     return (files, summary), errs
 
 
+def parse_version(text):
+    """'MAJOR.MINOR' -> (major, minor), or None when malformed."""
+    m = re.match(r"^(\d+)\.(\d+)$", text or "")
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+def read_baseline_dir(path):
+    """(content_version, {table: set of primary keys}) of an earlier Content/ directory."""
+    with open(os.path.join(path, "manifest.json"), encoding="utf-8") as f:
+        manifest = json.load(f)
+    keys = {}
+    for name, entry in manifest["tables"].items():
+        with open(os.path.join(path, entry["file"]), encoding="utf-8") as f:
+            rows = json.load(f)["rows"]
+        keys[name] = {str(r[SCHEMA[name]["key"]]) for r in rows} if name in SCHEMA else set()
+    return manifest["content_version"], keys
+
+
+def read_baseline_ref(ref):
+    """The same, read from the Content/ directory of a git ref (no checkout needed)."""
+    def show(rel):
+        out = subprocess.run(["git", "show", f"{ref}:Content/{rel}"], capture_output=True)
+        if out.returncode != 0:
+            raise OSError(f"git show {ref}:Content/{rel} failed: {out.stderr.decode().strip()}")
+        return json.loads(out.stdout.decode("utf-8"))
+    manifest = show("manifest.json")
+    keys = {}
+    for name, entry in manifest["tables"].items():
+        rows = show(entry["file"])["rows"]
+        keys[name] = {str(r[SCHEMA[name]["key"]]) for r in rows} if name in SCHEMA else set()
+    return manifest["content_version"], keys
+
+
+def compare_to_baseline(base_version, base_keys, version, tables, errs):
+    """E090 / E091 (specs/05 section 6): a removed or renamed id needs a MAJOR bump, the version never goes backwards.
+
+    Saves refer to ids (species, trees, nodes, skills, books, talents, enemies), so a removed id breaks them."""
+    old, new = parse_version(base_version), parse_version(version)
+    if new is None or old is None:
+        errs.add("E091", "meta", f"content_version must be MAJOR.MINOR (now {version!r}, before {base_version!r})")
+        return
+    if new < old:
+        errs.add("E091", "meta", f"content_version went backwards: {version} after {base_version}")
+    if new[0] > old[0]:
+        return
+    for name in sorted(base_keys):
+        if name == "strings":
+            continue  # a string key is looked up, never saved; a missing one shows as the key (ContentDb.Text)
+        if name not in tables:
+            errs.add("E090", name, f"table removed since {base_version} without a MAJOR bump (content_version {version})")
+            continue
+        key = SCHEMA[name]["key"]
+        now = {str(r[key]) for r in tables[name]}
+        gone = sorted(base_keys[name] - now)
+        if gone:
+            errs.add("E090", name, f"removed or renamed since {base_version} without a MAJOR bump (content_version {version}): "
+                                    + ", ".join(gone))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--src", default="content_src")
     ap.add_argument("--out", default="Content")
     ap.add_argument("--check", action="store_true", help="exit 1 if --out differs from a fresh build")
     ap.add_argument("--copy-to", default=None)
+    base = ap.add_mutually_exclusive_group()
+    base.add_argument("--baseline", default=None, help="an earlier Content/ directory to compare the build with (E090, E091)")
+    base.add_argument("--baseline-ref", default=None, help="a git ref whose Content/ to compare the build with (E090, E091)")
     args = ap.parse_args(argv)
 
     if not os.path.isdir(args.src):
@@ -507,6 +574,22 @@ def main(argv=None):
             print(e, file=sys.stderr)
         return 1
     files, summary = result
+
+    if args.baseline or args.baseline_ref:
+        try:
+            base_version, base_keys = (read_baseline_dir(args.baseline) if args.baseline
+                                       else read_baseline_ref(args.baseline_ref))
+        except (OSError, KeyError, ValueError) as e:
+            print(f"cannot read the baseline: {e}", file=sys.stderr)
+            return 2
+        errs = Errors()
+        compare_to_baseline(base_version, base_keys, summary["manifest"]["content_version"], summary["tables"], errs)
+        if errs:
+            for e in errs:
+                print(e, file=sys.stderr)
+            return 1
+        print(f"Content ids are compatible with the baseline (content_version {base_version} -> "
+              f"{summary['manifest']['content_version']})")
 
     if args.check:
         stale = []
