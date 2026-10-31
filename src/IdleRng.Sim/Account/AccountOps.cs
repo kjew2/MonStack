@@ -350,6 +350,67 @@ namespace IdleRng.Sim.Account
         // ------------------------------------------------------------------ books
 
         /// <summary>Add (or with a negative count remove) skill books. The Daily Tower will grant books through this (specs/13 T10).</summary>
+        // ------------------------------------------------------------------ Daily Tower (specs/21 section 7)
+
+        /// <summary>Attempts left on <paramref name="day"/> (all of them on a day after the last attempt).</summary>
+        public static int TowerAttemptsLeft(ContentDb c, AccountState a, int day)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            var t = a.Tower ?? new TowerProgress();
+            int used = day > t.Day ? 0 : t.AttemptsUsed;
+            return Math.Max(0, c.Constants.TowerAttemptsPerDay - used);
+        }
+
+        /// <summary>
+        /// One Daily Tower attempt on <paramref name="day"/> (the caller's UTC day number) with the Vault entries at
+        /// <paramref name="vaultIndices"/> (oldest-first indices, in slot order, 1 to MON_SIDE_SIZE distinct). A run in progress
+        /// does not block it. Pays, for each floor cleared above today's best: TOWER_SHARDS_PER_FLOOR shards and that floor's
+        /// Skill Book drop, if any (TowerSim.BookDrop, fixed by day and floor). Rejected (throws, changes nothing) with no
+        /// attempts left, a bad team, or a day before the last attempt (the clock went back).
+        /// </summary>
+        public static TowerRunResult RunTower(ContentDb c, AccountState a, IList<int> vaultIndices, int day)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            if (vaultIndices == null) throw new ArgumentNullException(nameof(vaultIndices));
+            if (day < 0) throw new ArgumentOutOfRangeException(nameof(day), "day must be >= 0");
+            var t = a.Tower ?? new TowerProgress();
+            if (day < t.Day) throw new InvalidOperationException($"day {day} is before the last tower attempt (day {t.Day})");
+            if (TowerAttemptsLeft(c, a, day) <= 0) throw new InvalidOperationException("no tower attempts left today");
+            if (vaultIndices.Count < 1 || vaultIndices.Count > c.Constants.MonSideSize)
+                throw new ArgumentException($"a tower team needs 1..{c.Constants.MonSideSize} monsters", nameof(vaultIndices));
+            var seen = new HashSet<int>();
+            var team = new List<Fighter>(vaultIndices.Count);
+            foreach (int i in vaultIndices)
+            {
+                if (i < 0 || i >= a.Vault.Count) throw new ArgumentOutOfRangeException(nameof(vaultIndices), $"no Vault entry {i}");
+                if (!seen.Add(i)) throw new ArgumentException($"Vault entry {i} is on the team twice", nameof(vaultIndices));
+                team.Add(a.Vault[i].Fighter(c));
+            }
+
+            var result = IdleRng.Sim.Tower.TowerSim.Run(c, team, day);
+            bool newDay = day > t.Day;
+            int paidUpTo = newDay ? 0 : t.ClearedToday;
+            var r = new TowerRunResult { Result = result };
+            for (int f = paidUpTo + 1; f <= result.FloorsCleared; f++)
+            {
+                r.Shards += c.Constants.TowerShardsPerFloor;
+                var book = IdleRng.Sim.Tower.TowerSim.BookDrop(c, day, f);
+                if (book != null) r.Books.Add((f, book));
+                if (f > t.ClearedEver) r.FirstClears.Add(f);
+            }
+
+            // commit
+            a.Tower = t;
+            if (newDay) { t.Day = day; t.AttemptsUsed = 0; t.ClearedToday = 0; }
+            t.AttemptsUsed++;
+            t.ClearedToday = Math.Max(t.ClearedToday, result.FloorsCleared);
+            t.ClearedEver = Math.Max(t.ClearedEver, result.FloorsCleared);
+            a.Shards += r.Shards;
+            foreach (var (_, book) in r.Books) AddBooks(a, book, 1);
+            r.AttemptsLeft = TowerAttemptsLeft(c, a, day);
+            return r;
+        }
+
         public static void GrantBooks(ContentDb c, AccountState a, string bookId, int count)
         {
             if (bookId == null || !c.SkillBooks.ContainsKey(bookId)) throw new ArgumentException($"unknown skill book '{bookId}'", nameof(bookId));

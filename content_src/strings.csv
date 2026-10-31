@@ -272,3 +272,28 @@ tip.ai.buff,The target does not have this buff
 tip.ai.debuff,An enemy does not have this debuff
 tip.priority,"Each action uses the first ready heal or shield whose condition holds, else the first ready other skill, in slot then node order; otherwise a basic attack"
 tip.cost,{cost} SP
+tower.mire_brute.name,Mire Brute
+tower.cinder_wyrm.name,Cinder Wyrm
+tower.tide_warden.name,Tide Warden
+tower.gloom_stalker.name,Gloom Stalker
+tower.sun_idol.name,Sun Idol
+tower.bramble_king.name,Bramble King
+tower.apex_chimera.name,Apex Chimera
+tower.void_hydra.name,Void Hydra
+tower.storm_titan.name,Storm Titan
+tower.hydra_head.name,Hydra Head
+tower.cinder_whelp.name,Cinder Whelp
+mskill.boss_cleave.name,Cleave
+mskill.boss_cleave.desc,Hit every enemy for {power:pct} of {scales}. Cooldown {cooldown}.
+mskill.boss_roar.name,Shattering Roar
+mskill.boss_roar.desc,Lower every enemy's {stat} by {power:pct} for {duration} turns. Cooldown {cooldown}.
+rule.entropy_convert.name,Entropy Convert
+rule.entropy_convert.desc,"Daily Tower: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
+phase.shield_check.name,Shield Check
+phase.shield_check.desc,"The boss raises a shield. Break it before it fades, or the boss heals and hits harder."
+phase.split.name,Split
+phase.split.desc,"Adds join the fight. While one lives, the boss takes less damage. Killing the boss still wins."
+phase.channel.name,Channel
+phase.channel.desc,The boss charges a strike on your whole team. Deal enough damage to it in time to interrupt.
+phase.enrage.name,Enrage
+phase.enrage.desc,The boss hits harder every turn until the fight ends.

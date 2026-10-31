@@ -1093,6 +1093,106 @@
     {
       "key": "tip.cost",
       "text": "{cost} SP"
+    },
+    {
+      "key": "tower.mire_brute.name",
+      "text": "Mire Brute"
+    },
+    {
+      "key": "tower.cinder_wyrm.name",
+      "text": "Cinder Wyrm"
+    },
+    {
+      "key": "tower.tide_warden.name",
+      "text": "Tide Warden"
+    },
+    {
+      "key": "tower.gloom_stalker.name",
+      "text": "Gloom Stalker"
+    },
+    {
+      "key": "tower.sun_idol.name",
+      "text": "Sun Idol"
+    },
+    {
+      "key": "tower.bramble_king.name",
+      "text": "Bramble King"
+    },
+    {
+      "key": "tower.apex_chimera.name",
+      "text": "Apex Chimera"
+    },
+    {
+      "key": "tower.void_hydra.name",
+      "text": "Void Hydra"
+    },
+    {
+      "key": "tower.storm_titan.name",
+      "text": "Storm Titan"
+    },
+    {
+      "key": "tower.hydra_head.name",
+      "text": "Hydra Head"
+    },
+    {
+      "key": "tower.cinder_whelp.name",
+      "text": "Cinder Whelp"
+    },
+    {
+      "key": "mskill.boss_cleave.name",
+      "text": "Cleave"
+    },
+    {
+      "key": "mskill.boss_cleave.desc",
+      "text": "Hit every enemy for {power:pct} of {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.boss_roar.name",
+      "text": "Shattering Roar"
+    },
+    {
+      "key": "mskill.boss_roar.desc",
+      "text": "Lower every enemy's {stat} by {power:pct} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "rule.entropy_convert.name",
+      "text": "Entropy Convert"
+    },
+    {
+      "key": "rule.entropy_convert.desc",
+      "text": "Daily Tower: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
+    },
+    {
+      "key": "phase.shield_check.name",
+      "text": "Shield Check"
+    },
+    {
+      "key": "phase.shield_check.desc",
+      "text": "The boss raises a shield. Break it before it fades, or the boss heals and hits harder."
+    },
+    {
+      "key": "phase.split.name",
+      "text": "Split"
+    },
+    {
+      "key": "phase.split.desc",
+      "text": "Adds join the fight. While one lives, the boss takes less damage. Killing the boss still wins."
+    },
+    {
+      "key": "phase.channel.name",
+      "text": "Channel"
+    },
+    {
+      "key": "phase.channel.desc",
+      "text": "The boss charges a strike on your whole team. Deal enough damage to it in time to interrupt."
+    },
+    {
+      "key": "phase.enrage.name",
+      "text": "Enrage"
+    },
+    {
+      "key": "phase.enrage.desc",
+      "text": "The boss hits harder every turn until the fight ends."
     }
   ]
 }

@@ -13,12 +13,13 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
 | Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
+| Daily Tower: daily lineup of 4v1 boss floors, attempts and rewards (shards, Skill Book drops, the premium gate), a first web screen | `src/IdleRng.Sim/Tower`, `AccountOps.RunTower`, `web/run.js` | `21` |
 | Content database and pipeline | `content_src/` -> `Content/` -> `ContentDb` | `05` |
 | Account save lineage and stores | `src/IdleRng.Runtime/Save` | `06`, `18` |
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the rest of the Daily Tower (rules: `21`, its battle hooks are built; it drops Skill Books, the premium gate), the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 
@@ -41,7 +42,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, the chase capstone constants `MON_ECHO_POWER`, `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE`, `MON_DOUBLE_TURNS` | `15` section 9 |
 | Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7), `VENDOR_OFFERS` and the `vendor_rarities` table (section 4), the `achievements` table (section 8) | `18` |
 | Gauntlet | `GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` | `19` section 4 |
-| Daily Tower (designed, not built) | `TOWER_*`, `ENTROPY_*`, `CORRUPT_*` | `21` section 5 |
+| Daily Tower | `TOWER_*`, `ENTROPY_*`, `CORRUPT_*` | `21` section 5 |
 
 ## 3. Vocabulary
 

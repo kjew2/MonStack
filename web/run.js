@@ -10,7 +10,7 @@
 
   let run = null, C = null, shownView = null;   // shownView: the view the last render drew
   const ui = {
-    view: 'home',            // home | run | climb | grade | vendor
+    view: 'home',            // home | run | climb | grade | vendor | tower
     tab: 'train',            // train | trees | log
     pick: null,              // species chosen on the home screen
     book: false,             // test option: start with a skill book
@@ -27,6 +27,8 @@
     spGains: [],             // skill point gains not yet shown by the HUD (issue #86): [{n, why, cycle}], shown once no modal covers it
     fightGains: [],          // the gains the shown fight brought, for its result badge
     earned: [],              // achievements the sealed run earned (specs/18 section 8), shown on the grade screen
+    towerTeam: [],           // Daily Tower team: Vault indices in slot order (specs/21 section 8)
+    towerResult: null,       // the last attempt's result from the engine (run.runTower), shown on the tower screen
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -78,6 +80,7 @@
       if (wasView === 'home') main.scrollTop = prevScroll;   // a lock or dismantle deep in a long Vault keeps the place
       return;
     }
+    if (ui.view === 'tower') { tabs.hidden = true; modal.hidden = true; renderTower(main); return; }
     const s = run.state;
     if (ui.view === 'grade') { tabs.hidden = true; modal.hidden = true; renderGrade(main); return; }
     if (ui.view === 'climb') { tabs.hidden = true; modal.hidden = true; renderClimb(main); return; }
@@ -323,6 +326,7 @@
     else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
     else if (x.kind === 'shield') body = 'shields ' + Math.round(x.amount);
+    else if (x.kind === 'buff' || x.kind === 'debuff' || x.kind === 'passive' || x.kind === 'taunt') body = 'applied';   // amount is the effect size, not damage
     else if (x.amount > 0) body = Math.round(x.amount) + ' dmg';
     else body = 'applied';
     return body + (x.crit ? ' CRIT' : '');
@@ -582,7 +586,104 @@
     });
     main.append(al);
 
+    const ti = run.towerInfo(run.towerDay());
+    main.append(h('h3', { text: 'Daily Tower' }));
+    main.append(h('div', { class: 'card' }, [
+      h('p', { class: 'small muted', text: 'Send a team of up to ' + ti.teamMax + ' Vault monsters up today\'s ' + ti.floors.length + ' boss floors. Each floor cleared pays shards and may drop a Skill Book, once a day.' }),
+      h('div', { class: 'row between' }, [
+        h('span', { class: 'small num', 'data-id': 'tower-attempts', text: ti.attemptsLeft + '/' + ti.attemptsPerDay + ' attempts left today · best today ' + ti.clearedToday + ' floors' }),
+        h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Daily Tower',
+          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); main.scrollTop = 0; } }),
+      ]),
+    ]));
+
     VAULT.render(main, $('modal'), vaultHelpers());   // the Vault list, its sort/filter/search, detail and compare (web/vault.js)
+  }
+
+  // ---- Daily Tower (specs/21 section 8): today's lineup, a team of Vault monsters, one attempt at a time. The engine runs the
+  // climb and pays the rewards (run.runTower); this screen only lays out what it returns.
+  function renderTower(main) {
+    const acct = run.account, day = run.towerDay(), ti = run.towerInfo(day);
+    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Daily Tower' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
+      h('p', { class: 'small muted', 'data-id': 'tower-status', text: ti.attemptsLeft + '/' + ti.attemptsPerDay + ' attempts left today · best today ' + ti.clearedToday +
+        ' of ' + ti.floors.length + ' floors · best ever ' + ti.clearedEver }));
+    if (ui.towerResult) towerResult(main, ui.towerResult, ti);
+
+    main.append(h('h3', { text: 'Team' }));
+    if (!acct.vault.length) main.append(h('p', { class: 'muted', text: 'Finish a run first: the team comes from your Vault.' }));
+    const team = h('div', { class: 'card' });
+    acct.vault.forEach((e, i) => {
+      const slot = ui.towerTeam.indexOf(i), sp = speciesDef(e.species) || { name: e.species };
+      const cb = h('input', { type: 'checkbox', 'data-act': 'tower-pick-' + i, disabled: slot < 0 && ui.towerTeam.length >= ti.teamMax,
+        onchange: (ev) => { if (ev.target.checked) ui.towerTeam.push(i); else ui.towerTeam.splice(ui.towerTeam.indexOf(i), 1); render(); } });
+      cb.checked = slot >= 0;
+      team.append(h('label', { class: 'row between small' }, [
+        h('span', { class: 'row' }, [cb, h('b', { text: sp.name }), h('span', { class: 'tag', text: up(e.grade) }), e.gauntlet ? h('span', { class: 'muted', text: e.gauntlet.label }) : null]),
+        h('span', { class: 'tag num', text: slot >= 0 ? 'Slot ' + (slot + 1) : '' }),
+      ]));
+    });
+    if (acct.vault.length) main.append(team);
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-climb', disabled: !ui.towerTeam.length || ti.attemptsLeft <= 0,
+      text: ti.attemptsLeft <= 0 ? 'No attempts left today' : ui.towerTeam.length ? 'Climb with ' + ui.towerTeam.length + (ui.towerTeam.length === 1 ? ' monster' : ' monsters') : 'Pick up to ' + ti.teamMax + ' monsters',
+      onclick: () => {
+        const r = run.runTower(day, ui.towerTeam.slice());
+        if (!r.ok) { toast(r.reason); render(); return; }
+        ui.towerResult = r;
+        render();
+        $('main').scrollTop = 0;
+      } }));
+
+    main.append(h('h3', { text: "Today's floors" }));
+    const fl = h('div', { class: 'card' });
+    ti.floors.forEach((f) => fl.append(h('div', { class: 'row between small', 'data-id': 'tower-floor-' + f.floor }, [
+      h('span', { class: 'row' }, [h('span', { class: 'num muted', text: 'F' + f.floor }), h('b', { class: f.marquee ? 'gold' : '', text: f.name }), elementTag(f.element)]),
+      h('span', { class: 'muted', text: (f.phases.length ? f.phases.map((p) => p.name).join(' → ') + ' · ' : '') + 'lv ' + f.level }),
+    ])));
+    main.append(fl);
+    main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'tower-back', text: 'Back', onclick: () => { ui.view = 'home'; ui.towerResult = null; render(); } }));
+  }
+
+  function towerResult(main, r, ti) {
+    const last = r.floors[r.floors.length - 1];
+    const card = h('div', { class: 'card alert', 'data-id': 'tower-result' }, [
+      h('b', { text: r.cleared ? 'Cleared all ' + r.floorsCleared + ' floors!' : 'Fell on floor ' + r.floorReached + ' to ' + last.name + ' (' + r.floorsCleared + ' cleared)' }),
+      h('span', { class: 'gems num', 'data-id': 'tower-shards', text: r.shards ? '+' + r.shards + ' Training Shards' : 'No new floors cleared today: nothing more to pay' }),
+      r.books.length ? h('span', { class: 'gold', 'data-id': 'tower-books', text: 'Skill Books: ' + r.books.map((b) => b.name + ' (F' + b.floor + ')').join(', ') }) : null,
+      r.firstClears.length ? h('span', { class: 'small muted', text: 'First clears: floors ' + r.firstClears.join(', ') }) : null,
+    ]);
+    const rows = h('div', { class: 'small' });
+    r.floors.forEach((f) => rows.append(h('div', { class: 'row between' }, [
+      h('span', { class: f.won ? 'ok' : 'bad', text: (f.won ? '✓ ' : '✗ ') + 'F' + f.floor + ' ' + f.name }),
+      h('span', { class: 'muted', text: [f.phases.join(' → '), f.vents ? f.vents + ' vents' : '', f.corruption ? 'corruption ' + f.corruption : ''].filter(Boolean).join(' · ') }),
+    ])));
+    card.append(rows);
+    // The last floor's fight, as a log: ordinary actions plus the tower's events (phases, entropy vents, channels).
+    const f = r.final, nameOf = {};
+    f.units.forEach((u) => { nameOf[u.id] = u.name; });
+    const phaseName = {};
+    ti.floors.forEach((fl) => fl.phases.forEach((p) => { phaseName[p.kind] = p.name; }));
+    const lines = f.actions.map((x) => {
+      const a = nameOf[x.actor] || x.actor, ours = f.units.some((u) => u.id === x.actor && u.side === 0);
+      if (x.event && x.event.indexOf('rule:') !== 0) return { cls: 'gold', text: towerEventText(x, a, phaseName) };   // rule events read like actions
+      return { cls: ours ? 'you' : 'foe', text: a + ' · ' + actionName(x) + ' → ' + (x.target ? nameOf[x.target] || x.target : 'all') + ': ' + actionResult(x) };
+    });
+    const list = h('ul', { class: 'alog', 'data-id': 'tower-log' });
+    lines.forEach((l) => list.append(h('li', { class: l.cls, text: l.text })));
+    card.append(h('details', null, [h('summary', { class: 'small', text: 'Floor ' + f.floor + ' fight log (' + f.actionCount + ' actions' + (f.actionCount > f.actions.length ? ', first ' + f.actions.length + ' shown' : '') + ')' }), list]));
+    main.append(card);
+  }
+
+  function towerEventText(x, who, phaseName) {
+    const n = Math.round(x.amount);
+    if (x.event.indexOf('phase:') === 0) { const k = x.event.slice(6); return '⚠ ' + who + ' enters ' + (phaseName[k] || k); }
+    if (x.event.indexOf('vent:') === 0) {
+      const k = x.event.slice(5);
+      return '⚡ ' + who + "'s entropy vents: " + (k === 'recoil' ? 'recoil, ' + n + ' dmg to itself' : k === 'stun' ? 'stunned' : k === 'enrage' ? 'its foes are enraged' : 'converted into a shield of ' + n);
+    }
+    if (x.event === 'check_failed') return '⚠ ' + who + "'s shield held: it heals " + n + ' and hits harder';
+    if (x.event === 'channel_broken') return '✓ ' + who + "'s channel is interrupted";
+    if (x.event === 'channel_strike') return '⚠ ' + who + "'s channel strikes the team for " + n;
+    return who + ': ' + x.event;
   }
 
   function vaultHelpers() {

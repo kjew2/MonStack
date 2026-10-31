@@ -1,0 +1,20 @@
+{
+  "table": "book_drops",
+  "rows": [
+    {
+      "book_id": "book_embers",
+      "min_floor": 1,
+      "weight": 3.0
+    },
+    {
+      "book_id": "book_tides",
+      "min_floor": 1,
+      "weight": 3.0
+    },
+    {
+      "book_id": "book_echoes",
+      "min_floor": 10,
+      "weight": 1.0
+    }
+  ]
+}

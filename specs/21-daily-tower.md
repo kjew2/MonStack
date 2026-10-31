@@ -1,6 +1,6 @@
 # 21 - Daily Tower
 
-Status: **in progress (T10 of `specs/13`, P0)**. Build step 1 is **live**: the battle hooks of section 3 (code: `src/IdleRng.Sim/Combat`, tests: `src/IdleRng.Sim.Tests/TowerBattleTests.cs`). Steps 2 to 4 (section 10) are design only. Planned code: `src/IdleRng.Sim/Tower` (tower sim), `AccountOps` and `AccountSave` (attempts, rewards). Planned tests: `TowerTests`. Planned golden: `golden/tower-vectors.txt`.
+Status: **live (T10 of `specs/13`, P0)**, all four build steps (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4); a first web screen, section 8 (`web/run.js`, browser test in `web/wasm/test/run-trainer.js`). Section 8 lists what the screen does not do yet.
 
 The design is `specs/12` sections 8.2 and 8.3 and the Skill Book rules in section 5.6. This spec turns it into rules, data and build steps.
 
@@ -32,9 +32,9 @@ pay rewards (section 7)
 
 - **(agent)** The team starts every floor at full HP: each floor is a fresh fight, as in the gauntlet (`specs/19` section 1), so the result is "the first boss this team cannot beat". Carrying HP over would make healing and shields the whole game; easy to change.
 - **Attempts.** `TOWER_ATTEMPTS_PER_DAY` per day (placeholder 3). The best floor of the day counts for rewards; rewards are claimed per floor once per day (section 7), so a retry can only improve.
-- **Team.** 1 to 4 distinct Vault entries, in slot order (slot order breaks ATB ties and decides default targeting, `specs/16` section 4). Each fights with `VaultEntry.Fighter(content)`. A monster can be on a team any number of times across attempts and days; towers never consume or injure it. **(agent)** No Mercenaries yet (`specs/12` section 7); see question 1.
+- **Team.** 1 to 4 distinct Vault entries, in slot order (slot order breaks ATB ties and decides default targeting, `specs/16` section 4). Each fights with `VaultEntry.Fighter(content)`; every vaulted monster has the fighter id `monster`, so `TowerSim` renames them `t<slot>_monster` for the fight. A monster can be on a team any number of times across attempts and days; towers never consume or injure it. **(agent)** No Mercenaries yet (`specs/12` section 7); see question 1.
 - **Replayable.** A result is a pure function of (content, team entries, day, slot order). It is not stored; the client replays it for the animation and a server can recheck it at T12 (`specs/10`).
-- **Seeds.** Floor `f` fights on `Derive(seed, f)`. Fights never advance a game stream by an unknown amount (`specs/16` section 2).
+- **Seeds.** Floor `f` fights on `Derive(StreamSeed(seed, "tower_fight"), f)`, so a fight never shares draws with the lineup or the drops (`specs/16` section 2).
 
 ## 3. Anti-trivialization (all in `BattleSim`)
 
@@ -76,27 +76,27 @@ Arena corruption: `level = max(0, (tick - CORRUPT_START_TICK) / CORRUPT_EVERY_TI
 - Healing and shield amounts are multiplied by `max(CORRUPT_HEAL_FLOOR, 1 - level x CORRUPT_HEAL_PER_LEVEL)`.
 - All damage is multiplied by `1 + level x CORRUPT_DMG_PER_LEVEL`.
 
-The floor's `corrupt_start_tick` can override `CORRUPT_START_TICK` (deeper floors start sooner). `MON_TIME_LIMIT_TICKS` still ends the fight; a timeout is a loss for the team (`specs/16` section 10, proposed there). The UI shows the corruption level as a meter.
+Every floor uses the same `CORRUPT_START_TICK` **(agent: the per-floor override first planned here was dropped; floors are generated, so there is no floor row to hold it)**. `MON_TIME_LIMIT_TICKS` still ends the fight; a timeout is a loss for the team (`specs/16` section 10, proposed there). The UI shows the corruption level as a meter.
 
 ## 4. Floors and bosses
 
 - `TOWER_FLOORS` floors (placeholder 20). Level: `TOWER_BASE x TOWER_GROWTH^(floor - 1)` by repeated multiplication (no `Math.Pow`).
 - A boss's stats are its row's eight weights x the floor level; `hp` is also multiplied by `TOWER_BOSS_HP_MULT`, because four monsters face one boss.
-- **Daily lineup.** Every `TOWER_MILESTONE_EVERY`-th floor (5, 10, 15, 20) is a *marquee* boss chosen from the `marquee` rows by the seed; the other floors draw from the `regular` rows. Draws use a `tower` stream seeded from the day seed, without repeats until the pool is used up. Bosses carry their own skills (`skills`, ids from `monster_skills`) and phases.
+- **Daily lineup.** Every `TOWER_MILESTONE_EVERY`-th floor (5, 10, 15, 20) is a *marquee* boss chosen from the `marquee` rows by the seed; the other floors draw from the `regular` rows. Draws use a `tower` stream seeded with the day seed, one draw per floor in floor order, without repeats until the pool is used up (it then refills in CSV order). `add` rows are never drawn: they only spawn from `split` phases, at the floor's level and without the boss HP multiplier. Bosses carry their own skills (`skills`, ids from `monster_skills`, in AI priority order) and phases.
 - Because the lineup changes by day, a team good against one day's bosses is not best on another's: the intended reason to own more than one monster.
-- Placeholders: 6 regular and 3 marquee bosses. The draft names are reused where they exist (Apex Chimera, Void Hydra, Storm Titan, `specs/19` section 2); each marquee boss has 2 to 3 phases chosen from section 3.2.
+- Placeholders: 6 regular, 3 marquee and 2 add rows. The draft names are reused where they exist (Apex Chimera, Void Hydra, Storm Titan, `specs/19` section 2); each marquee boss has 2 to 3 phases covering all four kinds between them. Two boss skills were added to `monster_skills`: `boss_cleave` (hit every enemy) and `boss_roar` (lower every enemy's DEF); the rest reuse tree skills.
 
-## 5. Content (content `3.5`, MINOR)
+## 5. Content (content `3.6`, MINOR)
 
 New tables (a new table is a MINOR bump, `CLAUDE.md`). Ids are added, never renamed.
 
 | Table | Columns |
 |---|---|
-| `tower_bosses` | `id`, `name_key`, `element`, `marquee` (bool), eight stat weights, `skills` (ids, `\|`-separated) |
-| `boss_phases` | `boss_id`, `order`, `enter_hp`, `kind` (section 3.2), `power`, `duration`, `count`, `guard`, `heal_frac`, `strike`, `buff`, `adds` (a `tower_bosses` id), `add_skills` |
-| `book_drops` | `book_id`, `min_floor`, `weight` |
+| `tower_bosses` | `id`, `name_key`, `element`, `role` (`regular`, `marquee` or `add`), eight stat weights, `skills` (ids, `\|`-separated, may be empty) |
+| `boss_phases` | `id`, `boss_id`, `order`, `enter_hp`, `kind` (section 3.2), `power`, `duration`, `count`, `guard`, `heal_frac`, `strike`, `buff`, `adds` (a `tower_bosses` id of role `add`, or empty), `add_skills` (ids, `\|`-separated). Columns a kind does not use are 0 or empty |
+| `book_drops` | `book_id` (the key), `min_floor`, `weight` |
 
-Strings for names, phase banners and tooltips (`rule.entropy_convert.desc`, `phase.<kind>.name`, `phase.<kind>.desc`, `stat.entropy_gain.*`), with constants filled in as in `specs/16` section 9. `skill_books` gains no column.
+Strings: boss names (`tower.<id>.name`), `rule.entropy_convert.*` and the phase banners and tooltips (`phase.<kind>.name`, `phase.<kind>.desc`), with constants filled in as in `specs/16` section 9. `stat.dmg_dealt.*` and `stat.entropy_gain.*` come when content first uses those stats in a node. `skill_books` gains no column.
 
 Constants (all placeholders; range violations are `E043` in both `tools/content_build.py` and `ContentDb`, as in `specs/16`):
 
@@ -125,36 +125,37 @@ Constants (all placeholders; range violations are `E043` in both `tools/content_
 | `TOWER_BOOK_CHANCE` | 0.15 | `[0, 1]` |
 | `TOWER_BOOK_CHANCE_PER_FLOOR` | 0.01 | `>= 0` |
 
-Validation: every `skills` and `add_skills` id exists (`E023`); `adds` is a non-marquee boss with no phases of its own; at least one regular and one marquee boss (`E044`); phases of a boss have strictly decreasing `enter_hp` in `(0, 1)` (`E032`); `book_drops.book_id` exists; `min_floor` in `[1, TOWER_FLOORS]`. A new error code range is assigned when building (`E094` onward).
+Validation, in both `tools/content_build.py` (`validate_tower`) and `ContentDb.BuildTower`, reusing the existing codes **(agent: no new code range was needed)**: element, `skills`, `add_skills`, `boss_id`, `adds` (role `add`) and `book_id` references exist (`E023`); at least one regular and one marquee boss, an add has no phases, `book_drops` has at least one row and one with `min_floor` 1 (`E044`); each kind's values are in range, as `BattleSim.Start` checks them (`E043`); a boss's phases, by `order`, have strictly decreasing `enter_hp` in `(0, 1)` (`E032`); `min_floor` in `[1, TOWER_FLOORS]` and `weight > 0` (`E043`); the constants' ranges above (`E043`).
 
 ## 6. API
 
 ```csharp
 TowerResult r = TowerSim.Run(content, team /* IReadOnlyList<Fighter> */, day, onAction, onFloorStart);
-// r.FloorReached, r.Cleared, r.Floors[]: boss id, won, ticks, phases entered, vents, peak corruption, fight hash
+// r.FloorReached, r.Cleared, r.FloorsCleared, r.Floors[]: boss id, marquee, won, ticks, phases entered, vents, peak corruption, fight hash
 // r.Hash: SHA-256 over all of it (HashVersion 1)
-TowerLineup l = TowerSim.Lineup(content, day);          // bosses and phases per floor, for the preview screen
+List<TowerFloorPlan> l = TowerSim.Lineup(content, day);   // floor, boss id, marquee, level: the preview screen
+Fighter boss = TowerSim.Boss(content, bossId, level);     // a boss with its skills and phases (adds built at the same level)
+string book = TowerSim.BookDrop(content, day, floor);     // the floor's drop that day, or null (section 7)
 ```
 
 `FightRules.FromContent(content, tower: true)` carries the three mechanisms; `BattleSim.Start` validates the new fields (known phase kinds, `adds` within the side-size cap). `FightAction` gains one field, `Event` (null for an ordinary action): `phase:<kind>`, `vent:recoil|stun|enrage|convert`, `check_failed`, `channel_broken`, `channel_strike`, with the unit in `Actor` and the amount where there is one. Playback also reads `FightUnit.Entropy`, `FightState.PeakCorruption` and `BattleSim.CorruptionLevel(rules, ticks)` from the live state; observers only read, as before.
 
 ## 7. Account and rewards
 
-`AccountState.Tower` (new, saved; account save schema v3, a v2 save migrates with an empty tower):
+`AccountState.Tower` (`TowerProgress`, saved; account save schema v4, an older save migrates with no progress). Floors are counted as floors cleared:
 
 | Field | Meaning |
 |---|---|
-| `Day` | The last day an attempt was made; a new day resets the three below |
-| `AttemptsUsed` | This day's attempts |
-| `BestFloorToday` | Best floor reached today |
-| `ClaimedToday` | Highest floor whose rewards were already paid today |
-| `BestFloorEver` | Best floor ever reached (decides first clears) |
+| `Day` | UTC day of the last attempt, -1 before the first; a later day resets the next two |
+| `AttemptsUsed` | That day's attempts |
+| `ClearedToday` | Most floors one attempt cleared that day; every floor up to it has been paid that day |
+| `ClearedEver` | Most floors one attempt ever cleared (a floor above it is a first clear) |
 
-`AccountOps.RunTower(teamIndices, day)` (rejected commands throw and change nothing): requires `AttemptsUsed < TOWER_ATTEMPTS_PER_DAY`, and 1 to 4 distinct valid Vault indices. A run in progress does not block it: a tower attempt never touches the active run. It runs `TowerSim`, counts the attempt, then pays for each floor **above** `ClaimedToday` that was cleared:
+`AccountOps.RunTower(c, a, vaultIndices, day)` returns a `TowerRunResult` (the `TowerResult`, shards, books by floor, first clears, attempts left). Rejected commands throw and change nothing: no attempts left (`AccountOps.TowerAttemptsLeft`), not 1 to `MON_SIDE_SIZE` distinct valid Vault indices, a negative day, or a day before `Day` **(agent: the clock went back; refusing it stops replaying an earlier day's rewards)**. A run in progress does not block it: a tower attempt never touches the active run. It runs `TowerSim`, counts the attempt, then pays for each floor cleared **above** `ClearedToday`:
 
 - **Shards:** `TOWER_SHARDS_PER_FLOOR` per floor.
-- **Skill Books:** on each floor cleared, one roll with chance `TOWER_BOOK_CHANCE + TOWER_BOOK_CHANCE_PER_FLOOR x (floor - 1)`; on a hit, the book is drawn from `book_drops` rows with `min_floor <= floor`, by weight, so rarer books sit deeper. The roll's seed is `Derive(StreamSeed(seed, "drop"), floor)`: fixed by (day, floor), so a retry cannot re-roll a floor and the books are reproducible. Granted through `GrantBooks`.
-- **Star-Gems:** the first clear ever of a floor (above `BestFloorEver`) and each `TOWER_MILESTONE_EVERY` floor cleared in a day pay gems **once Star-Gems exist**: T9 scrapped the species gacha and added no gems, so what gems buy is open (#49, #77; `specs/18` section 1). Until then the tower pays shards and books only. Amounts are decided with the gacha economy (question 5).
+- **Skill Books:** on each floor cleared, one roll with chance `TOWER_BOOK_CHANCE + TOWER_BOOK_CHANCE_PER_FLOOR x (floor - 1)`; on a hit, the book is drawn from `book_drops` rows with `min_floor <= floor`, by weight, so rarer books sit deeper. The roll's seed is `Derive(StreamSeed(seed, "drop"), floor)` (`TowerSim.BookDrop`, built with step 2): fixed by (day, floor), so a retry cannot re-roll a floor and the books are reproducible. Granted through `GrantBooks`.
+- **Star-Gems:** the first clear ever of a floor (above `ClearedEver`, reported in `TowerRunResult.FirstClears`) and each `TOWER_MILESTONE_EVERY` floor cleared in a day pay gems **once Star-Gems exist**: T9 scrapped the species gacha and added no gems, so what gems buy is open (#49, #77; `specs/18` section 1). Until then the tower pays shards and books only. Amounts are decided with the gacha economy (question 5).
 
 The test button that grants books (`specs/13` T3) stays as a debug-only control, hidden behind the debug flag, once the tower grants them **(agent)**.
 
@@ -162,18 +163,22 @@ The day number is read from the device clock by the caller. The sim cannot tell 
 
 ## 8. Web client
 
-A **Tower** tab beside the Vault (`web/`), all through the bridge (`web/wasm/BRIDGE.md`; new `Tower*` exports, nothing computed in JS):
+**Built (first version).** A **Daily Tower** card on the home screen (attempts left today, today's best) opens the tower screen; everything comes through the bridge (`AccountCmd` `towerInfo` and `runTower`, `web/wasm/BRIDGE.md`), and the page computes no rule. The day is the UTC day number from the device clock (`run.towerDay()`).
 
-- Today's lineup: floor list with each boss's name, element and phase badges, the milestone floors marked, attempts left and today's best floor.
-- Team picker: choose 1 to 4 Vault monsters from a list with the Vault's sort, filters and search (`specs/18` section 9); slot order is shown and reorderable.
-- Playback: per floor, the existing action-by-action fight view (`specs/13` T6; 1x, 2x or Skip) with phase banners, each unit's entropy gauge and next vent, and the corruption meter. A summary at the end: floor reached, floors cleared, rewards paid (shards, books, gems when present).
-- A tooltip for every mechanism, built from the same data as the fight (`BattleText`, `specs/16` section 9).
+- Status line: attempts left, floors cleared today and ever.
+- Team: every Vault entry with a checkbox, up to `MON_SIDE_SIZE`; the order picked is the slot order, shown as "Slot n". Climb runs one attempt.
+- Result card: where the team fell (or a full clear), the shards paid, the Skill Books dropped and on which floor, first clears, every floor fought (won or lost, phases entered, vents, peak corruption), and the last floor's fight as a collapsible log in which the tower events (phase entered, entropy vent, shield check failed, channel broken or landed) are highlighted lines.
+- Today's floors: each floor's boss, element, marquee bosses in gold, their phases in order and the floor level.
+
+**Not yet** (issue #98): animated playback with the rank fight's view (1x, 2x, Skip) for tower floors; entropy gauges, the next vent and the corruption meter during playback; tooltips for phases, entropy and corruption (`BattleText`); the Vault's sort, filters and search in the team picker and reordering the team; moving the "Test: add a book" button behind a debug flag (it is still on the home screen).
 
 ## 9. Determinism and tests
 
-- No clock, IO, reflection or `Math.Pow`; every draw comes from a named stream (`specs/00` section 5). New streams: `tower` (lineup) and the per-floor `drop` seed.
-- `TowerTests`: the same (team, day) gives the same result and hash; different days differ; slot order matters; each phase kind changes the fight as its row says and fires once; entropy gains, decays, vents in the fixed rotation and `entropy_convert` shields instead; corruption level and its multipliers; rank fights and the gauntlet are unchanged with the tower rules off (their goldens do not move); drops are fixed by (day, floor) and a retry pays nothing twice; attempts cap; a new day resets; account save round-trips and a v2 save migrates.
-- `golden/tower-vectors.txt`: each species after a `focus` bot run at seed 7 and the four together, on two fixed days: floor, cleared, phases, vents, hash. Regenerated through the bot CLI (`golden --update`), never by hand. Bots get a `tower` verb (`specs/09`).
+- No clock, IO, reflection or `Math.Pow`; every draw comes from a named stream (`specs/00` section 5). New streams: `tower` (lineup), and the per-floor `tower_fight` and `drop` seeds.
+- `TowerBattleTests` (step 1): each phase kind changes the fight as its row says and fires once; entropy gains, decays, vents in the fixed rotation and `entropy_convert` shields instead; corruption level and its multipliers; tower rules off leave fights unchanged.
+- `TowerTests` (step 2): content loads; the lineup is fixed for a day, differs across days, puts marquees on milestones and uses the whole regular pool before repeating; boss scaling (adds skip the HP multiplier); the same (team, day) gives the same result and hash, different days differ, slot order matters, duplicate monster ids are fine; bad teams are rejected; a strong team clears and sees phases on every marquee floor; observers change nothing; drops are fixed by (day, floor), only eligible books drop, and the rate follows the constants.
+- `TowerAccountTests` (step 3): an attempt pays each cleared floor once (shards, the floor's book, first clears) and matches the sim; a retry pays nothing twice; attempts cap and a refused attempt changes nothing; a new day resets; an earlier day, a bad team and a negative day are refused; a run in progress is untouched. `AccountSaveTests`: tower progress round-trips and a v3 save migrates.
+- `golden/tower-vectors.txt` (`TowerVectors`): each species after a `focus` bot run at seed 7, alone and up to four together, on days 0 and 20391: the lineup, then floor, cleared, vents, phases, hash. Regenerated through the bot CLI (`golden --update`), never by hand. **(agent)** No `tower` CLI verb yet; add one with the balance harness (`specs/09` section 7).
 - No balance harness: whether floors are fair is balance work and waits (`CLAUDE.md`).
 
 ## 10. Build order
@@ -181,9 +186,9 @@ A **Tower** tab beside the Vault (`web/`), all through the bridge (`web/wasm/BRI
 Each step merges on its own with `./check.sh` green.
 
 1. **Engine hooks** (`BattleSim`): `TowerRules`, entropy, the four phase kinds, the clock, tests. Rank fights and the gauntlet unchanged. **Done** (`TowerBattleTests`; no golden moved).
-2. **Tower sim and content:** the three tables, constants, validators in both `content_build.py` and `ContentDb`, `TowerSim`, goldens.
-3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v3, tests.
-4. **Web:** the Tower tab, the bridge, tooltips, the debug-only book button. Publish the artifact (`CLAUDE.md`).
+2. **Tower sim and content:** the three tables, constants, validators in both `content_build.py` and `ContentDb`, `TowerSim`, goldens. **Done** (content 3.6, `TowerTests`, `golden/tower-vectors.txt`).
+3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v4, tests. **Done** (`TowerAccountTests`, `AccountSaveTests`).
+4. **Web:** the tower screen and the bridge. **Done** as a first version (section 8); its open items are issue #98.
 
 ## 11. Questions for kj
 

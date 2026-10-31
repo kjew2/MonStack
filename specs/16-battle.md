@@ -140,11 +140,11 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_SIDE_SIZE` | 4 | `> 0` | Most units per side |
 | `STAT_FLOOR_FRAC` | 0.1 | `(0, 1]` | A trained stat never drops below this fraction of its base (section 3; content `3.2`) |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` | `echo_cast` repeat power (content `2.5`) |
-| `MON_TIDE_REGEN` | 0.05 | `[0, 1]` | `tidal_overflow` heal per own action, fraction of max HP (content `3.6`) |
-| `MON_TIDE_SHIELD_CAP` | 0.3 | `[0, 1]` | `tidal_overflow` shield cap, fraction of max HP (content `3.6`) |
-| `MON_DRAIN_FRAC` | 0.3 | `[0, 1]` | `abyssal_drain` share of damage dealt healed (content `3.6`) |
-| `MON_FIRE_PIERCE` | 0.5 | `[0, 1]` | `fire_pierce` share of DEF or WIS ignored (content `3.6`) |
-| `MON_DOUBLE_TURNS` | 1 | `>= 1` | `double_turn_start` doubled opening actions (content `3.6`) |
+| `MON_TIDE_REGEN` | 0.05 | `[0, 1]` | `tidal_overflow` heal per own action, fraction of max HP (content `3.7`) |
+| `MON_TIDE_SHIELD_CAP` | 0.3 | `[0, 1]` | `tidal_overflow` shield cap, fraction of max HP (content `3.7`) |
+| `MON_DRAIN_FRAC` | 0.3 | `[0, 1]` | `abyssal_drain` share of damage dealt healed (content `3.7`) |
+| `MON_FIRE_PIERCE` | 0.5 | `[0, 1]` | `fire_pierce` share of DEF or WIS ignored (content `3.7`) |
+| `MON_DOUBLE_TURNS` | 1 | `>= 1` | `double_turn_start` doubled opening actions (content `3.7`) |
 
 Range violations are `E043` in both `tools/content_build.py` and `ContentDb`. `BattleSim.Start` also rejects a hand-built `FightRules` whose rule modifier values are outside these ranges (`DoubleTurns` may be 0 there: the rule does nothing).
 

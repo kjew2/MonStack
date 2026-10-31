@@ -202,6 +202,21 @@ namespace IdleRng.Sim.Combat
             && CorruptDmgPerLevel >= 0;
 
         public TowerRules Clone() => (TowerRules)MemberwiseClone();
+
+        /// <summary>The tower rules from content constants (specs/21 section 5).</summary>
+        public static TowerRules FromContent(ContentDb c)
+        {
+            var k = c.Constants;
+            return new TowerRules
+            {
+                EntropyCap = k.EntropyCap, EntropyPerTrigger = k.EntropyPerTrigger, EntropyPerEcho = k.EntropyPerEcho,
+                EntropyPerCounter = k.EntropyPerCounter, EntropyDecay = k.EntropyDecay, RecoilFrac = k.EntropyRecoilFrac,
+                StunGauge = k.EntropyStunGauge, EnrageFrac = k.EntropyEnrageFrac, EnrageTurns = k.EntropyEnrageTurns,
+                ConvertShield = k.EntropyConvertShield, ConvertTurns = k.EntropyConvertTurns,
+                CorruptStartTick = k.CorruptStartTick, CorruptEveryTicks = k.CorruptEveryTicks,
+                CorruptHealPerLevel = k.CorruptHealPerLevel, CorruptHealFloor = k.CorruptHealFloor, CorruptDmgPerLevel = k.CorruptDmgPerLevel,
+            };
+        }
     }
 
     /// <summary>
@@ -257,6 +272,14 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>The Daily Tower's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
         public TowerRules Tower { get; set; }
+
+        /// <summary>Fight rules from content; <paramref name="tower"/> adds the Daily Tower's rules (specs/21 section 3).</summary>
+        public static FightRules FromContent(ContentDb c, bool tower)
+        {
+            var r = FromContent(c);
+            if (tower) r.Tower = TowerRules.FromContent(c);
+            return r;
+        }
 
         public static FightRules FromContent(ContentDb c)
         {

@@ -1,11 +1,19 @@
 {
   "schema_version": 1,
-  "content_version": "3.6",
+  "content_version": "3.7",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
       "file": "achievements.json",
       "sha256": "6ab3d0dfe81264768e1f52507de244b33cdd03cea0a2a8f92e6064ac05381ea0"
+    },
+    "book_drops": {
+      "file": "book_drops.json",
+      "sha256": "0e93eba085a707d2a728653737a11ed175808da2d92973c8b0dc53d860a42154"
+    },
+    "boss_phases": {
+      "file": "boss_phases.json",
+      "sha256": "07e500a638df07cfcb02a4f1866068960f335a2ee10f2b1edfc63060be65d6dd"
     },
     "chase_conditions": {
       "file": "chase_conditions.json",
@@ -13,7 +21,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "a2f321c42f32083cecea3da11c257c3211545940d5a1d2247c8ebf306c1349af"
+      "sha256": "faa8918fd8e5b924b894279d3d0368fe29d6933c65ff7777e509ee03cd3ee92f"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -37,7 +45,7 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "f890b11ba02af0e47512ac5f620c76abef3db159498dfa69baf49310f6c12560"
+      "sha256": "0b290156ef51057cf19b8d1dd9d7f85e70e5793cb9c62cd7d68954c2477ef7fe"
     },
     "skill_books": {
       "file": "skill_books.json",
@@ -53,11 +61,15 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "5e2b8168e8794aaa317e13750509d904da08b6ac6a236505b1d66420e269c50a"
+      "sha256": "2e4e87bf1cb3d6ea4cda2e0b169e013b48bd092d15df41482019ef08b61ce59b"
     },
     "talents": {
       "file": "talents.json",
       "sha256": "5670210b20e98d9d712a530dc0714c97555eb5709f88959fd337aa606d175446"
+    },
+    "tower_bosses": {
+      "file": "tower_bosses.json",
+      "sha256": "a7821a5b9c5c4c7839bfe884c8927807b6bb5f9790ea5bce63830d65cce055b9"
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
@@ -72,5 +84,5 @@
       "sha256": "370640e02d9e08c1199e4631879604ebb782f53687f1d65c7d37f4e08f53c539"
     }
   },
-  "content_hash": "6df327c1ac48945d6c8c4ba87781927804f0d56ba2ad3b5307b1acae9e272532"
+  "content_hash": "7e31c8fa62ab083f47b40cb71f9fddfb139fb00cd39513059444ba18e9cf73a2"
 }

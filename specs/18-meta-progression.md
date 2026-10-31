@@ -22,6 +22,7 @@ The design is `specs/12` sections 7, 9 and 10.
 | `Achievements`, `Records` | Achievement ids earned, in earn order, and the lifetime records they are checked against (section 8) |
 | `Vendor` | The post-run vendor's offers from the last sealed run, or null (section 4) |
 | `Vault` | Finished monsters (`VaultEntry`, `specs/13` T4), oldest first; each carries the player's `Locked` flag. At most `VAULT_CAP` before a new run (section 7) |
+| `Tower` | Daily Tower progress: the day of the last attempt, attempts used that day, most floors cleared that day and ever (`specs/21` section 7) |
 | `Active` | The run in progress, or null |
 
 There is no premium currency yet. Skill Books are the premium gate (kj, T9); whether and how they, or Star-Gems, are sold is the monetization call (#49, #77).
@@ -37,7 +38,7 @@ There is no premium currency yet. Skill Books are the premium gate (kj, T9); whe
 | `BuyOffer(index)` | A vendor offer not yet bought, whose talent is not maxed; enough shards. Costs the offer's price, adds its ranks (section 4). Applies from the next run: a run keeps the bonuses it started with. There is no other way to buy talents |
 | `Dismantle(index)` | Removes Vault entry `index` (oldest first) for good and pays its grade's refund (section 7). Refused for a locked entry. Allowed during a run |
 | `SetLocked(index, locked)` | Locks or unlocks Vault entry `index`. Account state only: not part of the sealed monster or its `RunHash` |
-| `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower will grant books through it (T10, `specs/21` section 7); tests and debug use it now |
+| `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower adds its drops with `RunTower` (`specs/21` section 7); tests and debug use it now |
 | `UnlockSpecies(species)` | Adds a species to `OwnedSpecies` in content order. Achievements call it; tests use it |
 
 Rejected commands throw and change nothing. The sim has no clock: the caller passes the seal time.
@@ -104,7 +105,7 @@ A flat list for now; a branching talent tree is a later content change. Rules (`
 A new save lineage (kj: clean break, `specs/13` section 1), in its own store slot (`AccountSave.SlotName` = `account`), using the file shape of `specs/06` (header with CRC, JSON body) and its two-slot rotation:
 
 ```
-{ "Kind": "monster_account", "SchemaVersion": 3,
+{ "Kind": "monster_account", "SchemaVersion": 4,
   "Account": { ...AccountState without Active... },
   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
 ```
@@ -112,7 +113,7 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. If the replay fails or the stored hash differs (for example after a rules change), the run is dropped, its books return to the inventory and the rest of the account loads with a notice (`specs/06` section 5).
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
-- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
+- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
 - On every load the account's achievements are checked again, so an achievement added to content later is granted when the records already meet it (section 8).
 
 ## 7. Vault cap and dismantling

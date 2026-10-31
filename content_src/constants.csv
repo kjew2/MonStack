@@ -51,3 +51,29 @@ GAUNTLET_GROWTH,double,1.03,level grows by this factor per floor. Placeholder
 GAUNTLET_BOSS_EVERY,int,10,every Nth floor is a boss floor. Placeholder
 GAUNTLET_BOSS_MULT,double,1.2,boss floors multiply the level by this. Placeholder
 REST_ENERGY,double,50,energy a rest restores (capped at max). Placeholder
+TOWER_SEED,int,20260101,Daily Tower (specs/21 section 5): the day's lineup and drops derive from this and the UTC day number
+TOWER_FLOORS,int,20,Daily Tower: floors per day. Placeholder
+TOWER_ATTEMPTS_PER_DAY,int,3,Daily Tower: attempts per day; the best floor counts. Placeholder
+TOWER_BASE,double,80,Daily Tower: floor 1 level. Placeholder
+TOWER_GROWTH,double,1.06,Daily Tower: level x this per floor. Placeholder
+TOWER_BOSS_HP_MULT,double,4,Daily Tower: boss hp weight x this (four monsters face one boss). Placeholder
+TOWER_MILESTONE_EVERY,int,5,Daily Tower: every Nth floor is a marquee boss and a milestone. Placeholder
+TOWER_SHARDS_PER_FLOOR,int,4,Daily Tower: Training Shards per floor cleared, once per floor per day. Placeholder
+TOWER_BOOK_CHANCE,double,0.15,Daily Tower: Skill Book drop chance on floor 1. Placeholder
+TOWER_BOOK_CHANCE_PER_FLOOR,double,0.01,Daily Tower: added drop chance per floor above 1. Placeholder
+ENTROPY_CAP,double,100,Daily Tower entropy gauge (specs/21 section 3.1): vents at this. Placeholder
+ENTROPY_PER_TRIGGER,double,5,entropy per triggered effect (not BattleStart passives). Placeholder
+ENTROPY_PER_ECHO,double,10,entropy per echo_cast repeat. Placeholder
+ENTROPY_PER_COUNTER,double,15,entropy per counter_mitigated counterattack. Placeholder
+ENTROPY_DECAY,double,3,entropy lost at the start of the unit's own action. Placeholder
+ENTROPY_RECOIL_FRAC,double,0.15,recoil vent: true damage as a fraction of max HP. Placeholder
+ENTROPY_STUN_GAUGE,double,100,stun vent: ATB gauge lost. Placeholder
+ENTROPY_ENRAGE_FRAC,double,0.25,enrage vent: damage buff every enemy gains. Placeholder
+ENTROPY_ENRAGE_TURNS,int,3,enrage vent: turns the buff lasts. Placeholder
+ENTROPY_CONVERT_SHIELD,double,0.2,entropy_convert: shield as a fraction of max HP. Placeholder
+ENTROPY_CONVERT_TURNS,int,3,entropy_convert: turns the shield lasts. Placeholder
+CORRUPT_START_TICK,int,300,environmental clock (specs/21 section 3.3): corruption starts after this tick. Placeholder
+CORRUPT_EVERY_TICKS,int,100,corruption rises one level per this many ticks. Placeholder
+CORRUPT_HEAL_PER_LEVEL,double,0.2,healing and shields lose this fraction per level. Placeholder
+CORRUPT_HEAL_FLOOR,double,0.2,healing and shields never drop below this fraction. Placeholder
+CORRUPT_DMG_PER_LEVEL,double,0.1,all damage gains this fraction per level. Placeholder
