@@ -413,17 +413,63 @@ Assumptions behind the cost column: 10,000 DAU, each with 2 sessions a day, 6 pu
 | Estimated monthly cost at 10 k DAU | Low. The services used here have free tiers sized for small titles; Cloud Code and Cloud Save are metered beyond them. Estimate 0 to 50 USD. | Standard tier has a base fee (about 99 USD) plus meters; estimate 150 to 400 USD. | Blaze pay-as-you-go. Firestore reads/writes at this volume are a few dollars; Functions within or just past the free tier; estimate 20 to 60 USD. | Self-hosted: software is Apache-2.0, infrastructure for one small VM plus managed Postgres about 50 to 150 USD. Heroic Cloud managed hosting starts in the low hundreds. |
 | Lock-in and risk | Single-vendor with the engine. Unity's commercial terms have changed abruptly before. Everything we use is reachable through this spec's interfaces, so a swap is confined to `IdleRng.Remote`. | Mature, stable pricing; heavier SDK; Azure account required. | Google lock-in on Firestore data model; everything else is portable. | No lock-in; we own the server. Ops burden: upgrades, backups, on-call. |
 
-Recommendation for v1: **Unity Gaming Services**, with **Nakama** as the fallback if UGS Cloud Code Modules cannot run `IdleRng.Server` unchanged or if commercial terms move.
+Recommendation for v1: **Unity Gaming Services**, with **Nakama** as the fallback if UGS Cloud Code Modules cannot run `IdleRng.Sim` unchanged or if commercial terms move. Plain hosted .NET (section 10.2) is the second fallback, and the first one if the vendor terms become the problem.
 
-Reasons:
-1. One SDK already in the Unity project covers all six interfaces, with no ops.
-2. Cloud Code Modules in C# compile the gacha roll from the same sources as the client, which satisfies 4.3 rule 4 without a port and without the cross-language vector file. That is the single largest correctness risk in adding a server, and UGS and PlayFab (via Azure Functions) are the two that remove it.
-3. Cost at 10 k DAU is the lowest of the four.
-4. Receipt validation through Economy and remote config are built in, so P1 does not grow a custom backend.
+The cost column above was written for the idle game's gacha and cloud-save load; section 10.1 redoes the numbers for server-resolved PvP.
 
-Against PlayFab: the base fee and the Azure Functions deployment pipeline are more than this project needs at 10 k DAU; it becomes the right answer if the game needs its live-ops tooling. Against Firebase: no .NET runtime, so the gacha roll is a Go port with a vector-file contract, and receipts are custom; it is the right answer if the team already standardises on Firebase Analytics. Against Nakama as first choice: the ops burden lands on a team that has none, and we gain nothing from owning the server until P2 (leaderboards, guilds), where it becomes attractive.
+Reasons (revised 2026-10-31 for the web-first client: the trainer ships as WebAssembly in a browser, `specs/13`, not as a Unity build):
+1. The services are plain HTTPS APIs (anonymous sign-in, Cloud Code, Cloud Save, Remote Config), so a browser client calls them with `fetch` and needs no Unity SDK. The "one SDK already in the Unity project" argument no longer applies; what remains is no ops.
+2. Cloud Code C# modules compile `IdleRng.Sim` from the same sources as the client (a project reference, section 10.1), so server-resolved battles (T12 async PvP, `specs/10`) need no port and no cross-language vector file. That is the single largest correctness risk in adding a server, and UGS and plain hosted .NET are the two options that remove it. The gacha `Pull` this was first argued for was cut at T9.
+3. Cost at 10 k DAU is the lowest of the options (section 10.1).
+4. Remote config is built in. Receipt validation through Economy only matters if paid items return.
 
-Decision checkpoint before P1 starts: a two-day spike that deploys the `Pull` test vectors as a UGS Cloud Code Module and reproduces `Fixtures/Gacha/vectors.json`. Pass means UGS; fail means Nakama with a Go port.
+Against PlayFab: the base fee and the Azure Functions deployment pipeline are more than this project needs at 10 k DAU. Against Firebase: no .NET runtime, so battles would be a Go or TypeScript port held to the golden vectors. Against Nakama as first choice: the ops burden lands on a team that has none, and we gain nothing from owning the server until leaderboards and guilds.
+
+### 10.1 Spike: `BattleSim.Resolve` in a UGS Cloud Code module (issue #17, 2026-10-31)
+
+**Status: in progress.** The module is built and deployed; the in-process and cross-runtime checks pass. The remote comparison (an anonymous player calling the deployed endpoint) and the latency numbers are not yet measured, because the cloud session's network policy refused `player-auth.services.api.unity.com` and `cloud-code.services.api.unity.com`. Rerun `server/ugs/SpikeClient remote` (see `server/ugs/README.md`) once both hosts are allowed, then fill in the pending rows and decide open decision 5.
+
+What is in the repo (not in `check.sh`, because it needs credentials):
+- `server/ugs/IdleRngBattle`: the module. A net10.0 class library with a `ProjectReference` to `src/IdleRng.Sim` (netstandard2.1), so the server compiles the same sources: no copy, no port, no change to `IdleRng.Sim`. One endpoint, `ResolveFight(FightRules rules, Fighter[] sideA, Fighter[] sideB, string seed)`, returns outcome, ticks, `BattleSim.StateHash`, the hash version, the time inside `Resolve` and the worker's runtime and culture.
+- `server/ugs/deploy.sh`: `dotnet publish -c Release -r linux-x64`, zip to `IdleRngBattle.ccm`, create or update the module through the Cloud Code Admin API with the service account (Basic auth on `services.api.unity.com`). It uses `curl` instead of the `ugs` CLI: the CLI's npm installer downloads its binary from GitHub's release API and failed on the API's rate limit.
+- `server/ugs/SpikeClient`: the test script. It builds 47 fights: the 7 `BattleVectors` fights, and every floor of the `TowerVectors` all-species team run on days 0 and 20391 (40 floors, all four boss phase kinds and an entropy vent; each floor's rebuilt hash is checked against `TowerSim.Run`). `local` regenerates all four golden files on the module's runtime and binds each fight's JSON params into the module the way Cloud Code does (by parameter name, Newtonsoft.Json); `remote` signs in anonymously, calls the deployed endpoint for each fight, and times 20 warm calls of the smallest and the largest fight.
+
+Results so far:
+
+| Check | Result |
+|---|---|
+| Module target framework | .NET 10 (Unity's "Package code" page for Cloud Code modules). `IdleRng.Sim` loads as-is; the Cloud Code Core package (0.0.9) targets netstandard2.1. |
+| Deploy | Create (HTTP 201) and update (HTTP 200) through the Admin API. Unity parsed the endpoint and its parameter types (`FightRules`, `Fighter[]`, `Fighter[]`, `String`). Nothing needed enabling in the dashboard. |
+| Package size | `IdleRngBattle.ccm` 392 KB of the 10 MB module limit (6 files: the module, `IdleRng.Sim.dll` 200 KB, Newtonsoft.Json 712 KB uncompressed, Cloud Code Core, DI abstractions). |
+| Golden files on .NET 10 | All four (`battle-sim`, `training-run`, `gauntlet`, `tower`) identical to the committed files written by the .NET 8 client build. |
+| In-process, through Cloud Code's JSON binding | 47 of 47 hashes, outcomes and ticks match `IdleRng.Sim`. `Resolve` takes 0.1 to 1.3 ms per fight in this cloud container (the slowest includes JIT warm-up). |
+| Remote, anonymous player | **Pending** (network policy). |
+| Cold start, warm median and worst of 20 | **Pending.** Unity documents a cold start after 15 minutes without traffic. |
+
+Blockers for the shared code found so far: none. Notes for T12:
+- **Floating point.** The sim uses only `+ - * /`, comparisons and `Math.Min`, `Max`, `Floor` and `Round`; it avoids `Math.Pow` and transcendental functions by design. Those operations are exact under IEEE 754 on every .NET runtime, which is why the golden files match across .NET 8 and .NET 10. Keep it that way: a `Math.Pow`, `Exp` or `Log` in the sim could differ between the browser (WebAssembly) and the server.
+- **Culture.** `StateHash` is a SHA-256 of a binary encoding of the state (raw double bits, no text formatting), so the worker's culture cannot move it. The reply still reports the culture.
+- **Seed.** A 64-bit seed travels as a decimal string: JSON numbers in a JavaScript client lose precision above 2^53.
+- **Input size.** Fight params are 1.4 to 5.1 KB of JSON (a four-monster team against a phased boss), far below any limit. Enums travel as integers and computed properties (`CombatSkill.Magical`, `TowerRules.Valid`) are ignored on the way in.
+- **Not covered here.** The browser client (the WebAssembly build of the same sources) against the server: the wasm run in `check.sh` plays the trainer but does not compare fight hashes with the golden files. Add that to T12's golden replay fixtures (#32).
+- **Limits** (Cloud Code docs): 15 s per call, 512 MB per worker, 2 MiB response, 600 requests per minute per player, 20 modules per project.
+
+PvP load and cost at 10 k daily players. Assumptions: 10 ranked async PvP fights per player per day, each resolved by one module call, and 3 Daily Tower attempts certified server-side (one call per attempt if the endpoint runs the whole climb). That is about 130 k calls a day, 4 M a month.
+
+| Meter | Free each month (UGS pricing page, October 2026) | Our use | Cost beyond the free tier |
+|---|---|---|---|
+| Invocations | 1 M | 4 M | 3 M x 1.50 USD per M = 4.50 USD |
+| Compute | 20 hours | 4 M x 10 to 30 ms billed (assumed; the remote run measures it) = 11 to 33 hours | 0 to 13 hours x 0.072 USD per hour = 0 to 1 USD |
+| Egress | 1 GiB | 4 M x about 400 B = 1.5 GiB | 0.5 GiB x 0.25 USD = 0.15 USD |
+
+About 5 to 10 USD a month for the battles, plus sign-in and Cloud Save, which have their own free tiers. Re-check against the pricing page before launch; a forum post reports that compute is billed by CPU time scheduled rather than wall time, which the remote run should confirm.
+
+Decision: **pending** the remote run. If every remote hash matches, UGS stands as the v1 choice (open decision 5 closes). If not, record why here and compare the fallbacks in 10.2.
+
+### 10.2 Fallbacks if the spike fails
+
+- **Nakama** (Go plugin): the battle rules ported to Go and held to the golden vectors. A second implementation to keep in step with every sim change, plus server ops.
+- **Plain hosted .NET** (for example a small ASP.NET Core service on a container host, not compared in the table above). Runs `IdleRng.Sim` unchanged like Cloud Code, with no vendor runtime limits, and suits a web client (plain HTTPS and CORS). Costs one small always-on container (about 5 to 20 USD a month) and the ops Cloud Code removes: deploys, TLS, scaling, and our own auth or a third-party one.
 
 ## 11. What stays client-authoritative, and why
 
@@ -458,8 +504,8 @@ Why this split is safe: P0 and P1 have no shared surface between players (00 sec
 2. **Payment ledger split.** In P1, gems move server-side while gold stays local. Confirm free-pull credits (daily and banked) move with gems, as 4.3 assumes, since they pay for pulls.
 3. **Cloud-save conflict threshold.** The "meaningfully ahead" rule in 5.2 (stage, pulls, `PULL_COST_GEMS` of gems). May need to include gear if playtesters find silent overwrites of a Legendary drop.
 4. **Analytics profile id hashing.** Salted per build (8.1) means the same player cannot be followed across builds in the remote dataset. Decide whether that is wanted before P1.
-5. **UGS spike result** (section 10). The recommendation is conditional on the two-day spike.
+5. **UGS spike result** (section 10.1, issue #17). The module is deployed and passes in-process and across .NET 8 and .NET 10; the remote run as an anonymous player and the latency are pending network access. The recommendation stays conditional until that run.
 6. **`PendingReceipt` schema step.** Add it to v1 now (a nullable field costs nothing and avoids a migration) or wait for P1. Leaning add now, alongside `PendingPull`.
 7. **Server-side plausibility bound.** Whether `plausibility_flag` should also be computed server-side on cloud-save upload in P1, so flagged profiles can be excluded from live tuning data without trusting the client's own flag.
 8. **TypeScript vs Go for a Nakama port.** Only relevant if the fallback is taken; Go for exact uint64 arithmetic unless the team strongly prefers TypeScript.
-9. **Competitive-play seams.** `IAccountService`, `IProgressCertifier`, `ILeaderboardService` and `IPvpService` are fixed in shape by `specs/10`; their contracts are written when P1a to P1d start. The BaaS spike in section 10 must now also cover running the certifier (`Replay` plus `StateHash`) in the chosen server runtime, in addition to the gacha vectors.
+9. **Competitive-play seams.** `IAccountService`, `IProgressCertifier`, `ILeaderboardService` and `IPvpService` are fixed in shape by `specs/10`; their contracts are written when P1a to P1d start. The BaaS spike in section 10 must now also cover running the certifier (`Replay` plus `StateHash`) in the chosen server runtime; the gacha vectors no longer apply (T9 cut the gacha). Section 10.1 covers `BattleSim.Resolve` and the Daily Tower floors.
