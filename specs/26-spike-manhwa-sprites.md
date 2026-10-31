@@ -63,19 +63,19 @@ Palette tokens that line up with any of them: a background, a raised surface, in
 
 ## 6. Questions for kj (answered 2026-10-31)
 
-1. **Style:** **abyss expedition watercolour** (kj; section 7). It replaces kj's first pick, hunter / system dark action. It is the art direction for the creatures: soft watercolour, a fine sepia pencil line, misty deep-chasm backgrounds with glowing flora, and cute creatures that each carry one unsettling detail. Whether the UI chrome follows it is for the UI overhaul, issue #115 (section 7.1).
+1. **Style:** **hunter / system dark action** (kj, final). kj tried the abyss expedition watercolour style (section 7) in between, compared AI drafts of both (section 8) and settled on hunter. It is the art direction for the creatures. Whether the UI chrome follows it is for the UI overhaul, issue #115 (sections 4.1 and 7.1).
 2. **Route:** **AI generation** (kj). It needs an image-API key and network access in the cloud environment (done by kj, 2026-10-31); issue #116 has the steps and the generation plan. Prompts describe the style in words and never name an artist or series; a model licensed for commercial use only (section 2).
-3. **Where the art shows:** **both** (kj): portraits on the monster card, draft cards and apex reveals, and the battle sprites redrawn in the same style. At 48-64 px the watercolour washes do not read, so sprites use a bolder sepia outline and at most two tones, keeping the glowing accents (eyes, nucleus, eyespots). The 12x12 pixel art in `web/sprites.js` stays until the generated set replaces it.
+3. **Where the art shows:** **both** (kj): portraits on the monster card, draft cards and apex reveals, and the battle sprites redrawn in the same style. Sprites use a bold outline and simple two-tone shading so they read at 32-88 px, keeping the glowing accents (eyes, nucleus, eyespots). The 12x12 pixel art in `web/sprites.js` stays until the generated set replaces it.
 4. **Chibi:** **not for now** (kj); maybe a later use case.
 
 ## 7. Addendum: batch 2, anime and manga known for their art
 
-kj asked for a second batch of demos after section 6 was answered: creature styles inspired by anime and manga known for good art. Same method as section 4 (agent-drawn SVG, original creatures, rendering language only), drawn without the image API to save cost. The panel artifact shows batch 2 next to the chosen hunter style; the drawings are in `specs/assets/26/` (`ghibli_`, `abyss_`, `meshi_`, `berserk_`, `ukiyo_`). kj picked the abyss style from this batch as the art direction (section 6.1); the rest is research.
+kj asked for a second batch of demos after section 6 was answered: creature styles inspired by anime and manga known for good art. Same method as section 4 (agent-drawn SVG, original creatures, rendering language only), drawn without the image API to save cost. The panel artifact shows batch 2 next to the chosen hunter style; the drawings are in `specs/assets/26/` (`ghibli_`, `abyss_`, `meshi_`, `berserk_`, `ukiyo_`). kj picked the abyss style from this batch for a while, then settled on hunter (section 6.1); the rest is research.
 
 | Style | Inspired by | Known for | Fit |
 |---|---|---|---|
 | Forest-spirit watercolour | *Princess Mononoke*, *Spirited Away*, *My Neighbor Totoro* | Hand-painted nature spirits; the benchmark for warm, wondrous creature design. | Medium: charming but soft; suits the training screen more than fights. |
-| Abyss expedition watercolour | *Made in Abyss* | Delicate watercolour worlds; cute creatures with one unsettling detail. | **Chosen** (kj). Cute-but-eerie fits a monster raiser. |
+| Abyss expedition watercolour | *Made in Abyss* | Delicate watercolour worlds; cute creatures with one unsettling detail. | High: cute-but-eerie fits a monster raiser (kj's pick for a while; section 6.1). |
 | Monster field guide | *Delicious in Dungeon* (*Dungeon Meshi*) | Monsters drawn as believable animals, like naturalist studies. | Medium: ideal for a bestiary or codex page. |
 | Grimdark pen and ink | *Berserk*, *Vagabond*, *Claymore* | Some of the most admired linework in manga: dense hatching, weight, scars. | Low as a main look: hatching dies at sprite size; strong for apex reveals. The agent drawings undersell it most (hatching too light). |
 | Woodblock print action | *Demon Slayer*, *Okami*, Edo-period yokai prints | Effects drawn as ukiyo-e prints: bold outline, pattern, waves and fire. | High for effects: skill and capstone flashes, rank-fight banners. |
@@ -90,7 +90,19 @@ For issue #115, in the terms of section 4.1: mostly CSS, a few small assets. Pan
 
 ## 8. Generation (issue #116)
 
-- `tools/art/generate.py` calls the OpenAI Images API (`gpt-image-2`, medium quality, 1024x1024 WebP) with `OPENAI_API_KEY`. `tools/art/prompts.json` holds one prompt per style (`--style abyss|hunter`) and one per species. Each species prompt names its one unsettling detail (section 7), which only the abyss style uses. The prompts describe the style in words and name no artist or series.
-- **Abyss drafts** (2026-10-31): three per species in `tools/art/drafts/abyss/`. kj picked **Coremote 2, Bastion Drake 3, Mirage Moth 1, Mandrake 3, Shade Hound 2** and asked that the final art not look washed out. The abyss style prompt now asks for rich, saturated colour, deep contrast and a crisp creature. `prompts.json` also holds a `refresh` pass (repaint a pick with richer colour), the ten apex-form prompts and a `sprite` pass (transparent background, bold sepia outline, two tones).
-- **Hunter drafts** (2026-10-31): kj asked for the same three-per-species test in the hunter / system dark style for comparison, in `tools/art/drafts/hunter/`. Both sets are on the panel's "AI drafts" tab.
-- **On hold (kj, 2026-10-31):** the apex forms, sprites and wiring into the web client wait for kj's go-ahead after the comparison. The next steps are a `refresh` of each pick, the apex forms and sprites from it as a reference image, then the web client in place of the 12x12 pixel art.
+### 8.1 Tool
+
+- `tools/art/generate.py` calls the OpenAI Images API with `OPENAI_API_KEY`. Prompts are in `tools/art/prompts.json`: one per style (`abyss`, `hunter`), one per species and one per apex form, plus `apex_base` and `sprite`. They describe the style in words and name no artist or series. Each species prompt names its one unsettling detail (section 7); only the abyss style uses it.
+- `draft` makes new candidates (`gpt-image-2`). `apex` draws an apex form from a picked image as a reference (`gpt-image-2`, image edit). `sprite` redraws an image as a battle sprite on a transparent background (`gpt-image-1.5`, because `gpt-image-2` cannot make a transparent background).
+- `tools/art/export.py` turns the masters in `tools/art/final/` into the web assets: `web/art/portrait/<key>.webp` (512 px) and `web/art/sprite/<key>.webp` (trimmed to the creature, 192 px), key = the apex form's chase tree id or the species id.
+
+### 8.2 What was made (2026-10-31)
+
+- Drafts, three per species per style, in `tools/art/drafts/abyss/` and `tools/art/drafts/hunter/`, shown on the panel's "AI drafts" tab. kj first picked abyss drafts, asked that the art not look washed out (the abyss prompt now asks for rich colour and deep contrast), then settled on hunter.
+- **Hunter picks (kj):** Coremote 1, Bastion Drake 1, Mirage Moth 1, Mandrake 3, Shade Hound 3. They are the base portraits as generated, in `tools/art/final/<species>.webp`.
+- The ten apex forms, each drawn from its species' pick, in `tools/art/final/<chase tree>.webp`, and the fifteen battle sprites in `tools/art/final/sprite/`. The sprites came out as hi-bit pixel art with a bold outline, which reads well at 32-88 px. **(agent)** Accepted as is: it keeps the game's pixel look in battle while the portraits carry the painted style.
+
+### 8.3 In the web client
+
+- Every species sprite (home cards, run HUD, fights, tower and gauntlet playback, Vault) is the generated sprite of the monster's apex form, else of its species (`IdleSprites.art`, `run.js` `sprite()`). An image that fails to load falls back to the 12x12 pixel art, which also stays for species without art. Rank opponents keep their seeded sprites.
+- The home screen shows the picked species' portrait above the species list. **(agent)** Other portrait spots (an apex reveal, a monster card) are not built yet; the UI overhaul (#115) is the natural place for them.

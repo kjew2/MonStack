@@ -108,7 +108,7 @@ A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a
 
 ### 5.3 Apex forms (kj, 2026-10-31, `specs/24` section 6)
 
-A monster that owns a chase tree's capstone takes that tree's **apex form**: the tree's apex name (`apex_name_key`) replaces the species name wherever the monster is shown (the run, the Vault, gauntlet and tower playback), and the web client draws the species' art with the apex palette and overlay (`web/sprites.js`). It is cosmetic: no fight reads it.
+A monster that owns a chase tree's capstone takes that tree's **apex form**: the tree's apex name (`apex_name_key`) replaces the species name wherever the monster is shown (the run, the Vault, gauntlet and tower playback), and the web client draws the apex form's generated art (`web/art/`, `specs/26` section 8), falling back to the species' pixel art with the apex palette and overlay (`web/sprites.js`). It is cosmetic: no fight reads it.
 
 - The apex form is the **first slotted chase tree, in slot order, with every node bought** (`ApexForm.TreeOf`). **(agent)** Slot order, rather than the last capstone bought, because a Vault entry keeps its trees but not the order they were maxed.
 - A run loses the form when the chase tree leaves its slot (overwritten, or locked again because a prerequisite was overwritten). A Vault entry keeps the form it was sealed with.

@@ -52,7 +52,16 @@
     return el;
   }
   function hash(str) { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
+  // A species' battle sprite: the generated art (apex form) when it has some (specs/26 section 8), else the 12x12 pixel art,
+  // else a seeded sprite. An image that fails to load falls back to the pixel art.
   function sprite(key, apex) {
+    const art = SP.art(key, apex);
+    if (!art) return pixelSprite(key, apex);
+    const img = h('img', { class: 'sprite art', src: art.sprite, alt: '', 'aria-hidden': 'true', draggable: 'false' });
+    img.addEventListener('error', () => { const cv = pixelSprite(key, apex); cv.className = img.className.replace(' art', ''); img.replaceWith(cv); }, { once: true });
+    return img;
+  }
+  function pixelSprite(key, apex) {
     const cv = h('canvas', { class: 'sprite', 'aria-hidden': 'true' });
     SP.draw(cv, SP.species(key, apex) || SP.enemy(hash(key) % 100000, false, 0));   // hand-drawn species art (apex form), else a seeded sprite
     return cv;
@@ -892,6 +901,9 @@
         h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
       h('p', { class: 'muted', text: 'Train over ' + C.consts.runCycles + ' cycles. Each cycle: ' + C.consts.runAp + ' actions (Drill a stat or Rest), then a rank fight. Win to rank up and spend skill points on trees. Drilling at low energy can injure the monster, which loses ' + injuryRisk() + '.' }));
     if (!owned(ui.pick)) ui.pick = acct.owned[0] || null;
+    const pickArt = ui.pick && SP.art(ui.pick);   // the picked species' portrait (specs/26 section 8)
+    if (pickArt) main.append(h('figure', { class: 'card portrait', 'data-id': 'portrait' }, [
+      h('img', { src: pickArt.portrait, alt: speciesDef(ui.pick).name, draggable: 'false' })]));
     C.species.forEach((sp) => {
       const sel = ui.pick === sp.id, have = owned(sp.id);
       const mini = h('div', { class: 'mini' });

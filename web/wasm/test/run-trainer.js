@@ -65,6 +65,18 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
   check((await page.locator('[data-id=unlock-slime]').count()) === 0, 'the starter has no unlock line');
+  // ---- generated creature art (specs/26 section 8): the picked species' portrait and every species card's sprite load as images
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-id=portrait] img, [data-act^="species-"] img.sprite.art')].every((i) => i.complete), null, { timeout: 15000 });
+  const art = await page.evaluate(() => ({
+    portrait: [...document.querySelectorAll('[data-id=portrait] img')].map((i) => i.naturalWidth),
+    sprites: [...document.querySelectorAll('[data-act^="species-"] img.sprite.art')].map((i) => i.naturalWidth),
+    cards: document.querySelectorAll('[data-act^="species-"]').length }));
+  check(art.portrait.length === 1 && art.portrait[0] > 0, 'the picked species shows its portrait: ' + JSON.stringify(art.portrait));
+  check(art.sprites.length === art.cards && art.sprites.every((w) => w > 0), 'every species card shows its art sprite: ' + JSON.stringify(art.sprites));
+  const artKeys = JSON.parse(fs.readFileSync(path.join(WEB, 'sprites.js'), 'utf8').match(/const ART_KEYS = new Set\((\[.*?\])\)/)[1]).sort();
+  const artFiles = (d) => fs.readdirSync(path.join(WEB, 'art', d)).map((f) => f.replace(/\.webp$/, '')).sort();
+  check(JSON.stringify(artFiles('sprite')) === JSON.stringify(artKeys) && JSON.stringify(artFiles('portrait')) === JSON.stringify(artKeys),
+    'web/art/ holds a sprite and a portrait for exactly the keys sprites.js lists (' + artKeys.length + ')');
   check((await page.locator('[data-id^="ach-"]').count()) >= 2, 'the home screen lists the achievements');
   check((await page.locator('[data-act^="talent-"]').count()) === 0, 'there is no always-on talent shop');
   await shot('01-home');
