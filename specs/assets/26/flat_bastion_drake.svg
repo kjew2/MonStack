@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<pattern id="fl-bd-dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6" fill="#f0b48a"/></pattern>
+</defs>
+<rect width="240" height="240" fill="#f6efe0"/>
+<circle cx="120" cy="118" r="98" fill="url(#fl-bd-dots)"/>
+<path d="M0 206 H240" stroke="#1a1a1a" stroke-width="2" opacity=".25"/>
+<ellipse cx="122" cy="210" rx="90" ry="10" fill="#1a1a1a" opacity=".18"/>
+<g stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<!-- tail -->
+<path d="M168 178 C196 180 214 170 220 148 C222 142 228 142 228 150 C228 178 206 196 172 196 Z" fill="#c2452e"/>
+<path d="M214 150 L226 132 L230 154 Z" fill="#a9b2c4"/>
+<!-- stub wings -->
+<path d="M66 128 C44 116 30 96 34 80 C46 92 58 96 70 98 Z" fill="#8f2f20"/>
+<path d="M174 128 C196 116 210 96 206 80 C194 92 182 96 170 98 Z" fill="#8f2f20"/>
+<!-- legs -->
+<path d="M66 176 C60 196 64 206 82 206 C98 206 104 200 102 184 Z" fill="#c2452e"/>
+<path d="M174 176 C180 196 176 206 158 206 C142 206 136 200 138 184 Z" fill="#c2452e"/>
+<path d="M68 206 v-6 M78 206 v-6 M88 206 v-6 M172 206 v-6 M162 206 v-6 M152 206 v-6" stroke-width="3"/>
+<!-- body -->
+<path d="M58 182 C48 144 66 104 120 102 C174 104 192 144 182 182 C170 198 70 198 58 182 Z" fill="#c2452e"/>
+<path d="M182 182 C176 192 150 197 128 197 C156 186 172 160 168 116 C184 134 188 160 182 182 Z" fill="#8f2f20" stroke="none"/>
+<!-- shoulder plates -->
+<path d="M58 150 C56 124 70 108 92 104 C96 118 94 134 84 148 C76 152 66 154 58 150 Z" fill="#a9b2c4"/>
+<path d="M182 150 C184 124 170 108 148 104 C144 118 146 134 156 148 C164 152 174 154 182 150 Z" fill="#a9b2c4"/>
+<path d="M182 150 C174 154 164 152 156 148 C162 140 166 130 166 118 C176 126 182 138 182 150 Z" fill="#4a4f5c" stroke="none"/>
+<path d="M58 150 C62 140 72 136 84 148 C76 152 66 154 58 150 Z" fill="#4a4f5c" stroke="none"/>
+<!-- bellows chest -->
+<path d="M94 128 C104 122 136 122 146 128 L150 186 C136 194 104 194 90 186 Z" fill="#ffb347"/>
+<g fill="none" stroke-width="3">
+<path d="M96 142 Q120 150 144 142"/><path d="M95 156 Q120 164 145 156"/><path d="M93 170 Q120 178 147 170"/>
+</g>
+<path d="M98 132 C108 130 114 130 118 132 C110 138 104 150 104 160 C100 156 98 146 98 132 Z" fill="#fff1c9" stroke="none"/>
+<!-- belt plate -->
+<path d="M88 122 C106 114 134 114 152 122 L150 132 C134 126 106 126 90 132 Z" fill="#a9b2c4" stroke-width="3.5"/>
+<!-- arms -->
+<path d="M74 150 C68 164 74 174 90 172 C96 168 96 160 92 154 Z" fill="#c2452e"/>
+<path d="M166 150 C172 164 166 174 150 172 C144 168 144 160 148 154 Z" fill="#c2452e"/>
+<!-- head -->
+<path d="M120 112 C94 112 76 100 76 78 C76 54 96 40 120 40 C144 40 164 54 164 78 C164 100 146 112 120 112 Z" fill="#c2452e"/>
+<!-- horns -->
+<path d="M90 50 C82 38 80 26 86 16 C92 28 100 36 104 44 Z" fill="#fff1c9"/>
+<path d="M150 50 C158 38 160 26 154 16 C148 28 140 36 136 44 Z" fill="#fff1c9"/>
+<!-- helmet plate -->
+<path d="M80 72 C78 52 96 38 120 38 C144 38 162 52 160 72 C146 66 134 64 120 70 C106 64 94 66 80 72 Z" fill="#a9b2c4"/>
+<path d="M120 38 C144 38 162 52 160 72 C152 68 146 66 140 66 C146 56 140 44 120 38 Z" fill="#4a4f5c" stroke="none"/>
+<!-- snout -->
+<path d="M96 92 C96 82 108 80 120 80 C132 80 144 82 144 92 C144 104 132 110 120 110 C108 110 96 104 96 92 Z" fill="#e0664a"/>
+<ellipse cx="110" cy="90" rx="3" ry="2.5" fill="#1a1a1a" stroke="none"/>
+<ellipse cx="130" cy="90" rx="3" ry="2.5" fill="#1a1a1a" stroke="none"/>
+<!-- glowing mouth -->
+<path d="M106 100 Q120 108 134 100 Q128 106 120 106 Q112 106 106 100 Z" fill="#ffb347" stroke-width="3"/>
+<!-- eyes -->
+<path d="M86 76 C88 68 100 66 104 74 C102 82 90 84 86 76 Z" fill="#ffd23f" stroke-width="3.5"/>
+<path d="M154 76 C152 68 140 66 136 74 C138 82 150 84 154 76 Z" fill="#ffd23f" stroke-width="3.5"/>
+<ellipse cx="96" cy="75" rx="2.2" ry="5" fill="#1a1a1a" stroke="none"/>
+<ellipse cx="144" cy="75" rx="2.2" ry="5" fill="#1a1a1a" stroke="none"/>
+<!-- rivets -->
+<g fill="#4a4f5c" stroke="none">
+<circle cx="96" cy="52" r="2.6"/><circle cx="120" cy="46" r="2.6"/><circle cx="66" cy="136" r="2.4"/><circle cx="78" cy="118" r="2.4"/>
+<circle cx="174" cy="136" r="2.4"/><circle cx="162" cy="118" r="2.4"/><circle cx="96" cy="124" r="2"/><circle cx="144" cy="124" r="2"/>
+</g>
+</g>
+<!-- smoke puffs -->
+<g fill="#fff" stroke="#1a1a1a" stroke-width="2.5"><circle cx="190" cy="56" r="8"/><circle cx="202" cy="44" r="5"/><circle cx="48" cy="56" r="6"/></g>
+</svg>

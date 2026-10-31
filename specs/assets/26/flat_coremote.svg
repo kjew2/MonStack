@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<pattern id="fl-cm-dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6" fill="#9cc9e6"/></pattern>
+</defs>
+<rect width="240" height="240" fill="#f6efe0"/>
+<circle cx="120" cy="118" r="98" fill="url(#fl-cm-dots)"/>
+<path d="M0 206 H240" stroke="#1a1a1a" stroke-width="2" opacity=".25"/>
+<g stroke="#1a1a1a" stroke-width="3" stroke-linecap="round" opacity=".55">
+<path d="M14 64 L38 72"/><path d="M10 104 L30 106"/><path d="M226 70 L204 78"/><path d="M230 112 L210 113"/>
+</g>
+<ellipse cx="120" cy="210" rx="82" ry="10" fill="#1a1a1a" opacity=".18"/>
+<g stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<!-- blob body -->
+<path d="M34 184 C24 140 46 92 78 66 C96 50 108 36 122 36 C134 37 140 50 154 62 C190 88 216 136 206 184 C200 204 172 210 120 210 C70 210 40 204 34 184 Z" fill="#4fb3e8"/>
+<!-- hard shadow tone -->
+<path d="M206 184 C200 204 172 210 120 210 C76 210 46 205 37 190 C70 200 150 202 178 182 C196 168 202 140 196 112 C208 134 211 162 206 184 Z" fill="#1d5f9e" stroke="none"/>
+<!-- drip foot -->
+<path d="M64 204 C62 214 72 218 76 208" fill="#4fb3e8"/>
+<!-- nucleus glow -->
+<g transform="translate(0 8)"><circle cx="124" cy="152" r="34" fill="#a8e4fa" stroke="none"/><path d="M160 152 h8 M88 152 h-8 M150 126 l6 -6 M98 126 l-6 -6 M150 178 l6 6 M98 178 l-6 6" stroke="#fff" stroke-width="3.5"/>
+<path d="M124 128 C138 128 148 140 147 153 C146 167 136 176 123 176 C110 176 100 166 101 152 C102 139 111 128 124 128 Z" fill="#f2c14e" stroke-width="3.5"/>
+<path d="M147 153 C146 167 136 176 123 176 C112 176 104 170 101 160 C112 168 132 168 145 145 Z" fill="#d18e1c" stroke="none"/>
+<circle cx="116" cy="144" r="4.5" fill="#fff7d6" stroke="none"/></g>
+<!-- eyes -->
+<ellipse cx="96" cy="106" rx="9" ry="13" fill="#1a1a1a"/>
+<ellipse cx="146" cy="106" rx="9" ry="13" fill="#1a1a1a"/>
+<circle cx="99" cy="100" r="3.6" fill="#fff" stroke="none"/>
+<circle cx="149" cy="100" r="3.6" fill="#fff" stroke="none"/>
+<!-- cheeks -->
+<ellipse cx="80" cy="124" rx="8" ry="4" fill="#ff8fa3" stroke="none" opacity=".8"/>
+<ellipse cx="162" cy="124" rx="8" ry="4" fill="#ff8fa3" stroke="none" opacity=".8"/>
+<!-- mouth -->
+<path d="M112 122 Q121 132 130 122" fill="none" stroke-width="3.5"/>
+<!-- gloss -->
+<path d="M58 132 C54 108 66 84 86 70 C92 68 94 74 90 78 C74 92 66 110 68 130 C68 136 60 138 58 132 Z" fill="#fff" stroke="none"/>
+<circle cx="102" cy="62" r="5" fill="#fff" stroke="none"/>
+</g>
+<!-- bubbles -->
+<g fill="none" stroke="#1a1a1a" stroke-width="2.5"><circle cx="186" cy="56" r="7"/><circle cx="204" cy="38" r="4"/></g>
+</svg>

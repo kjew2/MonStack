@@ -1,0 +1,69 @@
+# 26 - Spike: manhwa-style creature art
+
+Status: **spike report (agent, 2026-10-31).** Research only; nothing here is agreed design until kj answers section 6. kj asked for a spike on creature sprites in the style of widely known manhwa (Korean webtoons): (1) is it feasible, (2) which styles are the most popular, (3) a panel comparing some of our creatures in those styles.
+
+The panel is the artifact https://claude.ai/artifact/6kuv4A2UWBV6sM6UVmizpo. Its 20 concept drawings are kept in `specs/assets/26/` (hand-written SVG, one file per style and species), so they survive without the artifact.
+
+## 1. Where the art is today
+
+- The web client draws every creature from 12x12 pixel art in `web/sprites.js`: five hand-made species (Coremote, Bastion Drake, Mirage Moth, Mandrake, Shade Hound; `specs/24` section 6) plus ten apex forms made by palette swap and overlay. Enemies are seeded sprites. There are no image files.
+- That is 15 creature looks today. Every new species adds one base look and two apex looks.
+- The phone artifact is already published as several files (`web/wasm/publish-artifact.sh`, through `artifact-files.py`), so shipping image files is a matter of adding them to that list. 15 portraits at roughly 50-150 KB each fit easily inside the 16 MB page limit.
+
+## 2. Feasibility
+
+**Short answer: feasible, but not from inside an agent session alone.** The manhwa look comes from painted, high-resolution art. The routes:
+
+| Route | Quality and consistency | Cost and speed | Risks |
+|---|---|---|---|
+| **A. AI image generation** (FLUX, SDXL, or a hosted model such as GPT-image or Imagen; a style LoRA or reference images to keep one look across creatures) | Can reach the manhwa look closely. Keeping the same creature recognisable across its base and two apex forms needs a reference image or a LoRA per species, plus a manual pick from several tries. | Cents per image; a day or two for 15 looks including cleanup (transparent background, crop, size). | Base-model licences differ (FLUX.1 [dev] is non-commercial; FLUX.1 [schnell], paid APIs and SDXL allow commercial use). Prompting with a living artist's name, or a LoRA trained on one artist's pages, is legally and ethically risky: describe the style instead. Steam has asked for a disclosure of AI content since January 2024, narrowed in January 2026 to content players see; a mobile store listing may raise the same question. |
+| **B. Commissioned artist** | Best consistency and full ownership; an artist can match a style family without copying anyone. | Weeks; a few hundred dollars per finished illustration is a common range, so a few thousand for 15 looks. | Schedule and budget. |
+| **C. Hand-written vector (SVG) by an agent** (what this spike did) | Works today with no keys or assets. Reaches the flat, ink and dark-action styles convincingly; the painterly style only as clean vector shading, without real brushwork. Below real manhwa painting. | Hours; tiny files that scale to any size. | Quality ceiling; each new look is another hand drawing. |
+| **D. Hybrid** | AI or agent concepts, then an artist (or an agent with the chosen concept as reference) produces the final set. | Between A and B. | Same licence questions as A for the concept step. |
+
+What blocks route A **in this environment**: the cloud session has no image model and no image-API key, so an agent cannot generate raster art here. It would need an API key added to the environment's secrets (and the host on the network allow list), or kj generating images and committing them.
+
+**Fit with the game.** Manhwa art is drawn for tall scrolling panels and close-up portraits. It reads best large: the monster card, the draft-card art, the apex reveal and the fight intro. In a battle row at 48-64 px, a painted portrait turns to mush, while the 12x12 pixel art stays readable. The natural split is **manhwa portraits for cards and reveals, small sprites for the battle view**, with the small sprite later redrawn from the portrait so the two match.
+
+## 3. The most popular manhwa styles
+
+There is no reliable public ranking of webtoons by readers (platforms publish per-series subscriber or view counts inconsistently, and most "top 10" pages are unsourced). The most solid popularity signal is which series got big adaptations, so the families below are ranked by that, plus fit with this game.
+
+| Style family | Flagship series | Popularity signal | Look | Fit with a monster raiser |
+|---|---|---|---|---|
+| **Hunter / system dark action** | *Solo Leveling* (art: DUBU, Redice Studio), *Omniscient Reader's Viewpoint*, *SSS-Class Revival Hunter* | *Solo Leveling* anime (2024-25) was a global hit; *Omniscient Reader* got a live-action film (2025). The dominant look of action-fantasy webtoons today. | Near-black scenes, hard two-tone cel shading, rim light and glowing eyes in electric blue or violet, sharp silhouettes, aura smoke. | High. Ranks, gates, leveling and "system" windows are already this game's vocabulary (`specs/22` section 8). Strongest for dark and fire species and for apex reveals. |
+| **Classic webtoon flat** | *Tower of God* (SIU), *The God of High School*, *Noblesse* | All three got anime (2020; *Tower of God* season 2 in 2024); *Tower of God* is often cited at several billion views. | Bold uneven outlines, flat colour with one hard shadow, simple expressive faces. | High for readability: survives small sizes best of the four, cheapest to produce consistently. |
+| **Painterly high fantasy** | *The Beginning After the End* (Fuyuki23), *The Remarried Empress*; *Lore Olympus* (a Webtoon original, not Korean) for colour-driven work | Long-running top fantasy titles; *TBATE* got an anime adaptation; *Lore Olympus* won an Eisner. | Soft gradients, warm key and cool bounce light, bloom, bokeh backgrounds; reads like a cover illustration. | Medium. Gorgeous for apex reveals and store art; hardest to keep consistent and weakest at small sizes. |
+| **Murim ink** | *Return of the Mount Hua Sect*, *Nano Machine*, *The Legend of the Northern Blade* | Among the top-selling martial-arts titles in Korea; a whole genre on its own. | Ink-wash greys on rice paper, tapered brush strokes, one restrained accent colour, red seal stamp. | Medium. Very distinctive and cheap to keep consistent; suits the folklore creatures (Mandrake, Shade Hound) and a possible eastern-myth region more than the whole roster. |
+
+Families researched but not drawn: **romance soft-pastel** (*True Beauty*, one of the most-subscribed series on Webtoon; little fit with monsters), **urban street** (*Lookism*, Netflix anime 2022; human-centred), and **chibi gag** (the super-deformed comedy panels most manhwa use, *Eleceed*'s cats). Chibi is the obvious candidate for a cute variant of any of the four (e.g. hunter-dark for fights, chibi for the training screen) and is worth a second panel if kj likes the idea.
+
+## 4. The panel
+
+Five species (`specs/24` section 6) in each of the four drawn families, next to today's 12x12 pixel art. The drawings are original creatures, drawn in a style family's rendering language, not copies of any character. They are agent-made SVG (route C), so they show the direction and readability of each style, not final quality: route A or B would look markedly better, the painterly column most of all.
+
+### 4.1 Stretching a style to the UI chrome
+
+Asked by the UI overhaul (issue #115): could a family dress the whole UI, not just the creatures? Mostly with CSS and fonts; few image assets.
+
+| Family | Chrome treatment | Assets needed | Fonts (Google Fonts) |
+|---|---|---|---|
+| Hunter / system dark | The "system window": near-black panels with a thin glowing border (box-shadow in the element colour), cut corners (`clip-path`), uppercase labels, a blue glow on focus and rare events. Reads as the in-world status screen. | None; CSS only. A few SVG icons for stats. | Display: Black Han Sans or Chakra Petch (already loaded); body: Gothic A1 or Barlow. |
+| Classic webtoon flat | Comic panels: thick dark borders, flat fills, hard offset shadows, speech-bubble tooltips, halftone dot backgrounds (CSS radial-gradient). Closest to today's arcade skin. | None; CSS only. | Display: Bangers (already loaded) or Black Han Sans; body: Gothic A1. |
+| Painterly high fantasy | Ornate frames, parchment and gradient panels, soft glows. | Needs painted frame and banner images (9-slice) to look right; CSS alone looks cheap. | Display: Cinzel; body: Gothic A1. |
+| Murim ink | Rice-paper panels (CSS gradient plus an SVG noise filter), brush-stroke dividers and buttons, a red seal stamp for rare events, ink-splash transitions. | A handful of small SVG brush strokes and the seal; the rest is CSS. | Display: Nanum Brush Script or Gowun Batang; body: Gowun Dodum or Noto Serif KR. |
+
+Palette tokens that line up with any of them: a background, a raised surface, ink (text), muted text, one accent, plus the existing per-stat and per-element colours, which every family keeps. Hunter-dark and flat both work with today's dark phone palette; ink and painterly want a light, paper-coloured base.
+
+## 5. Recommendation
+
+1. **Pick hunter/system dark action as the main style.** It is the most popular action look, matches the game's own vocabulary, and makes apex reveals feel like a jackpot. Use the **flat** family's rules (bold outline, at most two tones) for the small battle sprites so they stay readable.
+2. **Use the art for portraits first** (monster card, draft cards, apex reveal); keep the pixel sprites in battle until the portraits are settled.
+3. **Produce the final set by route D**: generate concepts with a commercially licensed model and style descriptions (no artist names), pick one per species, then have an artist (or an agent working from the picked concept) make the 15 looks consistent. Disclose AI use if it ships on Steam.
+
+## 6. Questions for kj
+
+1. **Style:** which family (or mix, as in section 5.1) should the game use?
+2. **Route:** AI generation, a commissioned artist, or the hybrid? If AI: is it fine to add an image-API key to the cloud environment so an agent can generate drafts?
+3. **Where the art shows:** portraits on cards and reveals only, or redraw the battle sprites in the style too?
+4. **Chibi:** worth a second panel with a cute variant for the training screen?

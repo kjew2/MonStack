@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<linearGradient id="pt-mm-sky" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#1a2c4a"/><stop offset="0.55" stop-color="#4b5a78"/><stop offset="1" stop-color="#e2a467"/>
+</linearGradient>
+<radialGradient id="pt-mm-sun" cx="0.5" cy="0.45" r="0.55">
+<stop offset="0" stop-color="#fff0c0" stop-opacity="0.55"/><stop offset="1" stop-color="#fff0c0" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="pt-mm-wing" cx="0.2" cy="0.6" r="0.9">
+<stop offset="0" stop-color="#fff8e1"/><stop offset="0.45" stop-color="#f2c94c"/><stop offset="1" stop-color="#b9821c"/>
+</radialGradient>
+<radialGradient id="pt-mm-wingL" cx="0.8" cy="0.6" r="0.9">
+<stop offset="0" stop-color="#fff8e1"/><stop offset="0.45" stop-color="#f2c94c"/><stop offset="1" stop-color="#b9821c"/>
+</radialGradient>
+<radialGradient id="pt-mm-hind" cx="0.5" cy="0.2" r="0.9">
+<stop offset="0" stop-color="#fff4d6"/><stop offset="0.6" stop-color="#f0dca6"/><stop offset="1" stop-color="#c79a4a"/>
+</radialGradient>
+<radialGradient id="pt-mm-eye" cx="0.5" cy="0.5" r="0.5">
+<stop offset="0" stop-color="#1a1030"/><stop offset="0.55" stop-color="#3a2a5a"/><stop offset="0.7" stop-color="#ff9f43"/><stop offset="0.85" stop-color="#ffd27a"/><stop offset="1" stop-color="#3a2a5a"/>
+</radialGradient>
+<radialGradient id="pt-mm-fur" cx="0.4" cy="0.3" r="0.8">
+<stop offset="0" stop-color="#fffaf0"/><stop offset="0.6" stop-color="#efdcb4"/><stop offset="1" stop-color="#9c7a48"/>
+</radialGradient>
+<radialGradient id="pt-mm-halo" cx="0.5" cy="0.5" r="0.5">
+<stop offset="0" stop-color="#fff3b0" stop-opacity="0.8"/><stop offset="1" stop-color="#fff3b0" stop-opacity="0"/>
+</radialGradient>
+<filter id="pt-mm-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+<filter id="pt-mm-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4"/></filter>
+<filter id="pt-mm-bokeh" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+<g id="pt-mm-half">
+<path d="M118 112 C104 72 72 40 38 42 C18 44 14 66 24 88 C34 110 64 124 116 122 Z" fill="url(#pt-mm-wingL)" stroke="#9a6a1a" stroke-width="1.4"/>
+<path d="M116 126 C88 128 54 140 46 166 C40 186 58 196 76 190 C98 182 112 158 118 132 Z" fill="url(#pt-mm-hind)" stroke="#9a6a1a" stroke-width="1.4"/>
+<path d="M116 116 C96 96 70 70 44 56 M114 118 C88 104 56 92 30 82 M116 128 C96 140 76 158 64 182" stroke="#b5862c" stroke-width="0.9" fill="none" opacity="0.6"/>
+<path d="M30 60 C40 50 60 48 74 52" stroke="#fff8e1" stroke-width="2" fill="none" opacity="0.7"/>
+<circle cx="60" cy="80" r="17" fill="url(#pt-mm-eye)"/>
+<circle cx="60" cy="80" r="17" fill="none" stroke="#2a1c44" stroke-width="1"/>
+<ellipse cx="55" cy="75" rx="4" ry="3" fill="#fff" opacity="0.85"/>
+<circle cx="76" cy="164" r="10" fill="url(#pt-mm-eye)"/>
+<circle cx="73" cy="161" r="2" fill="#fff" opacity="0.85"/>
+<circle cx="36" cy="64" r="5" fill="#3a2a5a" opacity="0.85"/>
+<circle cx="96" cy="104" r="4" fill="#3a2a5a" opacity="0.7"/>
+</g>
+</defs>
+<rect width="240" height="240" fill="url(#pt-mm-sky)"/>
+<rect width="240" height="240" fill="url(#pt-mm-sun)"/>
+<g filter="url(#pt-mm-bokeh)">
+<circle cx="24" cy="30" r="9" fill="#ffe2a8" opacity="0.25"/><circle cx="218" cy="200" r="12" fill="#ffe2a8" opacity="0.22"/><circle cx="210" cy="24" r="6" fill="#c9b8ff" opacity="0.3"/><circle cx="20" cy="206" r="8" fill="#c9b8ff" opacity="0.25"/><circle cx="120" cy="222" r="7" fill="#ffe2a8" opacity="0.25"/>
+</g>
+<path d="M0 214 C60 206 120 222 240 210 L240 240 L0 240 Z" fill="#2c2a3c" opacity="0.8"/>
+<circle cx="120" cy="116" r="72" fill="url(#pt-mm-halo)" filter="url(#pt-mm-blur)"/>
+<use href="#pt-mm-half"/>
+<use href="#pt-mm-half" transform="translate(240 0) scale(-1 1)"/>
+<!-- antennae -->
+<g stroke="#8a6a3a" stroke-width="1.4" fill="none" stroke-linecap="round">
+<path d="M114 76 C108 58 96 46 84 40"/><path d="M126 76 C132 58 144 46 156 40"/>
+</g>
+<g stroke="#e8d3a2" stroke-width="1.1" stroke-linecap="round">
+<path d="M110 66 l-7 1 M106 58 l-7 -1 M101 51 l-6 -3 M95 46 l-5 -4 M110 66 l-2 -6 M106 58 l1 -6 M101 51 l2 -6 M95 46 l2 -6"/>
+<path d="M130 66 l7 1 M134 58 l7 -1 M139 51 l6 -3 M145 46 l5 -4 M130 66 l2 -6 M134 58 l-1 -6 M139 51 l-2 -6 M145 46 l-2 -6"/>
+</g>
+<!-- body -->
+<path d="M120 110 C130 112 134 130 132 148 C130 166 124 178 120 180 C116 178 110 166 108 148 C106 130 110 112 120 110 Z" fill="url(#pt-mm-fur)" stroke="#8a6a3a" stroke-width="1.2"/>
+<g stroke="#b08a52" stroke-width="1" fill="none" opacity="0.6"><path d="M110 134 C116 137 124 137 130 134"/><path d="M110 148 C116 151 124 151 130 148"/><path d="M112 162 C116 164 124 164 128 162"/></g>
+<!-- fluffy head/thorax -->
+<path d="M120 76 C132 76 140 86 140 98 C142 104 138 112 132 114 C126 118 114 118 108 114 C102 112 98 104 100 98 C100 86 108 76 120 76 Z" fill="url(#pt-mm-fur)" stroke="#8a6a3a" stroke-width="1.2"/>
+<path d="M104 106 l-5 3 M108 112 l-3 5 M136 106 l5 3 M132 112 l3 5 M114 116 l-1 5 M126 116 l1 5" stroke="#efdcb4" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="112" cy="94" rx="5.5" ry="6.5" fill="#2a1c44"/><ellipse cx="128" cy="94" rx="5.5" ry="6.5" fill="#2a1c44"/>
+<ellipse cx="112" cy="96" rx="3.5" ry="4" fill="#6a4fb0"/><ellipse cx="128" cy="96" rx="3.5" ry="4" fill="#6a4fb0"/>
+<circle cx="110" cy="91" r="2" fill="#fff"/><circle cx="126" cy="91" r="2" fill="#fff"/>
+<ellipse cx="108" cy="104" rx="4" ry="2" fill="#ff9f8a" opacity="0.4"/><ellipse cx="132" cy="104" rx="4" ry="2" fill="#ff9f8a" opacity="0.4"/>
+<path d="M114 82 C118 79 124 79 128 82" stroke="#fff" stroke-width="2" fill="none" opacity="0.8" stroke-linecap="round"/>
+<!-- glowing dust -->
+<g fill="#fff3b0" filter="url(#pt-mm-soft)">
+<circle cx="40" cy="120" r="2.4"/><circle cx="200" cy="124" r="2.4"/><circle cx="60" cy="200" r="2"/><circle cx="180" cy="196" r="2"/><circle cx="96" cy="196" r="1.6"/><circle cx="150" cy="206" r="1.8"/><circle cx="30" cy="150" r="1.5"/><circle cx="214" cy="160" r="1.5"/>
+</g>
+<g fill="#fffbe8">
+<path d="M200 96 L202 101 L207 103 L202 105 L200 110 L198 105 L193 103 L198 101 Z"/>
+<path d="M40 102 L41.5 106 L45.5 107.5 L41.5 109 L40 113 L38.5 109 L34.5 107.5 L38.5 106 Z"/>
+<circle cx="120" cy="196" r="1.2"/><circle cx="72" cy="212" r="1"/><circle cx="168" cy="216" r="1.1"/>
+</g>
+</svg>

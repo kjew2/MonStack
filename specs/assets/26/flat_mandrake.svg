@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<pattern id="fl-md-dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.6" fill="#b9d99a"/></pattern>
+</defs>
+<rect width="240" height="240" fill="#f6efe0"/>
+<circle cx="120" cy="118" r="98" fill="url(#fl-md-dots)"/>
+<!-- soil -->
+<path d="M0 206 C40 200 80 204 120 202 C160 200 200 204 240 200 V240 H0 Z" fill="#a8743f" opacity=".35"/>
+<!-- scream lines -->
+<g stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round" fill="none">
+<path d="M30 92 L12 84"/><path d="M28 112 L8 114"/><path d="M34 132 L16 142"/>
+<path d="M210 92 L228 84"/><path d="M212 112 L232 114"/><path d="M206 132 L224 142"/>
+</g>
+<g stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<!-- leaves -->
+<path d="M118 62 C104 40 82 30 60 34 C68 56 92 66 118 62 Z" fill="#3f8f3a"/>
+<path d="M122 62 C136 40 158 30 180 34 C172 56 148 66 122 62 Z" fill="#7ccf5a"/>
+<path d="M120 64 C112 40 116 18 128 6 C138 26 132 46 120 64 Z" fill="#7ccf5a"/>
+<path d="M120 64 C128 46 132 30 128 6 C138 26 132 46 120 64 Z" fill="#3f8f3a" stroke="none"/>
+<path d="M118 62 C104 46 84 38 66 38" fill="none" stroke-width="2.5"/>
+<path d="M122 62 C136 46 156 38 174 38" fill="none" stroke-width="2.5"/>
+<!-- root legs -->
+<path d="M100 176 C96 192 88 202 74 210 C72 214 78 216 84 212 C100 204 110 192 114 178 Z" fill="#d9a86c"/>
+<path d="M140 176 C144 192 152 202 166 210 C168 214 162 216 156 212 C140 204 130 192 126 178 Z" fill="#a8743f"/>
+<path d="M120 186 C120 198 118 206 112 214" fill="none" stroke-width="3"/>
+<!-- arms -->
+<path d="M70 118 C54 116 42 104 38 90 C36 84 42 82 46 88 C52 98 60 104 72 106 Z" fill="#d9a86c"/>
+<path d="M170 118 C186 116 198 104 202 90 C204 84 198 82 194 88 C188 98 180 104 168 106 Z" fill="#d9a86c"/>
+<path d="M42 92 l-8 -4 M44 88 l-4 -8 M198 92 l8 -4 M196 88 l4 -8" fill="none" stroke-width="3"/>
+<!-- body -->
+<path d="M120 58 C150 58 174 80 174 116 C174 150 156 178 128 186 C124 190 116 190 112 186 C84 178 66 150 66 116 C66 80 90 58 120 58 Z" fill="#d9a86c"/>
+<path d="M174 116 C174 150 156 178 128 186 C124 190 116 190 112 186 C146 174 162 146 160 104 C158 88 152 76 146 68 C164 78 174 96 174 116 Z" fill="#a8743f" stroke="none"/>
+<!-- bark lines -->
+<path d="M80 138 q6 4 4 10 M158 92 q-4 6 0 10 M96 72 q6 2 8 -2" fill="none" stroke-width="2.5"/>
+<!-- root hairs -->
+<path d="M66 130 l-10 4 M68 146 l-8 8 M174 136 l10 4" fill="none" stroke-width="2.5"/>
+<!-- eyes squeezed -->
+<path d="M86 96 L102 104 L86 110" fill="none" stroke-width="4.5"/>
+<path d="M154 96 L138 104 L154 110" fill="none" stroke-width="4.5"/>
+<!-- brows -->
+<path d="M84 86 L104 92 M156 86 L136 92" fill="none" stroke-width="4"/>
+<!-- screaming mouth -->
+<path d="M120 112 C136 112 144 126 142 142 C140 158 132 168 120 168 C108 168 100 158 98 142 C96 126 104 112 120 112 Z" fill="#5a1e1e"/>
+<path d="M106 158 C110 148 130 148 134 158 C130 166 110 166 106 158 Z" fill="#e0606a" stroke="none"/>
+<path d="M108 118 C112 114 128 114 132 118 L128 124 L124 118 L120 124 L116 118 L112 124 Z" fill="#fff8e6" stroke-width="2.5"/>
+<!-- sweat -->
+<path d="M168 70 C172 76 176 80 172 86 C168 90 162 86 164 80 Z" fill="#9fdcff" stroke-width="2.5"/>
+</g>
+</svg>
