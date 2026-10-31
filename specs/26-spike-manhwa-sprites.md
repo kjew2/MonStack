@@ -85,3 +85,9 @@ Possible uses next to the abyss style, none decided: the field-guide style for a
 ### 7.1 The abyss style on the UI chrome
 
 For issue #115, in the terms of section 4.1: mostly CSS, a few small assets. Panels read as deep layers: dark teal-to-ink backgrounds with a soft vertical depth gradient, thin sepia borders with a hand-drawn wobble (an SVG border image or `feTurbulence` displacement), paper grain at low opacity, and bioluminescent glows (teal, amber) on focus, rare events and capstones. Assets: a few hanging-root and glowing-flora corner ornaments as SVG. Fonts (Google Fonts): a hand-lettered display face such as Amatic SC or Caveat (already loaded), with a soft humanist body face such as Nunito or Gothic A1. It keeps a dark base, so today's dark palette and per-stat and per-element colours carry over.
+
+## 8. Generation (issue #116)
+
+- `tools/art/generate.py` calls the OpenAI Images API (`gpt-image-2`, medium quality, 1024x1024 WebP) with `OPENAI_API_KEY`. `tools/art/prompts.json` holds the shared style prompt and one prompt per species; each species prompt names its one unsettling detail (section 7). The prompts describe the style in words and name no artist or series.
+- First drafts (2026-10-31): three candidates per species, 15 images, in `tools/art/drafts/<species>_<n>.webp`. They are on the panel's "AI drafts" tab for kj to pick one per species.
+- Next, after the picks: generate the two apex forms per species and the battle sprite from each pick as a reference image, then wire them into the web client in place of the 12x12 pixel art.
