@@ -413,7 +413,7 @@ Assumptions behind the cost column: 10,000 DAU, each with 2 sessions a day, 6 pu
 | Estimated monthly cost at 10 k DAU | Low. The services used here have free tiers sized for small titles; Cloud Code and Cloud Save are metered beyond them. Estimate 0 to 50 USD. | Standard tier has a base fee (about 99 USD) plus meters; estimate 150 to 400 USD. | Blaze pay-as-you-go. Firestore reads/writes at this volume are a few dollars; Functions within or just past the free tier; estimate 20 to 60 USD. | Self-hosted: software is Apache-2.0, infrastructure for one small VM plus managed Postgres about 50 to 150 USD. Heroic Cloud managed hosting starts in the low hundreds. |
 | Lock-in and risk | Single-vendor with the engine. Unity's commercial terms have changed abruptly before. Everything we use is reachable through this spec's interfaces, so a swap is confined to `IdleRng.Remote`. | Mature, stable pricing; heavier SDK; Azure account required. | Google lock-in on Firestore data model; everything else is portable. | No lock-in; we own the server. Ops burden: upgrades, backups, on-call. |
 
-Recommendation for v1: **Unity Gaming Services**, with **Nakama** as the fallback if UGS Cloud Code Modules cannot run `IdleRng.Sim` unchanged or if commercial terms move. Plain hosted .NET (section 10.2) is the second fallback, and the first one if the vendor terms become the problem.
+Recommendation for v1: **Unity Gaming Services**, confirmed by the spike in section 10.1 (Cloud Code modules run `IdleRng.Sim` unchanged). If Unity's terms move, the first fallback is plain hosted .NET (section 10.2), which also runs `IdleRng.Sim` unchanged; **Nakama** (a Go port) is the second.
 
 The cost column above was written for the idle game's gacha and cloud-save load; section 10.1 redoes the numbers for server-resolved PvP.
 
@@ -427,7 +427,7 @@ Against PlayFab: the base fee and the Azure Functions deployment pipeline are mo
 
 ### 10.1 Spike: `BattleSim.Resolve` in a UGS Cloud Code module (issue #17, 2026-10-31)
 
-**Status: in progress.** The module is built and deployed; the in-process and cross-runtime checks pass. The remote comparison (an anonymous player calling the deployed endpoint) and the latency numbers are not yet measured, because the cloud session's network policy refused `player-auth.services.api.unity.com` and `cloud-code.services.api.unity.com`. Rerun `server/ugs/SpikeClient remote` (see `server/ugs/README.md`) once both hosts are allowed, then fill in the pending rows and decide open decision 5.
+**Status: done (pass).** The module is built and deployed, and all 47 fights resolve to the same hash, outcome and ticks in process, across .NET 8 and .NET 10, and remotely as an anonymous player calling the deployed endpoint. The remote run was on 2026-10-31 from a Claude cloud session (`server/ugs/SpikeClient remote`, see `server/ugs/README.md`).
 
 What is in the repo (not in `check.sh`, because it needs credentials):
 - `server/ugs/IdleRngBattle`: the module. A net10.0 class library with a `ProjectReference` to `src/IdleRng.Sim` (netstandard2.1), so the server compiles the same sources: no copy, no port, no change to `IdleRng.Sim`. One endpoint, `ResolveFight(FightRules rules, Fighter[] sideA, Fighter[] sideB, string seed)`, returns outcome, ticks, `BattleSim.StateHash`, the hash version, the time inside `Resolve` and the worker's runtime and culture.
@@ -443,8 +443,10 @@ Results so far:
 | Package size | `IdleRngBattle.ccm` 392 KB of the 10 MB module limit (6 files: the module, `IdleRng.Sim.dll` 200 KB, Newtonsoft.Json 712 KB uncompressed, Cloud Code Core, DI abstractions). |
 | Golden files on .NET 10 | All four (`battle-sim`, `training-run`, `gauntlet`, `tower`) identical to the committed files written by the .NET 8 client build. |
 | In-process, through Cloud Code's JSON binding | 47 of 47 hashes, outcomes and ticks match `IdleRng.Sim`. `Resolve` takes 0.1 to 1.3 ms per fight in this cloud container (the slowest includes JIT warm-up). |
-| Remote, anonymous player | **Pending** (network policy). |
-| Cold start, warm median and worst of 20 | **Pending.** Unity documents a cold start after 15 minutes without traffic. |
+| Remote, anonymous player | **47 of 47** hashes, outcomes and ticks match `IdleRng.Sim`. Anonymous sign-in 0.7 s. The worker reports .NET 10.0.13 on Ubuntu 24.04 x64 with the invariant culture. |
+| Time inside `Resolve` on the worker | Median 0.1 ms, worst 5.8 ms over the 47 fights (the worst includes JIT warm-up). |
+| Warm round trip, 20 calls | Smallest fight (1.4 KB of params): median 62 ms, worst 74 ms. Largest (5.1 KB, a phased boss floor): median 66 ms, worst 183 ms. Measured from a cloud container, so the round trip is mostly network and Cloud Code overhead, not the sim. |
+| Cold start | First call right after a deploy: 14.9 s. First call after 16 minutes without traffic: COLD_IDLE. |
 
 Blockers for the shared code found so far: none. Notes for T12:
 - **Floating point.** The sim uses only `+ - * /`, comparisons and `Math.Min`, `Max`, `Floor` and `Round`; it avoids `Math.Pow` and transcendental functions by design. Those operations are exact under IEEE 754 on every .NET runtime, which is why the golden files match across .NET 8 and .NET 10. Keep it that way: a `Math.Pow`, `Exp` or `Log` in the sim could differ between the browser (WebAssembly) and the server.
@@ -452,6 +454,7 @@ Blockers for the shared code found so far: none. Notes for T12:
 - **Seed.** A 64-bit seed travels as a decimal string: JSON numbers in a JavaScript client lose precision above 2^53.
 - **Input size.** Fight params are 1.4 to 5.1 KB of JSON (a four-monster team against a phased boss), far below any limit. Enums travel as integers and computed properties (`CombatSkill.Magical`, `TowerRules.Valid`) are ignored on the way in.
 - **Not covered here.** The browser client (the WebAssembly build of the same sources) against the server: the wasm run in `check.sh` plays the trainer but does not compare fight hashes with the golden files. Add that to T12's golden replay fixtures (#32).
+- **Cold start against the 15 s limit.** COLD_NOTE
 - **Limits** (Cloud Code docs): 15 s per call, 512 MB per worker, 2 MiB response, 600 requests per minute per player, 20 modules per project.
 
 PvP load and cost at 10 k daily players. Assumptions: 10 ranked async PvP fights per player per day, each resolved by one module call, and 3 Daily Tower attempts certified server-side (one call per attempt if the endpoint runs the whole climb). That is about 130 k calls a day, 4 M a month.
@@ -459,14 +462,14 @@ PvP load and cost at 10 k daily players. Assumptions: 10 ranked async PvP fights
 | Meter | Free each month (UGS pricing page, October 2026) | Our use | Cost beyond the free tier |
 |---|---|---|---|
 | Invocations | 1 M | 4 M | 3 M x 1.50 USD per M = 4.50 USD |
-| Compute | 20 hours | 4 M x 10 to 30 ms billed (assumed; the remote run measures it) = 11 to 33 hours | 0 to 13 hours x 0.072 USD per hour = 0 to 1 USD |
+| Compute | 20 hours | 4 M x 10 to 30 ms billed (assumed: the sim itself takes about 0.1 ms per fight, but billing is per invocation's scheduled time, which the spike cannot see) = 11 to 33 hours | 0 to 13 hours x 0.072 USD per hour = 0 to 1 USD |
 | Egress | 1 GiB | 4 M x about 400 B = 1.5 GiB | 0.5 GiB x 0.25 USD = 0.15 USD |
 
-About 5 to 10 USD a month for the battles, plus sign-in and Cloud Save, which have their own free tiers. Re-check against the pricing page before launch; a forum post reports that compute is billed by CPU time scheduled rather than wall time, which the remote run should confirm.
+About 5 to 10 USD a month for the battles, plus sign-in and Cloud Save, which have their own free tiers. Re-check against the pricing page before launch; a forum post reports that compute is billed by CPU time scheduled rather than wall time. The spike could not confirm it: the dashboard's usage page is the place to check once there is real traffic.
 
-Decision: **pending** the remote run. If every remote hash matches, UGS stands as the v1 choice (open decision 5 closes). If not, record why here and compare the fallbacks in 10.2.
+Decision (2026-10-31): **UGS Cloud Code stands as the v1 server for battles.** Every remote hash matches with no change to `IdleRng.Sim`, warm calls take about 65 ms, and the PvP load costs about 5 to 10 USD a month. Open decision 5 is closed. The fallbacks in 10.2 stay on file for the vendor-terms risk in section 10.
 
-### 10.2 Fallbacks if the spike fails
+### 10.2 Fallbacks (if Unity's terms move)
 
 - **Nakama** (Go plugin): the battle rules ported to Go and held to the golden vectors. A second implementation to keep in step with every sim change, plus server ops.
 - **Plain hosted .NET** (for example a small ASP.NET Core service on a container host, not compared in the table above). Runs `IdleRng.Sim` unchanged like Cloud Code, with no vendor runtime limits, and suits a web client (plain HTTPS and CORS). Costs one small always-on container (about 5 to 20 USD a month) and the ops Cloud Code removes: deploys, TLS, scaling, and our own auth or a third-party one.
@@ -504,7 +507,7 @@ Why this split is safe: P0 and P1 have no shared surface between players (00 sec
 2. **Payment ledger split.** In P1, gems move server-side while gold stays local. Confirm free-pull credits (daily and banked) move with gems, as 4.3 assumes, since they pay for pulls.
 3. **Cloud-save conflict threshold.** The "meaningfully ahead" rule in 5.2 (stage, pulls, `PULL_COST_GEMS` of gems). May need to include gear if playtesters find silent overwrites of a Legendary drop.
 4. **Analytics profile id hashing.** Salted per build (8.1) means the same player cannot be followed across builds in the remote dataset. Decide whether that is wanted before P1.
-5. **UGS spike result** (section 10.1, issue #17). The module is deployed and passes in-process and across .NET 8 and .NET 10; the remote run as an anonymous player and the latency are pending network access. The recommendation stays conditional until that run.
+5. **UGS spike result** (section 10.1, issue #17). **Closed 2026-10-31: UGS.** 47 of 47 fights match remotely as an anonymous player, warm calls take about 65 ms, and `IdleRng.Sim` needed no change.
 6. **`PendingReceipt` schema step.** Add it to v1 now (a nullable field costs nothing and avoids a migration) or wait for P1. Leaning add now, alongside `PendingPull`.
 7. **Server-side plausibility bound.** Whether `plausibility_flag` should also be computed server-side on cloud-save upload in P1, so flagged profiles can be excluded from live tuning data without trusting the client's own flag.
 8. **TypeScript vs Go for a Nakama port.** Only relevant if the fallback is taken; Go for exact uint64 arithmetic unless the team strongly prefers TypeScript.
