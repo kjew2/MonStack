@@ -234,8 +234,9 @@
           h('span', { text: s.fightsWon + '/' + s.fightsFought + ' fights won' }),
         ]),
       ]),
-      h('div', { style: 'grid-column: 1 / -1; display:flex; flex-direction:column; gap:6px' }, [
-        h('div', { class: 'row between' }, [h('span', { class: 'small muted', text: 'Action points' }), pips]),
+      // Actions left and energy share one line (the Train screen's compact layout).
+      h('div', { class: 'hud-meters' }, [
+        h('span', { class: 'small muted', text: 'Actions' }), pips,
         bar(s.energy, k.energyMax, 'Energy ' + Math.round(s.energy) + '/' + k.energyMax, 'energy' + (low ? ' low' : '')),
       ]),
     ]);
@@ -261,40 +262,42 @@
     ]));
     const busy = s.phase !== 'training' || s.offers.length > 0;
     main.append(oddsChips(s));
-    const card = h('div', { class: 'card stats' });
+    // One compact row per stat: label with its growth under it, the gauge (value, milestone ticks), a Drill button. The last
+    // action's result sits in a fixed line at the top of the card, so feedback stays in view and the rows never shift.
+    const card = h('div', { class: 'card stats' }, [resultLine(ui.last, s)]);
     C.stats.forEach((st) => {
       const row = h('div', { class: 'stat st-' + st + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
-        h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }),
         h('div', { class: 'meta' }, [
-          statGauge(s, st),
-          h('small', { text: 'growth x' + s.growth[st].toFixed(2) }),
+          h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }),
+          h('small', { class: 'num', text: 'x' + s.growth[st].toFixed(2), title: 'Growth: drill gains are multiplied by ' + s.growth[st].toFixed(2) }),
         ]),
-        h('button', { class: 'btn primary small', type: 'button', 'data-act': 'drill-' + st, text: 'Drill', disabled: busy, onclick: () => drill(st) }),
+        statGauge(s, st),
+        h('button', { class: 'btn primary small', type: 'button', 'data-act': 'drill-' + st, text: 'Drill', disabled: busy,
+          'aria-label': 'Drill ' + up(st), onclick: () => drill(st) }),
       ]);
       card.append(row);
     });
     main.append(card);
+    if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
       text: 'Rest (+' + num(s.restEnergy) + ' energy)', onclick: rest }));
-    if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
-    if (ui.last) main.append(resultCard(ui.last));
     ui.flash = null;
   }
 
-  // The drill odds at this energy as a chip row (issue #115), all numbers from the engine (RunState odds, drillCost): fail,
-  // success, super, injury (lit when above 0; what an injury loses is its title), then the drill's cost, or Momentum's free drill,
-  // and Second Wind while it would stop the next injury.
+  // The drill odds at this energy as one row of small cells, value over label (issue #115), all numbers from the engine
+  // (RunState odds, drillCost): fail, success, super, injury (lit when above 0; what an injury loses is its title), then the
+  // drill's energy cost, or Momentum's free drill, and Second Wind while it would stop the next injury.
   function oddsChips(s) {
     const o = s.odds;
-    const chip = (cls, label, value, title) => h('span', { class: 'ochip ' + cls, title: title }, value === null ? [label] : [label + ' ', h('b', { text: value })]);
+    const chip = (cls, label, value, title) => h('span', { class: 'ochip ' + cls, title: title }, [label + ' ', h('b', { text: value })]);
     return h('div', { class: 'odds', 'data-id': 'odds', role: 'group', 'aria-label': 'Drill odds at this energy' }, [
       chip('o-fail', 'Fail', pct(o.fail)),
       chip('o-success', 'Success', pct(o.success)),
       chip('o-super', 'Super', pct(o.super)),
       chip('o-injury' + (o.injury > 0 ? ' on' : ''), 'Injury', pct(o.injury), 'An injury loses ' + injuryRisk() + '.'),
-      s.freeDrills > 0 ? chip('o-free', 'Momentum: free drill', null, 'The next drill costs no energy.')
-        : chip('o-cost', 'Cost', num(s.drillCost) + ' energy'),
-      o.injury > 0 && s.shieldsLeft > 0 ? chip('o-shield', '🛡 Second Wind', null, 'Second Wind will stop the next injury (energy drops to 0).') : null,
+      s.freeDrills > 0 ? chip('o-free', 'Momentum', 'Free', 'Momentum: the next drill costs no energy.')
+        : chip('o-cost', 'Energy', '-' + num(s.drillCost), 'Each drill costs ' + num(s.drillCost) + ' energy.'),
+      o.injury > 0 && s.shieldsLeft > 0 ? chip('o-shield', '2nd Wind', '🛡', 'Second Wind will stop the next injury (energy drops to 0).') : null,
     ]);
   }
 
@@ -302,16 +305,20 @@
   // (RunState milestoneAt, lowered by Early Bloom), lit once the stat has reached it.
   function statGauge(s, st) {
     const max = C.consts.statMax, v = s.stats[st];
-    const g = bar(v, max, num(v) + ' / ' + max, 'gauge');
+    const g = bar(v, max, num(v), 'gauge');
+    g.setAttribute('title', num(v) + ' / ' + max);
     const label = g.querySelector('span');
     s.milestoneAt.forEach((m) => g.insertBefore(h('i', { class: 'tick' + (v >= m ? ' hit' : ''), 'data-at': num(m), title: 'Milestone ' + num(m) + (v >= m ? ' (reached)' : ''),
       style: 'left:' + Math.max(0, Math.min(100, (m / max) * 100)) + '%' }), label));
     return g;
   }
 
-  function resultCard(r) {
+  // The last action's outcome, a fixed line at the top of the stats card; before the first action of a visit, a hint.
+  function resultLine(r, s) {
+    if (!r) return h('div', { class: 'result hint small muted', 'data-id': 'result-hint',
+      text: s.phase === 'training' && s.ap > 0 ? 'Drill a stat or Rest. ' + s.ap + ' action' + (s.ap === 1 ? '' : 's') + ' left this cycle.' : 'No actions left this cycle.' });
     if (r.kind === 'drill') {
-      return h('div', { class: 'card result', 'data-id': 'result' }, [
+      return h('div', { class: 'result', 'data-id': 'result' }, [
         h('div', null, [h('b', { class: r.tier, text: r.tierName }), h('span', { text: ' ' + up(r.stat) + ' ' + (r.gain ? '+' + num(r.gain) : '+0') + ' → ' + num(r.value) })]),
         r.injury ? h('div', { class: 'bad', 'data-id': 'injury-result' }, [h('b', { text: 'Injured! ' }),
           r.injury.back ? 'Back in cycle ' + r.injury.back + '.' : 'The run is over.']) : null,
@@ -320,7 +327,7 @@
         r.echoStat ? h('div', { class: 'small gold', 'data-id': 'echo-result', text: 'Echo Training: ' + up(r.echoStat) + ' +' + num(r.echoGain) + '.' }) : null,
       ]);
     }
-    return h('div', { class: 'card result', 'data-id': 'result' }, [h('div', null, [h('b', { text: 'Rest' }), h('span', { text: ' +' + num(r.restored) + ' energy' })])]);
+    return h('div', { class: 'result', 'data-id': 'result' }, [h('div', null, [h('b', { text: 'Rest' }), h('span', { text: ' +' + num(r.restored) + ' energy' })])]);
   }
 
   // An injury (specs/14 section 4.1): what it cost and when the monster is back, from the engine's numbers.

@@ -125,21 +125,28 @@ small, .small { font-size: 12px; }
 .bar.low .fill { background: var(--bad); }
 .bar span { position: relative; display: block; text-align: center; font: 600 11px/16px var(--font-display); text-shadow: var(--text-shade); }
 .pips { display: flex; gap: 5px; }
+.hud-meters { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }
+.hud-meters .bar { flex: 1; min-width: 0; }
 .pip { width: 14px; height: 14px; border-radius: var(--r-pill); border: 2px solid var(--gems); }
 .pip.full { background: var(--gems); }
 
 /* Train */
-/* Drill odds as a chip row (issue #115): fail, success, super, injury, the drill's cost; Momentum and Second Wind as their own chips */
-.odds { display: flex; flex-wrap: wrap; gap: 6px; }
-.ochip { display: inline-block; padding: 2px 8px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--panel);
-  font: 600 12px/1.5 var(--font-display); color: var(--muted); white-space: nowrap; }
-.ochip b { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+/* Drill odds as one row of equal cells, value over label (issue #115): fail, success, super, injury, the energy cost (or Momentum);
+   Second Wind as a sixth cell while it is armed */
+.odds { display: flex; gap: 4px; }
+.ochip { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column-reverse; align-items: center; padding: 3px 2px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--panel); font: 600 10px/1.3 var(--font-display); color: var(--muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: .03em; }
+.ochip b { font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; text-transform: none; letter-spacing: 0; }
 .ochip.o-fail b { color: var(--fail-ink); } .ochip.o-success b { color: var(--ok); } .ochip.o-super b { color: var(--gold); } .ochip.o-cost b { color: var(--gems); }
 .ochip.o-injury.on { border-color: var(--bad); } .ochip.o-injury.on b { color: var(--bad); }
 .ochip.o-free { border-color: var(--gems); color: var(--gems); } .ochip.o-shield { border-color: var(--gold); color: var(--gold); }
-/* Stat rows (issue #96): one row per stat with a divider between rows; label, bar and Drill button share the row's centre line */
+/* Stat rows (issue #96): one compact row per stat with a divider between rows; label (growth under it), gauge and Drill button
+   share the row's centre line. The last action's result is a fixed line at the top of the card. */
 .card.stats { gap: 0; padding-top: 0; padding-bottom: 0; overflow: hidden; }
-.stat { display: grid; grid-template-columns: 38px minmax(0, 1fr) 76px; gap: 10px; align-items: center; min-height: 64px; margin: 0 -12px; padding: 8px 12px; }
+.stats .result { min-height: 40px; justify-content: center; margin: 0 -12px; padding: 6px 12px; border-bottom: 1px solid var(--line); background: var(--panel-2); }
+.stats .result.hint { font-size: 12px; }
+.stat { display: grid; grid-template-columns: 40px minmax(0, 1fr) 60px; gap: 10px; align-items: center; min-height: 46px; margin: 0 -12px; padding: 5px 12px; }
 .stat + .stat { border-top: 1px solid var(--line); }
 .stat .lbl { font: 700 13px var(--font-display); color: var(--st, var(--text)); }
 /* A stat gauge (issue #115): the bar in its stat colour, a tick per milestone (lit once reached) instead of the threshold text */
@@ -148,9 +155,9 @@ small, .small { font-size: 12px; }
 .bar.gauge span { line-height: 18px; }
 .bar .tick { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--tick); }
 .bar .tick.hit { background: var(--tick-hit); box-shadow: 0 0 4px var(--tick-hit); }
-.stat .meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.stat .meta small { color: var(--muted); overflow-wrap: anywhere; }
-.stat .btn { width: 76px; }
+.stat .meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; line-height: 1.1; }
+.stat .meta small { color: var(--muted); font-size: 10px; }
+.stat .btn { width: 60px; padding: 4px 6px; }
 /* Drill outcome pops (issue #95): a "+x" floating up from the drilled stat's row, styled by the drill tier */
 .dpop { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none; --o: 0 0 2px var(--shade), 1px 1px 0 var(--shade), -1px 1px 0 var(--shade), 1px -1px 0 var(--shade), -1px -1px 0 var(--shade); }
 .dpop.fail { font: 600 30px/1 var(--font-hand); color: var(--fail-ink); text-shadow: var(--o), 0 3px 6px color-mix(in srgb, var(--shade) 60%, transparent); animation: dpop-fail 1.6s ease-in both; }
