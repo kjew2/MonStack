@@ -46,7 +46,7 @@ namespace IdleRng.Web
             w.Key("consts").Obj()
                 .P("runCycles", k.RunCycles).P("runAp", k.RunAp).P("energyMax", k.RunEnergyMax).P("fightEvery", k.FightEvery)
                 .P("statMax", k.StatMax).P("treeSlots", k.TreeSlots).P("drillEnergyCost", k.DrillEnergyCost).P("restEnergy", k.RestEnergy)
-                .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("superP", k.DrillSuperP)
+                .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("treeRefund", k.TreeRefund).P("superP", k.DrillSuperP)
                 .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap).P("vendorOffers", k.VendorOffers)
                 .P("injurySkipCycles", k.InjurySkipCycles).P("injuryRecoverEnergy", k.InjuryRecoverEnergy)
                 .EndObj();
@@ -298,7 +298,7 @@ namespace IdleRng.Web
                     case "finishRun":
                     {
                         var r = AccountOps.FinishRun(_db, _acct, (long)a.Num(0));
-                        w.P("ok", true).P("shards", r.Shards);
+                        w.P("ok", true).P("shards", r.Shards).P("ticketPieces", r.TicketPieces).P("ticketsEarned", r.TicketsEarned);
                         w.Key("entry"); Entry(w, r.Entry);
                         w.Key("booksReturned").Arr();
                         foreach (var b in r.BooksReturned) w.Str(b);
@@ -375,14 +375,16 @@ namespace IdleRng.Web
         }
 
         /// <summary>
-        /// The Daily Tower on a day (specs/21 section 8), read only: attempts left, today's and the best floors cleared, and the
-        /// day's lineup with each boss's name, element, level and phases.
+        /// The Dungeon on a day (specs/21 section 8), read only: tickets (held plus the free ones due), ticket pieces, today's and
+        /// the best floors cleared, and the day's lineup with each boss's name, element, level and phases.
         /// </summary>
         private void TowerInfo(JsonOut w, int day)
         {
             var t = _acct.Tower ?? new TowerProgress();
-            w.P("ok", true).P("day", day).P("attemptsLeft", AccountOps.TowerAttemptsLeft(_db, _acct, day))
-                .P("attemptsPerDay", _db.Constants.TowerAttemptsPerDay).P("clearedToday", day == t.Day ? t.ClearedToday : 0)
+            w.P("ok", true).P("day", day).P("tickets", AccountOps.TowerTickets(_db, _acct, day))
+                .P("ticketsPerDay", _db.Constants.TowerAttemptsPerDay).P("ticketCap", _db.Constants.TowerTicketCap)
+                .P("ticketPieces", t.TicketPieces).P("piecesPerTicket", _db.Constants.TowerTicketPieces)
+                .P("clearedToday", day == t.Day ? t.ClearedToday : 0)
                 .P("clearedEver", t.ClearedEver).P("lastDay", t.Day).P("teamMax", _db.Constants.MonSideSize);
             w.Key("floors").Arr();
             foreach (var p in TowerSim.Lineup(_db, day))
@@ -400,7 +402,7 @@ namespace IdleRng.Web
         }
 
         /// <summary>
-        /// One Daily Tower attempt (AccountOps.RunTower): the rewards, each floor fought (with its fight hash), and the last floor's
+        /// One Dungeon attempt (AccountOps.RunTower): the rewards, each floor fought (with its fight hash), and the last floor's
         /// fight for playback (TowerFight). The fight log comes from replaying the attempt with observers, which gives the identical
         /// result (the hash is checked). The other floors' fights come from towerFloor, on demand.
         /// </summary>
@@ -413,7 +415,7 @@ namespace IdleRng.Web
             var (again, log, final) = ReplayTower(idx, day, last.Floor);
             if (again.Hash != res.Hash) throw new InvalidOperationException("the tower replay differs from the attempt");
 
-            w.P("ok", true).P("shards", r.Shards).P("attemptsLeft", r.AttemptsLeft).P("floorReached", res.FloorReached)
+            w.P("ok", true).P("shards", r.Shards).P("ticketsLeft", r.TicketsLeft).P("floorReached", res.FloorReached)
                 .P("cleared", res.Cleared).P("floorsCleared", res.FloorsCleared).P("hash", res.Hash);
             w.Key("books").Arr();
             foreach (var (floor, book) in r.Books) w.Obj().P("floor", floor).P("book", book).P("name", _db.Text(_db.SkillBooks[book].NameKey)).EndObj();
@@ -437,7 +439,7 @@ namespace IdleRng.Web
         }
 
         /// <summary>
-        /// One floor's fight of a Daily Tower attempt for playback, read only (specs/21 section 8). The same team (Vault indices in
+        /// One floor's fight of a Dungeon attempt for playback, read only (specs/21 section 8). The same team (Vault indices in
         /// slot order) on the same day replays the same fights, since a result is a pure function of them (specs/21 section 2), so
         /// this pays and counts nothing. Refused when the team does not reach that floor.
         /// </summary>
@@ -654,7 +656,7 @@ namespace IdleRng.Web
                     case "take":
                     {
                         var r = TrainingRun.TakeTree(_db, s, a.Int(0), a.Int(1));
-                        w.P("ok", true).P("kind", "take").P("placed", r.Placed);
+                        w.P("ok", true).P("kind", "take").P("placed", r.Placed).P("refunded", r.Refunded);
                         w.Key("removed").Arr();
                         foreach (var id in r.Removed) w.Str(id);
                         w.EndArr();
@@ -776,7 +778,7 @@ namespace IdleRng.Web
             if (x.Skill != null) w.P("skill", _db.Text("mskill." + x.Skill.Id + ".name")).P("skillId", x.Skill.Id).P("kind", x.Skill.Kind.ToString().ToLowerInvariant());
             if (x.Event != null)
             {
-                w.P("event", x.Event);   // a Daily Tower event (specs/21 section 6) or a rule modifier's (specs/16 section 6.2)
+                w.P("event", x.Event);   // a Dungeon event (specs/21 section 6) or a rule modifier's (specs/16 section 6.2)
                 if (x.Event.StartsWith(FightAction.RulePrefix, StringComparison.Ordinal))
                     w.P("skill", _db.Text("rule." + x.Event.Substring(FightAction.RulePrefix.Length) + ".name"));
             }

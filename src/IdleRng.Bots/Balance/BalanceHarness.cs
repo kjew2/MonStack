@@ -28,7 +28,7 @@ namespace IdleRng.Bots.Balance
         /// <summary>Skill books every run brings; null or empty = none.</summary>
         public IList<string> Books { get; set; }
 
-        /// <summary>Also send the sealed monsters up the Daily Tower (alone, and one of each species as a team).</summary>
+        /// <summary>Also send the sealed monsters up the Dungeon (alone, and one of each species as a team).</summary>
         public bool Tower { get; set; } = true;
 
         /// <summary>Tower day for seed index i is TowerDayBase + i, so the lineups vary across the sample.</summary>
@@ -97,7 +97,7 @@ namespace IdleRng.Bots.Balance
         public double WinRate => Fought == 0 ? 0 : (double)Won / Fought;
     }
 
-    /// <summary>One Daily Tower attempt by a team of sealed monsters on a day.</summary>
+    /// <summary>One Dungeon attempt by a team of sealed monsters on a day.</summary>
     public sealed class TowerSample
     {
         public string Policy { get; set; }
@@ -107,7 +107,7 @@ namespace IdleRng.Bots.Balance
         public int FloorsCleared { get; set; }
         public bool Cleared { get; set; }
 
-        /// <summary>TOWER_SHARDS_PER_FLOOR x floors cleared: what a first attempt that day pays.</summary>
+        /// <summary>TOWER_SHARDS_PER_FLOOR x floors cleared: what one ticket pays.</summary>
         public long Shards { get; set; }
 
         /// <summary>Skill Books the cleared floors drop (TowerSim.BookDrop).</summary>
@@ -298,7 +298,7 @@ namespace IdleRng.Bots.Balance
                 .OrderByDescending(t => t.Count).ThenBy(t => t.Key, StringComparer.Ordinal).ToList();
     }
 
-    /// <summary>Daily Tower results for one policy x team.</summary>
+    /// <summary>Dungeon results for one policy x team.</summary>
     public sealed class TowerSummary
     {
         public string Policy { get; set; }
@@ -349,7 +349,7 @@ namespace IdleRng.Bots.Balance
 
     /// <summary>
     /// The run-balance harness (specs/09 section 7): plays every species x policy over many seeds with the bots, seals each run
-    /// (shards, gauntlet) and optionally sends the monsters up the Daily Tower, then summarises and runs the loose sanity checks
+    /// (shards, gauntlet) and optionally sends the monsters up the Dungeon, then summarises and runs the loose sanity checks
     /// (BalanceChecks). A report, not a gate: a WARN fails nothing. Deterministic: the same content and options give the same
     /// report, at any Jobs.
     /// </summary>

@@ -54,10 +54,11 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 ## 4. Offers and overwriting
 
 - **Milestone draft.** When a stat crosses a `stat_milestones` threshold (by a drill or a flat stat node), the run offers up to `DRAFT_SIZE` distinct generic trees whose `offer_stat` is that stat or empty and whose `offer_threshold` is at most the threshold, excluding trees already slotted or offered. They are picked by partial shuffle on the run's `draft` stream, one draw per pick. No eligible tree, no offer. Each stat and threshold pair drafts once per run.
-- **Skill book.** `UseBook` offers the book's tree. Books come from the Daily Tower (post-MVP); until then a run is started with a list of books (`TrainingRun.Start(..., books)`), the debug grant `specs/13` T3 planned.
+- **Skill book.** `UseBook` offers the book's tree. Books come from the Dungeon (post-MVP); until then a run is started with a list of books (`TrainingRun.Start(..., books)`), the debug grant `specs/13` T3 planned.
 - **Chase tree.** Section 5.
 - Offers queue oldest first.
-- **Overwriting** (kj): the overwritten tree's points are lost. **(agent)** Its effects go with it: its flat stat boosts are subtracted again (never below 0), its growth bonus stops applying, its skills leave the kit. Gains already made from its growth bonus stay. Milestones already recorded stay recorded.
+- **Overwriting** (kj, 2026-10-31; it was "points are lost" until then): `TREE_REFUND` (0.5, half) of the SP spent in the overwritten tree comes back, rounded down **(agent)**. **(agent)** Its effects go with it: its flat stat boosts are subtracted again (never below 0), its growth bonus stops applying, its skills leave the kit. Gains already made from its growth bonus stay. Milestones already recorded stay recorded.
+- **(agent)** A chase tree that locks again (section 5.2) leaves the same way, so it is refunded too. Each tree is rounded down on its own. `TakeTree` reports the trees removed and the SP refunded.
 
 ## 5. Chase trees
 
@@ -133,6 +134,7 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | `SP_PER_WIN` | 2 | `>= 0` |
 | `TREE_SLOTS` | 4 | `>= 2` |
 | `DRAFT_SIZE` | 3 | `> 0` |
+| `TREE_REFUND` | 0.5 | `[0, 1]`: share of the SP spent in a tree that comes back when it leaves its slot (section 4) |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` (`specs/16` section 7) |
 | `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE` | 0.05, 0.3, 0.3, 0.5 | `[0, 1]` (`specs/16` section 7) |
 | `MON_DOUBLE_TURNS` | 1 | `>= 1` (`specs/16` section 7) |
@@ -154,4 +156,6 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
   - the in-run chase capstone is bought in about the top 10% of runs;
   - the book chase capstone in about 50% of runs that bring the species' own book.
   - **(agent)** Measured under the `focus` and `hoarder` policies. Today it is 0-69% for in-run and 0% for book (`specs/22` section 2), so content and the SP economy need retuning. The bots must first play toward their chase conditions (#111).
+- **Book chase capstones must be uber strong** (kj, 2026-10-31, #112): books are uber rare (`specs/21` section 5), so a run that gets its book should get a jackpot. The 50% target is for runs that have the book.
 - **Drawback capstones** and **fusion of specific tree pairs** are allowed (kj, 2026-10-31; `specs/12` section 5.2.1).
+- **Digestion and rank-fight loot** are agreed, tribulation fights are not; overwriting refunds half (built, content 3.15) and there are no tree neighbours (kj, 2026-10-31; `specs/12` section 5.2.1, `specs/22` section 8.6). Open **(agent)**: the content shape for digestion tallies on nodes, and what rank-fight loot drops.

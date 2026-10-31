@@ -8,7 +8,7 @@ It replaced the idle game's 4v1 boss battle, which was removed with that game at
 
 ## 1. Shape
 
-- Two sides, A and B, of 1 to `MON_SIDE_SIZE` (4) units each. 1v1 (gauntlet, in-run Tactical Challenges), 4v1 (Daily Tower bosses) and 4v4 (Endless Tower, PvP) are all the same engine.
+- Two sides, A and B, of 1 to `MON_SIDE_SIZE` (4) units each. 1v1 (gauntlet, in-run Tactical Challenges), 4v1 (Dungeon bosses) and 4v4 (Endless Tower, PvP) are all the same engine.
 - Turn order is an ATB gauge; actions are automatic (default AI, section 5.2). Gambit rulebooks (`specs/12` section 8.1) will replace the AI per unit later.
 - Pure and deterministic: same fighters, rules and random draws give the same fight on the client, the bots and a server.
 

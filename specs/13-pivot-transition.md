@@ -20,7 +20,7 @@ Status: **MVP done (T1-T7); T8 and T9 done.** The idle game is removed (T7, 2026
 | Pure sim rules (`specs/00` section 5.1) | `IdleRng.Sim`: no IO, clock, JSON, reflection or `Math.Pow` | Same rules for the run engine, battles and gauntlet | Keep |
 | RNG streams | `Rng/SplitMix64.cs`, named `(seed, counter)` streams | New streams: `training`, `draft`, `fight`, `battle_sim`, `gauntlet`, `run` (`specs/03` section 5.5); the idle streams were removed | Keep, new streams |
 | Command log, replay, `StateHash` | `Replay/`, `Simulation.Replay.cs` | Every run decision is a command, so a run replays exactly; PvP and certification rely on it | Idea kept, code replaced: `TrainingRun.Replay` and the run/fight/gauntlet hashes; only the canonical hash writer survives from `Replay/` |
-| Battle engine | `Battle/BattleEngine.cs`: 4v1 ATB, skill vocabulary, triggers | One engine for 1v1 (gauntlet, in-run fights), 4v1 (Daily Tower) and 4v4 (Endless, PvP). Becomes the `BattleSim.Resolve` of `specs/10` section 9.2 | Rebuilt as `IdleRng.Sim.Combat` (T1, `specs/16`) from the same ATB, damage and effect design; the idle engine retires at T7 |
+| Battle engine | `Battle/BattleEngine.cs`: 4v1 ATB, skill vocabulary, triggers | One engine for 1v1 (gauntlet, in-run fights), 4v1 (Dungeon) and 4v4 (Endless, PvP). Becomes the `BattleSim.Resolve` of `specs/10` section 9.2 | Rebuilt as `IdleRng.Sim.Combat` (T1, `specs/16`) from the same ATB, damage and effect design; the idle engine retires at T7 |
 | Skill vocabulary and triggers | `skills.csv` kinds/targets, `BattleTrigger` | Tree nodes, chase traits and rule-breaking passives are written in it; the trigger list grows | Adapt |
 | Elements | `elements.csv`, strong/weak wheel | Species and skill types | Keep (section 9 item 9) |
 | Gacha math | `Gacha/Gacha.cs`, `specs/01`, pity, 10-pull guarantee, vectors | None: the species gacha was scrapped at T9 (kj, 2026-10-30); species unlock from achievements | The idle code and vectors were deleted at T7; `tools/gacha_model.py` was deleted at T9 and `specs/01` marked retired |
@@ -41,7 +41,7 @@ Deleted at T7 (2026-10-30), when the web client had been on the new loop for a w
 - Gold, stat levels (`specs/04` section 4), gear drops and enhancement (`specs/04` section 5), promotion (`specs/11` section 6).
 - Offline catch-up, idle chest, offline gold (`specs/06` section 9, `specs/04`).
 - The idle boss battle (`src/IdleRng.Sim/Battle`, `specs/11` section 8), replaced by `IdleRng.Sim.Combat` (`specs/16`).
-- Daily quests as written (the Daily Tower replaces them; section 9 item 10).
+- Daily quests as written (the Dungeon replaces them; section 9 item 10).
 - Stage-target acceptance AC1-AC5 and `progress_targets`, the power-curve model (`tools/power_curve_model.py`, #66), `specs/02`.
 - Idle save migrations v1 -> v2.
 
@@ -65,7 +65,7 @@ Result at T7: `00`, `03`, `05`, `06` and `09` were rewritten; `02`, `04`, `07` a
 | `11-party-and-builds` | Phases 3-5 cancelled. The battle, kit vocabulary and elements carry into the new battle spec; the rest retires. |
 | `12-monster-trainer-design` | The target design. Each built system moves out of it into its own rules spec. |
 
-New rules specs were written as phases landed, one per system: `14-training-run`, `15-skill-trees`, `16-battle`, `18-meta-progression`, `19-gauntlet`, `21-daily-tower` (the Vault is in `13` T4 and `18`; `17` was never used). Each says what is live.
+New rules specs were written as phases landed, one per system: `14-training-run`, `15-skill-trees`, `16-battle`, `18-meta-progression`, `19-gauntlet`, `21-dungeon` (the Vault is in `13` T4 and `18`; `17` was never used). Each says what is live.
 
 ## 5. Priorities and issue triage (applied 2026-10-30 at kj's request)
 
@@ -82,7 +82,7 @@ Triage applied:
 | Issue | Result |
 |---|---|
 | #60 overhaul goal | Closed, superseded by #69 and #70 |
-| #55, #57 affix gear, slot enhancement; #56 daily dungeons, #64 uniques; #58 stat upgrades; #63 companion roles | Closed: no gear or companions in the new design; training, trees and the Daily Tower replace them |
+| #55, #57 affix gear, slot enhancement; #56 daily dungeons, #64 uniques; #58 stat upgrades; #63 companion roles | Closed: no gear or companions in the new design; training, trees and the Dungeon replace them |
 | #59 multiplying stats | Closed as folded into `specs/15` and `specs/16` |
 | #41 AC4 walls, #66 power-curve model | Closed: they measure the idle loop |
 | #54 App Store launch goal | Closed as a duplicate of #70; its launch goals #45-#53 moved under #70 |
@@ -121,12 +121,12 @@ MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were m
 
 ### T3 - Skill trees
 
-**Done** (`specs/15`). kj (2026-10-30): SP per cycle plus a bonus per rank fight win; trees are lines of nodes with about 75% filler and the chase trait last; points in an overwritten tree are lost and a chase tree whose prerequisite is overwritten locks again; chase trees' capstones are much stronger and more unique.
+**Done** (`specs/15`). kj (2026-10-30): SP per cycle plus a bonus per rank fight win; trees are lines of nodes with about 75% filler and the chase trait last; points in an overwritten tree are lost (amended 2026-10-31: half come back, `specs/15` section 4) and a chase tree whose prerequisite is overwritten locks again; chase trees' capstones are much stronger and more unique.
 
 - Content `2.5`: `monster_skills`, `trees`, `tree_nodes`, `chase_conditions`, `skill_books`, species native trees, SP and slot constants. Placeholder content: 3 species x 2 native trees, 10 generic trees, 1 book tree, 2 chase trees.
 - Run commands `SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; milestone drafts on a `draft` stream; chase unlock and re-lock; run tallies from rank fights; the monster's fight kit from its bought nodes.
 - New rule modifier `echo_cast` (Arcane Overflow's capstone). Each chase tree got a capstone of its own in content `3.7` (issue #92, `specs/15` section 2).
-- Books are passed into `TrainingRun.Start` until the Daily Tower drops them (T10).
+- Books are passed into `TrainingRun.Start` until the Dungeon drops them (T10).
 
 ### T4 - Run end: grade, Vault
 
@@ -172,8 +172,8 @@ MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were m
 | Phase | Content |
 |---|---|
 | T8 | **Done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title; the web client spins the wheel after sealing and shows "Floor N: title" on the grade screen and Vault cards). End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
-| T9 | **Done** (`specs/18` sections 4 and 8; issue #73). Re-scoped by kj (2026-10-30): the species gacha is scrapped. A new account owns the starter species (slime); the others unlock from account achievements (content table `achievements`, checked at seal and on load). The always-on talent shop is replaced by a post-run vendor: `VENDOR_OFFERS` (5) random talent offers per sealed run, rarity odds by the run's grade (`vendor_rarities`), bought with Training Shards, gone when the next run starts. Skill Books become the premium gate (dropped by the Daily Tower, T10; selling them is open, #49 and #77). Account save v3. Web: locked species with their condition, achievement list and notices, the vendor screen after the grade screen. `tools/gacha_model.py` deleted, `specs/01` retired, Genetic Aptitude dropped |
-| T10 | **P0, in progress** (`specs/21`; kj answered its questions 1 and 2 on 2026-10-31). **Live**: the battle hooks (entropy gauge, boss phases, environmental clock), the tower sim with its content (content 3.6), attempts and rewards on the account (save v4) and the tower screen in the web client with floor playback, entropy and corruption meters and their tooltips (content 3.10), a team picker with the Vault's search, sort and filters and slot reordering, and the test book button made debug only (issue #98). Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
+| T9 | **Done** (`specs/18` sections 4 and 8; issue #73). Re-scoped by kj (2026-10-30): the species gacha is scrapped. A new account owns the starter species (slime); the others unlock from account achievements (content table `achievements`, checked at seal and on load). The always-on talent shop is replaced by a post-run vendor: `VENDOR_OFFERS` (5) random talent offers per sealed run, rarity odds by the run's grade (`vendor_rarities`), bought with Training Shards, gone when the next run starts. Skill Books become the premium gate (dropped by the Dungeon, T10; selling them is open, #49 and #77). Account save v3. Web: locked species with their condition, achievement list and notices, the vendor screen after the grade screen. `tools/gacha_model.py` deleted, `specs/01` retired, Genetic Aptitude dropped |
+| T10 | **P0, in progress** (`specs/21`; kj answered its questions 1, 2 and 7 on 2026-10-31). Renamed the **Dungeon** (kj, 2026-10-31): one free ticket a day banked up to 5, ticket pieces from sealed runs by grade, every ticket pays in full (content 3.16, account save v5). **Live**: the battle hooks (entropy gauge, boss phases, environmental clock), the tower sim with its content (content 3.6), attempts and rewards on the account (save v4) and the tower screen in the web client with floor playback, entropy and corruption meters and their tooltips (content 3.10), a team picker with the Vault's search, sort and filters and slot reordering, and the test book button made debug only (issue #98). Dungeon: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
 | T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |
 | T12 | Async 4v4 PvP on `specs/10`: accounts, server-resolved battles, cosmetic rewards |
 | T13 | Monetization: opt-in ads, ad-removal pass, cosmetics; platform builds |

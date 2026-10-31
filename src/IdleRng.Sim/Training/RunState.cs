@@ -176,7 +176,7 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// The rank ladder (specs/14 section 5): the rank_enemies id fought at each rank, indexed like ContentDb.FightRanks, rolled
-        /// at Start on the "ladder" stream. Empty for a legacy run (started before the pools, content 3.14): its opponent at each
+        /// at Start on the "ladder" stream. Empty for a legacy run (started before the pools, content 3.17): its opponent at each
         /// rank is the flat fight_ranks row.
         /// </summary>
         public List<string> Ladder { get; set; } = new List<string>();
@@ -290,5 +290,8 @@ namespace IdleRng.Sim.Training
     {
         public string Placed { get; set; }
         public List<string> Removed { get; set; } = new List<string>();
+
+        /// <summary>SP refunded by the trees that left (TREE_REFUND of what was spent in each, rounded down).</summary>
+        public int Refunded { get; set; }
     }
 }

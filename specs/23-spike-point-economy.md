@@ -1,6 +1,6 @@
 # 23 - Spike: point economies with variance and dynamism
 
-Status: **spike report (agent, 2026-10-31; issue #112). Nothing here is agreed design.** kj asked for research on point and currency economies in general (management, strategy, RPG and roguelite games). The question: what can add variance and dynamism to the skill point (SP) economy, so that runs diverge through skill expression, RNG or both? This follows the higher-tier spike (`specs/22`). Section 6 lists the decisions for kj.
+Status: **spike report (agent, 2026-10-31; issue #112); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for research on point and currency economies in general (management, strategy, RPG and roguelite games). The question: what can add variance and dynamism to the skill point (SP) economy, so that runs diverge through skill expression, RNG or both? This follows the higher-tier spike (`specs/22`). Section 6 lists the decisions for kj.
 
 ## 1. Why
 
@@ -130,10 +130,15 @@ Hold back loans, wagers, typed SP, temperament and storms until the package show
 
 **How to measure.** Add the spread itself to `balance`: SP sd, grade entropy, distinct builds, and capstone rate (#111). Then judge each lever by how much it widens the spread, not only by the mean.
 
-## 6. Questions for kj
+## 6. Questions for kj (answered 2026-10-31)
 
-1. **The first package:** node hints, Challenge fights and capped SP interest. Approve it, or pick other levers from section 3?
-2. **Challenge reward:** SP, a skill book roll, or the player's choice? A book roll ties straight into the book-capstone target.
-3. **How much RNG:** at most two RNG sources per run (agent), or more chaos?
-4. **Overwrite softening:** keep "points in an overwritten tree are lost" (`specs/12` section 5.1), or add a costly respec (3.4)?
-5. **Visible odds:** show bust chance, hint discounts and interest on the buttons (agent: yes)?
+1. **The first package** (node hints, Challenge fights, capped SP interest): **approved** (kj). It is not built yet.
+2. **Challenge reward:** **skill points** (kj).
+   - kj also asked for **Skill Books to be uber rare and uber strong**. Content 3.14 cut the Daily Tower drop chance from about 3-5 books a day to about one per 15 days of full clears (`specs/21` section 5).
+   - The book chase capstones are to be strengthened to match (`specs/15` section 10).
+3. **How much RNG:** **at most two new sources of randomness per run** (kj).
+   - **(agent)** What counts: the core rolls are not counted (drill tier and gain, fight RNG, milestone draft draws). A source is a new system whose random draw makes runs differ.
+   - The package uses **one**: node hints (where a hint lands). Challenge fights reuse the fight RNG; interest has no randomness.
+   - **The second slot stays free** until the package is measured. The candidates are the cycle-0 boon (a random set of offers) and neglect bounties with random growth.
+4. **Overwrite:** **keep** "points in an overwritten tree are lost"; no respec (kj). **Amended later the same day** (kj, `specs/22` section 8.6): every overwrite refunds half the points spent in the tree (`TREE_REFUND`). Still no respec.
+5. **Visible odds:** **yes** (kj). Bust chance, hint discounts and interest are shown on the buttons.

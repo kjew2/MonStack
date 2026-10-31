@@ -6,8 +6,8 @@
 //
 // Refs: 'stat:<id>' (the stat, with the monster's "now" line), 'stat:<id>:vs' (also the rank opponent's), 'node:<nodeId>',
 // 'skill:<skillId>' (the tree node that grants the skill, else the skill alone from skillTips), 'mskill:<skillId>' (the skill alone
-// as a rank opponent uses it, from skillTips: no trigger or SP cost),
-// 'tower:<key>' (a Daily Tower playback tip: entropy, vent.<kind>, corruption, phase.<kind>). Tap, Enter or Space opens one; a long press opens it too; tapping
+// as a rank opponent uses it, from skillTips: no trigger or SP cost), 'tower:<key>' (a Dungeon playback tip: entropy, vent.<kind>,
+// corruption, phase.<kind>). Tap, Enter or Space opens one; a long press opens it too; tapping
 // elsewhere, Escape, scrolling or resizing closes it. One shared role="tooltip" element; the open trigger gets aria-describedby.
 (function (root) {
   'use strict';
@@ -70,7 +70,7 @@
     return f;
   }
 
-  // A Daily Tower playback tip (towerTips: entropy, vent.<kind>, corruption, phase.<kind>).
+  // A Dungeon playback tip (towerTips: entropy, vent.<kind>, corruption, phase.<kind>).
   function towerContent(C, key) {
     const t = C.towerTips && C.towerTips[key];
     if (!t) return null;

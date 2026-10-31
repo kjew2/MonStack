@@ -7,7 +7,7 @@ client? Results and the decision live in `specs/08` section 10.1. Nothing here i
 |---|---|
 | `IdleRngBattle/` | The module (net10.0). References `src/IdleRng.Sim` as a project, so the server compiles the client's sources. One endpoint: `ResolveFight(rules, sideA, sideB, seed)`. |
 | `deploy.sh` | Publishes for linux-x64, zips `IdleRngBattle.ccm` and creates or updates the module through the Cloud Code Admin API. |
-| `SpikeClient/` | The test script: 7 `BattleVectors` fights and 40 Daily Tower floors. `local` checks them in process and regenerates the golden files on .NET 10; `remote` calls the deployed module as an anonymous player and measures latency. |
+| `SpikeClient/` | The test script: 7 `BattleVectors` fights and 40 Dungeon floors. `local` checks them in process and regenerates the golden files on .NET 10; `remote` calls the deployed module as an anonymous player and measures latency. |
 
 ## Run it
 

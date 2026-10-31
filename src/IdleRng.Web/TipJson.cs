@@ -44,8 +44,8 @@ namespace IdleRng.Web
         }
 
         /// <summary>
-        /// skillTips{skillId:tip} for every skill a rank fight opponent uses (BattleText.SkillTip): the opponent's skills have no
-        /// tree node to show, so web/tooltips.js falls back to these for a 'skill:' ref.
+        /// skillTips{skillId:tip} for every skill a rank fight opponent uses (BattleText.SkillTip, no trigger or SP cost): web/tooltips.js
+        /// shows them for an 'mskill:' ref, and for a 'skill:' ref when no tree node grants the skill.
         /// </summary>
         public static void SkillTips(JsonOut w, ContentDb db)
         {
@@ -55,7 +55,7 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
-        /// <summary>towerTips{key:{name,text}}: the Daily Tower playback's entropy, vent, corruption and phase tooltips (BattleText.TowerTips).</summary>
+        /// <summary>towerTips{key:{name,text}}: the Dungeon playback's entropy, vent, corruption and phase tooltips (BattleText.TowerTips).</summary>
         public static void TowerTips(JsonOut w, ContentDb db)
         {
             w.Key("towerTips").Obj();

@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace IdleRng.Sim.Tests
 {
-    /// <summary>The Daily Tower's battle hooks (specs/21 section 3): entropy gauge, boss phases, environmental clock.</summary>
+    /// <summary>The Dungeon's battle hooks (specs/21 section 3): entropy gauge, boss phases, environmental clock.</summary>
     public class TowerBattleTests
     {
         static TowerRules Tower() => new TowerRules

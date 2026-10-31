@@ -159,8 +159,8 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// Take tree <paramref name="choice"/> of the oldest offer into <paramref name="slot"/>. An occupied slot is overwritten:
-        /// its points are lost and its flat stat boosts removed (specs/15 section 4). Afterwards any slotted chase tree whose
-        /// conditions no longer hold locks again and leaves its slot.
+        /// TREE_REFUND of its spent points comes back (rounded down) and its flat stat boosts are removed (specs/15 section 4).
+        /// Afterwards any slotted chase tree whose conditions no longer hold locks again and leaves its slot the same way.
         /// </summary>
         public static TakeResult TakeTree(ContentDb c, RunState s, int choice, int slot)
         {
@@ -172,11 +172,11 @@ namespace IdleRng.Sim.Training
             int already = Slotted(s, tree);
             if (already >= 0 && already != slot) throw new InvalidOperationException($"{tree} is already in slot {already}");
             var result = new TakeResult { Placed = tree };
-            if (s.Slots[slot] != null) result.Removed.Add(RemoveSlot(s, slot));
+            if (s.Slots[slot] != null) RemoveSlot(c, s, slot, result);
             s.Slots[slot] = new TreeSlot { TreeId = tree };
             s.Offers.RemoveAt(0);
             s.Log.Add(new RunCommand(RunCommandKind.TakeTree) { Choice = choice, Slot = slot });
-            Reconcile(c, s, result.Removed);
+            Reconcile(c, s, result);
             return result;
         }
 
@@ -492,7 +492,7 @@ namespace IdleRng.Sim.Training
         /// whose conditions fail is withdrawn; one of the run species' own chase trees (specs/15 section 5.1) that holds and is
         /// neither slotted nor already offered is offered.
         /// </summary>
-        static void Reconcile(ContentDb c, RunState s, List<string> removed)
+        static void Reconcile(ContentDb c, RunState s, TakeResult result)
         {
             bool changed = true;
             while (changed)
@@ -505,8 +505,7 @@ namespace IdleRng.Sim.Training
                     var tree = c.Trees[ts.TreeId];
                     if (tree.Kind == TreeKind.Chase && !ChaseConditionsHold(c, s, tree))
                     {
-                        string id = RemoveSlot(s, i);
-                        removed?.Add(id);
+                        RemoveSlot(c, s, i, result);
                         changed = true;
                     }
                 }
@@ -522,10 +521,18 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        /// <summary>Empty a slot: its points are lost and its flat stat boosts come off (not below 0). Returns the tree id.</summary>
-        static string RemoveSlot(RunState s, int slot)
+        /// <summary>
+        /// Empty a slot: TREE_REFUND of the SP spent in it comes back (rounded down) and its flat stat boosts come off (not below 0).
+        /// The tree and the refund are added to <paramref name="result"/> when there is one.
+        /// </summary>
+        static void RemoveSlot(ContentDb c, RunState s, int slot, TakeResult result)
         {
             var ts = s.Slots[slot];
+            var nodes = c.Trees[ts.TreeId].Nodes;
+            int spent = 0;
+            for (int i = 0; i < ts.Bought; i++) spent += nodes[i].Cost;
+            int refund = (int)Math.Floor(spent * c.Constants.TreeRefund);
+            s.Sp += refund;
             for (int i = 0; i < StatIds.Trained.Length; i++)
             {
                 if (ts.FlatAdded[i] == 0) continue;
@@ -533,7 +540,9 @@ namespace IdleRng.Sim.Training
                 Set(s.Stats, id, Math.Max(0, s.Stats.Get(id) - ts.FlatAdded[i]));
             }
             s.Slots[slot] = null;
-            return ts.TreeId;
+            if (result == null) return;
+            result.Removed.Add(ts.TreeId);
+            result.Refunded += refund;
         }
 
         static int Slotted(RunState s, string treeId)

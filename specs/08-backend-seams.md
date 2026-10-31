@@ -457,7 +457,7 @@ Blockers for the shared code: none. Notes for T12:
 - **Cold start against the 15 s limit.** A cold worker took 12 to 15 s to answer, against a 15 s per-call limit, and the sim is not the cause (0.1 ms). T12 must plan for it: a client timeout above 15 s with one retry (a deterministic fight gives the same result again), and a scheduled keep-warm call once there are players. TODO(#109)
 - **Limits** (Cloud Code docs): 15 s per call, 512 MB per worker, 2 MiB response, 600 requests per minute per player, 20 modules per project.
 
-PvP load and cost at 10 k daily players. Assumptions: 10 ranked async PvP fights per player per day, each resolved by one module call, and 3 Daily Tower attempts certified server-side (one call per attempt if the endpoint runs the whole climb). That is about 130 k calls a day, 4 M a month.
+PvP load and cost at 10 k daily players. Assumptions: 10 ranked async PvP fights per player per day, each resolved by one module call, and 3 Dungeon attempts certified server-side (one call per attempt if the endpoint runs the whole climb). That is about 130 k calls a day, 4 M a month.
 
 | Meter | Free each month (UGS pricing page, October 2026) | Our use | Cost beyond the free tier |
 |---|---|---|---|
@@ -511,4 +511,4 @@ Why this split is safe: P0 and P1 have no shared surface between players (00 sec
 6. **`PendingReceipt` schema step.** Add it to v1 now (a nullable field costs nothing and avoids a migration) or wait for P1. Leaning add now, alongside `PendingPull`.
 7. **Server-side plausibility bound.** Whether `plausibility_flag` should also be computed server-side on cloud-save upload in P1, so flagged profiles can be excluded from live tuning data without trusting the client's own flag.
 8. **TypeScript vs Go for a Nakama port.** Only relevant if the fallback is taken; Go for exact uint64 arithmetic unless the team strongly prefers TypeScript.
-9. **Competitive-play seams.** `IAccountService`, `IProgressCertifier`, `ILeaderboardService` and `IPvpService` are fixed in shape by `specs/10`; their contracts are written when P1a to P1d start. The BaaS spike in section 10 must now also cover running the certifier (`Replay` plus `StateHash`) in the chosen server runtime; the gacha vectors no longer apply (T9 cut the gacha). Section 10.1 covers `BattleSim.Resolve` and the Daily Tower floors.
+9. **Competitive-play seams.** `IAccountService`, `IProgressCertifier`, `ILeaderboardService` and `IPvpService` are fixed in shape by `specs/10`; their contracts are written when P1a to P1d start. The BaaS spike in section 10 must now also cover running the certifier (`Replay` plus `StateHash`) in the chosen server runtime; the gacha vectors no longer apply (T9 cut the gacha). Section 10.1 covers `BattleSim.Resolve` and the Dungeon floors.

@@ -197,6 +197,11 @@
       "value": 3
     },
     {
+      "key": "TREE_REFUND",
+      "type": "double",
+      "value": 0.5
+    },
+    {
       "key": "MON_ECHO_POWER",
       "type": "double",
       "value": 0.5
@@ -289,7 +294,17 @@
     {
       "key": "TOWER_ATTEMPTS_PER_DAY",
       "type": "int",
-      "value": 3
+      "value": 1
+    },
+    {
+      "key": "TOWER_TICKET_CAP",
+      "type": "int",
+      "value": 5
+    },
+    {
+      "key": "TOWER_TICKET_PIECES",
+      "type": "int",
+      "value": 4
     },
     {
       "key": "TOWER_BASE",
@@ -319,12 +334,12 @@
     {
       "key": "TOWER_BOOK_CHANCE",
       "type": "double",
-      "value": 0.15
+      "value": 0.0005
     },
     {
       "key": "TOWER_BOOK_CHANCE_PER_FLOOR",
       "type": "double",
-      "value": 0.01
+      "value": 0.0003
     },
     {
       "key": "ENTROPY_CAP",

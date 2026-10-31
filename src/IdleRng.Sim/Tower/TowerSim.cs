@@ -35,7 +35,7 @@ namespace IdleRng.Sim.Tower
     }
 
     /// <summary>
-    /// The end of one Daily Tower attempt (specs/21 section 2). FloorReached is the floor the team fell on, or TOWER_FLOORS + 1
+    /// The end of one Dungeon attempt (specs/21 section 2). FloorReached is the floor the team fell on, or TOWER_FLOORS + 1
     /// when it cleared every floor; FloorsCleared = FloorReached - 1.
     /// </summary>
     public sealed class TowerResult
@@ -49,7 +49,7 @@ namespace IdleRng.Sim.Tower
     }
 
     /// <summary>
-    /// The Daily Tower (specs/21, `specs/13` T10): a team of 1 to 4 Vault monsters climbs TOWER_FLOORS 4v1 boss floors, at full
+    /// The Dungeon (specs/21, `specs/13` T10): a team of 1 to 4 Vault monsters climbs TOWER_FLOORS 4v1 boss floors, at full
     /// HP each floor, with the tower rules on (entropy, phases, corruption). Everything derives from the content, the team and the
     /// UTC day number, so every player gets the same lineup on a day and a result replays exactly. The sim has no clock: the
     /// caller passes the day.
@@ -202,14 +202,18 @@ namespace IdleRng.Sim.Tower
         }
 
         /// <summary>
-        /// The Skill Book a cleared floor drops on a day, or null (specs/21 section 7): one roll with chance TOWER_BOOK_CHANCE +
-        /// TOWER_BOOK_CHANCE_PER_FLOOR x (floor - 1), then a weighted draw over book_drops rows with min_floor &lt;= floor. Fixed
-        /// by (day, floor), so a retry cannot re-roll it.
+        /// The Skill Book a cleared floor drops on a day's <paramref name="attempt"/>-th attempt (0 for the day's first), or null
+        /// (specs/21 section 7): one roll with chance TOWER_BOOK_CHANCE + TOWER_BOOK_CHANCE_PER_FLOOR x (floor - 1), then a
+        /// weighted draw over book_drops rows with min_floor &lt;= floor. Fixed by (day, attempt, floor): every ticket rolls
+        /// afresh, and the drops stay reproducible.
         /// </summary>
-        public static string BookDrop(ContentDb c, int day, int floor)
+        public static string BookDrop(ContentDb c, int day, int floor, int attempt = 0)
         {
+            if (attempt < 0) throw new ArgumentOutOfRangeException(nameof(attempt), "attempt must be >= 0");
             var k = c.Constants;
-            var rng = new RngStream(DropStream, SplitMix64.Derive(StreamNames.StreamSeed(DaySeed(c, day), DropStream), (ulong)floor));
+            ulong seed = SplitMix64.Derive(StreamNames.StreamSeed(DaySeed(c, day), DropStream), (ulong)floor);
+            if (attempt > 0) seed = SplitMix64.Derive(seed, (ulong)attempt);   // attempt 0 keeps the first-version seed
+            var rng = new RngStream(DropStream, seed);
             double chance = k.TowerBookChance + k.TowerBookChancePerFloor * (floor - 1);
             if (!(rng.NextDouble() < chance)) return null;
             double total = 0;

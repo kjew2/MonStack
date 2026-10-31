@@ -38,6 +38,7 @@ SP_PER_CYCLE,int,2,skill points granted at the start of each cycle (specs/15; kj
 SP_PER_WIN,int,2,skill points for each rank fight win. Placeholder
 TREE_SLOTS,int,4,tree slots per monster: 2 native + 2 empty at the start (kj)
 DRAFT_SIZE,int,3,most trees offered by one milestone draft. Placeholder
+TREE_REFUND,double,0.5,share of the SP spent in a tree that comes back when it leaves its slot (overwritten or a chase tree locking again; kj 2026-10-31: half); rounded down
 MON_ECHO_POWER,double,0.5,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder
 MON_TIDE_REGEN,double,0.05,tidal_overflow rule: heal this fraction of max HP at the start of each own action. Placeholder
 MON_TIDE_SHIELD_CAP,double,0.3,tidal_overflow rule: overhealing becomes shield up to this fraction of max HP. Placeholder
@@ -54,17 +55,19 @@ GAUNTLET_GROWTH,double,1.03,level grows by this factor per floor. Placeholder
 GAUNTLET_BOSS_EVERY,int,10,every Nth floor is a boss floor. Placeholder
 GAUNTLET_BOSS_MULT,double,1.0,boss floors multiply the level by this. 1.0: every floor is boss level so the curve is smooth (kj 2026-10-31; issue #99)
 REST_ENERGY,double,50,energy a rest restores (capped at max). Placeholder
-TOWER_SEED,int,20260101,Daily Tower (specs/21 section 5): the day's lineup and drops derive from this and the UTC day number
-TOWER_FLOORS,int,20,Daily Tower: floors per day. Placeholder
-TOWER_ATTEMPTS_PER_DAY,int,3,Daily Tower: attempts per day; the best floor counts. Placeholder
-TOWER_BASE,double,80,Daily Tower: floor 1 level. Placeholder
-TOWER_GROWTH,double,1.06,Daily Tower: level x this per floor. Placeholder
-TOWER_BOSS_HP_MULT,double,4,Daily Tower: boss hp weight x this (four monsters face one boss). Placeholder
-TOWER_MILESTONE_EVERY,int,5,Daily Tower: every Nth floor is a marquee boss and a milestone. Placeholder
-TOWER_SHARDS_PER_FLOOR,int,4,Daily Tower: Training Shards per floor cleared, once per floor per day. Placeholder
-TOWER_BOOK_CHANCE,double,0.15,Daily Tower: Skill Book drop chance on floor 1. Placeholder
-TOWER_BOOK_CHANCE_PER_FLOOR,double,0.01,Daily Tower: added drop chance per floor above 1. Placeholder
-ENTROPY_CAP,double,100,Daily Tower entropy gauge (specs/21 section 3.1): vents at this. Placeholder
+TOWER_SEED,int,20260101,Dungeon (specs/21 section 5): the day's lineup and drops derive from this and the UTC day number
+TOWER_FLOORS,int,20,Dungeon: floors per day. Placeholder
+TOWER_ATTEMPTS_PER_DAY,int,1,Dungeon (specs/21 section 7): free tickets (one attempt each) granted per UTC day; they bank up to TOWER_TICKET_CAP. Placeholder
+TOWER_TICKET_CAP,int,5,Dungeon: free daily tickets stop filling the stock at this many tickets held (tickets from runs ignore it). Placeholder
+TOWER_TICKET_PIECES,int,4,Dungeon: ticket pieces (fight_ranks.ticket_pieces from sealed runs) that make one ticket. Placeholder
+TOWER_BASE,double,80,Dungeon: floor 1 level. Placeholder
+TOWER_GROWTH,double,1.06,Dungeon: level x this per floor. Placeholder
+TOWER_BOSS_HP_MULT,double,4,Dungeon: boss hp weight x this (four monsters face one boss). Placeholder
+TOWER_MILESTONE_EVERY,int,5,Dungeon: every Nth floor is a marquee boss and a milestone. Placeholder
+TOWER_SHARDS_PER_FLOOR,int,4,Dungeon: Training Shards per floor cleared, every attempt. Placeholder
+TOWER_BOOK_CHANCE,double,0.0005,"Dungeon: Skill Book drop chance on floor 1. Uber rare (kj, 2026-10-31, #112): about 1 book per 15 full clears. Placeholder"
+TOWER_BOOK_CHANCE_PER_FLOOR,double,0.0003,Dungeon: added drop chance per floor above 1. Placeholder
+ENTROPY_CAP,double,100,Dungeon entropy gauge (specs/21 section 3.1): vents at this. Placeholder
 ENTROPY_PER_TRIGGER,double,5,entropy per triggered effect (not BattleStart passives). Placeholder
 ENTROPY_PER_ECHO,double,10,entropy per echo_cast repeat. Placeholder
 ENTROPY_PER_COUNTER,double,15,entropy per counter_mitigated counterattack. Placeholder

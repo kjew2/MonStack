@@ -30,7 +30,7 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
  End-of-run gauntlet ──> Legacy Title, monster certified into the Vault
       │
       ▼
- Towers and PvP with Vault teams (4v1 Daily Tower, 4v4 Endless Tower, 4v4 async PvP)
+ Towers and PvP with Vault teams (4v1 Dungeon, 4v4 Endless Tower, 4v4 async PvP)
       │
       ├── Training Shards ──> post-run vendor: talent ranks (cheaper, stronger future runs)
       ├── Achievements ─────> new species
@@ -92,7 +92,7 @@ Every newly acquired tree, from any source, is offered the same way: put it in a
 
 Example: the run starts with 2 native trees and 2 empty slots. The player uses a Skill Book and puts its tree in slot 3. Later a stat milestone offers a generic tree; it goes in slot 4. More generic trees arrive and are discarded in favour of the current four. Then a chase tree unlocks and overwrites the generic tree, or the weaker native tree.
 
-**Overwriting (kj, 2026-10-30):** skill points spent in an overwritten tree are lost. An unlocked chase tree does not survive losing its prerequisites: if a tree its conditions used is overwritten, the chase tree locks again.
+**Overwriting (kj, 2026-10-31, replacing "points are lost" of 2026-10-30):** **half** the skill points spent in an overwritten tree come back (`TREE_REFUND`, `specs/15` section 4); kj: "it is punishing enough". An unlocked chase tree does not survive losing its prerequisites: if a tree its conditions used is overwritten, the chase tree locks again.
 
 ### 5.2 Chase traits
 
@@ -105,7 +105,20 @@ Agreed direction from the higher-tier spike (`specs/22` section 6); not built ye
 - **Chase capstones may carry drawbacks** (keystones that give something up, in the *Exiled Heavy Knight* shape).
 - **Some specific tree pairs may fuse** into one tree, and the UI must make each fusing pair clear. Fusion is not a general rule.
 - **Reachability targets:** the in-run chase capstone in about the top 10% of runs; the book chase capstone in about 50% of runs that bring the species' own book (`specs/15` section 10).
-- **Runs must diverge more** through skill expression or RNG; the skill point economy is the first place to look (spike #112).
+- **Runs must diverge more** through skill expression or RNG. The skill point economy is the first place to look (spike #112, `specs/23`).
+- **Skill point economy package, approved (kj, 2026-10-31, #112; not built yet):**
+  - **Node hints:** drill results discount tree nodes.
+  - **Challenge fights:** an optional harder rank fight that pays skill points.
+  - **Capped SP interest.**
+  - No respec. Overwriting refunds half the points spent in the tree (section 5.1; kj amended this later the same day, replacing "points stay lost").
+  - Odds, discounts and interest are shown on the buttons.
+  - At most two new sources of randomness per run (`specs/23` section 6).
+
+Second round (kj, 2026-10-31, `specs/22` section 8.6); not built yet:
+- **Digestion:** a deep node or capstone may need a role tally (e.g. damage mitigated for a tank tree) as well as SP. The tally counts from the start of the run, so the point dump (section 5.4) still works.
+- **Rank-fight loot:** a rank-fight win may drop something from the opponent. Its use comes later (cosmetics, titles or unlock conditions); it does not add combat power yet.
+- **No tribulation fights:** crossing a milestone drafts at once, with no extra fight.
+- **Overwrite refund:** every overwrite refunds half the SP spent in the tree (section 5.1). kj dropped the neighbour-tree rule: there are no tree neighbours for now.
 
 ### 5.3 Chase trees
 
@@ -134,7 +147,8 @@ Some unlocks need in-run actions, e.g. "deal X fire damage" or "execute Y perfec
 
 ### 5.6 Skill Books
 
-- Earned in the Daily Tower (section 8.2), kept in the account inventory. **The main premium gate (kj, T9):** books are target-farmed as RNG drops from the Daily Tower (T10). How books are sold, if at all, is open (#49, #77).
+- **Uber rare and uber strong (kj, 2026-10-31, #112):** a book is a rare event, and the book-gated chase tree it opens must be among the strongest things a run can get. Drop rates: `specs/21` section 5.
+- Earned in the Dungeon (section 8.2), kept in the account inventory. **The main premium gate (kj, T9):** books are target-farmed as RNG drops from the Dungeon (T10). How books are sold, if at all, is open (#49, #77).
 - Consuming a book at the start of (or during) a run opens its **Book Tree** for that run.
 - A book-gated chase tree unlocks when all of these hold: points in named Book Tree nodes, points in named nodes of other trees, and a playstyle condition.
 
@@ -168,7 +182,7 @@ Some unlocks need in-run actions, e.g. "deal X fire damage" or "execute Y perfec
 | Mode | Format | Focus | Rewards |
 |---|---|---|---|
 | End-of-run Gauntlet | 1 monster vs 100 floors | How far one build goes | Legacy Title, shards |
-| Daily Tower ("Daily Challenge Tower", "Daily Tower Dive") | 4v1 boss floors, daily | Single-target DPS, taunts, survivability, status mitigation, boss phases | Star-Gems on first clears and milestones; Skill Books (RNG per floor/boss, rarer books deeper) |
+| Dungeon (drafts: "Daily Challenge Tower", "Daily Tower Dive"; built as the Daily Tower, renamed by kj 2026-10-31) | 4v1 boss floors, a daily lineup; one free ticket a day, more ground from runs (`specs/21` section 7) | Single-target DPS, taunts, survivability, status mitigation, boss phases | Star-Gems on first clears and milestones; Skill Books (RNG per floor/boss, rarer books deeper) |
 | Endless Tower | 4v4, escalating, with mutators | Team synergy, turn-order control, AoE burst, rulebooks | Shards, gems |
 | Offline Ranked PvP | 4v4 async against stored teams | Rulebook tactics | Cosmetic only: titles, skins, recolors, auras, badges, borders |
 
@@ -200,7 +214,7 @@ The drafts had a gacha that unlocked species (with duplicates raising Genetic Ap
 |---|---|---|
 | Training Shards (soft) | Completed and failed runs, dismantling, gauntlets, towers | Post-run vendor offers (talent ranks) |
 | Star-Gems (premium) | First-time tower clears, daily milestones, achievement ladders | Open: there are no gacha pulls (#49, #77) |
-| Skill Books (items, the premium gate) | Daily Tower drops, target-farmed | Book Trees in runs |
+| Skill Books (items, the premium gate) | Dungeon drops, target-farmed | Book Trees in runs |
 
 ## 11. Monetization and operations
 
@@ -223,7 +237,7 @@ Estimated 150-200 hours (8-12 weeks part time with AI help).
 - Rank fights during the run; the rank reached is the grade (instead of towers and the gauntlet).
 - Score screen with the rank and a stat breakdown.
 
-- Added to the MVP (kj, 2026-10-31): T9 (planned as the species gacha; re-scoped by kj to species unlocks by achievement and the post-run vendor, `specs/13` T9) and the Daily Tower (T10). The hour estimate above predates this and has not been revisited.
+- Added to the MVP (kj, 2026-10-31): T9 (planned as the species gacha; re-scoped by kj to species unlocks by achievement and the post-run vendor, `specs/13` T9) and the Dungeon (T10). The hour estimate above predates this and has not been revisited.
 
 Not in the MVP: multiplayer and database, Endless Tower scaling, PvP.
 
@@ -243,7 +257,7 @@ Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeat
 3. **What trees give.** Decided (kj, 2026-10-30): about 75% filler (growth and flat stats), the rest skills and effects, chase traits last (section 5).
 4. **Stats.** Decided (kj, 2026-10-30): HP, STR, INT, WIS, DEX, DEF, SPD, LUK. Proposed: milestones on all eight.
 5. **Duplicates.** Moot: the species gacha was scrapped at T9 (kj, 2026-10-30), so there are no duplicates or aptitude (section 5.7).
-6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode. Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.
+6. **Daily tower naming.** "Daily Challenge Tower" and "Daily Tower Dive" are treated as one mode, built as the Daily Tower and renamed the **Dungeon** (kj, 2026-10-31). Endless Tower is 4v4 in one draft and grouped with 4v1 in others; proposed 4v4.
 7. **Dodges in an auto-battle.** "Perfect dodges" implies action input. Proposed: combat stays automatic and the condition counts evasions.
 8. **Where in-run fights come from.** Decided (kj, 2026-10-30): the rank fight after each cycle's AP (section 4.2).
 9. **Failed runs.** Decided (kj, 2026-10-30): section 4.5.
@@ -252,5 +266,5 @@ Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeat
 12. **Stamina.** "Quick stamina refills" implies an account stamina gate on runs; no draft describes it. Proposed: no stamina gate in the MVP.
 13. **Idle.** No draft has an idle or offline layer. Proposed: drop it (offline catch-up, idle chest, stage push).
 14. **Roles and elements.** No draft mentions the current game's 5 roles and 5 elements. Proposed: keep the 5 elements as species/skill types; roles come from trees, not fixed per species.
-15. **Overwritten trees.** Decided (kj, 2026-10-30): points lost; a chase tree whose prerequisite tree is overwritten locks again (section 5.1).
+15. **Overwritten trees.** Decided (kj, 2026-10-30): points lost; a chase tree whose prerequisite tree is overwritten locks again (section 5.1). Amended (kj, 2026-10-31): half the points come back (section 5.1).
 16. **One energy meter.** The drafts have energy and fatigue; kj's cycle flow has only training energy. Proposed (agent, T2): one meter, energy; low energy raises the fail chance and allows injury (`specs/14` section 4). Easy to split later.

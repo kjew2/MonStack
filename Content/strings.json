@@ -1292,7 +1292,7 @@
     },
     {
       "key": "rule.entropy_convert.desc",
-      "text": "Daily Tower: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
+      "text": "Dungeon: when its entropy gauge would vent, it gains a shield of {ENTROPY_CONVERT_SHIELD:pct} of max HP for {ENTROPY_CONVERT_TURNS} turns instead."
     },
     {
       "key": "phase.shield_check.name",
@@ -1332,7 +1332,7 @@
     },
     {
       "key": "tower.entropy.desc",
-      "text": "Daily Tower: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
+      "text": "Dungeon: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
     },
     {
       "key": "vent.recoil.name",
@@ -1368,7 +1368,7 @@
     },
     {
       "key": "tower.corruption.desc",
-      "text": "Daily Tower: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
+      "text": "Dungeon: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."
     }
   ]
 }

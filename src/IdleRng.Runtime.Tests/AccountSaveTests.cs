@@ -92,7 +92,7 @@ namespace IdleRng.Runtime.Tests
         [Test]
         public void APrePoolSave_KeepsItsRunGoing_AgainstTheFlatRanks()
         {
-            // A save written before the rank pools (content 3.14): no Ladder in the recipe or the Vault entries, and the run's hash
+            // A save written before the rank pools (content 3.17): no Ladder in the recipe or the Vault entries, and the run's hash
             // is the version 4 one. Its run in progress replays as a legacy run, so it is not dropped.
             var db = TestContent.Db;
             var a = Played();
@@ -190,6 +190,28 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void V4Save_MigratesToV5_WithNoTicketsYet()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            AccountOps.RunTower(db, a, new[] { 0 }, 40);
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 4;
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct["SchemaVersion"] = 4;
+            var tower = (Newtonsoft.Json.Linq.JObject)acct["Tower"];
+            tower.Remove("Tickets"); tower.Remove("TicketPieces"); tower.Remove("GrantDay");
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.Tower.Day, Is.EqualTo(40), "v4 progress is kept");
+            Assert.That(b.Tower.ClearedEver, Is.EqualTo(a.Tower.ClearedEver));
+            Assert.That(b.Tower.Tickets, Is.EqualTo(0));
+            Assert.That(b.Tower.TicketPieces, Is.EqualTo(0));
+            Assert.That(b.Tower.GrantDay, Is.EqualTo(-1));
+            Assert.That(AccountOps.TowerTickets(db, b, 41), Is.EqualTo(db.Constants.TowerAttemptsPerDay), "the next day's free tickets are due");
+        }
+
+        [Test]
         public void TowerProgress_RoundTrips()
         {
             var db = TestContent.Db;
@@ -200,6 +222,9 @@ namespace IdleRng.Runtime.Tests
             Assert.That(b.Tower.AttemptsUsed, Is.EqualTo(1));
             Assert.That(b.Tower.ClearedToday, Is.EqualTo(a.Tower.ClearedToday));
             Assert.That(b.Tower.ClearedEver, Is.EqualTo(a.Tower.ClearedEver));
+            Assert.That(b.Tower.Tickets, Is.EqualTo(a.Tower.Tickets));
+            Assert.That(b.Tower.TicketPieces, Is.EqualTo(a.Tower.TicketPieces));
+            Assert.That(b.Tower.GrantDay, Is.EqualTo(123));
             Assert.That(b.Shards, Is.EqualTo(a.Shards));
         }
 

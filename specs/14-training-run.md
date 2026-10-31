@@ -83,7 +83,7 @@ kj (2026-10-31): "an RNG pool of monsters at each rank, and we can see the clear
 - **The ladder** (kj, 2026-10-31): `TrainingRun.Start` rolls one pool monster per rank, lowest rank first, on its own stream `ladder` (`StreamSeed(runSeed, "ladder")`; one draw per rank: the draw times the pool's total weight, walked through the cumulative weights in CSV order), so the `training`, `draft` and `fight` streams are untouched. `RunState.Ladder` holds the ids, indexed like `fight_ranks`; it is hashed (section 7) and saved with the run. The whole ladder is visible to the player from the start.
 - `Fight` builds the monster as a `Fighter` (species element, current stats, and the skills of its bought tree nodes, `specs/15` section 2) and the ladder's opponent at the current rank (its element, stats and skills, `TrainingRun.OpponentFighter`), and resolves a 1v1 `BattleSim` fight (`specs/16`). The result names the opponent (`RankFightResult.OpponentId`).
 - A win (`SideAWon`) promotes the monster one rank and pays `SP_PER_WIN`; at the top rank it stays. A loss or a timeout changes nothing: the next fight is a rematch with the same opponent (placeholder; no penalty yet). The fight's tallies add to the run tally (`specs/15` section 6).
-- **Legacy runs.** A run started before the pools (content 3.14) has an empty ladder: it fights the flat `fight_ranks` row at each rank (no skills), as it did, and keeps its version 4 hash (section 7). Saved runs and Vault entries without a `Ladder` load as legacy runs (`specs/18` section 6).
+- **Legacy runs.** A run started before the pools (content 3.17) has an empty ladder: it fights the flat `fight_ranks` row at each rank (no skills), as it did, and keeps its version 4 hash (section 7). Saved runs and Vault entries without a `Ladder` load as legacy runs (`specs/18` section 6).
 - Fight seed: `SplitMix64.Derive(StreamSeed(runSeed, "fight"), fightIndex)`, where `fightIndex` is the number of fights fought before it. Fights never advance the `training` stream.
 - `FIGHT_EVERY` (placeholder 1) sets how often fights come; kj suggested every other cycle if every cycle feels too frequent.
 - A rank up is called "promotion" in the drafts; code and specs say `Rank`.
@@ -125,8 +125,8 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 |---|---|
 | `species` | at least one row (`E044`); `element` is an element id (`E023`); base stats in `[0, STAT_MAX]`, growth `> 0` (`E043`) |
 | `drill_tiers` | exactly `fail`, `success`, `super` (`E044`); `0 <= gain_min <= gain_max` (`E043`). Placeholders: fail 0-2, success 8-15, super 20-30 |
-| `fight_ranks` | at least one row (`E044`); `sort_order` exactly `0..N-1` (`E047`); element id (`E023`); stats in `[0, STAT_MAX]` (`E043`); `dismantle_shards` (the Vault refund for that grade, `specs/18` section 7) `>= 0` (`E043`); every rank has a `rank_enemies` row (`E044`, empty pool) |
-| `rank_enemies` (content 3.14) | `rank` is a `fight_ranks` id and `element` an element id (`E023`); stats in `[0, STAT_MAX]` and summing to the rank's budget within 1e-6 (`E043`); each `skills` id is a `monster_skills` id (`E023`); `weight > 0` (`E043`) |
+| `fight_ranks` | at least one row (`E044`); `sort_order` exactly `0..N-1` (`E047`); element id (`E023`); stats in `[0, STAT_MAX]` (`E043`); `dismantle_shards` (the Vault refund for that grade, `specs/18` section 7) and `ticket_pieces` (Dungeon ticket pieces for that grade, `specs/21` section 7) `>= 0` (`E043`); every rank has a `rank_enemies` row (`E044`, empty pool) |
+| `rank_enemies` (content 3.17) | `rank` is a `fight_ranks` id and `element` an element id (`E023`); stats in `[0, STAT_MAX]` and summing to the rank's budget within 1e-6 (`E043`); each `skills` id is a `monster_skills` id (`E023`); `weight > 0` (`E043`) |
 | `stat_milestones` | thresholds `> 0`, strictly increasing (`E032`) |
 
 ## 9. Bots and goldens
