@@ -34,6 +34,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>Tower day for seed index i is TowerDayBase + i, so the lineups vary across the sample.</summary>
         public int TowerDayBase { get; set; }
 
+        /// <summary>
+        /// When the main pass brings no books, replay every species x policy with every skill book (no tower) for the books
+        /// sanity check (BalanceChecks). Ignored when Books is set.
+        /// </summary>
+        public bool BookCanary { get; set; } = true;
+
         /// <summary>Worker threads (1 = serial). Results are collected by index, so the report does not depend on it.</summary>
         public int Jobs { get; set; } = 1;
     }
@@ -106,6 +112,10 @@ namespace IdleRng.Bots.Balance
         public Distribution Cycles { get; set; }
         public Distribution FightsWon { get; set; }
         public Distribution FightsLost { get; set; }
+        public Distribution Rests { get; set; }
+
+        /// <summary>Runs ended by an injury by cycle BalanceChecks.EarlyEndCycle.</summary>
+        public int EarlyEnds { get; set; }
 
         /// <summary>Rank fights won / fought over every run of the cell (0 when none were fought).</summary>
         public double FightWinRate { get; set; }
@@ -130,7 +140,11 @@ namespace IdleRng.Bots.Balance
             {
                 if (r.RankIndex < 0 || r.RankIndex >= rankCount) throw new ArgumentException($"rank {r.RankIndex} out of range");
                 s.Grades[r.RankIndex]++;
-                if (r.End == RunEnd.Injured) s.Injured++;
+                if (r.End == RunEnd.Injured)
+                {
+                    s.Injured++;
+                    if (r.Cycles <= BalanceChecks.EarlyEndCycle) s.EarlyEnds++;
+                }
                 else if (r.End == RunEnd.Completed) s.Completed++;
                 if (r.GauntletCleared) s.GauntletCleared++;
                 if (r.GauntletBossStall) s.GauntletBossStalls++;
@@ -142,6 +156,7 @@ namespace IdleRng.Bots.Balance
             s.Cycles = Distribution.Of(runs.Select(r => r.Cycles));
             s.FightsWon = Distribution.Of(runs.Select(r => r.FightsWon));
             s.FightsLost = Distribution.Of(runs.Select(r => r.FightsFought - r.FightsWon));
+            s.Rests = Distribution.Of(runs.Select(r => r.Rests));
             s.Shards = Distribution.Of(runs.Select(r => (double)r.Shards));
             s.GauntletFloor = Distribution.Of(runs.Select(r => r.GauntletFloor));
             s.Killers = Count(runs.Where(r => r.GauntletKiller != null).Select(r => r.GauntletKiller));
@@ -163,6 +178,9 @@ namespace IdleRng.Bots.Balance
         public Distribution FloorsCleared { get; set; }
         public int Cleared { get; set; }
         public double ClearRate => N == 0 ? 0 : (double)Cleared / N;
+
+        /// <summary>Attempts that cleared at least one floor.</summary>
+        public int ReachedFloor1 { get; set; }
         public Distribution Shards { get; set; }
         public Distribution Books { get; set; }
 
@@ -171,6 +189,7 @@ namespace IdleRng.Bots.Balance
             Policy = policy, Team = team, N = runs.Count,
             FloorsCleared = Distribution.Of(runs.Select(r => r.FloorsCleared)),
             Cleared = runs.Count(r => r.Cleared),
+            ReachedFloor1 = runs.Count(r => r.FloorsCleared >= 1),
             Shards = Distribution.Of(runs.Select(r => (double)r.Shards)),
             Books = Distribution.Of(runs.Select(r => r.Books)),
         };
@@ -186,14 +205,24 @@ namespace IdleRng.Bots.Balance
         public List<string> RankIds { get; set; }
         public int GauntletFloors { get; set; }
         public int TowerFloors { get; set; }
+
+        /// <summary>GAUNTLET_BOSS_EVERY: the first boss floor, for the gauntlet sanity check.</summary>
+        public int GauntletBossEvery { get; set; }
         public List<CellSummary> Cells { get; set; } = new List<CellSummary>();
         public List<TowerSummary> Tower { get; set; } = new List<TowerSummary>();
+
+        /// <summary>The book canary pass (BalanceOptions.BookCanary): the same cells, every run bringing every skill book. Empty when not run.</summary>
+        public List<CellSummary> BookCells { get; set; } = new List<CellSummary>();
+
+        /// <summary>The loose sanity checks (BalanceChecks), evaluated over everything above.</summary>
+        public List<CheckResult> Checks { get; set; } = new List<CheckResult>();
     }
 
     /// <summary>
     /// The run-balance harness (specs/09 section 7): plays every species x policy over many seeds with the bots, seals each run
-    /// (shards, gauntlet) and optionally sends the monsters up the Daily Tower, then summarises. A report, not a gate: it has
-    /// no targets and fails on nothing. Deterministic: the same content and options give the same report, at any Jobs.
+    /// (shards, gauntlet) and optionally sends the monsters up the Daily Tower, then summarises and runs the loose sanity checks
+    /// (BalanceChecks). A report, not a gate: a WARN fails nothing. Deterministic: the same content and options give the same
+    /// report, at any Jobs.
     /// </summary>
     public static class BalanceHarness
     {
@@ -217,7 +246,28 @@ namespace IdleRng.Bots.Balance
                 foreach (var b in books)
                     if (!c.SkillBooks.ContainsKey(b)) throw new ArgumentException($"unknown skill book '{b}'");
 
-            // Every (policy, species, seed) run, in that order.
+            var runs = PlayAll(c, o, policies, species, books);
+            var report = new BalanceReport
+            {
+                ContentVersion = c.Version, ContentHash = c.ContentHash, Options = o,
+                RankIds = c.FightRanks.Select(r => r.Id).ToList(),
+                GauntletFloors = c.Constants.GauntletFloors, TowerFloors = c.Constants.TowerFloors,
+                GauntletBossEvery = c.Constants.GauntletBossEvery,
+            };
+            report.Cells = Summarise(c, o, policies, species, runs);
+            if (books == null && o.BookCanary && c.SkillBooks.Count > 0)
+            {
+                var all = c.SkillBooks.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
+                report.BookCells = Summarise(c, o, policies, species, PlayAll(c, o, policies, species, all));
+            }
+            if (o.Tower) ClimbAll(c, o, policies, species, runs, report);
+            report.Checks = BalanceChecks.Evaluate(report);
+            return report;
+        }
+
+        /// <summary>Every (policy, species, seed) run, in that order.</summary>
+        static RunSample[] PlayAll(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, List<string> books)
+        {
             int perPolicy = species.Count * o.Seeds;
             var runs = new RunSample[policies.Count * perPolicy];
             For(runs.Length, o.Jobs, i =>
@@ -227,18 +277,23 @@ namespace IdleRng.Bots.Balance
                 ulong seed = o.SeedBase + (ulong)(i % o.Seeds);
                 runs[i] = Play(c, policy, sp, seed, books);
             });
+            return runs;
+        }
 
-            var report = new BalanceReport
-            {
-                ContentVersion = c.Version, ContentHash = c.ContentHash, Options = o,
-                RankIds = c.FightRanks.Select(r => r.Id).ToList(),
-                GauntletFloors = c.Constants.GauntletFloors, TowerFloors = c.Constants.TowerFloors,
-            };
+        static List<CellSummary> Summarise(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, RunSample[] runs)
+        {
+            int perPolicy = species.Count * o.Seeds;
+            var cells = new List<CellSummary>();
             for (int p = 0; p < policies.Count; p++)
                 for (int s = 0; s < species.Count; s++)
-                    report.Cells.Add(CellSummary.From(species[s], policies[p], c.FightRanks.Count,
+                    cells.Add(CellSummary.From(species[s], policies[p], c.FightRanks.Count,
                         new ArraySegment<RunSample>(runs, p * perPolicy + s * o.Seeds, o.Seeds)));
-            if (!o.Tower) return report;
+            return cells;
+        }
+
+        static void ClimbAll(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, RunSample[] runs, BalanceReport report)
+        {
+            int perPolicy = species.Count * o.Seeds;
 
             // Teams per policy: each species alone, then one of each species (first MON_SIDE_SIZE) from the same seed together.
             var teams = species.Select(sp => new[] { sp }).ToList();
@@ -257,7 +312,6 @@ namespace IdleRng.Bots.Balance
                 for (int t = 0; t < teams.Count; t++)
                     report.Tower.Add(TowerSummary.From(policies[p], string.Join("+", teams[t]),
                         new ArraySegment<TowerSample>(towers, p * perPolicyTower + t * perTeam, perTeam)));
-            return report;
         }
 
         /// <summary>One bot run, sealed the way AccountOps.FinishRun seals it (payout, gauntlet on the run seed).</summary>
