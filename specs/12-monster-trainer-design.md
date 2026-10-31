@@ -92,7 +92,7 @@ Every newly acquired tree, from any source, is offered the same way: put it in a
 
 Example: the run starts with 2 native trees and 2 empty slots. The player uses a Skill Book and puts its tree in slot 3. Later a stat milestone offers a generic tree; it goes in slot 4. More generic trees arrive and are discarded in favour of the current four. Then a chase tree unlocks and overwrites the generic tree, or the weaker native tree.
 
-**Overwriting (kj, 2026-10-30):** skill points spent in an overwritten tree are lost. An unlocked chase tree does not survive losing its prerequisites: if a tree its conditions used is overwritten, the chase tree locks again.
+**Overwriting (kj, 2026-10-30):** skill points spent in an overwritten tree are lost, except that overwriting a tree with one of its listed neighbours refunds half of them (kj, 2026-10-31, section 5.2.1; not built yet). An unlocked chase tree does not survive losing its prerequisites: if a tree its conditions used is overwritten, the chase tree locks again.
 
 ### 5.2 Chase traits
 
@@ -106,6 +106,12 @@ Agreed direction from the higher-tier spike (`specs/22` section 6); not built ye
 - **Some specific tree pairs may fuse** into one tree, and the UI must make each fusing pair clear. Fusion is not a general rule.
 - **Reachability targets:** the in-run chase capstone in about the top 10% of runs; the book chase capstone in about 50% of runs that bring the species' own book (`specs/15` section 10).
 - **Runs must diverge more** through skill expression or RNG; the skill point economy is the first place to look (spike #112).
+
+Second round (kj, 2026-10-31, `specs/22` section 8.6); not built yet:
+- **Digestion:** a deep node or capstone may need a role tally (e.g. damage mitigated for a tank tree) as well as SP. The tally counts from the start of the run, so the point dump (section 5.4) still works.
+- **Rank-fight loot:** a rank-fight win may drop something from the opponent. Its use comes later (cosmetics, titles or unlock conditions); it does not add combat power yet.
+- **No tribulation fights:** crossing a milestone drafts at once, with no extra fight.
+- **Lateral swap:** a tree may list neighbour trees; overwriting it with a listed neighbour refunds half the SP spent in it (section 5.1).
 
 ### 5.3 Chase trees
 
@@ -252,5 +258,5 @@ Proposed resolutions, for kj to confirm or overrule. `specs/13` section 9 repeat
 12. **Stamina.** "Quick stamina refills" implies an account stamina gate on runs; no draft describes it. Proposed: no stamina gate in the MVP.
 13. **Idle.** No draft has an idle or offline layer. Proposed: drop it (offline catch-up, idle chest, stage push).
 14. **Roles and elements.** No draft mentions the current game's 5 roles and 5 elements. Proposed: keep the 5 elements as species/skill types; roles come from trees, not fixed per species.
-15. **Overwritten trees.** Decided (kj, 2026-10-30): points lost; a chase tree whose prerequisite tree is overwritten locks again (section 5.1).
+15. **Overwritten trees.** Decided (kj, 2026-10-30): points lost; a chase tree whose prerequisite tree is overwritten locks again (section 5.1). Amended (kj, 2026-10-31): overwriting with a listed neighbour refunds half the points (section 5.2.1).
 16. **One energy meter.** The drafts have energy and fatigue; kj's cycle flow has only training energy. Proposed (agent, T2): one meter, energy; low energy raises the fail chance and allows injury (`specs/14` section 4). Easy to split later.

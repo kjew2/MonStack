@@ -1,6 +1,6 @@
 # 22 - Spike: skill trees and capstones for higher-tier creatures
 
-Status: **spike report (agent, 2026-10-31; issue #110); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for research on skill trees and capstones for higher-tier creatures, then widened it: any interesting mechanic, interaction or synergy from RPG-like games, anime, manga or LitRPG that could inspire a tree or capstone. The starting point is *The Exiled Heavy Knight Knows How to Game the System*, which inspired the game. Section 6 records kj's answers, which are copied into `specs/12` section 5.2.1 and `specs/15` section 10. **Section 8 is an addendum (agent, 2026-10-31)**: kj asked to widen the research beyond anime, to manhwa and webtoons, donghua and Chinese web novels, and light novels, *Lord of the Mysteries* in particular. Section 8 is research only; its questions are open.
+Status: **spike report (agent, 2026-10-31; issue #110); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for research on skill trees and capstones for higher-tier creatures, then widened it: any interesting mechanic, interaction or synergy from RPG-like games, anime, manga or LitRPG that could inspire a tree or capstone. The starting point is *The Exiled Heavy Knight Knows How to Game the System*, which inspired the game. Section 6 records kj's answers, which are copied into `specs/12` section 5.2.1 and `specs/15` section 10. **Section 8 is an addendum (agent, 2026-10-31)**: kj asked to widen the research beyond anime, to manhwa and webtoons, donghua and Chinese web novels, and light novels, *Lord of the Mysteries* in particular. kj answered section 8.6 the same day; those answers are copied into `specs/12` section 5.2.1 and `specs/15` sections 4 and 10. The rest of section 8 is research.
 
 ## 1. Questions
 
@@ -302,11 +302,9 @@ A fifth rule is for later: when a Beyonder dies, their **characteristic** stays 
 3. **Lateral swap** (8.1) is one answer to `specs/23` question 4 (overwrite softening): cheap, readable, and a partner to the agreed fusion pairs.
 4. **Hold:** racial tax (until higher tiers exist and dominate), positions (T11 rulebooks), tree mastery (meta-progression), characteristics, Beast Will and Regressor (inheritance and determinism work).
 
-### 8.6 Questions for kj (open)
+### 8.6 Questions for kj (answered 2026-10-31)
 
-None blocks the current phase.
-
-1. **Digestion:** may a deep node or capstone need a role tally as well as SP, with the tally banked from run start so the point dump still works?
-2. **Rank-fight loot:** should rank-fight wins offer something from the opponent (a ring, a copied skill)? It adds content to every opponent.
-3. **Tribulation fights** at 700 and 900: worth the extra run length? (If Challenge fights from `specs/23` are approved, this is a forced Challenge at those milestones.)
-4. **Lateral swap:** should overwriting a tree with a listed neighbour keep half its SP? This is one option for `specs/23` question 4.
+1. **Digestion:** may a deep node or capstone need a role tally as well as SP, with the tally banked from run start so the point dump still works? **Yes** (kj).
+2. **Rank-fight loot:** should rank-fight wins offer something from the opponent (a ring, a copied skill)? **Yes, set it up** (kj). What the loot is for comes later: cosmetics, titles or unlock conditions. **(agent)** So the first version records drops and does not add combat power; a power use (rank rings, Absorb) would need kj again.
+3. **Tribulation fights** at 700 and 900: worth the extra run length? **No** (kj). Milestones keep drafting at once.
+4. **Lateral swap:** should overwriting a tree with a listed neighbour keep half its SP? **Yes** (kj: "overwrite refunding half sounds fine"). **(agent)** Recorded for listed neighbours only, as asked; every other overwrite still loses its points. This answers `specs/23` question 4 in part.

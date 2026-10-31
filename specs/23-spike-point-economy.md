@@ -135,5 +135,5 @@ Hold back loans, wagers, typed SP, temperament and storms until the package show
 1. **The first package:** node hints, Challenge fights and capped SP interest. Approve it, or pick other levers from section 3?
 2. **Challenge reward:** SP, a skill book roll, or the player's choice? A book roll ties straight into the book-capstone target.
 3. **How much RNG:** at most two RNG sources per run (agent), or more chaos?
-4. **Overwrite softening:** keep "points in an overwritten tree are lost" (`specs/12` section 5.1), or add a costly respec (3.4)?
+4. **Overwrite softening:** keep "points in an overwritten tree are lost" (`specs/12` section 5.1), or add a costly respec (3.4)? *Partly answered (kj, 2026-10-31, `specs/22` section 8.6): overwriting with a listed neighbour tree refunds half the points. A general respec is still open.*
 5. **Visible odds:** show bust chance, hint discounts and interest on the buttons (agent: yes)?
