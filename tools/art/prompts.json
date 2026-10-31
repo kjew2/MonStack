@@ -34,14 +34,13 @@
    "prompt": "A dog made purely of shadow, deep purple-black with soft violet edges, in a real canine pose with a lean body and four jointed legs, its tail dissolving into drifting smoke. Bright acid-green eyes and small white fangs. Unsettling detail: a short row of tiny extra acid-green eyes along its cheek."
   }
  },
- "refresh": "Repaint this exact image: keep the same creature, design, pose, composition, background and unsettling detail. Make the colours richer and more saturated, deepen the contrast and the shadows, make the sepia linework crisper, and clear the haze in front of the creature so it stands out sharply from the misty background. Do not add text.",
- "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face, colours and unsettling detail), but grander and more powerful, in the same watercolour and sepia pencil style and the same kind of misty chasm background, with richer colours and deep contrast. Do not add text. The change:",
- "sprite": "Redraw this exact creature as a small game battle sprite: the same design, pose and colours, full body, alone on a fully transparent background with no scenery, no ground and no shadow. Bold, even sepia outline, simple two-tone shading, flat saturated colours, glowing parts kept bright, readable when shrunk to 64 pixels. No text.",
+ "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
+ "sprite": "Redraw this exact creature as a small game battle sprite: the same design, pose and colours, full body, alone on a fully transparent background with no scenery, no ground, no rune circle and no shadow. Bold, even dark outline, simple two-tone cel shading, flat saturated colours, glowing parts kept bright, readable when shrunk to 64 pixels. No text.",
  "apex": {
   "living_ocean": {
    "species": "slime",
    "name": "Solaris Tide",
-   "prompt": "the jelly has become a small living sea in teal and sea-green with its own weather: a tiny rain cloud above it and a curling wave-wall of water rising around it; the slit-pupil nucleus now glows white-gold."
+   "prompt": "the jelly has become a small living sea in teal and sea-green with its own weather: a tiny rain cloud above it and a curling wave-wall of water rising around it; the nucleus now glows white-gold."
   },
   "abyssal_bloom": {
    "species": "slime",

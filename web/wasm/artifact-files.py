@@ -26,6 +26,10 @@ for page in pages:
     with open(os.path.join(WEB, page), encoding="utf-8") as f:
         for src in re.findall(r'<script[^>]*\bsrc="([^":]+)"', f.read()):   # local scripts only
             files[src] = "web/" + src
+for d, _, names in os.walk(os.path.join(WEB, "art")):   # generated creature art (specs/26 section 8)
+    for n in sorted(names):
+        rel = os.path.relpath(os.path.join(d, n), WEB).replace(os.sep, "/")
+        files[rel] = "web/" + rel
 for d, _, names in os.walk(DIST):
     for n in sorted(names):
         rel = os.path.relpath(os.path.join(d, n), WEB).replace(os.sep, "/")

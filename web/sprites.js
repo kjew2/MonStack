@@ -151,6 +151,13 @@ function speciesSprite(id, apex) {
   if (x) x.over.forEach((row, y) => row.split("").forEach((c, xx) => { if (c !== ".") g[y][xx] = c; }));
   return (SPR[key] = paint(g, x ? Object.assign({}, a.pal, x.pal) : a.pal));
 }
+// Generated creature art (specs/26 section 8): web/art/sprite/<key>.webp (battle sprite) and web/art/portrait/<key>.webp,
+// key = the apex form's chase tree id when it has art, else the species id. Made by tools/art/export.py; null without art.
+const ART_KEYS = new Set(["abyssal_bloom", "arcane_overflow", "drake", "inferno_sovereign", "living_ocean", "mandragora_scream", "mandrake", "night_feast", "shade_hound", "slime", "sprite", "starlit_ascension", "umbral_veil", "unbreakable_will", "world_root"]);
+function speciesArt(id, apex) {
+  const key = apex && ART_KEYS.has(apex) ? apex : id;
+  return ART_KEYS.has(key) ? { sprite: "art/sprite/" + key + ".webp", portrait: "art/portrait/" + key + ".webp" } : null;
+}
 function paint(g, pal) {
   const c = document.createElement("canvas"); c.width = g[0].length; c.height = g.length;
   const x = c.getContext("2d");
@@ -167,6 +174,7 @@ function paint(g, pal) {
   root.IdleSprites = {
     hero: heroSprite,
     species: speciesSprite,
+    art: speciesArt,
     player: playerSprite,
     enemy: function (stage, boss, variant) { return enemySprite(stage * 31 + (boss ? 999 : (variant || 0) % 4), boss); },
     // A rank opponent (specs/14 section 5): its own shape from seed, the boss horns at the top rank, tinted by colour (#RRGGBB).
