@@ -41,7 +41,7 @@ namespace IdleRng.Bots
     {
         const string Usage =
             "usage: IdleRng.Bots <train|balance|golden|help> [options]\n" +
-            "  train      --species ID --policy balanced|focus|reckless|hoarder|chaser --seed N --books a,b --content dir   (one training run, specs/14-15)\n" +
+            "  train      --species ID --policy balanced|focus|reckless|hoarder|chaser|mono-<stat> --seed N --books a,b --content dir   (one training run, specs/14-15)\n" +
             "  balance    --seeds N --seed-base N --species a,b --policies a,b --books none|all|a,b --no-tower --tower-day N\n" +
             "             --no-book-canary --strict --format text|json|csv --jobs N --out path\n" +
             "             (run-balance report and loose sanity checks over many seeds, specs/09 section 7; --strict exits 1 on a WARN)\n" +

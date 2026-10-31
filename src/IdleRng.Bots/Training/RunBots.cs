@@ -156,11 +156,18 @@ namespace IdleRng.Bots.Training
             var open = StatIds.Trained.Where(id => s.Stats.Get(id) < c.Constants.StatMax).ToList();
             return (open.Count > 0 ? open : StatIds.Trained.ToList()).OrderByDescending(id => TrainingRun.Growth(c, s, id)).First();
         }
+
+        /// <summary>Drill <paramref name="stat"/> until it is capped, then fall back to the best-growth stat.</summary>
+        public static Func<ContentDb, RunState, string> Mono(string stat) =>
+            (c, s) => s.Stats.Get(stat) < c.Constants.StatMax ? stat : BestGrowth(c, s);
     }
 
     public static class RunPolicies
     {
         public static readonly string[] Names = { "balanced", "focus", "reckless", "hoarder", "chaser" };
+
+        /// <summary>Opt-in policies, not in <see cref="Names"/>: <c>mono-&lt;stat&gt;</c> puts every drill into one stat (focus otherwise).</summary>
+        public const string MonoPrefix = "mono-";
 
         /// <summary>Cycle from which the hoarder spends: it banks points for a late point dump (specs/12 section 5.4).</summary>
         public const int HoarderSpendFrom = 9;
@@ -171,6 +178,8 @@ namespace IdleRng.Bots.Training
         /// </summary>
         public static IRunPolicy Create(string name)
         {
+            if (name != null && name.StartsWith(MonoPrefix, StringComparison.Ordinal) && StatIds.IsTrained(name.Substring(MonoPrefix.Length)))
+                return new ThresholdRunPolicy(name, 0.3, ThresholdRunPolicy.Mono(name.Substring(MonoPrefix.Length)));
             switch (name)
             {
                 case "balanced": return new ThresholdRunPolicy(name, 0.4, ThresholdRunPolicy.Lowest);
@@ -178,7 +187,7 @@ namespace IdleRng.Bots.Training
                 case "reckless": return new ThresholdRunPolicy(name, -1, ThresholdRunPolicy.BestGrowth);
                 case "hoarder": return new ThresholdRunPolicy(name, 0.3, ThresholdRunPolicy.BestGrowth, HoarderSpendFrom);
                 case "chaser": return new ThresholdRunPolicy(name, 0.3, ThresholdRunPolicy.BestGrowth, chase: true);
-                default: throw new ArgumentException($"unknown run policy '{name}' (one of {string.Join(", ", Names)})");
+                default: throw new ArgumentException($"unknown run policy '{name}' (one of {string.Join(", ", Names)}, or {MonoPrefix}<stat>)");
             }
         }
     }
