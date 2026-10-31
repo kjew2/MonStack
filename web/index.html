@@ -6,49 +6,61 @@
 <title>MonStack</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=Bangers&family=Caveat:wght@600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Caveat:wght@500..700&display=swap">
 <style>
 /* One phone-height column: header, scrolling body, tab bar. Dark palette.
    Theme tokens (issue #115): every colour, font, radius and shadow the page uses, and the shared motion timings, are variables here, so an art
    direction is mostly a swap of this block (plus assets). No colour literal lives outside :root; a light base only needs new
    values here. Per-element colours come from the engine (RunContent elements), not from here. */
 :root {
+  /* Art direction: the abyss expedition watercolour style (specs/26 sections 6.1 and 7.1, issue #115). A dark, deep-chasm base in
+     teal and ink, parchment text, sepia pencil lines, and teal and amber bioluminescent glows. */
   /* base: background, surfaces, lines, ink */
-  --bg: #121212; --panel: #1e1e1e; --panel-2: #262626; --line: #333333; --line-soft: #2a2a2a; --line-faint: #222222;
-  --text: #eeeeee; --muted: #9e9e9e; --shade: #000000;
-  --track: #424242;                 /* an empty bar */
-  --tile: #2a2a2a; --tile-mix: #1a1a1a;   /* a node tile, and the dark a stat tint is mixed into */
-  --scrim: rgba(10, 10, 10, .94);   /* behind the modal */
-  --toast-bg: #333333; --cd-veil: rgba(40, 40, 40, .82); --keycap: #0a0a0a; --arena-top: #1b1b2b;
-  /* accents: --gems is the one accent (focus, selection, skill points) */
-  --gold: #ffd54f; --gems: #4dd0e1; --ok: #66bb6a; --bad: #ef5350; --warn: #ffa726; --epic: #ab47bc;
+  --bg: #071013; --bg-top: #0d2026;   /* the chasm: lighter at the top, ink below */
+  --panel: #0e1c21; --panel-hi: #15292f; --panel-2: #172b31; --line: #6a5639; --line-soft: #26393b; --line-faint: #1b2a2d;
+  --text: #ece3cf; --muted: #a09d8a; --shade: #000000;
+  --track: #203236;                 /* an empty bar */
+  --tile: #162a2f; --tile-mix: #0b181c;   /* a node tile, and the dark a stat tint is mixed into */
+  --scrim: rgba(4, 11, 13, .93);    /* behind the modal */
+  --toast-bg: #17292e; --cd-veil: rgba(6, 15, 18, .8); --keycap: #03090b; --arena-top: #123039;
+  /* accents: --gems is the one accent (focus, selection, skill points): a bioluminescent teal; --gold is the amber glow */
+  --gold: #f4b860; --gems: #5ee6c9; --ok: #93c98a; --bad: #e57a62; --warn: #f0a050; --epic: #b893e8;
   --accent: var(--gems);
   /* accent tints for filled buttons, badges and flashes */
-  --ok-bg: #2e3b2e; --ok-bg-2: #1f2e20; --ok-flash: #2f4a33; --ok-keycap: #14301a; --on-ok: #000000; --ok-pop: #7ee787;
-  --gems-bg: #1d3438; --gems-keycap: #0e3a40; --gems-deep: #0c1a1c; --gems-light: #b2ebf2; --gems-stroke: #00434c; --gems-shadow: #00606d;
-  --warn-bg: #3b2e1d; --foe-ink: #ef9a9a;
-  --gold-bg: #4a3f12; --gold-bg-2: #5a4d1c; --gold-deep: #1b1708; --gold-mid: #6b5410; --gold-dark: #2e2405; --gold-stroke: #7a3e00;
-  --epic-deep: #1a0c1d; --epic-light: #f3c4fb; --epic-stroke: #4a0f55; --epic-shadow: #6a1b9a;
-  --pop-red: #b71c1c;               /* the comic offset shadow under loud text (super drill, banners, POW) */
-  --fail-ink: #a4b6cc; --fail-bg: #2a2f38;
-  --tick: rgba(255, 255, 255, .38); --tick-hit: #ffffff;   /* milestone ticks on a stat gauge, before and after they are reached */
-  /* per-stat colours (--st): the stat gauges, chips and node tiles take them through .st-<stat> */
-  --st-hp: #ef5350; --st-str: #ff8a50; --st-int: #42a5f5; --st-wis: #ab47bc;
-  --st-dex: #66bb6a; --st-def: #90a4ae; --st-spd: #26c6da; --st-luk: #ffd54f;
-  --on-st: #111111;                 /* text on a solid stat colour */
+  --ok-bg: #1b3024; --ok-bg-2: #15261c; --ok-flash: #24402d; --ok-keycap: #0b1810; --on-ok: #000000; --ok-pop: #b8f0a8;
+  --gems-bg: #10302d; --gems-keycap: #061e1c; --gems-deep: #091a1b; --gems-light: #c8fff1; --gems-stroke: #0b3b36; --gems-shadow: #0e4d47;
+  --warn-bg: #32241a; --foe-ink: #f0a898;
+  --gold-bg: #3b2c14; --gold-bg-2: #4b3819; --gold-deep: #171209; --gold-mid: #5e4518; --gold-dark: #241a0a; --gold-stroke: #5a3510;
+  --epic-deep: #150e20; --epic-light: #eadcff; --epic-stroke: #3b2366; --epic-shadow: #4f2f86;
+  --pop-red: #5e2614;               /* the offset shadow under loud text (super drill, POW): a deep rust */
+  --fail-ink: #a9b9b4; --fail-bg: #1c2a2c;
+  --tick: rgba(236, 227, 207, .35); --tick-hit: #fff4dc;   /* milestone ticks on a stat gauge, before and after they are reached */
+  /* per-stat colours (--st): the stat gauges, chips and node tiles take them through .st-<stat>; watercolour-soft, same hues */
+  --st-hp: #e8735f; --st-str: #f09a5b; --st-int: #6aa8e0; --st-wis: #b08ad8;
+  --st-dex: #8cc77e; --st-def: #9fb0aa; --st-spd: #5fd0d0; --st-luk: #f2cf6a;
+  --on-st: #10181a;                 /* text on a solid stat colour */
   /* skill tiles take a per-skill hue from the page; these are the saturation and lightness it is drawn at */
-  --skill-bg: 35%, 28%; --skill-edge: 45%, 55%; --skill-tile: 30%, 30%;
-  /* type */
-  --font-display: 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
-  --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-comic: 'Bangers', Impact, 'Arial Black', fantasy;
+  --skill-bg: 30%, 24%; --skill-edge: 40%, 55%; --skill-tile: 28%, 26%;
+  /* glows: focus, selection, rare events and capstones */
+  --glow-gems: 0 0 14px rgba(94, 230, 201, .32); --glow-gold: 0 0 16px rgba(244, 184, 96, .45); --glow-epic: 0 0 16px rgba(184, 147, 232, .4);
+  --light-shaft: rgba(200, 255, 241, .07);   /* light falling into the chasm, on banners */
+  /* textures and ornaments (SVG; their colours live here too): paper grain, and the glowing flora on banners */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .93 0 0 0 0 .89 0 0 0 0 .81 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --orn-flora: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60' viewBox='0 0 120 60'%3E%3Cg fill='none' stroke='%236a5639' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M8 60 C10 44 4 36 12 26'/%3E%3Cpath d='M20 60 C19 48 26 42 22 32'/%3E%3Cpath d='M34 60 C36 52 30 46 38 40'/%3E%3Cpath d='M12 26 c-6 -2 -8 -8 -4 -10'/%3E%3C/g%3E%3Cg fill='%235ee6c9'%3E%3Ccircle cx='12' cy='25' r='2.4' opacity='.9'/%3E%3Ccircle cx='22' cy='31' r='1.8' opacity='.8'/%3E%3Ccircle cx='38' cy='39' r='1.6' opacity='.7'/%3E%3C/g%3E%3Cg fill='%23f4b860'%3E%3Cellipse cx='52' cy='55' rx='6' ry='3.4' opacity='.85'/%3E%3Cpath d='M51 55 v5 h2 v-5z' opacity='.7'/%3E%3Cellipse cx='64' cy='57' rx='3.6' ry='2.2' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
+  --orn-roots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='40' viewBox='0 0 90 40'%3E%3Cg fill='none' stroke='%236a5639' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M90 0 C70 4 66 12 60 22'/%3E%3Cpath d='M78 0 C74 10 80 18 74 30'/%3E%3Cpath d='M60 22 c-3 4 -2 8 -6 10'/%3E%3Cpath d='M86 0 C88 8 84 14 86 20'/%3E%3C/g%3E%3Ccircle cx='54' cy='32' r='2' fill='%235ee6c9' opacity='.85'/%3E%3Ccircle cx='74' cy='30' r='1.6' fill='%23f4b860' opacity='.8'/%3E%3C/svg%3E");
+  /* type: a soft humanist face for labels, numbers and body; a hand-lettered face for titles and loud moments */
+  --font-display: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-title: 'Caveat', 'Segoe Print', 'Comic Sans MS', cursive;
+  --font-comic: var(--font-title);
   --font-hand: 'Caveat', 'Comic Sans MS', 'Segoe Print', cursive;
-  /* shape */
+  /* shape: slightly uneven corners read as hand-drawn */
   --r-xs: 4px; --r-sm: 6px; --r: 8px; --r-lg: 10px; --r-xl: 12px; --r-pill: 999px;
-  --shadow-float: 0 2px 8px rgba(0, 0, 0, .5);
-  --shadow-pop: 0 4px 12px rgba(0, 0, 0, .5);
-  --shadow-tip: 0 6px 20px rgba(0, 0, 0, .6);
-  --shadow-key: 0 4px 0 var(--keycap); --shadow-key-down: 0 2px 0 var(--keycap);
+  --r-wobble: 9px 12px 8px 11px / 11px 8px 12px 9px;
+  --shadow-float: 0 2px 10px rgba(0, 0, 0, .55);
+  --shadow-pop: 0 6px 18px rgba(0, 0, 0, .55);
+  --shadow-tip: 0 8px 24px rgba(0, 0, 0, .65);
+  --shadow-key: 0 3px 10px rgba(0, 0, 0, .45); --shadow-key-down: 0 1px 4px rgba(0, 0, 0, .45);
   --text-shade: 0 1px 2px var(--shade);
   /* motion (prefers-reduced-motion sets these to 0s at the end of the sheet) */
   --dur-fast: .12s; --dur: .25s; --dur-slow: .5s;
@@ -194,7 +206,7 @@ small, .small { font-size: 12px; }
 .unithead b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sprite.small { width: 32px; height: 32px; padding: 2px; border-radius: var(--r-sm); }
 
-/* Tree offers as an arcade card pick: a banner, compact tree cards (node path, boost chips, perks), big slot tiles on the picked card. */
+/* Tree offers as a card pick: a banner, compact tree cards (node path, boost chips, perks), big slot tiles on the picked card. */
 .st-hp { --st: var(--st-hp); } .st-str { --st: var(--st-str); } .st-int { --st: var(--st-int); } .st-wis { --st: var(--st-wis); }
 .st-dex { --st: var(--st-dex); } .st-def { --st: var(--st-def); } .st-spd { --st: var(--st-spd); } .st-luk { --st: var(--st-luk); }
 .obanner { position: relative; text-align: center; padding: 14px 10px 12px; border-radius: var(--r-xl); overflow: hidden; border: 2px solid var(--gold);
@@ -395,6 +407,50 @@ small, .small { font-size: 12px; }
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; background: var(--toast-bg); box-shadow: var(--shadow-pop); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }
+/* ---- Skin: the abyss expedition look (specs/26 section 7.1). Surfaces as deep layers with paper grain, sepia pencil borders with a
+   faint second sketch line, bioluminescent glows instead of hard shadows, hand-lettered titles. Colours come from :root only. */
+body, #app { background: radial-gradient(ellipse 120% 60% at 50% -10%, color-mix(in srgb, var(--gems) 9%, transparent), transparent 60%), linear-gradient(var(--bg-top), var(--bg) 70%); }
+#top { position: relative; background: var(--grain), linear-gradient(var(--panel-hi), var(--panel)); border-bottom-color: var(--line); }
+#top::after { content: ''; position: absolute; right: 0; top: 0; width: 90px; height: 100%; background: var(--orn-roots) right top / 90px 40px no-repeat; pointer-events: none; opacity: .55; }   /* roots hanging into the header, behind the build stamp */
+#top > * { position: relative; z-index: 1; }
+#top .title { font: 700 26px/1 var(--font-title); color: var(--gold); text-shadow: var(--glow-gold); }
+#tabs { background: var(--grain), linear-gradient(var(--panel), var(--bg)); border-top-color: var(--line); }
+#tabs button { font-weight: 700; letter-spacing: .02em; }
+#tabs button[aria-selected="true"] { box-shadow: inset 0 2px 0 var(--gems), inset 0 12px 14px -12px var(--gems); text-shadow: var(--glow-gems); }
+h2 { font: 700 26px/1.1 var(--font-title); letter-spacing: .01em; }
+.card, .tcard { background: var(--grain), linear-gradient(170deg, var(--panel-hi), var(--panel) 70%); border-color: var(--line); border-radius: var(--r-wobble);
+  outline: 1px solid color-mix(in srgb, var(--line) 30%, transparent); outline-offset: 2px; }
+.card.alert, .rung.current, .species.sel { border-color: var(--gems); box-shadow: var(--glow-gems); }
+.card.injury { box-shadow: 0 0 14px color-mix(in srgb, var(--bad) 30%, transparent); }
+.btn { background: var(--grain), linear-gradient(var(--panel-hi), var(--panel-2)); border-color: var(--line); border-radius: var(--r-wobble); font-weight: 700; transition: transform var(--dur-fast), box-shadow var(--dur-fast); }
+.btn:not(:disabled):active { transform: translateY(1px); }
+.btn.primary { background: var(--grain), linear-gradient(var(--ok-bg), var(--ok-bg-2)); border-color: var(--ok); }
+.btn.gemsy { background: var(--grain), linear-gradient(var(--gems-bg), var(--gems-deep)); box-shadow: var(--glow-gems); }
+.btn.warn { background: var(--grain), linear-gradient(var(--warn-bg), var(--gold-dark)); box-shadow: 0 0 12px color-mix(in srgb, var(--warn) 25%, transparent); }
+.btn.ghost { background: transparent; }
+.tag { font-weight: 800; border-color: var(--line); background: color-mix(in srgb, var(--panel-2) 80%, transparent); border-radius: var(--r-sm); }
+.sprite { background: radial-gradient(circle at 50% 65%, color-mix(in srgb, var(--gems) 12%, var(--panel-2)), var(--panel-2) 70%); border: 1px solid var(--line-soft); }
+.grade { font-family: var(--font-title); text-shadow: var(--glow-gold); }
+/* tree offers: light falling into the chasm instead of a sunburst, flora at the banner's foot, a glow on the kind's colour */
+.obanner { --k: var(--gold); }
+.obanner.book { --k: var(--gems); } .obanner.chase { --k: var(--epic); }
+.obanner, .obanner.book, .obanner.chase { border: 1px solid var(--line); border-radius: var(--r-wobble); box-shadow: 0 0 22px color-mix(in srgb, var(--k) 22%, transparent);
+  background: var(--orn-flora) left bottom / 120px 60px no-repeat, radial-gradient(ellipse 80% 70% at 50% 120%, color-mix(in srgb, var(--k) 26%, transparent), transparent 70%),
+    repeating-linear-gradient(105deg, transparent 0 22px, var(--light-shaft) 22px 34px), var(--grain), linear-gradient(var(--panel-hi), var(--bg)); }
+.obanner::after { content: ''; position: absolute; right: 0; bottom: 0; width: 120px; height: 60px; background: var(--orn-flora) no-repeat; transform: scaleX(-1); pointer-events: none; }
+.obanner .big, .obanner.book .big, .obanner.chase .big { position: relative; z-index: 1; font: 700 46px/1 var(--font-title); letter-spacing: .01em; color: var(--k); -webkit-text-stroke: 0;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--k) 65%, transparent), 0 2px 0 var(--shade); }
+.obanner .sub { position: relative; z-index: 1; }
+.tcard { box-shadow: var(--shadow-key); }
+.tcard.sel { box-shadow: var(--glow-gems), var(--shadow-key); }
+.tcard .tname { font: 700 26px/1 var(--font-title); }
+.stile { background: var(--grain), linear-gradient(var(--panel-hi), var(--panel-2)); border-width: 1px; border-color: var(--line); border-radius: var(--r-wobble); box-shadow: var(--shadow-key); }
+.stile.empty { background: var(--grain), linear-gradient(var(--ok-bg), var(--ok-bg-2)); border-color: var(--ok); box-shadow: 0 0 12px color-mix(in srgb, var(--ok) 25%, transparent); }
+.stile.risky { border-color: var(--bad); }
+.nt.cap { box-shadow: var(--glow-gold); }
+.spgain, .spbadge { box-shadow: var(--glow-gems); }
+.toast { background: var(--grain), linear-gradient(var(--panel-hi), var(--toast-bg)); border: 1px solid var(--line); border-radius: var(--r-wobble); }
+
 @media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0s; --dur: 0s; --dur-slow: 0s; } .flash, .stat.flash.t-super, .stat.flash.t-fail, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain, .dpop { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
 @keyframes spfade { to { opacity: 0; } }
 </style>
