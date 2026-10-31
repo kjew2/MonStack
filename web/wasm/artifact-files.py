@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Print the `files` map for publishing web/ as the claude.ai phone artifact.
 
-Run web/wasm/build.sh first. Publish web/index.html (the monster trainer, the page kj opens) with this map as `files` and the repo root as `root`.
+web/wasm/publish-artifact.sh builds and prints the whole publish call with this map; use that. By hand: run web/wasm/build.sh first, then publish web/index.html (the monster trainer, the page kj opens) with this map as `files` and the repo root as `root`.
 Keys are the paths the pages load; values are the source files, relative to the repo root. Every other web/*.html page
 goes in as a further page, with the scripts all pages load (there are none besides index.html now).
 """
@@ -30,4 +30,9 @@ for d, _, names in os.walk(DIST):
     for n in sorted(names):
         rel = os.path.relpath(os.path.join(d, n), WEB).replace(os.sep, "/")
         files[rel] = "web/" + rel
+# What build.sh always writes (build-info.json is the page's build stamp, index.html #build), plus every listed source.
+required = ["web/wasm/dist/" + n for n in ("_framework/dotnet.js", "content-pack.json", "build-info.json")]
+missing = sorted(set(src for src in list(files.values()) + required if not os.path.isfile(os.path.join(ROOT, src))))
+if missing:
+    sys.exit("listed files are missing: " + ", ".join(missing))
 print(json.dumps(files, indent=1, sort_keys=True))

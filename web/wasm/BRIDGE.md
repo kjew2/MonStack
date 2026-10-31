@@ -2,7 +2,7 @@
 
 The browser UI in `web/` plays through the C# `IdleRng.Sim` compiled to WebAssembly. `src/IdleRng.Web` is an **adapter** over `AccountOps`, `TrainingRun`, `ContentDb` and the account save in `IdleRng.Runtime`: it maps them onto the JSON shapes below and adds no game rules. Changes to the core stay in the core; this file changes only when the bridge does. (The idle game's bridge, `Init`/`Advance`/`State`/`Query`/`Cmd`, was removed with that game at `specs/13` T7.)
 
-Build: `web/wasm/build.sh` (packs `Content/*.json` with `pack-content.js`, publishes `src/IdleRng.Web`, writes `web/wasm/dist/`). Test: `node web/wasm/test/run-trainer.js`.
+Build: `web/wasm/build.sh` (packs `Content/*.json` with `pack-content.js`, publishes `src/IdleRng.Web`, writes `web/wasm/dist/`). Test: `node web/wasm/test/run-trainer.js`. Republish the phone artifact: `web/wasm/publish-artifact.sh` (builds, then prints the Artifact publish call as JSON). The build writes `dist/build-info.json` (commit, dirty flag, date), which the page header shows (`#build`, "dev" without it).
 
 `web/engine.js` is the loader: `IdleEngine.loadWasm(opts)` fetches `wasm/dist/_framework/dotnet.js`, starts the runtime and returns `{ host, contentPack }`; if loading fails it rejects with a message the UI shows (bundle not built, page opened as a file, or the load error). `web/run-engine.js` builds the facade on top.
 

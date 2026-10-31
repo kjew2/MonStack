@@ -42,7 +42,11 @@ mkdir -p "$DIST"
 cp -r "$SRC/_framework" "$DIST/_framework"
 find "$DIST" \( -name '*.br' -o -name '*.gz' \) -delete
 cp "$ROOT/build/content-pack.json" "$DIST/content-pack.json"
-printf '%s\n' "{\"built\":\"$(date -u +%FT%TZ)\",\"aot\":$AOT}" > "$DIST/build-info.json"
+# Build stamp: index.html shows the commit and date in its header (#build), so kj can tell whether the phone artifact is current.
+COMMIT=$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)
+DIRTY=false
+[ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null)" ] && DIRTY=true
+printf '%s\n' "{\"built\":\"$(date -u +%FT%TZ)\",\"aot\":$AOT,\"commit\":\"$COMMIT\",\"dirty\":$DIRTY}" > "$DIST/build-info.json"
 
 if ! $FAST; then
   RAW=$(find "$DIST" -type f -exec cat {} + | wc -c | tr -d ' ')   # portable (macOS du has no -b)

@@ -12,7 +12,8 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `engine.js` | Loader for the .NET runtime and the content pack. |
 | `sprites.js` | Seeded 12x12 pixel sprites drawn on canvas. Cosmetic only, never touches the game's RNG. |
 | `wasm/build.sh` | Builds `src/IdleRng.Web` and lays out `wasm/dist/` (gitignored). |
-| `wasm/artifact-files.py` | Prints the `files` map for republishing the phone artifact (root README, "On a phone"). |
+| `wasm/publish-artifact.sh` | Builds and prints the whole Artifact publish call for republishing the phone artifact (root README, "On a phone"). |
+| `wasm/artifact-files.py` | Prints the `files` map that call uses; fails if a listed file is missing. |
 | `wasm/pack-content.js` | Bundles `Content/*.json` into the content pack the engine loads and hash-checks. |
 | `wasm/BRIDGE.md` | The JS <-> C# contract: exports and JSON shapes. |
 | `wasm/test/run-trainer.js` | Headless-Chromium test that plays a full run through the buttons (part of `./check.sh`). |

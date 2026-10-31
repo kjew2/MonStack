@@ -194,6 +194,7 @@ small, .small { font-size: 12px; }
 <div id="app">
   <header id="top">
     <span class="title">Monster Trainer</span>
+    <small id="build" class="muted num" title="Engine build: commit and date"></small>
   </header>
   <main id="main"><p class="muted">Loading the C# engine...</p></main>
   <nav id="tabs" role="tablist" hidden></nav>
@@ -206,5 +207,18 @@ small, .small { font-size: 12px; }
 <script src="sprites.js"></script>
 <script src="tooltips.js"></script>
 <script src="run.js"></script>
+<script>
+// Build stamp from web/wasm/build.sh (commit, dirty flag, date): shows at a glance whether this copy is current. "dev" without one.
+(async () => {
+  const el = document.getElementById('build');
+  let t = 'dev';
+  try {
+    const r = await fetch('wasm/dist/build-info.json', { cache: 'no-store' });
+    const b = r.ok ? await r.json() : null;
+    if (b && b.commit) t = b.commit + (b.dirty ? '+dirty' : '') + (b.built ? ' · ' + String(b.built).slice(0, 10) : '');
+  } catch (e) { /* no stamp: stay "dev" */ }
+  el.textContent = t;
+})();
+</script>
 </body>
 </html>
