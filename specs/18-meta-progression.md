@@ -45,18 +45,18 @@ Rejected commands throw and change nothing. The sim has no clock: the caller pas
 
 ## 3. Run modifiers
 
-`TrainingRun.Start(content, species, seed, books, mods)` takes a `RunModifiers` (null = none). It is stored on `RunState.Mods`, hashed into `StateHash` (run hash version 3), and must be passed to `Replay` again; the account save does that (section 6).
+`TrainingRun.Start(content, species, seed, books, mods)` takes a `RunModifiers` (null = none). It is stored on `RunState.Mods`, hashed into `StateHash` (run hash version 3; version 5 replaced `DraftSizeBonus` with `ChaseChance`), and must be passed to `Replay` again; the account save does that (section 6).
 
 | Field | Effect | Default |
 |---|---|---|
 | `DrillCostMult` | Multiplies `DRILL_ENERGY_COST` (`TrainingRun.DrillCost(c, run)` gives the run's cost, for the UI) | 1 |
 | `StatFloorMult` | Multiplies the species' base stats at the start (floored, capped at `STAT_MAX`) | 1 |
-| `DraftSizeBonus` | Added to `DRAFT_SIZE` | 0 |
+| `ChaseChance` | Odds the run is attuned to its in-run chase tree (`specs/15` section 5.4); an account's is `CHASE_BASE_CHANCE` plus its talents, capped at 1 | 1 (always: runs without an account) |
 | `StartSp` | Extra skill points at the start | 0 |
 
 ## 4. Talents and the post-run vendor
 
-Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarities` id: the talent's tier), `effect` (`drill_cost`, `stat_floor`, `draft_size`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
+Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarities` id: the talent's tier), `effect` (`drill_cost`, `stat_floor`, `chase_chance`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
 
 **The post-run vendor** (kj, T9) replaces the always-on talent shop. Code: `AccountOps.RollVendor`, `OfferOpen`, `OfferPrice`, `BuyOffer`. The talents overhaul is tracked in #100.
 
@@ -87,10 +87,12 @@ Placeholder talents (the drafts' examples, `specs/12` section 9):
 |---|---|---|---|---|
 | Frugal Drills | Common | drills cost 5% less energy | 5 | 20, 40, 60, ... |
 | Strong Stock | Rare | base stats +10% | 3 | 30, 60, 90 |
-| Wide Scouting | Epic | +1 tree per milestone draft | 2 | 50, 100 |
+| Chase Instinct | Epic | +10 points of odds that a run is attuned to its in-run chase tree (`specs/15` section 5.4); 0.2 base, 0.5 at max | 3 | 50, 100, 150 |
 | Head Start | Common | +1 starting skill point | 3 | 25, 50, 75 |
 
-A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor` per rank `>= 0`; `draft_size` and `start_sp` per rank a whole number `>= 0`.
+A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor` per rank `>= 0`; `chase_chance` per rank `>= 0` with `CHASE_BASE_CHANCE + per_rank x max_rank <= 1`; `start_sp` per rank a whole number `>= 0`.
+
+**Wide Scouting removed (kj, 2026-10-31).** The old Epic talent (+1 tree per Awakening) was never worth buying while the chase trees were the goal, so it was replaced by Chase Instinct (content 4.0, a MAJOR bump for the removed id: a saved rank in `wide_scouting` is ignored and not refunded). The `DRAFT_SIZE` constant stays at 3 and no talent changes it.
 
 ## 5. Shard payout
 

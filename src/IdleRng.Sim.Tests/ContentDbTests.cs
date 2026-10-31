@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("3.16"));
+            Assert.That(db.Version, Is.EqualTo("4.0"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -104,7 +104,7 @@ namespace IdleRng.Sim.Tests
             files["talents.json"] = files["talents.json"].Replace("\"rarity\": \"epic\"", "\"rarity\": \"mythic\"");
             var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false));
             var msgs = ex.Errors.Select(e => e.Code + " " + e.Location + ": " + e.Message).ToList();
-            Assert.That(msgs, Has.Some.Contains("E023 talents[wide_scouting]: rarity 'mythic' is not a vendor_rarities id"));
+            Assert.That(msgs, Has.Some.Contains("E023 talents[chase_instinct]: rarity 'mythic' is not a vendor_rarities id"));
         }
 
         [Test]
@@ -123,10 +123,10 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void IsCompatibleWith()
         {
-            var db = TestContent.Db;   // 3.4
-            Assert.That(db.IsCompatibleWith("3.0"), Is.True);
-            Assert.That(db.IsCompatibleWith("3.1"), Is.True);
-            Assert.That(db.IsCompatibleWith("2.7"), Is.False);
+            var db = TestContent.Db;   // 4.0
+            Assert.That(db.IsCompatibleWith("4.0"), Is.True);
+            Assert.That(db.IsCompatibleWith("4.1"), Is.True);
+            Assert.That(db.IsCompatibleWith("3.16"), Is.False);
             Assert.That(db.IsCompatibleWith(""), Is.False);
             Assert.That(db.IsCompatibleWith("a.b"), Is.False);
         }

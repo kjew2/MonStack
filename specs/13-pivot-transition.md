@@ -142,7 +142,7 @@ MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were m
 **Engine done** (`specs/18`). Built in parallel with the T6 web slice by a second session; the web page wires the account in next.
 
 - `AccountState` and `AccountOps`: owned species (all MVP species until T9, which made them unlock from achievements), the Vault (`VaultEntry`, T4), Training Shards, skill books, talent ranks, the run in progress. Start and finish runs, shard payout (cycles played and rank reached), buy talents (from T9, through the post-run vendor).
-- `RunModifiers` carry talent effects into a run (drill cost, base stats, draft size, starting SP), stored on the run and the Vault entry so replays match.
+- `RunModifiers` carry talent effects into a run (drill cost, base stats, chase attunement odds, starting SP; draft size until 2026-10-31), stored on the run and the Vault entry so replays match.
 - Content `2.6`: `talents` (4 placeholder talents) and shard constants.
 - `AccountSave`: a new save lineage in its own store slot; the active run is saved as its replay recipe.
 - Exit met in tests: run -> shards -> talent -> the next run differs, saved and reloaded (`AccountTests`, `AccountSaveTests`).

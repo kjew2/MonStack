@@ -148,8 +148,8 @@ talent.frugal_drills.name,Frugal Drills
 talent.frugal_drills.desc,Drills cost 5% less energy per rank.
 talent.strong_stock.name,Strong Stock
 talent.strong_stock.desc,Monsters start runs with 10% higher base stats per rank.
-talent.wide_scouting.name,Wide Scouting
-talent.wide_scouting.desc,Milestone drafts offer one more tree per rank.
+talent.chase_instinct.name,Chase Instinct
+talent.chase_instinct.desc,+10% odds a run is attuned to its in-run chase tree.
 talent.head_start.name,Head Start
 talent.head_start.desc,Start each run with one extra skill point per rank.
 achievement.rank_c.name,Contender

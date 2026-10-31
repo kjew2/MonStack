@@ -1,109 +1,109 @@
-# training-run vectors, hash v4 content=3.16/ac3140bb
+# training-run vectors, hash v5 content=4.0/7f346ac0
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8 injuries=0
   stats hp 174 str 170 int 177 wis 173 dex 178 def 187 spd 170 luk 171
   trees slime_fundamentals:8/8 gel_armor:8/8 - -
-  hash 27d3c03837350643197c50662fabb838582590858f8201067f9e510c172e2809
+  hash a3886c60966092a1de721b748ca4db867508932cef79a2f45b1d41d1130f7884
 
 slime focus seed=7
   end=Completed cycle=12 rank=s fights=7/12 drills=44 rests=16 energy=20 milestones=3 sp=1 injuries=0
   stats hp 871 str 90 int 100 wis 145 dex 90 def 175 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 vital_core:8/8 living_ocean:4/8
-  hash dac07fdf36dc3205ac832b3158df000b1ff19b9aa76f2778af9843e67d8008fd
+  hash 6314b2b2e0f406f8439bcf59855b9cf467524ce2ee2f1e492887a78199535541
 
 slime reckless seed=7
   end=Completed cycle=12 rank=c fights=2/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
   stats hp 607 str 90 int 100 wis 145 dex 90 def 125 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:7/8 vital_core:3/8 survivor:0/8
-  hash 877faa06f78d0ae7a3caad6a1dcc198cb88d2c41f68b597798e04c8421b17fd7
+  hash 4c689532955a33b81651881b7ee505a5ea39b353d14ff07281ba152d04425289
 
 slime hoarder seed=7
   end=Completed cycle=12 rank=s fights=6/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 807 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 living_ocean:8/8 survivor:3/8
-  hash e34a82bfe7e75faec953dc6ef7f7f54ff704b91cd2bbecf8c203d3f01f83c8eb
+  hash df418cca24bafef2ce8015d93bdb8b3f20b6f228a2f93ec9163ee4e4ec8edd87
 
 slime chaser seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 799 str 90 int 100 wis 145 dex 90 def 160 spd 100 luk 155
   trees slime_fundamentals:7/8 gel_armor:8/8 living_ocean:8/8 survivor:0/8
-  hash 592c996da35a597ede74253b0d599037b53d2fe63700f41f5cf6da4f13198a7d
+  hash 521574a558bd0805d4179c111f03e0cc3d1c6c7244d2845ea738c30382877efa
 
 slime focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 832 str 90 int 115 wis 180 dex 90 def 140 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:7/8 living_ocean:4/8
-  hash 3dd362994423f82de1711d4a52312f3420e955a1d050747b166b0eb5d9084f04
+  hash 3611c9a903e5fce4b77fd90681c82cbf66fb85dc0c3690f9f608ab4012c23af1
 
 drake balanced seed=7
   end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=0 sp=4 injuries=0
   stats hp 165 str 165 int 153 wis 154 dex 164 def 155 spd 155 luk 157
   trees pyromancy:8/8 heavy_armor:8/8 - -
-  hash e0a777d31494fc2f9778850caecdcf2917ef9fbd5a7eacbf2e7e1b434ac9f247
+  hash b27facf5e9b3a07672fef5eaf1ba1e96f561a62e5cbc7db78e16fded2e922411
 
 drake focus seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 215 str 860 int 95 wis 80 dex 90 def 155 spd 90 luk 70
   trees pyromancy:8/8 heavy_armor:7/8 brute_force:7/8 survivor:3/8
-  hash 9bead951c6070a114f9541b3c2255a079a944f36fce7e526c50ea4a1289a769f
+  hash d1170a35a786c5386b71d4d73c3db8beda09b80f7d9073bd0346771a4e7b7e13
 
 drake reckless seed=7
   end=Completed cycle=12 rank=c fights=2/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
   stats hp 165 str 617 int 95 wis 80 dex 90 def 155 spd 90 luk 70
   trees pyromancy:8/8 heavy_armor:7/8 brute_force:3/8 survivor:0/8
-  hash aa1936f2d7f036a9ae0a74e6d1828277d75cb4f58e75171bb7f68d84142a7699
+  hash 735d4bc28ad587511bd60c352a7c123ee30d37c974c7b02333fc89adb11b3848
 
 drake hoarder seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 195 str 795 int 95 wis 80 dex 90 def 155 spd 90 luk 70
   trees pyromancy:8/8 heavy_armor:8/8 brute_force:4/8 survivor:2/8
-  hash 7b6fcc4fca7b1830abffc132f5272c5f2ae981140eb844d6d810657ac90b42d4
+  hash 707c34c106ed1dba99721fd4c3eedc3b6722d4b4249d4e36a8c748afbcffa680
 
 drake chaser seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 200 str 324 int 95 wis 80 dex 90 def 627 spd 90 luk 70
   trees pyromancy:7/8 heavy_armor:8/8 unbreakable_will:8/8 survivor:0/8
-  hash c7ebd0f04547f2105e48bdfc1c6c86a1c101954f6ae9952ef68fd86d4c02e294
+  hash bcb45718b0208adf76e0dd18318f7cea44de2ff16c2cc930fd994ccf48872219
 
 drake focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 165 str 840 int 110 wis 115 dex 90 def 170 spd 90 luk 70
   trees pyromancy:7/8 heavy_armor:7/8 tome_of_echoes:7/8 ember_codex:4/8
-  hash 60825b59b9e785fc0a45765ed941aa65aa6c5b00082051d35994fe9e2cc2011c
+  hash ffa5b2e78bb463337374331dc3968b1e1e1fce34281faab3414a4ecc44207d12
 
 sprite balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
   stats hp 168 str 156 int 165 wis 173 dex 157 def 159 spd 175 luk 158
   trees aether_striker:8/8 mind_warp:8/8 - -
-  hash ce387a000a9b0290a5e3772e405a7b0bc6f2724503e5b2b049f03c8aae4ac642
+  hash 28831e119ae52488a44364a34e98c79a37b48becb74bd16e4ac3e80b3c3e642f
 
 sprite focus seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 90 str 60 int 869 wis 190 dex 155 def 70 spd 175 luk 110
   trees aether_striker:8/8 mind_warp:8/8 spellcraft:7/8 survivor:0/8
-  hash 87a7883ed78f07929ef1602b9d11f636efd498a05ef86b6c3a597c72bc426519
+  hash 43eafebc98504b0a4597c89fff7f1b6f47c6e217dd2a142278cbd507734b46ad
 
 sprite reckless seed=7
   end=Completed cycle=12 rank=c fights=2/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
   stats hp 90 str 60 int 623 wis 155 dex 155 def 70 spd 175 luk 110
   trees aether_striker:8/8 mind_warp:7/8 spellcraft:3/8 survivor:0/8
-  hash d33591cb6cad0aad7958a95c28b83688a156a696a013023e2d4cbd870f7466d1
+  hash 804021a734f5f2f904d2edbea02fc5fdbaed04e9592c72c8b51dbf079b894a0c
 
 sprite hoarder seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 90 str 60 int 796 wis 190 dex 155 def 70 spd 175 luk 110
   trees aether_striker:8/8 mind_warp:8/8 spellcraft:7/8 survivor:0/8
-  hash 289467deecd8bdb9d8067c3b07e0c8f228d214023e84de7386a02b1e825ae9f7
+  hash acae43f29251730057468cdd01b2656d2707abf5175bcb835c96ac3273a9f8af
 
 sprite chaser seed=7
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0
   stats hp 105 str 60 int 518 wis 155 dex 155 def 70 spd 519 luk 110
   trees aether_striker:8/8 mind_warp:7/8 starlit_ascension:8/8 survivor:2/8
-  hash 08f55cd4945dd9d1319f0ee8dd5b48ea8e8bdad065801beff0f028d59c95bdd0
+  hash e126ddd4d1e9661ecf1bbef8e30e0ae17b51ade8971a0923307e2c7754cc22ad
 
 sprite focus seed=7 books=book_echoes,book_embers,book_tides
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 90 str 60 int 869 wis 190 dex 155 def 70 spd 175 luk 110
   trees aether_striker:8/8 mind_warp:8/8 tome_of_echoes:7/8 ember_codex:0/8
-  hash 9bf1c7aa0e3870fa85c3c02a2fe4572b424f3e98739d30f34775cef538593d33
+  hash b7bea02808287fbd6297761feb9d6c89745325e801b5c3fb0cb2c7eab9b19127
