@@ -60,7 +60,10 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   // ---- home screen
   await page.goto(url);
   await act('start').waitFor({ timeout: 90000 });
-  check((await page.locator('[data-act^="species-"]').count()) >= 3, 'home lists the species from the C# content');
+  check((await page.locator('[data-act^="species-"]').count()) === 1, 'the species carousel holds only the owned species; the locked ones are folded away');
+  check(/^▸ 🔒 \d+ locked species$/.test(await text('[data-act=locked-toggle]')), 'one line counts the locked species: ' + (await text('[data-act=locked-toggle]')));
+  await act('locked-toggle').click();
+  check((await page.locator('[data-act^="species-"]').count()) >= 3, 'opening it lists the species from the C# content');
   check(await act('start').isEnabled(), 'a species is pre-picked');
   await page.waitForFunction(() => document.getElementById('build').textContent !== '');
   const stamp = await page.locator('#build').textContent();
@@ -72,14 +75,14 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
   check((await page.locator('[data-id=unlock-slime]').count()) === 0, 'the starter has no unlock line');
-  // ---- generated creature art (specs/26 section 8): the picked species' portrait and every species card's sprite load as images
-  await page.waitForFunction(() => [...document.querySelectorAll('[data-id=portrait] img, [data-act^="species-"] img.sprite.art')].every((i) => i.complete), null, { timeout: 15000 });
+  // ---- generated creature art (specs/26 section 8): the picked species' carousel card shows its portrait, every locked card its sprite
+  await page.waitForFunction(() => [...document.querySelectorAll('[data-act^="species-"] img')].every((i) => i.complete), null, { timeout: 15000 });
   const art = await page.evaluate(() => ({
-    portrait: [...document.querySelectorAll('[data-id=portrait] img')].map((i) => i.naturalWidth),
-    sprites: [...document.querySelectorAll('[data-act^="species-"] img.sprite.art')].map((i) => i.naturalWidth),
-    cards: document.querySelectorAll('[data-act^="species-"]').length }));
+    portrait: [...document.querySelectorAll('.species-card.sel [data-id=portrait] img')].map((i) => i.naturalWidth),
+    sprites: [...document.querySelectorAll('[data-act^="species-"][data-locked] img.sprite.art')].map((i) => i.naturalWidth),
+    cards: document.querySelectorAll('[data-act^="species-"][data-locked]').length }));
   check(art.portrait.length === 1 && art.portrait[0] > 0, 'the picked species shows its portrait: ' + JSON.stringify(art.portrait));
-  check(art.sprites.length === art.cards && art.sprites.every((w) => w > 0), 'every species card shows its art sprite: ' + JSON.stringify(art.sprites));
+  check(art.sprites.length === art.cards && art.sprites.every((w) => w > 0), 'every locked species card shows its art sprite: ' + JSON.stringify(art.sprites));
   const artKeys = JSON.parse(fs.readFileSync(path.join(WEB, 'sprites.js'), 'utf8').match(/const ART_KEYS = new Set\((\[.*?\])\)/)[1]).sort();
   const artFiles = (d) => fs.readdirSync(path.join(WEB, 'art', d)).map((f) => f.replace(/\.webp$/, '')).sort();
   check(JSON.stringify(artFiles('sprite')) === JSON.stringify(artKeys) && JSON.stringify(artFiles('portrait')) === JSON.stringify(artKeys),
@@ -98,6 +101,16 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   check(await act('species-drake').isEnabled() && (await page.locator('[data-id=unlock-drake]').count()) === 0, 'an account that unlocked drake can pick it');
+  // The carousel (two owned species now): a tap glides the card to the middle and picks it; a swipe back picks the other one.
+  await act('species-drake').click();
+  check(/Coremote|Drake/.test(await act('start').innerText()) && (await act('species-drake').getAttribute('aria-selected')) === 'true', 'tapping a carousel card picks it: ' + (await act('start').innerText()));
+  await page.waitForTimeout(600);
+  await page.locator('[data-id=species-carousel]').evaluate((r) => r.scrollTo({ left: 0 }));
+  await page.waitForFunction(() => document.querySelector('[data-act=species-slime]').getAttribute('aria-selected') === 'true', null, { timeout: 5000 });
+  check(true, 'swiping the carousel back picks the card that settles in the middle');
+  const cw0 = await page.evaluate(() => document.documentElement.scrollWidth);
+  check(cw0 <= 390, 'the carousel fits the phone width (' + cw0 + 'px)');
+  await shot('01b-carousel');
 
   // ---- start a run, first drill and rest
   await act('species-drake').click();

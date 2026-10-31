@@ -96,6 +96,21 @@ small, .small { font-size: 12px; }
 #tabs .tabsp.pill { position: absolute; top: -7px; right: 0; padding: 0 5px; border-radius: var(--r-pill); background: var(--panel-2); border: 1px solid var(--line); font-size: 10px; line-height: 15px; letter-spacing: 0; }
 #tabs button { white-space: nowrap; }
 .sticky-start { position: sticky; bottom: 0; z-index: 2; }
+/* Raise tab: the species carousel. Cards snap to the middle and the neighbours peek in from the sides. */
+.carousel { position: relative; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 14% 8px; margin: 0 calc(-1 * var(--gutter-r)) 0 calc(-1 * var(--gutter-l)); scrollbar-width: none; overscroll-behavior-x: contain; }
+.carousel::-webkit-scrollbar { display: none; }
+.species-card { flex: 0 0 100%; scroll-snap-align: center; padding: 0; overflow: hidden; display: flex; flex-direction: column; text-align: left; opacity: .55; transform: scale(.94); transition: opacity var(--dur), transform var(--dur); }
+.species-card.sel { opacity: 1; transform: none; }
+.species-card .pimg { display: grid; place-items: center; aspect-ratio: 4 / 3; background: var(--panel-2); }
+.species-card .pimg img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+.species-card .pimg .sprite { width: 45%; height: auto; }
+.species-card > .row { padding: 10px 12px; }
+.dots { display: flex; justify-content: center; gap: 8px; margin-top: -6px; }
+.dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: var(--line); }
+.dot.on { background: var(--gems); }
+.species-info { display: flex; flex-direction: column; gap: 6px; }
+.howto summary { cursor: pointer; }
+.howto p { margin: 6px 0 0; }
 /* Skill point gains (issue #86): a float-up by the HUD's SP count, a pulse on the count, the fight result's badge */
 #floats { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
 .spgain { position: absolute; padding: 2px 8px; border-radius: var(--r-lg); background: var(--gems-bg); border: 1px solid var(--gems); color: var(--gems); font: 700 13px var(--font-display); white-space: nowrap; box-shadow: var(--shadow-float); animation: spfloat 2s ease-out both; }

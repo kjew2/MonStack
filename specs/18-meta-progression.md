@@ -219,7 +219,7 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 
 Rules (both `tools/content_build.py` and `ContentDb`): `ref` and `amount` as in the table (`E023` for a bad reference, `E043` otherwise); `unlocks_species` is a species id (`E023`) and not the starter (`E043`); every species but the starter is unlocked by at least one achievement (`E044`), so none is unobtainable.
 
-The web client shows locked species on the species pick with their unlock condition and progress, an achievement list on the home screen (its Goals tab), and a notice on the grade screen (and a toast) for each achievement a run earned.
+The web client shows locked species on the species pick with their unlock condition and progress (folded under one "N locked species" line on the Raise tab, kj 2026-10-31: less clutter), an achievement list on the home screen (its Goals tab), and a notice on the grade screen (and a toast) for each achievement a run earned.
 
 ## 9. Vault browsing (web client)
 
