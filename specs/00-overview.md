@@ -1,6 +1,6 @@
 # 00 - Overview and Shared Contracts
 
-Working title: **Idle RNG** (a leftover from the idle game this project started as; the game is now a monster raising game and has no name yet, #47). The target design is `specs/12`; this file is the contract the other specs build on. If another spec disagrees with a number or name here, this file wins.
+Name: **MonStack** (kj, 2026-10-31; a store-name and trademark check is still open, #47). Code, assemblies, paths and save keys still say `IdleRng` / `idle-rng`, a leftover from the idle game this project started as, until the one mechanical rename (`specs/20` R0.3). The target design is `specs/12`; this file is the contract the other specs build on. If another spec disagrees with a number or name here, this file wins.
 
 History: the project began as a mobile idle game (stage push, gear, gacha). It pivoted to the monster trainer on 2026-10-30 and the idle game was removed in `specs/13` phase T7. Git history holds it; the specs that described only it (`02` power curve, `04` economy, `07` Unity client, `11` party and builds) were deleted with it.
 
