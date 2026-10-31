@@ -1,6 +1,6 @@
 # 21 - Daily Tower
 
-Status: **live (T10 of `specs/13`, P0)**, all four build steps (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4); a first web screen, section 8 (`web/run.js`, browser test in `web/wasm/test/run-trainer.js`). Section 8 lists what the screen does not do yet.
+Status: **live (T10 of `specs/13`, P0)**, all four build steps (section 10): the battle hooks of section 3 (`src/IdleRng.Sim/Combat`, `TowerBattleTests`); the tower sim and content of sections 2, 4 and 5 (`src/IdleRng.Sim/Tower/TowerSim.cs`, `TowerTests`, golden `golden/tower-vectors.txt`); attempts and rewards on the account, section 7 (`AccountOps.RunTower`, `TowerAccountTests`, account save v4); the web screen with floor playback, section 8 (`web/run.js`, browser test in `web/wasm/test/run-trainer.js`). Section 8 lists what the screen does not do yet.
 
 The design is `specs/12` sections 8.2 and 8.3 and the Skill Book rules in section 5.6. This spec turns it into rules, data and build steps.
 
@@ -96,7 +96,7 @@ New tables (a new table is a MINOR bump, `CLAUDE.md`). Ids are added, never rena
 | `boss_phases` | `id`, `boss_id`, `order`, `enter_hp`, `kind` (section 3.2), `power`, `duration`, `count`, `guard`, `heal_frac`, `strike`, `buff`, `adds` (a `tower_bosses` id of role `add`, or empty), `add_skills` (ids, `\|`-separated). Columns a kind does not use are 0 or empty |
 | `book_drops` | `book_id` (the key), `min_floor`, `weight` |
 
-Strings: boss names (`tower.<id>.name`), `rule.entropy_convert.*` and the phase banners and tooltips (`phase.<kind>.name`, `phase.<kind>.desc`), with constants filled in as in `specs/16` section 9. `stat.dmg_dealt.*` and `stat.entropy_gain.*` come when content first uses those stats in a node. `skill_books` gains no column.
+Strings: boss names (`tower.<id>.name`), `rule.entropy_convert.*` and the phase banners and tooltips (`phase.<kind>.name`, `phase.<kind>.desc`), with constants filled in as in `specs/16` section 9. Content 3.10 added the playback tooltips (section 8): `tower.entropy.*`, `tower.corruption.*` and `vent.<recoil|stun|enrage>.*`, `vent.convert.name`. `stat.dmg_dealt.*` and `stat.entropy_gain.*` come when content first uses those stats in a node. `skill_books` gains no column.
 
 Constants (all placeholders; range violations are `E043` in both `tools/content_build.py` and `ContentDb`, as in `specs/16`):
 
@@ -138,7 +138,7 @@ Fighter boss = TowerSim.Boss(content, bossId, level);     // a boss with its ski
 string book = TowerSim.BookDrop(content, day, floor);     // the floor's drop that day, or null (section 7)
 ```
 
-`FightRules.FromContent(content, tower: true)` carries the three mechanisms; `BattleSim.Start` validates the new fields (known phase kinds, `adds` within the side-size cap). `FightAction` gains one field, `Event` (null for an ordinary action): `phase:<kind>`, `vent:recoil|stun|enrage|convert`, `check_failed`, `channel_broken`, `channel_strike`, with the unit in `Actor` and the amount where there is one. Playback also reads `FightUnit.Entropy`, `FightState.PeakCorruption` and `BattleSim.CorruptionLevel(rules, ticks)` from the live state; observers only read, as before.
+`FightRules.FromContent(content, tower: true)` carries the three mechanisms; `BattleSim.Start` validates the new fields (known phase kinds, `adds` within the side-size cap). `FightAction` gains one field, `Event` (null for an ordinary action): `phase:<kind>`, `vent:recoil|stun|enrage|convert`, `check_failed`, `channel_broken`, `channel_strike`, with the unit in `Actor` and the amount where there is one. Playback also reads `FightUnit.Entropy`, `BattleSim.NextVent(unit)` (the vent kind the gauge fires next: convert with `entropy_convert`, else the rotation by vent count; `GainEntropy` uses the same function), `FightState.PeakCorruption` and `BattleSim.CorruptionLevel(rules, ticks)` from the live state; observers only read, as before.
 
 ## 7. Account and rewards
 
@@ -167,10 +167,13 @@ The day number is read from the device clock by the caller. The sim cannot tell 
 
 - Status line: attempts left, floors cleared today and ever.
 - Team: every Vault entry with a checkbox, up to `MON_SIDE_SIZE`; the order picked is the slot order, shown as "Slot n". Climb runs one attempt.
-- Result card: where the team fell (or a full clear), the shards paid, the Skill Books dropped and on which floor, first clears, every floor fought (won or lost, phases entered, vents, peak corruption), and the last floor's fight as a collapsible log in which the tower events (phase entered, entropy vent, shield check failed, channel broken or landed) are highlighted lines.
-- Today's floors: each floor's boss, element, marquee bosses in gold, their phases in order and the floor level.
+- Result card: where the team fell (or a full clear), the shards paid, the Skill Books dropped and on which floor, first clears, every floor fought (won or lost, phases entered, vents, peak corruption) with a **Watch** button, and the last floor's fight as a collapsible log in which the tower events (phase entered, entropy vent, shield check failed, channel broken or landed) are highlighted lines.
+- Today's floors: each floor's boss, element, marquee bosses in gold, their phases in order (each opens its tooltip) and the floor level.
+- **Floor playback** (issue #98): a floor's fight plays in the rank fight's view (`fightPlayView`; 1x, 2x or Skip, the same remembered speed): every unit's HP and skill cooldown tiles, and for each unit its entropy gauge (out of `ENTROPY_CAP`) with the vent that is next, a corruption meter (level out of the level the time limit reaches), and a gold banner for each tower event. A split phase's adds appear when they join. Right after a climb the last floor (the one that decided the attempt) plays unless the speed is Skip; Watch plays any floor fought, at 1x when the speed is Skip, and the view steps to the floor before or after. Skip shows the floor's end. Every number is the engine's per-action snapshot (`web/wasm/BRIDGE.md`, `en`, `vent`, `corruption`); the next vent is `BattleSim.NextVent`, so the page computes no rule.
+- **Bridge (agent):** the last floor's fight comes with `runTower`; any other floor comes from the read-only `towerFloor(day, team, floor)`, which replays the attempt and logs only that floor. Chosen over putting every floor's log in `runTower`: a 20-floor attempt with per-action snapshots would be megabytes in a result the page keeps, while players watch one or two floors. The replay is the same fight (a result is a pure function of content, team, day and slot order, section 2); each floor's fight `hash` is in both results and the browser test checks they match. The page calls it only for an attempt already made; since the sim runs on the device, it does not stop a player from trying a team on the day's floors before spending an attempt (as with the clock, section 7, the server check comes with T12).
+- **Tooltips** (`BattleText.TowerTips`, RunContent `towerTips`): the entropy gauge (`tower.entropy.*`), each vent kind (`vent.<kind>.*`; convert uses `rule.entropy_convert.desc`), the corruption meter (`tower.corruption.*`, its start and step given in turns) and each phase kind (`phase.<kind>.*`), constants filled in (content 3.10).
 
-**Not yet** (issue #98): animated playback with the rank fight's view (1x, 2x, Skip) for tower floors; entropy gauges, the next vent and the corruption meter during playback; tooltips for phases, entropy and corruption (`BattleText`); the Vault's sort, filters and search in the team picker and reordering the team; moving the "Test: add a book" button behind a debug flag (it is still on the home screen).
+**Not yet** (issue #98): the Vault's sort, filters and search in the team picker and reordering the team; moving the "Test: add a book" button behind a debug flag (it is still on the home screen).
 
 ## 9. Determinism and tests
 
@@ -188,7 +191,7 @@ Each step merges on its own with `./check.sh` green.
 1. **Engine hooks** (`BattleSim`): `TowerRules`, entropy, the four phase kinds, the clock, tests. Rank fights and the gauntlet unchanged. **Done** (`TowerBattleTests`; no golden moved).
 2. **Tower sim and content:** the three tables, constants, validators in both `content_build.py` and `ContentDb`, `TowerSim`, goldens. **Done** (content 3.6, `TowerTests`, `golden/tower-vectors.txt`).
 3. **Account:** `AccountState.Tower`, `RunTower`, rewards, save schema v4, tests. **Done** (`TowerAccountTests`, `AccountSaveTests`).
-4. **Web:** the tower screen and the bridge. **Done** as a first version (section 8); its open items are issue #98.
+4. **Web:** the tower screen and the bridge. **Done** (section 8): the first version, then floor playback with the entropy and corruption meters and tooltips (issue #98); its open items are listed in section 8.
 
 ## 11. Questions for kj
 

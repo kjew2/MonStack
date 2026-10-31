@@ -43,6 +43,14 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
+        /// <summary>towerTips{key:{name,text}}: the Daily Tower playback's entropy, vent, corruption and phase tooltips (BattleText.TowerTips).</summary>
+        public static void TowerTips(JsonOut w, ContentDb db)
+        {
+            w.Key("towerTips").Obj();
+            foreach (var (key, name, text) in BattleText.TowerTips(db)) w.Key(key).Obj().P("name", name).P("text", text).EndObj();
+            w.EndObj();
+        }
+
         /// <summary>statNow{id:text} and nowTitle for one side of the coming rank fight.</summary>
         public static void StatNow(JsonOut w, ContentDb db, MonsterStats self, MonsterStats foe, string foeName)
         {

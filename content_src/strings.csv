@@ -297,3 +297,14 @@ phase.channel.name,Channel
 phase.channel.desc,The boss charges a strike on your whole team. Deal enough damage to it in time to interrupt.
 phase.enrage.name,Enrage
 phase.enrage.desc,The boss hits harder every turn until the fight ends.
+tower.entropy.name,Entropy
+tower.entropy.desc,"Daily Tower: builds up as a unit's free extra effects fire: +{ENTROPY_PER_TRIGGER} per triggered effect, +{ENTROPY_PER_ECHO} per echo and +{ENTROPY_PER_COUNTER} per counterattack. It drains {ENTROPY_DECAY} at the start of the unit's own action. At {ENTROPY_CAP} the gauge vents and empties, in turn: recoil, stun, then enrage."
+vent.recoil.name,Recoil
+vent.recoil.desc,The unit takes {ENTROPY_RECOIL_FRAC:pct} of its max HP as true damage (a shield absorbs it).
+vent.stun.name,Stun
+vent.stun.desc,The unit loses {ENTROPY_STUN_GAUGE} of its action gauge and acts later.
+vent.enrage.name,Enrage
+vent.enrage.desc,Every enemy deals {ENTROPY_ENRAGE_FRAC:pct} more damage for {ENTROPY_ENRAGE_TURNS} turns.
+vent.convert.name,Shield
+tower.corruption.name,Corruption
+tower.corruption.desc,"Daily Tower: from turn {start_turns} the arena corrupts one more level every {every_turns} turns, for both sides. Each level adds {CORRUPT_DMG_PER_LEVEL:pct} to all damage and cuts healing and shields by {CORRUPT_HEAL_PER_LEVEL:pct}, to no less than {CORRUPT_HEAL_FLOOR:pct}."

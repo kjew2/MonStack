@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.9",
+  "content_version": "3.10",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -61,7 +61,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "43e13c0713cea6c5a61557b5dcd7108652e144aa5e1b527a4469b52cf90eda44"
+      "sha256": "e38ce241e4d40fe164f12a2121eb3344f644102ef7c11dd3bd567b7c3a31a85d"
     },
     "talents": {
       "file": "talents.json",
@@ -84,5 +84,5 @@
       "sha256": "370640e02d9e08c1199e4631879604ebb782f53687f1d65c7d37f4e08f53c539"
     }
   },
-  "content_hash": "1e09d206e544373f1d151ba28fce3ae564e75e93140c219f9ae75d06894d385b"
+  "content_hash": "a4f0eba35652cc755d57181f5ccaaa73b1eabc1e8bbfa9f27cab8543bad73188"
 }

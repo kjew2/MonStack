@@ -37,6 +37,25 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void TowerTips_CoverEntropyEveryVentCorruptionAndEveryPhase_WithNothingLeftUnfilled()
+        {
+            var tips = BattleText.TowerTips(Db);
+            var keys = tips.Select(t => t.key).ToList();
+            Assert.That(keys, Is.EquivalentTo(new[] { "entropy", "vent.recoil", "vent.stun", "vent.enrage", "vent.convert", "corruption" }
+                .Concat(PhaseKinds.Known.Select(p => "phase." + p))));
+            foreach (var (key, name, text) in tips)
+            {
+                Assert.That(name, Is.Not.Empty.And.Not.Contains("."), key + " has a name string");
+                Assert.That(text, Is.Not.Empty.And.Not.EqualTo(key), key);
+                Assert.That(TextTemplate.HasPlaceholder(text), Is.False, key + ": " + text);
+            }
+            var k = Db.Constants;
+            string corruption = tips.First(t => t.key == "corruption").text;
+            Assert.That(corruption, Does.Contain("from turn " + TextTemplate.Number((double)k.CorruptStartTick / k.TurnTicks, null) + " "));
+            Assert.That(corruption, Does.Contain("every " + TextTemplate.Number((double)k.CorruptEveryTicks / k.TurnTicks, null) + " turns"));
+        }
+
+        [Test]
         public void NowLines_UseTheBattleFormulas()
         {
             var r = FightRules.FromContent(Db);
