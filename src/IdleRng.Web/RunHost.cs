@@ -162,7 +162,7 @@ namespace IdleRng.Web
             }
             w.EndArr();
             w.P("source", TreeSource(t));
-            if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated);
+            if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated).P("apexName", _db.Text(t.ApexNameKey));
             w.Key("conditions").Arr();
             if (t.Conditions != null) foreach (var cd in t.Conditions) w.Str(ConditionText(cd));
             w.EndArr();
@@ -502,7 +502,7 @@ namespace IdleRng.Web
         }
 
         /// <summary>
-        /// A tower fighter's display name: "t0_monster" is the first team slot's species, "boss_x" the boss row x, and "boss_x#2"
+        /// A tower fighter's display name: "t0_monster" is the first team slot's monster (its apex or species name, specs/15 section 5.3), "boss_x" the boss row x, and "boss_x#2"
         /// its second add, named after the add row of x's split phase plus "#2" (the first split phase's row, if x has several).
         /// </summary>
         private string TowerUnitName(string id, List<int> idx)
@@ -510,7 +510,7 @@ namespace IdleRng.Web
             if (id.StartsWith("t", StringComparison.Ordinal) && id.Length > 1 && char.IsDigit(id[1]))
             {
                 int slot = id[1] - '0';
-                if (slot < idx.Count) return _db.Text(_db.Species[_acct.Vault[idx[slot]].SpeciesId].NameKey);
+                if (slot < idx.Count) { var e = _acct.Vault[idx[slot]]; return ApexForm.Name(_db, e.SpeciesId, ApexForm.TreeOf(_db, e)); }
             }
             if (id.StartsWith("boss_", StringComparison.Ordinal))
             {
@@ -589,6 +589,8 @@ namespace IdleRng.Web
                 .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
                 .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("hash", e.RunHash).P("sealedUtcMs", e.SealedUtcMs)
                 .P("locked", e.Locked).P("refund", AccountOps.DismantleRefund(_db, e));
+            string apex = ApexForm.TreeOf(_db, e);
+            w.P("apex", apex).P("name", ApexForm.Name(_db, e.SpeciesId, apex));
             w.Key("stats"); Stats(w, e.Stats);
             w.Key("trees").Arr();
             foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).EndObj();
@@ -814,6 +816,8 @@ namespace IdleRng.Web
             double fail = TrainingRun.FailChance(k, e);
             var w = new JsonOut().Obj();
             w.P("species", s.SpeciesId).P("seed", s.Seed.ToString("x16", CultureInfo.InvariantCulture));
+            string apex = ApexForm.TreeOf(_db, s);
+            w.P("apex", apex).P("name", ApexForm.Name(_db, s.SpeciesId, apex));
             w.P("phase", s.Phase.ToString().ToLowerInvariant()).P("end", s.End.ToString().ToLowerInvariant());
             w.P("cycle", s.Cycle).P("ap", s.ApLeft).P("energy", s.Energy).P("sp", s.Sp).P("rank", s.Rank);
             w.P("fightsFought", s.FightsFought).P("fightsWon", s.FightsWon).P("drills", s.Drills).P("rests", s.Rests);

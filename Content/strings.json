@@ -615,6 +615,30 @@
       "text": "Starlit Ascension"
     },
     {
+      "key": "tree.unbreakable_will.apex",
+      "text": "Aegis Wyrm"
+    },
+    {
+      "key": "tree.inferno_sovereign.apex",
+      "text": "Surtr Drake"
+    },
+    {
+      "key": "tree.living_ocean.apex",
+      "text": "Solaris Tide"
+    },
+    {
+      "key": "tree.abyssal_bloom.apex",
+      "text": "Abyssal Siphonophore"
+    },
+    {
+      "key": "tree.starlit_ascension.apex",
+      "text": "Comet Moth"
+    },
+    {
+      "key": "tree.arcane_overflow.apex",
+      "text": "Gemini Moth"
+    },
+    {
       "key": "book.book_echoes.name",
       "text": "Skill Book: Tome of Echoes"
     },

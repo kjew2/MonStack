@@ -92,7 +92,7 @@ namespace IdleRng.Runtime.Tests
         [Test]
         public void APrePoolSave_KeepsItsRunGoing_AgainstTheFlatRanks()
         {
-            // A save written before the rank pools (content 4.1): no Ladder in the recipe or the Vault entries, and the run's hash
+            // A save written before the rank pools (content 4.2): no Ladder in the recipe or the Vault entries, and the run's hash
             // is the version 5 one. Its run in progress replays as a legacy run, so it is not dropped.
             var db = TestContent.Db;
             var a = Played();

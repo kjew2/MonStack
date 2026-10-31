@@ -102,10 +102,30 @@ const SPECIES_ART = {
     "...A....A...", "....A..A....", "YY...BB...YY", "YWY.BEEB.YWY", "YKOYBBBBYOKY", "YOKYYBBYYKOY",
     ".YYYWBBWYYY.", "..YWYBBYWY..", ".YOKYBBYKOY.", ".YKOY.BYOKY.", "..YY..B.YY..", "............"] },
 };
-function speciesSprite(id) {
+// Apex forms (specs/15 section 5.3): the species' art with a palette swap and an overlay (non-"." pixels replace the base).
+const BLANK = "............";
+const APEX_ART = {
+  living_ocean: { pal: { A: "#0b6e6e", B: "#2ec4b6", W: "#e0fffb", C: "#7fd6ff", K: "#ffffff", S: "#e0fffb" },   // Solaris Tide
+    over: ["..S.S..S.S..", ".SSS.SS.SSS."] },
+  abyssal_bloom: { pal: { A: "#2a0f4a", B: "#4b1d7a", W: "#ff7ad9", E: "#ffe0f5", C: "#ff3fa4", K: "#ffd1f0", T: "#ff7ad9" },   // Abyssal Siphonophore
+    over: ["...T..T..T..", "..T.T.T..T.."] },
+  unbreakable_will: { pal: { P: "#5a4a2a", M: "#ffd36b", O: "#ff4d1a", H: "#fff2b0", G: "#ffd36b" },   // Aegis Wyrm
+    over: ["......G.G.G."] },
+  inferno_sovereign: { pal: { P: "#2a2038", M: "#7a6a96", R: "#2a1a2e", O: "#b366ff", E: "#d9b3ff", H: "#b366ff", F: "#7a3cff" },   // Surtr Drake
+    over: ["......F.F.F.", ".....F......"] },
+  starlit_ascension: { pal: { Y: "#8fd1ff", W: "#ffffff", O: "#4f7dff", K: "#1b2a6b", B: "#dfe8ff", A: "#bcd4ff", S: "#fff6b0" },   // Comet Moth
+    over: [BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, ".S.S....S.S."] },
+  arcane_overflow: { pal: { Y: "#b388ff", W: "#f3e8ff", O: "#ff7ad9", K: "#2a1050", B: "#d9c2ff", S: "#e8d6ff" },   // Gemini Moth
+    over: [BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, BLANK, "..S..SS..S.."] },
+};
+// The species' hand-drawn art, in its apex form when apex (a chase tree id) has one; null for a species without art.
+function speciesSprite(id, apex) {
   const a = SPECIES_ART[id]; if (!a) return null;
-  const key = "sp:" + id; if (SPR[key]) return SPR[key];
-  return (SPR[key] = paint(a.rows.map(r => r.split("")), a.pal));
+  const x = apex ? APEX_ART[apex] : null;
+  const key = "sp:" + id + (x ? ":" + apex : ""); if (SPR[key]) return SPR[key];
+  const g = a.rows.map(r => r.split(""));
+  if (x) x.over.forEach((row, y) => row.split("").forEach((c, xx) => { if (c !== ".") g[y][xx] = c; }));
+  return (SPR[key] = paint(g, x ? Object.assign({}, a.pal, x.pal) : a.pal));
 }
 function paint(g, pal) {
   const c = document.createElement("canvas"); c.width = g[0].length; c.height = g.length;

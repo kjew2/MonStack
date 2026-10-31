@@ -179,7 +179,7 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// The rank ladder (specs/14 section 5): the rank_enemies id fought at each rank, indexed like ContentDb.FightRanks, rolled
-        /// at Start on the "ladder" stream. Empty for a legacy run (started before the pools, content 4.1): its opponent at each
+        /// at Start on the "ladder" stream. Empty for a legacy run (started before the pools, content 4.2): its opponent at each
         /// rank is the flat fight_ranks row.
         /// </summary>
         public List<string> Ladder { get; set; } = new List<string>();

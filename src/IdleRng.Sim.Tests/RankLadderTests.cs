@@ -183,7 +183,7 @@ namespace IdleRng.Sim.Tests
         public void LegacyRun_FightsTheFlatRanks_AndKeepsTheVersion5Hash()
         {
             // Computed by the code before the rank pools (run hash version 5) for this exact script: runs saved and Vault entries
-            // sealed before content 4.1 must keep replaying to their stored hashes.
+            // sealed before content 4.2 must keep replaying to their stored hashes.
             const string V5Hash = "3036b66f6cc6a90c85e4114e510230ce64d3f2916b64ec8513d6f2aaf4d7c932";
             var s = Scripted(TrainingRun.Start(Db, "drake", 11, null, null, new List<string>()));
             Assert.That(s.Ladder, Is.Empty);
