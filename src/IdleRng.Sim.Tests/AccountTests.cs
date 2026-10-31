@@ -344,6 +344,83 @@ namespace IdleRng.Sim.Tests
             Assert.That(a.Vendor.Rerolls, Is.EqualTo(0));
         }
 
+        // ------------------------------------------------------------------ the talent loadout (issue #106)
+
+        /// <summary>The shipped content with the given tier taking a legendary slot, for loadout tests.</summary>
+        static ContentDb DbWithSlotTier(string tier)
+        {
+            string dir = FileContentSource.FindContentDirectory(TestContext.CurrentContext.TestDirectory);
+            var files = System.IO.Directory.GetFiles(dir, "*.json").ToDictionary(System.IO.Path.GetFileName, System.IO.File.ReadAllText);
+            string t = files["vendor_rarities.json"];
+            int at = t.IndexOf("\"id\": \"" + tier + "\"", StringComparison.Ordinal);
+            int end = t.IndexOf('}', at);
+            files["vendor_rarities.json"] = t.Substring(0, at) + t.Substring(at, end - at).Replace("\"legendary_slot\": false", "\"legendary_slot\": true") + t.Substring(end);
+            return ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false);
+        }
+
+        [Test]
+        public void Loadout_SwitchedOffTalents_GiveNothing_AndTheLoadoutIsRemembered()
+        {
+            var a = AccountOps.New(Db, 31);
+            a.Talents["frugal_drills"] = 2;
+            a.Talents["head_start"] = 1;
+            Assert.That(AccountOps.DefaultLoadout(Db, a), Is.Empty, "every owned talent is on by default");
+
+            Assert.Throws<ArgumentException>(() => AccountOps.StartRun(Db, a, "slime", null, new[] { "nope" }));
+            Assert.That(a.RunsStarted, Is.EqualTo(0), "a refused loadout changes nothing");
+            Assert.That(a.Active, Is.Null);
+
+            var run = AccountOps.StartRun(Db, a, "slime", null, new[] { "frugal_drills", "frugal_drills", "scavenger" });
+            Assert.That(run.Mods.DrillCostMult, Is.EqualTo(1), "Frugal Drills is off for this run");
+            Assert.That(run.Mods.StartSp, Is.EqualTo(1), "Head Start is still on");
+            Assert.That(a.TalentsOff, Is.EqualTo(new[] { "frugal_drills", "scavenger" }), "saved in content order without duplicates (a talent not owned may be off)");
+            PlayOut(run);
+            var f = AccountOps.FinishRun(Db, a);
+            Assert.That(f.Entry.Mods.DrillCostMult, Is.EqualTo(1), "the Vault entry keeps the run's modifiers, so it replays");
+
+            Assert.That(AccountOps.DefaultLoadout(Db, a), Is.EqualTo(new[] { "frugal_drills", "scavenger" }));
+            Assert.That(AccountOps.Modifiers(Db, a).DrillCostMult, Is.EqualTo(1), "the next run's bonuses follow the last loadout");
+            var next = AccountOps.StartRun(Db, a, "slime");
+            Assert.That(next.Mods.DrillCostMult, Is.EqualTo(1), "no loadout given: the last one");
+            AccountOps.AbandonRun(Db, a);
+            var on = AccountOps.StartRun(Db, a, "slime", null, new string[0]);
+            Assert.That(on.Mods.DrillCostMult, Is.EqualTo(1 + 2 * Db.Talents["frugal_drills"].PerRank).Within(1e-12), "switched back on");
+            Assert.That(a.TalentsOff, Is.Empty);
+        }
+
+        [Test]
+        public void Loadout_AtMostLegendarySlots_LegendarySlotTalentsOn()
+        {
+            var db = DbWithSlotTier("epic");
+            Assert.That(db.Constants.LegendarySlots, Is.EqualTo(1));
+            var a = AccountOps.New(db, 32);
+            a.Talents["fifth_slot"] = 1;
+            a.Talents["second_wind"] = 1;
+            a.Talents["head_start"] = 1;
+            Assert.That(AccountOps.TakesLegendarySlot(db, db.Talents["fifth_slot"]), Is.True);
+            Assert.That(AccountOps.TakesLegendarySlot(db, db.Talents["head_start"]), Is.False);
+            Assert.That(AccountOps.DefaultLoadout(db, a), Is.EqualTo(new[] { "second_wind" }), "the first in content order keeps the one slot");
+
+            Assert.Throws<InvalidOperationException>(() => AccountOps.StartRun(db, a, "slime", null, new string[0]), "two legendaries on");
+            Assert.That(a.RunsStarted, Is.EqualTo(0));
+            var run = AccountOps.StartRun(db, a, "slime", null, new[] { "fifth_slot" });
+            Assert.That(run.Mods.TreeSlotBonus, Is.EqualTo(0));
+            Assert.That(run.Mods.InjuryShields, Is.EqualTo(1), "the chosen legendary is on");
+            Assert.That(run.Mods.StartSp, Is.EqualTo(1));
+            AccountOps.AbandonRun(db, a);
+            Assert.That(AccountOps.DefaultLoadout(db, a), Is.EqualTo(new[] { "fifth_slot" }), "the choice is remembered");
+            AccountOps.StartRun(db, a, "slime", null, new[] { "fifth_slot", "second_wind" });   // none on is fine too
+            AccountOps.AbandonRun(db, a);
+
+            // SetLoadout saves the toggles the species pick shows; a bad one is refused and changes nothing.
+            AccountOps.SetLoadout(db, a, new[] { "second_wind" });
+            Assert.That(a.TalentsOff, Is.EqualTo(new[] { "second_wind" }));
+            Assert.That(AccountOps.Modifiers(db, a).TreeSlotBonus, Is.EqualTo(1));
+            Assert.Throws<InvalidOperationException>(() => AccountOps.SetLoadout(db, a, new string[0]));
+            Assert.Throws<ArgumentException>(() => AccountOps.SetLoadout(db, a, new[] { "nope" }));
+            Assert.That(a.TalentsOff, Is.EqualTo(new[] { "second_wind" }));
+        }
+
         [Test]
         public void StartRun_DerivesSeeds_OneAtATime_ChecksSpeciesAndBooks()
         {

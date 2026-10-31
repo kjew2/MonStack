@@ -933,11 +933,18 @@
 
     main.append(h('h3', { text: 'Talents' }));
     const now = talentSummary(acct.mods);
-    main.append(h('p', { class: 'small muted', 'data-id': 'talent-now', text: 'Talent ranks are sold by the vendor after each run. They apply from the next run on. Now: ' + (now.length ? now.join(', ') : 'none yet') + '.' }));
+    main.append(h('p', { class: 'small muted', 'data-id': 'talent-now', text: 'Talent ranks are sold by the vendor after each run. They apply from the next run on. Untick a talent to leave it out of the next run (free); ' +
+      C.consts.legendarySlots + ' legendary talent' + (C.consts.legendarySlots === 1 ? '' : 's') + ' can be on per run. Next run: ' + (now.length ? now.join(', ') : 'no talents yet') + '.' }));
     const tl = h('div', { class: 'card' });
     acct.talents.forEach((t) => {
       const def = C.talents.find((x) => x.id === t.id);
-      tl.append(h('div', { class: 'row between', 'data-id': 'talent-' + t.id, title: def.desc }, [h('span', { text: def.name }), h('span', { class: 'tag num', text: t.rank + '/' + def.maxRank })]));
+      const on = t.rank > 0 && acct.talentsOff.indexOf(t.id) < 0;
+      // The loadout toggle (issue #106): only owned talents can be switched; the engine checks the legendary slots.
+      const cb = t.rank > 0 ? h('input', { type: 'checkbox', 'data-act': 'talent-toggle-' + t.id, 'aria-label': 'Use ' + def.name + ' in the next run', onchange: (e) => toggleTalent(t.id, e.target.checked) }) : null;
+      if (cb) cb.checked = on;
+      tl.append(h('div', { class: 'row between', 'data-id': 'talent-' + t.id, title: def.desc }, [
+        h('label', { class: 'row' + (t.rank > 0 && !on ? ' muted' : '') }, [cb, h('span', { text: def.name }), def.legendary ? h('span', { class: 'tag gold', text: 'Legendary' }) : null]),
+        h('span', { class: 'tag num', text: t.rank + '/' + def.maxRank })]));
     });
     main.append(tl);
 
@@ -1412,11 +1419,26 @@
     return gains;
   }
 
+  // Switch an owned talent on or off for the next run (issue #106). Switching a legendary on when every legendary slot is taken
+  // switches the legendaries that were on off, so the player swaps one for another in one tap.
+  function toggleTalent(id, on) {
+    const acct = run.account, def = C.talents.find((x) => x.id === id);
+    let off = acct.talentsOff.filter((x) => x !== id);
+    if (!on) off.push(id);
+    else if (def.legendary) {
+      const active = acct.talents.filter((t) => t.rank > 0 && t.id !== id && off.indexOf(t.id) < 0 && C.talents.find((x) => x.id === t.id).legendary);
+      if (active.length >= C.consts.legendarySlots) active.forEach((t) => off.push(t.id));
+    }
+    const r = run.acct('setLoadout', off);
+    if (!r.ok) toast(r.reason);
+    render();
+  }
+
   function startRun() {
     if (!ui.pick) return;
     resetRunUi();
     const bring = bookToBring();
-    const r = run.startRun(ui.pick, ui.book && bring ? [bring] : []);
+    const r = run.startRun(ui.pick, ui.book && bring ? [bring] : [], run.account.talentsOff);
     if (!r.ok) { toast(r.reason); render(); return; }
     ui.book = false;
     ui.view = 'run';

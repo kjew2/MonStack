@@ -66,6 +66,7 @@ SHARDS_PER_CYCLE,int,5,training shards per cycle played when a run ends (specs/1
 SHARDS_PER_RANK,int,10,training shards per rank index reached (E = 0). Placeholder
 VENDOR_OFFERS,int,5,offers the post-run vendor rolls after each sealed run (specs/18 section 4). Placeholder
 REROLL_BASE,int,10,shards the first vendor reroll of a visit costs; reroll n (0-based) costs REROLL_BASE + REROLL_STEP x n (specs/18 section 4; kj 2026-10-31; issue #104). Placeholder
+LEGENDARY_SLOTS,int,1,talents of a legendary_slot tier (vendor_rarities) that can be active in one run; the loadout on the species pick picks them (specs/18 section 4; kj 2026-10-31; issue #106). More slots may come from achievements later
 REROLL_STEP,int,10,shards each vendor reroll adds to the next one's price within one visit; resets on each sealed run (specs/18 section 4). Placeholder
 VAULT_CAP,int,50,most Vault entries a new run may start with (specs/18 section 7; a finished run still seals over it). Placeholder
 GAUNTLET_FLOORS,int,100,end-of-run gauntlet (specs/19): floors in the tower. Placeholder

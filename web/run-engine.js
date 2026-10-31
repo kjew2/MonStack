@@ -66,7 +66,7 @@
       get account() { if (acctCache === undefined) acctCache = parse(host.AccountView()); return acctCache; },
       get state() { if (runCache === undefined) runCache = parse(host.RunState()); return runCache; },   // the active run, or null
       persist() { const t = host.AccountSave(); if (t && t !== 'null') ls.set(SAVE_KEY, t); },
-      // Account command (startRun, finishRun, buyOffer, rerollVendor, abandon, dismantle, lock, debugGrantBook); returns the result,
+      // Account command (startRun, finishRun, buyOffer, rerollVendor, setLoadout, abandon, dismantle, lock, debugGrantBook); returns the result,
       // ok:false when refused.
       acct(name) {
         const r = parse(host.AccountCmd(name, JSON.stringify([].slice.call(arguments, 1))));
@@ -89,7 +89,7 @@
       runTower(day, vaultIndices) { return run.acct('runTower', day, vaultIndices); },
       // Read only: one floor's fight of that day's attempt by that team, for playback (the same fight runTower fought).
       towerFloor(day, vaultIndices, floor) { return parse(host.AccountCmd('towerFloor', JSON.stringify([day, vaultIndices, floor]))); },
-      startRun(speciesId, books) { return run.acct('startRun', speciesId, books || []); },
+      startRun(speciesId, books, talentsOff) { return talentsOff ? run.acct('startRun', speciesId, books || [], talentsOff) : run.acct('startRun', speciesId, books || []); },
       finishRun() { return run.acct('finishRun', Date.now()); },
       randomSeedHex: randomSeedHex,
     };

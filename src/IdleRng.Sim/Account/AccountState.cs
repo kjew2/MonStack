@@ -13,9 +13,9 @@ namespace IdleRng.Sim.Account
     {
         /// <summary>
         /// The account save lineage (specs/18 section 6). v2: Vault entries carry Locked. v3: achievements, records and the post-run
-        /// vendor. v4: Dungeon progress. v5: Dungeon tickets. v6: the vendor's reroll count (AccountSave migrates v1 to v6).
+        /// vendor. v4: Dungeon progress. v5: Dungeon tickets. v6: the vendor's reroll count. v7: the talent loadout (AccountSave migrates v1 to v7).
         /// </summary>
-        public const int CurrentSchemaVersion = 6;
+        public const int CurrentSchemaVersion = 7;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";
@@ -34,6 +34,12 @@ namespace IdleRng.Sim.Account
 
         /// <summary>Talent ranks by id; a missing id is rank 0.</summary>
         public SortedDictionary<string, int> Talents { get; set; } = new SortedDictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// The last run's talent loadout (issue #106): talent ids switched off, in content order. The species pick starts from it;
+        /// a talent not in it is on (AccountOps.DefaultLoadout).
+        /// </summary>
+        public List<string> TalentsOff { get; set; } = new List<string>();
 
         /// <summary>Finished monsters, oldest first.</summary>
         public List<VaultEntry> Vault { get; set; } = new List<VaultEntry>();

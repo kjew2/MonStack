@@ -60,7 +60,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^[0-9a-f]{4,}(\+dirty)? · \d{4}-\d\d-\d\d$/.test(stamp), 'the header shows the build stamp: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 6, 'a new account owns only the starter species (slime), schema v6');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 7, 'a new account owns only the starter species (slime), schema v7');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -405,7 +405,17 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(vw0 <= 390, 'the vendor fits the phone width (' + vw0 + 'px)');
   await act('vendor-done').click();
   check((await page.locator('[data-id=vendor-offer]').count()) === 5, 'home keeps the unbought offers until the next run');
-  check(new RegExp('^' + afterBuy.Account.Talents[talentId] + '/').test(await text('[data-id=talent-' + talentId + '] .tag')), 'the talent list shows the new rank');
+  check(new RegExp('^' + afterBuy.Account.Talents[talentId] + '/').test(await text('[data-id=talent-' + talentId + '] .tag.num')), 'the talent list shows the new rank');
+  // ---- the talent loadout (issue #106): an owned talent can be switched off for the next run, free, and back on
+  const toggle = act('talent-toggle-' + talentId);
+  check(await toggle.isChecked(), 'an owned talent is on by default');
+  const nowOn = await text('[data-id=talent-now]');
+  await toggle.uncheck();
+  const offAcct = (await readAccount()).Account;
+  check(JSON.stringify(offAcct.TalentsOff) === JSON.stringify([talentId]) && !(await act('talent-toggle-' + talentId).isChecked()), 'unticking saves it in the loadout: ' + JSON.stringify(offAcct.TalentsOff));
+  check((await text('[data-id=talent-now]')) !== nowOn, 'and the next run\'s bonuses drop it');
+  await act('talent-toggle-' + talentId).check();
+  check((await readAccount()).Account.TalentsOff.length === 0 && (await text('[data-id=talent-now]')) === nowOn, 'ticking it again puts it back');
 
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
@@ -538,7 +548,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 6 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v6 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 7 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v7 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap && (await page.locator('[data-id=vault-over]').count()) === 0, 'back at the cap, the warning goes');
   check(await act('start').isEnabled(), 'and a run can start again at the cap');

@@ -47,7 +47,7 @@ namespace IdleRng.Web
                 .P("runCycles", k.RunCycles).P("runAp", k.RunAp).P("energyMax", k.RunEnergyMax).P("fightEvery", k.FightEvery)
                 .P("statMax", k.StatMax).P("treeSlots", k.TreeSlots).P("drillEnergyCost", k.DrillEnergyCost).P("restEnergy", k.RestEnergy)
                 .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("treeRefund", k.TreeRefund).P("superP", k.DrillSuperP)
-                .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap).P("vendorOffers", k.VendorOffers)
+                .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap).P("vendorOffers", k.VendorOffers).P("legendarySlots", k.LegendarySlots)
                 .P("injurySkipCycles", k.InjurySkipCycles).P("injuryRecoverEnergy", k.InjuryRecoverEnergy)
                 .EndObj();
             w.Key("stats").Arr();
@@ -98,14 +98,14 @@ namespace IdleRng.Web
             w.Key("talents").Arr();
             foreach (var t in _db.TalentList)
                 w.Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("desc", _db.Text(t.DescKey)).P("effect", t.Effect.ToString().ToLowerInvariant())
-                    .P("rarity", t.Rarity).P("maxRank", t.MaxRank).EndObj();
+                    .P("rarity", t.Rarity).P("maxRank", t.MaxRank).P("legendary", AccountOps.TakesLegendarySlot(_db, t)).EndObj();
             w.EndArr();
             w.Key("achievements").Arr();
             foreach (var d in _db.AchievementList)
                 w.Obj().P("id", d.Id).P("name", _db.Text(d.NameKey)).P("text", AchievementText(d)).P("species", d.UnlocksSpecies).EndObj();
             w.EndArr();
             w.Key("rarities").Arr();
-            foreach (var r in _db.VendorRarities) w.Obj().P("id", r.Id).P("name", _db.Text(r.NameKey)).EndObj();
+            foreach (var r in _db.VendorRarities) w.Obj().P("id", r.Id).P("name", _db.Text(r.NameKey)).P("legendary", r.LegendarySlot).EndObj();
             w.EndArr();
             w.Key("gauntlet").Obj().P("floors", k.GauntletFloors).P("bossEvery", k.GauntletBossEvery);
             w.Key("enemies").Obj();
@@ -313,7 +313,7 @@ namespace IdleRng.Web
                 switch (name)
                 {
                     case "startRun":
-                        AccountOps.StartRun(_db, _acct, a.Str(0), a.Has(1) ? BookList(a.El(1)) : null);
+                        AccountOps.StartRun(_db, _acct, a.Str(0), a.Has(1) ? IdList(a.El(1)) : null, a.Has(2) ? IdList(a.El(2)) : null);
                         w.P("ok", true);
                         break;
                     case "finishRun":
@@ -355,6 +355,10 @@ namespace IdleRng.Web
                         w.P("ok", true).P("cost", AccountOps.BuyOffer(_db, _acct, i)).P("talent", offer.Talent);
                         break;
                     }
+                    case "setLoadout":
+                        AccountOps.SetLoadout(_db, _acct, a.Has(0) ? IdList(a.El(0)) : new List<string>());
+                        w.P("ok", true);
+                        break;
                     case "rerollVendor":
                         w.P("ok", true).P("cost", AccountOps.RerollVendor(_db, _acct));
                         break;
@@ -549,7 +553,7 @@ namespace IdleRng.Web
             return id;
         }
 
-        private static List<string> BookList(JsonElement arr)
+        private static List<string> IdList(JsonElement arr)
         {
             var list = new List<string>();
             foreach (var e in arr.EnumerateArray()) list.Add(e.GetString());
@@ -582,6 +586,9 @@ namespace IdleRng.Web
             w.EndArr();
             w.Key("talents").Arr();
             foreach (var t in _db.TalentList) w.Obj().P("id", t.Id).P("rank", ac.TalentRank(t.Id)).EndObj();
+            w.EndArr();
+            w.Key("talentsOff").Arr();   // the loadout the next run starts with unless changed (issue #106)
+            foreach (var id in AccountOps.DefaultLoadout(_db, ac)) w.Str(id);
             w.EndArr();
             w.Key("vendor");
             if (ac.Vendor == null) w.Null();
