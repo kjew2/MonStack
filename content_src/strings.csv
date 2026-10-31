@@ -255,5 +255,5 @@ tip.ai.shield,It or an ally is below {AI_SHIELD_BELOW:pct} of max HP
 tip.ai.taunt,It is not taunting already
 tip.ai.buff,The target does not have this buff
 tip.ai.debuff,An enemy does not have this debuff
-tip.priority,"Each action uses the first ready skill, in slot then node order, whose condition holds; otherwise a basic attack"
+tip.priority,"Each action uses the first ready heal or shield whose condition holds, else the first ready other skill, in slot then node order; otherwise a basic attack"
 tip.cost,{cost} SP
