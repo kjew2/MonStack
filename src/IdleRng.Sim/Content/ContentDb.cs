@@ -489,6 +489,7 @@ namespace IdleRng.Sim.Content
                 {
                     Id = id, NameKey = r.Str("name_key"), Kind = ParseTreeKind(r.Str("kind")), OfferStat = r.NStr("offer_stat"),
                     OfferThreshold = r.NInt("offer_threshold") ?? 0, ApexNameKey = r.NStr("apex_name_key"),
+                    FuseA = r.NStr("fuse_a"), FuseB = r.NStr("fuse_b"),
                     Nodes = (ns ?? new List<TreeNodeDef>()).OrderBy(n => n.Index).ToList().AsReadOnly(),
                     Conditions = (cs ?? new List<ChaseConditionDef>()).AsReadOnly(),
                 };
@@ -505,8 +506,22 @@ namespace IdleRng.Sim.Content
                 }
                 else if (tr.OfferStat != null || hasThreshold.Contains(tr.Id))
                     errors.Add(new ContentError("E043", loc, "only generic trees have offer_stat and offer_threshold"));
-                if ((tr.Kind == TreeKind.Chase) != (tr.ApexNameKey != null))
-                    errors.Add(new ContentError("E043", loc, "chase trees, and only chase trees, have an apex_name_key"));
+                if ((tr.Kind == TreeKind.Chase || tr.Kind == TreeKind.Fusion) != (tr.ApexNameKey != null))
+                    errors.Add(new ContentError("E043", loc, "chase and fusion trees, and only they, have an apex_name_key"));
+                if ((tr.Kind == TreeKind.Fusion) != (tr.FuseA != null && tr.FuseB != null) || (tr.Kind != TreeKind.Fusion && (tr.FuseA != null || tr.FuseB != null)))
+                    errors.Add(new ContentError("E043", loc, "fusion trees, and only they, name the two trees they fuse (fuse_a, fuse_b)"));
+                if (tr.Kind == TreeKind.Fusion && tr.FuseA != null && tr.FuseB != null)
+                {
+                    if (tr.FuseA == tr.FuseB) errors.Add(new ContentError("E043", loc, "a fusion tree fuses two different trees"));
+                    foreach (var p in new[] { tr.FuseA, tr.FuseB })
+                    {
+                        if (!Trees.TryGetValue(p, out var pt)) errors.Add(new ContentError("E023", loc, $"fuses '{p}', which is not a tree id"));
+                        else if (pt.Kind != TreeKind.Native && pt.Kind != TreeKind.Generic && pt.Kind != TreeKind.Book)
+                            errors.Add(new ContentError("E043", loc, $"fuses '{p}': only native, generic and book trees fuse"));
+                        else if (pt.FusesInto != null) errors.Add(new ContentError("E043", loc, $"'{p}' already fuses into {pt.FusesInto}"));
+                        else pt.FusesInto = tr.Id;
+                    }
+                }
                 if (tr.Nodes.Count < 2) { errors.Add(new ContentError("E044", loc, "a tree needs at least 2 nodes")); continue; }
                 for (int i = 0; i < tr.Nodes.Count; i++)
                     if (tr.Nodes[i].Index != i) { errors.Add(new ContentError("E060", loc, "node index must be 0..N-1 contiguous")); break; }
@@ -906,6 +921,7 @@ namespace IdleRng.Sim.Content
                 case "generic": return TreeKind.Generic;
                 case "chase": return TreeKind.Chase;
                 case "book": return TreeKind.Book;
+                case "fusion": return TreeKind.Fusion;
                 default: throw new FormatException($"unknown tree kind '{s}'");
             }
         }

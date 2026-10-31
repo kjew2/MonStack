@@ -26,7 +26,7 @@ SCHEMA_VERSION = 1
 
 ENUMS = {
     "ConstantType": ["int", "double", "bool"],
-    "TreeKind": ["native", "generic", "chase", "book"],
+    "TreeKind": ["native", "generic", "chase", "book", "fusion"],
     "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
@@ -166,7 +166,8 @@ SCHEMA = {
                          c("target", "enum:SkillTarget"), c("stat", "string", True), c("scales", "string", True),
                          c("power", "double"), c("cooldown", "int"), c("duration", "int"), c("element", "id", True)], key="id"),
     "trees": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:TreeKind"), c("offer_stat", "string", True),
-                c("offer_threshold", "int", True), c("apex_name_key", "key", True)], key="id"),
+                c("offer_threshold", "int", True), c("apex_name_key", "key", True),
+                c("fuse_a", "id", True), c("fuse_b", "id", True)], key="id"),
     "tree_nodes": T([c("id", "id"), c("tree_id", "id"), c("index", "int"), c("cost", "int"), c("kind", "enum:NodeKind"),
                      c("stat", "string", True), c("amount", "double", True), c("skill_id", "id", True),
                      c("trigger", "enum:FightTrigger", True), c("rule_id", "id", True)], key="id"),
@@ -302,8 +303,27 @@ def validate_trees(t, errs):
                 errs.add("E023", loc, f"offer_stat '{r['offer_stat']}' is not a trained stat")
         elif r["offer_stat"] is not None or r["offer_threshold"] is not None:
             errs.add("E043", loc, "only generic trees have offer_stat and offer_threshold")
-        if (r["kind"] == "chase") != (r["apex_name_key"] is not None):
-            errs.add("E043", loc, "chase trees, and only chase trees, have an apex_name_key")
+        if (r["kind"] in ("chase", "fusion")) != (r["apex_name_key"] is not None):
+            errs.add("E043", loc, "chase and fusion trees, and only they, have an apex_name_key")
+        if (r["kind"] == "fusion") != (r["fuse_a"] is not None and r["fuse_b"] is not None) or \
+                (r["kind"] != "fusion" and (r["fuse_a"] is not None or r["fuse_b"] is not None)):
+            errs.add("E043", loc, "fusion trees, and only they, name the two trees they fuse (fuse_a, fuse_b)")
+    fused = {}
+    for r in t["trees"]:
+        if r["kind"] != "fusion" or r["fuse_a"] is None or r["fuse_b"] is None:
+            continue
+        loc = f"trees[{r['id']}]"
+        if r["fuse_a"] == r["fuse_b"]:
+            errs.add("E043", loc, "a fusion tree fuses two different trees")
+        for p in (r["fuse_a"], r["fuse_b"]):
+            if p not in trees:
+                errs.add("E023", loc, f"fuses '{p}', which is not a tree id")
+            elif trees[p]["kind"] not in ("native", "generic", "book"):
+                errs.add("E043", loc, f"fuses '{p}': only native, generic and book trees fuse")
+            elif p in fused:
+                errs.add("E043", loc, f"'{p}' already fuses into {fused[p]}")
+            else:
+                fused[p] = r["id"]
     by_tree = {}
     nodes = {}
     for n in t["tree_nodes"]:

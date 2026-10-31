@@ -1721,6 +1721,102 @@
     {
       "key": "rule.night_feast.desc",
       "text": "It starts every fight with {MON_FEAST_START:pct} more damage. Every hit it lands adds {MON_FEAST_DMG:pct} more damage and {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
+    },
+    {
+      "key": "tree.geyser_heart.name",
+      "text": "Geyser Heart"
+    },
+    {
+      "key": "tree.living_fortress.name",
+      "text": "Living Fortress"
+    },
+    {
+      "key": "tree.hall_of_mirrors.name",
+      "text": "Hall of Mirrors"
+    },
+    {
+      "key": "tree.arcana_deck.name",
+      "text": "Arcana Deck"
+    },
+    {
+      "key": "tree.geyser_heart.apex",
+      "text": "Geyser Wyrm"
+    },
+    {
+      "key": "tree.living_fortress.apex",
+      "text": "Fortress Drake"
+    },
+    {
+      "key": "tree.hall_of_mirrors.apex",
+      "text": "Mirrorwing"
+    },
+    {
+      "key": "tree.arcana_deck.apex",
+      "text": "Tarot Mimic"
+    },
+    {
+      "key": "mskill.scald.name",
+      "text": "Scald"
+    },
+    {
+      "key": "mskill.scald.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.steam_burst.name",
+      "text": "Steam Burst"
+    },
+    {
+      "key": "mskill.steam_burst.desc",
+      "text": "Duo capstone. When hit: {element} damage to all enemies for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.rampart.name",
+      "text": "Rampart"
+    },
+    {
+      "key": "mskill.rampart.desc",
+      "text": "Shield all allies for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.siege_return.name",
+      "text": "Siege Return"
+    },
+    {
+      "key": "mskill.siege_return.desc",
+      "text": "Duo capstone. When hit: strike back for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.mirror_feint.name",
+      "text": "Mirror Feint"
+    },
+    {
+      "key": "mskill.mirror_feint.desc",
+      "text": "+{power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.shatter.name",
+      "text": "Shatter"
+    },
+    {
+      "key": "mskill.shatter.desc",
+      "text": "Duo capstone. When hit: its mirror strikes back for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.draw_card.name",
+      "text": "Draw a Card"
+    },
+    {
+      "key": "mskill.draw_card.desc",
+      "text": "Draws a lucky card: +{power:pct} damage dealt for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.major_arcana.name",
+      "text": "The Star"
+    },
+    {
+      "key": "mskill.major_arcana.desc",
+      "text": "Duo capstone. When hit: heal self for {power:pct} of max HP."
     }
   ]
 }

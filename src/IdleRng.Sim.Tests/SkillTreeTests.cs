@@ -298,6 +298,72 @@ namespace IdleRng.Sim.Tests
             Assert.That(ApexForm.TreeOf(Db, e), Is.EqualTo("inferno_sovereign"), "two capstones: the first in slot order; native trees never count");
         }
 
+        /// <summary>Drake with Heavy Armor and Bulwark slotted and maxed: Living Fortress is offered (specs/15 section 5.6).</summary>
+        static RunState DrakeReadyToFuse()
+        {
+            var s = Drake();
+            s.Stats.Def = 300;   // below Unbreakable Will's DEF so no chase offer joins the queue
+            Offer(s, "bulwark");
+            TrainingRun.TakeTree(Db, s, 0, 2);
+            Max(s, SlotOf(s, "heavy_armor"));
+            Max(s, SlotOf(s, "bulwark"));
+            return s;
+        }
+
+        [Test]
+        public void Fusion_IsOfferedWhenBothParentsAreMaxed_AndKeepsBoth()
+        {
+            var s = DrakeReadyToFuse();
+            var offer = s.Offers.Single();
+            Assert.That((offer.Source, offer.Trees.Single()), Is.EqualTo((OfferSource.Fusion, "living_fortress")));
+            int armor = SlotOf(s, "heavy_armor"), bulwark = SlotOf(s, "bulwark");
+            var before = TrainingRun.MonsterFighter(Db, s);
+            double def = s.Stats.Def, sp = s.Sp;
+            int other = Enumerable.Range(0, s.Slots.Length).First(i => i != armor && i != bulwark);
+            Assert.Throws<InvalidOperationException>(() => TrainingRun.TakeTree(Db, s, 0, other), "only a parent's slot");
+
+            var r = TrainingRun.TakeTree(Db, s, 0, bulwark);
+            Assert.That(s.Slots[bulwark].TreeId, Is.EqualTo("living_fortress"));
+            Assert.That(s.Slots[bulwark].Absorbed.Select(a => a.TreeId), Is.EqualTo(new[] { "heavy_armor", "bulwark" }));
+            Assert.That(s.Slots[armor], Is.Null, "the other parent's slot comes free");
+            Assert.That((s.Stats.Def, s.Sp, r.Refunded, r.Removed.Count), Is.EqualTo((def, sp, 0, 0)), "nothing is lost or refunded");
+            Assert.That(TrainingRun.MonsterFighter(Db, s).Skills.Select(k => k.Id), Is.EqualTo(before.Skills.Select(k => k.Id)), "the parents' skills stay");
+            Assert.That(ApexForm.TreeOf(Db, s), Is.EqualTo("living_fortress"), "the fused look shows at once");
+            Assert.That(TrainingRun.ConditionHolds(Db, s, Db.Trees["unbreakable_will"].Conditions.First(cd => cd.Type == ConditionType.TreeMaxed)),
+                "an absorbed parent still counts for chase conditions");
+
+            Max(s, bulwark);
+            Assert.That(TrainingRun.MonsterFighter(Db, s).Triggers.Select(t => t.Skill.Id), Does.Contain("siege_return"), "the duo capstone");
+            s.Phase = RunPhase.Finished;   // a test shortcut: Seal reads the slots, not how the run ended
+            s.End = RunEnd.Completed;
+            var e = Vault.Seal(Db, s, 0);
+            Assert.That(e.Trees.Where(t => t.FusedInto == "living_fortress").Select(t => t.TreeId), Is.EquivalentTo(new[] { "heavy_armor", "bulwark" }));
+            Assert.That(ApexForm.TreeOf(Db, e), Is.EqualTo("living_fortress"));
+        }
+
+        [Test]
+        public void Fusion_OverwrittenTakesItsParents_AndADiscardIsNotReoffered()
+        {
+            var s = DrakeReadyToFuse();
+            TrainingRun.DiscardOffer(Db, s);
+            Offer(s, "vital_core");
+            TrainingRun.TakeTree(Db, s, 0, Array.IndexOf(s.Slots, null));
+            Assert.That(s.Offers, Is.Empty, "a discarded fusion is not offered again while its parents stay ready");
+
+            s = DrakeReadyToFuse();
+            TrainingRun.TakeTree(Db, s, 0, SlotOf(s, "heavy_armor"));
+            int slot = SlotOf(s, "living_fortress");
+            Max(s, slot);
+            double def0 = s.Stats.Def - s.Slots[slot].Absorbed.Concat(new[] { s.Slots[slot] }).Sum(t => t.FlatAdded[Array.IndexOf(StatIds.Trained, StatIds.Def)]);
+            int expected = s.Slots[slot].Absorbed.Concat(new[] { s.Slots[slot] })
+                .Sum(t => (int)Math.Floor(Db.Trees[t.TreeId].Nodes.Take(t.Bought).Sum(n => n.Cost) * Db.Constants.TreeRefund));
+            Offer(s, "vital_core");
+            var r = TrainingRun.TakeTree(Db, s, 0, slot);
+            Assert.That(r.Refunded, Is.EqualTo(expected), "the fused tree and both parents are refunded, each rounded down");
+            Assert.That(s.Stats.Def, Is.EqualTo(def0).Within(1e-9), "and their flat stats come off");
+            Assert.That(s.Slots.Any(x => x != null && (x.TreeId == "heavy_armor" || x.TreeId == "bulwark")), Is.False);
+        }
+
         [Test]
         public void PendingChaseOffer_IsWithdrawn_WhenItsConditionsBreak()
         {

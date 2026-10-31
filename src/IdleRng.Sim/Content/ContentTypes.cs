@@ -282,7 +282,7 @@ namespace IdleRng.Sim.Content
         public double Weight { get; internal set; }
     }
 
-    public enum TreeKind { Native, Generic, Chase, Book }
+    public enum TreeKind { Native, Generic, Chase, Book, Fusion }
     public enum NodeKind { Growth, Stat, Skill, Trigger, Rule }
     public enum ConditionType { TreeMaxed, NodeOwned, StatAtLeast, TallyAtLeast }
 
@@ -310,8 +310,18 @@ namespace IdleRng.Sim.Content
         /// <summary>Chase trees: true for the species' book-gated chase tree, false for its in-run one.</summary>
         public bool BookGated { get; internal set; }
 
-        /// <summary>Chase trees: the name of the apex form a monster takes once it owns this tree's capstone (specs/15 section 5.3). Null otherwise.</summary>
+        /// <summary>
+        /// Chase and fusion trees: the name of the apex form the tree gives (specs/15 section 5.3): a chase tree once its capstone
+        /// is bought, a fusion tree as soon as it is slotted. Null otherwise.
+        /// </summary>
         public string ApexNameKey { get; internal set; }
+
+        /// <summary>Fusion trees: the two trees that fuse into it (specs/15 section 5.6). Null otherwise.</summary>
+        public string FuseA { get; internal set; }
+        public string FuseB { get; internal set; }
+
+        /// <summary>Native, generic and book trees: the fusion tree it is one half of, or null.</summary>
+        public string FusesInto { get; internal set; }
     }
 
     public sealed class TreeNodeDef

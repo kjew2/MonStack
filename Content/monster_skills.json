@@ -804,6 +804,102 @@
       "cooldown": 0,
       "duration": 2,
       "element": null
+    },
+    {
+      "id": "scald",
+      "name_key": "mskill.scald.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "str",
+      "power": 0.7,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "water"
+    },
+    {
+      "id": "steam_burst",
+      "name_key": "mskill.steam_burst.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "str",
+      "power": 0.1,
+      "cooldown": 0,
+      "duration": 0,
+      "element": "fire"
+    },
+    {
+      "id": "rampart",
+      "name_key": "mskill.rampart.name",
+      "kind": "shield",
+      "target": "all_allies",
+      "stat": null,
+      "scales": "def",
+      "power": 0.8,
+      "cooldown": 4,
+      "duration": 3,
+      "element": null
+    },
+    {
+      "id": "siege_return",
+      "name_key": "mskill.siege_return.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "def",
+      "power": 0.15,
+      "cooldown": 0,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "mirror_feint",
+      "name_key": "mskill.mirror_feint.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "dex",
+      "scales": null,
+      "power": 0.4,
+      "cooldown": 4,
+      "duration": 3,
+      "element": null
+    },
+    {
+      "id": "shatter",
+      "name_key": "mskill.shatter.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "int",
+      "power": 1.0,
+      "cooldown": 0,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "draw_card",
+      "name_key": "mskill.draw_card.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "dmg_dealt",
+      "scales": null,
+      "power": 0.2,
+      "cooldown": 3,
+      "duration": 3,
+      "element": null
+    },
+    {
+      "id": "major_arcana",
+      "name_key": "mskill.major_arcana.name",
+      "kind": "heal",
+      "target": "self",
+      "stat": null,
+      "scales": "hp",
+      "power": 0.01,
+      "cooldown": 0,
+      "duration": 0,
+      "element": null
     }
   ]
 }

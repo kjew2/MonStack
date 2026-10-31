@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("4.4"));
+            Assert.That(db.Version, Is.EqualTo("4.5"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -82,6 +82,19 @@ namespace IdleRng.Sim.Tests
             Assert.That(msgs, Has.Some.Contains("already belongs to species"));
             Assert.That(msgs, Has.Some.Contains("in-run chase tree 'arcane_overflow' must not need a book tree"));
             Assert.That(msgs, Has.Some.Contains("trees[unbreakable_will]: a chase tree must belong to a species"));
+        }
+
+        [Test]
+        public void FusionTrees_AreValidated()
+        {
+            string dir = FileContentSource.FindContentDirectory(TestContext.CurrentContext.TestDirectory);
+            var files = Directory.GetFiles(dir, "*.json").ToDictionary(Path.GetFileName, File.ReadAllText);
+            files["trees.json"] = files["trees.json"].Replace("\"fuse_b\": \"bulwark\"", "\"fuse_b\": \"unbreakable_will\"")
+                .Replace("\"fuse_b\": \"spellcraft\"", "\"fuse_b\": \"tidal_codex\"");
+            var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false));
+            var msgs = ex.Errors.Select(e => e.Location + ": " + e.Message).ToList();
+            Assert.That(msgs, Has.Some.EqualTo("trees[living_fortress]: fuses 'unbreakable_will': only native, generic and book trees fuse"));
+            Assert.That(msgs, Has.Some.Contains("'tidal_codex' already fuses into"));
         }
 
         [Test]

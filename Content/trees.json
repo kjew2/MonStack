@@ -7,7 +7,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "gel_armor",
@@ -15,7 +17,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "pyromancy",
@@ -23,7 +27,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "heavy_armor",
@@ -31,7 +37,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "aether_striker",
@@ -39,7 +47,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "mind_warp",
@@ -47,7 +57,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "vital_core",
@@ -55,7 +67,9 @@
       "kind": "generic",
       "offer_stat": "hp",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "brute_force",
@@ -63,7 +77,9 @@
       "kind": "generic",
       "offer_stat": "str",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "spellcraft",
@@ -71,7 +87,9 @@
       "kind": "generic",
       "offer_stat": "int",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "sage_mind",
@@ -79,7 +97,9 @@
       "kind": "generic",
       "offer_stat": "wis",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "nimble_feet",
@@ -87,7 +107,9 @@
       "kind": "generic",
       "offer_stat": "dex",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "bulwark",
@@ -95,7 +117,9 @@
       "kind": "generic",
       "offer_stat": "def",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "overclock",
@@ -103,7 +127,9 @@
       "kind": "generic",
       "offer_stat": "spd",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "fortune",
@@ -111,7 +137,9 @@
       "kind": "generic",
       "offer_stat": "luk",
       "offer_threshold": 300,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "battle_instinct",
@@ -119,7 +147,9 @@
       "kind": "generic",
       "offer_stat": null,
       "offer_threshold": 500,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "survivor",
@@ -127,7 +157,9 @@
       "kind": "generic",
       "offer_stat": null,
       "offer_threshold": 500,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "tome_of_echoes",
@@ -135,7 +167,9 @@
       "kind": "book",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "tidal_codex",
@@ -143,7 +177,9 @@
       "kind": "book",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "ember_codex",
@@ -151,7 +187,9 @@
       "kind": "book",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "unbreakable_will",
@@ -159,7 +197,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.unbreakable_will.apex"
+      "apex_name_key": "tree.unbreakable_will.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "arcane_overflow",
@@ -167,7 +207,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.arcane_overflow.apex"
+      "apex_name_key": "tree.arcane_overflow.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "living_ocean",
@@ -175,7 +217,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.living_ocean.apex"
+      "apex_name_key": "tree.living_ocean.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "abyssal_bloom",
@@ -183,7 +227,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.abyssal_bloom.apex"
+      "apex_name_key": "tree.abyssal_bloom.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "inferno_sovereign",
@@ -191,7 +237,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.inferno_sovereign.apex"
+      "apex_name_key": "tree.inferno_sovereign.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "starlit_ascension",
@@ -199,7 +247,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.starlit_ascension.apex"
+      "apex_name_key": "tree.starlit_ascension.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "rootbound",
@@ -207,7 +257,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "mandrake_wail",
@@ -215,7 +267,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "umbral_step",
@@ -223,7 +277,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "shadow_harvest",
@@ -231,7 +287,9 @@
       "kind": "native",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "verdant_herbarium",
@@ -239,7 +297,9 @@
       "kind": "book",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "umbral_grimoire",
@@ -247,7 +307,9 @@
       "kind": "book",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": null
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "world_root",
@@ -255,7 +317,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.world_root.apex"
+      "apex_name_key": "tree.world_root.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "mandragora_scream",
@@ -263,7 +327,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.mandragora_scream.apex"
+      "apex_name_key": "tree.mandragora_scream.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "umbral_veil",
@@ -271,7 +337,9 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.umbral_veil.apex"
+      "apex_name_key": "tree.umbral_veil.apex",
+      "fuse_a": null,
+      "fuse_b": null
     },
     {
       "id": "night_feast",
@@ -279,7 +347,49 @@
       "kind": "chase",
       "offer_stat": null,
       "offer_threshold": null,
-      "apex_name_key": "tree.night_feast.apex"
+      "apex_name_key": "tree.night_feast.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "geyser_heart",
+      "name_key": "tree.geyser_heart.name",
+      "kind": "fusion",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.geyser_heart.apex",
+      "fuse_a": "pyromancy",
+      "fuse_b": "tidal_codex"
+    },
+    {
+      "id": "living_fortress",
+      "name_key": "tree.living_fortress.name",
+      "kind": "fusion",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.living_fortress.apex",
+      "fuse_a": "heavy_armor",
+      "fuse_b": "bulwark"
+    },
+    {
+      "id": "hall_of_mirrors",
+      "name_key": "tree.hall_of_mirrors.name",
+      "kind": "fusion",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.hall_of_mirrors.apex",
+      "fuse_a": "mind_warp",
+      "fuse_b": "nimble_feet"
+    },
+    {
+      "id": "arcana_deck",
+      "name_key": "tree.arcana_deck.name",
+      "kind": "fusion",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.arcana_deck.apex",
+      "fuse_a": "fortune",
+      "fuse_b": "spellcraft"
     }
   ]
 }

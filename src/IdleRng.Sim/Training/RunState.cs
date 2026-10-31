@@ -128,15 +128,22 @@ namespace IdleRng.Sim.Training
         /// <summary>Flat points this tree's Stat nodes actually added, per trained stat (StatIds.Trained order); removed with the tree.</summary>
         public double[] FlatAdded { get; set; } = new double[StatIds.Trained.Length];
 
+        /// <summary>
+        /// A fusion tree's two parents, as they were when they fused (specs/15 section 5.6): their bought nodes still count for the
+        /// fighter and for chase conditions, and their flat stats stay. Empty for every other tree.
+        /// </summary>
+        public List<TreeSlot> Absorbed { get; set; } = new List<TreeSlot>();
+
         public TreeSlot Clone()
         {
             var c = (TreeSlot)MemberwiseClone();
             c.FlatAdded = (double[])FlatAdded.Clone();
+            c.Absorbed = Absorbed.ConvertAll(a => a.Clone());
             return c;
         }
     }
 
-    public enum OfferSource { Milestone, Book, Chase }
+    public enum OfferSource { Milestone, Book, Chase, Fusion }
 
     /// <summary>
     /// A pending tree offer (specs/15 section 4): pick one tree into a slot, or discard. Milestone drafts hold up to DRAFT_SIZE
@@ -264,6 +271,9 @@ namespace IdleRng.Sim.Training
         /// <summary>Chase trees offered since they last unlocked; cleared for a tree when its conditions stop holding.</summary>
         public List<string> ChaseOffered { get; set; } = new List<string>();
 
+        /// <summary>Fusion trees offered while their parents stay ready (specs/15 section 5.6); a discarded one is not offered again until then.</summary>
+        public List<string> FusionOffered { get; set; } = new List<string>();
+
         public RunTally Tally { get; set; } = new RunTally();
 
         public List<MilestoneHit> Milestones { get; set; } = new List<MilestoneHit>();
@@ -285,6 +295,7 @@ namespace IdleRng.Sim.Training
             c.Offers = Offers.ConvertAll(o => o.Clone());
             c.Books = new List<string>(Books);
             c.ChaseOffered = new List<string>(ChaseOffered);
+            c.FusionOffered = new List<string>(FusionOffered);
             c.Tally = Tally.Clone();
             c.Milestones = Milestones.ConvertAll(m => new MilestoneHit { Stat = m.Stat, Threshold = m.Threshold, Cycle = m.Cycle });
             c.Injuries = Injuries.ConvertAll(i => i.Clone());

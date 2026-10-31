@@ -1,36 +1,40 @@
-id,name_key,kind,offer_stat,offer_threshold,apex_name_key,#notes
-slime_fundamentals,tree.slime_fundamentals.name,native,,,,"placeholder tree (specs/15): 8 nodes, 6 filler"
-gel_armor,tree.gel_armor.name,native,,,,
-pyromancy,tree.pyromancy.name,native,,,,
-heavy_armor,tree.heavy_armor.name,native,,,,
-aether_striker,tree.aether_striker.name,native,,,,
-mind_warp,tree.mind_warp.name,native,,,,
-vital_core,tree.vital_core.name,generic,hp,300,,
-brute_force,tree.brute_force.name,generic,str,300,,
-spellcraft,tree.spellcraft.name,generic,int,300,,
-sage_mind,tree.sage_mind.name,generic,wis,300,,
-nimble_feet,tree.nimble_feet.name,generic,dex,300,,
-bulwark,tree.bulwark.name,generic,def,300,,
-overclock,tree.overclock.name,generic,spd,300,,
-fortune,tree.fortune.name,generic,luk,300,,
-battle_instinct,tree.battle_instinct.name,generic,,500,,
-survivor,tree.survivor.name,generic,,500,,
-tome_of_echoes,tree.tome_of_echoes.name,book,,,,sprite's book tree (Arcane Overflow)
-tidal_codex,tree.tidal_codex.name,book,,,,placeholder: slime's book tree (Abyssal Bloom)
-ember_codex,tree.ember_codex.name,book,,,,placeholder: drake's book tree (Inferno Sovereign)
-unbreakable_will,tree.unbreakable_will.name,chase,,,tree.unbreakable_will.apex,drake in-run chase tree
-arcane_overflow,tree.arcane_overflow.name,chase,,,tree.arcane_overflow.apex,sprite book-gated chase tree
-living_ocean,tree.living_ocean.name,chase,,,tree.living_ocean.apex,placeholder: slime in-run chase tree
-abyssal_bloom,tree.abyssal_bloom.name,chase,,,tree.abyssal_bloom.apex,placeholder: slime book-gated chase tree
-inferno_sovereign,tree.inferno_sovereign.name,chase,,,tree.inferno_sovereign.apex,placeholder: drake book-gated chase tree
-starlit_ascension,tree.starlit_ascension.name,chase,,,tree.starlit_ascension.apex,placeholder: sprite in-run chase tree
-rootbound,tree.rootbound.name,native,,,,
-mandrake_wail,tree.mandrake_wail.name,native,,,,
-umbral_step,tree.umbral_step.name,native,,,,
-shadow_harvest,tree.shadow_harvest.name,native,,,,
-verdant_herbarium,tree.verdant_herbarium.name,book,,,,mandrake's book tree (Mandragora Scream)
-umbral_grimoire,tree.umbral_grimoire.name,book,,,,shade hound's book tree (Night Feast)
-world_root,tree.world_root.name,chase,,,tree.world_root.apex,mandrake in-run chase tree
-mandragora_scream,tree.mandragora_scream.name,chase,,,tree.mandragora_scream.apex,mandrake book-gated chase tree
-umbral_veil,tree.umbral_veil.name,chase,,,tree.umbral_veil.apex,shade hound in-run chase tree
-night_feast,tree.night_feast.name,chase,,,tree.night_feast.apex,shade hound book-gated chase tree
+id,name_key,kind,offer_stat,offer_threshold,apex_name_key,fuse_a,fuse_b,#notes
+slime_fundamentals,tree.slime_fundamentals.name,native,,,,,,"placeholder tree (specs/15): 8 nodes, 6 filler"
+gel_armor,tree.gel_armor.name,native,,,,,,
+pyromancy,tree.pyromancy.name,native,,,,,,
+heavy_armor,tree.heavy_armor.name,native,,,,,,
+aether_striker,tree.aether_striker.name,native,,,,,,
+mind_warp,tree.mind_warp.name,native,,,,,,
+vital_core,tree.vital_core.name,generic,hp,300,,,,
+brute_force,tree.brute_force.name,generic,str,300,,,,
+spellcraft,tree.spellcraft.name,generic,int,300,,,,
+sage_mind,tree.sage_mind.name,generic,wis,300,,,,
+nimble_feet,tree.nimble_feet.name,generic,dex,300,,,,
+bulwark,tree.bulwark.name,generic,def,300,,,,
+overclock,tree.overclock.name,generic,spd,300,,,,
+fortune,tree.fortune.name,generic,luk,300,,,,
+battle_instinct,tree.battle_instinct.name,generic,,500,,,,
+survivor,tree.survivor.name,generic,,500,,,,
+tome_of_echoes,tree.tome_of_echoes.name,book,,,,,,sprite's book tree (Arcane Overflow)
+tidal_codex,tree.tidal_codex.name,book,,,,,,placeholder: slime's book tree (Abyssal Bloom)
+ember_codex,tree.ember_codex.name,book,,,,,,placeholder: drake's book tree (Inferno Sovereign)
+unbreakable_will,tree.unbreakable_will.name,chase,,,tree.unbreakable_will.apex,,,drake in-run chase tree
+arcane_overflow,tree.arcane_overflow.name,chase,,,tree.arcane_overflow.apex,,,sprite book-gated chase tree
+living_ocean,tree.living_ocean.name,chase,,,tree.living_ocean.apex,,,placeholder: slime in-run chase tree
+abyssal_bloom,tree.abyssal_bloom.name,chase,,,tree.abyssal_bloom.apex,,,placeholder: slime book-gated chase tree
+inferno_sovereign,tree.inferno_sovereign.name,chase,,,tree.inferno_sovereign.apex,,,placeholder: drake book-gated chase tree
+starlit_ascension,tree.starlit_ascension.name,chase,,,tree.starlit_ascension.apex,,,placeholder: sprite in-run chase tree
+rootbound,tree.rootbound.name,native,,,,,,
+mandrake_wail,tree.mandrake_wail.name,native,,,,,,
+umbral_step,tree.umbral_step.name,native,,,,,,
+shadow_harvest,tree.shadow_harvest.name,native,,,,,,
+verdant_herbarium,tree.verdant_herbarium.name,book,,,,,,mandrake's book tree (Mandragora Scream)
+umbral_grimoire,tree.umbral_grimoire.name,book,,,,,,shade hound's book tree (Night Feast)
+world_root,tree.world_root.name,chase,,,tree.world_root.apex,,,mandrake in-run chase tree
+mandragora_scream,tree.mandragora_scream.name,chase,,,tree.mandragora_scream.apex,,,mandrake book-gated chase tree
+umbral_veil,tree.umbral_veil.name,chase,,,tree.umbral_veil.apex,,,shade hound in-run chase tree
+night_feast,tree.night_feast.name,chase,,,tree.night_feast.apex,,,shade hound book-gated chase tree
+geyser_heart,tree.geyser_heart.name,fusion,,,tree.geyser_heart.apex,pyromancy,tidal_codex,fusion tree (specs/15 section 5.6)
+living_fortress,tree.living_fortress.name,fusion,,,tree.living_fortress.apex,heavy_armor,bulwark,fusion tree (specs/15 section 5.6)
+hall_of_mirrors,tree.hall_of_mirrors.name,fusion,,,tree.hall_of_mirrors.apex,mind_warp,nimble_feet,fusion tree (specs/15 section 5.6)
+arcana_deck,tree.arcana_deck.name,fusion,,,tree.arcana_deck.apex,fortune,spellcraft,fusion tree (specs/15 section 5.6)
