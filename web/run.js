@@ -32,6 +32,8 @@
     towerTeam: [],           // Dungeon team: Vault indices in slot order (specs/21 section 8)
     towerResult: null,       // the last attempt's result from the engine (run.runTower) plus its day and team, shown on the tower screen
     offer: { key: null, pick: 0, open: false },   // the tree offer on screen: its key, the picked card, the node list open
+    treeOpen: {},            // Trees tab: the slots whose full node list is open, by 'slot:tree' (a new tree in the slot starts closed)
+    heldToasts: [],          // toasts waiting for the tree offer to close (issue #115: they covered it)
     towerFight: null,        // the tower floor fight shown in the playback modal (issue #98), or null
     reveal: null,            // the merchant's card reveal on the vendor screen (issue #108): {i, phase: 'hint'|'flip', timer}, or null
   };
@@ -69,7 +71,29 @@
     return h('div', { class: 'oppskills' }, ids.map((id) => h('span', { class: 'tag tipword', text: C.skillTips[id] ? C.skillTips[id].title : id,
       'data-id': 'oppskill-' + id, ...TIP.attrs('mskill:' + id) })));
   }
+  // Toasts (issue #115): none covers a tree offer. A toast raised while an offer is on screen, or just before the render that opens
+  // one (a drill that reaches a milestone), waits until the offer closes; any already showing when an offer opens goes back in the
+  // queue. The check runs after the current render (a microtask) and after every render.
+  let toastFlushQueued = false;
   function toast(msg) {
+    ui.heldToasts.push(msg);
+    if (toastFlushQueued) return;
+    toastFlushQueued = true;
+    queueMicrotask(() => { toastFlushQueued = false; flushToasts(); });
+  }
+  const offerOnScreen = () => !$('modal').hidden && !!$('modal').querySelector('[data-id=offer-title]');
+  function flushToasts() {
+    const box = $('toasts');
+    if (offerOnScreen()) {
+      if (box.children.length) ui.heldToasts = [...box.children].map((t) => t.textContent).concat(ui.heldToasts);
+      box.replaceChildren();
+      return;
+    }
+    const msgs = ui.heldToasts;
+    ui.heldToasts = [];
+    msgs.forEach(showToast);
+  }
+  function showToast(msg) {
     const t = h('div', { class: 'toast', text: msg });
     const box = $('toasts');
     while (box.children.length >= 3) box.firstChild.remove();
@@ -89,6 +113,10 @@
 
   // ------------------------------------------------------------ rendering
   function render() {
+    renderView();
+    flushToasts();   // held toasts show once no tree offer is on screen
+  }
+  function renderView() {
     const main = $('main'), tabs = $('tabs'), modal = $('modal');
     const prevScroll = main.scrollTop;
     main.replaceChildren();
@@ -223,18 +251,14 @@
       h('b', { class: 'bad', text: ui.last && ui.last.injury ? 'Injured!' : 'Back from injury' }), h('div', { class: 'small', text: injuryText(hurt) }),
     ]));
     const busy = s.phase !== 'training' || s.offers.length > 0;
-    const o = s.odds;
-    main.append(h('div', { class: 'odds', 'data-id': 'odds',
-      text: 'Drill at this energy: fail ' + pct(o.fail) + ' · success ' + pct(o.success) + ' · super ' + pct(o.super) + ' · injury ' + pct(o.injury) +
-        '. ' + (s.freeDrills > 0 ? 'Momentum: the next drill costs no energy.' : 'Each drill costs ' + num(s.drillCost) + ' energy.') +
-        (o.injury > 0 ? (s.shieldsLeft > 0 ? ' Second Wind will stop the next injury (energy drops to 0).' : ' An injury loses ' + injuryRisk() + '.') : '') }));
+    main.append(oddsChips(s));
     const card = h('div', { class: 'card stats' });
     C.stats.forEach((st) => {
-      const row = h('div', { class: 'stat' + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
+      const row = h('div', { class: 'stat st-' + st + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
         h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }),
         h('div', { class: 'meta' }, [
-          bar(s.stats[st], k.statMax, num(s.stats[st]) + ' / ' + k.statMax),
-          h('small', { text: 'growth x' + s.growth[st].toFixed(2) + ' · ' + s.milestoneAt.map((m) => (s.stats[st] >= m ? '✓' : '') + num(m)).join(' ') }),
+          statGauge(s, st),
+          h('small', { text: 'growth x' + s.growth[st].toFixed(2) }),
         ]),
         h('button', { class: 'btn primary small', type: 'button', 'data-act': 'drill-' + st, text: 'Drill', disabled: busy, onclick: () => drill(st) }),
       ]);
@@ -246,6 +270,34 @@
     if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     if (ui.last) main.append(resultCard(ui.last));
     ui.flash = null;
+  }
+
+  // The drill odds at this energy as a chip row (issue #115), all numbers from the engine (RunState odds, drillCost): fail,
+  // success, super, injury (lit when above 0; what an injury loses is its title), then the drill's cost, or Momentum's free drill,
+  // and Second Wind while it would stop the next injury.
+  function oddsChips(s) {
+    const o = s.odds;
+    const chip = (cls, label, value, title) => h('span', { class: 'ochip ' + cls, title: title }, value === null ? [label] : [label + ' ', h('b', { text: value })]);
+    return h('div', { class: 'odds', 'data-id': 'odds', role: 'group', 'aria-label': 'Drill odds at this energy' }, [
+      chip('o-fail', 'Fail', pct(o.fail)),
+      chip('o-success', 'Success', pct(o.success)),
+      chip('o-super', 'Super', pct(o.super)),
+      chip('o-injury' + (o.injury > 0 ? ' on' : ''), 'Injury', pct(o.injury), 'An injury loses ' + injuryRisk() + '.'),
+      s.freeDrills > 0 ? chip('o-free', 'Momentum: free drill', null, 'The next drill costs no energy.')
+        : chip('o-cost', 'Cost', num(s.drillCost) + ' energy'),
+      o.injury > 0 && s.shieldsLeft > 0 ? chip('o-shield', '🛡 Second Wind', null, 'Second Wind will stop the next injury (energy drops to 0).') : null,
+    ]);
+  }
+
+  // A stat as a gauge in its colour (issue #115): the value against the stat cap, and a tick at each milestone this run crosses
+  // (RunState milestoneAt, lowered by Early Bloom), lit once the stat has reached it.
+  function statGauge(s, st) {
+    const max = C.consts.statMax, v = s.stats[st];
+    const g = bar(v, max, num(v) + ' / ' + max, 'gauge');
+    const label = g.querySelector('span');
+    s.milestoneAt.forEach((m) => g.insertBefore(h('i', { class: 'tick' + (v >= m ? ' hit' : ''), 'data-at': num(m), title: 'Milestone ' + num(m) + (v >= m ? ' (reached)' : ''),
+      style: 'left:' + Math.max(0, Math.min(100, (m / max) * 100)) + '%' }), label));
+    return g;
   }
 
   function resultCard(r) {
@@ -321,14 +373,17 @@
           h('span', null, [h('span', { class: 'tag', text: t.kind }), ' ', h('span', { class: 'small muted num', text: slot.bought + '/' + t.nodes.length })]),
         ]),
         fusionLine(s, slot, t),
+        nodePath(t, slot.bought),
       ]);
-      t.nodes.forEach((n, j) => {
-        if (j < slot.bought) card.append(nodeRow(n, 'got'));
-        else if (j === slot.bought) {
-          card.append(nodeRow(n, 'next', h('button', { class: 'btn small primary', type: 'button', 'data-act': 'buy-' + i, disabled: s.sp < n.cost,
-            text: 'Buy ' + n.cost + ' SP', onclick: () => spend(i) })));
-        } else card.append(nodeRow(n, 'locked'));
-      });
+      // The path tiles show the whole tree (issue #115); below them only the next node to buy, the full list one tap away.
+      const next = t.nodes[slot.bought];
+      if (next) card.append(nodeRow(next, 'next', h('button', { class: 'btn small primary', type: 'button', 'data-act': 'buy-' + i, disabled: s.sp < next.cost,
+        text: 'Buy ' + next.cost + ' SP', onclick: () => spend(i) })));
+      else card.append(h('small', { class: 'ok', 'data-id': 'maxed-' + i, text: '✓ Every node bought' }));
+      const key = i + ':' + slot.tree, open = !!ui.treeOpen[key];
+      card.append(h('button', { class: 'linkish', type: 'button', 'data-act': 'slot-nodes-' + i, 'aria-expanded': String(open),
+        text: open ? 'Hide nodes ▴' : 'All ' + t.nodes.length + ' nodes ▾', onclick: () => { ui.treeOpen[key] = !open; render(); } }));
+      if (open) card.append(h('div', { 'data-id': 'nodes-' + i }, t.nodes.map((n, j) => nodeRow(n, j < slot.bought ? 'got' : j === slot.bought ? 'next' : 'locked'))));
       main.append(card);
     });
 
@@ -792,11 +847,13 @@
   }
 
   // A tree's nodes as a strip of tiles in buy order: stat nodes show their stat (▲ growth, + flat), skills their initials, the
-  // capstone a star. Each tile opens its node's tooltip.
-  function nodePath(t) {
-    return h('div', { class: 'npath', 'aria-label': t.nodes.length + ' nodes' }, t.nodes.map((n) => {
+  // capstone a star. Each tile opens its node's tooltip. With `bought` (a slotted tree on the Trees tab, issue #115) the bought
+  // tiles are lit, the next one is outlined and the rest dimmed; without it (an offer card) every tile shows plain.
+  function nodePath(t, bought) {
+    const prog = typeof bought === 'number';
+    return h('div', { class: 'npath' + (prog ? ' prog' : ''), 'data-id': 'npath', 'aria-label': t.nodes.length + ' nodes' + (prog ? ', ' + bought + ' bought' : '') }, t.nodes.map((n, j) => {
       const filler = n.kind === 'growth' || n.kind === 'stat';
-      const cls = 'nt ' + (n.last ? 'cap' : filler ? 'fill st-' + n.stat : 'sk k-' + n.kind);
+      const cls = 'nt ' + (n.last ? 'cap' : filler ? 'fill st-' + n.stat : 'sk k-' + n.kind) + (prog ? (j < bought ? ' got' : j === bought ? ' next' : '') : '');
       const face = n.last ? '★' : filler ? up(n.stat) : skillAbbr(n.name);
       return h('span', { class: cls, ...TIP.attrs('node:' + n.id), style: !filler && !n.last ? '--hue:' + (hash(n.name) % 360) : null }, [
         h('span', { class: 'f', text: face }),
@@ -1314,7 +1371,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.ticketGain = null; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; }
+  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.ticketGain = null; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; ui.treeOpen = {}; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
@@ -1355,8 +1412,11 @@
     if (!r.ok) toast(r.reason);
     render();
   }
+  // A milestone reached: logged, and toasted only when no offer is waiting. When one is, its banner already names the stat and
+  // threshold (issue #115: the toast was redundant and covered it); with none, no Awakening is waiting, so the toast does not say so.
   function milestones(r) {
-    (r.milestones || []).forEach((m) => { toast('Milestone: ' + up(m.stat) + ' ' + m.threshold + '. An Awakening is waiting'); log('Milestone ' + up(m.stat) + ' ' + m.threshold); });
+    const offered = run.state.offers.length > 0;
+    (r.milestones || []).forEach((m) => { if (!offered) toast('Milestone: ' + up(m.stat) + ' ' + m.threshold); log('Milestone ' + up(m.stat) + ' ' + m.threshold); });
   }
 
   function drill(stat) {

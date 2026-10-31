@@ -84,8 +84,21 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/Cycle 1\/12/.test(await text('[data-id=cycle]')), 'HUD shows cycle 1/12');
   check(/Rank E/.test(await text('[data-id=rank]')), 'starts at rank E');
   check((await page.locator('[data-act^="drill-"]').count()) === 8, 'eight stats can be drilled');
-  const odds0 = await text('[data-id=odds]');
-  check(/fail \d+%/.test(odds0) && /injury \d+%/.test(odds0), 'drill odds shown: ' + odds0.slice(0, 60));
+  // Drill odds as a chip row (issue #115): one chip each for fail, success, super, injury and the drill's cost
+  const odds0 = await page.$$eval('[data-id=odds] .ochip', (els) => els.map((e) => e.textContent));
+  check(odds0.length >= 5 && ['Fail', 'Success', 'Super', 'Injury'].every((w, i) => new RegExp('^' + w + ' \\d+%$').test(odds0[i])) && /^Cost \d+(\.\d)? energy$/.test(odds0[4]),
+    'drill odds shown as chips: ' + odds0.join(' | '));
+  // Stat gauges (issue #115): each bar takes its stat's colour and has a tick per milestone, none reached at the start
+  const statGauges = await page.evaluate(() => [...document.querySelectorAll('.stat')].map((row) => ({
+    fill: getComputedStyle(row.querySelector('.bar.gauge .fill')).backgroundColor,
+    st: getComputedStyle(row).getPropertyValue('--st').trim(),
+    ticks: [...row.querySelectorAll('.bar.gauge .tick')].map((t) => +t.dataset.at),
+    hit: row.querySelectorAll('.bar.gauge .tick.hit').length,
+    text: /\d/.test(row.querySelector('.meta small').textContent.replace(/growth x[\d.]+/, '')),
+  })));
+  check(statGauges.length === 8 && new Set(statGauges.map((g) => g.fill)).size === 8 && statGauges.every((g) => g.st !== ''), 'each stat gauge is filled in its own stat colour: ' + statGauges.map((g) => g.fill).join(' '));
+  check(statGauges.every((g) => g.ticks.length === 4 && g.ticks.every((v, i) => i === 0 || v > g.ticks[i - 1]) && g.hit === 0 && !g.text),
+    'each gauge carries the milestones as ticks (' + statGauges[0].ticks.join(' ') + '), none reached, and no milestone numbers as text');
   // Stat rows (issue #96): each Drill button is vertically centred in its stat's row, and the rows are divided
   const rows = await page.evaluate(() => [...document.querySelectorAll('.stat')].map((row) => {
     const r = row.getBoundingClientRect(), b = row.querySelector('[data-act^="drill-"]').getBoundingClientRect();
@@ -132,6 +145,17 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('tab-trees').click();
   check((await page.locator('[data-id^="slot-"]').count()) === 2, 'two native trees slotted at the start');
   check(/SP/.test(await text('[data-id=sp2]')), 'skill points shown');
+  // Slotted trees read like the offer cards (issue #115): the node path tiles, none lit yet, the first outlined as the next buy;
+  // below them only that node with its Buy button, the full list behind a toggle
+  const paths = await page.$$eval('[data-id^="slot-"]', (els) => els.map((e) => ({ tiles: e.querySelectorAll('.npath.prog .nt').length,
+    got: e.querySelectorAll('.npath .nt.got').length, next: [...e.querySelectorAll('.npath .nt')].findIndex((t) => t.classList.contains('next')),
+    cap: !!e.querySelector('.npath .nt:last-child.cap'), rows: e.querySelectorAll('.node').length, buy: e.querySelectorAll('[data-act^="buy-"]').length })));
+  check(paths.length === 2 && paths.every((p) => p.tiles === 8 && p.got === 0 && p.next === 0 && p.cap && p.rows === 1 && p.buy === 1),
+    'each slot shows its node path (8 tiles, none bought, the first next, the capstone last) and only the next node to buy: ' + JSON.stringify(paths[0]));
+  await act('slot-nodes-0').click();
+  check((await page.locator('[data-id=slot-0] [data-id=nodes-0] .node').count()) === 8 && (await act('slot-nodes-0').getAttribute('aria-expanded')) === 'true', '"All nodes" lists every node of the tree');
+  await act('slot-nodes-0').click();
+  check((await page.locator('[data-id=slot-0] .node').count()) === 1, 'and folds them away again');
   const fuses = await page.$$eval('[data-id=fuses-with]', (els) => els.map((e) => e.textContent));
   check(fuses.length === 2 && fuses.some((t) => /Codex of Tides.*Geyser Heart/.test(t)) && fuses.some((t) => /Bulwark.*Living Fortress/.test(t)),
     'each fusable native tree names its fusing partner and the fused tree (specs/15 section 5.6): ' + fuses.join(' | '));
@@ -451,7 +475,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('drill-str').waitFor();
   check((await readAccount()).Account.Vendor === null, 'starting the next run clears the vendor');
   const frugal = afterBuy.Account.Talents.frugal_drills || 0;
-  if (frugal > 0) check(new RegExp('costs ' + (20 - frugal) + ' energy').test(await text('[data-id=odds]')), 'Frugal Drills cut the next run\'s drill cost: ' + (await text('[data-id=odds]')).slice(-26));
+  if (frugal > 0) check(new RegExp('Cost ' + (20 - frugal) + ' energy').test(await text('[data-id=odds]')), 'Frugal Drills cut the next run\'s drill cost: ' + (await text('[data-id=odds]')).slice(-26));
   await act('tab-log').click();
   await act('abandon').click();
   await act('abandon-no').click();
