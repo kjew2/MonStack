@@ -71,9 +71,9 @@ The rank fight replaces the drafts' *Tactical Challenge*: it is the in-run fight
 - **Energy** is the one training meter (no separate fatigue). Drills spend it, rests restore it. Low energy makes a drill more likely to fail and, below a threshold, able to cause an **injury**: the monster loses the rest of the cycle and its rank fight and sits out the next cycle, then comes back rested (kj, 2026-10-31, issue #89: "skip a fight cycle", less punishing but it still bricks the build; rules `specs/14` section 4.1). Pushing on at low energy to cross a milestone before the run ends is the run's main risk-versus-reward decision. The talent tree can reduce drill cost.
 - **Skill points** (kj, 2026-10-30): a fixed amount every cycle plus a bonus for each rank fight win, spent in trees. Saving them is a strategy (section 5.4). Rules: `specs/15`.
 
-### 4.4 Attribute milestones and drafts
+### 4.4 Attribute milestones and Awakenings
 
-When a stat crosses **300 / 500 / 700 / 900**, the run pauses for a **3-card tree draft** themed on that stat (example at 700 WIS: *Mind Warp*, *Overclock*, *Aether Conduit*). The picked tree goes into a tree slot under the slot rule of section 5.1. Milestone drafts are one way to get a new tree, not the only one. The talent tree can add draft options.
+When a stat crosses **300 / 500 / 700 / 900**, the run pauses for an **Awakening** (kj, 2026-10-31: renamed from "tree draft"), a **3-card tree offer** themed on that stat (example at 700 WIS: *Mind Warp*, *Overclock*, *Aether Conduit*). The picked tree goes into a tree slot under the slot rule of section 5.1. Milestone drafts are one way to get a new tree, not the only one. The talent tree can add draft options.
 
 ### 4.5 End of run
 
@@ -101,6 +101,7 @@ Every tree has a hidden capstone, its **chase trait**, that breaks a standard ru
 ### 5.2.1 Higher-tier species and capstones (kj, 2026-10-31, #110)
 
 Agreed direction from the higher-tier spike (`specs/22` section 6); not built yet:
+- **The in-run chase tree is not guaranteed (kj, 2026-10-31):** each run rolls once whether it is attuned to its species' in-run chase tree. A new account is attuned in 20% of runs; the Chase Instinct talent raises it to 50% at max. The book-gated chase tree has no such roll (`specs/15` section 5.4).
 - **Higher-tier species are later unlocks** (account achievements) and may be **stronger overall**, as in *Monster Rancher*. Mid-run evolution and breeding are much later on the roadmap.
 - **Chase capstones may carry drawbacks** (keystones that give something up, in the *Exiled Heavy Knight* shape).
 - **Some specific tree pairs may fuse** into one tree, and the UI must make each fusing pair clear. Fusion is not a general rule.
@@ -119,6 +120,13 @@ Second round (kj, 2026-10-31, `specs/22` section 8.6); not built yet:
 - **Rank-fight loot:** a rank-fight win may drop something from the opponent. Its use comes later (cosmetics, titles or unlock conditions); it does not add combat power yet.
 - **No tribulation fights:** crossing a milestone drafts at once, with no extra fight.
 - **Overwrite refund:** every overwrite refunds half the SP spent in the tree (section 5.1). kj dropped the neighbour-tree rule: there are no tree neighbours for now.
+
+Third round (kj, 2026-10-31, creature spike `specs/24` section 6):
+- **Creature tone:** a mix of cute, mythic, grimdark and hot; each creature takes the style that suits it.
+- **Species follow their concepts:** slime, drake and sprite are named **Coremote**, **Bastion Drake** and **Mirage Moth** (ids unchanged) and drawn from hand-made pixel art.
+- **Apex forms:** buying a chase tree's capstone changes the monster's look and name (`specs/24` section 4.2). Not built yet.
+- **Two new species:** the **Mandrake** (nature) and the **Shade Hound** (dark), unlocked from achievements (`specs/24` section 5.1). Not built yet.
+- **Fusing pairs:** *Pyromancy* + *Codex of Tides*, *Heavy Armor* + *Bulwark*, *Mind Warp* + *Nimble Feet*, *Fortune* + *Spellcraft* (`specs/24` section 5.2). How fusion works is not decided yet.
 
 ### 5.3 Chase trees
 
@@ -196,7 +204,7 @@ Bosses never get hard immunities ("immune to stun", "immune to magic"). Broken b
 
 ## 9. Meta-progression
 
-The account-wide rogue-lite talents, bought with Training Shards. Named examples: -5% energy cost per action, +10% base stat floors, more milestone draft slots, access to more skill trees.
+The account-wide rogue-lite talents, bought with Training Shards. Named examples: -5% energy cost per action, +10% base stat floors, a better chance that a run is attuned to its in-run chase tree (Chase Instinct, replacing the Wide Scouting "more milestone draft slots" of 2026-10-31), access to more skill trees.
 
 **Post-run vendor (kj, T9):** talents are not an always-on shop. After each run a vendor offers a random assortment of upgrades (5 offers), with rarities tied to the run's score. A rarity is the talent's own tier and each offer is one rank (kj, 2026-10-31, #102); unbought offers vanish when the next run starts. Rules: `specs/18` section 4.
 

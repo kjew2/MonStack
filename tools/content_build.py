@@ -30,7 +30,7 @@ ENUMS = {
     "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
-    "TalentEffect": ["drill_cost", "stat_floor", "draft_size", "start_sp"],
+    "TalentEffect": ["drill_cost", "stat_floor", "chase_chance", "start_sp"],
     "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
@@ -54,7 +54,7 @@ REQUIRED_CONSTANTS = {
     "DRILL_SUPER_P": "double", "INJURY_BELOW": "double", "INJURY_MAX_P": "double", "INJURY_SKIP_CYCLES": "int",
     "INJURY_RECOVER_ENERGY": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
     # skill trees (specs/15)
-    "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "TREE_REFUND": "double",
+    "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "TREE_REFUND": "double", "CHASE_BASE_CHANCE": "double",
     "MON_ECHO_POWER": "double",
     "MON_TIDE_REGEN": "double", "MON_TIDE_SHIELD_CAP": "double", "MON_DRAIN_FRAC": "double", "MON_FIRE_PIERCE": "double",
     "MON_DOUBLE_TURNS": "int",
@@ -100,7 +100,7 @@ MON_RANGES = {
     "STAT_MAX": ("> 0", lambda v: v > 0), "FIGHT_EVERY": ("> 0", lambda v: v > 0),
     "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
-    "TREE_REFUND": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "TREE_REFUND": ("[0, 1]", lambda v: 0 <= v <= 1), "CHASE_BASE_CHANCE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_TIDE_REGEN": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TIDE_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DRAIN_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_FIRE_PIERCE": ("[0, 1]", lambda v: 0 <= v <= 1),
@@ -481,6 +481,7 @@ def validate_tower(t, keys, errs):
 
 def validate_talents(t, errs):
     """Account talent tree (specs/18 section 4). Mirrors ContentDb.BuildAccount."""
+    chase_base = next((float(r["value"]) for r in t["constants"] if r["key"] == "CHASE_BASE_CHANCE"), 0.0)
     for r in t["talents"]:
         loc = f"talents[{r['id']}]"
         if r["max_rank"] < 1 or r["cost_base"] < 0 or r["cost_step"] < 0:
@@ -490,8 +491,10 @@ def validate_talents(t, errs):
             errs.add("E043", loc, "drill_cost per_rank must be <= 0 and keep the multiplier >= 0 at max rank")
         if eff == "stat_floor" and not p >= 0:
             errs.add("E043", loc, "stat_floor per_rank must be >= 0")
-        if eff in ("draft_size", "start_sp") and not (p >= 0 and p == int(p)):
-            errs.add("E043", loc, f"{eff} per_rank must be a whole number >= 0")
+        if eff == "chase_chance" and not (p >= 0 and chase_base + p * r["max_rank"] <= 1):
+            errs.add("E043", loc, "chase_chance per_rank must be >= 0 and keep CHASE_BASE_CHANCE + per_rank x max_rank <= 1")
+        if eff == "start_sp" and not (p >= 0 and p == int(p)):
+            errs.add("E043", loc, "start_sp per_rank must be a whole number >= 0")
 
 
 def validate_unlocks(t, errs):

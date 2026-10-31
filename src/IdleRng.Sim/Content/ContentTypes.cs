@@ -55,6 +55,7 @@ namespace IdleRng.Sim.Content
         public int TreeSlots { get; internal set; }              // TREE_SLOTS
         public int DraftSize { get; internal set; }              // DRAFT_SIZE
         public double TreeRefund { get; internal set; }          // TREE_REFUND
+        public double ChaseBaseChance { get; internal set; }     // CHASE_BASE_CHANCE
         public double MonEchoPower { get; internal set; }        // MON_ECHO_POWER
         public double MonTideRegen { get; internal set; }        // MON_TIDE_REGEN
         public double MonTideShieldCap { get; internal set; }    // MON_TIDE_SHIELD_CAP
@@ -338,7 +339,7 @@ namespace IdleRng.Sim.Content
         public string TreeId { get; internal set; }
     }
 
-    public enum TalentEffect { DrillCost, StatFloor, DraftSize, StartSp }
+    public enum TalentEffect { DrillCost, StatFloor, ChaseChance, StartSp }
 
     /// <summary>An account talent (specs/18 section 4). Rank r+1 costs CostBase + CostStep * r shards; the effect is PerRank x rank.</summary>
     public sealed class TalentDef

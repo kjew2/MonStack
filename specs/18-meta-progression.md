@@ -45,18 +45,18 @@ Rejected commands throw and change nothing. The sim has no clock: the caller pas
 
 ## 3. Run modifiers
 
-`TrainingRun.Start(content, species, seed, books, mods)` takes a `RunModifiers` (null = none). It is stored on `RunState.Mods`, hashed into `StateHash` (run hash version 3), and must be passed to `Replay` again; the account save does that (section 6).
+`TrainingRun.Start(content, species, seed, books, mods)` takes a `RunModifiers` (null = none). It is stored on `RunState.Mods`, hashed into `StateHash` (run hash version 3; version 5 replaced `DraftSizeBonus` with `ChaseChance`), and must be passed to `Replay` again; the account save does that (section 6).
 
 | Field | Effect | Default |
 |---|---|---|
 | `DrillCostMult` | Multiplies `DRILL_ENERGY_COST` (`TrainingRun.DrillCost(c, run)` gives the run's cost, for the UI) | 1 |
 | `StatFloorMult` | Multiplies the species' base stats at the start (floored, capped at `STAT_MAX`) | 1 |
-| `DraftSizeBonus` | Added to `DRAFT_SIZE` | 0 |
+| `ChaseChance` | Odds the run is attuned to its in-run chase tree (`specs/15` section 5.4); an account's is `CHASE_BASE_CHANCE` plus its talents, capped at 1 | 1 (always: runs without an account) |
 | `StartSp` | Extra skill points at the start | 0 |
 
 ## 4. Talents and the post-run vendor
 
-Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarities` id: the talent's tier), `effect` (`drill_cost`, `stat_floor`, `draft_size`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
+Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarities` id: the talent's tier), `effect` (`drill_cost`, `stat_floor`, `chase_chance`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
 
 **The post-run vendor** (kj, T9) replaces the always-on talent shop. Code: `AccountOps.RollVendor`, `OfferOpen`, `OfferPrice`, `BuyOffer`. The talents overhaul is tracked in #100.
 
@@ -87,10 +87,12 @@ Placeholder talents (the drafts' examples, `specs/12` section 9):
 |---|---|---|---|---|
 | Frugal Drills | Common | drills cost 5% less energy | 5 | 20, 40, 60, ... |
 | Strong Stock | Rare | base stats +10% | 3 | 30, 60, 90 |
-| Wide Scouting | Epic | +1 tree per milestone draft | 2 | 50, 100 |
+| Chase Instinct | Epic | +10 points of odds that a run is attuned to its in-run chase tree (`specs/15` section 5.4); 0.2 base, 0.5 at max | 3 | 50, 100, 150 |
 | Head Start | Common | +1 starting skill point | 3 | 25, 50, 75 |
 
-A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor` per rank `>= 0`; `draft_size` and `start_sp` per rank a whole number `>= 0`.
+A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor` per rank `>= 0`; `chase_chance` per rank `>= 0` with `CHASE_BASE_CHANCE + per_rank x max_rank <= 1`; `start_sp` per rank a whole number `>= 0`.
+
+**Wide Scouting removed (kj, 2026-10-31).** The old Epic talent (+1 tree per Awakening) was never worth buying while the chase trees were the goal, so it was replaced by Chase Instinct (content 4.0, a MAJOR bump for the removed id: a saved rank in `wide_scouting` is ignored and not refunded). The `DRAFT_SIZE` constant stays at 3 and no talent changes it.
 
 ## 5. Shard payout
 
@@ -114,7 +116,7 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. If the replay fails or the stored hash differs (for example after a rules change), the run is dropped, its books return to the inventory and the rest of the account loads with a notice (`specs/06` section 5).
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
-- `Ladder` (content 3.17, `specs/14` section 5) is the run's rolled rank ladder, in the recipe and on each Vault entry, so a replay fights the same opponents even if the pools change later. A save from before the pools has none: it loads as an empty ladder, a legacy run that fights the flat `fight_ranks` opponents and keeps its version 4 run hash, so the run in progress goes on and old Vault entries replay as sealed. The field is additive with that default, so the schema version does not change **(agent)**.
+- `Ladder` (content 4.1, `specs/14` section 5) is the run's rolled rank ladder, in the recipe and on each Vault entry, so a replay fights the same opponents even if the pools change later. A save from before the pools has none: it loads as an empty ladder, a legacy run that fights the flat `fight_ranks` opponents and keeps its version 5 run hash, so the run in progress goes on and old Vault entries replay as sealed. The field is additive with that default, so the schema version does not change **(agent)**.
 - Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves; v5 (`specs/21` section 7) adds the Dungeon tickets to it, none for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
 - On every load the account's achievements are checked again, so an achievement added to content later is granted when the records already meet it (section 8).
 
@@ -154,8 +156,8 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 
 | Achievement | Condition | Unlocks |
 |---|---|---|
-| Contender | Reach rank C in a run | drake |
-| Prodigy | Finish a run with any stat at 500 or more | sprite |
+| Contender | Reach rank C in a run | drake (Bastion Drake) |
+| Prodigy | Finish a run with any stat at 500 or more | sprite (Mirage Moth) |
 | Veteran | Finish 5 runs | nothing yet |
 | Climber | Clear 10 gauntlet floors | nothing yet |
 

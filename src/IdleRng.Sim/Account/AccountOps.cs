@@ -321,7 +321,7 @@ namespace IdleRng.Sim.Account
         /// <summary>The run bonuses the account's talents give (specs/18 section 4).</summary>
         public static RunModifiers Modifiers(ContentDb c, AccountState a)
         {
-            var m = new RunModifiers();
+            var m = new RunModifiers { ChaseChance = c.Constants.ChaseBaseChance };
             foreach (var t in c.TalentList)
             {
                 int rank = a.TalentRank(t.Id);
@@ -331,7 +331,7 @@ namespace IdleRng.Sim.Account
                 {
                     case TalentEffect.DrillCost: m.DrillCostMult = Math.Max(0, m.DrillCostMult + v); break;
                     case TalentEffect.StatFloor: m.StatFloorMult += v; break;
-                    case TalentEffect.DraftSize: m.DraftSizeBonus += (int)v; break;
+                    case TalentEffect.ChaseChance: m.ChaseChance = Math.Min(1, m.ChaseChance + v); break;
                     case TalentEffect.StartSp: m.StartSp += (int)v; break;
                 }
             }

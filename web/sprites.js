@@ -90,6 +90,23 @@ function hueOf(hex) {
   const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
   return Math.round(h * 60 + 360) % 360;
 }
+// Hand-drawn species art (specs/24 section 6): 12x12 rows, one palette letter per pixel, "." is empty.
+const SPECIES_ART = {
+  slime: { pal: { A: "#1d5f9e", B: "#4fb3e8", W: "#d8f3ff", E: "#10203a", C: "#f2c14e", K: "#fff4b0" }, rows: [   // Coremote
+    "............", "............", "....AAAA....", "...AWWBBA...", "..AWBBBBBA..", "..ABEBBEBA..",
+    ".ABBBBBBBBA.", ".ABBBCCBBBA.", ".ABBCKKCBBA.", "AABBBCCBBBAA", "ABBBBBBBBBBA", ".AAAAAAAAAA."] },
+  drake: { pal: { P: "#4a4f5c", M: "#a9b2c4", R: "#c2452e", O: "#ffb347", E: "#ffe066", D: "#2a2133", H: "#eef1f6" }, rows: [   // Bastion Drake
+    "............", ".......H.H..", "......MMMM..", "..M..MRRERM.", ".MPM.MRRRRRO", "MPPPMMRRMM..",
+    "MPOPPPPPM...", "MPPOPPOPPM..", ".MPPOOOPPM..", ".MMPPPPPMM..", "..MR..MR....", "..DD..DD...."] },
+  sprite: { pal: { A: "#6b5b3e", W: "#fff6d8", Y: "#f2c94c", K: "#3a2a5a", O: "#ff9f43", B: "#c9b27a", E: "#1b1428" }, rows: [   // Mirage Moth
+    "...A....A...", "....A..A....", "YY...BB...YY", "YWY.BEEB.YWY", "YKOYBBBBYOKY", "YOKYYBBYYKOY",
+    ".YYYWBBWYYY.", "..YWYBBYWY..", ".YOKYBBYKOY.", ".YKOY.BYOKY.", "..YY..B.YY..", "............"] },
+};
+function speciesSprite(id) {
+  const a = SPECIES_ART[id]; if (!a) return null;
+  const key = "sp:" + id; if (SPR[key]) return SPR[key];
+  return (SPR[key] = paint(a.rows.map(r => r.split("")), a.pal));
+}
 function paint(g, pal) {
   const c = document.createElement("canvas"); c.width = g[0].length; c.height = g.length;
   const x = c.getContext("2d");
@@ -105,6 +122,7 @@ function paint(g, pal) {
   }
   root.IdleSprites = {
     hero: heroSprite,
+    species: speciesSprite,
     player: playerSprite,
     enemy: function (stage, boss, variant) { return enemySprite(stage * 31 + (boss ? 999 : (variant || 0) % 4), boss); },
     // A rank opponent (specs/14 section 5): its own shape from seed, the boss horns at the top rank, tinted by colour (#RRGGBB).

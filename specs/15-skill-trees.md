@@ -1,6 +1,6 @@
 # 15 - Skill Trees
 
-Status: **live (T3 of `specs/13`)**, in the training run engine and the web client (T6: the tree screen, drafts, books and node tooltips in `web/run.js`). Code: `src/IdleRng.Sim/Training/TrainingRun.cs` (tree commands), `src/IdleRng.Sim/Combat` (rule modifiers). Tests: `src/IdleRng.Sim.Tests/SkillTreeTests.cs`. Golden: `golden/training-run-vectors.txt`.
+Status: **live (T3 of `specs/13`)**, in the training run engine and the web client (T6: the tree screen, Awakenings, books and node tooltips in `web/run.js`). Code: `src/IdleRng.Sim/Training/TrainingRun.cs` (tree commands), `src/IdleRng.Sim/Combat` (rule modifiers). Tests: `src/IdleRng.Sim.Tests/SkillTreeTests.cs`. Golden: `golden/training-run-vectors.txt`.
 
 The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless marked **(agent)**.
 
@@ -12,7 +12,7 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 - **Skill points** (SP): `SP_PER_CYCLE` at the start of every cycle (cycle 1 included) plus `SP_PER_WIN` for each rank fight won.
 - SP buy a tree's **nodes in order**. About 75% of nodes are **filler** (a growth bonus or a flat stat boost); the rest grant skills, triggered effects or rule modifiers. The **last node is the tree's chase trait**.
 - Each species owns **two chase trees** of its own: one unlocked in-run, one gated behind a skill book tree (section 5.1).
-- New trees arrive as **offers**: a milestone draft, a skill book, or an unlocked chase tree. Any offered tree may go into an empty slot or **overwrite any slot**, native trees included; or the offer is discarded.
+- New trees arrive as **offers**: an Awakening (a milestone draft), a skill book, or an unlocked chase tree. Any offered tree may go into an empty slot or **overwrite any slot**, native trees included; or the offer is discarded.
 
 ## 2. Trees and nodes
 
@@ -53,7 +53,7 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 
 ## 4. Offers and overwriting
 
-- **Milestone draft.** When a stat crosses a `stat_milestones` threshold (by a drill or a flat stat node), the run offers up to `DRAFT_SIZE` distinct generic trees whose `offer_stat` is that stat or empty and whose `offer_threshold` is at most the threshold, excluding trees already slotted or offered. They are picked by partial shuffle on the run's `draft` stream, one draw per pick. No eligible tree, no offer. Each stat and threshold pair drafts once per run.
+- **Awakening** (the milestone tree offer; "draft" before kj's rename, 2026-10-31, who found the word bland; the code keeps `Draft` and the `draft` stream). When a stat crosses a `stat_milestones` threshold (by a drill or a flat stat node), the run offers up to `DRAFT_SIZE` distinct generic trees whose `offer_stat` is that stat or empty and whose `offer_threshold` is at most the threshold, excluding trees already slotted or offered. They are picked by partial shuffle on the run's `draft` stream, one draw per pick. No eligible tree, no offer. Each stat and threshold pair drafts once per run.
 - **Skill book.** `UseBook` offers the book's tree. Books come from the Dungeon (post-MVP); until then a run is started with a list of books (`TrainingRun.Start(..., books)`), the debug grant `specs/13` T3 planned.
 - **Chase tree.** Section 5.
 - Offers queue oldest first.
@@ -66,10 +66,20 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 
 Every species owns exactly two chase trees, named in `species`:
 
-- `chase_tree_run`, the **in-run** chase tree: unlocks from the species' own native trees plus stat thresholds and a playstyle tally (the normal chase rules). Its conditions name no book tree.
+- `chase_tree_run`, the **in-run** chase tree: unlocks from the species' own native trees plus stat thresholds and a playstyle tally (the normal chase rules). Its conditions name no book tree. It is only ever offered to a run that is **attuned** to it (section 5.4).
 - `chase_tree_book`, the **book-gated** chase tree, the one that rewards planning a run: its conditions also need nodes in a species-specific skill book tree (`specs/12` section 5.3), plus nodes in other trees and a playstyle tally. Each species has its own placeholder book.
 
 Only the owner's runs unlock a chase tree: another species meeting its conditions is never offered it. Every chase tree belongs to exactly one species. **(agent)** Books are not species-locked: any species may use any book and slot its tree as an ordinary tree; only the owner unlocks the chase tree that needs it.
+
+### 5.4 Attunement (kj, 2026-10-31)
+
+kj: the in-run chase tree must not be something the player "just gets every run with no metagame progression"; with maxed meta progression it should still be about half the runs, not a thing to force every time. So the in-run chase tree is gated by an **attunement roll** made once when the run starts:
+
+- `RunState.ChaseAttuned = ChaseChance >= 1 or u < ChaseChance`, where `u` is the first draw of the run's `chase` stream (`StreamSeed(seed, "chase")`) and `ChaseChance` is the run modifier of `specs/18` section 3. The roll is part of the run's seed, so a replay repeats it.
+- An unattuned run never offers its species' in-run chase tree, whatever its conditions; `TrainingRun.ChaseOpen` says whether a chase tree can be offered. The book-gated chase tree needs no attunement (a book is already the rare gate, `specs/21` section 5). Chase trees of other species are never open.
+- An account's `ChaseChance` is `CHASE_BASE_CHANCE` (placeholder 0.2) plus the Chase Instinct talent (`chase_chance`, +0.1 per rank, 3 ranks, so 0.5 at max). A run started without an account (tests, bots) has `ChaseChance` 1 and is always attuned.
+- The Trees tab shows the in-run chase tree as **dormant** when the run is not attuned, so the player knows to build for something else.
+- The attuned share is the cap on how often the in-run chase capstone can happen (about half the runs at max meta); reaching it still needs the conditions and the SP (the reachability targets of section 10, which counted conditions only).
 
 ### 5.2 Conditions
 
@@ -134,6 +144,7 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | `SP_PER_WIN` | 2 | `>= 0` |
 | `TREE_SLOTS` | 4 | `>= 2` |
 | `DRAFT_SIZE` | 3 | `> 0` |
+| `CHASE_BASE_CHANCE` | 0.2 | `[0, 1]` |
 | `TREE_REFUND` | 0.5 | `[0, 1]`: share of the SP spent in a tree that comes back when it leaves its slot (section 4) |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` (`specs/16` section 7) |
 | `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE` | 0.05, 0.3, 0.3, 0.5 | `[0, 1]` (`specs/16` section 7) |
@@ -150,10 +161,10 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 
 ## 10. Open
 
-- Genetic aptitude (`specs/12` section 5.7) was dropped with the species gacha at T9 (kj, 2026-10-30): nothing raises a species' draft or chase-tree odds.
+- Genetic aptitude (`specs/12` section 5.7) was dropped with the species gacha at T9 (kj, 2026-10-30): nothing raises a species' Awakening or chase-tree odds. The Chase Instinct talent (section 5.4) raises the in-run chase tree's odds, for every species alike.
 - Real tree content: names, skills and chase capstones beyond placeholders.
 - **Capstone reachability targets (kj, 2026-10-31, #110):**
-  - the in-run chase capstone is bought in about the top 10% of runs;
+  - the in-run chase capstone is bought in about the top 10% of runs (attunement, section 5.4, caps it at about half the runs with maxed meta progression, kj);
   - the book chase capstone in about 50% of runs that bring the species' own book.
   - **(agent)** Measured under the `focus` and `hoarder` policies. Today it is 0-69% for in-run and 0% for book (`specs/22` section 2), so content and the SP economy need retuning. The bots must first play toward their chase conditions (#111).
 - **Book chase capstones must be uber strong** (kj, 2026-10-31, #112): books are uber rare (`specs/21` section 5), so a run that gets its book should get a jackpot. The 50% target is for runs that have the book.

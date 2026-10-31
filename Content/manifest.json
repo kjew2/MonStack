@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.17",
+  "content_version": "4.1",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -21,7 +21,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "ba5f4d0f5e48e0b6eaf90d37a9e10d7a9cf334f3c092db32b276b98673170bec"
+      "sha256": "3d2db98f72572f718d83f5d95620181250c85d1846acb87033ddf869f1a1d9e5"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -65,11 +65,11 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "ddedc3e68ffe3e0c0d104912b213857e073899679e17d8ec563dd70c4e39552f"
+      "sha256": "c0246788da3cc11a20cd2638cc364badabee4f73e3123e6f5b6e0bd13197a9e9"
     },
     "talents": {
       "file": "talents.json",
-      "sha256": "0e590049c6a8fb2a3f7b71522c3aef6cc5537ec806a46113dc2db42af2214870"
+      "sha256": "9b213e2c1718e4dab7fbeeda3a3d8f317e9a468f7301c02c97f3bbdaca9412a0"
     },
     "tower_bosses": {
       "file": "tower_bosses.json",
@@ -88,5 +88,5 @@
       "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "82b95de1a3ff3fb7ffb4b02c2f7c73d1036b8c9d76830bdd3f982288323ebd86"
+  "content_hash": "d698556944d8693b5f514c293d39b4545956d7b3a90af42a02d43bc3244d834d"
 }

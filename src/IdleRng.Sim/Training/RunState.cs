@@ -60,8 +60,11 @@ namespace IdleRng.Sim.Training
         /// <summary>Multiplies the species' base stats at the start (capped at STAT_MAX). 1 = no change.</summary>
         public double StatFloorMult { get; set; } = 1;
 
-        /// <summary>Added to DRAFT_SIZE for milestone drafts.</summary>
-        public int DraftSizeBonus { get; set; }
+        /// <summary>
+        /// Odds the run is attuned to its species' in-run chase tree (specs/15 section 5.4). 1 = always, so a run started without
+        /// an account (tests, bots) behaves as before; an account's runs get CHASE_BASE_CHANCE plus its talents (AccountOps.Modifiers).
+        /// </summary>
+        public double ChaseChance { get; set; } = 1;
 
         /// <summary>Extra skill points at the start of the run.</summary>
         public int StartSp { get; set; }
@@ -176,7 +179,7 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// The rank ladder (specs/14 section 5): the rank_enemies id fought at each rank, indexed like ContentDb.FightRanks, rolled
-        /// at Start on the "ladder" stream. Empty for a legacy run (started before the pools, content 3.17): its opponent at each
+        /// at Start on the "ladder" stream. Empty for a legacy run (started before the pools, content 4.1): its opponent at each
         /// rank is the flat fight_ranks row.
         /// </summary>
         public List<string> Ladder { get; set; } = new List<string>();
@@ -187,7 +190,10 @@ namespace IdleRng.Sim.Training
         /// <summary>Drill and injury rolls.</summary>
         public RngStream Training { get; set; } = new RngStream();
 
-        /// <summary>Milestone draft picks.</summary>
+        /// <summary>Whether this run was rolled attuned to its in-run chase tree at Start; only then is that tree ever offered.</summary>
+        public bool ChaseAttuned { get; set; }
+
+        /// <summary>Awakening (milestone tree offer) picks.</summary>
         public RngStream Draft { get; set; } = new RngStream();
 
         public int FightsFought { get; set; }

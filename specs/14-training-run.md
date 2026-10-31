@@ -35,7 +35,7 @@ Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` s
 
 ## 3. Species
 
-Content table `species`: `id`, `name_key`, `element`, `base_<stat>` and `grow_<stat>` for each of the eight stats. A run starts with the species' base stats. The growth multiplier scales every drill gain on that stat. Three placeholder species (slime, drake, sprite) match the MVP's three (`specs/12` section 12.1); their native trees arrive in T3.
+Content table `species`: `id`, `name_key`, `element`, `base_<stat>` and `grow_<stat>` for each of the eight stats. A run starts with the species' base stats. The growth multiplier scales every drill gain on that stat. Three placeholder species (slime, drake, sprite; named Coremote, Bastion Drake and Mirage Moth after the creature spike, `specs/24` section 6) match the MVP's three (`specs/12` section 12.1); their native trees arrive in T3.
 
 ## 4. Drill and Rest
 
@@ -62,7 +62,7 @@ Both cost 1 AP. When AP reach 0 the run goes to `AwaitFight` if a fight is due, 
 
 kj: "rework injury to be like, skip a fight cycle or something, less punishing and annoying, but would still basically brick ur build." An injury no longer ends the run; it costs cycles. **(agent)** The concrete rule:
 
-1. The injuring drill keeps its gain (and any milestone it crossed, whose draft waits as usual).
+1. The injuring drill keeps its gain (and any milestone it crossed, whose Awakening waits as usual).
 2. The rest of the current cycle is lost: its remaining AP are gone and its rank fight (if one was due) is skipped. No promotion chance, no `SP_PER_WIN`.
 3. The next `INJURY_SKIP_CYCLES` (placeholder 1) whole cycles are sat out: no drills, no rank fights and no `SP_PER_CYCLE` for them.
 4. The monster is then back: energy is set to `INJURY_RECOVER_ENERGY` (placeholder 100, full) and the following cycle starts as usual (full AP, `SP_PER_CYCLE`).
@@ -83,7 +83,7 @@ kj (2026-10-31): "an RNG pool of monsters at each rank, and we can see the clear
 - **The ladder** (kj, 2026-10-31): `TrainingRun.Start` rolls one pool monster per rank, lowest rank first, on its own stream `ladder` (`StreamSeed(runSeed, "ladder")`; one draw per rank: the draw times the pool's total weight, walked through the cumulative weights in CSV order), so the `training`, `draft` and `fight` streams are untouched. `RunState.Ladder` holds the ids, indexed like `fight_ranks`; it is hashed (section 7) and saved with the run. The whole ladder is visible to the player from the start.
 - `Fight` builds the monster as a `Fighter` (species element, current stats, and the skills of its bought tree nodes, `specs/15` section 2) and the ladder's opponent at the current rank (its element, stats and skills, `TrainingRun.OpponentFighter`), and resolves a 1v1 `BattleSim` fight (`specs/16`). The result names the opponent (`RankFightResult.OpponentId`).
 - A win (`SideAWon`) promotes the monster one rank and pays `SP_PER_WIN`; at the top rank it stays. A loss or a timeout changes nothing: the next fight is a rematch with the same opponent (placeholder; no penalty yet). The fight's tallies add to the run tally (`specs/15` section 6).
-- **Legacy runs.** A run started before the pools (content 3.17) has an empty ladder: it fights the flat `fight_ranks` row at each rank (no skills), as it did, and keeps its version 4 hash (section 7). Saved runs and Vault entries without a `Ladder` load as legacy runs (`specs/18` section 6).
+- **Legacy runs.** A run started before the pools (content 4.1) has an empty ladder: it fights the flat `fight_ranks` row at each rank (no skills), as it did, and keeps its version 5 hash (section 7). Saved runs and Vault entries without a `Ladder` load as legacy runs (`specs/18` section 6).
 - Fight seed: `SplitMix64.Derive(StreamSeed(runSeed, "fight"), fightIndex)`, where `fightIndex` is the number of fights fought before it. Fights never advance the `training` stream.
 - `FIGHT_EVERY` (placeholder 1) sets how often fights come; kj suggested every other cycle if every cycle feels too frequent.
 - A rank up is called "promotion" in the drafts; code and specs say `Rank`.
@@ -91,13 +91,13 @@ kj (2026-10-31): "an RNG pool of monsters at each rank, and we can see the clear
 
 ## 6. Milestones
 
-Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it, the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens a milestone draft (`specs/15` section 4).
+Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it, the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens an Awakening, the milestone tree offer (`specs/15` section 4).
 
 ## 7. Determinism, replay, hash
 
-- Pure: no clock, IO or `Math.Pow`. All randomness is the `training` and `draft` streams plus derived fight seeds.
+- Pure: no clock, IO or `Math.Pow`. All randomness is the `training`, `draft` (Awakening picks), `chase` (the attunement roll, `specs/15` section 5.4) and `ladder` (read once at the start, section 5) streams plus derived fight seeds.
 - `TrainingRun.Replay(content, species, seed, log, books, mods, ladder)` rebuilds a run from its command log; tests check it gives the same `StateHash` for every species, bot and book list. A saved run passes its stored ladder (empty for a legacy run); a null ladder rolls it from the seed again, which gives the same ladder while the pools are unchanged. A stored ladder must have one id per rank, each from that rank's pool, or `Replay` throws.
-- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 5 since the rank ladder of section 5, which is appended at the end of the encoding; a legacy run with an empty ladder keeps the exact version 4 bytes and magic, so its stored hashes stay valid; 4 since the injuries of section 4.1, 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument). A hash version bump means a saved run in progress no longer matches its stored hash: it is dropped on load with the notice of `specs/06` section 5 and its books are returned.
+- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 6 since the rank ladder of section 5, which is appended at the end of the encoding; a legacy run with an empty ladder keeps the exact version 5 bytes and magic, so its stored hashes stay valid; 5 since the attunement roll replaced the draft-size modifier (kj, 2026-10-31), 4 since the injuries of section 4.1, 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument). A hash version bump means a saved run in progress no longer matches its stored hash: it is dropped on load with the notice of `specs/06` section 5 and its books are returned.
 
 ## 8. Content
 
@@ -126,7 +126,7 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 | `species` | at least one row (`E044`); `element` is an element id (`E023`); base stats in `[0, STAT_MAX]`, growth `> 0` (`E043`) |
 | `drill_tiers` | exactly `fail`, `success`, `super` (`E044`); `0 <= gain_min <= gain_max` (`E043`). Placeholders: fail 0-2, success 8-15, super 20-30 |
 | `fight_ranks` | at least one row (`E044`); `sort_order` exactly `0..N-1` (`E047`); element id (`E023`); stats in `[0, STAT_MAX]` (`E043`); `dismantle_shards` (the Vault refund for that grade, `specs/18` section 7) and `ticket_pieces` (Dungeon ticket pieces for that grade, `specs/21` section 7) `>= 0` (`E043`); every rank has a `rank_enemies` row (`E044`, empty pool) |
-| `rank_enemies` (content 3.17) | `rank` is a `fight_ranks` id and `element` an element id (`E023`); stats in `[0, STAT_MAX]` and summing to the rank's budget within 1e-6 (`E043`); each `skills` id is a `monster_skills` id (`E023`); `weight > 0` (`E043`) |
+| `rank_enemies` (content 4.1) | `rank` is a `fight_ranks` id and `element` an element id (`E023`); stats in `[0, STAT_MAX]` and summing to the rank's budget within 1e-6 (`E043`); each `skills` id is a `monster_skills` id (`E023`); `weight > 0` (`E043`) |
 | `stat_milestones` | thresholds `> 0`, strictly increasing (`E032`) |
 
 ## 9. Bots and goldens

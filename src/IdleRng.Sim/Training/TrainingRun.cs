@@ -15,16 +15,16 @@ namespace IdleRng.Sim.Training
     /// </summary>
     public static class TrainingRun
     {
-        public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight", LadderStream = "ladder";
+        public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight", ChaseStream = "chase", LadderStream = "ladder";
         public const string MonsterId = "monster";
 
         /// <summary>
-        /// Run hash version 5 (the rank ladder, specs/14 section 7). A legacy run (empty Ladder) still hashes with the version 4
+        /// Run hash version 6 (the rank ladder, specs/14 section 7). A legacy run (empty Ladder) still hashes with the version 5
         /// encoding, so runs saved and Vault entries sealed before the pools keep their hashes.
         /// </summary>
-        public const int HashVersion = 5;
-        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v5");
-        static readonly byte[] LegacyHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v4");
+        public const int HashVersion = 6;
+        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v6");
+        static readonly byte[] LegacyHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v5");
 
         // ------------------------------------------------------------------ start
 
@@ -43,8 +43,9 @@ namespace IdleRng.Sim.Training
                 throw new ArgumentException($"unknown species '{speciesId}'", nameof(speciesId));
             var k = c.Constants;
             mods = mods?.Clone() ?? new RunModifiers();
-            if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.DraftSizeBonus < 0 || mods.StartSp < 0)
+            if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.StartSp < 0)
                 throw new ArgumentException("run modifiers must be >= 0", nameof(mods));
+            if (!(mods.ChaseChance >= 0 && mods.ChaseChance <= 1)) throw new ArgumentException("ChaseChance must be in [0, 1]", nameof(mods));
             var stats = sp.Base.Clone();
             if (mods.StatFloorMult != 1)
                 foreach (var id in StatIds.Trained) Set(stats, id, Math.Min(k.StatMax, Math.Floor(stats.Get(id) * mods.StatFloorMult)));
@@ -55,6 +56,7 @@ namespace IdleRng.Sim.Training
                 Training = new RngStream(TrainingStream, StreamNames.StreamSeed(seed, TrainingStream)),
                 Draft = new RngStream(DraftStream, StreamNames.StreamSeed(seed, DraftStream)),
                 Sp = k.SpPerCycle + mods.StartSp, Slots = new TreeSlot[k.TreeSlots],
+                ChaseAttuned = mods.ChaseChance >= 1 || new RngStream(ChaseStream, StreamNames.StreamSeed(seed, ChaseStream)).NextDouble() < mods.ChaseChance,
                 Ladder = ladder == null ? RollLadder(c, seed) : CheckLadder(c, ladder),
             };
             s.Slots[0] = new TreeSlot { TreeId = sp.NativeTree1 };
@@ -332,6 +334,10 @@ namespace IdleRng.Sim.Training
             return g;
         }
 
+        /// <summary>Whether chase tree <paramref name="tree"/> can ever be offered to this run: an unattuned run never sees its in-run chase tree (specs/15 section 5.4).</summary>
+        public static bool ChaseOpen(ContentDb c, RunState s, TreeDef tree) =>
+            tree.Kind == TreeKind.Chase && tree.Species == s.SpeciesId && (s.ChaseAttuned || tree.Id != c.Species[s.SpeciesId].ChaseTreeRun);
+
         /// <summary>Whether every condition of chase tree <paramref name="tree"/> holds now (specs/15 section 5).</summary>
         public static bool ChaseConditionsHold(ContentDb c, RunState s, TreeDef tree)
         {
@@ -476,7 +482,7 @@ namespace IdleRng.Sim.Training
                 if (t.Kind == TreeKind.Generic && (t.OfferStat == null || t.OfferStat == stat) && t.OfferThreshold <= threshold
                     && Slotted(s, t.Id) < 0 && !Pending(s, t.Id))
                     pool.Add(t.Id);
-            int n = Math.Min(c.Constants.DraftSize + s.Mods.DraftSizeBonus, pool.Count);
+            int n = Math.Min(c.Constants.DraftSize, pool.Count);
             if (n == 0) return;
             for (int i = 0; i < n; i++)
             {
@@ -515,6 +521,7 @@ namespace IdleRng.Sim.Training
             foreach (var t in c.TreeList)
             {
                 if (t.Kind != TreeKind.Chase || t.Species != s.SpeciesId || s.ChaseOffered.Contains(t.Id) || Slotted(s, t.Id) >= 0) continue;
+                if (!ChaseOpen(c, s, t)) continue;
                 if (!ChaseConditionsHold(c, s, t)) continue;
                 s.Offers.Add(new TreeOffer { Source = OfferSource.Chase, Trees = { t.Id } });
                 s.ChaseOffered.Add(t.Id);
@@ -633,8 +640,8 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>
-        /// Lowercase hex SHA-256 over a canonical encoding of the run (specs/03 section 1). Bump HashVersion on change. Version 5
-        /// is version 4 plus the ladder at the end; a legacy run (empty ladder) keeps the exact version 4 bytes.
+        /// Lowercase hex SHA-256 over a canonical encoding of the run (specs/03 section 1). Bump HashVersion on change. Version 6
+        /// is version 5 plus the ladder at the end; a legacy run (empty ladder) keeps the exact version 5 bytes.
         /// </summary>
         public static string StateHash(RunState s)
         {
@@ -643,7 +650,7 @@ namespace IdleRng.Sim.Training
             w.Bytes(legacy ? LegacyHashMagic : HashMagic);
             w.Str(s.SpeciesId);
             w.U64(s.Seed);
-            w.F64(s.Mods.DrillCostMult); w.F64(s.Mods.StatFloorMult); w.I32(s.Mods.DraftSizeBonus); w.I32(s.Mods.StartSp);
+            w.F64(s.Mods.DrillCostMult); w.F64(s.Mods.StatFloorMult); w.F64(s.Mods.ChaseChance); w.I32(s.Mods.StartSp);
             foreach (var id in StatIds.Trained) w.F64(s.Stats.Get(id));
             w.F64(s.Energy);
             w.I32(s.Cycle); w.I32(s.ApLeft); w.I32(s.Rank);

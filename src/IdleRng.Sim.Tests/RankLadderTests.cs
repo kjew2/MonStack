@@ -163,7 +163,7 @@ namespace IdleRng.Sim.Tests
             }
         }
 
-        /// <summary>The scripted run of the version 4 probe: spend in slot 0 when possible, rest below 40 energy, else drill STR.</summary>
+        /// <summary>The scripted run of the version 5 probe: spend in slot 0 when possible, rest below 40 energy, else drill STR.</summary>
         static RunState Scripted(RunState s)
         {
             while (s.Phase != RunPhase.Finished)
@@ -180,18 +180,18 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void LegacyRun_FightsTheFlatRanks_AndKeepsTheVersion4Hash()
+        public void LegacyRun_FightsTheFlatRanks_AndKeepsTheVersion5Hash()
         {
-            // Computed by the code before the rank pools (run hash version 4) for this exact script: runs saved and Vault entries
-            // sealed before content 3.17 must keep replaying to their stored hashes.
-            const string V4Hash = "0e278668f40c6dfb2219cc8dc4e4a3ebbc366d9f0d1f7dc48b1fc40fdc751fc9";
+            // Computed by the code before the rank pools (run hash version 5) for this exact script: runs saved and Vault entries
+            // sealed before content 4.1 must keep replaying to their stored hashes.
+            const string V5Hash = "3036b66f6cc6a90c85e4114e510230ce64d3f2916b64ec8513d6f2aaf4d7c932";
             var s = Scripted(TrainingRun.Start(Db, "drake", 11, null, null, new List<string>()));
             Assert.That(s.Ladder, Is.Empty);
             Assert.That(TrainingRun.LadderEnemy(Db, s, 0), Is.Null);
             var flat = TrainingRun.OpponentFighter(Db, s, 0);
             Assert.That(flat.Id, Is.EqualTo("rank_" + Db.FightRanks[0].Id));
             Assert.That(flat.Skills, Is.Empty);
-            Assert.That(TrainingRun.StateHash(s), Is.EqualTo(V4Hash));
+            Assert.That(TrainingRun.StateHash(s), Is.EqualTo(V5Hash));
             Assert.That((s.Rank, s.FightsWon, s.FightsFought), Is.EqualTo((2, 2, 12)));
         }
 
