@@ -337,6 +337,11 @@
       "value": 10
     },
     {
+      "key": "LEGENDARY_SLOTS",
+      "type": "int",
+      "value": 1
+    },
+    {
       "key": "REROLL_STEP",
       "type": "int",
       "value": 10

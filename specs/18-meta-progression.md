@@ -32,7 +32,8 @@ There is no premium currency yet. Skill Books are the premium gate (kj, T9); whe
 | Command | Rule |
 |---|---|
 | `New(seed)` | Owns only the starter species (`ContentDb.StarterSpecies`, section 8); no shards, books, talents, achievements or Vault entries |
-| `StartRun(species, books)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3). The vendor's unbought offers vanish (section 4) |
+| `StartRun(species, books, talentsOff)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the bonuses of the talents its loadout leaves on (sections 3 and 4; `talentsOff` null = the account's last loadout, `DefaultLoadout`), and that loadout is saved on the account. The vendor's unbought offers vanish (section 4) |
+| `SetLoadout(talentsOff)` | Saves the loadout the next run starts with (the species pick's toggles; section 4). Free, at any time; a run in progress keeps its bonuses |
 | `FinishRun(sealedUtcMs)` | The active run is over (after its last cycle). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`), records it and checks achievements, which may unlock species (section 8), adds the grade's Dungeon ticket pieces (`fight_ranks.ticket_pieces`, 4 make a ticket; `specs/21` section 7), rolls the vendor's offers (section 4) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7). The result lists the achievements earned, the species unlocked and the ticket pieces and tickets earned |
 | `AbandonRun()` | Ends the active run in any phase with no payout and no Vault entry; unused books return to the inventory (a misclick costs nothing). `RunsStarted` stays counted, so the next run gets a new seed and abandoning cannot reroll a run. (Agreed between the two building sessions, 2026-10-30; the web client's Abandon button calls it.) |
 | `BuyOffer(index)` | A vendor offer not yet bought, whose talent is not maxed; enough shards. Costs the offer's price, adds one rank (section 4). Applies from the next run: a run keeps the bonuses it started with. There is no other way to buy talents |
@@ -76,7 +77,7 @@ Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarit
 **The post-run vendor** (kj, T9) replaces the always-on talent shop. Code: `AccountOps.RollVendor`, `OfferOpen`, `OfferPrice`, `BuyOffer`. The talents overhaul is tracked in #100.
 
 - When a run is sealed (`FinishRun`), the vendor rolls `VENDOR_OFFERS` offers. **A rarity is the talent's own tier (kj, 2026-10-31, issue #102).** Per offer: draw a tier by weight among the tiers that still have a talent not maxed, then a talent of that tier uniformly among its talents not maxed. The same talent may be offered more than once. No offers once every talent is maxed.
-- **Rarity odds follow the run's score**, its grade (the rank reached, E = index 0) **(agent: the grade is the score; the gauntlet floor does not count yet)**. Content table `vendor_rarities`: `id`, `sort_order`, `name_key`, `weight_base`, `weight_per_rank`. A tier's weight at grade index `g` is `max(0, weight_base + weight_per_rank x g)`.
+- **Rarity odds follow the run's score**, its grade (the rank reached, E = index 0) **(agent: the grade is the score; the gauntlet floor does not count yet)**. Content table `vendor_rarities`: `id`, `sort_order`, `name_key`, `weight_base`, `weight_per_rank`, `legendary_slot` (bool: the tier's talents take a legendary slot, below). A tier's weight at grade index `g` is `max(0, weight_base + weight_per_rank x g)`.
 - **An exhausted tier is skipped (agent):** a tier whose talents are all maxed has no weight, so the other tiers share its odds. When the tiers left all weigh 0 at that grade, the commonest of them is used. Two draws per offer, always.
 - **One rank per purchase (kj, 2026-10-31, issue #102):** an offer adds exactly one rank of its talent at its normal cost (`TalentCost` at the current rank), whatever its rarity. The price is worked out when bought, so buying one offer reprices another offer of the same talent; an offer whose talent reached max rank cannot be bought.
 - Each offer sells once. **Unbought offers vanish when the next run starts (agent; recommended by the coordinator).** They stay through reloads and on the home screen until then. An abandoned run rolls no vendor.
@@ -120,7 +121,13 @@ Placeholder talents: the drafts' four examples (`specs/12` section 9) and the ta
 | Early Bloom | Epic | milestone thresholds -10% | 2 | 70, 140 |
 | Second Look | Epic | reroll one Awakening per run | 1 | 70 |
 
-Every owned talent applies to every run: a talent loadout (switching talents off, #106), legendary talents (#103) and the vendor talents of the spike (Haggler: cheaper rerolls, Extra Shelf: +1 offer) are not built. The bot `balance` verb plays runs without talents, so these numbers are untested by it.
+**Talent loadout (kj, 2026-10-31, issue #106).** On the species pick the player can switch any owned talent off for the next run (free; on by default). Only the talents left on go into the run's `RunModifiers`, which the run and its Vault entry store, so replays hold. At most `LEGENDARY_SLOTS` talents of a `legendary_slot` tier can be on in one run (`CheckLoadout` refuses more). The loadout is saved on the account (`TalentsOff`, the ids switched off, **agent**) and the next species pick starts from it: a talent bought since is on, and when owned legendary-slot talents are more than the slots, the first in content order keep them (`DefaultLoadout`, **agent**). The web client's toggles call `SetLoadout`; switching a legendary on when the slots are full switches the others off. More slots may come from achievements later (not built).
+
+| Constant | Value | Range |
+|---|---|---|
+| `LEGENDARY_SLOTS` | 1 (kj) | `>= 0` |
+
+Legendary talents (#103) and the vendor talents of the spike (Haggler: cheaper rerolls, Extra Shelf: +1 offer) are not built. The bot `balance` verb plays runs without talents, so these numbers are untested by it.
 
 A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor`, `rest_energy` and `shard_mult` per rank `>= 0`; `fail_chance` per rank `<= 0`; `super_chance` per rank `>= 0` and at most 1 at max rank; `specialist` per rank `>= 0` and at most 2 at max rank; `milestone_mult` per rank `<= 0` and the multiplier stays `> 0` at max rank; `chase_chance` per rank `>= 0` with `CHASE_BASE_CHANCE + per_rank x max_rank <= 1`; `start_sp`, `momentum`, `loss_sp`, `tree_slots`, `injury_shield`, `last_cycle_ap` and `draft_rerolls` per rank a whole number `>= 0`.
 
@@ -140,7 +147,7 @@ A flat list for now; a branching talent tree is a later content change. Rules (`
 A new save lineage (kj: clean break, `specs/13` section 1), in its own store slot (`AccountSave.SlotName` = `account`), using the file shape of `specs/06` (header with CRC, JSON body) and its two-slot rotation:
 
 ```
-{ "Kind": "monster_account", "SchemaVersion": 6,
+{ "Kind": "monster_account", "SchemaVersion": 7,
   "Account": { ...AccountState without Active... },
   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Ladder", "Log", "Hash" } | null }
 ```
@@ -149,7 +156,7 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
 - `Ladder` (content 4.3, `specs/14` section 5) is the run's rolled rank ladder, in the recipe and on each Vault entry, so a replay fights the same opponents even if the pools change later. A save from before the pools has none: it loads as an empty ladder, a legacy run that fights the flat `fight_ranks` opponents and keeps its version 5 run hash, so the run in progress goes on and old Vault entries replay as sealed. The field is additive with that default, so the schema version does not change **(agent)**.
-- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves; v5 (`specs/21` section 7) adds the Dungeon tickets to it, none for older saves; v6 (issue #104) adds `Vendor.Rerolls`, 0 for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
+- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves; v5 (`specs/21` section 7) adds the Dungeon tickets to it, none for older saves; v6 (issue #104) adds `Vendor.Rerolls`, 0 for older saves; v7 (issue #106) adds `TalentsOff`, empty (every talent on) for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
 - On every load the account's achievements are checked again, so an achievement added to content later is granted when the records already meet it (section 8).
 
 ## 7. Vault cap and dismantling

@@ -39,10 +39,16 @@ namespace IdleRng.Sim.Account
         /// Start a run of an owned species with books taken from the inventory, under the account's talent bonuses
         /// (<see cref="Modifiers"/>). Only one run at a time.
         /// </summary>
-        public static RunState StartRun(ContentDb c, AccountState a, string speciesId, IList<string> books = null)
+        /// <remarks>
+        /// <paramref name="talentsOff"/> is the run's talent loadout (issue #106): owned talents switched off for this run. Null
+        /// uses the account's last loadout (<see cref="DefaultLoadout"/>). An unknown talent id, or more legendary-slot talents
+        /// left on than LEGENDARY_SLOTS, is refused. The loadout used is saved on the account for the next run.
+        /// </remarks>
+        public static RunState StartRun(ContentDb c, AccountState a, string speciesId, IList<string> books = null, IEnumerable<string> talentsOff = null)
         {
             if (a == null) throw new ArgumentNullException(nameof(a));
             if (a.Active != null) throw new InvalidOperationException("a run is already in progress");
+            var off = talentsOff == null ? DefaultLoadout(c, a) : CheckLoadout(c, a, talentsOff);
             int over = VaultOver(c, a);
             if (over > 0)
                 throw new InvalidOperationException($"the Vault holds {a.Vault.Count} of {c.Constants.VaultCap}: dismantle {over} to start a run");
@@ -58,8 +64,9 @@ namespace IdleRng.Sim.Account
             foreach (var kv in need)
                 if (a.BookCount(kv.Key) < kv.Value) throw new InvalidOperationException($"not enough '{kv.Key}' books ({a.BookCount(kv.Key)} < {kv.Value})");
 
-            var run = TrainingRun.Start(c, speciesId, RunSeed(a.Seed, a.RunsStarted), books, Modifiers(c, a));
+            var run = TrainingRun.Start(c, speciesId, RunSeed(a.Seed, a.RunsStarted), books, Modifiers(c, a, off));
             foreach (var kv in need) AddBooks(a, kv.Key, -kv.Value);
+            a.TalentsOff = off;
             a.RunsStarted++;
             a.Active = run;
             a.Vendor = null;   // unbought offers from the last run are gone (specs/18 section 4)
@@ -376,6 +383,74 @@ namespace IdleRng.Sim.Account
             return price;
         }
 
+        // ------------------------------------------------------------------ talent loadout (specs/18 section 4, issue #106)
+
+        /// <summary>Whether the talent's tier takes a legendary slot (vendor_rarities.legendary_slot).</summary>
+        public static bool TakesLegendarySlot(ContentDb c, TalentDef t)
+        {
+            foreach (var r in c.VendorRarities) if (r.Id == t.Rarity) return r.LegendarySlot;
+            return false;
+        }
+
+        /// <summary>
+        /// The loadout the next run starts with unless the player changes it: the account's last loadout (<see
+        /// cref="AccountState.TalentsOff"/>; a talent bought since is on), with any owned legendary-slot talents beyond
+        /// LEGENDARY_SLOTS switched off, the first in content order keeping the slots (agent). Talent ids in content order.
+        /// </summary>
+        public static List<string> DefaultLoadout(ContentDb c, AccountState a)
+        {
+            var saved = a.TalentsOff ?? new List<string>();
+            var off = new List<string>();
+            int used = 0;
+            foreach (var t in c.TalentList)
+            {
+                bool isOff = saved.Contains(t.Id);
+                if (!isOff && a.TalentRank(t.Id) > 0 && TakesLegendarySlot(c, t))
+                {
+                    if (used < c.Constants.LegendarySlots) used++;
+                    else isOff = true;
+                }
+                if (isOff) off.Add(t.Id);
+            }
+            return off;
+        }
+
+        /// <summary>
+        /// A loadout the player asked for, in content order without duplicates: refused (throws) for an unknown talent id or when
+        /// more owned legendary-slot talents are left on than LEGENDARY_SLOTS. Switching off a talent not owned is allowed and
+        /// changes nothing.
+        /// </summary>
+        public static List<string> CheckLoadout(ContentDb c, AccountState a, IEnumerable<string> talentsOff)
+        {
+            var asked = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var id in talentsOff)
+            {
+                if (id == null || !c.Talents.ContainsKey(id)) throw new ArgumentException($"unknown talent '{id}'", nameof(talentsOff));
+                asked.Add(id);
+            }
+            var off = new List<string>();
+            int legendaries = 0;
+            foreach (var t in c.TalentList)
+            {
+                if (asked.Contains(t.Id)) off.Add(t.Id);
+                else if (a.TalentRank(t.Id) > 0 && TakesLegendarySlot(c, t)) legendaries++;
+            }
+            if (legendaries > c.Constants.LegendarySlots)
+                throw new InvalidOperationException($"{legendaries} legendary talents are on, but a run has {c.Constants.LegendarySlots} legendary slot{(c.Constants.LegendarySlots == 1 ? "" : "s")}");
+            return off;
+        }
+
+        /// <summary>
+        /// Save the loadout the next run starts with (the species pick's talent toggles): checked as <see cref="CheckLoadout"/>
+        /// does. Free, allowed at any time; a run in progress keeps the bonuses it started with.
+        /// </summary>
+        public static void SetLoadout(ContentDb c, AccountState a, IEnumerable<string> talentsOff)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            if (talentsOff == null) throw new ArgumentNullException(nameof(talentsOff));
+            a.TalentsOff = CheckLoadout(c, a, talentsOff);
+        }
+
         /// <summary>Lowest milestone threshold multiplier talents can sum to (agent: keeps a stack of Early Bloom talents sane).</summary>
         public const double MinMilestoneMult = 0.1;
 
@@ -385,13 +460,16 @@ namespace IdleRng.Sim.Account
         /// Early Bloom's threshold multiplier at least MinMilestoneMult).
         /// </summary>
 
-        public static RunModifiers Modifiers(ContentDb c, AccountState a)
+        public static RunModifiers Modifiers(ContentDb c, AccountState a) => Modifiers(c, a, DefaultLoadout(c, a));
+
+        /// <summary>The run bonuses of the talents left on by the loadout <paramref name="talentsOff"/> (issue #106).</summary>
+        public static RunModifiers Modifiers(ContentDb c, AccountState a, ICollection<string> talentsOff)
         {
             var m = new RunModifiers { ChaseChance = c.Constants.ChaseBaseChance };
             foreach (var t in c.TalentList)
             {
                 int rank = a.TalentRank(t.Id);
-                if (rank == 0) continue;
+                if (rank == 0 || (talentsOff != null && talentsOff.Contains(t.Id))) continue;
                 double v = t.PerRank * rank;
                 switch (t.Effect)
                 {

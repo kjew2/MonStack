@@ -84,7 +84,7 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void BookGatedChaseTree_NeedsItsBookTree()
         {
-            // Arcane Overflow (content 4.9, issue #111): Tome of Echoes node 0, Mind Warp node 4, 2 crits.
+            // Arcane Overflow (content 4.10, issue #111): Tome of Echoes node 0, Mind Warp node 4, 2 crits.
             var s = TrainingRun.Start(Db, "sprite", 7, new[] { "book_echoes" });
             s.Tally.Crits = 2;
             Assert.That(s.Slots[1].TreeId, Is.EqualTo("mind_warp"));

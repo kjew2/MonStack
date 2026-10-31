@@ -257,6 +257,25 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void V6Save_MigratesToV7_EveryTalentOn_AndTheLoadoutRoundTrips()
+        {
+            var db = TestContent.Db;
+            var a = SealedOnce();
+            a.TalentsOff.Add(db.TalentList[1].Id);
+            var b = AccountSave.Decode(db, AccountSave.Encode(a));
+            Assert.That(b.TalentsOff, Is.EqualTo(new[] { db.TalentList[1].Id }), "the loadout round-trips");
+
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 6;
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct["SchemaVersion"] = 6;
+            acct.Remove("TalentsOff");
+            var c = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()));
+            Assert.That(c.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(c.TalentsOff, Is.Empty, "a v6 account had every talent on");
+        }
+
+        [Test]
         public void TowerProgress_RoundTrips()
         {
             var db = TestContent.Db;
