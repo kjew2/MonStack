@@ -29,7 +29,7 @@ Order follows `specs/13` section 6. Each phase gets its own spec before building
 |---|---|---|---|---|
 | R1.1 | **Done.** **T8 gauntlet wheel screen and Legacy Titles** in the web client (engine done, `specs/19`). Also expose the gauntlet fields in the bridge. | Feature | S-M | #72 |
 | R1.3 | **First-time experience, rewritten for the trainer**: guided first run, real strings (species, trees, nodes), settings, accessibility basics, localisation decision. The existing issue is written for the idle game. | Feature | M | #48 (**re-scope**) |
-| R1.5 | **Content depth for runs**: more species, native and generic trees, chase trees, books and talents beyond the placeholders; the long-term loop for a day-45 player. Numbers stay placeholders until balance resumes. | Feature | L | #51 (**re-scope**: its stage-walls, gear bag and prestige scope is the idle game; keep the endgame and live-ops-calendar questions) |
+| R1.5 | **Content depth for runs**: more species, native and generic trees, chase trees, books and talents beyond the placeholders; the long-term loop for a day-45 player. Numbers stay placeholders until balance resumes. | Feature | L | #51 (**re-scope**: its stage-walls, gear bag and prestige scope is the idle game; keep the endgame and live-ops-calendar questions); #110 higher-tier trees spike (`specs/22`), #111 chase capstone reachability |
 | R1.6 | **T11 Endless Tower** (4v4, mutators, gambit rulebook editor on a phone). | Feature | L | #75 |
 | R1.7 | **Art and visual identity**: the largest launch gap and the longest lead time, so start the decisions early and run in parallel. Hero portraits become monster art; stage backgrounds become battle and tower backdrops. | Feature | L | #45 (**re-scope**) |
 | R1.8 | **Audio and game feel**: music, SFX, haptics, volume settings. | Feature | M | #46 (**re-scope**: gacha and boss cues map to pulls, rank fights and gauntlet) |
@@ -84,6 +84,7 @@ Candidates for new issues if kj agrees; none is filed.
 | #29 | R3.2 | #73 | R0.5 |
 | #74 | R0.6 | #75 | R1.6 |
 | #76 | R2.1 | #77 | R2.2, R1.9 |
+| #110 | R1.5 | #111 | R1.5 |
 
 ## Suggested triage changes
 

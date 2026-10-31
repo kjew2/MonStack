@@ -23,6 +23,7 @@ The design is `specs/12`; the plan and what is built is `specs/13`. Start with `
 | `specs/19-gauntlet.md` | End-of-run gauntlet: 100 escalating floors, the floor and killer the wheel lands on, Legacy Titles |
 | `specs/21-daily-tower.md` | Daily Tower (T10): daily 4v1 boss floors with a Vault team, entropy gauge, boss phases, environmental clock, shard and Skill Book rewards |
 | `specs/20-roadmap.md` | Proposed roadmap: fixes, features and tech by priority, every open issue mapped |
+| `specs/22-spike-higher-tier-trees.md` | Spike report (#110): skill trees and capstones for higher-tier creatures, measurements of capstone reach, a mechanics catalogue (games and anime) and questions for kj |
 
 Checks: `./check.sh` runs every check in the repo (`--fast` for the inner loop, `--no-dotnet` without the .NET SDK). CI (`.github/workflows/check.yml`) runs the full `./check.sh` on every pull request and push to `main`. Agent rules live in `CLAUDE.md`.
 
