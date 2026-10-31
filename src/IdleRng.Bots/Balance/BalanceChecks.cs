@@ -69,6 +69,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>books: bringing every book lowers no cell's mean rank by more than this (a canary for broken books).</summary>
         public const double MaxBookGradeDrop = 1.5;
 
+        /// <summary>
+        /// capstone-ladder (kj, 2026-10-31, specs/15 section 5.5): under focus, every species' book-gated chase capstone adds more
+        /// gauntlet floors than its in-run one (the book chase is the rarest and strongest).
+        /// </summary>
+        public const double MinBookOverRunGain = 0;
+
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
         public static List<CheckResult> Evaluate(BalanceReport r)
@@ -90,6 +96,8 @@ namespace IdleRng.Bots.Balance
                 GauntletProgress(r),
                 Max("gauntlet-not-solved", $"no cell clears the gauntlet in > {Pct(MaxGauntletClearRate)} of runs",
                     r.Cells, c => c.GauntletClearRate, Cell, MaxGauntletClearRate, strict: false, none: "no cells"),
+                Min("capstone-ladder", $"under {FocusPolicy}, every species' book chase tree adds more gauntlet floors than its in-run one",
+                    focus, c => c.CapstoneGainBook.Mean - c.CapstoneGainRun.Mean, c => c.Species, MinBookOverRunGain, strict: true, none: $"no {FocusPolicy} cells"),
             };
             var team = FocusTeam(r);
             string noTeam = !r.Options.Tower ? "tower not run (--no-tower)" : $"no full {FocusPolicy} team (needs {FocusPolicy} and at least two species)";

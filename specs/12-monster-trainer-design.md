@@ -126,7 +126,9 @@ Third round (kj, 2026-10-31, creature spike `specs/24` section 6):
 - **Species follow their concepts:** slime, drake and sprite are named **Coremote**, **Bastion Drake** and **Mirage Moth** (ids unchanged) and drawn from hand-made pixel art.
 - **Apex forms:** buying a chase tree's capstone changes the monster's look and name (`specs/15` section 5.3).
 - **Two new species:** the **Mandrake** (nature) and the **Shade Hound** (dark), unlocked from achievements (`specs/24` section 5.1, `specs/18` section 8; content 4.2).
-- **Fusing pairs:** *Pyromancy* + *Codex of Tides*, *Heavy Armor* + *Bulwark*, *Mind Warp* + *Nimble Feet*, *Fortune* + *Spellcraft* (`specs/24` section 5.2). How fusion works is not decided yet.
+- **Fusing pairs:** *Pyromancy* + *Codex of Tides*, *Heavy Armor* + *Bulwark*, *Mind Warp* + *Nimble Feet*, *Fortune* + *Spellcraft* (`specs/24` section 5.2). How fusion works: fourth round below; not built yet.
+
+Fourth round (kj, 2026-10-31): **the book chase tree is the rarest and the strongest.** Power ladder, weakest first: ordinary tree capstone, fusion capstone (+3 to +5 gauntlet floors), in-run chase tree (+5 to +8), book chase tree (+10 to +15). Fusion is offered when both trees of a fusing pair are maxed: the fused tree replaces both, which frees a slot, and has its own duo capstone and fused look. Rules and measurement: `specs/15` section 5.5.
 
 ### 5.3 Chase trees
 

@@ -162,15 +162,15 @@ book.book_echoes.name,Skill Book: Tome of Echoes
 book.book_tides.name,Skill Book: Codex of Tides
 book.book_embers.name,Skill Book: Ember Codex
 rule.counter_mitigated.name,Mitigation Counter
-rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for the damage DEF mitigated (true damage).
+rule.counter_mitigated.desc,After surviving a single-target physical hit it counterattacks at once for {MON_COUNTER_MULT:pct} of the damage DEF mitigated (true damage).
 rule.echo_cast.name,Echo Cast
-rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power."
+rule.echo_cast.desc,"Every active damage, heal or shield skill is cast a second time at once, at {MON_ECHO_POWER:pct} power. Its mirror twin takes the first {MON_ECHO_DECOYS} hit(s) aimed at it each fight."
 rule.tidal_overflow.name,Tidal Overflow
 rule.tidal_overflow.desc,"Heals {MON_TIDE_REGEN:pct} of max HP at the start of each of its actions. Healing beyond max HP becomes a shield, up to {MON_TIDE_SHIELD_CAP:pct} of max HP."
 rule.abyssal_drain.name,Abyssal Drain
-rule.abyssal_drain.desc,Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt.
+rule.abyssal_drain.desc,"Every hit it lands heals it for {MON_DRAIN_FRAC:pct} of the damage dealt. Draining beyond max HP becomes a shield, up to {MON_DRAIN_SHIELD_CAP:pct} of max HP."
 rule.fire_pierce.name,Unquenchable Flame
-rule.fire_pierce.desc,Its fire damage ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element.
+rule.fire_pierce.desc,"Its fire damage is {MON_FIRE_BONUS:pct} stronger, ignores {MON_FIRE_PIERCE:pct} of the target's DEF or WIS and is never resisted by the target's element."
 rule.double_turn_start.name,Starlit Haste
 rule.double_turn_start.desc,Acts twice in a row on each of its first {MON_DOUBLE_TURNS} turn(s) of a fight.
 talent.frugal_drills.name,Frugal Drills
@@ -400,8 +400,8 @@ mskill.devour.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown
 rule.root_rebirth.name,Root Rebirth
 rule.root_rebirth.desc,"Once per fight, a blow that would fell it leaves it standing at {MON_REBIRTH_HEAL:pct} of max HP instead."
 rule.wail_stagger.name,Uprooting Scream
-rule.wail_stagger.desc,Every hit it lands pushes the target's next turn back by {MON_WAIL_STAGGER:pct} of a turn.
+rule.wail_stagger.desc,"Each of its actions pushes every enemy's next turn back by {MON_WAIL_STAGGER:pct} of a turn and withers it for {MON_WAIL_WITHER:pct} of its max HP (true damage)."
 rule.umbral_veil.name,Umbral Veil
-rule.umbral_veil.desc,"It can evade spells as well as physical hits, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
+rule.umbral_veil.desc,"It can evade spells as well as physical hits, gains {MON_VEIL_EVADE_BONUS:pct} evade chance, and its evade chance caps at {MON_VEIL_EVADE_CAP:pct} instead of {MON_EVADE_CAP:pct}."
 rule.night_feast.name,Night Feast
-rule.night_feast.desc,"Every hit it lands adds {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."
+rule.night_feast.desc,"It starts every fight with {MON_FEAST_START:pct} more damage. Every hit it lands adds {MON_FEAST_DMG:pct} more damage and {MON_FEAST_STR:pct} of its base STR for the rest of the fight, with no limit."

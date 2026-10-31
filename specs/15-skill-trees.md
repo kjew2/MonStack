@@ -125,6 +125,20 @@ A monster that owns a chase tree's capstone takes that tree's **apex form**: the
 | *Umbral Veil* | Grave Shuck |
 | *Night Feast* | Eclipse Hound |
 
+### 5.5 Power ladder (kj, 2026-10-31)
+
+Where each kind of capstone lands, weakest and commonest first. **The book-gated chase tree is the rarest and the strongest** (kj): it needs an uber rare Skill Book (`specs/21` section 5).
+
+| Tier | How it is reached | Target: gauntlet floors the whole tree adds |
+|---|---|---|
+| Ordinary tree capstone | max any native or generic tree | (no target) |
+| Fusion capstone | max both trees of a fusing pair (`specs/12` section 5.2.1) | +3 to +5 (not built yet) |
+| In-run chase tree | attunement roll plus its conditions (section 5.4) | +5 to +8 |
+| Book chase tree | the species' own Skill Book plus its conditions | +10 to +15 |
+
+- **Measured** by the `balance` report's chase power section (`specs/09` section 7): each run's monster with its chase trees taken out, then with one chase tree bought in full on top, up the gauntlet on the same seed. The targets hold for each species averaged over the `focus`, `hoarder`, `balanced` and `chaser` policies; single cells may stray. The `capstone-ladder` sanity check WARNs when a species' book chase tree does not beat its in-run one under `focus`.
+- **Retune at content 4.4 (agent, to kj's targets):** in-run trees add 5.6-7.7 floors and book trees 10.8-12.0. Survival dominates the gauntlet (a focus-trained monster dies in one or two hits), so three book capstones gained a second part to reach the band: *Arcane Overflow*'s mirror twin takes the first hits (`MON_ECHO_DECOYS`), *Mandragora Scream* works on every action and withers (`MON_WAIL_WITHER`), *Night Feast* starts fed and feeds damage, not only STR (`MON_FEAST_START`, `MON_FEAST_DMG`); *Abyssal Bloom*'s overheal becomes shield (`MON_DRAIN_SHIELD_CAP`). Rules: `specs/16` section 6.2.
+
 ## 6. Run tally
 
 The run adds up the monster's battle tallies (`specs/16` section 6.3) across its rank fights: damage dealt, evades, crits, kills and damage per element. `wins` is the rank fights won. These feed `tally_at_least` conditions, the drafts' "deal X fire damage" style playstyle conditions (`specs/12` section 5.5).

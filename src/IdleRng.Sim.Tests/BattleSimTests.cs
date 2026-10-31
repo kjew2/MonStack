@@ -436,7 +436,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(hit.Amount, Is.EqualTo(raw * r.DefK / (r.DefK + 900)).Within(1e-9));
             Assert.That(counter.Actor, Is.EqualTo("knight"));
             Assert.That(counter.Target, Is.EqualTo("a"));
-            Assert.That(counter.Amount, Is.EqualTo(raw - hit.Amount).Within(1e-9));
+            Assert.That(counter.Amount, Is.EqualTo((raw - hit.Amount) * r.CounterMult).Within(1e-9), "MON_COUNTER_MULT times what DEF stopped");
             Assert.That(s.Units[1].Tally.Counters, Is.EqualTo(1));
         }
 
@@ -551,30 +551,33 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void WailStagger_PushesTheTargetsTurnBack()
+        public void WailStagger_EachActionDelaysAndWithersEveryEnemy()
         {
             var r = Rules;
             Assert.That(r.WailStagger, Is.GreaterThan(0));
-            var s = BattleSim.Start(r, Side(With(Attacker(), RuleModifiers.WailStagger)), Side(Mon("b", 999, null, x => x.Spd = 10)));
+            Assert.That(r.WailWither, Is.GreaterThan(0));
+            var s = BattleSim.Start(r, Side(With(Harmless("a", 900), RuleModifiers.WailStagger)),
+                Side(Mon("b", 999, null, x => x.Spd = 10), Mon("c", 999, null, x => x.Spd = 10)));
             var b = s.Units[1];
-            b.Gauge = r.GaugeSize * 0.6;
-            double atHit = -1;
+            var c = s.Units[2];
             var log = new List<FightAction>();
+            double bAt = 0, cAt = 0;
             while (s.Outcome == FightOutcome.Ongoing && !log.Any(x => x.Event == FightAction.StaggerEvent))
-                BattleSim.Step(r, s, new Fixed(0.99), x => { if (x.Actor == "a" && x.Event == null) atHit = b.Gauge; log.Add(x); });
-            var ev = log.Single(x => x.Event == FightAction.StaggerEvent);
-            Assert.That((ev.Actor, ev.Target), Is.EqualTo(("a", "b")));
-            Assert.That(ev.Amount, Is.EqualTo(r.WailStagger * r.GaugeSize).Within(1e-9));
-            Assert.That(b.Gauge, Is.EqualTo(atHit - ev.Amount).Within(1e-9));
-
-            // never below an empty gauge
-            var low = BattleSim.Start(r, Side(With(Attacker(), RuleModifiers.WailStagger)), Side(Mon("b", 999, null, x => x.Spd = 10)));
-            var lb = low.Units[1];
-            var ll = new List<FightAction>();
-            while (low.Outcome == FightOutcome.Ongoing && !ll.Any(x => x.Event == FightAction.StaggerEvent))
-                BattleSim.Step(r, low, new Fixed(0.99), x => { if (x.Actor == "a" && x.Event == null) { lb.Gauge = r.GaugeSize * r.WailStagger / 2; atHit = lb.Gauge; } ll.Add(x); });
-            Assert.That(ll.Single(x => x.Event == FightAction.StaggerEvent).Amount, Is.EqualTo(atHit).Within(1e-9), "it takes only what is there");
-            Assert.That(lb.Gauge, Is.EqualTo(0));
+            {
+                b.Gauge = r.GaugeSize * 0.9;
+                c.Gauge = r.GaugeSize * r.WailStagger / 2;
+                double fill = BattleSim.GaugeFill(r, b.Source.Stats.Spd);
+                bAt = b.Gauge + fill;
+                cAt = c.Gauge + fill;
+                BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            }
+            var evs = log.Where(x => x.Event == FightAction.StaggerEvent).ToList();
+            Assert.That(evs.Select(x => (x.Actor, x.Target)), Is.EqualTo(new[] { ("a", "b"), ("a", "c") }), "every enemy, at the start of its action");
+            foreach (var e in evs) Assert.That(e.Amount, Is.EqualTo(r.WailWither * b.MaxHp).Within(1e-9), "true damage, a share of max HP");
+            Assert.That(b.Gauge, Is.EqualTo(bAt - r.WailStagger * r.GaugeSize).Within(1e-9));
+            Assert.That(c.Gauge, Is.EqualTo(0), "never below an empty gauge");
+            Assert.That(cAt, Is.LessThan(r.WailStagger * r.GaugeSize));
+            Assert.That(b.Hp, Is.EqualTo(b.MaxHp * (1 - r.WailWither)).Within(1e-9));
         }
 
         [Test]
@@ -597,21 +600,44 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void NightFeast_EachHitAddsStrForTheFight()
+        public void NightFeast_StartsFed_AndEachHitAddsStrAndDamage()
         {
             var r = Rules;
-            Assert.That(r.FeastStr, Is.GreaterThan(0));
+            Assert.That(r.FeastStr + r.FeastDmg, Is.GreaterThan(0));
             var s = BattleSim.Start(r, Side(With(Attacker(), RuleModifiers.NightFeast)), Side(Mon("b", 9999, null, x => x.Spd = 10)));
             var a = s.Units[0];
+            Assert.That(a.FeastDmgBonus, Is.EqualTo(r.FeastStart), "it starts every fight already fed");
             var log = new List<FightAction>();
             string h0 = BattleSim.StateHash(s);
             while (s.Outcome == FightOutcome.Ongoing && log.Count(x => x.Event == FightAction.FeastEvent) < 3) BattleSim.Step(r, s, new Fixed(0.99), log.Add);
             var feasts = log.Where(x => x.Event == FightAction.FeastEvent).ToList();
-            for (int i = 0; i < 3; i++) Assert.That(feasts[i].Amount, Is.EqualTo((i + 1) * r.FeastStr).Within(1e-9), "stacks without a cap");
+            for (int i = 0; i < 3; i++)
+                Assert.That(feasts[i].Amount, Is.EqualTo((i + 1) * r.FeastStr + r.FeastStart + (i + 1) * r.FeastDmg).Within(1e-9), "stacks without a cap");
             Assert.That(BattleSim.Eff(r, a, StatIds.Str), Is.EqualTo(300 * (1 + 3 * r.FeastStr)).Within(1e-9));
             var hits = log.Where(x => x.Actor == "a" && x.Event == null).ToList();
             Assert.That(hits[1].Amount, Is.GreaterThan(hits[0].Amount), "the next hit is stronger");
             Assert.That(BattleSim.StateHash(s), Is.Not.EqualTo(h0));
+
+            double plain = OneHit(Attacker(), Mon("b", 300), 0.99);
+            Assert.That(OneHit(With(Attacker(), RuleModifiers.NightFeast), Mon("b", 300), 0.99), Is.EqualTo(plain * (1 + r.FeastStart)).Within(1e-9),
+                "the first hit already carries the opening bonus");
+        }
+
+        [Test]
+        public void EchoCast_MirrorTwinTakesTheFirstHits()
+        {
+            var r = Rules;
+            Assert.That(r.EchoDecoys, Is.GreaterThan(0));
+            var s = BattleSim.Start(r, Side(Attacker()), Side(With(Harmless("b", 10), RuleModifiers.EchoCast)));
+            var b = s.Units[1];
+            var log = new List<FightAction>();
+            while (s.Outcome == FightOutcome.Ongoing && log.Count(x => x.Actor == "a" && x.Event == null) < r.EchoDecoys + 1)
+                BattleSim.Step(r, s, new Fixed(0.99), log.Add);
+            var hits = log.Where(x => x.Actor == "a" && x.Event == null).ToList();
+            for (int i = 0; i < r.EchoDecoys; i++) Assert.That((hits[i].Evaded, hits[i].Amount), Is.EqualTo((true, 0.0)), "the twin takes it");
+            Assert.That(hits[r.EchoDecoys].Evaded, Is.False, "then the hits land");
+            Assert.That(log.Count(x => x.Event == FightAction.DecoyEvent), Is.EqualTo(r.EchoDecoys));
+            Assert.That(b.DecoysLeft, Is.EqualTo(0));
         }
 
         [Test]
@@ -624,10 +650,10 @@ namespace IdleRng.Sim.Tests
             double plain = OneHit(Attacker("fire"), Mon("b", 300, "water", x => x.Def = 600), 0.99);
             Assert.That(plain, Is.EqualTo(raw * r.ElementWeakMult * r.DefK / (r.DefK + 600)).Within(1e-9));
             double pierced = OneHit(With(Attacker("fire"), RuleModifiers.FirePierce), Mon("b", 300, "water", x => x.Def = 600), 0.99);
-            Assert.That(pierced, Is.EqualTo(raw * r.DefK / (r.DefK + 600 * (1 - r.FirePierce))).Within(1e-9));
+            Assert.That(pierced, Is.EqualTo(raw * (1 + r.FireBonus) * r.DefK / (r.DefK + 600 * (1 - r.FirePierce))).Within(1e-9));
             // an element strong against the target is kept
             double strong = OneHit(With(Attacker("fire"), RuleModifiers.FirePierce), Mon("b", 300, "nature", x => x.Def = 600), 0.99);
-            Assert.That(strong, Is.EqualTo(raw * r.ElementStrongMult * r.DefK / (r.DefK + 600 * (1 - r.FirePierce))).Within(1e-9));
+            Assert.That(strong, Is.EqualTo(raw * r.ElementStrongMult * (1 + r.FireBonus) * r.DefK / (r.DefK + 600 * (1 - r.FirePierce))).Within(1e-9));
             // other elements are not pierced
             double water = OneHit(Attacker("water"), Mon("b", 300, "light", x => x.Def = 600), 0.99);
             Assert.That(OneHit(With(Attacker("water"), RuleModifiers.FirePierce), Mon("b", 300, "light", x => x.Def = 600), 0.99),

@@ -115,6 +115,12 @@ namespace IdleRng.Sim.Combat
         /// <summary>night_feast: the STR bonus (a fraction of base) the unit has gained from its hits this fight.</summary>
         public double FeastBonus { get; set; }
 
+        /// <summary>night_feast: the damage-dealt bonus the unit has gained from its hits this fight.</summary>
+        public double FeastDmgBonus { get; set; }
+
+        /// <summary>echo_cast: hits its mirror twin still takes for it this fight.</summary>
+        public int DecoysLeft { get; set; }
+
         public FightUnit Clone()
         {
             var c = (FightUnit)MemberwiseClone();
@@ -195,10 +201,12 @@ namespace IdleRng.Sim.Combat
         public const string DoubleTurnEvent = RulePrefix + RuleModifiers.DoubleTurnStart;
         /// <summary>root_rebirth: the unit survived a killing blow; Amount is the HP it came back with.</summary>
         public const string RebirthEvent = RulePrefix + RuleModifiers.RootRebirth;
-        /// <summary>wail_stagger after a hit: Target lost Amount of ATB gauge.</summary>
+        /// <summary>wail_stagger at the start of the unit's action, one per enemy: Target lost gauge and took Amount true damage.</summary>
         public const string StaggerEvent = RulePrefix + RuleModifiers.WailStagger;
-        /// <summary>night_feast after a hit: Amount is the unit's STR bonus now (a fraction of base).</summary>
+        /// <summary>night_feast after a hit: Amount is the unit's STR bonus plus damage-dealt bonus now.</summary>
         public const string FeastEvent = RulePrefix + RuleModifiers.NightFeast;
+        /// <summary>echo_cast's mirror twin took a hit for the unit (logged after the evaded hit); Amount is the decoys left.</summary>
+        public const string DecoyEvent = RulePrefix + RuleModifiers.EchoCast;
 
         /// <summary>
         /// Null for an ordinary action. Otherwise a rule modifier's event ("rule:&lt;id&gt;": <see cref="TideEvent"/>,

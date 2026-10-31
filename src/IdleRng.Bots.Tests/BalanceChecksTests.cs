@@ -16,12 +16,13 @@ namespace IdleRng.Bots.Tests
         /// <summary>n runs of one cell, all alike.</summary>
         static CellSummary Cell(string species, string policy, int rank, int n = 10, int won = 3, int rests = 2, RunEnd end = RunEnd.Completed,
                                 int cycles = 12, int floor = 30, bool cleared = false,
-                                int injuries = 0, int satOut = 0) =>
+                                int injuries = 0, int satOut = 0, int runGain = 6, int bookGain = 12) =>
             CellSummary.From(species, policy, Ranks.Length, Enumerable.Range(0, n).Select(_ => new RunSample
             {
                 Species = species, Policy = policy, RankIndex = rank, End = end, Cycles = cycles, FightsFought = 12, FightsWon = won,
                 Injuries = injuries, CyclesLost = satOut,
                 Rests = rests, GauntletFloor = cleared ? 101 : floor, GauntletCleared = cleared, GauntletKiller = cleared ? null : "golem",
+                CapstoneBaseFloor = floor, CapstoneRunFloor = floor + runGain, CapstoneBookFloor = floor + bookGain,
             }).ToList());
 
         static TowerSummary Team(string policy, string team, int floors, int n = 10) =>
@@ -55,10 +56,22 @@ namespace IdleRng.Bots.Tests
             Assert.That(checks.Select(k => k.Id), Is.EqualTo(new[]
             {
                 "progress-fights", "progress-grade", "not-all-s", "policy-matters", "injury-resting", "injury-total",
-                "gauntlet-progress", "gauntlet-not-solved", "tower-reachable", "tower-not-solved", "books",
+                "gauntlet-progress", "gauntlet-not-solved", "capstone-ladder", "tower-reachable", "tower-not-solved", "books",
             }));
             Assert.That(checks.Where(k => k.Status != CheckStatus.Pass).Select(k => k.Id + " " + k.Detail), Is.Empty);
             Assert.That(BalanceChecks.ExitCode(checks, strict: true), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void CapstoneLadder_WarnsWhenABookChaseTreeIsNotAboveTheInRunOne()
+        {
+            var r = Healthy();
+            Assert.That(Get(r, "capstone-ladder").Status, Is.EqualTo(CheckStatus.Pass));
+            Replace(r.Cells, Cell("b", "focus", 2, runGain: 8, bookGain: 8));
+            var k = Get(r, "capstone-ladder");
+            Assert.That((k.Status, k.Value, k.Detail), Is.EqualTo((CheckStatus.Warn, 0.0, "lowest: b")), "equal is not above (kj: the book chase is the strongest)");
+            Replace(r.Cells, Cell("b", "balanced", 1, runGain: 9, bookGain: 1));
+            Assert.That(Get(r, "capstone-ladder").Value, Is.EqualTo(0.0), "only focus cells count");
         }
 
         [Test]

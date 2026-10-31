@@ -108,16 +108,16 @@ Behaviour a table row cannot express is coded once and referenced by id from con
 
 | Id | Effect |
 |---|---|
-| `counter_mitigated` | After taking a single-target physical hit and surviving, counterattack the attacker at once for the damage DEF mitigated, as true damage (no evade, crit, element or mitigation; shields still absorb), regardless of gauge. The drafts' *Heavy Armor* + *Unbreakable Will* passive (`specs/12` section 5.3); the *Unbreakable Will* chase capstone. |
-| `echo_cast` | Every active damage, heal or shield skill the unit uses is cast again at once, at `MON_ECHO_POWER` of its power, within the same action. Passives, triggered effects and basic attacks do not echo. The *Arcane Overflow* chase capstone (`specs/15`). |
+| `counter_mitigated` | After taking a single-target physical hit and surviving, counterattack the attacker at once for `MON_COUNTER_MULT` times the damage DEF mitigated, as true damage (no evade, crit, element or mitigation; shields still absorb), regardless of gauge. The drafts' *Heavy Armor* + *Unbreakable Will* passive (`specs/12` section 5.3); the *Unbreakable Will* chase capstone. |
+| `echo_cast` | Every active damage, heal or shield skill the unit uses is cast again at once, at `MON_ECHO_POWER` of its power, within the same action. Passives, triggered effects and basic attacks do not echo. Its mirror twin also takes the first `MON_ECHO_DECOYS` hits aimed at it each fight (any hit, physical or magical: the hit is logged as evaded, then `rule:echo_cast` with the decoys left; hashed only for units with the rule). The *Arcane Overflow* chase capstone (`specs/15`). |
 | `tidal_overflow` | At the start of each of its actions (before its `OnAction` triggers) the unit heals `MON_TIDE_REGEN` of its max HP. Any healing it receives beyond max HP (this regeneration, heal skills, `abyssal_drain`) becomes shield, up to `MON_TIDE_SHIELD_CAP` of its max HP; the shield is the unit's one shield pool, so a timed shield's expiry clears it too and a bigger skill shield is not cut down. Only HP counts as healing done. Corruption scales the regeneration like any heal. Logged as the event `rule:tidal_overflow`. The *Living Ocean* chase capstone. |
-| `abyssal_drain` | Each hit the unit lands (skills, basic attacks, triggered damage) heals it for `MON_DRAIN_FRAC` of the HP damage the hit dealt (after shields), right after the hit and before the target's `OnHitTaken` triggers. Counters, channel strikes and other true damage do not drain. Logged as `rule:abyssal_drain`. The *Abyssal Bloom* chase capstone. |
-| `fire_pierce` | The unit's `fire` damage ignores `MON_FIRE_PIERCE` of the target's DEF or WIS and is never resisted: the element multiplier is at least 1 (a strong matchup still counts). The *Inferno Sovereign* chase capstone. |
+| `abyssal_drain` | Each hit the unit lands (skills, basic attacks, triggered damage) heals it for `MON_DRAIN_FRAC` of the HP damage the hit dealt (after shields; may be above 1), right after the hit and before the target's `OnHitTaken` triggers. Draining beyond max HP becomes shield up to `MON_DRAIN_SHIELD_CAP` of max HP (the larger of that and `tidal_overflow`'s cap when the unit has both). Counters, channel strikes and other true damage do not drain. Logged as `rule:abyssal_drain`. The *Abyssal Bloom* chase capstone. |
+| `fire_pierce` | The unit's `fire` damage is multiplied by 1 + `MON_FIRE_BONUS`, ignores `MON_FIRE_PIERCE` of the target's DEF or WIS and is never resisted: the element multiplier is at least 1 (a strong matchup still counts). The *Inferno Sovereign* chase capstone. |
 | `double_turn_start` | Each of the unit's first `MON_DOUBLE_TURNS` actions of the fight is followed at once by an extra full action (cooldowns tick, `OnAction` triggers fire, the AI picks again) without spending gauge. Logged as `rule:double_turn_start` before the extra action. The *Starlit Ascension* chase capstone. |
 | `root_rebirth` | Once per fight, damage from another unit (a hit, a counter or a channel strike; not its own entropy recoil) that would bring the unit to 0 HP leaves it at `MON_REBIRTH_HEAL` of its max HP instead; no kill is counted. Logged as `rule:root_rebirth` after the action that triggered it, with the HP it came back with. Its remaining rebirth is hashed only for units that carry the rule. The *World Root* chase capstone (Mandrake). |
-| `wail_stagger` | Each hit the unit lands that deals HP or shield damage takes `MON_WAIL_STAGGER` of a full ATB gauge from a living target (never below 0), pushing its next turn back. Logged as `rule:wail_stagger` with the gauge taken. The *Mandragora Scream* chase capstone (Mandrake). |
-| `umbral_veil` | The unit's evade roll also applies to magical hits, and its evade chance is capped at `MON_VEIL_EVADE_CAP` instead of `MON_EVADE_CAP`. The *Umbral Veil* chase capstone (Shade Hound). |
-| `night_feast` | Each hit the unit lands that deals damage adds `MON_FEAST_STR` of its base STR for the rest of the fight, with no cap (it counts like a permanent effect, outside `EFFECT_STACK_CAP`). Logged as `rule:night_feast` with the bonus so far; hashed only for units that carry the rule. The *Night Feast* chase capstone (Shade Hound). |
+| `wail_stagger` | At the start of each of the unit's actions (before its `OnAction` triggers), every living enemy loses `MON_WAIL_STAGGER` of a full ATB gauge (never below 0) and takes `MON_WAIL_WITHER` of its own max HP as true damage. Logged as `rule:wail_stagger` per enemy with the damage dealt. The *Mandragora Scream* chase capstone (Mandrake). |
+| `umbral_veil` | The unit's evade roll also applies to magical hits, gains `MON_VEIL_EVADE_BONUS` evade chance, and its evade chance is capped at `MON_VEIL_EVADE_CAP` instead of `MON_EVADE_CAP`. The *Umbral Veil* chase capstone (Shade Hound). |
+| `night_feast` | The unit starts every fight with `MON_FEAST_START` damage dealt (like a `dmg_dealt` effect), and each hit it lands that deals damage adds `MON_FEAST_DMG` more damage dealt and `MON_FEAST_STR` of its base STR for the rest of the fight, with no cap (they count like permanent effects, outside `EFFECT_STACK_CAP`). Logged as `rule:night_feast` with the STR plus damage bonus so far; hashed only for units that carry the rule. The *Night Feast* chase capstone (Shade Hound). |
 | `entropy_convert` | Tower fights only (`specs/21` section 3.1): instead of venting its entropy gauge, the unit gains a shield. Inert in other fights. |
 
 The entropy gauge, boss phases and the environmental clock (`specs/12` section 8.3, `specs/13` T10) are built: `FightRules.Tower` (`TowerRules`), `Fighter.Phases` and the tower fields of `FightState` and `FightUnit`, specified in `specs/21` section 3. They are off unless the caller sets `Tower`, so existing fights and hashes do not move. Two more bonus-only effect stats come with them, `dmg_dealt` and `entropy_gain` (`StatIds`), valid for skills and tree nodes like `crit_rate`.
@@ -146,16 +146,24 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_SIDE_SIZE` | 4 | `> 0` | Most units per side |
 | `STAT_FLOOR_FRAC` | 0.1 | `(0, 1]` | A trained stat never drops below this fraction of its base (section 3; content `3.2`) |
 | `EFFECT_STACK_CAP` | 3 | `>= 1` | Most copies of one timed effect (same source skill and stat) on a unit; another refreshes the shortest (section 3; content `3.8`) |
-| `MON_ECHO_POWER` | 0.5 | `[0, 1]` | `echo_cast` repeat power (content `2.5`) |
-| `MON_TIDE_REGEN` | 0.05 | `[0, 1]` | `tidal_overflow` heal per own action, fraction of max HP (content `3.7`) |
+| `MON_ECHO_POWER` | 1.0 | `[0, 1]` | `echo_cast` repeat power (content `2.5`; 4.4: 0.5 to 1.0) |
+| `MON_TIDE_REGEN` | 0.02 | `[0, 1]` | `tidal_overflow` heal per own action, fraction of max HP (content `3.7`; 4.4: 0.05 to 0.02) |
 | `MON_TIDE_SHIELD_CAP` | 0.3 | `[0, 1]` | `tidal_overflow` shield cap, fraction of max HP (content `3.7`) |
-| `MON_DRAIN_FRAC` | 0.3 | `[0, 1]` | `abyssal_drain` share of damage dealt healed (content `3.7`) |
-| `MON_FIRE_PIERCE` | 0.5 | `[0, 1]` | `fire_pierce` share of DEF or WIS ignored (content `3.7`) |
-| `MON_DOUBLE_TURNS` | 1 | `>= 1` | `double_turn_start` doubled opening actions (content `3.7`) |
-| `MON_REBIRTH_HEAL` | 0.4 | `(0, 1]` | `root_rebirth` HP after the killing blow, fraction of max HP (content `4.2`) |
-| `MON_WAIL_STAGGER` | 0.25 | `[0, 1]` | `wail_stagger` gauge taken per hit, fraction of a full gauge (content `4.2`) |
+| `MON_DRAIN_FRAC` | 2.5 | `>= 0` | `abyssal_drain` share of damage dealt healed (content `3.7`; 4.4: 0.3 to 2.5) |
+| `MON_FIRE_PIERCE` | 1.0 | `[0, 1]` | `fire_pierce` share of DEF or WIS ignored (content `3.7`; 4.4: 0.5 to 1.0) |
+| `MON_DOUBLE_TURNS` | 2 | `>= 1` | `double_turn_start` doubled opening actions (content `3.7`; 4.4: 1 to 2) |
+| `MON_REBIRTH_HEAL` | 0.05 | `(0, 1]` | `root_rebirth` HP after the killing blow, fraction of max HP (content `4.2`; 4.4: 0.4 to 0.05) |
+| `MON_WAIL_STAGGER` | 0.6 | `[0, 1]` | `wail_stagger` gauge taken from every enemy per own action, fraction of a full gauge (content `4.2`; 4.4: 0.25 per hit to 0.6 per action) |
 | `MON_VEIL_EVADE_CAP` | 0.65 | `[0, 1]` | `umbral_veil` evade cap (content `4.2`) |
 | `MON_FEAST_STR` | 0.04 | `>= 0` | `night_feast` STR per landed hit, fraction of base (content `4.2`) |
+| `MON_WAIL_WITHER` | 0.09 | `[0, 1]` | `wail_stagger` true damage to every enemy per own action, fraction of its max HP (content `4.4`) |
+| `MON_COUNTER_MULT` | 2.0 | `>= 0` | `counter_mitigated` counter damage, multiple of the damage mitigated (content `4.4`) |
+| `MON_FIRE_BONUS` | 1.5 | `>= 0` | `fire_pierce` extra fire damage, fire damage x (1 + this) (content `4.4`) |
+| `MON_VEIL_EVADE_BONUS` | 0.2 | `[0, 1]` | `umbral_veil` flat evade chance added before its cap (content `4.4`) |
+| `MON_FEAST_DMG` | 0.15 | `>= 0` | `night_feast` damage dealt added per landed hit (content `4.4`) |
+| `MON_FEAST_START` | 1.5 | `>= 0` | `night_feast` damage dealt at the start of every fight (content `4.4`) |
+| `MON_ECHO_DECOYS` | 3 | `>= 0` | `echo_cast` hits per fight the mirror twin takes (content `4.4`) |
+| `MON_DRAIN_SHIELD_CAP` | 1.0 | `[0, 1]` | `abyssal_drain` overheal shield cap, fraction of max HP (content `4.4`) |
 
 Range violations are `E043` in both `tools/content_build.py` and `ContentDb`. `BattleSim.Start` also rejects a hand-built `FightRules` whose rule modifier values are outside these ranges (`DoubleTurns` may be 0 there: the rule does nothing).
 
