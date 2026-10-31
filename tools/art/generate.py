@@ -2,10 +2,10 @@
 """Generates creature art drafts with the OpenAI Images API (specs/26 section 6, issue #116).
 
 Reads the style and species prompts from prompts.json next to this file and writes
-<out>/<species>_<n>.webp. Needs OPENAI_API_KEY in the environment and api.openai.com
+<out>/<style>/<species>_<n>.webp. Needs OPENAI_API_KEY in the environment and api.openai.com
 on the network allow list. Each image costs money: generate only what you will review.
 
-Usage: tools/art/generate.py --species slime drake --n 3 --out tools/art/drafts
+Usage: tools/art/generate.py --style abyss --species slime drake --n 3
 """
 import argparse, base64, json, os, sys, urllib.error, urllib.request
 
@@ -29,6 +29,7 @@ def generate(prompt, n, model, quality, size):
 def main():
     cfg = json.load(open(os.path.join(HERE, "prompts.json")))
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--style", choices=sorted(cfg["styles"]), required=True)
     ap.add_argument("--species", nargs="+", choices=sorted(cfg["species"]), required=True)
     ap.add_argument("--n", type=int, default=3, help="candidates per species")
     ap.add_argument("--out", default=os.path.join(HERE, "drafts"))
@@ -38,11 +39,16 @@ def main():
     a = ap.parse_args()
     if not os.environ.get("OPENAI_API_KEY"):
         sys.exit("generate: OPENAI_API_KEY is not set (see issue #116)")
-    os.makedirs(a.out, exist_ok=True)
+    style = cfg["styles"][a.style]
+    out = os.path.join(a.out, a.style)
+    os.makedirs(out, exist_ok=True)
     for sp in a.species:
-        prompt = cfg["style"] + "\n\nCreature: " + cfg["species"][sp]["prompt"]
+        creature = cfg["species"][sp]["prompt"]
+        if not style["details"]:   # the "one unsettling detail" belongs to the abyss style (specs/26 section 7)
+            creature = creature.split(" Unsettling detail:")[0]
+        prompt = style["prompt"] + "\n\nCreature: " + creature
         for i, img in enumerate(generate(prompt, a.n, a.model, a.quality, a.size), 1):
-            path = os.path.join(a.out, f"{sp}_{i}.webp")
+            path = os.path.join(out, f"{sp}_{i}.webp")
             open(path, "wb").write(img)
             print(path, len(img) // 1024, "KB")
 
