@@ -251,7 +251,7 @@ Grade means at 200 seeds, no books, content 4.6 before and 4.7 after (E = 0, D =
 | `focus` | 4.18 / 4.18 | 2.29 / 2.29 | 2.91 / 2.92 | 2.12 / 2.12 | 3.38 / 3.38 | 2.97 / 2.98 | |
 
 - Every all-in build now averages about C (1.92 to 2.25, SPD and HP still above). The drake DEF and WIS cells, which sat right at D, are at 2.17 and 1.34.
-- All-in DEF and WIS end slightly above all-in STR and DEX (2.24 and 2.25 against 2.04 and 2.09), mostly from slime and mandrake, the species that grow those stats best.
+- All-in DEF and WIS end slightly above all-in STR and DEX (2.24 and 2.25 against 2.04 and 2.09), mostly from slime and mandrake, the species that grow those stats best. kj (2026-10-31): keep them as they are, no trim.
 - The default policies (`focus`, `balanced`, `hoarder`, `chaser`, `reckless`) and `mono-hp`, `mono-str`, `mono-dex` and `mono-spd` move by 0.01 at most: they rarely slot these trees early.
 - The weakest cells are shade_hound's all-in INT, WIS, LUK and DEF (1.34 to 1.81): unless it trains HP, its 1,000 max HP dies to C-rank casters in a few hits, and those stats grow slowly for it (growth 0.6 to 1.1). That is a species question, not a stat one.
 - **Sanity checks:** all 12 pass in the default `balance` run.
