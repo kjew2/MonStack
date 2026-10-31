@@ -194,22 +194,17 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void BuyOffer_SpendsShards_AddsTheRaritysRanks_SellsOnce()
+        public void BuyOffer_SpendsShards_AddsOneRank_SellsOnce()
         {
             var a = AccountOps.New(Db, 5);
-            var t = Db.TalentList.First(x => x.MaxRank >= 3);
-            var epic = Db.VendorRarities.OrderByDescending(r => r.Ranks).First();
-            var common = Db.VendorRarities.OrderBy(r => r.Ranks).First();
+            var t = Db.TalentList.First(x => x.MaxRank >= 2);
             a.Vendor = new VendorState
             {
                 Grade = "e",
-                Offers = { new VendorOffer { Talent = t.Id, Rarity = epic.Id }, new VendorOffer { Talent = t.Id, Rarity = common.Id } },
+                Offers = { new VendorOffer { Talent = t.Id, Rarity = t.Rarity }, new VendorOffer { Talent = t.Id, Rarity = t.Rarity } },
             };
-            int n = Math.Min(epic.Ranks, t.MaxRank);
-            long full = 0;
-            for (int i = 0; i < n; i++) full += AccountOps.TalentCost(t, i);
-            long price = (long)Math.Floor(epic.PriceMult * full + 0.5);
-            Assert.That(AccountOps.OfferRanks(Db, a, a.Vendor.Offers[0]), Is.EqualTo(n));
+            long price = AccountOps.TalentCost(t, 0);
+            Assert.That(AccountOps.OfferOpen(Db, a, a.Vendor.Offers[0]), Is.True);
             Assert.That(AccountOps.OfferPrice(Db, a, a.Vendor.Offers[0]), Is.EqualTo(price));
 
             Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 0), "no shards");
@@ -217,17 +212,46 @@ namespace IdleRng.Sim.Tests
             a.Shards = price + 1000;
             Assert.That(AccountOps.BuyOffer(Db, a, 0), Is.EqualTo(price));
             Assert.That(a.Shards, Is.EqualTo(1000));
-            Assert.That(a.TalentRank(t.Id), Is.EqualTo(n));
+            Assert.That(a.TalentRank(t.Id), Is.EqualTo(1), "one rank per purchase, whatever the rarity (#102)");
             Assert.That(a.Vendor.Offers[0].Bought, Is.True);
             Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 0), "sold");
             Assert.Throws<ArgumentException>(() => AccountOps.BuyOffer(Db, a, 2));
 
-            // The second offer's price follows the talent's rank now; at max rank it cannot be bought.
-            if (n < t.MaxRank)
-                Assert.That(AccountOps.OfferPrice(Db, a, a.Vendor.Offers[1]), Is.EqualTo((long)Math.Floor(common.PriceMult * AccountOps.TalentCost(t, n) + 0.5)));
+            // The second offer of the same talent is repriced at its next rank; at max rank it cannot be bought.
+            Assert.That(AccountOps.OfferPrice(Db, a, a.Vendor.Offers[1]), Is.EqualTo(AccountOps.TalentCost(t, 1)));
             a.Talents[t.Id] = t.MaxRank;
-            Assert.That(AccountOps.OfferRanks(Db, a, a.Vendor.Offers[1]), Is.EqualTo(0));
+            Assert.That(AccountOps.OfferOpen(Db, a, a.Vendor.Offers[1]), Is.False);
+            Assert.That(AccountOps.OfferPrice(Db, a, a.Vendor.Offers[1]), Is.EqualTo(0));
             Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 1), "maxed");
+        }
+
+        [Test]
+        public void Vendor_OfferRarityIsTheTalentsOwnTier()
+        {
+            var a = AccountOps.New(Db, 9);
+            var seen = new System.Collections.Generic.HashSet<string>();
+            for (int run = 0; run < 200; run++)
+                foreach (var o in AccountOps.RollVendor(Db, a, Db.FightRanks.Count - 1, run).Offers)
+                {
+                    Assert.That(o.Rarity, Is.EqualTo(Db.Talents[o.Talent].Rarity));
+                    seen.Add(o.Rarity);
+                }
+            Assert.That(seen, Is.EquivalentTo(Db.TalentList.Select(t => t.Rarity).Distinct()), "every tier with talents shows up at the top grade");
+        }
+
+        [Test]
+        public void Vendor_ExhaustedTier_IsSkipped()
+        {
+            // Max every talent of the commonest tier: those offers must come from the other tiers, even at grade E.
+            var a = AccountOps.New(Db, 5);
+            string common = Db.VendorRarities[0].Id;
+            foreach (var t in Db.TalentList.Where(x => x.Rarity == common)) a.Talents[t.Id] = t.MaxRank;
+            for (int run = 0; run < 50; run++)
+            {
+                var v = AccountOps.RollVendor(Db, a, 0, run);
+                Assert.That(v.Offers, Has.Count.EqualTo(K.VendorOffers));
+                Assert.That(v.Offers.All(o => o.Rarity != common && a.TalentRank(o.Talent) < Db.Talents[o.Talent].MaxRank), Is.True);
+            }
         }
 
         [Test]

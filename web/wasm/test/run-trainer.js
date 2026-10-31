@@ -299,13 +299,14 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const buy = page.locator('[data-act^="buy-offer-"]:not([disabled])').first();
   const price = +(/(\d+) shards/.exec(await buy.innerText()) || [])[1];
   const bought = +(/buy-offer-(\d+)/.exec(await buy.getAttribute('data-act')) || [])[1];
-  const shardsPre = (await readAccount()).Account.Shards;
+  const preBuy = (await readAccount()).Account, shardsPre = preBuy.Shards;
+  const rankPre = preBuy.Talents[preBuy.Vendor.Offers[bought].Talent] || 0;
   await buy.click();
   const afterBuy = await readAccount();
   check(price > 0 && afterBuy.Account.Shards === shardsPre - price, 'buying an offer spent its ' + price + ' shards');
   check(afterBuy.Account.Vendor.Offers[bought].Bought === true && (await offers.nth(bought).innerText()).includes('Sold'), 'the offer shows as sold');
   const talentId = afterBuy.Account.Vendor.Offers[bought].Talent;
-  check((afterBuy.Account.Talents[talentId] || 0) > 0, 'and the talent gained ranks: ' + talentId + ' ' + afterBuy.Account.Talents[talentId]);
+  check((afterBuy.Account.Talents[talentId] || 0) === rankPre + 1, 'and the talent gained exactly one rank (#102): ' + talentId + ' ' + rankPre + ' -> ' + afterBuy.Account.Talents[talentId]);
   const vw0 = await page.evaluate(() => document.documentElement.scrollWidth);
   check(vw0 <= 390, 'the vendor fits the phone width (' + vw0 + 'px)');
   await act('vendor-done').click();

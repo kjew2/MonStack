@@ -92,14 +92,14 @@ namespace IdleRng.Web
             w.Key("talents").Arr();
             foreach (var t in _db.TalentList)
                 w.Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("desc", _db.Text(t.DescKey)).P("effect", t.Effect.ToString().ToLowerInvariant())
-                    .P("maxRank", t.MaxRank).EndObj();
+                    .P("rarity", t.Rarity).P("maxRank", t.MaxRank).EndObj();
             w.EndArr();
             w.Key("achievements").Arr();
             foreach (var d in _db.AchievementList)
                 w.Obj().P("id", d.Id).P("name", _db.Text(d.NameKey)).P("text", AchievementText(d)).P("species", d.UnlocksSpecies).EndObj();
             w.EndArr();
             w.Key("rarities").Arr();
-            foreach (var r in _db.VendorRarities) w.Obj().P("id", r.Id).P("name", _db.Text(r.NameKey)).P("ranks", r.Ranks).P("priceMult", r.PriceMult).EndObj();
+            foreach (var r in _db.VendorRarities) w.Obj().P("id", r.Id).P("name", _db.Text(r.NameKey)).EndObj();
             w.EndArr();
             w.Key("gauntlet").Obj().P("floors", k.GauntletFloors).P("bossEvery", k.GauntletBossEvery);
             w.Key("enemies").Obj();
@@ -294,8 +294,7 @@ namespace IdleRng.Web
                     {
                         int i = a.Int(0);
                         var offer = _acct.Vendor != null && i >= 0 && i < _acct.Vendor.Offers.Count ? _acct.Vendor.Offers[i] : null;
-                        int ranks = offer == null ? 0 : AccountOps.OfferRanks(_db, _acct, offer);
-                        w.P("ok", true).P("cost", AccountOps.BuyOffer(_db, _acct, i)).P("talent", offer.Talent).P("ranks", ranks);
+                        w.P("ok", true).P("cost", AccountOps.BuyOffer(_db, _acct, i)).P("talent", offer.Talent);
                         break;
                     }
                     case "abandon":
@@ -529,9 +528,10 @@ namespace IdleRng.Web
                 w.Key("offers").Arr();
                 foreach (var o in ac.Vendor.Offers)
                 {
-                    int n = AccountOps.OfferRanks(_db, ac, o);
-                    w.Obj().P("talent", o.Talent).P("rarity", o.Rarity).P("bought", o.Bought).P("ranks", n).P("rank", ac.TalentRank(o.Talent))
-                        .P("price", AccountOps.OfferPrice(_db, ac, o)).P("maxed", n == 0).EndObj();
+                    // The talent's own tier; an offer rolled before #102 (or whose talent left content) keeps its stored rarity.
+                    string rarity = o.Talent != null && _db.Talents.TryGetValue(o.Talent, out var td) ? td.Rarity : o.Rarity;
+                    w.Obj().P("talent", o.Talent).P("rarity", rarity).P("bought", o.Bought).P("rank", ac.TalentRank(o.Talent))
+                        .P("price", AccountOps.OfferPrice(_db, ac, o)).P("maxed", !AccountOps.OfferOpen(_db, ac, o)).EndObj();
                 }
                 w.EndArr().EndObj();
             }

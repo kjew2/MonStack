@@ -308,6 +308,9 @@ namespace IdleRng.Sim.Content
         public string Id { get; internal set; }
         public string NameKey { get; internal set; }
         public string DescKey { get; internal set; }
+
+        /// <summary>The talent's vendor tier: a <see cref="VendorRarityDef"/> id (specs/18 section 4).</summary>
+        public string Rarity { get; internal set; }
         public TalentEffect Effect { get; internal set; }
         public double PerRank { get; internal set; }
         public int MaxRank { get; internal set; }
@@ -335,16 +338,14 @@ namespace IdleRng.Sim.Content
     }
 
     /// <summary>
-    /// A rarity of the post-run vendor's offers (specs/18 section 4). An offer grants up to Ranks talent ranks for PriceMult x
-    /// their normal cost; its weight at grade index g is max(0, WeightBase + WeightPerRank x g).
+    /// A talent tier of the post-run vendor (specs/18 section 4). Every talent has one; the vendor draws a tier by weight, then a
+    /// talent of that tier. Its weight at grade index g is max(0, WeightBase + WeightPerRank x g).
     /// </summary>
     public sealed class VendorRarityDef
     {
         public string Id { get; internal set; }
         public int SortOrder { get; internal set; }
         public string NameKey { get; internal set; }
-        public int Ranks { get; internal set; }
-        public double PriceMult { get; internal set; }
         public double WeightBase { get; internal set; }
         public double WeightPerRank { get; internal set; }
 

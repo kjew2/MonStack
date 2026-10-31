@@ -240,7 +240,7 @@ namespace IdleRng.Sim.Account
 
         // ------------------------------------------------------------------ talents and the post-run vendor (specs/18 section 4)
 
-        /// <summary>Shards one rank of a talent costs from <paramref name="rank"/>, before the vendor's rarity multiplier.</summary>
+        /// <summary>Shards one rank of a talent costs from <paramref name="rank"/>: rank r + 1 costs cost_base + cost_step x r.</summary>
         public static long TalentCost(TalentDef t, int rank) => t.CostBase + (long)t.CostStep * rank;
 
         /// <summary>Seed of the vendor rolled after the account's <paramref name="runIndex"/>-th run (0-based).</summary>
@@ -248,67 +248,57 @@ namespace IdleRng.Sim.Account
             SplitMix64.Derive(StreamNames.StreamSeed(accountSeed, VendorStream), (ulong)runIndex);
 
         /// <summary>
-        /// Roll VENDOR_OFFERS offers for a run that reached grade index <paramref name="gradeIndex"/>. Each offer draws a rarity
-        /// (weights by grade, <see cref="VendorRarityDef.Weight"/>) then a talent uniformly among those not maxed; the same
-        /// talent may be offered twice. No offers once every talent is maxed. Deterministic from the account seed and the run index.
+        /// Roll VENDOR_OFFERS offers for a run that reached grade index <paramref name="gradeIndex"/>. A rarity is a talent's own
+        /// tier. Each offer draws a tier by weight (<see cref="VendorRarityDef.Weight"/> at that grade) among the tiers that still
+        /// have a talent not maxed, then a talent of that tier uniformly; the same talent may be offered twice. When those tiers all
+        /// weigh 0 at that grade, the commonest of them is used. No offers once every talent is maxed. Two draws per offer, always.
+        /// Deterministic from the account seed and the run index.
         /// </summary>
         public static VendorState RollVendor(ContentDb c, AccountState a, int gradeIndex, int runIndex)
         {
             int g = Math.Max(0, Math.Min(gradeIndex, c.FightRanks.Count - 1));
             var v = new VendorState { Grade = c.FightRanks[g].Id };
-            var candidates = new List<TalentDef>();
-            foreach (var t in c.TalentList) if (a.TalentRank(t.Id) < t.MaxRank) candidates.Add(t);
-            if (candidates.Count == 0) return v;
+            var tiers = new List<(VendorRarityDef Rarity, List<TalentDef> Talents)>();
+            foreach (var r in c.VendorRarities)
+            {
+                var open = new List<TalentDef>();
+                foreach (var t in c.TalentList) if (t.Rarity == r.Id && a.TalentRank(t.Id) < t.MaxRank) open.Add(t);
+                if (open.Count > 0) tiers.Add((r, open));
+            }
+            if (tiers.Count == 0) return v;
             double total = 0;
-            foreach (var r in c.VendorRarities) total += r.Weight(g);
+            foreach (var x in tiers) total += x.Rarity.Weight(g);
             var rng = new RngStream(VendorStream, VendorSeed(a.Seed, runIndex));
             for (int i = 0; i < c.Constants.VendorOffers; i++)
             {
                 double u = rng.NextDouble() * total;
-                VendorRarityDef rarity = null;
-                foreach (var r in c.VendorRarities)
+                var tier = tiers[0];
+                foreach (var x in tiers)
                 {
-                    double w = r.Weight(g);
+                    double w = x.Rarity.Weight(g);
                     if (w <= 0) continue;
-                    rarity = r;            // the last rarity with weight absorbs any rounding residue
+                    tier = x;              // the last tier with weight absorbs any rounding residue
                     if (u < w) break;
                     u -= w;
                 }
-                var talent = candidates[rng.NextIndex(candidates.Count)];
-                v.Offers.Add(new VendorOffer { Talent = talent.Id, Rarity = rarity.Id });
+                var talent = tier.Talents[rng.NextIndex(tier.Talents.Count)];
+                v.Offers.Add(new VendorOffer { Talent = talent.Id, Rarity = tier.Rarity.Id });
             }
             return v;
         }
 
-        static VendorRarityDef Rarity(ContentDb c, string id)
-        {
-            foreach (var r in c.VendorRarities) if (r.Id == id) return r;
-            return null;
-        }
+        /// <summary>True when buying this offer now would add a rank: its talent is in content and not maxed.</summary>
+        public static bool OfferOpen(ContentDb c, AccountState a, VendorOffer o) =>
+            o.Talent != null && c.Talents.TryGetValue(o.Talent, out var t) && a.TalentRank(o.Talent) < t.MaxRank;
 
-        /// <summary>Ranks buying this offer would add now: the rarity's ranks, capped at the talent's max. 0 when maxed (or its ids left content).</summary>
-        public static int OfferRanks(ContentDb c, AccountState a, VendorOffer o)
-        {
-            var r = Rarity(c, o.Rarity);
-            if (r == null || o.Talent == null || !c.Talents.TryGetValue(o.Talent, out var t)) return 0;
-            return Math.Max(0, Math.Min(r.Ranks, t.MaxRank - a.TalentRank(o.Talent)));
-        }
-
-        /// <summary>Shards the offer costs now: the rarity's price multiplier x the normal cost of the ranks it adds, rounded half up.</summary>
-        public static long OfferPrice(ContentDb c, AccountState a, VendorOffer o)
-        {
-            int n = OfferRanks(c, a, o);
-            if (n == 0) return 0;
-            var t = c.Talents[o.Talent];
-            int rank = a.TalentRank(o.Talent);
-            long sum = 0;
-            for (int i = 0; i < n; i++) sum += TalentCost(t, rank + i);
-            return (long)Math.Floor(Rarity(c, o.Rarity).PriceMult * sum + 0.5);
-        }
+        /// <summary>Shards the offer costs now: the talent's normal cost for its next rank. 0 when it cannot be bought.</summary>
+        public static long OfferPrice(ContentDb c, AccountState a, VendorOffer o) =>
+            OfferOpen(c, a, o) ? TalentCost(c.Talents[o.Talent], a.TalentRank(o.Talent)) : 0;
 
         /// <summary>
-        /// Buy vendor offer <paramref name="index"/>: costs its price (<see cref="OfferPrice"/>) and adds its ranks (<see cref="OfferRanks"/>).
-        /// Each offer sells once. Talents apply from the next run on. Returns the shards spent.
+        /// Buy vendor offer <paramref name="index"/>: costs its price (<see cref="OfferPrice"/>) and adds exactly one rank of its
+        /// talent (kj, issue #102: never several ranks in one purchase). Each offer sells once. Talents apply from the next run on.
+        /// Returns the shards spent.
         /// </summary>
         public static long BuyOffer(ContentDb c, AccountState a, int index)
         {
@@ -317,12 +307,11 @@ namespace IdleRng.Sim.Account
             if (index < 0 || index >= v.Offers.Count) throw new ArgumentException($"no vendor offer {index}", nameof(index));
             var o = v.Offers[index];
             if (o.Bought) throw new InvalidOperationException("that offer is sold");
-            int n = OfferRanks(c, a, o);
-            if (n == 0) throw new InvalidOperationException($"{o.Talent} is maxed");
+            if (!OfferOpen(c, a, o)) throw new InvalidOperationException($"{o.Talent} is maxed");
             long price = OfferPrice(c, a, o);
             if (a.Shards < price) throw new InvalidOperationException($"that offer costs {price} shards, have {a.Shards}");
             a.Shards -= price;
-            a.Talents[o.Talent] = a.TalentRank(o.Talent) + n;
+            a.Talents[o.Talent] = a.TalentRank(o.Talent) + 1;
             o.Bought = true;
             return price;
         }

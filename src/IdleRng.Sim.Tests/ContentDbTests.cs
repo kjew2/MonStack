@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("3.12"));
+            Assert.That(db.Version, Is.EqualTo("3.13"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -94,6 +94,17 @@ namespace IdleRng.Sim.Tests
             var msgs = ex.Errors.Select(e => e.Code + " " + e.Location + ": " + e.Message).ToList();
             Assert.That(msgs, Has.Some.Contains("E043 achievements[rank_c]: 'slime' is the starter species"));
             Assert.That(msgs, Has.Some.Contains("E044 species[drake]: only the first species is owned from the start"));
+        }
+
+        [Test]
+        public void TalentRarity_MustBeAVendorTier()
+        {
+            string dir = FileContentSource.FindContentDirectory(TestContext.CurrentContext.TestDirectory);
+            var files = Directory.GetFiles(dir, "*.json").ToDictionary(Path.GetFileName, File.ReadAllText);
+            files["talents.json"] = files["talents.json"].Replace("\"rarity\": \"epic\"", "\"rarity\": \"mythic\"");
+            var ex = Assert.Throws<ContentLoadException>(() => ContentDb.Load(new DictionaryContentSource(files), verifyHashes: false));
+            var msgs = ex.Errors.Select(e => e.Code + " " + e.Location + ": " + e.Message).ToList();
+            Assert.That(msgs, Has.Some.Contains("E023 talents[wide_scouting]: rarity 'mythic' is not a vendor_rarities id"));
         }
 
         [Test]
