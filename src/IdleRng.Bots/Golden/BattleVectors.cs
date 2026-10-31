@@ -17,7 +17,8 @@ namespace IdleRng.Bots.Golden
     {
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
-        sealed record Vector(string Name, ulong Seed, Fighter[] A, Fighter[] B);
+        /// <summary>One fixed fight: side A against side B at a seed. Public so the server spike (server/ugs) sends the same fights.</summary>
+        public sealed record Vector(string Name, ulong Seed, Fighter[] A, Fighter[] B);
 
         public static string Generate(ContentDb db)
         {
@@ -140,7 +141,7 @@ namespace IdleRng.Bots.Golden
             return f;
         }
 
-        static IEnumerable<Vector> Vectors()
+        public static IEnumerable<Vector> Vectors()
         {
             yield return new Vector("1v1 brawler vs mage", 1, new[] { Brawler("brawler") }, new[] { Mage("mage") });
             yield return new Vector("1v1 brawler vs counter tank", 2, new[] { Brawler("brawler") }, new[] { Tank("tank") });

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    UGS Cloud Code C# module (specs/08 section 10). The project name is the module name, and the deployed archive must be
+    named after it. It compiles IdleRng.Sim from the same sources as the client: a project reference, no copy and no port.
+    Cloud Code modules target .NET 10 (Unity's "Package code" page, Cloud Code 3.0.0 docs).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>IdleRngBattle</RootNamespace>
+    <AssemblyName>IdleRngBattle</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Com.Unity.Services.CloudCode.Core" Version="0.0.9" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/IdleRng.Sim/IdleRng.Sim.csproj" />
+  </ItemGroup>
+</Project>
