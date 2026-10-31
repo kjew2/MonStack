@@ -91,4 +91,5 @@ Progress is saved in the browser, separately for each address, so the artifact l
 ### Tests for the web build
 
 - `node web/wasm/test/run-trainer.js`: plays a whole monster-trainer run on `index.html` through the real buttons (drill, rest, fights, drafts, buying), seals it, checks the grade and Vault, reloads mid-run and after the end, and locks, dismantles and loads an over-cap v1 save.
-- Game rules are tested in C# (`src/IdleRng.Sim.Tests`); `./check.sh` runs everything, including the web build and the browser test in full mode.
+- `node web/wasm/test/flows.js`: checks each main screen at 390x844 for horizontal scroll and console errors, overwrites a tree slot from a draft, reloads mid-run (also with a draft waiting) and resumes to the end with the same run hash, and loads a stale and a damaged save (notice, kept-aside backup, working account).
+- Game rules are tested in C# (`src/IdleRng.Sim.Tests`); `./check.sh` runs everything, including the web build and the browser tests in full mode.

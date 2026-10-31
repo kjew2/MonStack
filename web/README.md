@@ -17,6 +17,8 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `wasm/pack-content.js` | Bundles `Content/*.json` into the content pack the engine loads and hash-checks. |
 | `wasm/BRIDGE.md` | The JS <-> C# contract: exports and JSON shapes. |
 | `wasm/test/run-trainer.js` | Headless-Chromium test that plays a full run through the buttons (part of `./check.sh`). |
+| `wasm/test/flows.js` | Headless-Chromium test of the other flows: no horizontal scroll or console error on each main screen at 390x844, a tree draft overwriting a slot, save/reload/resume with the same run hash, and a stale or damaged save (part of `./check.sh`). |
+| `wasm/test/harness.js` | Shared helpers for the browser tests (phone-sized page, save encoding, play loop, layout check). |
 
 ## Where things come from
 
