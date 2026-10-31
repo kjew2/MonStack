@@ -240,6 +240,10 @@ namespace IdleRng.Sim.Content
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"),
                 InjurySkipCycles = I("INJURY_SKIP_CYCLES"), InjuryRecoverEnergy = D("INJURY_RECOVER_ENERGY"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"), TreeRefund = D("TREE_REFUND"),
+                RollOwnChance = D("ROLL_OWN_CHANCE"), RollGrowthOwnMin = D("ROLL_GROWTH_OWN_MIN"), RollGrowthOwnMax = D("ROLL_GROWTH_OWN_MAX"),
+                RollGrowthOffMin = D("ROLL_GROWTH_OFF_MIN"), RollGrowthOffMax = D("ROLL_GROWTH_OFF_MAX"), RollFlatOwnMin = D("ROLL_FLAT_OWN_MIN"),
+                RollFlatOwnMax = D("ROLL_FLAT_OWN_MAX"), RollFlatOffMin = D("ROLL_FLAT_OFF_MIN"), RollFlatOffMax = D("ROLL_FLAT_OFF_MAX"),
+                RollCapGrowthMin = D("ROLL_CAP_GROWTH_MIN"), RollCapGrowthMax = D("ROLL_CAP_GROWTH_MAX"),
                 MonEchoPower = D("MON_ECHO_POWER"), MonTideRegen = D("MON_TIDE_REGEN"), MonTideShieldCap = D("MON_TIDE_SHIELD_CAP"),
                 MonDrainFrac = D("MON_DRAIN_FRAC"), MonFirePierce = D("MON_FIRE_PIERCE"), MonDoubleTurns = I("MON_DOUBLE_TURNS"),
                 MonRebirthHeal = D("MON_REBIRTH_HEAL"), MonWailStagger = D("MON_WAIL_STAGGER"), MonWailWither = D("MON_WAIL_WITHER"), MonVeilEvadeCap = D("MON_VEIL_EVADE_CAP"),
@@ -309,12 +313,15 @@ namespace IdleRng.Sim.Content
         {
             var k = Constants;
             bool In01(double v) => v >= 0 && v <= 1;
+            bool RollRange(double lo, double hi) => lo >= 0 && lo <= hi;
             if (!(k.RunCycles > 0 && k.RunAp > 0 && k.RunEnergyMax > 0 && k.RunEnergyStart >= 0 && k.RunEnergyStart <= k.RunEnergyMax
                   && k.DrillEnergyCost >= 0 && k.RestEnergy >= 0 && In01(k.DrillFailMin) && In01(k.DrillFailMax)
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.InjurySkipCycles >= 0
                   && k.InjuryRecoverEnergy >= 0 && k.InjuryRecoverEnergy <= k.RunEnergyMax && k.StatMax > 0 && k.FightEvery > 0
                   && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.TreeRefund) && In01(k.MonEchoPower)
+                  && In01(k.RollOwnChance) && RollRange(k.RollGrowthOwnMin, k.RollGrowthOwnMax) && RollRange(k.RollGrowthOffMin, k.RollGrowthOffMax)
+                  && RollRange(k.RollFlatOwnMin, k.RollFlatOwnMax) && RollRange(k.RollFlatOffMin, k.RollFlatOffMax) && RollRange(k.RollCapGrowthMin, k.RollCapGrowthMax)
                   && In01(k.MonTideRegen) && In01(k.MonTideShieldCap) && k.MonDrainFrac >= 0 && In01(k.MonFirePierce) && k.MonDoubleTurns >= 1
                   && k.MonRebirthHeal > 0 && k.MonRebirthHeal <= 1 && In01(k.MonWailStagger) && In01(k.MonWailWither) && In01(k.MonVeilEvadeCap) && k.MonFeastStr >= 0
                   && k.MonCounterMult >= 0 && k.MonFireBonus >= 0 && In01(k.MonVeilEvadeBonus)

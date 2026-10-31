@@ -73,7 +73,7 @@ The rank fight replaces the drafts' *Tactical Challenge*: it is the in-run fight
 
 ### 4.4 Attribute milestones and Awakenings
 
-When a stat crosses **300 / 500 / 700 / 900**, the run pauses for an **Awakening** (kj, 2026-10-31: renamed from "tree draft"), a **3-card tree offer** themed on that stat (example at 700 WIS: *Mind Warp*, *Overclock*, *Aether Conduit*). The picked tree goes into a tree slot under the slot rule of section 5.1. Milestone drafts are one way to get a new tree, not the only one. The talent tree can add draft options.
+When a stat crosses **300 / 500 / 700 / 900**, the run pauses for an **Awakening** (kj, 2026-10-31: renamed from "tree draft"), a **3-card tree offer** of generic trees for **any** stat, each **rolled** (kj, 2026-10-31, issue #121): its filler nodes and capstone growth are random, mostly on the tree's own stat, so a lucky card can open a build the species struggles with (a drake that finds a good LUK tree can grow LUK for a crit build). Rules: `specs/15` section 4.1. The picked tree goes into a tree slot under the slot rule of section 5.1. Milestone drafts are one way to get a new tree, not the only one. The talent tree can add draft options.
 
 ### 4.5 End of run
 

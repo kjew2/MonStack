@@ -72,6 +72,9 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
+        /// <summary>One tip object, for a tooltip carried inline (a rolled tree's nodes, specs/15 section 4.1).</summary>
+        public static void Write(JsonOut w, Tip t) => Tip(w, t);
+
         private static void Tip(JsonOut w, Tip t)
         {
             w.Obj().P("title", t.Title).P("text", t.Text);

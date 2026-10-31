@@ -43,6 +43,17 @@ SP_PER_WIN,int,2,skill points for each rank fight win. Placeholder
 TREE_SLOTS,int,4,tree slots per monster: 2 native + 2 empty at the start (kj)
 DRAFT_SIZE,int,3,most trees offered by one Awakening (the milestone tree offer). Placeholder
 TREE_REFUND,double,0.5,share of the SP spent in a tree that comes back when it leaves its slot (overwritten or a chase tree locking again; kj 2026-10-31: half); rounded down
+ROLL_OWN_CHANCE,double,0.7,rolled Awakening trees (specs/15 section 4.1): chance a filler node is on the tree's own stat; else a random other trained stat. Placeholder
+ROLL_GROWTH_OWN_MIN,double,0.2,rolled tree: a growth node on the tree's own stat adds between MIN and MAX growth (kj 2026-10-31: big; fixed trees gave 0.1). Placeholder
+ROLL_GROWTH_OWN_MAX,double,0.35,see ROLL_GROWTH_OWN_MIN. Placeholder
+ROLL_GROWTH_OFF_MIN,double,0.05,rolled tree: a growth node on another stat adds between MIN and MAX growth. Placeholder
+ROLL_GROWTH_OFF_MAX,double,0.15,see ROLL_GROWTH_OFF_MIN. Placeholder
+ROLL_FLAT_OWN_MIN,double,15,rolled tree: a flat stat node on the tree's own stat adds between MIN and MAX points (whole points). Placeholder
+ROLL_FLAT_OWN_MAX,double,30,see ROLL_FLAT_OWN_MIN. Placeholder
+ROLL_FLAT_OFF_MIN,double,10,rolled tree: a flat stat node on another stat adds between MIN and MAX points (whole points). Placeholder
+ROLL_FLAT_OFF_MAX,double,20,see ROLL_FLAT_OFF_MIN. Placeholder
+ROLL_CAP_GROWTH_MIN,double,0.3,rolled tree: its capstone also adds between MIN and MAX growth to the tree's own stat. Placeholder
+ROLL_CAP_GROWTH_MAX,double,0.6,see ROLL_CAP_GROWTH_MIN. Placeholder
 MON_ECHO_POWER,double,1.0,echo_cast rule: the echo repeats a skill at this fraction of its power. Placeholder
 MON_TIDE_REGEN,double,0.02,tidal_overflow rule: heal this fraction of max HP at the start of each own action. Placeholder
 MON_TIDE_SHIELD_CAP,double,0.3,tidal_overflow rule: overhealing becomes shield up to this fraction of max HP. Placeholder

@@ -12,7 +12,7 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 7, "Account": { ...AccountState without Active... },
+    /// { "Kind": "monster_account", "SchemaVersion": 8, "Account": { ...AccountState without Active... },
     ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Ladder", "Log", "Hash" } | null }
     /// </code>
     /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
@@ -149,6 +149,21 @@ namespace IdleRng.Runtime.Save
                 // v6 -> v7 (issue #106): the talent loadout. Every owned talent was always on, so none is switched off.
                 acct["TalentsOff"] = new JArray();
                 version = 7;
+            }
+            if (version == 7)
+            {
+                // v7 -> v8 (issue #121): Awakenings roll their trees. Every run saved before (the run in progress and each Vault
+                // entry) drafted fixed trees, so it replays with LegacyDrafts.
+                void Legacy(JObject recipe)
+                {
+                    if (!(recipe["Mods"] is JObject mods)) recipe["Mods"] = mods = new JObject();   // saved before talents: default mods
+                    mods["LegacyDrafts"] = true;
+                }
+                if (body["ActiveRun"] is JObject run) Legacy(run);
+                if (acct["Vault"] is JArray vault)
+                    foreach (var e in vault)
+                        if (e is JObject o) Legacy(o);
+                version = 8;
             }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;

@@ -12,11 +12,11 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 - **Skill points** (SP): `SP_PER_CYCLE` at the start of every cycle (cycle 1 included) plus `SP_PER_WIN` for each rank fight won.
 - SP buy a tree's **nodes in order**. About 75% of nodes are **filler** (a growth bonus or a flat stat boost); the rest grant skills, triggered effects or rule modifiers. The **last node is the tree's chase trait**.
 - Each species owns **two chase trees** of its own: one unlocked in-run, one gated behind a skill book tree (section 5.1).
-- New trees arrive as **offers**: an Awakening (a milestone draft), a skill book, or an unlocked chase tree. Any offered tree may go into an empty slot or **overwrite any slot**, native trees included; or the offer is discarded.
+- New trees arrive as **offers**: an Awakening (a milestone draft of **rolled** trees for any stat, section 4.1), a skill book, or an unlocked chase tree. Any offered tree may go into an empty slot or **overwrite any slot**, native trees included; or the offer is discarded.
 
 ## 2. Trees and nodes
 
-Content table `trees`: `id`, `name_key`, `kind` (`native`, `generic`, `chase`, `book`), for generic trees `offer_stat` (a trained stat, or empty for any stat) and `offer_threshold`, for chase and fusion trees `apex_name_key`, the name of the apex form the tree gives (section 5.3), and for fusion trees `fuse_a` and `fuse_b`, the two trees that fuse into it (section 5.6). `kind` may also be `fusion`.
+Content table `trees`: `id`, `name_key`, `kind` (`native`, `generic`, `chase`, `book`), for generic trees `offer_stat` (the tree's own stat: most of its rolled nodes and its capstone growth go to it, section 4.1; empty = an any-stat tree, whose own stat is rolled) and `offer_threshold` (the lowest milestone that drafts it), for chase and fusion trees `apex_name_key`, the name of the apex form the tree gives (section 5.3), and for fusion trees `fuse_a` and `fuse_b`, the two trees that fuse into it (section 5.6). `kind` may also be `fusion`.
 
 Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree), `cost` (SP, `>= 1`), `kind` and its arguments:
 
@@ -53,7 +53,20 @@ All are logged and replayed like the training commands (`specs/14` section 7).
 
 ## 4. Offers and overwriting
 
-- **Awakening** (the milestone tree offer; "draft" before kj's rename, 2026-10-31, who found the word bland; the code keeps `Draft` and the `draft` stream). When a stat crosses a `stat_milestones` threshold (by a drill or a flat stat node), the run offers up to `DRAFT_SIZE` distinct generic trees whose `offer_stat` is that stat or empty and whose `offer_threshold` is at most the threshold, excluding trees already slotted or offered. They are picked by partial shuffle on the run's `draft` stream, one draw per pick. No eligible tree, no offer. Each stat and threshold pair drafts once per run.
+- **Awakening** (the milestone tree offer; "draft" before kj's rename, 2026-10-31, who found the word bland; the code keeps `Draft` and the `draft` stream). When a stat crosses a `stat_milestones` threshold (by a drill or a flat stat node), the run offers up to `DRAFT_SIZE` distinct generic trees **for any stat** (kj, 2026-10-31, issue #121: a drake that hits 300 STR can be offered a LUK tree that makes its crit build work) whose `offer_threshold` is at most the threshold, excluding trees already slotted or offered. They are picked by partial shuffle on the run's `draft` stream, one draw per pick, then each is **rolled** (section 4.1). No eligible tree, no offer. Each stat and threshold pair drafts once per run. Until issue #121 the offer held only trees whose `offer_stat` was the crossing stat or empty, not rolled; a legacy run still drafts that way (section 4.1).
+### 4.1 Rolled Awakening trees (kj, 2026-10-31, issue #121)
+
+Every tree an Awakening offers (and a Second Look reroll redraws) is rolled when it is offered, so two *Fortune* trees can differ and a good roll is worth taking. kj's aim: a tree is the way to grow its stat, so a lucky Awakening can open a build the species could not support (drake's LUK is a slog; a good LUK tree lets it train LUK for a crit build).
+
+- **Kept from content:** the tree, its node count, order and costs, and its skill, trigger and rule nodes (so *Fortune* still has *Gamble* at index 1, fusion pairs still name the tree, and chase conditions still count its nodes).
+- **Own stat:** the tree's `offer_stat`; an any-stat tree (*Battle Instinct*, *Survivor*) rolls one trained stat uniformly.
+- **Filler nodes** (growth and flat stat) keep their kind and roll a stat and amount: the own stat with chance `ROLL_OWN_CHANCE`, else one of the other trained stats uniformly; then the amount, uniform in the own or other range of its kind: growth `ROLL_GROWTH_OWN_*` or `ROLL_GROWTH_OFF_*` (rounded to 0.01), flat `ROLL_FLAT_OWN_*` or `ROLL_FLAT_OFF_*` (whole points). Each filler node draws three numbers whether or not it needs them (own or not, which other stat, amount), so the stream stays aligned.
+- **Capstone growth:** the tree also rolls `ROLL_CAP_GROWTH_*` (0.01), added to its own stat's drill growth while its capstone is bought (on top of the capstone's skill; kj chose "big": own-stat growth nodes give 2 to 3.5 times the 0.1 of the fixed trees, and the capstone more).
+- **Order of draws** on the `draft` stream: the picks (section 4), then each picked tree in offer order: an any-stat tree's own stat, its filler nodes in index order, its capstone growth.
+- **State:** `TreeOffer.Rolls` (one `TreeRoll` per offered tree), carried into `TreeSlot.Roll` by `TakeTree` (and kept by a fusion's absorbed parent), and into `VaultTree.Roll` by `Vault.Seal` for display. `TrainingRun.Nodes` gives a slotted tree's nodes with its rolls applied; `SpendPoint`, `Growth` and `MonsterFighter` use it. The run hash adds a "rolls" block only when a run has any rolls, so a legacy run keeps its hash.
+- **Legacy (agent):** a run saved before rolled trees (the run in progress and every Vault entry; the save migration to schema v8 sets `RunModifiers.LegacyDrafts`, `specs/06` section 5) drafts as it was played: the crossing stat's own trees, not rolled. Its log replays unchanged.
+- **UI:** an offer card and a slot show the rolled nodes, a chip for the tree's own stat, and the capstone's growth in its text and the stat chips; a rolled node carries its own tooltip (the bridge's `rolled` object, `web/wasm/BRIDGE.md`).
+
 - **Skill book.** `UseBook` offers the book's tree. Books come from the Dungeon (post-MVP); until then a run is started with a list of books (`TrainingRun.Start(..., books)`), the debug grant `specs/13` T3 planned.
 - **Chase tree.** Section 5.
 - Offers queue oldest first.
@@ -91,7 +104,7 @@ Content table `chase_conditions`: `id`, `tree_id` (a chase tree), `type`, `ref`,
 | `stat_at_least` | trained stat | the stat is at least `amount` |
 | `tally_at_least` | `damage_dealt`, `evades`, `crits`, `kills`, `wins`, or `damage_<element>` | the run tally (section 6) is at least `amount` |
 
-**Source hints (kj).** The Trees tab lists the run species' two chase trees, tagged in-run or book-gated, and shows under each where every tree its conditions name comes from (the bridge's `source` text per tree: a species' native tree, the stat threshold that drafts a generic tree, or the book that holds a book tree), so a player can tell how to obtain what a condition asks for.
+**Source hints (kj).** The Trees tab lists the run species' two chase trees, tagged in-run or book-gated, and shows under each where every tree its conditions name comes from (the bridge's `source` text per tree: a species' native tree, the milestone threshold from which an Awakening can roll a generic tree, or the book that holds a book tree), so a player can tell how to obtain what a condition asks for.
 
 After every command the run reconciles chase trees, in this order:
 
@@ -168,7 +181,7 @@ The run adds up the monster's battle tallies (`specs/16` section 6.3) across its
 | Kind | Trees |
 |---|---|
 | Native | slime: *Slime Fundamentals*, *Gel Armor*; drake: *Pyromancy*, *Heavy Armor*; sprite: *Aether Striker*, *Mind Warp*; mandrake: *Rootbound*, *Mandrake Wail*; shade_hound: *Umbral Step*, *Shadow Harvest* (content `4.2`) |
-| Generic | one per stat at 300 (*Vital Core*, *Brute Force*, *Spellcraft*, *Sage Mind*, *Nimble Feet*, *Bulwark*, *Overclock*, *Fortune*), two for any stat at 500 (*Battle Instinct*, *Survivor*). Four stat trees put a damage skill scaled by their own stat at index 1, so an all-in build gets it soon after its Awakening (content 4.7, `specs/25` section 10): *Bulwark* *Iron Press* (DEF), *Sage Mind* *Smite* (WIS, magical), *Fortune* *Gamble* (LUK), *Spellcraft* *Arcane Blast* (INT) |
+| Generic | one per stat at 300 (*Vital Core*, *Brute Force*, *Spellcraft*, *Sage Mind*, *Nimble Feet*, *Bulwark*, *Overclock*, *Fortune*), two for any stat at 500 (*Battle Instinct*, *Survivor*). Any milestone may offer any of them, rolled (section 4.1); the content filler nodes are only a legacy run's. Four stat trees put a damage skill scaled by their own stat at index 1, so an all-in build gets it soon after its Awakening (content 4.7, `specs/25` section 10): *Bulwark* *Iron Press* (DEF), *Sage Mind* *Smite* (WIS, magical), *Fortune* *Gamble* (LUK), *Spellcraft* *Arcane Blast* (INT) |
 | Book | *Codex of Tides* (book `book_tides`, slime), *Ember Codex* (`book_embers`, drake), *Tome of Echoes* (`book_echoes`, sprite), *Verdant Herbarium* (`book_roots`, mandrake), *Umbral Grimoire* (`book_shadows`, shade_hound) |
 
 Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
@@ -187,9 +200,9 @@ Generated once by a script; the CSVs in `content_src/` are the source of truth a
 
 ## 8. Bots
 
-Run policies resolve offers (take into an empty slot; a chase tree overwrites the least-invested slot that is neither one of its prerequisites nor a prerequisite of a chase tree already slotted; otherwise discard), use their books at once, and buy the first affordable next node in slot order. **(agent, issue #111)** Once a chase tree is slotted and not maxed, its next node comes first: bought when affordable, else the SP are banked for it until the run ends. Before content `4.10` the four non-planning policies bought it in slot order, so a chase tree (in the last slot) got only what the trees before it left, and a chase offer could overwrite another slotted chase tree's prerequisite and lock it again. `hoarder` banks SP until cycle 9, then dumps them (`specs/12` section 5.4). `golden/training-run-vectors.txt` adds a run with every book per species.
+Run policies resolve offers (take into an empty slot, from an Awakening of rolled trees the first tree whose own stat is the stat the policy would drill now, else the first (issue #121); a chase tree overwrites the least-invested slot that is neither one of its prerequisites nor a prerequisite of a chase tree already slotted; otherwise discard), use their books at once, and buy the first affordable next node in slot order. **(agent, issue #111)** Once a chase tree is slotted and not maxed, its next node comes first: bought when affordable, else the SP are banked for it until the run ends. Before content `4.10` the four non-planning policies bought it in slot order, so a chase tree (in the last slot) got only what the trees before it left, and a chase offer could overwrite another slotted chase tree's prerequisite and lock it again. `hoarder` banks SP until cycle 9, then dumps them (`specs/12` section 5.4). `golden/training-run-vectors.txt` adds a run with every book per species.
 
-`chaser` (issue #111) plans toward one of its species' own chase capstones, read from `chase_conditions` (nothing hard-coded). Its **target** is a slotted own chase tree whose capstone is not bought yet; otherwise, among the own chase trees whose prerequisite trees can still be had (slotted, pending, a book tree whose book the run still holds, or a generic tree that a milestone not yet crossed would draft), the one with the fewest stat goals (unmet stat conditions, plus the offer stat of a generic prerequisite still below the milestone that drafts it), then the fewest SP still needed, then content order. It uses only its species' own book (a book whose tree is a prerequisite of one of its chase trees) and leaves other books unused. A draft holding a tree the target needs gives that tree; a needed tree, the own book tree or a chase offer takes an empty slot or overwrites the least-invested slot the target does not need. It buys the target's nodes first (prerequisites in condition order, then the chase tree) and other nodes only while the SP left plus the cycle SP still to come cover what the target needs. It drills the target's unmet stat conditions (and the offer stat of a generic prerequisite up to the milestone that drafts it) before its best-growth pick. The other four policies do not plan for chase trees, so what they measure stays comparable.
+`chaser` (issue #111) plans toward one of its species' own chase capstones, read from `chase_conditions` (nothing hard-coded). Its **target** is a slotted own chase tree whose capstone is not bought yet; otherwise, among the own chase trees whose prerequisite trees can still be had (slotted, pending, a book tree whose book the run still holds, or a generic tree that a milestone not yet crossed would draft), the one with the fewest stat goals (unmet stat conditions, plus the offer stat of a generic prerequisite still below the milestone that drafts it), then the fewest SP still needed, then content order. It uses only its species' own book (a book whose tree is a prerequisite of one of its chase trees) and leaves other books unused. A draft holding a tree the target needs gives that tree; a needed tree, the own book tree or a chase offer takes an empty slot or overwrites the least-invested slot the target does not need. It buys the target's nodes first (prerequisites in condition order, then the chase tree) and other nodes only while the SP left plus the cycle SP still to come cover what the target needs. It drills the target's unmet stat conditions (and, in a legacy run, the offer stat of a generic prerequisite up to the milestone that drafts it; since issue #121 any milestone may roll it, so no stat goal) before its best-growth pick. The other four policies do not plan for chase trees, so what they measure stays comparable.
 
 ## 9. Content rules
 
@@ -202,6 +215,12 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | `TREE_SLOTS` | 4 | `>= 2` |
 | `DRAFT_SIZE` | 3 | `> 0` |
 | `TREE_REFUND` | 0.5 | `[0, 1]`: share of the SP spent in a tree that comes back when it leaves its slot (section 4) |
+| `ROLL_OWN_CHANCE` | 0.7 | `[0, 1]`: share of a rolled tree's filler nodes on its own stat (section 4.1) |
+| `ROLL_GROWTH_OWN_MIN`, `_MAX` | 0.2, 0.35 | `0 <= MIN <= MAX`: a rolled growth node on the own stat |
+| `ROLL_GROWTH_OFF_MIN`, `_MAX` | 0.05, 0.15 | same: a rolled growth node on another stat |
+| `ROLL_FLAT_OWN_MIN`, `_MAX` | 15, 30 | same: a rolled flat node on the own stat (whole points) |
+| `ROLL_FLAT_OFF_MIN`, `_MAX` | 10, 20 | same: a rolled flat node on another stat |
+| `ROLL_CAP_GROWTH_MIN`, `_MAX` | 0.3, 0.6 | same: the growth a rolled tree's capstone adds to its own stat |
 | `MON_ECHO_POWER` | 0.5 | `[0, 1]` (`specs/16` section 7) |
 | `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE` | 0.05, 0.3, 0.3, 0.5 | `[0, 1]` (`specs/16` section 7) |
 | `MON_DOUBLE_TURNS` | 1 | `>= 1` (`specs/16` section 7) |

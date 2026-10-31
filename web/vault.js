@@ -9,7 +9,7 @@
   // Filter values for the title select that are not a title text.
   const HAS_TITLE = '\u0001has', NO_TITLE = '\u0001none';
 
-  let X = null;   // the run screen's helpers, set by render: { h, C, run, toast, rerender, nodeRow, elementTag, up, num, bar, TIP }
+  let X = null;   // the run screen's helpers, set by render: { h, C, run, toast, rerender, nodeRow, treeView, elementTag, up, num, bar, TIP }
   const st = {
     view: loadView(),        // { sort, species, element, title, lock }
     search: '',              // text search; not remembered, so a reload never hides monsters behind a forgotten search
@@ -264,7 +264,7 @@
       h('span', { class: 'lbl', text: X.up(s), ...X.TIP.attrs('stat:' + s) }), X.bar(e.stats[s], X.C.consts.statMax, X.num(e.stats[s]))])));
     modal.append(stats);
     e.trees.forEach((t, k) => {
-      const def = X.C.trees[t.id];
+      const def = X.treeView(t.id, t.rolled);   // a rolled Awakening tree shows its own rolls (specs/15 section 4.1)
       const tc = h('div', { class: 'card', 'data-id': 'detail-tree-' + k }, [h('div', { class: 'row between' }, [h('b', { text: treeName(t.id) }),
         h('span', { class: 'small muted num', text: t.bought + '/' + treeSize(t.id) + ' bought' })])]);
       // Nodes are bought in order (specs/15 section 1), so the first `bought` nodes are the bought ones.

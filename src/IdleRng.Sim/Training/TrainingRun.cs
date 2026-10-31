@@ -227,7 +227,7 @@ namespace IdleRng.Sim.Training
             else
             {
                 if (s.Slots[slot] != null) RemoveSlot(c, s, slot, result);
-                s.Slots[slot] = new TreeSlot { TreeId = tree };
+                s.Slots[slot] = new TreeSlot { TreeId = tree, Roll = offer.RollOf(choice) };
             }
             s.Offers.RemoveAt(0);
             s.Log.Add(new RunCommand(RunCommandKind.TakeTree) { Choice = choice, Slot = slot });
@@ -246,9 +246,9 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// Second Look (specs/18 section 3): redraw the oldest offer, a milestone draft, once per Mods.DraftRerolls. The new trees
-        /// are generic trees at or below the draft's threshold for <b>any</b> stat (agent: a stat's own pool is rarely bigger than
-        /// one draft), not slotted and not in a pending offer (so none it offered), by the same partial shuffle on the draft
-        /// stream. Refused when no such tree is left (<see cref="CanRerollDraft"/>).
+        /// are generic trees at or below the draft's threshold for <b>any</b> stat, not slotted and not in a pending offer (so none
+        /// it offered), by the same partial shuffle on the draft stream, and rolled afresh (specs/15 section 4.1) unless the run
+        /// is a legacy one. Refused when no such tree is left (<see cref="CanRerollDraft"/>).
         /// </summary>
         public static void RerollDraft(ContentDb c, RunState s)
         {
@@ -259,6 +259,7 @@ namespace IdleRng.Sim.Training
             var trees = DraftPicks(c, s, null, offer.Threshold);
             if (trees.Count == 0) throw new InvalidOperationException("no other tree can be drawn for this Awakening");
             offer.Trees = trees;
+            offer.Rolls = Rolls(c, s, trees);
             s.RerollsUsed++;
             s.Log.Add(new RunCommand(RunCommandKind.RerollDraft));
             Reconcile(c, s, null);
@@ -279,9 +280,9 @@ namespace IdleRng.Sim.Training
             if (s == null) throw new ArgumentNullException(nameof(s));
             if (slot < 0 || slot >= s.Slots.Length || s.Slots[slot] == null) throw new InvalidOperationException($"slot {slot} has no tree");
             var ts = s.Slots[slot];
-            var tree = c.Trees[ts.TreeId];
-            if (ts.Bought >= tree.Nodes.Count) throw new InvalidOperationException($"{tree.Id} is maxed");
-            var node = tree.Nodes[ts.Bought];
+            var nodes = Nodes(c, ts);
+            if (ts.Bought >= nodes.Count) throw new InvalidOperationException($"{ts.TreeId} is maxed");
+            var node = nodes[ts.Bought];
             if (s.Sp < node.Cost) throw new InvalidOperationException($"{node.Id} costs {node.Cost} SP, have {s.Sp}");
 
             s.Sp -= node.Cost;
@@ -326,7 +327,7 @@ namespace IdleRng.Sim.Training
             var f = new Fighter { Id = MonsterId, Element = c.Species[s.SpeciesId].Element, Stats = s.Stats.Clone() };
             foreach (var ts in AllTrees(s))
             {
-                var nodes = c.Trees[ts.TreeId].Nodes;
+                var nodes = Nodes(c, ts);
                 for (int i = 0; i < ts.Bought; i++)
                 {
                     var n = nodes[i];
@@ -402,8 +403,9 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>
-        /// Drill growth for <paramref name="stat"/>: species growth plus the bought growth nodes of the slotted trees, times the
-        /// Specialist talent's factor when it is on (x(1 + b) on the highest trained stat, ties included, else x(1 - b / 2)).
+        /// Drill growth for <paramref name="stat"/>: species growth plus the bought growth nodes of the slotted trees (and a rolled
+        /// tree's capstone growth once its capstone is bought, specs/15 section 4.1), times the Specialist talent's factor when it
+        /// is on (x(1 + b) on the highest trained stat, ties included, else x(1 - b / 2)).
         /// </summary>
         public static double Growth(ContentDb c, RunState s, string stat)
         {
@@ -411,9 +413,10 @@ namespace IdleRng.Sim.Training
             foreach (var ts in s.Slots)
             {
                 if (ts == null) continue;
-                var nodes = c.Trees[ts.TreeId].Nodes;
+                var nodes = Nodes(c, ts);
                 for (int i = 0; i < ts.Bought; i++)
                     if (nodes[i].Kind == NodeKind.Growth && nodes[i].Stat == stat) g += nodes[i].Amount;
+                if (ts.Roll != null && ts.Roll.Stat == stat && ts.Bought >= nodes.Count) g += ts.Roll.CapGrowth;
             }
             if (s.Mods.GlassCannonBonus > 0) g = stat == StatIds.Hp ? 0 : g * (1 + s.Mods.GlassCannonBonus);   // Glass Cannon
             double b = s.Mods.SpecialistBonus;
@@ -584,15 +587,74 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>
-        /// A milestone draft (specs/15 section 4): up to DRAFT_SIZE distinct generic trees for this stat (or any stat) at or below
-        /// this threshold that are not slotted or already offered, picked by partial shuffle on the draft stream (one draw per
-        /// pick). No eligible tree, no offer.
+        /// A milestone draft, an Awakening (specs/15 section 4): up to DRAFT_SIZE distinct generic trees for any stat (kj,
+        /// 2026-10-31, issue #121) at or below this threshold that are not slotted or already offered, picked by partial shuffle
+        /// on the draft stream (one draw per pick), then each rolled (section 4.1). A legacy run (RunModifiers.LegacyDrafts) drafts
+        /// as it was played: only trees for <paramref name="stat"/> or any stat, not rolled. No eligible tree, no offer.
         /// </summary>
         static void Draft(ContentDb c, RunState s, string stat, int threshold)
         {
-            var trees = DraftPicks(c, s, stat, threshold);
+            var trees = DraftPicks(c, s, s.Mods.LegacyDrafts ? stat : null, threshold);
             if (trees.Count == 0) return;
-            s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = stat, Threshold = threshold, Trees = trees });
+            s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = stat, Threshold = threshold, Trees = trees, Rolls = Rolls(c, s, trees) });
+        }
+
+        /// <summary>Each drafted tree's rolls, in order, on the draft stream; none for a legacy run.</summary>
+        static List<TreeRoll> Rolls(ContentDb c, RunState s, List<string> trees) =>
+            s.Mods.LegacyDrafts ? new List<TreeRoll>() : trees.ConvertAll(id => RollTree(c, s.Draft, c.Trees[id]));
+
+        /// <summary>
+        /// Roll a generic tree (specs/15 section 4.1). Its own stat is its offer_stat, or for an any-stat tree one trained stat
+        /// drawn uniformly. Each filler node draws three numbers: whether it is on the own stat (ROLL_OWN_CHANCE), which other
+        /// trained stat it is on otherwise (uniform), and its amount, uniform in the own or other range of its kind (growth
+        /// rounded to 0.01, flat points to whole points). Then the capstone growth, uniform in ROLL_CAP_GROWTH. Skill, trigger
+        /// and rule nodes draw nothing.
+        /// </summary>
+        public static TreeRoll RollTree(ContentDb c, RngStream r, TreeDef t)
+        {
+            var k = c.Constants;
+            var trained = StatIds.Trained;
+            string own = t.OfferStat ?? trained[Pick(r, trained.Length)];
+            var roll = new TreeRoll { Stat = own, NodeStats = new string[t.Nodes.Count], Amounts = new double[t.Nodes.Count] };
+            for (int i = 0; i < t.Nodes.Count; i++)
+            {
+                var n = t.Nodes[i];
+                if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
+                bool isOwn = r.NextDouble() < k.RollOwnChance;
+                int other = Pick(r, trained.Length - 1);
+                double u = r.NextDouble();
+                roll.NodeStats[i] = isOwn ? own : trained.Where(x => x != own).ElementAt(other);
+                roll.Amounts[i] = n.Kind == NodeKind.Growth
+                    ? Math.Round(isOwn ? Lerp(k.RollGrowthOwnMin, k.RollGrowthOwnMax, u) : Lerp(k.RollGrowthOffMin, k.RollGrowthOffMax, u), 2, MidpointRounding.AwayFromZero)
+                    : Math.Round(isOwn ? Lerp(k.RollFlatOwnMin, k.RollFlatOwnMax, u) : Lerp(k.RollFlatOffMin, k.RollFlatOffMax, u), MidpointRounding.AwayFromZero);
+            }
+            roll.CapGrowth = Math.Round(Lerp(k.RollCapGrowthMin, k.RollCapGrowthMax, r.NextDouble()), 2, MidpointRounding.AwayFromZero);
+            return roll;
+        }
+
+        static int Pick(RngStream r, int count) => Math.Min(count - 1, (int)(r.NextDouble() * count));
+        static double Lerp(double lo, double hi, double u) => lo + (hi - lo) * u;
+
+        /// <summary>The nodes of a slotted tree: its content nodes, with a rolled tree's rolls applied.</summary>
+        public static IReadOnlyList<TreeNodeDef> Nodes(ContentDb c, TreeSlot ts) => Nodes(c, ts.TreeId, ts.Roll);
+
+        /// <summary>Tree <paramref name="treeId"/>'s nodes with <paramref name="roll"/> applied (null = the content nodes).</summary>
+        public static IReadOnlyList<TreeNodeDef> Nodes(ContentDb c, string treeId, TreeRoll roll)
+        {
+            var t = c.Trees[treeId];
+            if (roll == null) return t.Nodes;
+            if (roll.Built != null) return roll.Built;
+            var list = new List<TreeNodeDef>(t.Nodes.Count);
+            for (int i = 0; i < t.Nodes.Count; i++)
+            {
+                var n = t.Nodes[i];
+                list.Add(roll.NodeStats[i] == null ? n : new TreeNodeDef
+                {
+                    Id = n.Id, TreeId = n.TreeId, Index = n.Index, Cost = n.Cost, Kind = n.Kind, Stat = roll.NodeStats[i], Amount = roll.Amounts[i],
+                });
+            }
+            roll.Built = list;
+            return list;
         }
 
         /// <summary>
@@ -873,6 +935,19 @@ namespace IdleRng.Sim.Training
                     foreach (var a in ts.Absorbed) { w.Str(a.TreeId); w.I32(a.Bought); foreach (var v in a.FlatAdded) w.F64(v); }
                 }
             }
+            if (s.Slots.Any(x => x != null && (x.Roll != null || x.Absorbed.Any(a => a.Roll != null))) || s.Offers.Any(o => o.Rolls.Count > 0))
+            {
+                // Rolled Awakening trees (specs/15 section 4.1, issue #121), hashed only when a run has any, so legacy runs keep their hash.
+                w.Str("rolls");
+                foreach (var ts in s.Slots)
+                {
+                    w.Bool(ts != null);
+                    if (ts == null) continue;
+                    Roll(w, ts.Roll);
+                    foreach (var a in ts.Absorbed) Roll(w, a.Roll);
+                }
+                foreach (var o in s.Offers) { w.I32(o.Rolls.Count); foreach (var r in o.Rolls) Roll(w, r); }
+            }
             if (talents)
             {
                 var m = s.Mods;
@@ -905,5 +980,14 @@ namespace IdleRng.Sim.Training
             || m.MilestoneMult != 1 || m.DraftRerolls != 0;
 
         static void Stream(CanonicalWriter w, RngStream r) { w.Str(r.Name); w.U64(r.Seed); w.U64(r.Counter); }
+
+        static void Roll(CanonicalWriter w, TreeRoll r)
+        {
+            w.Bool(r != null);
+            if (r == null) return;
+            w.Str(r.Stat); w.F64(r.CapGrowth);
+            w.I32(r.NodeStats.Length);
+            for (int i = 0; i < r.NodeStats.Length; i++) { w.Str(r.NodeStats[i]); w.F64(r.Amounts[i]); }
+        }
     }
 }

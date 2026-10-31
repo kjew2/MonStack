@@ -167,17 +167,18 @@ namespace IdleRng.Sim.Tests
             Assert.That(offer.Source, Is.EqualTo(OfferSource.Milestone));
             Assert.That(offer.Trees.Count, Is.InRange(1, K.DraftSize));
             Assert.That(offer.Trees.Distinct().Count(), Is.EqualTo(offer.Trees.Count));
+            Assert.That(offer.Rolls.Count, Is.EqualTo(offer.Trees.Count), "every drafted tree is rolled (specs/15 section 4.1)");
             foreach (var id in offer.Trees)
             {
                 var tr = Db.Trees[id];
                 Assert.That(tr.Kind, Is.EqualTo(TreeKind.Generic));
-                Assert.That(tr.OfferStat == null || tr.OfferStat == StatIds.Str, Is.True);
-                Assert.That(tr.OfferThreshold, Is.LessThanOrEqualTo(t));
+                Assert.That(tr.OfferThreshold, Is.LessThanOrEqualTo(t));   // any stat's tree (issue #121)
             }
             Assert.Throws<InvalidOperationException>(() => TrainingRun.Drill(Db, s, StatIds.Str));
             Assert.Throws<InvalidOperationException>(() => TrainingRun.Rest(Db, s));
             var r = TrainingRun.TakeTree(Db, s, 0, 2);
             Assert.That(s.Slots[2].TreeId, Is.EqualTo(offer.Trees[0]));
+            Assert.That(s.Slots[2].Roll, Is.SameAs(offer.Rolls[0]), "the slotted tree keeps its rolls");
             Assert.That(r.Removed, Is.Empty);
             Assert.That(s.Offers, Is.Empty);
             Assert.DoesNotThrow(() => TrainingRun.Rest(Db, s));

@@ -314,6 +314,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(after, Is.Not.Empty);
             Assert.That(after.Count, Is.EqualTo(Math.Min(K.DraftSize, pool - before.Count)));
             Assert.That(after.Intersect(before), Is.Empty, "a reroll draws new trees");
+            Assert.That(s.Offers[0].Rolls.Count, Is.EqualTo(after.Count), "the new trees are rolled too (specs/15 section 4.1)");
             Assert.That(s.Offers[0].Source, Is.EqualTo(OfferSource.Milestone));
             Assert.That(s.RerollsUsed, Is.EqualTo(1));
             Assert.That(after.Any(id => Db.Trees[id].OfferStat != null && Db.Trees[id].OfferStat != StatIds.Int), "a reroll draws other stats' trees too");

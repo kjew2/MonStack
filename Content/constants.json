@@ -222,6 +222,61 @@
       "value": 0.5
     },
     {
+      "key": "ROLL_OWN_CHANCE",
+      "type": "double",
+      "value": 0.7
+    },
+    {
+      "key": "ROLL_GROWTH_OWN_MIN",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "ROLL_GROWTH_OWN_MAX",
+      "type": "double",
+      "value": 0.35
+    },
+    {
+      "key": "ROLL_GROWTH_OFF_MIN",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "ROLL_GROWTH_OFF_MAX",
+      "type": "double",
+      "value": 0.15
+    },
+    {
+      "key": "ROLL_FLAT_OWN_MIN",
+      "type": "double",
+      "value": 15.0
+    },
+    {
+      "key": "ROLL_FLAT_OWN_MAX",
+      "type": "double",
+      "value": 30.0
+    },
+    {
+      "key": "ROLL_FLAT_OFF_MIN",
+      "type": "double",
+      "value": 10.0
+    },
+    {
+      "key": "ROLL_FLAT_OFF_MAX",
+      "type": "double",
+      "value": 20.0
+    },
+    {
+      "key": "ROLL_CAP_GROWTH_MIN",
+      "type": "double",
+      "value": 0.3
+    },
+    {
+      "key": "ROLL_CAP_GROWTH_MAX",
+      "type": "double",
+      "value": 0.6
+    },
+    {
       "key": "MON_ECHO_POWER",
       "type": "double",
       "value": 1.0

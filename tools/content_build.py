@@ -58,6 +58,9 @@ REQUIRED_CONSTANTS = {
     "INJURY_RECOVER_ENERGY": "double", "STAT_MAX": "double", "FIGHT_EVERY": "int",
     # skill trees (specs/15)
     "SP_PER_CYCLE": "int", "SP_PER_WIN": "int", "TREE_SLOTS": "int", "DRAFT_SIZE": "int", "TREE_REFUND": "double",
+    "ROLL_OWN_CHANCE": "double", "ROLL_GROWTH_OWN_MIN": "double", "ROLL_GROWTH_OWN_MAX": "double", "ROLL_GROWTH_OFF_MIN": "double",
+    "ROLL_GROWTH_OFF_MAX": "double", "ROLL_FLAT_OWN_MIN": "double", "ROLL_FLAT_OWN_MAX": "double", "ROLL_FLAT_OFF_MIN": "double",
+    "ROLL_FLAT_OFF_MAX": "double", "ROLL_CAP_GROWTH_MIN": "double", "ROLL_CAP_GROWTH_MAX": "double",
     "MON_ECHO_POWER": "double",
     "MON_TIDE_REGEN": "double", "MON_TIDE_SHIELD_CAP": "double", "MON_DRAIN_FRAC": "double", "MON_FIRE_PIERCE": "double",
     "MON_DOUBLE_TURNS": "int", "MON_REBIRTH_HEAL": "double", "MON_WAIL_STAGGER": "double", "MON_WAIL_WITHER": "double", "MON_VEIL_EVADE_CAP": "double",
@@ -106,6 +109,9 @@ MON_RANGES = {
     "SP_PER_CYCLE": (">= 0", lambda v: v >= 0), "SP_PER_WIN": (">= 0", lambda v: v >= 0),
     "TREE_SLOTS": (">= 2", lambda v: v >= 2), "DRAFT_SIZE": ("> 0", lambda v: v > 0),
     "TREE_REFUND": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "ROLL_OWN_CHANCE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    **{k: (">= 0", lambda v: v >= 0) for k in ["ROLL_GROWTH_OWN_MIN", "ROLL_GROWTH_OWN_MAX", "ROLL_GROWTH_OFF_MIN", "ROLL_GROWTH_OFF_MAX",
+        "ROLL_FLAT_OWN_MIN", "ROLL_FLAT_OWN_MAX", "ROLL_FLAT_OFF_MIN", "ROLL_FLAT_OFF_MAX", "ROLL_CAP_GROWTH_MIN", "ROLL_CAP_GROWTH_MAX"]},
     "MON_ECHO_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_TIDE_REGEN": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TIDE_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DRAIN_FRAC": (">= 0", lambda v: v >= 0), "MON_FIRE_PIERCE": ("[0, 1]", lambda v: 0 <= v <= 1),
@@ -636,6 +642,9 @@ def validate_training(t, keys, errs):
         errs.add("E043", "constants[DRILL_FAIL_MIN]", "value out of range (<= DRILL_FAIL_MAX)")
     if kv.get("DRILL_FAIL_MAX", 0) + kv.get("DRILL_SUPER_P", 0) > 1:
         errs.add("E043", "constants[DRILL_SUPER_P]", "value out of range (DRILL_FAIL_MAX + DRILL_SUPER_P <= 1)")
+    for part in ("GROWTH_OWN", "GROWTH_OFF", "FLAT_OWN", "FLAT_OFF", "CAP_GROWTH"):   # rolled Awakening trees (specs/15 section 4.1)
+        if kv.get(f"ROLL_{part}_MIN", 0) > kv.get(f"ROLL_{part}_MAX", 0):
+            errs.add("E043", f"constants[ROLL_{part}_MIN]", f"value out of range (<= ROLL_{part}_MAX)")
     if not t["species"]:
         errs.add("E044", "species", "at least one species is required")
     for r in t["species"]:

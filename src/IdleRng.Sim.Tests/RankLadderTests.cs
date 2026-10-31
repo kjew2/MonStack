@@ -186,7 +186,8 @@ namespace IdleRng.Sim.Tests
             // re-pinned when battle rules change the fights themselves (content 4.6: graze, fortune, DEX crit damage; specs/25),
             // which specs/06 section 5 allows: entries sealed under older rules may stop replaying.
             const string V5Hash = "8262eb7467bf036bb757176797b1b7914d39b3c4767a33007fc48373b320996f";
-            var s = Scripted(TrainingRun.Start(Db, "drake", 11, null, null, new List<string>()));
+            // Saved before rolled Awakening trees, so it replays with LegacyDrafts (the v7 -> v8 save migration, issue #121).
+            var s = Scripted(TrainingRun.Start(Db, "drake", 11, null, new RunModifiers { LegacyDrafts = true }, new List<string>()));
             Assert.That(s.Ladder, Is.Empty);
             Assert.That(TrainingRun.LadderEnemy(Db, s, 0), Is.Null);
             var flat = TrainingRun.OpponentFighter(Db, s, 0);

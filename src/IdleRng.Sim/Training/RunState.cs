@@ -109,6 +109,13 @@ namespace IdleRng.Sim.Training
         /// <summary>Milestone drafts the run may reroll (Second Look).</summary>
         public int DraftRerolls { get; set; }
 
+        /// <summary>
+        /// Legacy, for replay only: the run was started before rolled Awakening trees (kj, 2026-10-31, issue #121; specs/15
+        /// section 4.1), so its Awakenings offer the fixed generic trees of the stat that crossed the milestone, as it was played.
+        /// Set by the save migration to schema v8 on every saved run and Vault entry; never set for a new run.
+        /// </summary>
+        public bool LegacyDrafts { get; set; }
+
         // Legendary rule changes (specs/18 section 3, issue #103). Hashed only when a run uses one (run hash version 8).
 
         /// <summary>Drills never injure (Iron Constitution). The injury roll is still drawn, so the stream stays aligned.</summary>
@@ -152,6 +159,12 @@ namespace IdleRng.Sim.Training
         /// </summary>
         public List<TreeSlot> Absorbed { get; set; } = new List<TreeSlot>();
 
+        /// <summary>
+        /// A rolled Awakening tree's rolls (specs/15 section 4.1): its filler nodes' stats and amounts and its capstone growth.
+        /// Null for every other tree, which uses its content nodes as they are. Never changed once rolled, so clones share it.
+        /// </summary>
+        public TreeRoll Roll { get; set; }
+
         public TreeSlot Clone()
         {
             var c = (TreeSlot)MemberwiseClone();
@@ -159,6 +172,29 @@ namespace IdleRng.Sim.Training
             c.Absorbed = Absorbed.ConvertAll(a => a.Clone());
             return c;
         }
+    }
+
+    /// <summary>
+    /// A rolled Awakening tree (kj, 2026-10-31, issue #121; specs/15 section 4.1): a generic tree's skill, trigger and rule nodes
+    /// and costs stay as in content; each filler node's stat and amount, and a growth bonus its capstone adds to the tree's own
+    /// stat, are rolled when the tree is offered. Never changed once rolled.
+    /// </summary>
+    public sealed class TreeRoll
+    {
+        /// <summary>The tree's own stat: its offer_stat, or a rolled trained stat for an any-stat tree.</summary>
+        public string Stat { get; set; }
+
+        /// <summary>Per node index: a filler node's rolled stat; null for a skill, trigger or rule node.</summary>
+        public string[] NodeStats { get; set; }
+
+        /// <summary>Per node index: a filler node's rolled amount (growth, or whole flat points); 0 for the others.</summary>
+        public double[] Amounts { get; set; }
+
+        /// <summary>Growth the bought capstone adds to <see cref="Stat"/>.</summary>
+        public double CapGrowth { get; set; }
+
+        /// <summary>The nodes with the rolls applied, built once (TrainingRun.Nodes). Not saved.</summary>
+        internal IReadOnlyList<TreeNodeDef> Built;
     }
 
     public enum OfferSource { Milestone, Book, Chase, Fusion }
@@ -172,14 +208,24 @@ namespace IdleRng.Sim.Training
         public OfferSource Source { get; set; }
         public List<string> Trees { get; set; } = new List<string>();
 
+        /// <summary>
+        /// Milestone drafts of a run with rolled trees: each tree's rolls, in the order of <see cref="Trees"/>. Empty for every
+        /// other offer (and a legacy run's drafts).
+        /// </summary>
+        public List<TreeRoll> Rolls { get; set; } = new List<TreeRoll>();
+
         /// <summary>Milestone drafts: the stat and threshold that caused it.</summary>
         public string Stat { get; set; }
         public int Threshold { get; set; }
+
+        /// <summary>The rolls of tree <paramref name="choice"/>, or null when the offer has none.</summary>
+        public TreeRoll RollOf(int choice) => choice >= 0 && choice < Rolls.Count ? Rolls[choice] : null;
 
         public TreeOffer Clone()
         {
             var c = (TreeOffer)MemberwiseClone();
             c.Trees = new List<string>(Trees);
+            c.Rolls = new List<TreeRoll>(Rolls);
             return c;
         }
     }
