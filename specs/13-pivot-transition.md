@@ -173,7 +173,7 @@ MVP is T0-T7 plus T9 and T10 (matches `specs/12` section 12.1; T9 and T10 were m
 |---|---|
 | T8 | **Done** (`specs/19`; `Vault.Seal` stores floor, killer and Legacy Title; the web client spins the wheel after sealing and shows "Floor N: title" on the grade screen and Vault cards). End-of-run gauntlet (kj, 2026-10-30): the finished monster is simulated up a boss tower, the wheel spin lands on the floor and enemy that beat it, Legacy Title (`specs/12` section 6) |
 | T9 | **P0.** Species gacha UI and dupes -> aptitude ranks (reuses `Gacha.cs`, pity, vectors). The gem-sale question (section 9 item 4) blocks only the economy part |
-| T10 | **P0.** Rules written in `specs/21` (not built; questions 1 and 2 there block the content step). Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
+| T10 | **P0, in progress** (`specs/21`; kj answered its questions 1 and 2 on 2026-10-31). Step 1, the battle hooks (entropy gauge, boss phases, environmental clock), is done; the tower sim, account and web client are next. Daily Tower: 4v1 floors, boss phases, entropy gauge, environmental clock, Skill Book drops |
 | T11 | Endless Tower: 4v4, mutators, gambit rulebook editor |
 | T12 | Async 4v4 PvP on `specs/10`: accounts, server-resolved battles, cosmetic rewards |
 | T13 | Monetization: opt-in ads, ad-removal pass, cosmetics; platform builds |

@@ -28,7 +28,7 @@ namespace IdleRng.Sim.Combat
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
             Validate(rules);
-            var s = new FightState();
+            var s = new FightState { Tower = rules.Tower != null };
             var ids = new HashSet<string>(StringComparer.Ordinal);
             AddSide(rules, s, sideA, 0, ids, nameof(sideA));
             AddSide(rules, s, sideB, 1, ids, nameof(sideB));
@@ -40,6 +40,7 @@ namespace IdleRng.Sim.Combat
             if (!(r.GaugeSize > 0 && r.TurnTicks > 0 && r.TimeLimitTicks > 0 && r.SideSize > 0 && r.HpPerPoint > 0 && r.DefK > 0
                   && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1))
                 throw new ArgumentException("fight rules out of range (specs/16 section 7)", nameof(r));
+            if (r.Tower != null && !r.Tower.Valid) throw new ArgumentException("tower rules out of range (specs/21 section 5)", nameof(r));
         }
 
         static void AddSide(FightRules rules, FightState s, IReadOnlyList<Fighter> side, int sideIndex, HashSet<string> ids, string name)
@@ -50,26 +51,31 @@ namespace IdleRng.Sim.Combat
             for (int i = 0; i < side.Count; i++)
             {
                 var f = side[i];
-                ValidateFighter(f, name, i);
+                ValidateFighter(rules, f, name, i);
                 if (!ids.Add(f.Id)) throw new ArgumentException($"fighter id '{f.Id}' appears twice", name);
-                var u = new FightUnit
-                {
-                    Source = f, Side = sideIndex, Slot = i,
-                    MaxHp = MaxHp(rules, f.Stats.Hp),
-                    Cooldowns = new int[f.Skills.Count],
-                };
-                u.Hp = u.MaxHp;
-                s.Units.Add(u);
+                s.Units.Add(NewUnit(rules, f, sideIndex, i));
             }
         }
 
-        static void ValidateFighter(Fighter f, string side, int slot)
+        static FightUnit NewUnit(FightRules rules, Fighter f, int side, int slot)
+        {
+            var u = new FightUnit
+            {
+                Source = f, Side = side, Slot = slot,
+                MaxHp = MaxHp(rules, f.Stats.Hp),
+                Cooldowns = new int[f.Skills.Count],
+            };
+            u.Hp = u.MaxHp;
+            return u;
+        }
+
+        static void ValidateFighter(FightRules rules, Fighter f, string side, int slot)
         {
             string at = $"{side}[{slot}]";
             if (f == null) throw new ArgumentException($"{at} is null", side);
             if (string.IsNullOrEmpty(f.Id)) throw new ArgumentException($"{at} needs an id", side);
-            if (f.Stats == null || f.Skills == null || f.Triggers == null || f.Rules == null)
-                throw new ArgumentException($"{at} ({f.Id}): Stats, Skills, Triggers and Rules must not be null", side);
+            if (f.Stats == null || f.Skills == null || f.Triggers == null || f.Rules == null || f.Phases == null)
+                throw new ArgumentException($"{at} ({f.Id}): Stats, Skills, Triggers, Rules and Phases must not be null", side);
             foreach (var id in StatIds.Trained)
             {
                 double v = f.Stats.Get(id);
@@ -83,6 +89,37 @@ namespace IdleRng.Sim.Combat
             }
             foreach (var r in f.Rules)
                 if (!RuleModifiers.IsKnown(r)) throw new ArgumentException($"{at} ({f.Id}): unknown rule modifier '{r}'", side);
+            ValidatePhases(rules, f, at, side);
+        }
+
+        static void ValidatePhases(FightRules rules, Fighter f, string at, string side)
+        {
+            if (f.Phases.Count == 0) return;
+            if (rules.Tower == null) throw new ArgumentException($"{at} ({f.Id}): boss phases need FightRules.Tower", side);
+            double prev = 1;
+            foreach (var p in f.Phases)
+            {
+                if (p == null || !PhaseKinds.IsKnown(p.Kind) || p.AddSkills == null)
+                    throw new ArgumentException($"{at} ({f.Id}): unknown or null boss phase", side);
+                if (!(p.EnterHp > 0 && p.EnterHp < prev))
+                    throw new ArgumentException($"{at} ({f.Id}): phase enter_hp must be strictly decreasing and inside (0, 1)", side);
+                prev = p.EnterHp;
+                bool ok;
+                switch (p.Kind)
+                {
+                    case PhaseKinds.ShieldCheck: ok = p.Power > 0 && p.Duration > 0 && p.HealFrac >= 0 && p.Buff >= 0; break;
+                    case PhaseKinds.Split: ok = p.Count >= 1 && p.Guard >= 0 && p.Guard <= 1 && p.Add != null; break;
+                    case PhaseKinds.Channel: ok = p.Power > 0 && p.Duration > 0 && p.Strike >= 0; break;
+                    default: ok = p.Buff >= 0; break;
+                }
+                if (!ok) throw new ArgumentException($"{at} ({f.Id}): phase '{p.Kind}' has out-of-range values (specs/21 section 3.2)", side);
+                if (p.Add != null)
+                {
+                    ValidateFighter(rules, p.Add, side, 0);
+                    if (p.Add.Phases.Count > 0) throw new ArgumentException($"{at} ({f.Id}): an add cannot have phases", side);
+                }
+                foreach (var sk in p.AddSkills) ValidateSkill(sk, at, f.Id, side);
+            }
         }
 
         static void ValidateSkill(CombatSkill sk, string at, string fid, string side)
@@ -129,6 +166,7 @@ namespace IdleRng.Sim.Combat
                 if (start != FightOutcome.Ongoing) return s.Outcome = start;
             }
             s.Ticks++;
+            if (s.Tower) s.PeakCorruption = Math.Max(s.PeakCorruption, CorruptionLevel(rules, s.Ticks));
             foreach (var u in s.Units)
                 if (u.Alive) u.Gauge += GaugeFill(rules, Eff(rules, u, StatIds.Spd));
 
@@ -138,11 +176,17 @@ namespace IdleRng.Sim.Combat
                 if (actor == null) break;
                 actor.Gauge -= rules.GaugeSize;
                 Act(rules, s, actor, rng, onAction);
+                CheckPhases(rules, s, rng, onAction);
                 var o = Decide(s, actor.Side);
                 if (o != FightOutcome.Ongoing) return s.Outcome = o;
             }
 
-            foreach (var u in s.Units) Age(u);
+            int strikeSide = AgeAll(rules, s, onAction);
+            if (strikeSide >= 0)
+            {
+                var o = Decide(s, strikeSide);
+                if (o != FightOutcome.Ongoing) return s.Outcome = o;
+            }
             if (s.Ticks >= rules.TimeLimitTicks) s.Outcome = FightOutcome.TimedOut;
             return s.Outcome;
         }
@@ -166,8 +210,46 @@ namespace IdleRng.Sim.Combat
 
         static bool SideAlive(FightState s, int side)
         {
-            foreach (var u in s.Units) if (u.Side == side && u.Alive) return true;
+            foreach (var u in s.Units) if (u.Side == side && u.Alive && !u.IsAdd) return true;
             return false;
+        }
+
+        /// <summary>
+        /// End of tick: age timed effects, shields and taunts, then the tower's timed parts (specs/21 section 3.2): the enrage
+        /// buff, a shield_check shield's expiry and a channel's countdown. Returns the side of a unit whose channel strike landed
+        /// (the caller re-checks the outcome), or -1.
+        /// </summary>
+        static int AgeAll(FightRules r, FightState s, Action<FightAction> onAction)
+        {
+            int strikeSide = -1;
+            foreach (var u in s.Units)
+            {
+                if (u.EnrageStep > 0 && u.Alive && s.Ticks % r.TurnTicks == 0) BumpEnrage(r, u);
+                Age(u);
+                if (u.CheckPending && u.Shield <= 0) u.CheckPending = false;   // broken in time
+                if (u.ShieldTicks > 0 && --u.ShieldTicks == 0)
+                {
+                    if (u.CheckPending && u.Alive) CheckFailed(r, s, u, onAction);
+                    u.CheckPending = false;
+                    u.Shield = 0;
+                }
+                if (u.ChannelTicks > 0 && u.Alive)
+                {
+                    if (u.ChannelDealt >= u.ChannelNeed)
+                    {
+                        u.ChannelTicks = 0;
+                        onAction?.Invoke(new FightAction(u.Id, "channel_broken", null, u.ChannelDealt));
+                    }
+                    else if (--u.ChannelTicks == 0)
+                    {
+                        double amt = u.ChannelStrike * Math.Max(Eff(r, u, StatIds.Str), Eff(r, u, StatIds.Int)), total = 0;
+                        foreach (var e in Enemies(s, u)) total += Absorb(u, e, amt, null);
+                        onAction?.Invoke(new FightAction(u.Id, "channel_strike", null, total));
+                        strikeSide = u.Side;
+                    }
+                }
+            }
+            return strikeSide;
         }
 
         static void Age(FightUnit u)
@@ -178,8 +260,23 @@ namespace IdleRng.Sim.Combat
                 if (e.TicksLeft < 0) continue;
                 if (--e.TicksLeft <= 0) u.Effects.RemoveAt(i);
             }
-            if (u.ShieldTicks > 0 && --u.ShieldTicks == 0) u.Shield = 0;
             if (u.TauntTicks > 0) u.TauntTicks--;
+        }
+
+        static void CheckFailed(FightRules r, FightState s, FightUnit u, Action<FightAction> onAction)
+        {
+            double heal = Math.Min(u.MaxHp - u.Hp, u.CheckHealFrac * u.MaxHp * HealMult(r, s));
+            u.Hp += heal;
+            if (u.CheckBuff > 0) AddEffect(r, u, StatIds.DmgDealt, u.CheckBuff, -1, "phase_check");
+            onAction?.Invoke(new FightAction(u.Id, "check_failed", null, heal));
+        }
+
+        /// <summary>The enrage phase's buff: one permanent effect that grows by EnrageStep every turn.</summary>
+        static void BumpEnrage(FightRules r, FightUnit u)
+        {
+            foreach (var e in u.Effects)
+                if (e.Source == "phase_enrage" && e.Stat == StatIds.DmgDealt) { e.Frac += u.EnrageStep; return; }
+            AddEffect(r, u, StatIds.DmgDealt, u.EnrageStep, -1, "phase_enrage");
         }
 
         // ------------------------------------------------------------------ triggers
@@ -204,7 +301,11 @@ namespace IdleRng.Sim.Combat
             if (shared.Count == 0) return;
             var list = shared.ToArray();
             foreach (var sk in list)
-                if (u.Alive) Use(r, s, u, sk, rng, onAction, triggered: true);
+                if (u.Alive)
+                {
+                    Use(r, s, u, sk, rng, onAction, triggered: true);
+                    if (trigger != FightTrigger.BattleStart) GainEntropy(r, s, u, r.Tower?.EntropyPerTrigger ?? 0, onAction);
+                }
         }
 
         // ------------------------------------------------------------------ actions
@@ -212,6 +313,7 @@ namespace IdleRng.Sim.Combat
         static void Act(FightRules r, FightState s, FightUnit u, IRandomSource rng, Action<FightAction> onAction)
         {
             u.Tally.Actions++;
+            if (r.Tower != null) u.Entropy = Math.Max(0, u.Entropy - r.Tower.EntropyDecay);
             Fire(r, s, u, FightTrigger.OnAction, rng, onAction);
             if (!u.Alive) return;
             for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
@@ -227,7 +329,10 @@ namespace IdleRng.Sim.Combat
                     Use(r, s, u, sk, rng, onAction, triggered: false);
                     if (u.Alive && Has(u, RuleModifiers.EchoCast)
                         && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield))
+                    {
                         Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
+                        GainEntropy(r, s, u, r.Tower?.EntropyPerEcho ?? 0, onAction);
+                    }
                     return;
                 }
             BasicAttack(r, s, u, rng, onAction);
@@ -293,7 +398,7 @@ namespace IdleRng.Sim.Combat
                 }
                 case SkillKind.Heal:
                 {
-                    double amt = Scaled(r, src, sk), total = 0;
+                    double amt = Scaled(r, src, sk) * HealMult(r, s), total = 0;
                     var targets = Allies(s, src, sk.Target);
                     foreach (var t in targets)
                     {
@@ -307,7 +412,7 @@ namespace IdleRng.Sim.Combat
                 }
                 case SkillKind.Shield:
                 {
-                    double amt = Scaled(r, src, sk);
+                    double amt = Scaled(r, src, sk) * HealMult(r, s);
                     foreach (var t in Allies(s, src, sk.Target))
                     {
                         t.Shield = Math.Max(t.Shield, amt);
@@ -370,8 +475,15 @@ namespace IdleRng.Sim.Combat
             double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate));
             if (rate > 0 && Draw(rng) < rate) { crit = true; raw *= Math.Max(1.0, r.CritDmg + Bonus(src, StatIds.CritDmg)); }
             raw *= r.ElementMult(element, tgt.Source.Element);
+            double dmgBonus = Bonus(src, StatIds.DmgDealt);
+            if (dmgBonus != 0) raw *= Math.Max(0.0, 1 + dmgBonus);
             double after = Mitigate(r, raw, Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def));
             double mitigated = raw - after;
+            if (r.Tower != null)
+            {
+                after *= 1 + CorruptionLevel(r, s.Ticks) * r.Tower.CorruptDmgPerLevel;
+                if (tgt.Guard > 0 && GuardActive(s, tgt)) after *= Math.Max(0.0, 1 - tgt.Guard);
+            }
             double dealt = Absorb(src, tgt, after, element);
 
             if (crit) src.Tally.Crits++;
@@ -384,6 +496,7 @@ namespace IdleRng.Sim.Combat
                 tgt.Tally.Counters++;
                 double c = Absorb(tgt, src, mitigated, null);
                 onAction?.Invoke(new FightAction(tgt.Id, null, src.Id, c, false, false, false, true));
+                GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, onAction);
             }
             return dealt;
         }
@@ -405,6 +518,7 @@ namespace IdleRng.Sim.Combat
                 src.Tally.DamageByElement[element] = prev + dealt;
             }
             if (wasAlive && !tgt.Alive) src.Tally.Kills++;
+            if (tgt.ChannelTicks > 0) tgt.ChannelDealt += absorbed + dealt;
             return dealt;
         }
 
@@ -475,6 +589,163 @@ namespace IdleRng.Sim.Combat
         }
 
         static bool Has(FightUnit u, string rule) => u.Source.Rules.Contains(rule);
+
+        // ------------------------------------------------------------------ the tower (specs/21 section 3)
+
+        /// <summary>Arena corruption level at a tick: max(0, (tick - CORRUPT_START_TICK) / CORRUPT_EVERY_TICKS), integer division. 0 without tower rules.</summary>
+        public static int CorruptionLevel(FightRules r, int ticks)
+        {
+            var t = r.Tower;
+            if (t == null || ticks < t.CorruptStartTick) return 0;
+            return (ticks - t.CorruptStartTick) / t.CorruptEveryTicks;
+        }
+
+        /// <summary>Healing and shield multiplier from corruption: max(CORRUPT_HEAL_FLOOR, 1 - level x CORRUPT_HEAL_PER_LEVEL). Exactly 1 without tower rules.</summary>
+        public static double HealMult(FightRules r, FightState s) =>
+            r.Tower == null ? 1.0 : Math.Max(r.Tower.CorruptHealFloor, 1 - CorruptionLevel(r, s.Ticks) * r.Tower.CorruptHealPerLevel);
+
+        static bool GuardActive(FightState s, FightUnit boss)
+        {
+            foreach (var a in s.Units) if (a.IsAdd && a.Side == boss.Side && a.Alive) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Add entropy to a unit (scaled by its entropy_gain effects). At the cap the gauge vents and resets: recoil, stun, then enrage,
+        /// by the unit's vent count; a unit with entropy_convert shields itself instead.
+        /// </summary>
+        static void GainEntropy(FightRules r, FightState s, FightUnit u, double amount, Action<FightAction> onAction)
+        {
+            var t = r.Tower;
+            if (t == null || !u.Alive || !(amount > 0)) return;
+            u.Entropy += amount * Math.Max(0.0, 1 + Bonus(u, StatIds.EntropyGain));
+            if (u.Entropy < t.EntropyCap) return;
+            u.Entropy = 0;
+            int kind = u.Vents++ % 3;
+            if (Has(u, RuleModifiers.EntropyConvert))
+            {
+                double amt = t.ConvertShield * u.MaxHp;
+                u.Shield = Math.Max(u.Shield, amt);
+                u.ShieldTicks = Math.Max(u.ShieldTicks, t.ConvertTurns * r.TurnTicks);
+                onAction?.Invoke(new FightAction(u.Id, "vent:convert", u.Id, amt));
+                return;
+            }
+            switch (kind)
+            {
+                case 0:
+                {
+                    double dmg = t.RecoilFrac * u.MaxHp;
+                    double absorbed = Math.Min(u.Shield, dmg);
+                    u.Shield -= absorbed;
+                    double lost = Math.Min(u.Hp, dmg - absorbed);
+                    u.Hp -= lost;
+                    u.Tally.DamageTaken += lost;
+                    onAction?.Invoke(new FightAction(u.Id, "vent:recoil", u.Id, lost));
+                    break;
+                }
+                case 1:
+                    u.Gauge = Math.Max(0.0, u.Gauge - t.StunGauge);
+                    onAction?.Invoke(new FightAction(u.Id, "vent:stun", u.Id, t.StunGauge));
+                    break;
+                default:
+                    foreach (var e in Enemies(s, u)) AddEffect(r, e, StatIds.DmgDealt, t.EnrageFrac, t.EnrageTurns * r.TurnTicks, "vent_enrage");
+                    onAction?.Invoke(new FightAction(u.Id, "vent:enrage", null, t.EnrageFrac));
+                    break;
+            }
+        }
+
+        /// <summary>After each action: every living boss whose HP has reached its next phase's threshold enters it (one phase per unit per action).</summary>
+        static void CheckPhases(FightRules r, FightState s, IRandomSource rng, Action<FightAction> onAction)
+        {
+            if (!s.Tower) return;
+            for (int i = 0, n = s.Units.Count; i < n; i++)   // adds spawned now are not checked
+            {
+                var u = s.Units[i];
+                var phases = u.Source.Phases;
+                if (!u.Alive || u.PhaseNext >= phases.Count) continue;
+                var p = phases[u.PhaseNext];
+                if (u.Hp > p.EnterHp * u.MaxHp) continue;
+                u.PhaseNext++;
+                EnterPhase(r, s, u, p, rng, onAction);
+            }
+        }
+
+        static void EnterPhase(FightRules r, FightState s, FightUnit u, BossPhase p, IRandomSource rng, Action<FightAction> onAction)
+        {
+            double amount = 0;
+            switch (p.Kind)
+            {
+                case PhaseKinds.ShieldCheck:
+                    amount = p.Power * u.MaxHp;
+                    u.Shield = amount;
+                    u.ShieldTicks = p.Duration * r.TurnTicks;
+                    u.CheckPending = true; u.CheckHealFrac = p.HealFrac; u.CheckBuff = p.Buff;
+                    break;
+                case PhaseKinds.Split:
+                    u.Guard = p.Guard;
+                    break;
+                case PhaseKinds.Channel:
+                    amount = p.Power * u.MaxHp;
+                    u.ChannelTicks = p.Duration * r.TurnTicks; u.ChannelNeed = amount; u.ChannelStrike = p.Strike; u.ChannelDealt = 0;
+                    break;
+                default:
+                    u.EnrageStep = p.Buff;
+                    break;
+            }
+            onAction?.Invoke(new FightAction(u.Id, "phase:" + p.Kind, null, amount));
+
+            if (p.Kind == PhaseKinds.Split)
+                for (int k = 0; k < p.Count && LivingOnSide(s, u.Side) < r.SideSize; k++)
+                {
+                    string id;
+                    do id = u.Id + "#" + (++u.Spawned); while (HasId(s, id));
+                    var add = NewUnit(r, WithId(p.Add, id), u.Side, CountOnSide(s, u.Side));
+                    add.IsAdd = true;
+                    s.Units.Add(add);
+                    Fire(r, s, add, FightTrigger.BattleStart, rng, onAction);
+                }
+
+            if (p.AddSkills.Count > 0)
+            {
+                var skills = new List<CombatSkill>(u.Source.Skills);
+                skills.AddRange(p.AddSkills);
+                var cd = new int[skills.Count];
+                Array.Copy(u.Cooldowns, cd, u.Cooldowns.Length);
+                u.Cooldowns = cd;
+                u.Source = new Fighter
+                {
+                    Id = u.Source.Id, Element = u.Source.Element, Stats = u.Source.Stats, Skills = skills,
+                    Triggers = u.Source.Triggers, Rules = u.Source.Rules, Phases = u.Source.Phases,
+                };
+                foreach (var sk in p.AddSkills)
+                    if (sk.Kind == SkillKind.Passive && u.Alive) Use(r, s, u, sk, rng, onAction, triggered: true);
+            }
+        }
+
+        static int LivingOnSide(FightState s, int side)
+        {
+            int n = 0;
+            foreach (var u in s.Units) if (u.Side == side && u.Alive) n++;
+            return n;
+        }
+
+        static int CountOnSide(FightState s, int side)
+        {
+            int n = 0;
+            foreach (var u in s.Units) if (u.Side == side) n++;
+            return n;
+        }
+
+        static bool HasId(FightState s, string id)
+        {
+            foreach (var u in s.Units) if (u.Id == id) return true;
+            return false;
+        }
+
+        static Fighter WithId(Fighter f, string id) => new Fighter
+        {
+            Id = id, Element = f.Element, Stats = f.Stats, Skills = f.Skills, Triggers = f.Triggers, Rules = f.Rules, Phases = f.Phases,
+        };
 
         // ------------------------------------------------------------------ formulas (specs/16 sections 3 and 5.3)
         // The fight uses these, and so do the stat tooltips (BattleText), so what the player reads is what the fight does.
@@ -574,7 +845,14 @@ namespace IdleRng.Sim.Combat
                 w.I32(t.Crits); w.I32(t.Evades); w.I32(t.Kills); w.I32(t.Counters);
                 w.I32(t.DamageByElement.Count);
                 foreach (var kv in t.DamageByElement) { w.Str(kv.Key); w.F64(kv.Value); }
+                if (s.Tower)   // only tower fights hash the tower fields, so every other fight keeps its hash
+                {
+                    w.F64(u.Entropy); w.I32(u.Vents); w.I32(u.PhaseNext); w.Bool(u.IsAdd); w.I32(u.Spawned); w.F64(u.Guard);
+                    w.Bool(u.CheckPending); w.F64(u.CheckHealFrac); w.F64(u.CheckBuff);
+                    w.I32(u.ChannelTicks); w.F64(u.ChannelNeed); w.F64(u.ChannelStrike); w.F64(u.ChannelDealt); w.F64(u.EnrageStep);
+                }
             }
+            if (s.Tower) w.I32(s.PeakCorruption);
             return Sha256.Hex(Sha256.Compute(w.ToArray()));
         }
     }

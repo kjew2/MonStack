@@ -60,9 +60,9 @@ REQUIRED_CONSTANTS = {
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
 DRILL_TIERS = ["fail", "success", "super"]
-EFFECT_STATS = STATS + ["crit_rate", "crit_dmg"]
+EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 # Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
-RULE_IDS = ["counter_mitigated", "echo_cast"]
+RULE_IDS = ["counter_mitigated", "echo_cast", "entropy_convert"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).

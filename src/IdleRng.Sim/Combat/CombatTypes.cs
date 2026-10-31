@@ -12,11 +12,17 @@ namespace IdleRng.Sim.Combat
         /// <summary>Bonus-only stats: effects add to them directly (crit chance, crit damage multiplier).</summary>
         public const string CritRate = "crit_rate", CritDmg = "crit_dmg";
 
+        /// <summary>
+        /// More bonus-only stats, added directly: damage dealt (a fraction on top of 1; the entropy enrage vent and boss phases
+        /// use it) and entropy gain (a fraction of the gain; negative lowers it, specs/21 section 3.1).
+        /// </summary>
+        public const string DmgDealt = "dmg_dealt", EntropyGain = "entropy_gain";
+
         /// <summary>The eight trained stats, in sheet order.</summary>
         public static readonly string[] Trained = { Hp, Str, Int, Wis, Dex, Def, Spd, Luk };
 
         public static bool IsTrained(string id) => Array.IndexOf(Trained, id) >= 0;
-        public static bool IsEffectStat(string id) => IsTrained(id) || id == CritRate || id == CritDmg;
+        public static bool IsEffectStat(string id) => IsTrained(id) || id == CritRate || id == CritDmg || id == DmgDealt || id == EntropyGain;
     }
 
     /// <summary>A monster's eight trained stats (kj, 2026-10-30). Values are on the 0-999 training scale.</summary>
@@ -113,6 +119,89 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>Coded rule modifiers by id (RuleModifiers).</summary>
         public List<string> Rules { get; set; } = new List<string>();
+
+        /// <summary>Boss phases, highest enter_hp first (specs/21 section 3.2). Only a fight with <see cref="FightRules.Tower"/> runs them.</summary>
+        public List<BossPhase> Phases { get; set; } = new List<BossPhase>();
+    }
+
+    /// <summary>The coded boss phase kinds (specs/21 section 3.2).</summary>
+    public static class PhaseKinds
+    {
+        public const string ShieldCheck = "shield_check", Split = "split", Channel = "channel", Enrage = "enrage";
+        public static readonly string[] Known = { ShieldCheck, Split, Channel, Enrage };
+        public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
+    }
+
+    /// <summary>
+    /// One boss phase (specs/21 section 3.2): entered once, when the boss's HP first falls to <see cref="EnterHp"/> of max.
+    /// Which of the other fields matter depends on <see cref="Kind"/>.
+    /// </summary>
+    public sealed class BossPhase
+    {
+        /// <summary>HP fraction in (0, 1) at or below which the phase starts.</summary>
+        public double EnterHp { get; set; }
+        public string Kind { get; set; }
+
+        /// <summary>shield_check: shield as a fraction of max HP. channel: damage to deal during the channel, as a fraction of max HP.</summary>
+        public double Power { get; set; }
+
+        /// <summary>shield_check and channel: turns it lasts.</summary>
+        public int Duration { get; set; }
+
+        /// <summary>split: adds that join the boss's side (up to the side-size cap).</summary>
+        public int Count { get; set; }
+
+        /// <summary>split: damage the boss takes less while an add lives, as a fraction.</summary>
+        public double Guard { get; set; }
+
+        /// <summary>shield_check: fraction of max HP the boss heals if the shield expires unbroken.</summary>
+        public double HealFrac { get; set; }
+
+        /// <summary>channel: true damage to every enemy if not interrupted, as a multiple of the boss's STR or INT (the higher).</summary>
+        public double Strike { get; set; }
+
+        /// <summary>shield_check: a permanent damage buff if the shield expires unbroken. enrage: damage buff added each turn.</summary>
+        public double Buff { get; set; }
+
+        /// <summary>split: what each add looks like (a fighter template; its id gets a #n suffix).</summary>
+        public Fighter Add { get; set; }
+
+        /// <summary>Skills the boss gains on entry (passives apply at once). Added after its own, so cooldowns of existing skills are kept.</summary>
+        public List<CombatSkill> AddSkills { get; set; } = new List<CombatSkill>();
+    }
+
+    /// <summary>
+    /// The Daily Tower's extra rules (specs/21 section 3): the entropy gauge and the environmental clock. Null on
+    /// <see cref="FightRules.Tower"/> turns all of it, and boss phases, off, and the fight (and its hash) is exactly as before.
+    /// </summary>
+    public sealed class TowerRules
+    {
+        public double EntropyCap { get; set; }
+        public double EntropyPerTrigger { get; set; }
+        public double EntropyPerEcho { get; set; }
+        public double EntropyPerCounter { get; set; }
+        public double EntropyDecay { get; set; }
+        public double RecoilFrac { get; set; }
+        public double StunGauge { get; set; }
+        public double EnrageFrac { get; set; }
+        public int EnrageTurns { get; set; }
+        public double ConvertShield { get; set; }
+        public int ConvertTurns { get; set; }
+
+        /// <summary>Corruption level = max(0, (tick - CorruptStartTick) / CorruptEveryTicks), integer division.</summary>
+        public int CorruptStartTick { get; set; }
+        public int CorruptEveryTicks { get; set; }
+        public double CorruptHealPerLevel { get; set; }
+        public double CorruptHealFloor { get; set; }
+        public double CorruptDmgPerLevel { get; set; }
+
+        public bool Valid =>
+            EntropyCap > 0 && EntropyPerTrigger >= 0 && EntropyPerEcho >= 0 && EntropyPerCounter >= 0 && EntropyDecay >= 0
+            && RecoilFrac >= 0 && RecoilFrac <= 1 && StunGauge >= 0 && EnrageFrac >= 0 && EnrageTurns > 0 && ConvertShield >= 0 && ConvertTurns > 0
+            && CorruptStartTick >= 0 && CorruptEveryTicks > 0 && CorruptHealPerLevel >= 0 && CorruptHealFloor >= 0 && CorruptHealFloor <= 1
+            && CorruptDmgPerLevel >= 0;
+
+        public TowerRules Clone() => (TowerRules)MemberwiseClone();
     }
 
     /// <summary>
@@ -150,6 +239,9 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>echo_cast: the echo's fraction of the skill's power.</summary>
         public double EchoPower { get; set; }
+
+        /// <summary>The Daily Tower's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
+        public TowerRules Tower { get; set; }
 
         public static FightRules FromContent(ContentDb c)
         {
@@ -191,7 +283,13 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string EchoCast = "echo_cast";
 
-        public static readonly string[] Known = { CounterMitigated, EchoCast };
+        /// <summary>
+        /// When the unit's entropy gauge would vent (tower fights only), it gains a shield of ENTROPY_CONVERT_SHIELD of its max HP
+        /// instead (specs/21 section 3.1).
+        /// </summary>
+        public const string EntropyConvert = "entropy_convert";
+
+        public static readonly string[] Known = { CounterMitigated, EchoCast, EntropyConvert };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

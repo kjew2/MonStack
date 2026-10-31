@@ -18,7 +18,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the species gacha (`01` has the math), the Daily Tower (rules written: `21`), the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the species gacha (`01` has the math), the rest of the Daily Tower (rules: `21`; its battle hooks are built), the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 

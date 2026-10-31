@@ -20,7 +20,7 @@ Status: **proposal** (agent draft, 2026-10-30; kj has not reviewed it). A high-l
 | R0.4 | **Answer the open design questions** in `specs/13` section 9 (what overwriting removes, one energy meter, roles and elements). Not blocking, but each is a rule the next specs build on. | Fix | decision | none |
 
 | R0.5 | **T9 species gacha and aptitude ranks** (moved up from P1, kj 2026-10-31). Engine and UI; the currency and gem-sale question (R1.9) blocks only the economy part. | Feature | M | #73 |
-| R0.6 | **T10 Daily Tower** (moved up from P1, kj 2026-10-31): 4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button. Spec written: `specs/21` (kj's questions 1 and 2 there come first). | Feature | L | #74 |
+| R0.6 | **T10 Daily Tower** (moved up from P1, kj 2026-10-31): 4v1, boss phases, entropy gauge, environmental clock, Skill Book drops replacing the test button. Spec: `specs/21`. Step 1 (battle hooks) done; tower sim and content, account, web next. | Feature | L | #74 |
 
 ## P1 - Next: the game toward 1.0
 
