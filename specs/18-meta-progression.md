@@ -35,7 +35,7 @@ There is no premium currency yet. Skill Books are the premium gate (kj, T9); whe
 | `StartRun(species, books)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3). The vendor's unbought offers vanish (section 4) |
 | `FinishRun(sealedUtcMs)` | The active run is over (completed or injured). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`), records it and checks achievements, which may unlock species (section 8), rolls the vendor's offers (section 4) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7). The result lists the achievements earned and the species unlocked |
 | `AbandonRun()` | Ends the active run in any phase with no payout and no Vault entry; unused books return to the inventory (a misclick costs nothing). `RunsStarted` stays counted, so the next run gets a new seed and abandoning cannot reroll a run. (Agreed between the two building sessions, 2026-10-30; the web client's Abandon button calls it.) |
-| `BuyOffer(index)` | A vendor offer not yet bought, whose talent is not maxed; enough shards. Costs the offer's price, adds its ranks (section 4). Applies from the next run: a run keeps the bonuses it started with. There is no other way to buy talents |
+| `BuyOffer(index)` | A vendor offer not yet bought, whose talent is not maxed; enough shards. Costs the offer's price, adds one rank (section 4). Applies from the next run: a run keeps the bonuses it started with. There is no other way to buy talents |
 | `Dismantle(index)` | Removes Vault entry `index` (oldest first) for good and pays its grade's refund (section 7). Refused for a locked entry. Allowed during a run |
 | `SetLocked(index, locked)` | Locks or unlocks Vault entry `index`. Account state only: not part of the sealed monster or its `RunHash` |
 | `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower adds its drops with `RunTower` (`specs/21` section 7); tests and debug use it now |
@@ -56,38 +56,39 @@ Rejected commands throw and change nothing. The sim has no clock: the caller pas
 
 ## 4. Talents and the post-run vendor
 
-Content table `talents`: `id`, `name_key`, `desc_key`, `effect` (`drill_cost`, `stat_floor`, `draft_size`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
+Content table `talents`: `id`, `name_key`, `desc_key`, `rarity` (a `vendor_rarities` id: the talent's tier), `effect` (`drill_cost`, `stat_floor`, `draft_size`, `start_sp`), `per_rank`, `max_rank`, `cost_base`, `cost_step`. The normal cost of rank `r + 1` is `cost_base + cost_step x r` shards (`TalentCost`). A talent at rank `r` adds `per_rank x r` to its modifier field (`drill_cost` adds to the multiplier, so it is negative).
 
-**The post-run vendor** (kj, T9) replaces the always-on talent shop. Code: `AccountOps.RollVendor`, `OfferRanks`, `OfferPrice`, `BuyOffer`.
+**The post-run vendor** (kj, T9) replaces the always-on talent shop. Code: `AccountOps.RollVendor`, `OfferOpen`, `OfferPrice`, `BuyOffer`. The talents overhaul is tracked in #100.
 
-- When a run is sealed (`FinishRun`), the vendor rolls `VENDOR_OFFERS` offers. Each offer is one talent and a rarity. Per offer: draw a rarity by weight, then a talent uniformly among the talents not maxed. The same talent may be offered more than once **(agent: with 4 talents and 5 offers repeats cannot be avoided)**. No offers once every talent is maxed.
-- **Rarity odds follow the run's score**, its grade (the rank reached, E = index 0) **(agent: the grade is the score; the gauntlet floor does not count yet)**. Content table `vendor_rarities`: `id`, `sort_order`, `name_key`, `ranks`, `price_mult`, `weight_base`, `weight_per_rank`. A rarity's weight at grade index `g` is `max(0, weight_base + weight_per_rank x g)`.
-- **What a rarity means** **(agent)**: an offer adds up to `ranks` ranks of its talent (capped at the talent's max) for `price_mult` x the normal cost of those ranks, rounded half up. Rarer offers add more ranks for less per rank. Ranks and price are worked out at the talent's rank when bought, so buying one offer reprices another offer of the same talent.
-- Each offer sells once. **Unbought offers vanish when the next run starts (agent; recommended by the coordinator).** They stay through reloads and on the home screen until then. **No reroll (agent).** An abandoned run rolls no vendor.
-- **Deterministic:** the vendor's draws come from the `vendor` stream, seeded `Derive(StreamSeed(account seed, "vendor"), run index)` where the run index is the sealed run's (`RunsStarted - 1`). The offers are stored on the account (`Vendor`), so the save holds them as rolled.
+- When a run is sealed (`FinishRun`), the vendor rolls `VENDOR_OFFERS` offers. **A rarity is the talent's own tier (kj, 2026-10-31, issue #102).** Per offer: draw a tier by weight among the tiers that still have a talent not maxed, then a talent of that tier uniformly among its talents not maxed. The same talent may be offered more than once. No offers once every talent is maxed.
+- **Rarity odds follow the run's score**, its grade (the rank reached, E = index 0) **(agent: the grade is the score; the gauntlet floor does not count yet)**. Content table `vendor_rarities`: `id`, `sort_order`, `name_key`, `weight_base`, `weight_per_rank`. A tier's weight at grade index `g` is `max(0, weight_base + weight_per_rank x g)`.
+- **An exhausted tier is skipped (agent):** a tier whose talents are all maxed has no weight, so the other tiers share its odds. When the tiers left all weigh 0 at that grade, the commonest of them is used. Two draws per offer, always.
+- **One rank per purchase (kj, 2026-10-31, issue #102):** an offer adds exactly one rank of its talent at its normal cost (`TalentCost` at the current rank), whatever its rarity. The price is worked out when bought, so buying one offer reprices another offer of the same talent; an offer whose talent reached max rank cannot be bought.
+- Each offer sells once. **Unbought offers vanish when the next run starts (agent; recommended by the coordinator).** They stay through reloads and on the home screen until then. **No reroll yet** (kj asked for one: #104). An abandoned run rolls no vendor.
+- **Deterministic:** the vendor's draws come from the `vendor` stream, seeded `Derive(StreamSeed(account seed, "vendor"), run index)` where the run index is the sealed run's (`RunsStarted - 1`). The offers are stored on the account (`Vendor`), so the save holds them as rolled. An offer stores the tier it was drawn from; an offer rolled before #102 may hold an older rarity, and the web view shows the talent's own tier.
 
 | Constant | Value | Range |
 |---|---|---|
 | `VENDOR_OFFERS` | 5 (kj: "say 5") | `> 0` |
 
-Placeholder rarities: `vendor_rarities.csv`. Odds at grade E and S follow from the weights:
+Placeholder tiers: `vendor_rarities.csv`. Odds at grade E and S follow from the weights (while every tier has a talent left):
 
-| Rarity | Ranks | Price | Weight `base + per_rank x g` | E | S |
-|---|---|---|---|---|---|
-| Common | 1 | x1.0 | 80 - 10g | 80% | 30% |
-| Rare | 2 | x0.8 | 18 + 4g | 18% | 38% |
-| Epic | 3 | x0.6 | 2 + 6g | 2% | 32% |
+| Rarity | Weight `base + per_rank x g` | E | S |
+|---|---|---|---|
+| Common | 80 - 10g | 80% | 30% |
+| Rare | 18 + 4g | 18% | 38% |
+| Epic | 2 + 6g | 2% | 32% |
 
-Rules (`E043`, `E044`, `E047`, both `tools/content_build.py` and `ContentDb`): at least one rarity; `sort_order` exactly `0..N-1`; `ranks >= 1`; `price_mult >= 0`; at every grade index the weights do not all come to 0.
+Rules (`E023`, `E043`, `E044`, `E047`, both `tools/content_build.py` and `ContentDb`): at least one rarity; `sort_order` exactly `0..N-1`; at every grade index the weights do not all come to 0; every talent's `rarity` is a `vendor_rarities` id (`E023`).
 
 Placeholder talents (the drafts' examples, `specs/12` section 9):
 
-| Talent | Effect per rank | Max | Normal cost |
-|---|---|---|---|
-| Frugal Drills | drills cost 5% less energy | 5 | 20, 40, 60, ... |
-| Strong Stock | base stats +10% | 3 | 30, 60, 90 |
-| Wide Scouting | +1 tree per milestone draft | 2 | 50, 100 |
-| Head Start | +1 starting skill point | 3 | 25, 50, 75 |
+| Talent | Rarity | Effect per rank | Max | Normal cost |
+|---|---|---|---|---|
+| Frugal Drills | Common | drills cost 5% less energy | 5 | 20, 40, 60, ... |
+| Strong Stock | Rare | base stats +10% | 3 | 30, 60, 90 |
+| Wide Scouting | Epic | +1 tree per milestone draft | 2 | 50, 100 |
+| Head Start | Common | +1 starting skill point | 3 | 25, 50, 75 |
 
 A flat list for now; a branching talent tree is a later content change. Rules (`E043`, both `tools/content_build.py` and `ContentDb`): `max_rank >= 1`, costs `>= 0`; `drill_cost` per rank `<= 0` and the multiplier stays `>= 0` at max rank; `stat_floor` per rank `>= 0`; `draft_size` and `start_sp` per rank a whole number `>= 0`.
 

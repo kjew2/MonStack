@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.11",
+  "content_version": "3.12",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -65,7 +65,7 @@
     },
     "talents": {
       "file": "talents.json",
-      "sha256": "5670210b20e98d9d712a530dc0714c97555eb5709f88959fd337aa606d175446"
+      "sha256": "0e590049c6a8fb2a3f7b71522c3aef6cc5537ec806a46113dc2db42af2214870"
     },
     "tower_bosses": {
       "file": "tower_bosses.json",
@@ -81,8 +81,8 @@
     },
     "vendor_rarities": {
       "file": "vendor_rarities.json",
-      "sha256": "370640e02d9e08c1199e4631879604ebb782f53687f1d65c7d37f4e08f53c539"
+      "sha256": "90e78544bc7d8c5042e2bd0794767f9a01346007b16d3ba48acb717ab3cdfc77"
     }
   },
-  "content_hash": "6798e83fc7eb88086d2d5de4cf40af3a1f2b11985d961429d65e5f78cd4bb4da"
+  "content_hash": "0f43503f4bb9836316f97d1b1e02fd0ba32b43c287191bd0339f079da468557e"
 }

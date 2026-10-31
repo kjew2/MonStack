@@ -164,11 +164,11 @@ SCHEMA = {
                       c("power", "double"), c("duration", "int"), c("count", "int"), c("guard", "double"), c("heal_frac", "double"),
                       c("strike", "double"), c("buff", "double"), c("adds", "id", True), c("add_skills", "string", True)], key="id"),
     "book_drops": T([c("book_id", "id"), c("min_floor", "int"), c("weight", "double")], key="book_id"),
-    "talents": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("effect", "enum:TalentEffect"),
+    "talents": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("rarity", "id"), c("effect", "enum:TalentEffect"),
                   c("per_rank", "double"), c("max_rank", "int"), c("cost_base", "int"), c("cost_step", "int")], key="id"),
     "achievements": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:AchievementKind"), c("ref", "string", True),
                        c("amount", "double", True), c("unlocks_species", "id", True)], key="id"),
-    "vendor_rarities": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"), c("ranks", "int"), c("price_mult", "double"),
+    "vendor_rarities": T([c("id", "id"), c("sort_order", "int"), c("name_key", "key"),
                           c("weight_base", "double"), c("weight_per_rank", "double")], key="id"),
     "strings": T([c("key", "key"), c("en", "string")], key="key", required=False),
 }
@@ -523,9 +523,10 @@ def validate_unlocks(t, errs):
         errs.add("E044", "vendor_rarities", "at least one rarity is required")
     if sorted(r["sort_order"] for r in rar) != list(range(len(rar))):
         errs.add("E047", "vendor_rarities", "sort_order must be exactly 0..N-1")
-    for r in rar:
-        if r["ranks"] < 1 or r["price_mult"] < 0:
-            errs.add("E043", f"vendor_rarities[{r['id']}]", "need ranks >= 1 and price_mult >= 0")
+    tiers = {r["id"] for r in rar}
+    for r in t["talents"]:
+        if r["rarity"] not in tiers:
+            errs.add("E023", f"talents[{r['id']}]", f"rarity '{r['rarity']}' is not a vendor_rarities id")
     for g in range(len(t["fight_ranks"])):
         if rar and not sum(max(0.0, r["weight_base"] + r["weight_per_rank"] * g) for r in rar) > 0:
             errs.add("E043", "vendor_rarities", f"the weights must not all be 0 at grade index {g}")

@@ -568,7 +568,7 @@ namespace IdleRng.Sim.Content
         {
             TalentList = t["talents"].Select(r => new TalentDef
             {
-                Id = r.Str("id"), NameKey = r.Str("name_key"), DescKey = r.Str("desc_key"), Effect = ParseTalentEffect(r.Str("effect")),
+                Id = r.Str("id"), NameKey = r.Str("name_key"), DescKey = r.Str("desc_key"), Rarity = r.Str("rarity"), Effect = ParseTalentEffect(r.Str("effect")),
                 PerRank = r.Dbl("per_rank"), MaxRank = r.Int("max_rank"), CostBase = r.Int("cost_base"), CostStep = r.Int("cost_step"),
             }).ToList().AsReadOnly();
             Talents = new ReadOnlyDictionary<string, TalentDef>(TalentList.ToDictionary(x => x.Id, StringComparer.Ordinal));
@@ -636,14 +636,15 @@ namespace IdleRng.Sim.Content
 
             VendorRarities = t["vendor_rarities"].Select(r => new VendorRarityDef
             {
-                Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"), Ranks = r.Int("ranks"),
-                PriceMult = r.Dbl("price_mult"), WeightBase = r.Dbl("weight_base"), WeightPerRank = r.Dbl("weight_per_rank"),
+                Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"),
+                WeightBase = r.Dbl("weight_base"), WeightPerRank = r.Dbl("weight_per_rank"),
             }).OrderBy(x => x.SortOrder).ToList().AsReadOnly();
             if (VendorRarities.Count == 0) errors.Add(new ContentError("E044", "vendor_rarities", "at least one rarity is required"));
             if (!VendorRarities.Select(x => x.SortOrder).SequenceEqual(Enumerable.Range(0, VendorRarities.Count)))
                 errors.Add(new ContentError("E047", "vendor_rarities", "sort_order must be exactly 0..N-1"));
-            foreach (var r in VendorRarities)
-                if (r.Ranks < 1 || r.PriceMult < 0) errors.Add(new ContentError("E043", $"vendor_rarities[{r.Id}]", "need ranks >= 1 and price_mult >= 0"));
+            foreach (var d in TalentList)
+                if (!VendorRarities.Any(r => r.Id == d.Rarity))
+                    errors.Add(new ContentError("E023", $"talents[{d.Id}]", $"rarity '{d.Rarity}' is not a vendor_rarities id"));
             for (int g = 0; g < FightRanks.Count && VendorRarities.Count > 0; g++)
                 if (!(VendorRarities.Sum(r => r.Weight(g)) > 0))
                     errors.Add(new ContentError("E043", "vendor_rarities", $"the weights must not all be 0 at grade index {g}"));

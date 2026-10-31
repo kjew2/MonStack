@@ -897,7 +897,7 @@
   }
 
   // ---- post-run vendor (specs/18 section 4): offers rolled when the run was sealed, rarer with a better grade, bought with shards.
-  const rarityDef = (id) => C.rarities.find((r) => r.id === id) || { id: id, name: id, ranks: 1 };
+  const rarityDef = (id) => C.rarities.find((r) => r.id === id) || { id: id, name: id };
   function achievementProgress(id) { return run.account.achievements.find((x) => x.id === id) || { earned: false, current: 0, target: 1 }; }
   function owned(id) { return !!id && run.account.owned.indexOf(id) >= 0; }
   function vendorOffers(main) {
@@ -913,7 +913,7 @@
         h('div', { class: 'row between' }, [h('b', { text: def.name }), h('span', { class: 'tag rarity', text: rar.name })]),
         h('div', { class: 'small muted', text: def.desc }),
         h('div', { class: 'row between' }, [
-          h('span', { class: 'small num', text: o.bought || o.maxed ? 'Rank ' + o.rank + '/' + def.maxRank : '+' + o.ranks + (o.ranks === 1 ? ' rank' : ' ranks') + ' · ' + o.rank + ' → ' + (o.rank + o.ranks) + '/' + def.maxRank }),
+          h('span', { class: 'small num', text: o.bought || o.maxed ? 'Rank ' + o.rank + '/' + def.maxRank : '+1 rank · ' + o.rank + ' → ' + (o.rank + 1) + '/' + def.maxRank }),
           status]),
       ]));
     });
@@ -921,7 +921,7 @@
   function buyOffer(i) {
     const r = run.acct('buyOffer', i);
     if (!r.ok) toast(r.reason);
-    else { const def = C.talents.find((x) => x.id === r.talent); toast('Bought ' + (def ? def.name : r.talent) + ' +' + r.ranks + ' for ' + r.cost + ' shards'); }
+    else { const def = C.talents.find((x) => x.id === r.talent); toast('Bought ' + (def ? def.name : r.talent) + ' +1 for ' + r.cost + ' shards'); }
     render();
   }
   function renderVendor(main) {
@@ -929,7 +929,7 @@
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Vendor' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]));
     if (!v || !v.offers.length) main.append(h('p', { class: 'muted', text: 'Every talent is maxed: nothing to sell.' }));
     else {
-      main.append(h('p', { class: 'small muted', text: v.offers.length + ' offers for your grade ' + up(v.grade) + ' run: a better grade rolls rarer offers, which add more ranks for less. Talents apply from the next run on. Unbought offers vanish when the next run starts.' }));
+      main.append(h('p', { class: 'small muted', text: v.offers.length + ' offers for your grade ' + up(v.grade) + ' run: a better grade rolls rarer talents. Each offer adds one rank. Talents apply from the next run on. Unbought offers vanish when the next run starts.' }));
       vendorOffers(main);
     }
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));

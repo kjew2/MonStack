@@ -175,7 +175,7 @@ Bosses never get hard immunities ("immune to stun", "immune to magic"). Broken b
 
 The account-wide rogue-lite talents, bought with Training Shards. Named examples: -5% energy cost per action, +10% base stat floors, more milestone draft slots, access to more skill trees.
 
-**Post-run vendor (kj, T9):** talents are not an always-on shop. After each run a vendor offers a random assortment of upgrades (5 offers), with rarities tied to the run's score; unbought offers vanish when the next run starts. Rules: `specs/18` section 4.
+**Post-run vendor (kj, T9):** talents are not an always-on shop. After each run a vendor offers a random assortment of upgrades (5 offers), with rarities tied to the run's score. A rarity is the talent's own tier and each offer is one rank (kj, 2026-10-31, #102); unbought offers vanish when the next run starts. Rules: `specs/18` section 4.
 
 **Species unlocks (kj, T9):** a new account owns one species; the others unlock from account achievements with varied conditions (rank reached, a stat reached, runs finished, gauntlet floors). Rules: `specs/18` section 8.
 

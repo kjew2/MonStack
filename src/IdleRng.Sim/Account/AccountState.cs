@@ -116,7 +116,10 @@ namespace IdleRng.Sim.Account
         public List<VendorOffer> Offers { get; set; } = new List<VendorOffer>();
     }
 
-    /// <summary>One vendor offer: up to the rarity's rank count of one talent. Ranks and price are worked out when bought.</summary>
+    /// <summary>
+    /// One vendor offer: one rank of one talent, at its normal cost worked out when bought. Rarity is the tier it was drawn from
+    /// (the talent's own tier; an offer rolled before issue #102 may carry an older rarity).
+    /// </summary>
     public sealed class VendorOffer
     {
         public string Talent { get; set; }
