@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<pattern id="bk-bd-h1" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><path d="M0 0V4" stroke="#14110e" stroke-width=".6"/></pattern>
+<pattern id="bk-bd-h2" width="2.2" height="2.2" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><path d="M0 0V2.2" stroke="#14110e" stroke-width=".8"/></pattern>
+<pattern id="bk-bd-h3" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><path d="M0 0V3" stroke="#14110e" stroke-width=".6"/></pattern>
+<linearGradient id="bk-bd-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e2f22" stop-opacity=".55"/><stop offset=".8" stop-color="#6e2f22" stop-opacity="0"/></linearGradient>
+<radialGradient id="bk-bd-glow"><stop offset="0" stop-color="#ffe2a8"/><stop offset=".35" stop-color="#ffb347" stop-opacity=".85"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+<clipPath id="bk-bd-bc"><path d="M80 118C96 94 150 88 176 108C196 124 200 150 186 170C170 186 120 188 94 178C76 170 70 144 80 118Z"/></clipPath>
+</defs>
+<rect width="240" height="240" fill="#e9e2d0"/>
+<rect width="240" height="240" fill="url(#bk-bd-sky)"/>
+<path d="M0 0H240V40C210 50 190 34 160 44C130 54 110 36 80 46C50 56 30 40 0 48Z" fill="url(#bk-bd-h2)"/>
+<path d="M0 48C30 40 50 56 80 46C110 36 130 54 160 44C190 34 210 50 240 40V60C200 70 180 56 150 66C120 74 90 60 60 70C40 76 20 64 0 70Z" fill="url(#bk-bd-h1)" stroke="#14110e" stroke-width="1"/>
+<path d="M200 0L188 30L198 32L180 70L204 26L194 24L210 0Z" fill="#e9e2d0" stroke="#14110e" stroke-width=".8"/>
+<path d="M0 200C50 194 90 198 130 196C170 194 210 200 240 196V240H0Z" fill="url(#bk-bd-h3)"/>
+<path d="M0 218C70 212 170 214 240 220V240H0Z" fill="url(#bk-bd-h1)"/>
+<path d="M0 200C50 194 90 198 130 196C170 194 210 200 240 196" fill="none" stroke="#14110e" stroke-width="1.6"/>
+<ellipse cx="135" cy="205" rx="95" ry="8" fill="#14110e"/>
+<!-- far legs -->
+<path d="M112 168C110 182 110 192 106 202L128 202C128 192 128 182 132 172Z" fill="url(#bk-bd-h2)" stroke="#14110e" stroke-width="1.6"/>
+<path d="M186 164C196 176 198 190 196 202L178 202C180 192 178 182 172 174Z" fill="url(#bk-bd-h2)" stroke="#14110e" stroke-width="1.6"/>
+<!-- tail -->
+<path d="M180 158C206 162 224 174 226 192C226 204 212 208 200 200C212 198 214 186 202 180C190 176 182 176 172 172Z" fill="#e9e2d0" stroke="#14110e" stroke-width="2"/>
+<path d="M180 168C200 170 214 178 216 192C214 196 208 198 204 196C210 190 206 180 196 178C188 176 182 176 176 174Z" fill="url(#bk-bd-h2)"/>
+<path d="M194 162L200 152L204 164ZM210 168L218 160L218 172Z" fill="#14110e"/>
+<!-- wing -->
+<path d="M132 100C140 70 164 52 192 54C184 64 190 70 182 78L186 82C180 86 182 92 174 96L170 90L166 99C158 101 150 104 142 110Z" fill="#e9e2d0" stroke="#14110e" stroke-width="2"/>
+<path d="M140 104C150 90 168 70 192 54M146 106C160 96 172 86 182 78M150 108C160 102 168 98 174 96" fill="none" stroke="#14110e" stroke-width="1.2"/>
+<path d="M146 98C156 86 170 72 186 60C176 76 164 90 150 104Z" fill="url(#bk-bd-h1)"/>
+<!-- body -->
+<path d="M80 118C96 94 150 88 176 108C196 124 200 150 186 170C170 186 120 188 94 178C76 170 70 144 80 118Z" fill="#c2452e" opacity=".35"/>
+<path d="M80 118C96 94 150 88 176 108C196 124 200 150 186 170C170 186 120 188 94 178C76 170 70 144 80 118Z" fill="url(#bk-bd-h2)"/>
+<g clip-path="url(#bk-bd-bc)" stroke="#14110e" stroke-width="1.6">
+<path d="M96 104C120 92 150 92 172 104L170 128C150 120 120 120 98 128Z" fill="#e9e2d0"/>
+<path d="M98 132C122 124 150 124 176 132L178 156C150 148 122 148 100 156Z" fill="#e9e2d0"/>
+<path d="M150 108C160 110 168 114 172 118L170 128C162 124 154 122 148 122ZM152 138C162 140 170 142 176 146L178 156C168 152 160 150 150 150Z" fill="url(#bk-bd-h1)" stroke="none"/>
+<path d="M98 120C120 114 150 114 171 120L170 128C150 120 120 120 98 128ZM100 148C122 142 150 142 177 148L178 156C150 148 122 148 100 156Z" fill="url(#bk-bd-h1)" stroke="none"/>
+<path d="M78 162C100 176 150 180 196 156L196 196L78 196Z" fill="#14110e" stroke="none"/>
+<path d="M120 110C126 108 130 112 128 116" fill="none" stroke-width="1"/>
+<path d="M136 136L140 140L138 144" fill="none" stroke-width="1"/>
+</g>
+<g fill="#14110e"><circle cx="104" cy="108" r="1.6"/><circle cx="118" cy="102" r="1.6"/><circle cx="134" cy="99" r="1.6"/><circle cx="150" cy="100" r="1.6"/><circle cx="164" cy="104" r="1.6"/><circle cx="106" cy="136" r="1.6"/><circle cx="122" cy="131" r="1.6"/><circle cx="140" cy="130" r="1.6"/><circle cx="158" cy="132" r="1.6"/><circle cx="172" cy="137" r="1.6"/></g>
+<path d="M104 96L110 82L116 96ZM124 92L132 76L138 92ZM146 92L154 78L158 94ZM166 98L176 86L176 102Z" fill="#14110e"/>
+<path d="M80 118C96 94 150 88 176 108C196 124 200 150 186 170C170 186 120 188 94 178C76 170 70 144 80 118Z" fill="none" stroke="#14110e" stroke-width="2.6"/>
+<path d="M186 170C170 186 120 188 94 178" fill="none" stroke="#14110e" stroke-width="4.5" stroke-linecap="round"/>
+<!-- near legs -->
+<path d="M144 146C170 140 188 160 182 180L180 202L152 202C156 192 152 182 148 174C138 166 136 152 144 146Z" fill="#e9e2d0" stroke="#14110e" stroke-width="2.2"/>
+<path d="M170 150C182 160 184 174 180 186L180 202L170 202C172 186 174 168 164 152Z" fill="url(#bk-bd-h2)"/>
+<path d="M150 154C160 150 170 152 176 160" fill="none" stroke="#14110e" stroke-width="1.2"/>
+<circle cx="156" cy="158" r="1.5" fill="#14110e"/><circle cx="168" cy="158" r="1.5" fill="#14110e"/>
+<path d="M150 202L146 208L156 204L158 210L164 204L168 210L172 204" fill="#14110e" stroke="#14110e" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M90 160C86 176 84 190 80 202L106 202C106 190 108 180 112 168Z" fill="#e9e2d0" stroke="#14110e" stroke-width="2.2"/>
+<path d="M100 166C98 180 100 192 102 202L106 202C106 190 108 180 112 168Z" fill="url(#bk-bd-h2)"/>
+<path d="M84 180C92 176 102 178 108 182" fill="none" stroke="#14110e" stroke-width="1.2"/>
+<path d="M78 202L72 208L82 205L84 210L90 205L94 210L98 204" fill="#14110e" stroke="#14110e" stroke-width="1.2" stroke-linejoin="round"/>
+<!-- neck and chest bellows -->
+<path d="M96 126C86 108 82 98 74 90L102 80C110 92 114 106 116 118Z" fill="#e9e2d0" stroke="#14110e" stroke-width="2"/>
+<path d="M98 82C106 94 110 106 114 118L106 122C102 108 96 96 90 86Z" fill="url(#bk-bd-h2)"/>
+<path d="M84 100L104 92M88 110L110 102" stroke="#14110e" stroke-width="1.3"/>
+<circle cx="96" cy="140" r="34" fill="url(#bk-bd-glow)"/>
+<path d="M80 118C72 134 74 156 86 170C98 162 102 140 98 120Z" fill="#14110e"/>
+<path d="M80 128C86 128 92 126 98 124M78 138C86 138 94 136 100 134M78 148C86 148 94 147 100 145M80 158C86 158 92 157 98 155" fill="none" stroke="#ffb347" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M80 118C72 134 74 156 86 170C98 162 102 140 98 120Z" fill="none" stroke="#14110e" stroke-width="1.8"/>
+<!-- head -->
+<path d="M90 72C96 56 106 48 116 46C108 56 104 64 102 76Z" fill="#14110e"/>
+<path d="M80 70C82 58 88 50 96 48C92 56 90 64 90 72Z" fill="url(#bk-bd-h2)" stroke="#14110e" stroke-width="1.4"/>
+<path d="M38 92C40 78 58 68 78 70C94 70 106 78 108 90C108 102 98 110 84 110L58 112C46 112 36 104 38 92Z" fill="#e9e2d0" stroke="#14110e" stroke-width="2.4"/>
+<path d="M44 82C56 72 76 70 92 74L98 86C80 82 62 84 48 90Z" fill="#e9e2d0" stroke="#14110e" stroke-width="1.6"/>
+<circle cx="56" cy="80" r="1.5" fill="#14110e"/><circle cx="70" cy="76" r="1.5" fill="#14110e"/><circle cx="86" cy="77" r="1.5" fill="#14110e"/>
+<path d="M80 96C92 96 100 92 106 90C106 100 98 108 84 110L64 112C70 104 76 98 80 96Z" fill="url(#bk-bd-h2)"/>
+<path d="M58 112C70 112 80 111 86 109C78 116 66 118 56 116Z" fill="#14110e"/>
+<path d="M40 100C50 108 66 108 82 104" fill="none" stroke="#14110e" stroke-width="1.8"/>
+<path d="M46 102L48 108L51 103L54 109L57 104" fill="#e9e2d0" stroke="#14110e" stroke-width=".9"/>
+<circle cx="44" cy="104" r="7" fill="url(#bk-bd-glow)"/>
+<path d="M44 92C46 90 48 90 50 92" fill="none" stroke="#14110e" stroke-width="1.6"/>
+<path d="M68 90C72 84 80 84 84 88C80 94 72 94 68 90Z" fill="#ffb347" stroke="#14110e" stroke-width="1.4"/>
+<path d="M76 85L75 93" stroke="#14110e" stroke-width="1.8"/>
+<path d="M64 86L88 84" stroke="#14110e" stroke-width="2.2"/>
+<path d="M62 74L66 79M98 80L94 84" stroke="#14110e" stroke-width=".9"/>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+<defs>
+<linearGradient id="uk-mm-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c3f72" stop-opacity="0.8"/><stop offset="0.7" stop-color="#efe3c8" stop-opacity="0"/></linearGradient>
+<pattern id="uk-mm-asa" width="20" height="34.64" patternUnits="userSpaceOnUse"><g stroke="#c99a2e" stroke-width="0.8" fill="none"><path d="M0 0L20 34.64M20 0L0 34.64M0 17.32L20 17.32M10 0L10 34.64M0 0L10 5.77L20 0M0 34.64L10 28.87L20 34.64M0 17.32L10 11.55L20 17.32L10 23.09Z"/></g></pattern>
+<g id="uk-mm-eye"><circle r="10" fill="#ff9f43" stroke="#1b1712" stroke-width="2"/><circle r="6.5" fill="#3a2a5a"/><circle r="2.6" fill="#1b1712"/><path d="M-4 -3C-3 -5 -1 -6 1 -6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>
+<filter id="uk-mm-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/><feColorMatrix values="0 0 0 0 0.35 0 0 0 0 0.27 0 0 0 0 0.15 0 0 0 0.5 -0.1"/></filter>
+</defs>
+<rect width="240" height="240" fill="#efe3c8"/>
+<rect width="240" height="240" fill="url(#uk-mm-sky)"/>
+<g fill="#f2d98a" opacity="0.55"><path d="M120 116L60 -10L90 -10Z"/><path d="M120 116L130 -10L160 -10Z"/><path d="M120 116L200 -10L240 10Z"/><path d="M120 116L250 60L250 100Z"/><path d="M120 116L-10 30L-10 70Z"/><path d="M120 116L-10 130L-10 170Z"/><path d="M120 116L250 150L250 190Z"/><path d="M120 116L20 250L60 250Z"/><path d="M120 116L180 250L220 250Z"/></g>
+<g stroke="#1b1712" stroke-width="2.2" fill="#f7f0de" stroke-linejoin="round">
+<path d="M-4 206C12 196 28 196 38 204C42 194 56 190 64 198C72 190 88 192 90 204C84 208 76 206 74 200C74 210 62 214 56 206C52 214 40 218 30 210C20 214 8 214 -4 214Z"/>
+<path d="M150 214C160 204 176 204 184 212C190 202 204 200 212 208C222 202 236 204 244 210L244 222L150 222Z"/>
+<path d="M190 30C198 22 212 22 216 30C224 26 236 30 244 34L244 42L176 42C176 34 184 30 190 30Z"/>
+</g>
+<g transform="rotate(-10 120 125)">
+<g stroke="#1b1712" stroke-linecap="round" fill="none" stroke-width="1.6">
+<path d="M114 96C108 76 96 60 78 52" stroke-width="2.2"/>
+<path d="M126 96C134 78 148 66 168 60" stroke-width="2.2"/>
+<path d="M110 86l-8 1M106 78l-8 -1M101 70l-7 -3M95 63l-6 -5M88 58l-4 -6M108 82l2 -7M103 73l3 -7M97 66l3 -7M90 60l2 -6M130 86l8 1M135 78l8 -1M141 71l7 -2M148 66l6 -4M156 62l5 -5M132 82l-1 -7M138 74l0 -7M145 68l1 -7M153 64l2 -7"/>
+</g>
+<g stroke="#1b1712" stroke-width="2.6" stroke-linejoin="round">
+<path d="M114 134C88 138 58 156 62 186C70 204 98 192 112 158Z" fill="#e8b23a" transform="translate(2,2)" stroke="none"/>
+<path d="M114 134C88 138 58 156 62 186C70 204 98 192 112 158Z" fill="#f2c94c"/>
+<path d="M126 134C156 136 192 152 190 184C180 204 148 192 128 156Z" fill="#f2c94c"/>
+<path d="M116 116C92 80 52 58 26 72C14 92 40 126 92 138Z" fill="#e8b23a" transform="translate(2,2)" stroke="none"/>
+<path d="M116 116C92 80 52 58 26 72C14 92 40 126 92 138Z" fill="#f2c94c"/>
+<path d="M116 116C92 80 52 58 26 72C14 92 40 126 92 138Z" fill="url(#uk-mm-asa)" stroke="none" opacity="0.6"/>
+<path d="M124 116C150 74 196 44 226 60C236 86 208 128 148 138Z" fill="#f2c94c"/>
+<path d="M124 116C150 74 196 44 226 60C236 86 208 128 148 138Z" fill="url(#uk-mm-asa)" stroke="none" opacity="0.6"/>
+<path d="M26 72C14 92 40 126 92 138C64 128 40 110 34 86C34 80 30 76 26 72Z" fill="#f7f0de" stroke-width="1.6"/>
+<path d="M226 60C236 86 208 128 148 138C180 126 210 104 216 80C218 72 222 66 226 60Z" fill="#f7f0de" stroke-width="1.6"/>
+<path d="M62 186C70 204 98 192 112 158C100 180 84 192 62 186Z" fill="#f7f0de" stroke-width="1.6"/>
+<path d="M190 184C180 204 148 192 128 156C146 180 166 190 190 184Z" fill="#f7f0de" stroke-width="1.6"/>
+</g>
+<g fill="#3a2a5a"><circle cx="34" cy="96" r="2"/><circle cx="46" cy="114" r="2"/><circle cx="62" cy="126" r="2"/><circle cx="214" cy="98" r="2"/><circle cx="198" cy="114" r="2"/><circle cx="178" cy="126" r="2"/><circle cx="76" cy="192" r="1.8"/><circle cx="96" cy="182" r="1.8"/><circle cx="168" cy="190" r="1.8"/><circle cx="148" cy="180" r="1.8"/></g>
+<use href="#uk-mm-eye" transform="translate(186,82) scale(1.7)"/>
+<use href="#uk-mm-eye" transform="translate(150,112) scale(0.9)"/>
+<use href="#uk-mm-eye" transform="translate(62,92) scale(1.35)"/>
+<use href="#uk-mm-eye" transform="translate(94,118) scale(0.75)"/>
+<use href="#uk-mm-eye" transform="translate(164,168) scale(1.05)"/>
+<use href="#uk-mm-eye" transform="translate(84,168) scale(0.9)"/>
+<g stroke="#1b1712" stroke-width="2.5" stroke-linejoin="round">
+<path d="M120 128C130 128 134 140 132 156C130 172 126 184 120 186C114 184 110 172 108 156C106 140 110 128 120 128Z" fill="#e9c98a"/>
+<path d="M110 146C116 148 124 148 130 146M110 160C116 162 124 162 130 160M112 173C116 175 124 175 128 173" fill="none" stroke="#a0763a" stroke-width="1.6"/>
+<path d="M120 104C132 104 140 112 138 124C136 132 128 136 120 136C112 136 104 132 102 124C100 112 108 104 120 104Z" fill="#f7f0de"/>
+<path d="M104 116l-4 -3l5 -1M136 116l4 -3l-5 -1M104 128l-5 2l4 2M136 128l5 2l-4 2" fill="none" stroke-width="1.6"/>
+<path d="M120 82C134 82 142 92 140 102C130 110 110 110 100 102C98 92 106 82 120 82Z" fill="#f7f0de"/>
+<path d="M106 94C108 88 116 88 116 96C114 102 106 100 106 94Z M124 96C124 88 132 88 134 94C134 100 126 102 124 96Z" fill="#3a2a5a"/>
+</g>
+<circle cx="110" cy="93" r="1.6" fill="#fff"/><circle cx="128" cy="93" r="1.6" fill="#fff"/>
+<path d="M117 103C119 105 121 105 123 103" fill="none" stroke="#1b1712" stroke-width="1.5" stroke-linecap="round"/>
+</g>
+<g transform="translate(14,186)"><rect width="22" height="40" fill="#f6eedb" stroke="#1b1712" stroke-width="2"/><rect x="3" y="3" width="16" height="34" fill="none" stroke="#1b1712" stroke-width="0.8"/><circle cx="11" cy="14" r="4" fill="none" stroke="#1b1712" stroke-width="1.5"/><rect x="7" y="26" width="8" height="8" fill="#c8402c"/></g>
+<rect width="240" height="240" filter="url(#uk-mm-grain)" opacity="0.35"/>
+<rect x="3" y="3" width="234" height="234" fill="none" stroke="#1b1712" stroke-width="3"/>
+</svg>
