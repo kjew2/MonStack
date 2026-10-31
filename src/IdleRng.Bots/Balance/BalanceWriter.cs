@@ -43,13 +43,13 @@ namespace IdleRng.Bots.Balance
                     .Concat(new[] { Num(c.Grade.Mean), Pcts(c.Grade, x => r.RankIds[(int)x].ToUpperInvariant()) }));
             t.AppendTo(sb);
 
-            sb.Append("\n## Runs: cycles played, rank fights, injuries (an injury ends the run), shard payout\n");
+            sb.Append("\n## Runs: injuries (each costs the rest of its cycle and fight, then INJURY_SKIP_CYCLES whole cycles sat out), rank fights, shard payout\n");
             t = new Table(2);
-            t.Row("species", "policy", "injured%", "cycles mean", "p10/p50/p90", "won mean", "p10/p50/p90", "lost mean", "p10/p50/p90",
-                  "win%", "shards mean", "sd", "p10/p50/p90");
+            t.Row("species", "policy", "injured%", "injuries mean", "p10/p50/p90", "sat-out mean", "p10/p50/p90", "won mean", "p10/p50/p90",
+                  "lost mean", "p10/p50/p90", "win%", "shards mean", "sd", "p10/p50/p90");
             foreach (var c in r.Cells)
-                t.Row(c.Species, c.Policy, Pct(c.InjuryRate), Num(c.Cycles.Mean), Pcts(c.Cycles), Num(c.FightsWon.Mean), Pcts(c.FightsWon),
-                      Num(c.FightsLost.Mean), Pcts(c.FightsLost), Pct(c.FightWinRate), Num(c.Shards.Mean), Num(c.Shards.Sd), Pcts(c.Shards));
+                t.Row(c.Species, c.Policy, Pct(c.InjuryRate), Num(c.Injuries.Mean), Pcts(c.Injuries), Num(c.CyclesLost.Mean), Pcts(c.CyclesLost),
+                      Num(c.FightsWon.Mean), Pcts(c.FightsWon), Num(c.FightsLost.Mean), Pcts(c.FightsLost), Pct(c.FightWinRate), Num(c.Shards.Mean), Num(c.Shards.Sd), Pcts(c.Shards));
             t.AppendTo(sb);
 
             sb.Append($"\n## Gauntlet: floor reached of {r.GauntletFloors} ({r.GauntletFloors + 1} = cleared)\n");
@@ -144,6 +144,8 @@ namespace IdleRng.Bots.Balance
                 j.Close('}');
                 j.Key("grade"); Dist(j, c.Grade);
                 j.Key("completed").Num(c.Completed).Key("injured").Num(c.Injured).Key("injuryRate").Num(c.InjuryRate);
+                j.Key("injuries"); Dist(j, c.Injuries);
+                j.Key("cyclesLost"); Dist(j, c.CyclesLost);
                 j.Key("cycles"); Dist(j, c.Cycles);
                 j.Key("fightsWon"); Dist(j, c.FightsWon);
                 j.Key("fightsLost"); Dist(j, c.FightsLost);
@@ -229,6 +231,8 @@ namespace IdleRng.Bots.Balance
                 for (int i = 0; i < r.RankIds.Count; i++) Rate(sb, "run", c.Species, c.Policy, "", "grade_" + r.RankIds[i], c.N, c.N == 0 ? 0 : (double)c.Grades[i] / c.N);
                 Row(sb, "run", c.Species, c.Policy, "", "grade", c.Grade);
                 Rate(sb, "run", c.Species, c.Policy, "", "injury_rate", c.N, c.InjuryRate);
+                Row(sb, "run", c.Species, c.Policy, "", "injuries", c.Injuries);
+                Row(sb, "run", c.Species, c.Policy, "", "cycles_lost", c.CyclesLost);
                 Row(sb, "run", c.Species, c.Policy, "", "cycles", c.Cycles);
                 Row(sb, "run", c.Species, c.Policy, "", "fights_won", c.FightsWon);
                 Row(sb, "run", c.Species, c.Policy, "", "fights_lost", c.FightsLost);

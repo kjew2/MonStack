@@ -53,6 +53,10 @@ namespace IdleRng.Bots.Balance
         public int Rests { get; set; }
         public int Milestones { get; set; }
 
+        /// <summary>Injuries the run took, and the whole cycles it sat out because of them (specs/14 section 4.1).</summary>
+        public int Injuries { get; set; }
+        public int CyclesLost { get; set; }
+
         /// <summary>The run's Training Shards (AccountOps.Payout).</summary>
         public long Shards { get; set; }
         public int GauntletFloor { get; set; }
@@ -101,8 +105,13 @@ namespace IdleRng.Bots.Balance
         public int[] Grades { get; set; }
         public Distribution Grade { get; set; }
         public int Completed { get; set; }
+        /// <summary>Runs with at least one injury, and their share (an injury costs cycles, it no longer ends the run).</summary>
         public int Injured { get; set; }
         public double InjuryRate => N == 0 ? 0 : (double)Injured / N;
+
+        /// <summary>Injuries per run, and whole cycles sat out per run.</summary>
+        public Distribution Injuries { get; set; }
+        public Distribution CyclesLost { get; set; }
         public Distribution Cycles { get; set; }
         public Distribution FightsWon { get; set; }
         public Distribution FightsLost { get; set; }
@@ -130,8 +139,8 @@ namespace IdleRng.Bots.Balance
             {
                 if (r.RankIndex < 0 || r.RankIndex >= rankCount) throw new ArgumentException($"rank {r.RankIndex} out of range");
                 s.Grades[r.RankIndex]++;
-                if (r.End == RunEnd.Injured) s.Injured++;
-                else if (r.End == RunEnd.Completed) s.Completed++;
+                if (r.Injuries > 0) s.Injured++;
+                if (r.End == RunEnd.Completed) s.Completed++;
                 if (r.GauntletCleared) s.GauntletCleared++;
                 if (r.GauntletBossStall) s.GauntletBossStalls++;
                 fought += r.FightsFought;
@@ -140,6 +149,8 @@ namespace IdleRng.Bots.Balance
             s.FightWinRate = fought == 0 ? 0 : (double)won / fought;
             s.Grade = Distribution.Of(runs.Select(r => r.RankIndex));
             s.Cycles = Distribution.Of(runs.Select(r => r.Cycles));
+            s.Injuries = Distribution.Of(runs.Select(r => r.Injuries));
+            s.CyclesLost = Distribution.Of(runs.Select(r => r.CyclesLost));
             s.FightsWon = Distribution.Of(runs.Select(r => r.FightsWon));
             s.FightsLost = Distribution.Of(runs.Select(r => r.FightsFought - r.FightsWon));
             s.Shards = Distribution.Of(runs.Select(r => (double)r.Shards));
@@ -270,6 +281,7 @@ namespace IdleRng.Bots.Balance
                 Species = species, Policy = policy, Seed = seed, RankIndex = s.Rank, End = s.End, Cycles = s.Cycle,
                 FightsFought = s.FightsFought, FightsWon = s.FightsWon, Drills = s.Drills, Rests = s.Rests,
                 Milestones = s.Milestones.Count, Shards = AccountOps.Payout(c, s),
+                Injuries = s.Injuries.Count, CyclesLost = s.Injuries.Sum(i => i.CyclesLost),
                 GauntletFloor = g.FloorReached, GauntletCleared = g.Cleared, GauntletKiller = g.KillerId,
                 GauntletBossStall = !g.Cleared && GauntletSim.IsBoss(c, g.FloorReached), State = s,
             };

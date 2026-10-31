@@ -6,6 +6,7 @@
 //   is then finished; a save whose run in progress no longer replays drops only that run, with a notice, its books returned and
 //   the original kept aside (specs/06 section 5); a damaged save is kept aside next to it and the player gets a fresh, working
 //   account. Issue #93: kept-aside saves are capped, the oldest (or a legacy single backup) is never evicted.
+// - issue #89: an injury loses the rest of its cycle, its fight and the next cycle, says when the monster is back, and survives a reload.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/flows.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
@@ -175,6 +176,34 @@ const H = require('./harness.js');
   await act('start').click();
   await act('drill-str').waitFor();
   check((await t.readAccount()).ActiveRun !== null, 'the account still starts a run');
+
+  // ---- an injury (specs/14 section 4.1, issue #89): drilling without rest injures the monster; it loses the rest of the cycle
+  // and its fight and sits out the next cycle, then the run goes on
+  const hurt = await page.evaluate(() => {
+    const q = (s) => document.querySelector(s);
+    const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
+    for (let i = 0; i < 200; i++) {
+      if (q('[data-id=injury-result]')) return { cycle: q('[data-id=cycle]').textContent, result: q('[data-id=injury-result]').textContent,
+        text: (q('[data-id=injury]') || {}).textContent || '' };
+      if (q('[data-id=fight-play]')) { click('[data-act="speed-skip"]'); continue; }
+      if (click('[data-act="fight-continue"]') || click('[data-act="discard"]') || click('[data-act="fight"]')) continue;
+      if (!click('[data-act="drill-str"]')) return null;
+    }
+    return null;
+  });
+  check(!!hurt, 'drilling without rest injures the monster: ' + JSON.stringify(hurt));
+  const hm = hurt && /Lost: the rest of cycle (\d+), its rank fight, cycle (\d+) \(no drills, fights or cycle SP\)\. Back in cycle (\d+) with (\d+) energy\./.exec(hurt.text);
+  check(!!hm && +hm[2] === +hm[1] + 1 && +hm[3] === +hm[1] + 2 && /^Injured!/.test(hurt.text), 'a card at the top says what the injury cost and when the monster is back: ' + (hurt && hurt.text));
+  check(!!hm && hurt.result === 'Injured! Back in cycle ' + hm[3] + '.', 'so does the drill result: ' + (hurt && hurt.result));
+  check(!!hm && hurt.cycle === 'Cycle ' + hm[3] + '/12', 'the run goes on in the cycle after the lost one: ' + (hurt && hurt.cycle));
+  check(!!hm && new RegExp('Energy ' + hm[4] + '/').test(await text('.bar.energy span')), 'with the energy it came back with');
+  check(/Injured! Back in cycle/.test(await page.locator('#toasts').innerText()), 'a toast says when it is back');
+  await t.layout('run screen after an injury');
+  await reloadSame('reload after an injury');
+  check(/Back from injury/.test(await text('[data-id=injury]')) && (await text('[data-id=injury]')).includes('Back in cycle ' + (hm && hm[3])),
+    'after a reload the run screen still says the monster is back from injury');
+  await act('drill-str').click();
+  check((await t.readAccount()).ActiveRun.Log.length > 0, 'and it trains again');
 
   // ---- a damaged save: kept aside, and a fresh account that works
   const damaged = (await t.readSaveText()).slice(0, -20);             // cut short: the length and CRC no longer match

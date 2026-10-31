@@ -50,7 +50,7 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
 - One monster per run, picked from the species the account owns.
 - **12 cycles** (an "epoch" in the drafts; one draft said 12-15). 8-10 minutes in total.
 - No events, dialogue or story scenes. Every screen is a mechanical choice.
-- A run ends after the last cycle, or early on an injury (section 4.5).
+- A run ends after the last cycle. An injury costs cycles but does not end it (section 4.3).
 
 ### 4.2 Cycle flow (kj, 2026-10-30)
 
@@ -68,7 +68,7 @@ The rank fight replaces the drafts' *Tactical Challenge*: it is the in-run fight
 ### 4.3 Stats, energy, fatigue, injury
 
 - **Stats (kj, 2026-10-30):** eight trained stats: HP, STR, INT, WIS, DEX, DEF, SPD, LUK. The drafts named six; kj added HP and LUK. How each one works in battle is `specs/16` section 3.
-- **Energy** is the one training meter (no separate fatigue). Drills spend it, rests restore it. Low energy makes a drill more likely to fail and, below a threshold, able to cause an **injury** that ends the run. Pushing on at low energy to cross a milestone before the run ends is the run's main risk-versus-reward decision. The talent tree can reduce drill cost.
+- **Energy** is the one training meter (no separate fatigue). Drills spend it, rests restore it. Low energy makes a drill more likely to fail and, below a threshold, able to cause an **injury**: the monster loses the rest of the cycle and its rank fight and sits out the next cycle, then comes back rested (kj, 2026-10-31, issue #89: "skip a fight cycle", less punishing but it still bricks the build; rules `specs/14` section 4.1). Pushing on at low energy to cross a milestone before the run ends is the run's main risk-versus-reward decision. The talent tree can reduce drill cost.
 - **Skill points** (kj, 2026-10-30): a fixed amount every cycle plus a bonus for each rank fight win, spent in trees. Saving them is a strategy (section 5.4). Rules: `specs/15`.
 
 ### 4.4 Attribute milestones and drafts
@@ -78,7 +78,7 @@ When a stat crosses **300 / 500 / 700 / 900**, the run pauses for a **3-card tre
 ### 4.5 End of run
 
 - After epoch 12 the monster goes to the gauntlet (section 6) and then into the Vault.
-- **Failed runs (kj, 2026-10-30):** an injury at high fatigue ends the run early. The monster is still certified and vaulted (the gauntlet scores it low), and the run still pays Training Shards.
+- **Injuries (kj, 2026-10-31, issue #89):** an injury no longer ends the run early (kj's first rule, 2026-10-30). It costs the rest of the cycle, its fight and the next cycle; a run that lost many cycles is weak, so the gauntlet scores it low. Every run plays to cycle 12, is vaulted and pays Training Shards for all its cycles.
 
 ## 5. Skill trees
 

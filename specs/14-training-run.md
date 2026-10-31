@@ -11,7 +11,8 @@ The design is `specs/12` section 4; the cycle flow is kj's (2026-10-30). Skill p
 ```
 Start(species, seed)
   cycle 1..RUN_CYCLES:
-    RUN_AP taps, each one:  Drill(stat)  -> tier roll, gain roll, maybe injury (ends the run)
+    RUN_AP taps, each one:  Drill(stat)  -> tier roll, gain roll, maybe injury (section 4.1: loses the rest of the cycle,
+                                            its fight and the next INJURY_SKIP_CYCLES cycles)
                             Rest         -> + energy
     AP spent: if cycle % FIGHT_EVERY == 0 -> Fight (1v1 vs the current rank's opponent; win = rank up)
   after the last cycle (and its fight): Finished, Completed
@@ -21,13 +22,13 @@ Every tap gives instant feedback (the command's result object). Fights are resol
 
 ## 2. State and commands
 
-`RunState` is a plain mutable graph (saveable, `Clone()`): species id, run seed, the eight stats, energy, cycle (1-based), AP left, rank index, phase, end reason, the `training` stream, counters (fights fought and won, drills, rests), milestone hits and the command log.
+`RunState` is a plain mutable graph (saveable, `Clone()`): species id, run seed, the eight stats, energy, cycle (1-based), AP left, rank index, phase, end reason, the `training` stream, counters (fights fought and won, drills, rests), milestone hits, injuries (section 4.1) and the command log.
 
 | Phase | Allowed command |
 |---|---|
 | `Training` | `Drill(stat)`, `Rest` |
 | `AwaitFight` | `Fight` |
-| `Finished` | none (`End` is `Completed` or `Injured`) |
+| `Finished` | none (`End` is `Completed`; `Injured` only on Vault entries sealed before issue #89, section 4.1) |
 
 Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` section 3) work in every phase. `Drill`, `Rest` and `Fight` also wait until no tree offer is pending. A command that is not allowed throws `InvalidOperationException`; an unknown stat throws `ArgumentException`. Only accepted commands enter the log.
 
@@ -49,12 +50,28 @@ energy = max(0, energy - DRILL_ENERGY_COST)
 ```
 
 - Draws come from the run's `training` stream in the order u1, u2, u3.
-- An injury still applies the drill's gain, then ends the run (`Injured`, no fight). `specs/12` section 4.5: the monster is still vaulted and the run still pays shards (T4/T5).
+- An injury still applies the drill's gain, then costs cycles (section 4.1). It no longer ends the run.
 - One energy meter stands in for the drafts' energy plus fatigue (`specs/12` section 13 item 16).
 
 **Rest:** `energy = min(RUN_ENERGY_MAX, energy + REST_ENERGY)`. No draw.
 
 Both cost 1 AP. When AP reach 0 the run goes to `AwaitFight` if a fight is due, else straight to the next cycle (or `Finished` after the last cycle).
+
+### 4.1 Injury (kj, 2026-10-31, issue #89)
+
+kj: "rework injury to be like, skip a fight cycle or something, less punishing and annoying, but would still basically brick ur build." An injury no longer ends the run; it costs cycles. **(agent)** The concrete rule:
+
+1. The injuring drill keeps its gain (and any milestone it crossed, whose draft waits as usual).
+2. The rest of the current cycle is lost: its remaining AP are gone and its rank fight (if one was due) is skipped. No promotion chance, no `SP_PER_WIN`.
+3. The next `INJURY_SKIP_CYCLES` (placeholder 1) whole cycles are sat out: no drills, no rank fights and no `SP_PER_CYCLE` for them.
+4. The monster is then back: energy is set to `INJURY_RECOVER_ENERGY` (placeholder 100, full) and the following cycle starts as usual (full AP, `SP_PER_CYCLE`).
+5. If the lost cycles reach past the last cycle, the run finishes there as `Completed` (never `Injured`); an injury in the last cycle just loses that cycle's fight.
+
+All of it happens inside the `Drill` command: no new phase or command, and no extra draw (the injury roll was u3). In cycle terms, an injury in cycle `c` makes the run resume in cycle `c + 1 + INJURY_SKIP_CYCLES`. Each injury is recorded as an `InjuryHit` (cycle injured, whole cycles sat out, cycle back or 0 when the run ran out) in `RunState.Injuries` and returned as `DrillResult.Injury`. Injuries can repeat. Lost cycles still count as cycles played for the shard payout (`specs/18` section 5): the cost of an injury is the build, not the shards.
+
+Why: one tap still costs a fight and up to `RUN_AP - 1 + RUN_AP * INJURY_SKIP_CYCLES` actions (9 at the placeholders) of a 60-action run, plus the SP of the skipped cycle and of any win, so a habit of drilling at low energy cripples a monster (the `reckless` bot, section 9) without throwing the run away. Coming back at full energy keeps it readable ("sits out a cycle, comes back rested").
+
+`RunEnd.Injured` stays in the enum for Vault entries sealed before this change; their logs replay to the same fighter under the new rules (the injuring drill was their last command). No achievement or payout depends on it.
 
 ## 5. Rank fights
 
@@ -73,7 +90,7 @@ Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700,
 
 - Pure: no clock, IO or `Math.Pow`. All randomness is the `training` and `draft` streams plus derived fight seeds.
 - `TrainingRun.Replay(content, species, seed, log, books)` rebuilds a run from its command log; tests check it gives the same `StateHash` for every species, bot and book list.
-- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument).
+- `TrainingRun.StateHash` is SHA-256 over a canonical encoding of the run (`StateHasher` conventions; `HashVersion` 4 since the injuries of section 4.1, 3 since the run modifiers of `specs/18` section 3, which `Start` and `Replay` take as an optional last argument). A hash version bump means a saved run in progress no longer matches its stored hash: it is dropped on load with the notice of `specs/06` section 5 and its books are returned.
 
 ## 8. Content
 
@@ -92,6 +109,8 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 | `DRILL_SUPER_P` | 0.1 | `[0, 1]` |
 | `INJURY_BELOW` | 0.25 | `[0, 1]` |
 | `INJURY_MAX_P` | 0.4 | `[0, 1]` |
+| `INJURY_SKIP_CYCLES` | 1 | `>= 0` (content 3.11) |
+| `INJURY_RECOVER_ENERGY` | 100 | `[0, RUN_ENERGY_MAX]` (content 3.11) |
 | `STAT_MAX` | 999 | `> 0` |
 | `FIGHT_EVERY` | 1 | `> 0` |
 
@@ -104,7 +123,7 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 
 ## 9. Bots and goldens
 
-- `src/IdleRng.Bots/Training/RunBots.cs`: four policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the best-growth stat that is not capped; `reckless` never rests; `hoarder` is `focus` but saves skill points until cycle 9. All fight when a fight is due; tree handling is `specs/15` section 8.
+- `src/IdleRng.Bots/Training/RunBots.cs`: four policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the best-growth stat that is not capped; `reckless` never rests (so it is injured about four times a run and sits out about four cycles, section 4.1); `hoarder` is `focus` but saves skill points until cycle 9. All fight when a fight is due; tree handling is `specs/15` section 8.
 - CLI: `dotnet run --project src/IdleRng.Bots -- train --species drake --policy hoarder --seed 7 [--books book_echoes]` prints every command, the summary and the hash.
 - `golden/training-run-vectors.txt`: every species x policy at seed 7, plus `focus` with every book, summary and hash. Regenerate with `golden --update` when the run rules, the battle or their content change.
 

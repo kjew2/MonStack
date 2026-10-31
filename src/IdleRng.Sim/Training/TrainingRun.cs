@@ -17,8 +17,8 @@ namespace IdleRng.Sim.Training
     {
         public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight";
         public const string MonsterId = "monster";
-        public const int HashVersion = 3;
-        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v3");
+        public const int HashVersion = 4;
+        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v4");
 
         // ------------------------------------------------------------------ start
 
@@ -64,7 +64,8 @@ namespace IdleRng.Sim.Training
         /// <summary>
         /// Drill one trained stat (specs/14 section 4). Rolls the tier (fail/success/super, odds from current energy), then the
         /// gain inside the tier's range, then injury when energy is low. Costs 1 AP and DRILL_ENERGY_COST energy. Growth is the
-        /// species' plus the bought growth nodes of the slotted trees.
+        /// species' plus the bought growth nodes of the slotted trees. An injury keeps the gain, then costs the rest of the cycle
+        /// and its fight plus INJURY_SKIP_CYCLES whole cycles (<see cref="Injure"/>); the run goes on after that.
         /// </summary>
         public static DrillResult Drill(ContentDb c, RunState s, string stat)
         {
@@ -90,7 +91,7 @@ namespace IdleRng.Sim.Training
             var result = new DrillResult { Stat = stat, Tier = tier, Gain = after - before, NewValue = after, EnergyAfter = s.Energy, Injured = injured };
             CrossMilestones(c, s, stat, before, after, result.Milestones);
 
-            if (injured) { s.Phase = RunPhase.Finished; s.End = RunEnd.Injured; s.ApLeft = 0; }
+            if (injured) result.Injury = Injure(c, s);
             else SpendAp(c, s);
             Reconcile(c, s, null);
             return result;
@@ -342,6 +343,26 @@ namespace IdleRng.Sim.Training
             else NextCycle(c, s);
         }
 
+        /// <summary>
+        /// An injury (specs/14 section 4.1, kj 2026-10-31 on issue #89): the rest of the current cycle is lost and its rank fight
+        /// is skipped; the next INJURY_SKIP_CYCLES cycles are sat out (no drills, no fight, no SP_PER_CYCLE); then the monster
+        /// comes back at INJURY_RECOVER_ENERGY and trains the following cycle as usual. Lost cycles past the last one finish the
+        /// run as Completed. No roll: the injury itself was the roll.
+        /// </summary>
+        static InjuryHit Injure(ContentDb c, RunState s)
+        {
+            var k = c.Constants;
+            var hit = new InjuryHit { Cycle = s.Cycle };
+            s.Injuries.Add(hit);
+            s.ApLeft = 0;
+            for (int i = 0; i < k.InjurySkipCycles && s.Cycle < k.RunCycles; i++) { s.Cycle++; hit.CyclesLost++; }
+            NextCycle(c, s);
+            if (s.Phase == RunPhase.Finished) return hit;
+            s.Energy = k.InjuryRecoverEnergy;
+            hit.BackCycle = s.Cycle;
+            return hit;
+        }
+
         static void NextCycle(ContentDb c, RunState s)
         {
             if (s.Cycle >= c.Constants.RunCycles)
@@ -565,6 +586,8 @@ namespace IdleRng.Sim.Training
             foreach (var kv in s.Tally.DamageByElement) { w.Str(kv.Key); w.F64(kv.Value); }
             w.I32(s.Milestones.Count);
             foreach (var m in s.Milestones) { w.Str(m.Stat); w.I32(m.Threshold); w.I32(m.Cycle); }
+            w.I32(s.Injuries.Count);
+            foreach (var i in s.Injuries) { w.I32(i.Cycle); w.I32(i.BackCycle); w.I32(i.CyclesLost); }
             w.I32(s.Log.Count);
             foreach (var l in s.Log) { w.I32((int)l.Kind); w.Str(l.Stat); w.I32(l.Choice); w.I32(l.Slot); w.Str(l.Book); }
             return Sha256.Hex(Sha256.Compute(w.ToArray()));

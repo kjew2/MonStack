@@ -15,7 +15,8 @@ namespace IdleRng.Sim.Training
     /// <summary>
     /// A finished monster, frozen (specs/13 T4, kj 2026-10-30: final stats, slotted trees with bought nodes, rank, species and
     /// run date). Carries the species, seed, books and command log, so the run replays exactly (TrainingRun.Replay) and
-    /// <see cref="Fighter"/> rebuilds the battle snapshot from them. Unspent skill points are lost. Injured runs are vaulted too.
+    /// <see cref="Fighter"/> rebuilds the battle snapshot from them. Unspent skill points are lost. Entries sealed
+    /// before issue #89 may have End = Injured (an injury used to end the run); their logs still replay to the same fighter.
     /// </summary>
     public sealed class VaultEntry
     {
@@ -32,7 +33,7 @@ namespace IdleRng.Sim.Training
         public int RankIndex { get; set; }
         public RunEnd End { get; set; }
 
-        /// <summary>Cycles played, including the one an injury ended.</summary>
+        /// <summary>Cycles played, including any sat out injured (an old Injured entry: up to the cycle the injury ended).</summary>
         public int Cycles { get; set; }
         public int FightsFought { get; set; }
         public int FightsWon { get; set; }

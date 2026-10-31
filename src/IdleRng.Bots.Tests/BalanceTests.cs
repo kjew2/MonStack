@@ -41,9 +41,11 @@ namespace IdleRng.Bots.Tests
             Assert.That((d.N, d.Mean, d.Sd, d.Min, d.P50, d.Max), Is.EqualTo((0, 0.0, 0.0, 0.0, 0.0, 0.0)));
         }
 
-        static RunSample Sample(int rank, RunEnd end, int cycles, int fought, int won, long shards, int floor, string killer, bool boss = false) =>
+        static RunSample Sample(int rank, RunEnd end, int cycles, int fought, int won, long shards, int floor, string killer, bool boss = false,
+                                int injuries = 0) =>
             new RunSample
             {
+                Injuries = injuries, CyclesLost = injuries,
                 Species = "slime", Policy = "focus", RankIndex = rank, End = end, Cycles = cycles, FightsFought = fought, FightsWon = won,
                 Shards = shards, GauntletFloor = floor, GauntletCleared = killer == null, GauntletKiller = killer, GauntletBossStall = boss,
             };
@@ -53,15 +55,16 @@ namespace IdleRng.Bots.Tests
         {
             var runs = new[]
             {
-                Sample(0, RunEnd.Injured, 2, 1, 0, 10, 20, "hydra", boss: true),
-                Sample(2, RunEnd.Completed, 12, 12, 2, 80, 40, "golem"),
+                Sample(0, RunEnd.Completed, 2, 1, 0, 10, 20, "hydra", boss: true, injuries: 3),
+                Sample(2, RunEnd.Completed, 12, 12, 2, 80, 40, "golem", injuries: 1),
                 Sample(2, RunEnd.Completed, 12, 12, 2, 80, 30, "hydra"),
                 Sample(5, RunEnd.Completed, 12, 12, 5, 110, 101, null),
             };
             var s = CellSummary.From("slime", "focus", 6, runs);
             Assert.That(s.N, Is.EqualTo(4));
             Assert.That(s.Grades, Is.EqualTo(new[] { 1, 0, 2, 0, 0, 1 }));
-            Assert.That((s.Completed, s.Injured, s.InjuryRate), Is.EqualTo((3, 1, 0.25)));
+            Assert.That((s.Completed, s.Injured, s.InjuryRate), Is.EqualTo((4, 2, 0.5)), "injured = runs with at least one injury");
+            Assert.That((s.Injuries.Mean, s.Injuries.Max, s.CyclesLost.Mean), Is.EqualTo((1.0, 3.0, 1.0)));
             Assert.That(s.FightWinRate, Is.EqualTo(9.0 / 37));
             Assert.That(s.FightsLost.Mean, Is.EqualTo((1 + 10 + 10 + 7) / 4.0));
             Assert.That(s.Cycles.Min, Is.EqualTo(2));

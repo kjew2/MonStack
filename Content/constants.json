@@ -157,6 +157,16 @@
       "value": 0.4
     },
     {
+      "key": "INJURY_SKIP_CYCLES",
+      "type": "int",
+      "value": 1
+    },
+    {
+      "key": "INJURY_RECOVER_ENERGY",
+      "type": "double",
+      "value": 100.0
+    },
+    {
       "key": "STAT_MAX",
       "type": "double",
       "value": 999.0

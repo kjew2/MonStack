@@ -59,6 +59,26 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void AnActiveRunWithAnInjury_ReplaysOnLoad()
+        {
+            var db = TestContent.Db;
+            var a = AccountOps.New(db, 5);
+            var run = AccountOps.StartRun(db, a, a.OwnedSpecies[0]);
+            while (run.Injuries.Count == 0 && run.Phase != RunPhase.Finished)
+            {
+                while (run.Offers.Count > 0) TrainingRun.DiscardOffer(db, run);
+                if (run.Phase == RunPhase.AwaitFight) TrainingRun.Fight(db, run);
+                else TrainingRun.Drill(db, run, StatIds.Str);   // never rests, so an injury comes (specs/14 section 4.1)
+            }
+            Assert.That(run.Injuries, Is.Not.Empty);
+            Assume.That(run.Phase, Is.Not.EqualTo(RunPhase.Finished), "an early injury leaves the run going");
+            var b = AccountSave.Decode(db, AccountSave.Encode(a), out var notice);
+            Assert.That(notice, Is.Null);
+            Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(run)));
+            Assert.That(b.Active.Injuries.Single().BackCycle, Is.EqualTo(run.Injuries.Single().BackCycle));
+        }
+
+        [Test]
         public void VaultLock_RoundTrips()
         {
             var a = Played();

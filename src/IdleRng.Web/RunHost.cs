@@ -48,6 +48,7 @@ namespace IdleRng.Web
                 .P("statMax", k.StatMax).P("treeSlots", k.TreeSlots).P("drillEnergyCost", k.DrillEnergyCost).P("restEnergy", k.RestEnergy)
                 .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("superP", k.DrillSuperP)
                 .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap).P("vendorOffers", k.VendorOffers)
+                .P("injurySkipCycles", k.InjurySkipCycles).P("injuryRecoverEnergy", k.InjuryRecoverEnergy)
                 .EndObj();
             w.Key("stats").Arr();
             foreach (var id in StatIds.Trained) w.Str(id);
@@ -586,6 +587,8 @@ namespace IdleRng.Web
                         w.P("ok", true).P("kind", "drill").P("stat", r.Stat).P("tier", r.Tier.ToString().ToLowerInvariant())
                             .P("tierName", _db.Text("drill." + r.Tier.ToString().ToLowerInvariant() + ".name"))
                             .P("gain", r.Gain).P("value", r.NewValue).P("energy", r.EnergyAfter).P("injured", r.Injured);
+                        w.Key("injury");
+                        if (r.Injury == null) w.Null(); else Injury(w, r.Injury);
                         Milestones(w, r.Milestones);
                         break;
                     }
@@ -640,6 +643,10 @@ namespace IdleRng.Web
         }
 
         private static string Fail(string reason) => new JsonOut().Obj().P("ok", false).P("reason", reason).EndObj().ToString();
+
+        /// <summary>An injury (specs/14 section 4.1): the cycle it happened in, whole cycles sat out, and the cycle the monster is back (0 = the run ran out).</summary>
+        private static void Injury(JsonOut w, InjuryHit i) =>
+            w.Obj().P("cycle", i.Cycle).P("lost", i.CyclesLost).P("back", i.BackCycle).EndObj();
 
         private void Milestones(JsonOut w, List<MilestoneHit> hits)
         {
@@ -815,6 +822,9 @@ namespace IdleRng.Web
             w.Key("tally").Obj().P("damage", s.Tally.DamageDealt).P("crits", s.Tally.Crits).P("evades", s.Tally.Evades).P("kills", s.Tally.Kills).EndObj();
             w.Key("milestonesHit").Arr();
             foreach (var m in s.Milestones) w.Obj().P("stat", m.Stat).P("threshold", m.Threshold).EndObj();
+            w.EndArr();
+            w.Key("injuries").Arr();
+            foreach (var i in s.Injuries) Injury(w, i);
             w.EndArr();
             w.P("hash", TrainingRun.StateHash(s));
             return w.EndObj().ToString();

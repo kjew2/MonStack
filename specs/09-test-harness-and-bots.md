@@ -83,7 +83,7 @@ When the `CI` environment variable is set (anything but empty or `false`; GitHub
 | Section | Metrics |
 |---|---|
 | Grades | % of runs ending at each rank (E to S), mean rank index (E = 0), p10/p50/p90 |
-| Runs | injury rate (an injury ends the run), cycles played, rank fights won and lost, fight win rate (won / fought over the cell), shard payout |
+| Runs | injury rate (runs with at least one injury), injuries per run and whole cycles sat out (`specs/14` section 4.1), rank fights won and lost, fight win rate (won / fought over the cell), shard payout |
 | Gauntlet | floor reached (`GAUNTLET_FLOORS` + 1 = cleared), clear rate, boss-floor stall rate (share of the runs that did not clear that ended on a boss floor; about 1/`GAUNTLET_BOSS_EVERY` when the curve is smooth, `specs/19` section 2), the killers that ended most runs |
 | Daily Tower | per policy x team: floors cleared, clear rate, shards, books |
 

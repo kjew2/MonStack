@@ -44,6 +44,8 @@ namespace IdleRng.Sim.Content
         public double DrillSuperP { get; internal set; }         // DRILL_SUPER_P
         public double InjuryBelow { get; internal set; }         // INJURY_BELOW
         public double InjuryMaxP { get; internal set; }          // INJURY_MAX_P
+        public int InjurySkipCycles { get; internal set; }       // INJURY_SKIP_CYCLES: whole cycles lost after the injured one
+        public double InjuryRecoverEnergy { get; internal set; } // INJURY_RECOVER_ENERGY: energy on return
         public double StatMax { get; internal set; }             // STAT_MAX
         public int FightEvery { get; internal set; }             // FIGHT_EVERY
 
