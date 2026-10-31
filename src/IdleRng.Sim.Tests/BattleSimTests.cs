@@ -299,6 +299,21 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Taunt_IsNotUsed_WithNoAllyToProtect()
+        {
+            // alone, a taunt changes nothing: the AI attacks instead (issue #117); with an ally it taunts
+            var taunt = new CombatSkill { Id = "taunt", Kind = SkillKind.Taunt, Target = SkillTarget.Self, Cooldown = 3, Duration = 3 };
+            var log = new List<FightAction>();
+            Run(Side(Mon("tank", 400, null, null, taunt)), Side(Mon("enemy", 300)), 11, log);
+            Assert.That(log.Any(a => a.Actor == "tank" && a.Skill?.Id == "taunt"), Is.False);
+            Assert.That(log.Any(a => a.Actor == "tank" && a.Amount > 0), Is.True);
+
+            log.Clear();
+            Run(Side(Mon("tank", 400, null, null, taunt), Mon("ally", 300)), Side(Mon("enemy", 300)), 11, log);
+            Assert.That(log.Any(a => a.Actor == "tank" && a.Skill?.Id == "taunt"), Is.True);
+        }
+
+        [Test]
         public void Healer_HealsOnlyWhenTheWholeHealLands()
         {
             var mend = new CombatSkill { Id = "mend", Kind = SkillKind.Heal, Target = SkillTarget.LowestAlly, Scales = StatIds.Wis, Power = 1, Cooldown = 1 };

@@ -1,6 +1,6 @@
 # 25 - Spike: stat systems, DEX, LUK and single-stat builds
 
-Status: **spike report (agent, 2026-10-31); kj answered section 7 the same day, and the DEX and LUK retune is built (content 4.6, section 9).** Only the answers in section 7 are agreed design; the rest is research. kj asked for field research before changing any stat: DEX needs a tweak, LUK should be more interesting, every all-in single-stat build should at least kind of work, and "magic cannot be dodged" looks like a problem, but kj wants to see other stat systems before fixing it. Section 7 has the questions for kj.
+Status: **spike report (agent, 2026-10-31); kj answered section 7 the same day, the DEX and LUK retune is built (content 4.6, section 9), and so are signature skills for the all-in builds that still lagged (content 4.7, section 10).** Only the answers in section 7 are agreed design; the rest is research. kj asked for field research before changing any stat: DEX needs a tweak, LUK should be more interesting, every all-in single-stat build should at least kind of work, and "magic cannot be dodged" looks like a problem, but kj wants to see other stat systems before fixing it. Section 7 has the questions for kj.
 
 ## 1. Scope and method
 
@@ -221,5 +221,37 @@ What changed:
 - **Magic** grazes against high-DEX opponents, so all-in INT lost about 0.07.
 - **Sanity checks:** all 12 pass in the default `balance` run.
 
-Follow-up: all-in DEF is now the weakest build (1.66). LUK, WIS and INT are close behind (about 1.9). A pass to make those stronger is issue #117.
+Follow-up: all-in DEF is now the weakest build (1.66). LUK, WIS and INT are close behind (about 1.9). A pass to make those stronger is issue #117 (section 10).
 
+
+## 10. Signature skills for the lagging all-in builds (content 4.7, issue #117)
+
+kj's bar (section 7, answers 4 and 6): every all-in build should reach about D to C, and the weak stats get stronger rather than SPD weaker. After content 4.6 all-in DEF, WIS, INT and LUK still trailed all-in STR and DEX. The fix follows section 6 ("All-in builds", option 1): each lagging stat's own Awakening tree (the generic tree its 300 milestone drafts, `specs/15` section 4) holds a damage skill scaled by that stat, at index 1, right after the first growth node. A run then has it as soon as it puts 3 SP into the tree; at index 4 (where *Gamble* and *Arcane Blast* sat) the bots only reached it in the last cycles, after the native trees.
+
+| Tree | Index 1 (was) | Skill |
+|---|---|---|
+| *Bulwark* (DEF) | +15 DEF | *Iron Press* `iron_press`: physical damage 120% DEF, cooldown 2 (new) |
+| *Sage Mind* (WIS) | +15 WIS | *Smite* `smite`: magical damage 160% WIS, cooldown 2 (new) |
+| *Fortune* (LUK) | +15 LUK, now at index 4 | *Gamble*: physical damage 250% LUK, cooldown 4 (moved from index 4) |
+| *Spellcraft* (INT) | +15 INT, now at index 4 | *Arcane Blast*: magical damage 200% INT, cooldown 3 (moved from index 4) |
+
+One AI fix came with it: a taunt is used only when the unit has a living ally to protect (`specs/16` section 5.2). *Bulwark*'s *Provoke* used to spend every fourth action of a lone DEF monster on a taunt that changes nothing in 1v1. On its own this fix moved all-in DEF from 1.66 to 1.78 (drake 1.06 to 1.41).
+
+**Opponents' LUK (section 6 option 2) was measured and not built.** Lowering every rank opponent's LUK to at most 10% above its highest other stat (S 825 to 550), with the points spread over its other stats so the rank budget holds (`specs/14` section 5), lowered every policy by about 0.05 to 0.15 and did not help all-in LUK (1.95 to 1.94): what the opponents gain in the other stats outweighs what the player's fortune and crits gain. The rank sheets keep their LUK.
+
+Grade means at 200 seeds, no books, content 4.6 before and 4.7 after (E = 0, D = 1, C = 2; rank fight win rate averaged over the five species):
+
+| Policy | slime | drake | sprite | mandrake | shade_hound | avg | win rate |
+|---|---|---|---|---|---|---|---|
+| `mono-def` | 1.93 / 2.79 | 1.06 / 2.17 | 2.03 / 2.17 | 1.43 / 2.26 | 1.84 / 1.81 | 1.66 / 2.24 | 14% / 19% |
+| `mono-wis` | 2.37 / 3.00 | 1.00 / 1.34 | 2.65 / 2.88 | 1.88 / 2.49 | 1.52 / 1.52 | 1.89 / 2.25 | 16% / 19% |
+| `mono-luk` | 2.50 / 2.49 | 1.25 / 1.68 | 2.38 / 2.48 | 1.72 / 1.76 | 1.90 / 1.73 | 1.95 / 2.03 | 16% / 17% |
+| `mono-int` | 2.10 / 2.13 | 1.16 / 1.42 | 2.91 / 2.92 | 1.75 / 1.77 | 1.34 / 1.34 | 1.85 / 1.92 | 15% / 16% |
+| `mono-str`, `mono-dex` (reference) | unchanged | | | | | 2.04, 2.09 | |
+| `focus` | 4.18 / 4.18 | 2.29 / 2.29 | 2.91 / 2.92 | 2.12 / 2.12 | 3.38 / 3.38 | 2.97 / 2.98 | |
+
+- Every all-in build now averages about C (1.92 to 2.25, SPD and HP still above). The drake DEF and WIS cells, which sat right at D, are at 2.17 and 1.34.
+- All-in DEF and WIS end slightly above all-in STR and DEX (2.24 and 2.25 against 2.04 and 2.09), mostly from slime and mandrake, the species that grow those stats best.
+- The default policies (`focus`, `balanced`, `hoarder`, `chaser`, `reckless`) and `mono-hp`, `mono-str`, `mono-dex` and `mono-spd` move by 0.01 at most: they rarely slot these trees early.
+- The weakest cells are shade_hound's all-in INT, WIS, LUK and DEF (1.34 to 1.81): unless it trains HP, its 1,000 max HP dies to C-rank casters in a few hits, and those stats grow slowly for it (growth 0.6 to 1.1). That is a species question, not a stat one.
+- **Sanity checks:** all 12 pass in the default `balance` run.

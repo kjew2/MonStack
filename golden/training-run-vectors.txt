@@ -1,4 +1,4 @@
-# training-run vectors, hash v7 content=4.6/d5d0c800
+# training-run vectors, hash v7 content=4.7/d6b5bd61
 
 slime balanced seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=0 sp=8 injuries=0
@@ -62,9 +62,9 @@ drake hoarder seed=7
 
 drake chaser seed=7
   end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 180 str 388 int 95 wis 80 dex 90 def 554 spd 90 luk 70
-  trees pyromancy:8/8 heavy_armor:8/8 bulwark:4/8 survivor:0/8
-  hash 8496913ff5b3587da0c64a65972a009dddd220deff947b267501880f78959f3d
+  stats hp 165 str 388 int 95 wis 80 dex 90 def 539 spd 90 luk 70
+  trees pyromancy:8/8 heavy_armor:8/8 bulwark:3/8 survivor:0/8
+  hash 7a4e00e2297fb32aabc8b3f3a6f0c3901165793da63f21b281da68f60fcaea50
 
 drake focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
@@ -82,19 +82,19 @@ sprite focus seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
   stats hp 105 str 60 int 874 wis 205 dex 155 def 70 spd 175 luk 110
   trees aether_striker:7/8 mind_warp:7/8 spellcraft:7/8 survivor:5/8
-  hash 743ade97da644028b0955b484b41a5a7fcfc2af97872760a7c63747a981713b1
+  hash ae02ccfb9801fda816f83a112ca30bfd2ec4d4977a0130a62eb5ed5e4e2e636a
 
 sprite reckless seed=7
   end=Completed cycle=12 rank=c fights=2/5 drills=30 rests=0 energy=0 milestones=2 sp=0 injuries=c2,c5,c9,c12
-  stats hp 90 str 60 int 623 wis 155 dex 155 def 70 spd 175 luk 110
-  trees aether_striker:8/8 mind_warp:7/8 spellcraft:3/8 survivor:0/8
-  hash 09f88aa95373a6fdfd6a587a3645801b57b34215ed3c70798a3e2c276e790aff
+  stats hp 90 str 60 int 608 wis 155 dex 155 def 70 spd 175 luk 110
+  trees aether_striker:8/8 mind_warp:7/8 spellcraft:2/8 survivor:0/8
+  hash 64eab168dbb282753e442baaffa14d1e40909bad83d4738a0c3b958a50ed72c7
 
 sprite hoarder seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=3 sp=0 injuries=0
-  stats hp 90 str 60 int 791 wis 190 dex 155 def 70 spd 175 luk 110
-  trees aether_striker:8/8 mind_warp:8/8 spellcraft:7/8 survivor:0/8
-  hash 2d0c97fa6f2447b824a0d574ccfdb27e515613c4f8e972871d38eed49709ac73
+  stats hp 90 str 60 int 791 wis 170 dex 155 def 70 spd 175 luk 110
+  trees aether_striker:8/8 mind_warp:8/8 spellcraft:6/8 survivor:1/8
+  hash 9070a96579d2e9ea2cc27da5ebd655fd2973b1e585fea878ffb0ae63feab3f62
 
 sprite chaser seed=7
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=4 sp=0 injuries=0

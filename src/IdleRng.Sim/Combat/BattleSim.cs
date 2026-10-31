@@ -410,7 +410,7 @@ namespace IdleRng.Sim.Combat
                     return false;
                 }
                 case SkillKind.Shield: return AnyAllyBelow(s, u, r.AiShieldBelow);
-                case SkillKind.Taunt: return u.TauntTicks == 0;
+                case SkillKind.Taunt: return u.TauntTicks == 0 && AnyOtherAlly(s, u);   // nobody to protect: a wasted action
                 case SkillKind.Buff:
                 {
                     var t = sk.Target == SkillTarget.LowestAlly ? LowestAlly(s, u) : u;
@@ -748,6 +748,12 @@ namespace IdleRng.Sim.Combat
                 if (a.Side == src.Side && WantsHeal(r, a, amount) && (best == null || a.Hp / a.MaxHp < best.Hp / best.MaxHp)) best = a;
             if (best != null) return new List<FightUnit>(1) { best };
             return Allies(s, src, SkillTarget.LowestAlly);
+        }
+
+        static bool AnyOtherAlly(FightState s, FightUnit u)
+        {
+            foreach (var a in s.Units) if (a != u && a.Side == u.Side && a.Alive) return true;
+            return false;
         }
 
         static bool AnyAllyBelow(FightState s, FightUnit u, double frac)
