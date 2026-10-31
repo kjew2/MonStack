@@ -17,7 +17,7 @@ The design is `specs/12` sections 7, 9 and 10.
 | `OwnedSpecies` | Species the player can train. **(agent)** All MVP species from the start until the gacha (`specs/13` T9) |
 | `Books` | Skill books by id and count |
 | `Talents` | Talent ranks by id |
-| `Vault` | Finished monsters (`VaultEntry`, `specs/13` T4), oldest first |
+| `Vault` | Finished monsters (`VaultEntry`, `specs/13` T4), oldest first; each carries the player's `Locked` flag. At most `VAULT_CAP` before a new run (section 7) |
 | `Active` | The run in progress, or null |
 
 Gems (premium currency) arrive with the gacha (T9).
@@ -27,10 +27,12 @@ Gems (premium currency) arrive with the gacha (T9).
 | Command | Rule |
 |---|---|
 | `New(seed)` | Every species owned; no shards, books, talents or Vault entries |
-| `StartRun(species, books)` | No run in progress; the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3) |
-| `FinishRun(sealedUtcMs)` | The active run is over (completed or injured). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`) and clears the active run |
+| `StartRun(species, books)` | No run in progress; the Vault is not over `VAULT_CAP` (section 7); the species is owned; the books are in the inventory and leave it. The run seed is `Derive(StreamSeed(seed, "run"), RunsStarted)`; `RunsStarted` goes up by one. The run starts with the account's talent bonuses (section 3) |
+| `FinishRun(sealedUtcMs)` | The active run is over (completed or injured). Pays shards (section 5), returns unused books to the inventory **(agent)**, seals the monster into the Vault (`Vault.Seal`) and clears the active run. It seals even at or over `VAULT_CAP`: no monster is lost (section 7) |
 | `AbandonRun()` | Ends the active run in any phase with no payout and no Vault entry; unused books return to the inventory (a misclick costs nothing). `RunsStarted` stays counted, so the next run gets a new seed and abandoning cannot reroll a run. (Agreed between the two building sessions, 2026-10-30; the web client's Abandon button calls it.) |
 | `BuyTalent(talent)` | Not maxed; enough shards. Costs shards, adds a rank. Applies from the next run: a run keeps the bonuses it started with |
+| `Dismantle(index)` | Removes Vault entry `index` (oldest first) for good and pays its grade's refund (section 7). Refused for a locked entry. Allowed during a run |
+| `SetLocked(index, locked)` | Locks or unlocks Vault entry `index`. Account state only: not part of the sealed monster or its `RunHash` |
 | `GrantBooks(book, count)` | Adds (or removes) books. The Daily Tower will grant books through it (T10); tests and debug use it now |
 
 Rejected commands throw and change nothing. The sim has no clock: the caller passes the seal time.
@@ -75,7 +77,7 @@ A flat list for now; a branching talent tree is a later content change. Rules (`
 A new save lineage (kj: clean break, `specs/13` section 1), in its own store slot (`AccountSave.SlotName` = `account`), using the file shape of `specs/06` (header with CRC, JSON body) and its two-slot rotation:
 
 ```
-{ "Kind": "monster_account", "SchemaVersion": 1,
+{ "Kind": "monster_account", "SchemaVersion": 2,
   "Account": { ...AccountState without Active... },
   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Log", "Hash" } | null }
 ```
@@ -83,10 +85,26 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - The run in progress is stored as its replay recipe and rebuilt with `TrainingRun.Replay` on load. The stored hash must match the replayed run, otherwise the save is invalid (it no longer replays, for example after a rules change).
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as they are (with their own replay recipe and hash).
-- Schema migrations for this lineage start at v1 when a field changes.
+- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries. A v1 save migrates on load, every entry unlocked.
 
-## 7. Open
+## 7. Vault cap and dismantling
+
+kj's decision (2026-10-30, issue #82): **a cap and dismantling only.** Code: `AccountOps.VaultOver`, `Dismantle`, `DismantleRefund`, `SetLocked`.
+
+- The Vault holds at most `VAULT_CAP` monsters before a new run. A finished run **always seals**, even at or over the cap, so no monster is lost.
+- `StartRun` is refused while the Vault holds more than `VAULT_CAP` (`VaultOver > 0`): the player dismantles down to the cap first. Starting at exactly the cap is allowed, so a run can end one over it **(agent: "down to the cap" read as `count <= VAULT_CAP`)**.
+- **Dismantling** removes an entry for good and pays Training Shards by its grade: the `dismantle_shards` column of `fight_ranks` (`specs/14` section 8). A grade no longer in content pays 0.
+- **Lock**: a locked entry cannot be dismantled. The web client asks for confirmation before dismantling.
+- Capacity expansions wait for the monetization call (#49); none are built.
+
+| Constant | Value | Range |
+|---|---|---|
+| `VAULT_CAP` | 50 | `> 0` |
+
+Placeholder refunds (`fight_ranks.dismantle_shards`, `>= 0`, `E043`): E 5, D 10, C 15, B 25, A 40, S 60.
+
+## 8. Open
 
 - What else shards buy, and gems (T9).
 - A branching talent tree instead of a list.
-- Retiring or deleting Vault entries.
+- Vault capacity expansions (after the monetization call, #49).

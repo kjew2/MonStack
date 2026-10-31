@@ -47,13 +47,17 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 ## 5. Schema versions
 
-`AccountState.CurrentSchemaVersion` is 1. When a field changes after release, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation; a step uses frozen literals, never `ContentDb`. There are no migrations yet and no released saves.
+`AccountState.CurrentSchemaVersion` is 2. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
+
+| Step | Change |
+|---|---|
+| v1 -> v2 | Vault entries gain `Locked` (`false`), issue #82 (`specs/18` section 7) |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten. A content change that breaks an active run's replay is reported the same way; the Vault keeps its entries' replay recipes so they stay verifiable.
 
 ## 6. Tests
 
-`src/IdleRng.Runtime.Tests`: `SaveSerializerTests` (header, CRC, truncation, hex seeds), `SaveStoreTests` (rotation, tmp cleanup, crash between renames, quarantine), `AccountSaveTests` (round trip, backup fallback, rejection).
+`src/IdleRng.Runtime.Tests`: `SaveSerializerTests` (header, CRC, truncation, hex seeds), `SaveStoreTests` (rotation, tmp cleanup, crash between renames, quarantine), `AccountSaveTests` (round trip, backup fallback, rejection, the v1 -> v2 migration).
 
 ## 7. Open
 

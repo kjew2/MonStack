@@ -22,6 +22,7 @@ namespace IdleRng.Web
         public double Num(int i) => Has(i) && _a[i].ValueKind == JsonValueKind.Number ? _a[i].GetDouble() : throw new ArgumentException("argument " + i + " must be a number");
         public int Int(int i) => (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, Math.Floor(Num(i))));
         public string Str(int i) => Has(i) && _a[i].ValueKind == JsonValueKind.String ? _a[i].GetString() : throw new ArgumentException("argument " + i + " must be a string");
+        public bool Bool(int i) => Has(i) && (_a[i].ValueKind == JsonValueKind.True || _a[i].ValueKind == JsonValueKind.False) ? _a[i].GetBoolean() : throw new ArgumentException("argument " + i + " must be true or false");
         public JsonElement El(int i) => Has(i) ? _a[i] : throw new ArgumentException("argument " + i + " missing");
     }
 }

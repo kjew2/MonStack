@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "3.1",
+  "content_version": "3.2",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "chase_conditions": {
@@ -9,7 +9,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "f8aa83b73b139cef94559615feb0daaaaf810eb8fefd91596845b5d041c33281"
+      "sha256": "3a099522cab296140a362323ac602c2aed266220cb7cd0be0bdd0e337b75e3f9"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -21,7 +21,7 @@
     },
     "fight_ranks": {
       "file": "fight_ranks.json",
-      "sha256": "89a4eea53570606ee4c6a274775f30ef28bfba0975230d202ecb95cca1b2ea38"
+      "sha256": "81a0c38d7c77ba049cd0d986a4dda9658f9bc940c78bfb1bbfb1d43fff2025d4"
     },
     "gauntlet_enemies": {
       "file": "gauntlet_enemies.json",
@@ -64,5 +64,5 @@
       "sha256": "3a3706172d7fb80dea79a6154b0b135e6a4b9600396de12549ae708f7bb46c72"
     }
   },
-  "content_hash": "c12098bdf689397cfc2931c9fe9a5011cb8cd9b8fa2483a1bbf32f4b61fa197a"
+  "content_hash": "4dc63cd642aa0ce189d9e3331317c530ceb5f8f11000ac6084ade4a8ce922363"
 }

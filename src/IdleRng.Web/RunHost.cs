@@ -46,7 +46,7 @@ namespace IdleRng.Web
                 .P("runCycles", k.RunCycles).P("runAp", k.RunAp).P("energyMax", k.RunEnergyMax).P("fightEvery", k.FightEvery)
                 .P("statMax", k.StatMax).P("treeSlots", k.TreeSlots).P("drillEnergyCost", k.DrillEnergyCost).P("restEnergy", k.RestEnergy)
                 .P("spPerCycle", k.SpPerCycle).P("spPerWin", k.SpPerWin).P("superP", k.DrillSuperP)
-                .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank)
+                .P("shardsPerCycle", k.ShardsPerCycle).P("shardsPerRank", k.ShardsPerRank).P("vaultCap", k.VaultCap)
                 .EndObj();
             w.Key("stats").Arr();
             foreach (var id in StatIds.Trained) w.Str(id);
@@ -226,14 +226,16 @@ namespace IdleRng.Web
                         w.P("ok", true).P("cost", AccountOps.BuyTalent(_db, _acct, a.Str(0)));
                         break;
                     case "abandon":
-                    {
-                        // Abandoning pays nothing and seals nothing; unused books go back to the inventory so a misclick costs none.
-                        var run = _acct.Active ?? throw new InvalidOperationException("no run in progress");
-                        foreach (var b in run.Books) AccountOps.GrantBooks(_db, _acct, b, 1);
-                        _acct.Active = null;
+                        AccountOps.AbandonRun(_db, _acct);
                         w.P("ok", true);
                         break;
-                    }
+                    case "dismantle":
+                        w.P("ok", true).P("refund", AccountOps.Dismantle(_db, _acct, a.Int(0)));
+                        break;
+                    case "lock":
+                        AccountOps.SetLocked(_db, _acct, a.Int(0), a.Bool(1));
+                        w.P("ok", true);
+                        break;
                     case "debugGrantBook":
                         AccountOps.GrantBooks(_db, _acct, a.Str(0), a.Has(1) ? a.Int(1) : 1);
                         w.P("ok", true);
@@ -294,6 +296,7 @@ namespace IdleRng.Web
             }
             w.EndArr();
             w.Key("mods").Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("draftSizeBonus", m.DraftSizeBonus).P("startSp", m.StartSp).EndObj();
+            w.P("vaultCap", _db.Constants.VaultCap).P("vaultOver", AccountOps.VaultOver(_db, ac));
             w.Key("vault").Arr();
             foreach (var e in ac.Vault) Entry(w, e);
             w.EndArr();
@@ -304,7 +307,8 @@ namespace IdleRng.Web
         {
             w.Obj().P("species", e.SpeciesId).P("seed", e.Seed.ToString("x16", CultureInfo.InvariantCulture))
                 .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
-                .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("hash", e.RunHash).P("sealedUtcMs", e.SealedUtcMs);
+                .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("hash", e.RunHash).P("sealedUtcMs", e.SealedUtcMs)
+                .P("locked", e.Locked).P("refund", AccountOps.DismantleRefund(_db, e));
             w.Key("stats"); Stats(w, e.Stats);
             w.Key("trees").Arr();
             foreach (var t in e.Trees) w.Obj().P("id", t.TreeId).P("bought", t.Bought).EndObj();

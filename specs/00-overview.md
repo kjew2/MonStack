@@ -11,7 +11,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Monster battle: sides of 1 to 4, eight-stat sheet, ATB, triggers, rule modifiers | `src/IdleRng.Sim/Combat` | `16` |
 | Training run: action-point cycles of Drill and Rest, rank fights, milestones | `src/IdleRng.Sim/Training` | `14` |
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
-| Account: Vault, Training Shards, talents, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
+| Account: Vault (cap, lock, dismantle), Training Shards, talents, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
 | Content database and pipeline | `content_src/` -> `Content/` -> `ContentDb` | `05` |
 | Account save lineage and stores | `src/IdleRng.Runtime/Save` | `06`, `18` |
@@ -39,7 +39,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*` | `16` section 7 |
 | Training run | `RUN_CYCLES`, `RUN_AP`, `RUN_ENERGY_*`, `DRILL_*`, `REST_ENERGY`, `INJURY_*`, `STAT_MAX`, `FIGHT_EVERY` | `14` section 8 |
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, `MON_ECHO_POWER` | `15` section 9 |
-| Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` | `18` section 5 |
+| Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7) | `18` |
 | Gauntlet | `GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` | `19` section 4 |
 
 ## 3. Vocabulary

@@ -192,6 +192,11 @@
       "value": 10
     },
     {
+      "key": "VAULT_CAP",
+      "type": "int",
+      "value": 50
+    },
+    {
       "key": "GAUNTLET_FLOORS",
       "type": "int",
       "value": 100

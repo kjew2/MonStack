@@ -210,6 +210,7 @@ namespace IdleRng.Sim.Content
                 InjuryBelow = D("INJURY_BELOW"), InjuryMaxP = D("INJURY_MAX_P"), StatMax = D("STAT_MAX"), FightEvery = I("FIGHT_EVERY"),
                 SpPerCycle = I("SP_PER_CYCLE"), SpPerWin = I("SP_PER_WIN"), TreeSlots = I("TREE_SLOTS"), DraftSize = I("DRAFT_SIZE"),
                 MonEchoPower = D("MON_ECHO_POWER"), ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
+                VaultCap = I("VAULT_CAP"),
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
                 GauntletBossEvery = I("GAUNTLET_BOSS_EVERY"), GauntletBossMult = D("GAUNTLET_BOSS_MULT"),
             };
@@ -264,7 +265,7 @@ namespace IdleRng.Sim.Content
                   && k.DrillFailMin <= k.DrillFailMax && In01(k.DrillSuperP) && k.DrillFailMax + k.DrillSuperP <= 1
                   && In01(k.InjuryBelow) && In01(k.InjuryMaxP) && k.StatMax > 0 && k.FightEvery > 0
                   && k.SpPerCycle >= 0 && k.SpPerWin >= 0 && k.TreeSlots >= 2 && k.DraftSize > 0 && In01(k.MonEchoPower)
-                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
+                  && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
                   && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));
 
@@ -317,7 +318,7 @@ namespace IdleRng.Sim.Content
             FightRanks = t["fight_ranks"].Select(r => new FightRankDef
             {
                 Id = r.Str("id"), SortOrder = r.Int("sort_order"), NameKey = r.Str("name_key"), Element = r.Str("element"),
-                Stats = StatsFrom(r, ""),
+                Stats = StatsFrom(r, ""), DismantleShards = r.Int("dismantle_shards"),
             }).OrderBy(x => x.SortOrder).ToList().AsReadOnly();
             if (FightRanks.Count == 0) errors.Add(new ContentError("E044", "fight_ranks", "at least one rank is required"));
             if (!FightRanks.Select(x => x.SortOrder).SequenceEqual(Enumerable.Range(0, FightRanks.Count)))
@@ -326,6 +327,7 @@ namespace IdleRng.Sim.Content
             {
                 if (!Elements.ContainsKey(fr.Element)) errors.Add(new ContentError("E023", $"fight_ranks[{fr.Id}]", $"element '{fr.Element}' is not an element id"));
                 if (!StatsOk(fr.Stats, 0, k.StatMax, false)) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "stats must be in [0, STAT_MAX]"));
+                if (fr.DismantleShards < 0) errors.Add(new ContentError("E043", $"fight_ranks[{fr.Id}]", "dismantle_shards must be >= 0"));
             }
 
             BuildTrees(t, errors);

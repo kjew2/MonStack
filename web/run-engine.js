@@ -38,7 +38,8 @@
       get account() { if (acctCache === undefined) acctCache = parse(host.AccountView()); return acctCache; },
       get state() { if (runCache === undefined) runCache = parse(host.RunState()); return runCache; },   // the active run, or null
       persist() { const t = host.AccountSave(); if (t && t !== 'null') ls.set(SAVE_KEY, t); },
-      // Account command (startRun, finishRun, buyTalent, abandon, debugGrantBook); returns the result, ok:false when refused.
+      // Account command (startRun, finishRun, buyTalent, abandon, dismantle, lock, debugGrantBook); returns the result,
+      // ok:false when refused.
       acct(name) {
         const r = parse(host.AccountCmd(name, JSON.stringify([].slice.call(arguments, 1))));
         dirty();

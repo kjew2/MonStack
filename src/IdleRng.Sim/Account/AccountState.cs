@@ -11,8 +11,8 @@ namespace IdleRng.Sim.Account
     /// </summary>
     public sealed class AccountState
     {
-        /// <summary>The account save lineage (specs/18 section 6).</summary>
-        public const int CurrentSchemaVersion = 1;
+        /// <summary>The account save lineage (specs/18 section 6). v2: Vault entries carry Locked (AccountSave migrates v1).</summary>
+        public const int CurrentSchemaVersion = 2;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";

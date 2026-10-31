@@ -37,6 +37,9 @@ namespace IdleRng.Sim.Account
         {
             if (a == null) throw new ArgumentNullException(nameof(a));
             if (a.Active != null) throw new InvalidOperationException("a run is already in progress");
+            int over = VaultOver(c, a);
+            if (over > 0)
+                throw new InvalidOperationException($"the Vault holds {a.Vault.Count} of {c.Constants.VaultCap}: dismantle {over} to start a run");
             if (speciesId == null || !a.OwnedSpecies.Contains(speciesId)) throw new InvalidOperationException($"species '{speciesId}' is not owned");
             books = books ?? new List<string>();
             var need = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -58,7 +61,8 @@ namespace IdleRng.Sim.Account
 
         /// <summary>
         /// Finish the active run once it is over (completed or injured): pay shards (<see cref="Payout"/>), return unused books,
-        /// seal the monster into the Vault (Vault.Seal, specs/13 T4) and clear the active run.
+        /// seal the monster into the Vault (Vault.Seal, specs/13 T4) and clear the active run. It seals even when the Vault is
+        /// at or over VAULT_CAP (no monster is lost); the next StartRun waits until the player dismantles down to the cap.
         /// </summary>
         public static FinishResult FinishRun(ContentDb c, AccountState a, long sealedUtcMs = 0)
         {
@@ -92,6 +96,46 @@ namespace IdleRng.Sim.Account
         /// <summary>Training Shards for a finished run: SHARDS_PER_CYCLE per cycle played plus SHARDS_PER_RANK per rank reached.</summary>
         public static long Payout(ContentDb c, RunState run) =>
             (long)c.Constants.ShardsPerCycle * run.Cycle + (long)c.Constants.ShardsPerRank * run.Rank;
+
+        // ------------------------------------------------------------------ Vault (specs/18 section 7)
+
+        /// <summary>How many entries the Vault holds above VAULT_CAP (0 when at or under it). StartRun is refused while it is above 0.</summary>
+        public static int VaultOver(ContentDb c, AccountState a) => Math.Max(0, a.Vault.Count - c.Constants.VaultCap);
+
+        /// <summary>Training Shards dismantling this entry pays: its grade's dismantle_shards (0 for a grade no longer in content).</summary>
+        public static long DismantleRefund(ContentDb c, VaultEntry e)
+        {
+            foreach (var r in c.FightRanks) if (r.Id == e.Grade) return r.DismantleShards;
+            return 0;
+        }
+
+        /// <summary>Lock or unlock Vault entry <paramref name="index"/> (oldest first). A locked entry cannot be dismantled.</summary>
+        public static void SetLocked(ContentDb c, AccountState a, int index, bool locked)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            VaultAt(a, index).Locked = locked;
+        }
+
+        /// <summary>
+        /// Dismantle Vault entry <paramref name="index"/> (oldest first): the entry is removed for good and pays its grade's
+        /// refund (<see cref="DismantleRefund"/>). Locked entries are refused. Later entries move down one index. Returns the refund.
+        /// </summary>
+        public static long Dismantle(ContentDb c, AccountState a, int index)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            var e = VaultAt(a, index);
+            if (e.Locked) throw new InvalidOperationException("that monster is locked: unlock it to dismantle it");
+            long refund = DismantleRefund(c, e);
+            a.Vault.RemoveAt(index);
+            a.Shards += refund;
+            return refund;
+        }
+
+        static VaultEntry VaultAt(AccountState a, int index)
+        {
+            if (index < 0 || index >= a.Vault.Count) throw new ArgumentException($"no Vault entry {index}", nameof(index));
+            return a.Vault[index];
+        }
 
         // ------------------------------------------------------------------ talents
 

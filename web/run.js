@@ -24,6 +24,7 @@
     sealed: null,            // Vault entry of the finished run
     payout: 0,               // shards that run paid
     climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf }
+    confirmDismantle: null,  // Vault entry awaiting the dismantle confirm: { i (vault index), hash }
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -477,7 +478,11 @@
       cb.checked = ui.book;
       main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[owned[0]].name + ' (you have ' + acct.books[owned[0]] + ')' })]));
     }
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'start', disabled: !ui.pick, text: ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
+    const over = acct.vaultOver;   // the engine refuses a new run while the Vault is over its cap (specs/18 section 7)
+    if (over > 0) main.append(h('p', { class: 'small bad', 'data-id': 'vault-over', role: 'status',
+      text: 'The Vault holds ' + acct.vault.length + ' of ' + acct.vaultCap + ' monsters. Dismantle ' + over + (over === 1 ? ' monster' : ' monsters') + ' in the Vault below to start a run.' }));
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
+      text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
     if (bookIds.length) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[bookIds[0]].name,
       onclick: () => { const r = run.acct('debugGrantBook', bookIds[0], 1); if (!r.ok) toast(r.reason); render(); } }));
 
@@ -495,13 +500,40 @@
       ]));
     });
 
-    const vault = acct.vault.slice().reverse();
-    main.append(h('h3', { text: 'Vault (' + vault.length + ')' }));
-    if (!vault.length) main.append(h('p', { class: 'small muted', text: 'Sealed monsters appear here.' }));
-    vault.forEach((e) => main.append(vaultCard(e)));
+    main.append(h('h3', { class: over > 0 ? 'bad' : '', 'data-id': 'vault-count', text: 'Vault ' + acct.vault.length + '/' + acct.vaultCap }));
+    if (!acct.vault.length) main.append(h('p', { class: 'small muted', text: 'Sealed monsters appear here.' }));
+    else main.append(h('p', { class: 'small muted', text: 'Dismantle a monster for Training Shards; lock your favourites so they cannot be dismantled.' }));
+    for (let i = acct.vault.length - 1; i >= 0; i--) main.append(vaultCard(acct.vault[i], i));   // newest first
   }
 
-  function vaultCard(e) {
+  // Lock toggle and dismantle (with an in-page confirm) for Vault entry i (its index in the engine's oldest-first list).
+  function vaultActions(e, i) {
+    const sp = speciesDef(e.species) || { name: e.species };
+    const c = ui.confirmDismantle;
+    if (c && c.i === i && c.hash === e.hash) {
+      return h('div', { class: 'card alert', 'data-id': 'dismantle-confirm' }, [
+        h('p', { class: 'small', text: 'Dismantle this ' + up(e.grade) + ' ' + sp.name + ' for ' + e.refund + ' Training Shards? It is gone for good.' }),
+        h('div', { class: 'row' }, [
+          h('button', { class: 'btn small warn', type: 'button', 'data-act': 'dismantle-yes', text: 'Yes, dismantle', onclick: () => {
+            ui.confirmDismantle = null;
+            const r = run.acct('dismantle', i);
+            toast(r.ok ? 'Dismantled ' + sp.name + ': +' + r.refund + ' shards' : r.reason);
+            render();
+          } }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': 'dismantle-no', text: 'Keep it', onclick: () => { ui.confirmDismantle = null; render(); } }),
+        ]),
+      ]);
+    }
+    return h('div', { class: 'row', style: 'flex-wrap:wrap;margin-top:6px' }, [
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'lock-' + i, 'aria-pressed': e.locked ? 'true' : 'false',
+        text: e.locked ? '🔒 Locked' : '🔓 Lock', title: e.locked ? 'Unlock so it can be dismantled' : 'Lock so it cannot be dismantled',
+        onclick: () => { ui.confirmDismantle = null; const r = run.acct('lock', i, !e.locked); if (!r.ok) toast(r.reason); render(); } }),
+      h('button', { class: 'btn small warn', type: 'button', 'data-act': 'dismantle-' + i, disabled: e.locked,
+        text: 'Dismantle · +' + e.refund + ' shards', onclick: () => { ui.confirmDismantle = { i: i, hash: e.hash }; render(); } }),
+    ]);
+  }
+
+  function vaultCard(e, i) {
     const sp = speciesDef(e.species) || { name: e.species };
     const total = Object.keys(e.stats).reduce((a, k) => a + e.stats[k], 0);
     return h('div', { class: 'card', 'data-id': 'vault-entry' }, [
@@ -512,6 +544,7 @@
       e.gauntlet ? h('div', { class: 'small gold', 'data-id': 'vault-title', text: e.gauntlet.label }) : null,
       h('div', { class: 'small muted', text: e.trees.map((t) => treeName(t.id) + ' ' + t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?')).join(' · ') }),
       e.sealedUtcMs ? h('div', { class: 'small muted', text: new Date(e.sealedUtcMs).toLocaleString() }) : null,
+      vaultActions(e, i),
     ]);
   }
 
@@ -532,6 +565,9 @@
     main.append(h('div', { class: 'card' }, [h('h3', { text: 'Trees' }),
       ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
     main.append(h('div', { class: 'small muted center', text: 'Run hash ' + e.hash.slice(0, 16) }));
+    const acct = run.account;
+    if (acct.vaultOver > 0) main.append(h('p', { class: 'small bad center', 'data-id': 'grade-vault-over', role: 'status',
+      text: 'Sealed over the Vault cap (' + acct.vault.length + '/' + acct.vaultCap + '). Dismantle ' + acct.vaultOver + ' before the next run.' }));
     if (ui.climb) main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-replay', text: 'Watch the gauntlet again', onclick: () => openClimb(ui.climb.data) }));
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
   }
@@ -639,7 +675,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
+  function resetRunUi() { stopClimb(); stopPlayback(); ui.climb = null; ui.confirmAbandon = false; ui.confirmDismantle = null; ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.tab = 'train'; ui.showAll = false; }
   const log = (line) => { ui.feed.unshift(line); };
 
   function startRun() {
