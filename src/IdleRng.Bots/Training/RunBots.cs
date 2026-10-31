@@ -233,9 +233,9 @@ namespace IdleRng.Bots.Training
         /// state at the start and after every command (the balance report's ChaseTracker).
         /// </summary>
         public static RunState Play(ContentDb c, IRunPolicy policy, string speciesId, ulong seed, Action<string> log = null,
-                                    IEnumerable<string> books = null, Action<RunState> observe = null)
+                                    IEnumerable<string> books = null, Action<RunState> observe = null, RunModifiers mods = null)
         {
-            var s = TrainingRun.Start(c, speciesId, seed, books);
+            var s = TrainingRun.Start(c, speciesId, seed, books, mods);
             observe?.Invoke(s);
             const int guard = 100000;
             for (int i = 0; ; i++)

@@ -376,6 +376,7 @@ namespace IdleRng.Sim.Content
     {
         DrillCost, StatFloor, ChaseChance, StartSp, RestEnergy, FailChance, SuperChance, ShardMult, Momentum, LossSp, Specialist,
         TreeSlots, InjuryShield, LastCycleAp, MilestoneMult, DraftRerolls,
+        IronConstitution, GamblersBlood, GlassCannon, EchoTraining,   // legendary rule changes (issue #103), one rank each
     }
 
     /// <summary>An account talent (specs/18 section 4). Rank r+1 costs CostBase + CostStep * r shards; the effect is PerRank x rank.</summary>

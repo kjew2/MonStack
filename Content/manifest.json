@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "4.10",
+  "content_version": "4.11",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -65,11 +65,11 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "75a327d221656b854b202d402ee8e5eaef9ef45091f5a1e08bc062f44e38db4a"
+      "sha256": "a2f80cee23bee71914455f12ebb59c963851f2dd1f82d3f9a7820b76e49492f8"
     },
     "talents": {
       "file": "talents.json",
-      "sha256": "09226d2e9d4164a34ebb71f2f2dc510d5a8c2649eb99ec8df3379d54771c93c5"
+      "sha256": "597d876fba71ff7d575f1cf309392e892c7c83b6dd8d43773b53f5daabc00916"
     },
     "tower_bosses": {
       "file": "tower_bosses.json",
@@ -85,8 +85,8 @@
     },
     "vendor_rarities": {
       "file": "vendor_rarities.json",
-      "sha256": "24cb4115b47c2018e6fe69a3c60dfc4953d5cc605c6a55ff4b94e150bdd65e30"
+      "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "4fcb57beb9cb2a3a29de4387a76fd8dc530ad37757d8b66eaf60d82cde69e2cc"
+  "content_hash": "040eb267673f90947a476a1cb39a95e1abf499194fb0539ac6fb9c8f921725f9"
 }

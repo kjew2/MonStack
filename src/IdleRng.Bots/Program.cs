@@ -42,7 +42,7 @@ namespace IdleRng.Bots
         const string Usage =
             "usage: IdleRng.Bots <train|balance|golden|help> [options]\n" +
             "  train      --species ID --policy balanced|focus|reckless|hoarder|chaser|mono-<stat> --seed N --books a,b --content dir   (one training run, specs/14-15)\n" +
-            "  balance    --seeds N --seed-base N --species a,b --policies a,b --books none|all|own|a,b --no-tower --tower-day N\n" +
+            "  balance    --seeds N --seed-base N --species a,b --policies a,b --books none|all|own|a,b --talents a,b --no-tower --tower-day N\n" +
             "             --no-book-canary --strict --format text|json|csv --jobs N --out path\n" +
             "             (run-balance report and loose sanity checks over many seeds, specs/09 section 7; --strict exits 1 on a WARN)\n" +
             "  golden     --check|--update --golden-dir path --content dir   (specs/09 section 11)\n";
@@ -127,6 +127,7 @@ namespace IdleRng.Bots
                 TowerDayBase = a.Int("tower-day", 0),
                 Jobs = a.Int("jobs", Environment.ProcessorCount),
                 BookCanary = !a.Has("no-book-canary"),
+                Talents = List(a.Str("talents", null)),
             };
             var sw = Stopwatch.StartNew();
             var report = IdleRng.Bots.Balance.BalanceHarness.Run(db, o);

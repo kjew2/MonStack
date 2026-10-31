@@ -623,9 +623,13 @@ namespace IdleRng.Sim.Content
                     case TalentEffect.SuperChance: ok = p >= 0 && p * d.MaxRank <= 1; break;
                     case TalentEffect.Specialist: ok = p >= 0 && p * d.MaxRank <= 2; break;
                     case TalentEffect.MilestoneMult: ok = p <= 0 && 1 + p * d.MaxRank > 0; break;
+                    case TalentEffect.IronConstitution: case TalentEffect.EchoTraining: ok = p >= 0 && p <= 1; break;
+                    case TalentEffect.GamblersBlood: case TalentEffect.GlassCannon: ok = p >= 0; break;
                     default: ok = p >= 0 && p == Math.Floor(p); break;
                 }
                 if (!ok) errors.Add(new ContentError("E043", loc, $"per_rank {p} out of range for {d.Effect}"));
+                if (IsLegendaryEffect(d.Effect) && d.MaxRank != 1)
+                    errors.Add(new ContentError("E043", loc, $"{d.Effect} is a rule change: max_rank must be 1"));
             }
         }
 
@@ -879,6 +883,10 @@ namespace IdleRng.Sim.Content
             }
         }
 
+        /// <summary>The legendary rule-change effects (issue #103): one rank each, per_rank is the rule's one number.</summary>
+        public static bool IsLegendaryEffect(TalentEffect e) =>
+            e == TalentEffect.IronConstitution || e == TalentEffect.GamblersBlood || e == TalentEffect.GlassCannon || e == TalentEffect.EchoTraining;
+
         static TalentEffect ParseTalentEffect(string s)
         {
             switch (s)
@@ -899,6 +907,10 @@ namespace IdleRng.Sim.Content
                 case "last_cycle_ap": return TalentEffect.LastCycleAp;
                 case "milestone_mult": return TalentEffect.MilestoneMult;
                 case "draft_rerolls": return TalentEffect.DraftRerolls;
+                case "iron_constitution": return TalentEffect.IronConstitution;
+                case "gamblers_blood": return TalentEffect.GamblersBlood;
+                case "glass_cannon": return TalentEffect.GlassCannon;
+                case "echo_training": return TalentEffect.EchoTraining;
                 default: throw new FormatException($"unknown talent effect '{s}'");
             }
         }

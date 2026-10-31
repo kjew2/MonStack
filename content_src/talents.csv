@@ -15,3 +15,7 @@ second_wind,talent.second_wind.name,talent.second_wind.desc,epic,injury_shield,1
 overtime,talent.overtime.name,talent.overtime.desc,epic,last_cycle_ap,1,2,60,60,Placeholder
 early_bloom,talent.early_bloom.name,talent.early_bloom.desc,epic,milestone_mult,-0.1,2,70,70,Placeholder
 second_look,talent.second_look.name,talent.second_look.desc,epic,draft_rerolls,1,1,70,0,Placeholder
+iron_constitution,talent.iron_constitution.name,talent.iron_constitution.desc,legendary,iron_constitution,0.5,1,150,0,"legendary (#103, from the spike #101): drills never injure; rests restore x per_rank (half). 1 rank. Placeholder"
+gamblers_blood,talent.gamblers_blood.name,talent.gamblers_blood.desc,legendary,gamblers_blood,2,1,150,0,"legendary: drills never Fail; drills cost x per_rank energy. 1 rank. Placeholder"
+glass_cannon,talent.glass_cannon.name,talent.glass_cannon.desc,legendary,glass_cannon,0.3,1,150,0,"legendary: drill gains +per_rank on every stat but HP; HP drills gain nothing. 1 rank. Placeholder"
+echo_training,talent.echo_training.name,talent.echo_training.desc,legendary,echo_training,0.25,1,150,0,"legendary: each drill also adds per_rank of its gain to a random other trained stat. 1 rank. Placeholder"

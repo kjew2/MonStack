@@ -34,6 +34,13 @@ namespace IdleRng.Bots.Balance
         /// </summary>
         public bool OwnBooks { get; set; }
 
+        /// <summary>
+        /// Talents every run starts with, each at max rank (null or empty = a fresh account, no talents). The mods are what an
+        /// account with those talents and every other talent off would start with (AccountOps.Modifiers, at most LEGENDARY_SLOTS
+        /// legendaries), except ChaseChance, which stays 1 as for the talentless bots so the cells compare (agent; issue #103).
+        /// </summary>
+        public IList<string> Talents { get; set; }
+
         /// <summary>Also send the sealed monsters up the Dungeon (alone, and one of each species as a team).</summary>
         public bool Tower { get; set; } = true;
 
@@ -408,8 +415,9 @@ namespace IdleRng.Bots.Balance
                 foreach (var b in books)
                     if (!c.SkillBooks.ContainsKey(b)) throw new ArgumentException($"unknown skill book '{b}'");
             if (books != null && o.OwnBooks) throw new ArgumentException("pass either a list of books or own books, not both");
+            var mods = TalentMods(c, o.Talents);
 
-            var runs = PlayAll(c, o, policies, species, books);
+            var runs = PlayAll(c, o, policies, species, books, mods);
             var report = new BalanceReport
             {
                 ContentVersion = c.Version, ContentHash = c.ContentHash, Options = o,
@@ -421,7 +429,7 @@ namespace IdleRng.Bots.Balance
             if (books == null && !o.OwnBooks && o.BookCanary && c.SkillBooks.Count > 0)
             {
                 var all = c.SkillBooks.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
-                report.BookCells = Summarise(c, o, policies, species, PlayAll(c, o, policies, species, all));
+                report.BookCells = Summarise(c, o, policies, species, PlayAll(c, o, policies, species, all, mods));
             }
             if (o.Tower) ClimbAll(c, o, policies, species, runs, report);
             report.Checks = BalanceChecks.Evaluate(report);
@@ -429,7 +437,22 @@ namespace IdleRng.Bots.Balance
         }
 
         /// <summary>Every (policy, species, seed) run, in that order.</summary>
-        static RunSample[] PlayAll(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, List<string> books)
+        /// <summary>The run modifiers of <see cref="BalanceOptions.Talents"/>, or null for none. Throws for an unknown talent or too many legendaries.</summary>
+        public static RunModifiers TalentMods(ContentDb c, IList<string> talents)
+        {
+            if (talents == null || talents.Count == 0) return null;
+            var acct = AccountOps.New(c, 0);
+            foreach (var id in talents)
+            {
+                if (!c.Talents.TryGetValue(id, out var t)) throw new ArgumentException($"unknown talent '{id}'");
+                acct.Talents[id] = t.MaxRank;
+            }
+            var mods = AccountOps.Modifiers(c, acct, AccountOps.CheckLoadout(c, acct, new string[0]));
+            mods.ChaseChance = 1;
+            return mods;
+        }
+
+        static RunSample[] PlayAll(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, List<string> books, RunModifiers mods)
         {
             int perPolicy = species.Count * o.Seeds;
             var runs = new RunSample[policies.Count * perPolicy];
@@ -441,7 +464,7 @@ namespace IdleRng.Bots.Balance
                 string policy = policies[i / perPolicy];
                 string sp = species[i % perPolicy / o.Seeds];
                 ulong seed = o.SeedBase + (ulong)(i % o.Seeds);
-                runs[i] = Play(c, policy, sp, seed, own != null ? own[sp] : books);
+                runs[i] = Play(c, policy, sp, seed, own != null ? own[sp] : books, mods);
             });
             return runs;
         }
@@ -481,11 +504,11 @@ namespace IdleRng.Bots.Balance
         }
 
         /// <summary>One bot run, sealed the way AccountOps.FinishRun seals it (payout, gauntlet on the run seed).</summary>
-        public static RunSample Play(ContentDb c, string policy, string species, ulong seed, IEnumerable<string> books = null)
+        public static RunSample Play(ContentDb c, string policy, string species, ulong seed, IEnumerable<string> books = null, RunModifiers mods = null)
         {
             var chase = new ChaseTracker(c, species);
             var fights = new FightTracker();
-            var s = RunBot.Play(c, RunPolicies.Create(policy), species, seed, null, books, st => { chase.Observe(st); fights.Observe(st); });
+            var s = RunBot.Play(c, RunPolicies.Create(policy), species, seed, null, books, st => { chase.Observe(st); fights.Observe(st); }, mods);
             var monster = TrainingRun.MonsterFighter(c, s);
             var g = GauntletSim.Run(c, monster, s.Seed);
             var sp = c.Species[species];

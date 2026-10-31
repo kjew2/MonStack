@@ -273,21 +273,16 @@ namespace IdleRng.Sim.Account
         /// <summary>
         /// Roll VENDOR_OFFERS offers for a run that reached grade index <paramref name="gradeIndex"/>. A rarity is a talent's own
         /// tier. Each offer draws a tier by weight (<see cref="VendorRarityDef.Weight"/> at that grade) among the tiers that still
-        /// have a talent not maxed, then a talent of that tier uniformly; the same talent may be offered twice. When those tiers all
-        /// weigh 0 at that grade, the commonest of them is used. No offers once every talent is maxed. Two draws per offer, always.
+        /// have a talent not maxed and weigh more than 0 at that grade (<see cref="OpenTiers"/>), then a talent of that tier
+        /// uniformly; the same talent may be offered twice. No offers when no such tier is left (every talent maxed, or only tiers
+        /// that weigh 0 at that grade, such as Legendary below A). Two draws per offer, always.
         /// Deterministic from the account seed, the run index and the reroll count (0 for the roll at seal time).
         /// </summary>
         public static VendorState RollVendor(ContentDb c, AccountState a, int gradeIndex, int runIndex, int reroll = 0)
         {
             int g = Math.Max(0, Math.Min(gradeIndex, c.FightRanks.Count - 1));
             var v = new VendorState { Grade = c.FightRanks[g].Id };
-            var tiers = new List<(VendorRarityDef Rarity, List<TalentDef> Talents)>();
-            foreach (var r in c.VendorRarities)
-            {
-                var open = new List<TalentDef>();
-                foreach (var t in c.TalentList) if (t.Rarity == r.Id && a.TalentRank(t.Id) < t.MaxRank) open.Add(t);
-                if (open.Count > 0) tiers.Add((r, open));
-            }
+            var tiers = OpenTiers(c, a, g);
             if (tiers.Count == 0) return v;
             double total = 0;
             foreach (var x in tiers) total += x.Rarity.Weight(g);
@@ -299,8 +294,7 @@ namespace IdleRng.Sim.Account
                 foreach (var x in tiers)
                 {
                     double w = x.Rarity.Weight(g);
-                    if (w <= 0) continue;
-                    tier = x;              // the last tier with weight absorbs any rounding residue
+                    tier = x;              // the last tier absorbs any rounding residue
                     if (u < w) break;
                     u -= w;
                 }
@@ -308,6 +302,29 @@ namespace IdleRng.Sim.Account
                 v.Offers.Add(new VendorOffer { Talent = talent.Id, Rarity = tier.Rarity.Id });
             }
             return v;
+        }
+
+        /// <summary>
+        /// The tiers the vendor can sell at grade index <paramref name="g"/>, with their talents not maxed: a tier needs a talent
+        /// left and a weight above 0 at that grade (kj, issue #103: a tier weighing 0 there, Legendary below A, is never sold).
+        /// </summary>
+        static List<(VendorRarityDef Rarity, List<TalentDef> Talents)> OpenTiers(ContentDb c, AccountState a, int g)
+        {
+            var tiers = new List<(VendorRarityDef Rarity, List<TalentDef> Talents)>();
+            foreach (var r in c.VendorRarities)
+            {
+                if (!(r.Weight(g) > 0)) continue;
+                var open = new List<TalentDef>();
+                foreach (var t in c.TalentList) if (t.Rarity == r.Id && a.TalentRank(t.Id) < t.MaxRank) open.Add(t);
+                if (open.Count > 0) tiers.Add((r, open));
+            }
+            return tiers;
+        }
+
+        static int GradeIndex(ContentDb c, string grade)
+        {
+            for (int i = 0; i < c.FightRanks.Count; i++) if (c.FightRanks[i].Id == grade) return i;
+            return 0;
         }
 
         /// <summary>True when buying this offer now would add a rank: its talent is in content and not maxed.</summary>
@@ -353,9 +370,7 @@ namespace IdleRng.Sim.Account
             if (v == null) return false;
             bool unbought = false;
             foreach (var o in v.Offers) if (!o.Bought) unbought = true;
-            if (!unbought) return false;
-            foreach (var t in c.TalentList) if (a.TalentRank(t.Id) < t.MaxRank) return true;
-            return false;
+            return unbought && OpenTiers(c, a, GradeIndex(c, v.Grade)).Count > 0;
         }
 
         /// <summary>
@@ -369,12 +384,10 @@ namespace IdleRng.Sim.Account
         {
             if (a == null) throw new ArgumentNullException(nameof(a));
             var v = a.Vendor ?? throw new InvalidOperationException("the vendor has no offers: finish a run first");
-            if (!CanRerollVendor(c, a)) throw new InvalidOperationException("nothing to reroll: every offer is sold or every talent is maxed");
+            if (!CanRerollVendor(c, a)) throw new InvalidOperationException("nothing to reroll: every offer is sold, or nothing is left to sell at this grade");
             long price = RerollPrice(c, v);
             if (a.Shards < price) throw new InvalidOperationException($"a reroll costs {price} shards, have {a.Shards}");
-            int g = 0;
-            for (int i = 0; i < c.FightRanks.Count; i++) if (c.FightRanks[i].Id == v.Grade) g = i;
-            var fresh = RollVendor(c, a, g, Math.Max(0, a.RunsStarted - 1), v.Rerolls + 1);
+            var fresh = RollVendor(c, a, GradeIndex(c, v.Grade), Math.Max(0, a.RunsStarted - 1), v.Rerolls + 1);
             a.Shards -= price;
             v.Rerolls++;
             // Both lists hold VENDOR_OFFERS offers; the bound only matters for a vendor saved under a larger VENDOR_OFFERS.
@@ -466,6 +479,7 @@ namespace IdleRng.Sim.Account
         public static RunModifiers Modifiers(ContentDb c, AccountState a, ICollection<string> talentsOff)
         {
             var m = new RunModifiers { ChaseChance = c.Constants.ChaseBaseChance };
+            double costMult = 1;
             foreach (var t in c.TalentList)
             {
                 int rank = a.TalentRank(t.Id);
@@ -489,8 +503,14 @@ namespace IdleRng.Sim.Account
                     case TalentEffect.LastCycleAp: m.LastCycleAp += (int)v; break;
                     case TalentEffect.MilestoneMult: m.MilestoneMult = Math.Max(MinMilestoneMult, m.MilestoneMult + v); break;
                     case TalentEffect.DraftRerolls: m.DraftRerolls += (int)v; break;
+                    // Legendary rule changes (issue #103): one rank each, so v is per_rank.
+                    case TalentEffect.IronConstitution: m.InjuryImmune = true; m.RestEnergyMult = Math.Min(m.RestEnergyMult, v); break;
+                    case TalentEffect.GamblersBlood: m.NeverFail = true; costMult *= v; break;
+                    case TalentEffect.GlassCannon: m.GlassCannonBonus += v; break;
+                    case TalentEffect.EchoTraining: m.EchoFrac = Math.Min(1, m.EchoFrac + v); break;
                 }
             }
+            m.DrillCostMult *= costMult;   // Gambler's Blood multiplies the summed Frugal Drills multiplier
             return m;
         }
 

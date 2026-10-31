@@ -2,3 +2,4 @@ id,sort_order,name_key,weight_base,weight_per_rank,legendary_slot,#notes
 common,0,rarity.common.name,80,-10,false,"post-run vendor (specs/18 section 4): a talent's tier. The vendor draws a tier by weight, then a talent of that tier; an offer is one rank at the talent's normal cost. Weight at grade index g = max(0; weight_base + weight_per_rank x g). Placeholder"
 rare,1,rarity.rare.name,18,4,false,Placeholder
 epic,2,rarity.epic.name,2,6,false,Placeholder
+legendary,3,rarity.legendary.name,-14,4,true,"kj (2026-10-31, issue #103): offered only after a run graded A or S: weight 0 at E..B (g 0..3), 2 at A, 6 at S (2% and about 6% of the draws). Its talents take the legendary slot (LEGENDARY_SLOTS). Placeholder"

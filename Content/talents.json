@@ -176,6 +176,50 @@
       "max_rank": 1,
       "cost_base": 70,
       "cost_step": 0
+    },
+    {
+      "id": "iron_constitution",
+      "name_key": "talent.iron_constitution.name",
+      "desc_key": "talent.iron_constitution.desc",
+      "rarity": "legendary",
+      "effect": "iron_constitution",
+      "per_rank": 0.5,
+      "max_rank": 1,
+      "cost_base": 150,
+      "cost_step": 0
+    },
+    {
+      "id": "gamblers_blood",
+      "name_key": "talent.gamblers_blood.name",
+      "desc_key": "talent.gamblers_blood.desc",
+      "rarity": "legendary",
+      "effect": "gamblers_blood",
+      "per_rank": 2.0,
+      "max_rank": 1,
+      "cost_base": 150,
+      "cost_step": 0
+    },
+    {
+      "id": "glass_cannon",
+      "name_key": "talent.glass_cannon.name",
+      "desc_key": "talent.glass_cannon.desc",
+      "rarity": "legendary",
+      "effect": "glass_cannon",
+      "per_rank": 0.3,
+      "max_rank": 1,
+      "cost_base": 150,
+      "cost_step": 0
+    },
+    {
+      "id": "echo_training",
+      "name_key": "talent.echo_training.name",
+      "desc_key": "talent.echo_training.desc",
+      "rarity": "legendary",
+      "effect": "echo_training",
+      "per_rank": 0.25,
+      "max_rank": 1,
+      "cost_base": 150,
+      "cost_step": 0
     }
   ]
 }

@@ -20,12 +20,15 @@ namespace IdleRng.Sim.Training
         public const string MonsterId = "monster";
 
         /// <summary>
-        /// Run hash version 7 (the talent catalog v2, specs/18 section 3; specs/14 section 7). Only a run with one of those talents
-        /// uses it: the talent fields and counters are appended after the ladder. Every other run hashes exactly as before, version
-        /// 6 (the rank ladder) or, for a legacy run with an empty Ladder, version 5, so saved runs and Vault entries keep their hashes.
+        /// Run hash version 8 (the legendary talents, specs/18 section 3, issue #103; specs/14 section 7): only a run with a legendary
+        /// rule change uses it, appending those fields after the version 7 talent block. Version 7 (the talent catalog v2) is used by
+        /// a run with one of those talents only: the talent fields and counters are appended after the ladder. Every other run hashes
+        /// exactly as before, version 6 (the rank ladder) or, for a legacy run with an empty Ladder, version 5, so saved runs and
+        /// Vault entries keep their hashes.
         /// </summary>
-        public const int HashVersion = 7;
-        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v7");
+        public const int HashVersion = 8;
+        static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v8");
+        static readonly byte[] CatalogHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v7");
         static readonly byte[] LadderHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v6");
         static readonly byte[] LegacyHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v5");
 
@@ -49,7 +52,8 @@ namespace IdleRng.Sim.Training
             if (!(mods.DrillCostMult >= 0) || !(mods.StatFloorMult >= 0) || mods.StartSp < 0
                 || !(mods.RestEnergyBonus >= 0) || !(mods.FailChanceDelta <= 0) || !(mods.SuperChanceBonus >= 0) || !(mods.ShardMult >= 0)
                 || mods.MomentumDrills < 0 || mods.LossSp < 0 || !(mods.SpecialistBonus >= 0 && mods.SpecialistBonus <= 2)
-                || mods.TreeSlotBonus < 0 || mods.InjuryShields < 0 || mods.LastCycleAp < 0 || !(mods.MilestoneMult > 0) || mods.DraftRerolls < 0)
+                || mods.TreeSlotBonus < 0 || mods.InjuryShields < 0 || mods.LastCycleAp < 0 || !(mods.MilestoneMult > 0) || mods.DraftRerolls < 0
+                || !(mods.RestEnergyMult >= 0) || !(mods.GlassCannonBonus >= 0) || !(mods.EchoFrac >= 0 && mods.EchoFrac <= 1))
                 throw new ArgumentException("run modifiers out of range (specs/18 section 3)", nameof(mods));
             if (!(mods.ChaseChance >= 0 && mods.ChaseChance <= 1)) throw new ArgumentException("ChaseChance must be in [0, 1]", nameof(mods));
             var stats = sp.Base.Clone();
@@ -104,6 +108,7 @@ namespace IdleRng.Sim.Training
 
             double injuryP = InjuryChance(k, e);
             bool injured = injuryP > 0 && s.Training.NextDouble() < injuryP;
+            if (s.Mods.InjuryImmune) injured = false;   // Iron Constitution: the roll is drawn, never lands
             bool shielded = injured && s.ShieldsUsed < s.Mods.InjuryShields;
             if (shielded) { injured = false; s.ShieldsUsed++; }
 
@@ -118,6 +123,18 @@ namespace IdleRng.Sim.Training
                 Stat = stat, Tier = tier, Gain = after - before, NewValue = after, EnergyAfter = s.Energy, Injured = injured, Shielded = shielded, Free = free,
             };
             CrossMilestones(c, s, stat, before, after, result.Milestones);
+            if (s.Mods.EchoFrac > 0)
+            {
+                // Echo Training: one draw picks one of the other trained stats; it gains EchoFrac of this drill's gain, floored.
+                var others = new List<string>(StatIds.Trained.Length - 1);
+                foreach (var id in StatIds.Trained) if (id != stat) others.Add(id);
+                string echo = others[Math.Min(others.Count - 1, (int)(s.Training.NextDouble() * others.Count))];
+                double eb = s.Stats.Get(echo), ea = Math.Min(k.StatMax, eb + Math.Floor(result.Gain * s.Mods.EchoFrac));
+                Set(s.Stats, echo, ea);
+                result.EchoStat = echo;
+                result.EchoGain = ea - eb;
+                CrossMilestones(c, s, echo, eb, ea, result.Milestones);
+            }
 
             if (injured) result.Injury = Injure(c, s);
             else SpendAp(c, s);
@@ -398,6 +415,7 @@ namespace IdleRng.Sim.Training
                 for (int i = 0; i < ts.Bought; i++)
                     if (nodes[i].Kind == NodeKind.Growth && nodes[i].Stat == stat) g += nodes[i].Amount;
             }
+            if (s.Mods.GlassCannonBonus > 0) g = stat == StatIds.Hp ? 0 : g * (1 + s.Mods.GlassCannonBonus);   // Glass Cannon
             double b = s.Mods.SpecialistBonus;
             if (b == 0) return g;
             double top = 0;
@@ -463,11 +481,11 @@ namespace IdleRng.Sim.Training
         /// <summary>Energy the next drill costs: DRILL_ENERGY_COST times the run's talent modifier, or 0 while Momentum has a free drill.</summary>
         public static double DrillCost(ContentDb c, RunState s) => s.FreeDrills > 0 ? 0 : c.Constants.DrillEnergyCost * s.Mods.DrillCostMult;
 
-        /// <summary>Energy a rest restores this run before the cap: REST_ENERGY plus the Deep Rest bonus.</summary>
-        public static double RestEnergy(ContentDb c, RunState s) => c.Constants.RestEnergy + s.Mods.RestEnergyBonus;
+        /// <summary>Energy a rest restores this run before the cap: REST_ENERGY plus the Deep Rest bonus, times Iron Constitution's multiplier.</summary>
+        public static double RestEnergy(ContentDb c, RunState s) => (c.Constants.RestEnergy + s.Mods.RestEnergyBonus) * s.Mods.RestEnergyMult;
 
-        /// <summary>The run's fail chance at energy fraction e: <see cref="FailChance"/> plus the Steady Hands delta, not below 0.</summary>
-        public static double RunFailChance(ContentDb c, RunState s, double e) => Math.Max(0, FailChance(c.Constants, e) + s.Mods.FailChanceDelta);
+        /// <summary>The run's fail chance at energy fraction e: <see cref="FailChance"/> plus the Steady Hands delta, not below 0; 0 with Gambler's Blood.</summary>
+        public static double RunFailChance(ContentDb c, RunState s, double e) => s.Mods.NeverFail ? 0 : Math.Max(0, FailChance(c.Constants, e) + s.Mods.FailChanceDelta);
 
         /// <summary>The run's super chance at energy fraction e: DRILL_SUPER_P plus Super Set, at most what the fail chance leaves.</summary>
         public static double RunSuperChance(ContentDb c, RunState s, double e) =>
@@ -795,9 +813,9 @@ namespace IdleRng.Sim.Training
         /// </summary>
         public static string StateHash(RunState s)
         {
-            bool legacy = s.Ladder.Count == 0, talents = UsesCatalogV2(s.Mods);
+            bool legacy = s.Ladder.Count == 0, legendary = UsesLegendary(s.Mods), talents = legendary || UsesCatalogV2(s.Mods);
             var w = new CanonicalWriter(512);
-            w.Bytes(talents ? HashMagic : legacy ? LegacyHashMagic : LadderHashMagic);
+            w.Bytes(legendary ? HashMagic : talents ? CatalogHashMagic : legacy ? LegacyHashMagic : LadderHashMagic);
             w.Str(s.SpeciesId);
             w.U64(s.Seed);
             w.F64(s.Mods.DrillCostMult); w.F64(s.Mods.StatFloorMult); w.F64(s.Mods.ChaseChance); w.I32(s.Mods.StartSp);
@@ -863,8 +881,19 @@ namespace IdleRng.Sim.Training
                 w.F64(m.MilestoneMult); w.I32(m.DraftRerolls);
                 w.I32(s.FreeDrills); w.I32(s.ShieldsUsed); w.I32(s.RerollsUsed);
             }
+            if (legendary)
+            {
+                // Legendary rule changes (specs/18 section 3, issue #103), version 8: only runs with one, so others keep their hash.
+                var m = s.Mods;
+                w.Str("legendary");
+                w.Bool(m.InjuryImmune); w.F64(m.RestEnergyMult); w.Bool(m.NeverFail); w.F64(m.GlassCannonBonus); w.F64(m.EchoFrac);
+            }
             return Sha256.Hex(Sha256.Compute(w.ToArray()));
         }
+
+        /// <summary>Whether a run uses a legendary rule change (issue #103): hashed (version 8) only then.</summary>
+        static bool UsesLegendary(RunModifiers m) =>
+            m.InjuryImmune || m.RestEnergyMult != 1 || m.NeverFail || m.GlassCannonBonus != 0 || m.EchoFrac != 0;
 
         /// <summary>
         /// Whether a run uses any talent of the catalog v2 (specs/18 section 3): those fields are hashed (version 7) only then. The
