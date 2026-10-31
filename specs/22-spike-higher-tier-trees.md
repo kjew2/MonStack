@@ -1,6 +1,6 @@
 # 22 - Spike: skill trees and capstones for higher-tier creatures
 
-Status: **spike report (agent, 2026-10-31; issue #110). Nothing here is agreed design.** kj asked for research on skill trees and capstones for higher-tier creatures, then widened it: any interesting mechanic, interaction or synergy from RPG-like games, anime, manga or LitRPG that could inspire a tree or capstone. The starting point is *The Exiled Heavy Knight Knows How to Game the System*, which inspired the game. Section 6 lists the decisions kj needs to make before any of this is built. Until kj answers, `specs/12` and `specs/15` stay the design.
+Status: **spike report (agent, 2026-10-31; issue #110); kj answered section 6 the same day.** Only the answers in section 6 are agreed design; the rest is research. kj asked for research on skill trees and capstones for higher-tier creatures, then widened it: any interesting mechanic, interaction or synergy from RPG-like games, anime, manga or LitRPG that could inspire a tree or capstone. The starting point is *The Exiled Heavy Knight Knows How to Game the System*, which inspired the game. Section 6 records kj's answers, which are copied into `specs/12` section 5.8 and `specs/15` section 10.
 
 ## 1. Questions
 
@@ -205,14 +205,18 @@ These options can be combined. Effort assumes today's engine: a new chase capsto
 4. **Adopt the loop and readability rules in section 3.4** before more trigger-heavy capstones are added. Add them to `specs/16` once kj agrees.
 5. **First prototype:** one Heavy Knight-style pair, a "Life Shield" threshold enabler plus a "Relentless Vigor" DEF-to-STR conversion keystone, as a drake book chase tree. Measure it with the harness in section 2 before building any tier system.
 
-## 6. Questions for kj
+## 6. Questions for kj (answered 2026-10-31)
 
-1. **What is a higher tier?** A species unlocked later (as today, only stronger), an evolved form of a base species reached in a run (E), a bred one (F), or a mix?
-2. **May higher tiers be stronger overall,** or must they only be different (drawbacks, team cost)? This decides whether A and G are on the table.
-3. **Capstone reachability target:** in what share of good runs should a chase capstone be bought, and by which cycle? This needs agreed targets before the retune in section 5.1.
-4. **Drawback capstones:** are keystones that give something up (Heavy Knight, PoE) the right tone for chase trees, or must chase capstones stay pure upside?
-5. **Fusion:** may two maxed trees fuse and free a slot (B), or should the 4-slot rule stay fixed?
-6. **SP economy:** SP interest, node hints, or neither?
+1. **What is a higher tier?** **A later unlock** (kj): a higher-tier species is unlocked from account achievements like the others. Mid-run evolution (E) and breeding (F) are much further out on the roadmap.
+2. **May higher tiers be stronger overall?** **Yes, like Monster Rancher** (kj). Option A is on the table; G stays the fallback if they dominate the Tower or PvP.
+3. **Capstone reachability target.** kj: tune from the top down.
+   - The **in-run chase capstone** is hard: about the **top 10% of runs**.
+   - The **book chase capstone** is more consistent, since the player already needed luck to get the book: about **50% of runs that bring the species' own book**.
+   - kj deferred the exact numbers to the agent. **(agent)** These are measured with the `balance` harness under the `focus` and `hoarder` policies, once the bots play toward their chase conditions (#111).
+   - kj also asked for **features that make runs diverge**, through skill expression or RNG: runs are too deterministic today. That is spike #112 (`specs/23`).
+4. **Drawback capstones?** **Yes** (kj): keystones that give something up suit chase trees.
+5. **Fusion?** **Only for some specific pairs** (kj), and the association must be clear to the player: the UI shows which trees fuse.
+6. **SP economy?** **Yes**, as a starting point (kj). SP interest and node hints lead into spike #112, which researches point economies with more variance and dynamism.
 
 ## 7. Follow-up
 
