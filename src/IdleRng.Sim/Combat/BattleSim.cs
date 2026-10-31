@@ -38,7 +38,7 @@ namespace IdleRng.Sim.Combat
         static void Validate(FightRules r)
         {
             if (!(r.GaugeSize > 0 && r.TurnTicks > 0 && r.TimeLimitTicks > 0 && r.SideSize > 0 && r.HpPerPoint > 0 && r.DefK > 0
-                  && r.SpdMin > 0 && r.CritDmg >= 1))
+                  && r.SpdMin > 0 && r.CritDmg >= 1 && r.StatFloor > 0 && r.StatFloor <= 1))
                 throw new ArgumentException("fight rules out of range (specs/16 section 7)", nameof(r));
         }
 
@@ -130,7 +130,7 @@ namespace IdleRng.Sim.Combat
             }
             s.Ticks++;
             foreach (var u in s.Units)
-                if (u.Alive) u.Gauge += GaugeFill(rules, Eff(u, StatIds.Spd));
+                if (u.Alive) u.Gauge += GaugeFill(rules, Eff(rules, u, StatIds.Spd));
 
             for (int n = 0; n < MaxActionsPerTick; n++)
             {
@@ -237,7 +237,7 @@ namespace IdleRng.Sim.Combat
             if (!u.Alive) return;
             var target = PickEnemy(s, u, rng);
             if (target == null) return;
-            double str = Eff(u, StatIds.Str), intel = Eff(u, StatIds.Int);
+            double str = Eff(r, u, StatIds.Str), intel = Eff(r, u, StatIds.Int);
             Hit(r, s, u, target, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), u.Source.Element, null, false, rng, onAction);
         }
 
@@ -274,7 +274,7 @@ namespace IdleRng.Sim.Combat
             {
                 case SkillKind.Damage:
                 {
-                    double raw = Scaled(src, sk);
+                    double raw = Scaled(r, src, sk);
                     string element = sk.Element ?? src.Source.Element;
                     if (sk.Target == SkillTarget.AllEnemies)
                     {
@@ -290,7 +290,7 @@ namespace IdleRng.Sim.Combat
                 }
                 case SkillKind.Heal:
                 {
-                    double amt = Scaled(src, sk), total = 0;
+                    double amt = Scaled(r, src, sk), total = 0;
                     var targets = Allies(s, src, sk.Target);
                     foreach (var t in targets)
                     {
@@ -304,7 +304,7 @@ namespace IdleRng.Sim.Combat
                 }
                 case SkillKind.Shield:
                 {
-                    double amt = Scaled(src, sk);
+                    double amt = Scaled(r, src, sk);
                     foreach (var t in Allies(s, src, sk.Target))
                     {
                         t.Shield = Math.Max(t.Shield, amt);
@@ -322,18 +322,18 @@ namespace IdleRng.Sim.Combat
                 {
                     bool permanent = sk.Kind == SkillKind.Passive;
                     foreach (var t in Allies(s, src, sk.Target))
-                        AddEffect(t, sk.Stat, sk.Power, permanent ? -1 : ticks, sk.Id);
+                        AddEffect(r, t, sk.Stat, sk.Power, permanent ? -1 : ticks, sk.Id);
                     if (!permanent || triggered) onAction?.Invoke(new FightAction(src.Id, sk, null, sk.Power, false, false, aoe, false));
                     break;
                 }
                 case SkillKind.Debuff:
                 {
                     if (sk.Target == SkillTarget.AllEnemies)
-                        foreach (var t in Enemies(s, src)) AddEffect(t, sk.Stat, -sk.Power, ticks, sk.Id);
+                        foreach (var t in Enemies(s, src)) AddEffect(r, t, sk.Stat, -sk.Power, ticks, sk.Id);
                     else
                     {
                         var t = PickEnemy(s, src, rng);
-                        if (t != null) AddEffect(t, sk.Stat, -sk.Power, ticks, sk.Id);
+                        if (t != null) AddEffect(r, t, sk.Stat, -sk.Power, ticks, sk.Id);
                     }
                     onAction?.Invoke(new FightAction(src.Id, sk, null, sk.Power, false, false, aoe, false));
                     break;
@@ -353,7 +353,7 @@ namespace IdleRng.Sim.Combat
         {
             if (!magical)
             {
-                double evade = EvadeChance(r, Eff(tgt, StatIds.Dex), Eff(src, StatIds.Dex));
+                double evade = EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
                 if (evade > 0 && Draw(rng) < evade)
                 {
                     tgt.Tally.Evades++;
@@ -364,10 +364,10 @@ namespace IdleRng.Sim.Combat
             }
 
             bool crit = false;
-            double rate = CritChance(r, Eff(src, StatIds.Luk), Bonus(src, StatIds.CritRate));
+            double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate));
             if (rate > 0 && Draw(rng) < rate) { crit = true; raw *= Math.Max(1.0, r.CritDmg + Bonus(src, StatIds.CritDmg)); }
             raw *= r.ElementMult(element, tgt.Source.Element);
-            double after = Mitigate(r, raw, Eff(tgt, magical ? StatIds.Wis : StatIds.Def));
+            double after = Mitigate(r, raw, Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def));
             double mitigated = raw - after;
             double dealt = Absorb(src, tgt, after, element);
 
@@ -501,12 +501,12 @@ namespace IdleRng.Sim.Combat
 
         // ------------------------------------------------------------------ stats
 
-        static void AddEffect(FightUnit u, string stat, double frac, int ticks, string source)
+        static void AddEffect(FightRules r, FightUnit u, string stat, double frac, int ticks, string source)
         {
             if (stat == StatIds.Hp && ticks < 0)
             {
                 // a permanent HP bonus raises max HP and current HP together
-                double m = Math.Max(0.1, 1 + frac);
+                double m = Math.Max(r.StatFloor, 1 + frac);
                 u.MaxHp *= m;
                 u.Hp *= m;
                 return;
@@ -521,15 +521,15 @@ namespace IdleRng.Sim.Combat
             Cooldown = sk.Cooldown, Duration = sk.Duration, Element = sk.Element,
         };
 
-        static double Scaled(FightUnit src, CombatSkill sk) => (sk.Scales == StatIds.Hp ? src.MaxHp : Eff(src, sk.Scales)) * sk.Power;
+        static double Scaled(FightRules r, FightUnit src, CombatSkill sk) => (sk.Scales == StatIds.Hp ? src.MaxHp : Eff(r, src, sk.Scales)) * sk.Power;
 
         /// <summary>
-        /// Current value of a trained stat: base x (1 + sum of effect fractions), floored at 10% of base. "hp" is max HP.
+        /// Current value of a trained stat: base x (1 + sum of effect fractions), floored at STAT_FLOOR_FRAC of base. "hp" is max HP.
         /// </summary>
-        public static double Eff(FightUnit u, string stat)
+        public static double Eff(FightRules r, FightUnit u, string stat)
         {
             if (stat == StatIds.Hp) return u.MaxHp;
-            return u.Source.Stats.Get(stat) * Math.Max(0.1, 1 + Bonus(u, stat));
+            return u.Source.Stats.Get(stat) * Math.Max(r.StatFloor, 1 + Bonus(u, stat));
         }
 
         /// <summary>Sum of effect values on <paramref name="stat"/> (the whole value for crit_rate and crit_dmg bonuses).</summary>

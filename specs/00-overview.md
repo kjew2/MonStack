@@ -36,7 +36,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 | Group | Constants | Spec |
 |---|---|---|
-| Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*` | `16` section 7 |
+| Battle | `BATTLE_GAUGE`, `SPD_REF`, `ELEMENT_STRONG_MULT`, `ELEMENT_WEAK_MULT`, `BASIC_ATTACK_POWER`, `AI_HEAL_BELOW`, `AI_SHIELD_BELOW`, `MON_*`, `STAT_FLOOR_FRAC` | `16` section 7 |
 | Training run | `RUN_CYCLES`, `RUN_AP`, `RUN_ENERGY_*`, `DRILL_*`, `REST_ENERGY`, `INJURY_*`, `STAT_MAX`, `FIGHT_EVERY` | `14` section 8 |
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, `MON_ECHO_POWER` | `15` section 9 |
 | Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` | `18` section 5 |

@@ -84,6 +84,13 @@ namespace IdleRng.Sim.Tests
             Assert.That(BattleText.RuleDesc(Db, RuleModifiers.EchoCast), Does.Contain(TextTemplate.Number(Db.Constants.MonEchoPower, "pct")));
         }
 
+        [Test]
+        public void DebuffTooltip_NamesTheStatFloorConstant()
+        {
+            var confuse = BattleText.NodeTip(Db, NodeWith("confuse"), "x", "x", false);
+            Assert.That(Fact(confuse, "effect"), Does.Contain(TextTemplate.Number(Db.Constants.StatFloorFrac, "pct") + " of its base"));
+        }
+
         static TreeNodeDef NodeWith(string skillId) => Db.TreeNodes.Values.First(n => n.Skill != null && n.Skill.Id == skillId);
 
         static string Fact(Tip t, string label) => t.Facts.FirstOrDefault(f => f.Key == Db.Text("tip.label." + label)).Value;
