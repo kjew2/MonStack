@@ -796,6 +796,26 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-id^="chasecard-"]').count()) === 2, 'the Trees tab lists the drake\'s own two chase trees');
   check(/Ember Codex/.test(await text('[data-id=chasecard-inferno_sovereign]')), 'the book-gated chase tree says which skill book it needs');
 
+  // ---- the evolution (debug preview of a chase tree's apex form): plays over the page, a tap skips to the end, the next closes it
+  const evoName = await page.evaluate(() => document.querySelector('[data-id=monster-name]').textContent);
+  await act('evolve-preview-inferno_sovereign').click();
+  await page.locator('[data-id=evolve].charge').waitFor();
+  check(/is evolving/.test(await text('[data-id=evolve-line]')), 'the evolution opens on the old form: ' + await text('[data-id=evolve-line]'));
+  await page.locator('[data-id=evolve].morph').waitFor({ timeout: 3000 });
+  check((await page.locator('[data-id=evolve] .sprite').count()) === 2, 'the evolution swaps the old and the new form');
+  await shot('07b-evolve-morph');
+  await page.locator('[data-id=evolve]').click();                  // skip
+  check(/became the Surtr Drake!/.test(await text('[data-id=evolve-line]')), 'a tap skips to the new form: ' + await text('[data-id=evolve-line]'));
+  check(/continue/i.test(await text('[data-id=evolve-hint]')), 'the end of the evolution says to tap to continue');
+  await shot('07c-evolve-done');
+  await page.locator('[data-id=evolve]').click();                  // close
+  check((await page.locator('[data-id=evolve]').count()) === 0, 'the next tap closes the evolution');
+  check((await page.evaluate(() => document.querySelector('[data-id=monster-name]').textContent)) === evoName, 'a preview changes nothing in the run');
+  await page.locator('[data-act="evolve-preview-inferno_sovereign"]').click();
+  await page.locator('[data-id=evolve].done').waitFor({ timeout: 6000 });
+  check(true, 'left alone, the evolution reaches the new form by itself');
+  await page.locator('[data-id=evolve]').click();
+
   // ---- without a build stamp (an older dist) the header says "dev" and nothing errors
   const bare = await ctx.newPage();
   bare.on('pageerror', (e) => errors.push('pageerror (no stamp): ' + e.message));

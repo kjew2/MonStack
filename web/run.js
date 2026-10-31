@@ -208,11 +208,65 @@
     });
   }
 
-  // Apex forms (specs/15 section 5.3): toast once when the run's monster takes one (not on a reload of a run already in it).
+  // Apex forms (specs/15 section 5.3): the evolution plays once when the run's monster takes one (a chase capstone or a fusion),
+  // not on a reload of a run already in it.
   let apexSeen = null;
   function noticeApex(s) {
-    if (apexSeen && apexSeen.seed === s.seed && s.apex && s.apex !== apexSeen.apex) toast(speciesDef(s.species).name + ' became the ' + s.name + '!');
-    apexSeen = { seed: s.seed, apex: s.apex };
+    const name = s.name || speciesDef(s.species).name;
+    if (apexSeen && apexSeen.seed === s.seed && s.apex && s.apex !== apexSeen.apex)
+      playEvolve({ species: s.species, from: apexSeen.apex, fromName: apexSeen.name, to: s.apex, toName: name });
+    apexSeen = { seed: s.seed, apex: s.apex, name: name };
+  }
+
+  // ---- the evolution (presentation only): the old form glows and shakes, white silhouettes of the old and new forms swap faster
+  // and faster, a white flash, then the new form in colour with a burst of sparkles. A tap skips to the end, the next tap closes.
+  // Reduced motion shows the end at once. EVOLVE_MS are placeholders.
+  const EVOLVE_MS = { charge: 900, morph: 2400, flash: 160 };
+  let evo = null;
+  function stopEvolve() {
+    if (!evo) return;
+    evo.timers.forEach(clearTimeout);
+    evo.box.remove();
+    evo = null;
+  }
+  function playEvolve(e) {
+    stopEvolve();
+    const done = 'became the ' + e.toName + '!';
+    const oldS = sprite(e.species, e.from), newS = sprite(e.species, e.to);
+    oldS.classList.add('evo-old'); newS.classList.add('evo-new');
+    const line = h('div', { class: 'evo-line', 'data-id': 'evolve-line', 'aria-live': 'polite', text: 'What? ' + e.fromName + ' is evolving!' });
+    const hint = h('small', { class: 'evo-hint', 'data-id': 'evolve-hint', text: 'Tap to skip' });
+    const sparks = h('div', { class: 'evo-sparks', 'aria-hidden': 'true' });
+    for (let i = 0; i < 14; i++) sparks.append(h('i', { style: '--a:' + Math.round(i * 360 / 14 + (i % 2) * 12) + 'deg;--d:' + (i % 3 ? 96 : 130) + 'px' }));
+    const box = h('div', { class: 'evolve charge', 'data-id': 'evolve', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Evolution' }, [
+      h('div', { class: 'evo-mon' }, [h('div', { class: 'evo-rays', 'aria-hidden': 'true' }), oldS, newS, sparks]),
+      line, hint, h('div', { class: 'evo-flash', 'aria-hidden': 'true' }),
+    ]);
+    const me = evo = { box: box, timers: [], done: false };
+    const at = (ms, f) => me.timers.push(setTimeout(() => { if (evo === me) f(); }, ms));
+    const finish = () => {
+      me.timers.forEach(clearTimeout); me.timers = [];
+      me.done = true;
+      box.className = 'evolve done';
+      line.replaceChildren(h('span', { text: e.fromName + ' ' }), h('b', { text: done }));
+      hint.textContent = 'Tap to continue';
+    };
+    const tap = () => { if (evo !== me) return; if (me.done) stopEvolve(); else finish(); };
+    box.addEventListener('click', tap);
+    box.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Escape') { ev.preventDefault(); tap(); } });
+    box.tabIndex = -1;
+    $('app').append(box);
+    box.focus({ preventScroll: true });
+    if (reducedMotion()) { finish(); return; }
+    // The swaps: each gap a little shorter than the last, down to a flicker.
+    const morphEnd = EVOLVE_MS.charge + EVOLVE_MS.morph;
+    at(EVOLVE_MS.charge, () => { box.className = 'evolve morph'; });
+    for (let t = EVOLVE_MS.charge, gap = 300, alt = false; t < morphEnd; t += gap, gap = Math.max(45, gap * 0.8)) {
+      const v = alt = !alt;
+      at(t + gap, () => box.classList.toggle('alt', v));
+    }
+    at(morphEnd, () => { box.className = 'evolve morph alt flash'; });
+    at(morphEnd + EVOLVE_MS.flash, () => { finish(); box.classList.add('flash'); });
   }
 
   // Actions left (pips) and energy: in the HUD on the other tabs, in the corners of the Train tab's stage.
@@ -430,6 +484,9 @@
         ...(c.open ? [] : [h('small', { class: 'muted', text: 'This run was started under the old attunement rule and was not attuned, so this tree cannot unlock in it. New runs always can.' })]),
         ...t.conditions.map((txt, i) => h('div', { class: 'cond' + (c.met[i] ? ' met' : '') }, [h('span', { text: c.met[i] ? '✓' : '○' }), h('span', { text: txt })])),
         ...conditionSources(t),
+        // Debug only: play this tree's evolution without buying its capstone (nothing in the run changes).
+        debugOn() && t.apexName ? h('button', { class: 'btn small', type: 'button', 'data-act': 'evolve-preview-' + c.tree, text: 'Test: preview evolution',
+          onclick: () => playEvolve({ species: s.species, from: s.apex, fromName: s.name || speciesDef(s.species).name, to: c.tree, toName: t.apexName }) }) : null,
       ]));
     });
     if (s.books.length) {
@@ -1434,7 +1491,7 @@
   }
 
   // ------------------------------------------------------------ actions
-  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.ticketGain = null; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; ui.treeOpen = {}; }
+  function resetRunUi() { stopClimb(); stopPlayback(); stopReveal(); stopEvolve(); ui.climb = null; ui.confirmAbandon = false; VAULT.reset(); ui.feed = []; ui.last = null; ui.fight = null; ui.sealed = null; ui.payout = 0; ui.ticketGain = null; ui.tab = 'train'; ui.showAll = false; ui.spGains = []; ui.drillPop = null; ui.fightGains = []; ui.earned = []; ui.treeOpen = {}; }
   const log = (line) => { ui.feed.unshift(line); };
 
   // The book the picked species' book-gated chase tree needs, if any.
