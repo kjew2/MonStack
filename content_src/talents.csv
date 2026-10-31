@@ -1,7 +1,6 @@
 id,name_key,desc_key,rarity,effect,per_rank,max_rank,cost_base,cost_step,#notes
 frugal_drills,talent.frugal_drills.name,talent.frugal_drills.desc,common,drill_cost,-0.05,5,20,20,"account talent tree (specs/18): rank r+1 costs cost_base + cost_step * r shards; rarity is the talent's vendor tier (a vendor_rarities id). Placeholder; the drafts' examples"
 strong_stock,talent.strong_stock.name,talent.strong_stock.desc,rare,stat_floor,0.1,3,30,30,Placeholder
-chase_instinct,talent.chase_instinct.name,talent.chase_instinct.desc,epic,chase_chance,0.1,3,50,50,"each rank adds 10 points to the odds a run is attuned to its in-run chase tree (CHASE_BASE_CHANCE + 3 x 0.1 = half the runs at max). Placeholder"
 head_start,talent.head_start.name,talent.head_start.desc,common,start_sp,1,3,25,25,Placeholder
 deep_rest,talent.deep_rest.name,talent.deep_rest.desc,common,rest_energy,10,3,20,20,"talent catalog v2 (#105, from the spike #101): numbers are placeholders"
 steady_hands,talent.steady_hands.name,talent.steady_hands.desc,common,fail_chance,-0.02,3,20,20,Placeholder

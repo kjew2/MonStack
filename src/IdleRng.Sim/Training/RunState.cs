@@ -61,8 +61,9 @@ namespace IdleRng.Sim.Training
         public double StatFloorMult { get; set; } = 1;
 
         /// <summary>
-        /// Odds the run is attuned to its species' in-run chase tree (specs/15 section 5.4). 1 = always, so a run started without
-        /// an account (tests, bots) behaves as before; an account's runs get CHASE_BASE_CHANCE plus its talents (AccountOps.Modifiers).
+        /// Legacy, for replay only: the odds a run was attuned to its in-run chase tree, from when attunement existed (removed by
+        /// kj, 2026-10-31; specs/15 section 5.4). Every new run has 1 (always attuned); a saved recipe from before keeps its odds
+        /// so its log replays as it was played. No talent or constant sets it any more.
         /// </summary>
         public double ChaseChance { get; set; } = 1;
 
@@ -253,7 +254,7 @@ namespace IdleRng.Sim.Training
         /// <summary>Drill and injury rolls.</summary>
         public RngStream Training { get; set; } = new RngStream();
 
-        /// <summary>Whether this run was rolled attuned to its in-run chase tree at Start; only then is that tree ever offered.</summary>
+        /// <summary>Whether the run is attuned to its in-run chase tree: always true, except a legacy run replayed with ChaseChance below 1.</summary>
         public bool ChaseAttuned { get; set; }
 
         /// <summary>Awakening (milestone tree offer) picks.</summary>

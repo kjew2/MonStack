@@ -24,17 +24,6 @@
       "cost_step": 30
     },
     {
-      "id": "chase_instinct",
-      "name_key": "talent.chase_instinct.name",
-      "desc_key": "talent.chase_instinct.desc",
-      "rarity": "epic",
-      "effect": "chase_chance",
-      "per_rank": 0.1,
-      "max_rank": 3,
-      "cost_base": 50,
-      "cost_step": 50
-    },
-    {
       "id": "head_start",
       "name_key": "talent.head_start.name",
       "desc_key": "talent.head_start.desc",

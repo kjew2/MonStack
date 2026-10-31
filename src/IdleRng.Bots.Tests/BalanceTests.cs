@@ -23,7 +23,7 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
-        public void TalentMods_MaxRank_OneLegendary_ChaseKeptAtOne()
+        public void TalentMods_MaxRank_OneLegendary()
         {
             var db = Content.Db;
             Assert.That(BalanceHarness.TalentMods(db, null), Is.Null);

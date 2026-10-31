@@ -617,7 +617,7 @@ namespace IdleRng.Web
 
         /// <summary>The run bonuses talents give (specs/18 section 3), one field per RunModifiers property.</summary>
         private static void Mods(JsonOut w, RunModifiers m) =>
-            w.Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("chaseChance", m.ChaseChance).P("startSp", m.StartSp)
+            w.Obj().P("drillCostMult", m.DrillCostMult).P("statFloorMult", m.StatFloorMult).P("startSp", m.StartSp)
                 .P("restEnergyBonus", m.RestEnergyBonus).P("failChanceDelta", m.FailChanceDelta).P("superChanceBonus", m.SuperChanceBonus)
                 .P("shardMult", m.ShardMult).P("momentumDrills", m.MomentumDrills).P("lossSp", m.LossSp).P("specialistBonus", m.SpecialistBonus)
                 .P("treeSlotBonus", m.TreeSlotBonus).P("injuryShields", m.InjuryShields).P("lastCycleAp", m.LastCycleAp)

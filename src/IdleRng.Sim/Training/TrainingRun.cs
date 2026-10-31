@@ -423,7 +423,7 @@ namespace IdleRng.Sim.Training
             return g * (s.Stats.Get(stat) >= top ? 1 + b : 1 - b / 2);
         }
 
-        /// <summary>Whether chase tree <paramref name="tree"/> can ever be offered to this run: an unattuned run never sees its in-run chase tree (specs/15 section 5.4).</summary>
+        /// <summary>Whether chase tree <paramref name="tree"/> can ever be offered to this run: the run species' own, unless a legacy unattuned run (RunModifiers.ChaseChance).</summary>
         public static bool ChaseOpen(ContentDb c, RunState s, TreeDef tree) =>
             tree.Kind == TreeKind.Chase && tree.Species == s.SpeciesId && (s.ChaseAttuned || tree.Id != c.Species[s.SpeciesId].ChaseTreeRun);
 
