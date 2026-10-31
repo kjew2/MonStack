@@ -257,13 +257,20 @@ namespace IdleRng.Sim.Account
             SplitMix64.Derive(StreamNames.StreamSeed(accountSeed, VendorStream), (ulong)runIndex);
 
         /// <summary>
+        /// Seed of the vendor's <paramref name="reroll"/>-th roll after run <paramref name="runIndex"/>: the roll at seal time
+        /// (reroll 0) is <see cref="VendorSeed(ulong, int)"/>; reroll n &gt; 0 derives n from it (issue #104).
+        /// </summary>
+        public static ulong VendorSeed(ulong accountSeed, int runIndex, int reroll) =>
+            reroll == 0 ? VendorSeed(accountSeed, runIndex) : SplitMix64.Derive(VendorSeed(accountSeed, runIndex), (ulong)reroll);
+
+        /// <summary>
         /// Roll VENDOR_OFFERS offers for a run that reached grade index <paramref name="gradeIndex"/>. A rarity is a talent's own
         /// tier. Each offer draws a tier by weight (<see cref="VendorRarityDef.Weight"/> at that grade) among the tiers that still
         /// have a talent not maxed, then a talent of that tier uniformly; the same talent may be offered twice. When those tiers all
         /// weigh 0 at that grade, the commonest of them is used. No offers once every talent is maxed. Two draws per offer, always.
-        /// Deterministic from the account seed and the run index.
+        /// Deterministic from the account seed, the run index and the reroll count (0 for the roll at seal time).
         /// </summary>
-        public static VendorState RollVendor(ContentDb c, AccountState a, int gradeIndex, int runIndex)
+        public static VendorState RollVendor(ContentDb c, AccountState a, int gradeIndex, int runIndex, int reroll = 0)
         {
             int g = Math.Max(0, Math.Min(gradeIndex, c.FightRanks.Count - 1));
             var v = new VendorState { Grade = c.FightRanks[g].Id };
@@ -277,7 +284,7 @@ namespace IdleRng.Sim.Account
             if (tiers.Count == 0) return v;
             double total = 0;
             foreach (var x in tiers) total += x.Rarity.Weight(g);
-            var rng = new RngStream(VendorStream, VendorSeed(a.Seed, runIndex));
+            var rng = new RngStream(VendorStream, VendorSeed(a.Seed, runIndex, reroll));
             for (int i = 0; i < c.Constants.VendorOffers; i++)
             {
                 double u = rng.NextDouble() * total;
@@ -322,6 +329,50 @@ namespace IdleRng.Sim.Account
             a.Shards -= price;
             a.Talents[o.Talent] = a.TalentRank(o.Talent) + 1;
             o.Bought = true;
+            return price;
+        }
+
+        /// <summary>Shards the vendor's next reroll costs: REROLL_BASE + REROLL_STEP x rerolls already made this visit (issue #104).</summary>
+        public static long RerollPrice(ContentDb c, VendorState v) =>
+            c.Constants.RerollBase + (long)c.Constants.RerollStep * (v?.Rerolls ?? 0);
+
+        /// <summary>
+        /// True when <see cref="RerollVendor"/> would change something (the price aside): an offer is unbought and some talent is
+        /// not maxed, so the fresh roll has offers.
+        /// </summary>
+        public static bool CanRerollVendor(ContentDb c, AccountState a)
+        {
+            var v = a?.Vendor;
+            if (v == null) return false;
+            bool unbought = false;
+            foreach (var o in v.Offers) if (!o.Bought) unbought = true;
+            if (!unbought) return false;
+            foreach (var t in c.TalentList) if (a.TalentRank(t.Id) < t.MaxRank) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Reroll the post-run vendor (kj, 2026-10-31, issue #104): costs <see cref="RerollPrice"/> shards and replaces every
+        /// unbought offer with a fresh roll at the same grade odds; bought offers stay. The fresh roll is <see cref="RollVendor"/>
+        /// keyed by the sealed run's index and the new reroll count, and unbought offer i takes the roll's offer i, so it is
+        /// deterministic. Refused (nothing changes) with no vendor, every offer bought, every talent maxed, or too few shards.
+        /// Returns the shards spent.
+        /// </summary>
+        public static long RerollVendor(ContentDb c, AccountState a)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            var v = a.Vendor ?? throw new InvalidOperationException("the vendor has no offers: finish a run first");
+            if (!CanRerollVendor(c, a)) throw new InvalidOperationException("nothing to reroll: every offer is sold or every talent is maxed");
+            long price = RerollPrice(c, v);
+            if (a.Shards < price) throw new InvalidOperationException($"a reroll costs {price} shards, have {a.Shards}");
+            int g = 0;
+            for (int i = 0; i < c.FightRanks.Count; i++) if (c.FightRanks[i].Id == v.Grade) g = i;
+            var fresh = RollVendor(c, a, g, Math.Max(0, a.RunsStarted - 1), v.Rerolls + 1);
+            a.Shards -= price;
+            v.Rerolls++;
+            // Both lists hold VENDOR_OFFERS offers; the bound only matters for a vendor saved under a larger VENDOR_OFFERS.
+            for (int i = 0; i < v.Offers.Count && i < fresh.Offers.Count; i++)
+                if (!v.Offers[i].Bought) v.Offers[i] = fresh.Offers[i];
             return price;
         }
 

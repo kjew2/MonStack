@@ -60,7 +60,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^[0-9a-f]{4,}(\+dirty)? · \d{4}-\d\d-\d\d$/.test(stamp), 'the header shows the build stamp: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 5, 'a new account owns only the starter species (slime), schema v5');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 6, 'a new account owns only the starter species (slime), schema v6');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -387,6 +387,20 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(afterBuy.Account.Vendor.Offers[bought].Bought === true && (await offers.nth(bought).innerText()).includes('Sold'), 'the offer shows as sold');
   const talentId = afterBuy.Account.Vendor.Offers[bought].Talent;
   check((afterBuy.Account.Talents[talentId] || 0) === rankPre + 1, 'and the talent gained exactly one rank (#102): ' + talentId + ' ' + rankPre + ' -> ' + afterBuy.Account.Talents[talentId]);
+  // ---- the vendor reroll (issue #104): REROLL_BASE + REROLL_STEP x n shards, replaces only the unbought offers
+  const reroll = act('vendor-reroll');
+  const rerollPrice = +(/(\d+) shards/.exec(await reroll.innerText()) || [])[1];
+  check(rerollPrice === 10, 'the vendor offers a reroll at its first price: ' + rerollPrice);
+  let rerollSpent = 0;
+  if (await reroll.isEnabled()) {
+    const preRoll = (await readAccount()).Account;
+    await reroll.click();
+    rerollSpent = rerollPrice;
+    const afterRoll = (await readAccount()).Account;
+    check(afterRoll.Vendor.Rerolls === 1 && afterRoll.Shards === preRoll.Shards - rerollPrice, 'rerolling spent ' + rerollPrice + ' shards and counted one reroll');
+    check(afterRoll.Vendor.Offers[bought].Bought === true && afterRoll.Vendor.Offers[bought].Talent === talentId, 'the bought offer stays');
+    check((await offers.count()) === 5 && /20 shards/.test(await act('vendor-reroll').innerText()), 'still 5 offers, and the next reroll costs 20');
+  } else check(afterBuy.Account.Shards < rerollPrice, 'the reroll is disabled only when the shards do not cover it');
   const vw0 = await page.evaluate(() => document.documentElement.scrollWidth);
   check(vw0 <= 390, 'the vendor fits the phone width (' + vw0 + 'px)');
   await act('vendor-done').click();
@@ -396,7 +410,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'a reload after sealing keeps one Vault entry (no double seal)');
-  check((await text('[data-id=shards]')).startsWith((SHARDS0 + payout - price) + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
+  check((await text('[data-id=shards]')).startsWith((SHARDS0 + payout - price - rerollSpent) + ' '), 'and the shards: ' + (await text('[data-id=shards]')));
   check((await text('[data-id=vault-title]')) === legacy, 'the Vault card shows the Legacy Title: ' + legacy);
   await shot('06-vault');
 
@@ -524,7 +538,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 5 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v5 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 6 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v6 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap && (await page.locator('[data-id=vault-over]').count()) === 0, 'back at the cap, the warning goes');
   check(await act('start').isEnabled(), 'and a run can start again at the cap');

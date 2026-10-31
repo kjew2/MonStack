@@ -12,7 +12,7 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 5, "Account": { ...AccountState without Active... },
+    /// { "Kind": "monster_account", "SchemaVersion": 6, "Account": { ...AccountState without Active... },
     ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Ladder", "Log", "Hash" } | null }
     /// </code>
     /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
@@ -136,6 +136,12 @@ namespace IdleRng.Runtime.Save
                     tower["GrantDay"] = -1;
                 }
                 version = 5;
+            }
+            if (version == 5)
+            {
+                // v5 -> v6 (issue #104): the vendor counts its rerolls; a vendor saved before rerolls existed has made none.
+                if (acct["Vendor"] is JObject vendor) vendor["Rerolls"] = 0;
+                version = 6;
             }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;

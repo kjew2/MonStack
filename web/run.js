@@ -928,6 +928,7 @@
       main.append(h('h3', { text: 'Vendor' }));
       main.append(h('p', { class: 'small muted', text: 'Offers from your last run. They vanish when the next run starts.' }));
       vendorOffers(main);
+      rerollButton(main);
     }
 
     main.append(h('h3', { text: 'Talents' }));
@@ -1254,6 +1255,20 @@
     else { const def = C.talents.find((x) => x.id === r.talent); toast('Bought ' + (def ? def.name : r.talent) + ' +1 for ' + r.cost + ' shards'); }
     render();
   }
+  // Vendor reroll (specs/18 section 4, issue #104): replaces the unbought offers; the price rises with each reroll this visit.
+  function rerollButton(main) {
+    const acct = run.account, v = acct.vendor;
+    if (!v || !v.canReroll) return;
+    main.append(h('button', { class: 'btn small block gemsy', type: 'button', 'data-act': 'vendor-reroll', disabled: acct.shards < v.rerollPrice,
+      text: 'Reroll unbought offers · ' + v.rerollPrice + ' shards', onclick: rerollVendor }));
+  }
+  function rerollVendor() {
+    stopReveal();
+    const r = run.acct('rerollVendor');
+    if (!r.ok) toast(r.reason);
+    else toast('Rerolled the offers for ' + r.cost + ' shards');
+    render();
+  }
   function renderVendor(main) {
     const acct = run.account, v = acct.vendor;
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Vendor' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]));
@@ -1264,6 +1279,7 @@
         h('span', { class: 'small merchant', 'data-id': 'merchant-line', text: 'The merchant lays out the wares…' }),
         h('button', { class: 'btn small', type: 'button', 'data-act': 'reveal-skip', text: 'Skip', onclick: skipReveal })]));
       vendorOffers(main);
+      rerollButton(main);
     }
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: () => { stopReveal(); resetRunUi(); ui.view = 'home'; render(); } }));
   }

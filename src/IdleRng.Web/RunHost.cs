@@ -355,6 +355,9 @@ namespace IdleRng.Web
                         w.P("ok", true).P("cost", AccountOps.BuyOffer(_db, _acct, i)).P("talent", offer.Talent);
                         break;
                     }
+                    case "rerollVendor":
+                        w.P("ok", true).P("cost", AccountOps.RerollVendor(_db, _acct));
+                        break;
                     case "abandon":
                         AccountOps.AbandonRun(_db, _acct);
                         w.P("ok", true);
@@ -584,7 +587,8 @@ namespace IdleRng.Web
             if (ac.Vendor == null) w.Null();
             else
             {
-                w.Obj().P("grade", ac.Vendor.Grade);
+                w.Obj().P("grade", ac.Vendor.Grade).P("rerolls", ac.Vendor.Rerolls)
+                    .P("rerollPrice", AccountOps.RerollPrice(_db, ac.Vendor)).P("canReroll", AccountOps.CanRerollVendor(_db, ac));
                 w.Key("offers").Arr();
                 foreach (var o in ac.Vendor.Offers)
                 {
