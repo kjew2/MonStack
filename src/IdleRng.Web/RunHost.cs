@@ -158,8 +158,23 @@ namespace IdleRng.Web
                 var n = t.Nodes[i];
                 var (name, desc) = NodeText(n);
                 w.Obj().P("id", n.Id).P("cost", n.Cost).P("kind", n.Kind.ToString().ToLowerInvariant()).P("name", name).P("desc", desc)
-                    .P("last", i == t.Nodes.Count - 1).EndObj();
+                    .P("last", i == t.Nodes.Count - 1);
+                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat) w.P("stat", n.Stat).P("amount", n.Amount);
+                w.EndObj();
             }
+            w.EndArr();
+            // The tree's filler nodes summed per stat, in first-seen order, for the tree offer's summary chips.
+            var boosts = new List<(string stat, double growth, double flat)>();
+            foreach (var n in t.Nodes)
+            {
+                if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
+                int k = boosts.FindIndex(b => b.stat == n.Stat);
+                if (k < 0) { boosts.Add((n.Stat, 0, 0)); k = boosts.Count - 1; }
+                var b0 = boosts[k];
+                boosts[k] = n.Kind == NodeKind.Growth ? (b0.stat, b0.growth + n.Amount, b0.flat) : (b0.stat, b0.growth, b0.flat + n.Amount);
+            }
+            w.Key("boosts").Arr();
+            foreach (var b in boosts) w.Obj().P("stat", b.stat).P("growth", Math.Round(b.growth, 4)).P("flat", Math.Round(b.flat, 4)).EndObj();
             w.EndArr();
             w.P("source", TreeSource(t));
             if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated).P("apexName", _db.Text(t.ApexNameKey));

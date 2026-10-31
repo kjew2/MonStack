@@ -145,7 +145,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
 
   // ---- play through the buttons. stop: 'fight' returns when a rank fight is due, 'skill' when one is due and slot 1 has bought
   // its skill node (node 5), 'end' at the seal button. A fight still playing back is skipped.
-  let played = { fights: 0, drafts: 0, bought: 0, takes: 0, steps: 0, slot0: 0, skillRows: 0 };
+  let played = { fights: 0, drafts: 0, bought: 0, takes: 0, steps: 0, slot0: 0, skillRows: 0, badCards: 0, multi: 0, picked2: 0 };
   const playUntil = async (stop) => {
     played = await page.evaluate(([stop, stats]) => {
       const q = (s) => document.querySelector(s);
@@ -157,7 +157,20 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
         if (click('[data-act="fight-continue"]')) continue;
         if (q('[data-id=offer-title]')) {
           stats.drafts++;
-          if (click('[data-act^="take-0-2"]') || click('[data-act^="take-0-3"]') || click('[data-act^="take-0-1"]')) stats.takes++; else click('[data-act="discard"]');
+          // The offer as a card pick (specs/15 section 4): every card has a node path ending in the chase trait's star tile and a
+          // chase trait line; one card is picked and only it has slot tiles. On a multi-tree offer, picking card 2 moves the slots.
+          const cards = [...document.querySelectorAll('.tcard')];
+          const ok = cards.length >= 1 && cards.every((c) => c.querySelectorAll('.npath .nt').length >= 2 && c.querySelector('.npath .nt:last-child.cap') && c.querySelector('.perk.cap'))
+            && document.querySelectorAll('.tcard.sel').length === 1 && document.querySelectorAll('.stile').length === document.querySelectorAll('.tcard.sel .stile').length
+            && document.querySelectorAll('.tcard.sel .stile').length >= 2;
+          if (!ok) stats.badCards++;
+          let c = 0;
+          if (cards.length > 1 && !stats.multi) {
+            stats.multi++;
+            click('[data-act="pick-1"]');
+            if (q('[data-act^="take-1-"]') && !q('[data-act^="take-0-"]') && q('.tcard.sel') === document.querySelectorAll('.tcard')[1]) { stats.picked2++; c = 1; }
+          }
+          if (click('[data-act^="take-' + c + '-2"]') || click('[data-act^="take-' + c + '-3"]') || click('[data-act^="take-' + c + '-1"]')) stats.takes++; else click('[data-act="discard"]');
           continue;
         }
         const f = q('[data-act="fight"]');
@@ -271,6 +284,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   console.log('played: ' + JSON.stringify(played));
   check(played.fights >= 6, 'rank fights happened (' + played.fights + ')');
   check(played.bought >= 3, 'tree nodes were bought (' + played.bought + ')');
+  check(played.badCards === 0, 'every tree offer showed as cards with a node path, a chase trait line and slot tiles on the picked card (' + played.drafts + ' offers)');
+  check(played.multi === played.picked2, 'tapping the second card of a multi-tree offer picks it and moves the slot tiles' + (played.multi ? '' : ' (no multi-tree offer this run)'));
   if (await act('fight-continue').count()) await act('fight-continue').click();   // the last fight's result popup
   check(await act('seal').isVisible(), 'the run reaches its end and offers to seal');
   await shot('04-end');
