@@ -153,8 +153,8 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 
 | Achievement | Condition | Unlocks |
 |---|---|---|
-| Contender | Reach rank C in a run | drake |
-| Prodigy | Finish a run with any stat at 500 or more | sprite |
+| Contender | Reach rank C in a run | drake (Bastion Drake) |
+| Prodigy | Finish a run with any stat at 500 or more | sprite (Mirage Moth) |
 | Veteran | Finish 5 runs | nothing yet |
 | Climber | Clear 10 gauntlet floors | nothing yet |
 

@@ -120,6 +120,13 @@ Second round (kj, 2026-10-31, `specs/22` section 8.6); not built yet:
 - **No tribulation fights:** crossing a milestone drafts at once, with no extra fight.
 - **Overwrite refund:** every overwrite refunds half the SP spent in the tree (section 5.1). kj dropped the neighbour-tree rule: there are no tree neighbours for now.
 
+Third round (kj, 2026-10-31, creature spike `specs/24` section 6):
+- **Creature tone:** a mix of cute, mythic, grimdark and hot; each creature takes the style that suits it.
+- **Species follow their concepts:** slime, drake and sprite are named **Coremote**, **Bastion Drake** and **Mirage Moth** (ids unchanged) and drawn from hand-made pixel art.
+- **Apex forms:** buying a chase tree's capstone changes the monster's look and name (`specs/24` section 4.2). Not built yet.
+- **Two new species:** the **Mandrake** (nature) and the **Shade Hound** (dark), unlocked from achievements (`specs/24` section 5.1). Not built yet.
+- **Fusing pairs:** *Pyromancy* + *Codex of Tides*, *Heavy Armor* + *Bulwark*, *Mind Warp* + *Nimble Feet*, *Fortune* + *Spellcraft* (`specs/24` section 5.2). How fusion works is not decided yet.
+
 ### 5.3 Chase trees
 
 Rare trees unlocked mid-run by meeting conditions across trees and stats. **Each species has two chase trees of its own** (kj, 2026-10-30): one per unlock route below. Only that species can unlock them. Two unlock routes:

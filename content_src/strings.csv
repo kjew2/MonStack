@@ -4,9 +4,9 @@ element.water.name,Water
 element.nature.name,Nature
 element.light.name,Light
 element.dark.name,Dark
-species.slime.name,Slime
-species.drake.name,Drake
-species.sprite.name,Sprite
+species.slime.name,Coremote
+species.drake.name,Bastion Drake
+species.sprite.name,Mirage Moth
 drill.fail.name,Fail
 drill.success.name,Success
 drill.super.name,Super

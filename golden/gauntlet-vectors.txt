@@ -1,4 +1,4 @@
-# gauntlet vectors, hash v1 content=3.16/ac3140bb
+# gauntlet vectors, hash v1 content=3.17/f364668f
 
 slime focus seed=7 rank=s
   floor=58 cleared=False killer=golem title=title.professional_punching_bag

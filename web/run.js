@@ -51,7 +51,7 @@
   function hash(str) { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
   function sprite(key) {
     const cv = h('canvas', { class: 'sprite', 'aria-hidden': 'true' });
-    SP.draw(cv, SP.enemy(hash(key) % 100000, false, 0));
+    SP.draw(cv, SP.species(key) || SP.enemy(hash(key) % 100000, false, 0));   // hand-drawn species art, else a seeded sprite
     return cv;
   }
   function toast(msg) {
