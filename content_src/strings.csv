@@ -181,6 +181,30 @@ talent.chase_instinct.name,Chase Instinct
 talent.chase_instinct.desc,+10% odds a run is attuned to its in-run chase tree.
 talent.head_start.name,Head Start
 talent.head_start.desc,Start each run with one extra skill point per rank.
+talent.deep_rest.name,Deep Rest
+talent.deep_rest.desc,Rest restores 10 more energy per rank.
+talent.steady_hands.name,Steady Hands
+talent.steady_hands.desc,Drills fail 2 percentage points less often per rank.
+talent.scavenger.name,Scavenger
+talent.scavenger.desc,Runs pay 10% more Training Shards per rank.
+talent.super_set.name,Super Set
+talent.super_set.desc,Drills roll Super 3 percentage points more often per rank.
+talent.momentum.name,Momentum
+talent.momentum.desc,After a Super drill, the next drill costs no energy.
+talent.grudge_match.name,Grudge Match
+talent.grudge_match.desc,A lost rank fight still pays one skill point per rank.
+talent.specialist.name,Specialist
+talent.specialist.desc,"Drills on your highest stat grow 15% more per rank, every other stat 7.5% less per rank."
+talent.fifth_slot.name,Fifth Slot
+talent.fifth_slot.desc,Monsters get one more tree slot.
+talent.second_wind.name,Second Wind
+talent.second_wind.desc,"The first injury of each run is prevented: the monster drops to 0 energy instead."
+talent.overtime.name,Overtime
+talent.overtime.desc,The last cycle of a run has one more action per rank.
+talent.early_bloom.name,Early Bloom
+talent.early_bloom.desc,Stat milestones are reached 10% sooner per rank.
+talent.second_look.name,Second Look
+talent.second_look.desc,Reroll one Awakening per run into trees of any stat.
 achievement.rank_c.name,Contender
 achievement.stat_500.name,Prodigy
 achievement.veteran.name,Veteran

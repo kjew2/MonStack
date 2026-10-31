@@ -30,7 +30,9 @@ ENUMS = {
     "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
-    "TalentEffect": ["drill_cost", "stat_floor", "chase_chance", "start_sp"],
+    "TalentEffect": ["drill_cost", "stat_floor", "chase_chance", "start_sp", "rest_energy", "fail_chance", "super_chance",
+                     "shard_mult", "momentum", "loss_sp", "specialist", "tree_slots", "injury_shield", "last_cycle_ap",
+                     "milestone_mult", "draft_rerolls"],
     "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
@@ -484,6 +486,10 @@ def validate_tower(t, keys, errs):
         errs.add("E044", "book_drops", "at least one row needs min_floor 1")
 
 
+WHOLE_TALENT_EFFECTS = ("start_sp", "momentum", "loss_sp", "tree_slots", "injury_shield", "last_cycle_ap",
+                        "draft_rerolls")
+
+
 def validate_talents(t, errs):
     """Account talent tree (specs/18 section 4). Mirrors ContentDb.BuildAccount."""
     chase_base = next((float(r["value"]) for r in t["constants"] if r["key"] == "CHASE_BASE_CHANCE"), 0.0)
@@ -494,12 +500,20 @@ def validate_talents(t, errs):
         p, eff = r["per_rank"], r["effect"]
         if eff == "drill_cost" and not (p <= 0 and 1 + p * r["max_rank"] >= 0):
             errs.add("E043", loc, "drill_cost per_rank must be <= 0 and keep the multiplier >= 0 at max rank")
-        if eff == "stat_floor" and not p >= 0:
-            errs.add("E043", loc, "stat_floor per_rank must be >= 0")
+        if eff in ("stat_floor", "rest_energy", "shard_mult") and not p >= 0:
+            errs.add("E043", loc, f"{eff} per_rank must be >= 0")
         if eff == "chase_chance" and not (p >= 0 and chase_base + p * r["max_rank"] <= 1):
             errs.add("E043", loc, "chase_chance per_rank must be >= 0 and keep CHASE_BASE_CHANCE + per_rank x max_rank <= 1")
-        if eff == "start_sp" and not (p >= 0 and p == int(p)):
-            errs.add("E043", loc, "start_sp per_rank must be a whole number >= 0")
+        if eff == "fail_chance" and not p <= 0:
+            errs.add("E043", loc, "fail_chance per_rank must be <= 0")
+        if eff == "super_chance" and not (p >= 0 and p * r["max_rank"] <= 1):
+            errs.add("E043", loc, "super_chance per_rank must be >= 0 and at most 1 at max rank")
+        if eff == "specialist" and not (p >= 0 and p * r["max_rank"] <= 2):
+            errs.add("E043", loc, "specialist per_rank must be >= 0 and at most 2 at max rank")
+        if eff == "milestone_mult" and not (p <= 0 and 1 + p * r["max_rank"] > 0):
+            errs.add("E043", loc, "milestone_mult per_rank must be <= 0 and keep the multiplier > 0 at max rank")
+        if eff in WHOLE_TALENT_EFFECTS and not (p >= 0 and p == int(p)):
+            errs.add("E043", loc, f"{eff} per_rank must be a whole number >= 0")
 
 
 def validate_unlocks(t, errs):

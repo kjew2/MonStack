@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v1 content=4.3/44a42cbb
+# battle-sim vectors, hash v1 content=4.4/f80b5079
 
 1v1 brawler vs mage seed=1 outcome=SideBWon ticks=32
   A0 brawler  hp      0.00/  3200.00 act   7 dealt    2290.91 taken    3200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0

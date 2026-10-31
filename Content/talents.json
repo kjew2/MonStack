@@ -44,6 +44,138 @@
       "max_rank": 3,
       "cost_base": 25,
       "cost_step": 25
+    },
+    {
+      "id": "deep_rest",
+      "name_key": "talent.deep_rest.name",
+      "desc_key": "talent.deep_rest.desc",
+      "rarity": "common",
+      "effect": "rest_energy",
+      "per_rank": 10.0,
+      "max_rank": 3,
+      "cost_base": 20,
+      "cost_step": 20
+    },
+    {
+      "id": "steady_hands",
+      "name_key": "talent.steady_hands.name",
+      "desc_key": "talent.steady_hands.desc",
+      "rarity": "common",
+      "effect": "fail_chance",
+      "per_rank": -0.02,
+      "max_rank": 3,
+      "cost_base": 20,
+      "cost_step": 20
+    },
+    {
+      "id": "scavenger",
+      "name_key": "talent.scavenger.name",
+      "desc_key": "talent.scavenger.desc",
+      "rarity": "common",
+      "effect": "shard_mult",
+      "per_rank": 0.1,
+      "max_rank": 5,
+      "cost_base": 15,
+      "cost_step": 15
+    },
+    {
+      "id": "super_set",
+      "name_key": "talent.super_set.name",
+      "desc_key": "talent.super_set.desc",
+      "rarity": "rare",
+      "effect": "super_chance",
+      "per_rank": 0.03,
+      "max_rank": 3,
+      "cost_base": 30,
+      "cost_step": 30
+    },
+    {
+      "id": "momentum",
+      "name_key": "talent.momentum.name",
+      "desc_key": "talent.momentum.desc",
+      "rarity": "rare",
+      "effect": "momentum",
+      "per_rank": 1.0,
+      "max_rank": 1,
+      "cost_base": 60,
+      "cost_step": 0
+    },
+    {
+      "id": "grudge_match",
+      "name_key": "talent.grudge_match.name",
+      "desc_key": "talent.grudge_match.desc",
+      "rarity": "rare",
+      "effect": "loss_sp",
+      "per_rank": 1.0,
+      "max_rank": 2,
+      "cost_base": 40,
+      "cost_step": 40
+    },
+    {
+      "id": "specialist",
+      "name_key": "talent.specialist.name",
+      "desc_key": "talent.specialist.desc",
+      "rarity": "rare",
+      "effect": "specialist",
+      "per_rank": 0.15,
+      "max_rank": 2,
+      "cost_base": 40,
+      "cost_step": 40
+    },
+    {
+      "id": "fifth_slot",
+      "name_key": "talent.fifth_slot.name",
+      "desc_key": "talent.fifth_slot.desc",
+      "rarity": "epic",
+      "effect": "tree_slots",
+      "per_rank": 1.0,
+      "max_rank": 1,
+      "cost_base": 120,
+      "cost_step": 0
+    },
+    {
+      "id": "second_wind",
+      "name_key": "talent.second_wind.name",
+      "desc_key": "talent.second_wind.desc",
+      "rarity": "epic",
+      "effect": "injury_shield",
+      "per_rank": 1.0,
+      "max_rank": 1,
+      "cost_base": 80,
+      "cost_step": 0
+    },
+    {
+      "id": "overtime",
+      "name_key": "talent.overtime.name",
+      "desc_key": "talent.overtime.desc",
+      "rarity": "epic",
+      "effect": "last_cycle_ap",
+      "per_rank": 1.0,
+      "max_rank": 2,
+      "cost_base": 60,
+      "cost_step": 60
+    },
+    {
+      "id": "early_bloom",
+      "name_key": "talent.early_bloom.name",
+      "desc_key": "talent.early_bloom.desc",
+      "rarity": "epic",
+      "effect": "milestone_mult",
+      "per_rank": -0.1,
+      "max_rank": 2,
+      "cost_base": 70,
+      "cost_step": 70
+    },
+    {
+      "id": "second_look",
+      "name_key": "talent.second_look.name",
+      "desc_key": "talent.second_look.desc",
+      "rarity": "epic",
+      "effect": "draft_rerolls",
+      "per_rank": 1.0,
+      "max_rank": 1,
+      "cost_base": 70,
+      "cost_step": 0
     }
   ]
 }

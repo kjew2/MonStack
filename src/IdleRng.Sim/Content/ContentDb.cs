@@ -597,8 +597,12 @@ namespace IdleRng.Sim.Content
                 switch (d.Effect)
                 {
                     case TalentEffect.DrillCost: ok = p <= 0 && 1 + p * d.MaxRank >= 0; break;
-                    case TalentEffect.StatFloor: ok = p >= 0; break;
+                    case TalentEffect.StatFloor: case TalentEffect.RestEnergy: case TalentEffect.ShardMult: ok = p >= 0; break;
                     case TalentEffect.ChaseChance: ok = p >= 0 && Constants.ChaseBaseChance + p * d.MaxRank <= 1; break;
+                    case TalentEffect.FailChance: ok = p <= 0; break;
+                    case TalentEffect.SuperChance: ok = p >= 0 && p * d.MaxRank <= 1; break;
+                    case TalentEffect.Specialist: ok = p >= 0 && p * d.MaxRank <= 2; break;
+                    case TalentEffect.MilestoneMult: ok = p <= 0 && 1 + p * d.MaxRank > 0; break;
                     default: ok = p >= 0 && p == Math.Floor(p); break;
                 }
                 if (!ok) errors.Add(new ContentError("E043", loc, $"per_rank {p} out of range for {d.Effect}"));
@@ -863,6 +867,18 @@ namespace IdleRng.Sim.Content
                 case "stat_floor": return TalentEffect.StatFloor;
                 case "chase_chance": return TalentEffect.ChaseChance;
                 case "start_sp": return TalentEffect.StartSp;
+                case "rest_energy": return TalentEffect.RestEnergy;
+                case "fail_chance": return TalentEffect.FailChance;
+                case "super_chance": return TalentEffect.SuperChance;
+                case "shard_mult": return TalentEffect.ShardMult;
+                case "momentum": return TalentEffect.Momentum;
+                case "loss_sp": return TalentEffect.LossSp;
+                case "specialist": return TalentEffect.Specialist;
+                case "tree_slots": return TalentEffect.TreeSlots;
+                case "injury_shield": return TalentEffect.InjuryShield;
+                case "last_cycle_ap": return TalentEffect.LastCycleAp;
+                case "milestone_mult": return TalentEffect.MilestoneMult;
+                case "draft_rerolls": return TalentEffect.DraftRerolls;
                 default: throw new FormatException($"unknown talent effect '{s}'");
             }
         }

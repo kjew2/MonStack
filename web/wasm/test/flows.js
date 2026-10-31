@@ -7,6 +7,7 @@
 //   the original kept aside (specs/06 section 5); a damaged save is kept aside next to it and the player gets a fresh, working
 //   account. Issue #93: kept-aside saves are capped, the oldest (or a legacy single backup) is never evicted.
 // - issue #89: an injury loses the rest of its cycle, its fight and the next cycle, says when the monster is back, and survives a reload.
+// - issue #105: every talent at max rank shows its bonus on the home screen and in the run; Second Look rerolls a draft once.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/flows.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
@@ -251,6 +252,48 @@ const H = require('./harness.js');
   check(keep === 3 && bad4.length === keep && bad4[0] === legacy && bad4[1] === extra[0] && bad4[2] === extra[1],
     'past the cap of ' + keep + ' the legacy backup and the newest saves are kept (' + bad4.length + ' kept)');
   check((await page.evaluate((k) => localStorage.getItem(k), H.BAD_KEY)) === legacy, 'the legacy backup key is untouched');
+
+  // ---- talent catalog v2 (issue #105, specs/18 section 3): an account with every talent at max rank. The home screen sums the
+  // bonuses, the run shows a fifth tree slot and the bigger rest, and a milestone draft can be rerolled once (Second Look)
+  const talented = await t.readAccount();
+  talented.ActiveRun = null;
+  const talentIds = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"]')].map((e) => e.getAttribute('data-id').slice(7))
+    .filter((id) => id !== 'now'));
+  const maxRanks = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"] .tag')].map((e) => +e.textContent.split('/')[1]));
+  check(talentIds.length === 16 && maxRanks.length === 16, 'the talent list shows all 16 talents (' + talentIds.join(' ') + ')');
+  talented.Account.Talents = {};
+  talentIds.forEach((id, i) => { talented.Account.Talents[id] = maxRanks[i]; });
+  await t.writeSaveText(H.encodeSave(talented));
+  await t.reload();
+  const now = await text('[data-id=talent-now]');
+  check(['rests +30 energy', 'a free drill after each Super', '+1 tree slot', '1 injury prevented per run', '+2 AP in the last cycle',
+    'milestones at x0.80', '1 Awakening reroll per run', '50% chase attunement', 'shards x1.50', '+2 SP per lost fight'].every((x) => now.includes(x)), 'the home screen sums every talent bonus: ' + now);
+  await act('start').click();
+  await act('drill-hp').waitFor();
+  check(/^Rest \(\+80 energy\)$/.test(await text('[data-act="rest"]')), 'the rest button shows Deep Rest\'s bigger rest: ' + await text('[data-act="rest"]'));
+  check(/240/.test(await text('[data-id=stat-hp] small')), 'Early Bloom moves the first milestone to 240: ' + await text('[data-id=stat-hp] small'));
+  await clickDom('[data-act="tab-trees"]');
+  check((await page.locator('.slotcard').count()) === 5, 'Fifth Slot: the monster has five tree slots');
+  await clickDom('[data-act="tab-train"]');
+  const draft = await page.evaluate(() => {
+    const q = (s) => document.querySelector(s);
+    const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
+    for (let i = 0; i < 200; i++) {
+      if (q('[data-act="reroll"]')) return [...document.querySelectorAll('[data-id^="offer-"]')].map((e) => e.getAttribute('data-id')).filter((x) => x !== 'offer-title');
+      if (q('[data-id=fight-play]')) { click('[data-act="speed-skip"]'); continue; }
+      if (click('[data-act="fight-continue"]') || click('[data-act="discard"]') || click('[data-act="fight"]')) continue;
+      const energy = +((/Energy (\d+)/.exec((q('.bar.energy span') || {}).textContent || '') || [])[1]);
+      if (!(energy >= 40) ? !click('[data-act="rest"]') : !click('[data-act="drill-hp"]')) return null;
+    }
+    return null;
+  });
+  check(!!draft && draft.length > 0, 'an Awakening offers Second Look\'s reroll: ' + JSON.stringify(draft));
+  await t.layout('tree draft with a reroll');
+  await clickDom('[data-act="reroll"]');
+  const redrawn = await page.evaluate(() => [...document.querySelectorAll('[data-id^="offer-"]')].map((e) => e.getAttribute('data-id')).filter((x) => x !== 'offer-title'));
+  check(!!draft && redrawn.length > 0 && redrawn.every((x) => draft.indexOf(x) < 0), 'the reroll draws other trees: ' + JSON.stringify(redrawn));
+  check((await page.locator('[data-act="reroll"]').count()) === 0, 'and only once per run');
+  await reloadSame('reload after a draft reroll');
 
   await t.finish();
 })().catch((e) => { console.error(e); process.exit(1); });

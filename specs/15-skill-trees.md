@@ -8,7 +8,7 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 
 ## 1. Summary
 
-- A monster has `TREE_SLOTS` (4) slots. A run starts with its species' two **native** trees in slots 0 and 1 and two empty slots.
+- A monster has `TREE_SLOTS` (4) slots, plus the Fifth Slot talent's (`specs/18` section 3). A run starts with its species' two **native** trees in slots 0 and 1 and the other slots empty. The Second Look talent rerolls an Awakening (`specs/18` section 3).
 - **Skill points** (SP): `SP_PER_CYCLE` at the start of every cycle (cycle 1 included) plus `SP_PER_WIN` for each rank fight won.
 - SP buy a tree's **nodes in order**. About 75% of nodes are **filler** (a growth bonus or a flat stat boost); the rest grant skills, triggered effects or rule modifiers. The **last node is the tree's chase trait**.
 - Each species owns **two chase trees** of its own: one unlocked in-run, one gated behind a skill book tree (section 5.1).

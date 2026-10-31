@@ -225,14 +225,15 @@
     const o = s.odds;
     main.append(h('div', { class: 'odds', 'data-id': 'odds',
       text: 'Drill at this energy: fail ' + pct(o.fail) + ' · success ' + pct(o.success) + ' · super ' + pct(o.super) + ' · injury ' + pct(o.injury) +
-        '. Each drill costs ' + num(s.drillCost) + ' energy.' + (o.injury > 0 ? ' An injury loses ' + injuryRisk() + '.' : '') }));
+        '. ' + (s.freeDrills > 0 ? 'Momentum: the next drill costs no energy.' : 'Each drill costs ' + num(s.drillCost) + ' energy.') +
+        (o.injury > 0 ? (s.shieldsLeft > 0 ? ' Second Wind will stop the next injury (energy drops to 0).' : ' An injury loses ' + injuryRisk() + '.') : '') }));
     const card = h('div', { class: 'card stats' });
     C.stats.forEach((st) => {
       const row = h('div', { class: 'stat' + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
         h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }),
         h('div', { class: 'meta' }, [
           bar(s.stats[st], k.statMax, num(s.stats[st]) + ' / ' + k.statMax),
-          h('small', { text: 'growth x' + s.growth[st].toFixed(2) + ' · ' + C.milestones.map((m) => (s.stats[st] >= m ? '✓' : '') + m).join(' ') }),
+          h('small', { text: 'growth x' + s.growth[st].toFixed(2) + ' · ' + s.milestoneAt.map((m) => (s.stats[st] >= m ? '✓' : '') + num(m)).join(' ') }),
         ]),
         h('button', { class: 'btn primary small', type: 'button', 'data-act': 'drill-' + st, text: 'Drill', disabled: busy, onclick: () => drill(st) }),
       ]);
@@ -240,7 +241,7 @@
     });
     main.append(card);
     main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
-      text: 'Rest (+' + k.restEnergy + ' energy)', onclick: rest }));
+      text: 'Rest (+' + num(s.restEnergy) + ' energy)', onclick: rest }));
     if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     if (ui.last) main.append(resultCard(ui.last));
     ui.flash = null;
@@ -252,6 +253,8 @@
         h('div', null, [h('b', { class: r.tier, text: r.tierName }), h('span', { text: ' ' + up(r.stat) + ' ' + (r.gain ? '+' + num(r.gain) : '+0') + ' → ' + num(r.value) })]),
         r.injury ? h('div', { class: 'bad', 'data-id': 'injury-result' }, [h('b', { text: 'Injured! ' }),
           r.injury.back ? 'Back in cycle ' + r.injury.back + '.' : 'The run is over.']) : null,
+        r.shielded ? h('div', { class: 'gold', 'data-id': 'shield-result' }, [h('b', { text: 'Second Wind! ' }), 'The injury was prevented; energy dropped to 0.']) : null,
+        r.free ? h('div', { class: 'small gems', 'data-id': 'free-result', text: 'Momentum: this drill cost no energy.' }) : null,
       ]);
     }
     return h('div', { class: 'card result', 'data-id': 'result' }, [h('div', null, [h('b', { text: 'Rest' }), h('span', { text: ' +' + num(r.restored) + ' energy' })])]);
@@ -703,7 +706,32 @@
       card.append(picks);
       modal.append(card);
     });
+    if (s.canReroll) modal.append(h('button', { class: 'btn block gemsy', type: 'button', 'data-act': 'reroll',
+      text: 'Second Look: reroll into trees of any stat (' + s.rerollsLeft + ' left this run)', onclick: reroll }));
     modal.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'discard', text: 'Discard this offer', onclick: discard }));
+  }
+
+  // The run bonuses the account's talents give now (specs/18 section 3), only those that change something.
+  function talentSummary(m) {
+    const pts = (v) => num(Math.abs(v) * 100);
+    return [
+      m.drillCostMult !== 1 && 'drills cost x' + m.drillCostMult.toFixed(2),
+      m.statFloorMult !== 1 && 'start stats x' + m.statFloorMult.toFixed(2),
+      Math.round(m.chaseChance * 100) + '% chase attunement',
+      m.startSp && '+' + m.startSp + ' starting SP',
+      m.restEnergyBonus && 'rests +' + num(m.restEnergyBonus) + ' energy',
+      m.failChanceDelta && 'fail -' + pts(m.failChanceDelta) + ' pts',
+      m.superChanceBonus && 'super +' + pts(m.superChanceBonus) + ' pts',
+      m.shardMult !== 1 && 'shards x' + m.shardMult.toFixed(2),
+      m.momentumDrills && 'a free drill after each Super',
+      m.lossSp && '+' + m.lossSp + ' SP per lost fight',
+      m.specialistBonus && 'top stat grows +' + pts(m.specialistBonus) + '%, others -' + pts(m.specialistBonus / 2) + '%',
+      m.treeSlotBonus && '+' + m.treeSlotBonus + ' tree slot' + (m.treeSlotBonus > 1 ? 's' : ''),
+      m.injuryShields && m.injuryShields + ' injur' + (m.injuryShields > 1 ? 'ies' : 'y') + ' prevented per run',
+      m.lastCycleAp && '+' + m.lastCycleAp + ' AP in the last cycle',
+      m.milestoneMult !== 1 && 'milestones at x' + m.milestoneMult.toFixed(2),
+      m.draftRerolls && m.draftRerolls + ' Awakening reroll' + (m.draftRerolls > 1 ? 's' : '') + ' per run',
+    ].filter(Boolean);
   }
 
   // ---- home and grade
@@ -752,8 +780,8 @@
     }
 
     main.append(h('h3', { text: 'Talents' }));
-    const m = acct.mods;
-    main.append(h('p', { class: 'small muted', text: 'Talent ranks are sold by the vendor after each run. They apply from the next run on. Now: drills cost x' + m.drillCostMult.toFixed(2) + ', start stats x' + m.statFloorMult.toFixed(2) + ', ' + Math.round(m.chaseChance * 100) + '% chase attunement, +' + m.startSp + ' starting SP.' }));
+    const now = talentSummary(acct.mods);
+    main.append(h('p', { class: 'small muted', 'data-id': 'talent-now', text: 'Talent ranks are sold by the vendor after each run. They apply from the next run on. Now: ' + (now.length ? now.join(', ') : 'none yet') + '.' }));
     const tl = h('div', { class: 'card' });
     acct.talents.forEach((t) => {
       const def = C.talents.find((x) => x.id === t.id);
@@ -1209,9 +1237,9 @@
   function spGained(sp0, cycle0, r) {
     const s = run.state, total = s.sp - sp0;
     if (!r.ok || total <= 0) return [];
-    const win = Math.min(total, r.won ? r.sp || 0 : 0);
+    const win = Math.min(total, r.sp || 0);   // a lost fight's r.sp is the Grudge Match talent's
     const gains = [];
-    if (win > 0) gains.push({ n: win, why: 'rank win', cycle: cycle0 });
+    if (win > 0) gains.push({ n: win, why: r.won ? 'rank win' : 'Grudge Match', cycle: cycle0 });
     if (total > win) gains.push({ n: total - win, why: s.cycle > cycle0 ? 'new cycle' : 'gained', cycle: s.cycle });
     gains.forEach((g) => { log('Cycle ' + g.cycle + ': +' + g.n + ' SP (' + g.why + ')'); ui.spGains.push(g); });
     return gains;
@@ -1242,7 +1270,9 @@
     const r = run.cmd('drill', stat);
     if (r.ok) {
       ui.last = r; ui.flash = { stat, tier: r.tier }; ui.drillPop = { stat, tier: r.tier, gain: r.gain };
-      log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : ''));
+      log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : '') +
+        (r.shielded ? ' (Second Wind stopped an injury)' : '') + (r.free ? ' (free: Momentum)' : ''));
+      if (r.shielded) toast('Second Wind! The injury was prevented.');
       milestones(r);
       if (r.injury) {
         toast(r.injury.back ? 'Injured! Back in cycle ' + r.injury.back + '.' : 'Injured! The run is over.');
@@ -1279,6 +1309,7 @@
     after(r);
   }
   function discard() { const r = run.cmd('discard'); if (r.ok) log('Discarded a tree offer'); after(r); }
+  function reroll() { const r = run.cmd('reroll'); if (r.ok) log('Second Look: rerolled an Awakening'); after(r); }
   function spend(slot) {
     const r = run.cmd('spend', slot);
     if (r.ok) { log('Bought ' + r.node + (r.statGain ? ' (+' + num(r.statGain) + ')' : '')); milestones(r); }

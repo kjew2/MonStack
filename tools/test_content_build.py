@@ -108,6 +108,31 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(2, self.build(lambda src: None, ["--baseline", os.path.join(ROOT, "nope")]))
 
 
+
+class TalentRules(unittest.TestCase):
+    """validate_talents (specs/18 section 4): per_rank ranges of the talent effects. Mirrors ContentDb.BuildAccount."""
+
+    def errors(self, effect, per_rank, max_rank=2):
+        errs = cb.Errors()
+        cb.validate_talents({"constants": [], "talents": [{"id": "x", "effect": effect, "per_rank": per_rank, "max_rank": max_rank,
+                                          "cost_base": 1, "cost_step": 1}]}, errs)
+        return errs
+
+    def test_in_range_passes(self):
+        for eff, p in [("rest_energy", 10), ("fail_chance", -0.02), ("super_chance", 0.03), ("shard_mult", 0.1),
+                       ("momentum", 1), ("loss_sp", 1), ("specialist", 0.15), ("tree_slots", 1), ("injury_shield", 1),
+                       ("last_cycle_ap", 1), ("milestone_mult", -0.1), ("draft_rerolls", 1)]:
+            self.assertEqual([], self.errors(eff, p), eff)
+
+    def test_out_of_range_fails(self):
+        for eff, p in [("rest_energy", -1), ("fail_chance", 0.02), ("super_chance", 0.6), ("shard_mult", -0.1),
+                       ("momentum", 0.5), ("loss_sp", -1), ("specialist", 1.5), ("tree_slots", 1.5), ("injury_shield", -1),
+                       ("last_cycle_ap", 0.5), ("milestone_mult", -0.5), ("draft_rerolls", 2.5)]:
+            errs = self.errors(eff, p)
+            self.assertEqual(1, len(errs), eff)
+            self.assertIn("E043 talents[x]", errs[0])
+
+
 class RankEnemies(unittest.TestCase):
     """validate_rank_enemies (specs/14 section 5): refs, the rank budget and empty pools."""
 

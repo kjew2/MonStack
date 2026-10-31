@@ -3,3 +3,15 @@ frugal_drills,talent.frugal_drills.name,talent.frugal_drills.desc,common,drill_c
 strong_stock,talent.strong_stock.name,talent.strong_stock.desc,rare,stat_floor,0.1,3,30,30,Placeholder
 chase_instinct,talent.chase_instinct.name,talent.chase_instinct.desc,epic,chase_chance,0.1,3,50,50,"each rank adds 10 points to the odds a run is attuned to its in-run chase tree (CHASE_BASE_CHANCE + 3 x 0.1 = half the runs at max). Placeholder"
 head_start,talent.head_start.name,talent.head_start.desc,common,start_sp,1,3,25,25,Placeholder
+deep_rest,talent.deep_rest.name,talent.deep_rest.desc,common,rest_energy,10,3,20,20,"talent catalog v2 (#105, from the spike #101): numbers are placeholders"
+steady_hands,talent.steady_hands.name,talent.steady_hands.desc,common,fail_chance,-0.02,3,20,20,Placeholder
+scavenger,talent.scavenger.name,talent.scavenger.desc,common,shard_mult,0.1,5,15,15,Placeholder
+super_set,talent.super_set.name,talent.super_set.desc,rare,super_chance,0.03,3,30,30,Placeholder
+momentum,talent.momentum.name,talent.momentum.desc,rare,momentum,1,1,60,0,Placeholder
+grudge_match,talent.grudge_match.name,talent.grudge_match.desc,rare,loss_sp,1,2,40,40,Placeholder
+specialist,talent.specialist.name,talent.specialist.desc,rare,specialist,0.15,2,40,40,"Placeholder; a trade-off: the highest stat grows faster, every other stat slower"
+fifth_slot,talent.fifth_slot.name,talent.fifth_slot.desc,epic,tree_slots,1,1,120,0,Placeholder
+second_wind,talent.second_wind.name,talent.second_wind.desc,epic,injury_shield,1,1,80,0,Placeholder
+overtime,talent.overtime.name,talent.overtime.desc,epic,last_cycle_ap,1,2,60,60,Placeholder
+early_bloom,talent.early_bloom.name,talent.early_bloom.desc,epic,milestone_mult,-0.1,2,70,70,Placeholder
+second_look,talent.second_look.name,talent.second_look.desc,epic,draft_rerolls,1,1,70,0,Placeholder
