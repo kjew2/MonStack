@@ -34,6 +34,20 @@ namespace IdleRng.Web
         [JSExport] public static string RunState() => GuardRun(h => h.State());
         [JSExport] public static string RunCmd(string name, string argsJson) => GuardRun(h => h.Cmd(name, argsJson));
 
+        /// <summary>
+        /// The wasm golden check (specs/08 section 10.1, issue #122): runs every generator of the bot CLI's `golden` verb
+        /// (IdleRng.Bots.Golden.GoldenFiles.All: battle, training-run, gauntlet and tower vectors) on the loaded content and returns
+        /// {"files":[{"name","text"}]}, the text each golden/ file must hold. web/wasm/test/golden.js compares it with golden/, so a
+        /// browser build that resolves a fight differently from .NET fails check.sh. Read only: the account is untouched.
+        /// </summary>
+        [JSExport]
+        public static string GoldenVectors() => GuardRun(h =>
+        {
+            var w = new JsonOut().Obj().Key("files").Arr();
+            foreach (var e in IdleRng.Bots.Golden.GoldenFiles.All) w.Obj().P("name", e.FileName).P("text", e.Generate(h.Db)).EndObj();
+            return w.EndArr().EndObj().ToString();
+        });
+
         private static string GuardRun(Func<RunHost, string> f)
         {
             if (_run == null) return JsonOut.Error("run engine not initialised");

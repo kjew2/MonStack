@@ -2,7 +2,7 @@
 
 The browser UI in `web/` plays through the C# `IdleRng.Sim` compiled to WebAssembly. `src/IdleRng.Web` is an **adapter** over `AccountOps`, `TrainingRun`, `ContentDb` and the account save in `IdleRng.Runtime`: it maps them onto the JSON shapes below and adds no game rules. Changes to the core stay in the core; this file changes only when the bridge does. (The idle game's bridge, `Init`/`Advance`/`State`/`Query`/`Cmd`, was removed with that game at `specs/13` T7.)
 
-Build: `web/wasm/build.sh` (packs `Content/*.json` with `pack-content.js`, publishes `src/IdleRng.Web`, writes `web/wasm/dist/`). Test: `node web/wasm/test/run-trainer.js` and `node web/wasm/test/flows.js`. Republish the phone artifact: `web/wasm/publish-artifact.sh` (builds, then prints the Artifact publish call as JSON). The build writes `dist/build-info.json` (commit, dirty flag, date), which the page header shows (`#build`, "dev" without it).
+Build: `web/wasm/build.sh` (packs `Content/*.json` with `pack-content.js`, publishes `src/IdleRng.Web`, writes `web/wasm/dist/`). Test: `node web/wasm/test/run-trainer.js`, `node web/wasm/test/flows.js` and `node web/wasm/test/golden.js` (the golden check below). Republish the phone artifact: `web/wasm/publish-artifact.sh` (builds, then prints the Artifact publish call as JSON). The build writes `dist/build-info.json` (commit, dirty flag, date), which the page header shows (`#build`, "dev" without it).
 
 `web/engine.js` is the loader: `IdleEngine.loadWasm(opts)` fetches `wasm/dist/_framework/dotnet.js`, starts the runtime and returns `{ host, contentPack }`; if loading fails it rejects with a message the UI shows (bundle not built, page opened as a file, or the load error). `web/run-engine.js` builds the facade on top.
 
@@ -44,6 +44,10 @@ A **tower fight** (`runTower`'s `final`, `towerFloor`) is the `fight` shape (no 
 - `towerTips[key]`: Dungeon playback tips (`BattleText.TowerTips`, `specs/21` section 8): `entropy`, `vent.<kind>` for each vent kind, `corruption` and `phase.<kind>` for each boss phase kind.
 
 `web/run-engine.js` wraps this (`RunEngine.create`) and keeps the whole save in `localStorage['idle-rng-account-v1']`. A save that does not load is kept aside under `idle-rng-account-v1-unloadable-<ms>` (the oldest and the two newest are kept, `specs/06` section 5).
+
+## Golden check
+
+`GoldenVectors() : string` (needs `RunInit`) is for the tests, not the UI: it runs every generator of the bot CLI's `golden` verb (`IdleRng.Bots.Golden.GoldenFiles.All`: battle, training-run, gauntlet and tower vectors, `specs/09` section 3) on the loaded content and returns `{"files":[{"name","text"}]}`, the text each `golden/` file must hold. It reads nothing from the account and changes nothing. `web/wasm/test/golden.js` (in `check.sh`) calls it on a bare page and compares each `text` byte for byte with `golden/`, so a WebAssembly build that resolves a fight differently from .NET fails the check (`specs/08` section 10.1, issue #122). For it, `IdleRng.Web` references `IdleRng.Bots` as a library (`ValidateExecutableReferencesMatchSelfContained` off; its `Main` never runs in the browser), which adds about 130 KB raw to `dist/`.
 
 ## Not exposed yet
 
