@@ -595,6 +595,38 @@
       "text": "Survivor"
     },
     {
+      "key": "tree.lifeblood.name",
+      "text": "Lifeblood"
+    },
+    {
+      "key": "tree.berserker.name",
+      "text": "Berserker"
+    },
+    {
+      "key": "tree.runeweaver.name",
+      "text": "Runeweaver"
+    },
+    {
+      "key": "tree.hermit.name",
+      "text": "Hermit"
+    },
+    {
+      "key": "tree.duelist.name",
+      "text": "Duelist"
+    },
+    {
+      "key": "tree.stonewall.name",
+      "text": "Stonewall"
+    },
+    {
+      "key": "tree.quickstep.name",
+      "text": "Quickstep"
+    },
+    {
+      "key": "tree.lucky_star.name",
+      "text": "Lucky Star"
+    },
+    {
       "key": "tree.tome_of_echoes.name",
       "text": "Tome of Echoes"
     },
@@ -1861,6 +1893,134 @@
     {
       "key": "mskill.major_arcana.desc",
       "text": "Duo capstone. When hit: heal self for {power:pct} of max HP."
+    },
+    {
+      "key": "mskill.body_slam.name",
+      "text": "Body Slam"
+    },
+    {
+      "key": "mskill.body_slam.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.bloodwell.name",
+      "text": "Bloodwell"
+    },
+    {
+      "key": "mskill.bloodwell.desc",
+      "text": "Chase trait. When hit: heal self for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.cleave.name",
+      "text": "Cleave"
+    },
+    {
+      "key": "mskill.cleave.desc",
+      "text": "Damage all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.berserk.name",
+      "text": "Berserk"
+    },
+    {
+      "key": "mskill.berserk.desc",
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
+    },
+    {
+      "key": "mskill.rune_bolt.name",
+      "text": "Rune Bolt"
+    },
+    {
+      "key": "mskill.rune_bolt.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.arcane_spark.name",
+      "text": "Arcane Spark"
+    },
+    {
+      "key": "mskill.arcane_spark.desc",
+      "text": "Chase trait. Every basic attack: extra hit for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.spirit_lash.name",
+      "text": "Spirit Lash"
+    },
+    {
+      "key": "mskill.spirit_lash.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.inner_peace.name",
+      "text": "Inner Peace"
+    },
+    {
+      "key": "mskill.inner_peace.desc",
+      "text": "Chase trait. When hit: heal self for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.lunge.name",
+      "text": "Lunge"
+    },
+    {
+      "key": "mskill.lunge.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.precision.name",
+      "text": "Precision"
+    },
+    {
+      "key": "mskill.precision.desc",
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
+    },
+    {
+      "key": "mskill.shield_bash.name",
+      "text": "Shield Bash"
+    },
+    {
+      "key": "mskill.shield_bash.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.granite_skin.name",
+      "text": "Granite Skin"
+    },
+    {
+      "key": "mskill.granite_skin.desc",
+      "text": "Chase trait. Permanent +{power:pct} {stat}."
+    },
+    {
+      "key": "mskill.rush.name",
+      "text": "Rush"
+    },
+    {
+      "key": "mskill.rush.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.momentum.name",
+      "text": "Momentum"
+    },
+    {
+      "key": "mskill.momentum.desc",
+      "text": "Chase trait. Every basic attack: +{power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "mskill.coin_toss.name",
+      "text": "Coin Toss"
+    },
+    {
+      "key": "mskill.coin_toss.desc",
+      "text": "Damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.windfall.name",
+      "text": "Windfall"
+    },
+    {
+      "key": "mskill.windfall.desc",
+      "text": "Chase trait. On crit: +{power:pct} {stat} for {duration} turns."
     }
   ]
 }

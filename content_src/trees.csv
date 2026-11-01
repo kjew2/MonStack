@@ -15,6 +15,14 @@ overclock,tree.overclock.name,generic,spd,300,,,,
 fortune,tree.fortune.name,generic,luk,300,,,,
 battle_instinct,tree.battle_instinct.name,generic,,500,,,,
 survivor,tree.survivor.name,generic,,500,,,,
+lifeblood,tree.lifeblood.name,generic,hp,300,,,,
+berserker,tree.berserker.name,generic,str,300,,,,
+runeweaver,tree.runeweaver.name,generic,int,300,,,,
+hermit,tree.hermit.name,generic,wis,300,,,,
+duelist,tree.duelist.name,generic,dex,300,,,,
+stonewall,tree.stonewall.name,generic,def,300,,,,
+quickstep,tree.quickstep.name,generic,spd,300,,,,
+lucky_star,tree.lucky_star.name,generic,luk,300,,,,
 tome_of_echoes,tree.tome_of_echoes.name,book,,,,,,sprite's book tree (Arcane Overflow)
 tidal_codex,tree.tidal_codex.name,book,,,,,,placeholder: slime's book tree (Abyssal Bloom)
 ember_codex,tree.ember_codex.name,book,,,,,,placeholder: drake's book tree (Inferno Sovereign)
