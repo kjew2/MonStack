@@ -75,7 +75,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(TrainingRun.StateHash(run), Is.EqualTo(TrainingRun.StateHash(dRun)));
             var f = (FinishResult)Do(viaCmd, "finishRun", 99.0);
             var df = AccountOps.FinishRun(Db, direct, 99);
-            Assert.That(f.Entry.RunHash, Is.EqualTo(df.Entry.RunHash));
+            Assert.That((f.Entry.Grade, f.Entry.GauntletFloor, f.Entry.Stats.Str), Is.EqualTo((df.Entry.Grade, df.Entry.GauntletFloor, df.Entry.Stats.Str)));
             Assert.That(f.Shards, Is.EqualTo(df.Shards));
             viaCmd.Shards = direct.Shards = 10_000;
             var bought = (OfferBought)Do(viaCmd, "buyOffer", 0);

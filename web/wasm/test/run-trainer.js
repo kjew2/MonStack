@@ -70,7 +70,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^v\d+\.(\d+|\?) · [0-9a-f]{4,}(\+dirty)?$/.test(stamp), 'the header shows the version and commit: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 9, 'a new account owns only the starter species (slime), schema v9');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 10, 'a new account owns only the starter species (slime), schema v10');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -220,11 +220,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/Rest/.test(await text('[data-id=result]')), 'a rest result appears');
   await shot('02-train');
 
-  // ---- mid-run reload restores the same run (replay save)
+  // ---- mid-run reload restores the same run (saved as its state, save v10)
   const before = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.dtile .val')].map((e) => e.textContent).join('|') }));
   const saved = await readAccount();
   check(saved && saved.Kind === 'monster_account', 'the save is the C# account save');
-  check(saved && saved.ActiveRun && saved.ActiveRun.SpeciesId === 'drake' && saved.ActiveRun.Log.length === 3, 'the active run is stored as species + seed + command log (' + (saved && saved.ActiveRun && saved.ActiveRun.Log.length) + ' commands)');
+  check(saved && saved.Run && saved.Run.SpeciesId === 'drake' && saved.Run.Log === undefined && (saved.Run.Drills || 0) + (saved.Run.Rests || 0) >= 1, 'the active run is stored as its state, with no command log (specs/27 section 3.5)');
   await page.reload();
   await act('drill-str').waitFor({ timeout: 90000 });
   const after = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.dtile .val')].map((e) => e.textContent).join('|') }));
@@ -339,7 +339,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/current/.test(rungs[5].cls) && rungs.filter((r) => /current/.test(r.cls)).length === 1 && !rungs.some((r) => /beaten/.test(r.cls)),
     'rank E is the next fight and nothing is beaten yet');
   check(rungs.every((r) => r.name && !/^Rank /.test(r.name) && r.skills >= 1 && r.sprite), 'each rung shows its rolled opponent, a sprite and its skills: ' + rungs.map((r) => r.name).join(', '));
-  const savedLadder = (await readAccount()).ActiveRun.Ladder;
+  const savedLadder = (await readAccount()).Run.Ladder;
   check(Array.isArray(savedLadder) && savedLadder.length === 6, 'the save keeps the rolled ladder: ' + JSON.stringify(savedLadder));
   await page.locator('[data-id="ladder-s"] [data-id^="oppskill-"]').first().click();
   const oppTip = await tip.innerText();
@@ -460,17 +460,18 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await shot('05b-wheel-landed');
   const sealedAcct = await readAccount();
   const sealed = sealedAcct && sealedAcct.Account.Vault[0];
-  check(sealed && sealed.LegacyTitle && legacy.startsWith(sealed.GauntletCleared ? 'All ' : 'Floor ' + sealed.GauntletFloor + ':'), 'the title matches the floor stored on the Vault entry (' + (sealed && sealed.GauntletFloor) + ')');
-  check(sealed && (await page.locator('[data-id=climb-reel]').getAttribute('data-hash')) === sealed.GauntletHash, 'the wheel\'s replayed climb hashes the same as the sealed gauntlet');
+  check(sealed && sealed.LegacyTitle && legacy.startsWith(sealed.GauntletKiller == null ? 'All ' : 'Floor ' + sealed.GauntletFloor + ':'), 'the title matches the floor stored on the Vault entry (' + (sealed && sealed.GauntletFloor) + ')');
+  check(sealed && sealed.GauntletHash === undefined && sealed.Seed === undefined && /^[0-9a-f]{64}$/.test(await page.locator('[data-id=climb-reel]').getAttribute('data-hash')),
+    'the wheel shows the climb the seal ran; the entry keeps only its result (no gauntlet hash or seed)');
   const fell = page.locator('.floor.landed');
-  check((await fell.count()) === 1 && ((sealed && sealed.GauntletCleared) || /✗/.test(await fell.innerText())), 'the landed row marks the floor that beat it');
+  check((await fell.count()) === 1 && ((sealed && sealed.GauntletKiller == null) || /✗/.test(await fell.innerText())), 'the landed row marks the floor that beat it');
   await act('climb-continue').click();
   const grade = await text('[data-id=grade]');
   check(/^[A-Z]$/.test(grade), 'grade screen shows the rank reached: ' + grade);
   const acct = await readAccount();
   const entry = acct && acct.Account.Vault[0];
-  check(acct && acct.Account.Vault.length === 1 && entry.SpeciesId === 'drake' && entry.Log === undefined && entry.Trees.length > 0 && acct.ActiveRun === null, 'sealing stored the monster as its result (no replay log) and cleared the active run');
-  check(entry && entry.Grade === grade.toLowerCase() && /^[0-9a-f]{64}$/.test(entry.RunHash), 'entry grade and run hash match');
+  check(acct && acct.Account.Vault.length === 1 && entry.SpeciesId === 'drake' && entry.Log === undefined && entry.Trees.length > 0 && acct.Run === undefined, 'sealing stored the monster as its result (no replay log) and cleared the active run');
+  check(entry && entry.Grade === grade.toLowerCase() && entry.RunHash === undefined, 'entry grade matches; no run hash is kept');
   const payout = +(/\+(\d+) Training Shards/.exec(await text('[data-id=payout]')) || [])[1];
   check(payout > 0 && acct.Account.Shards === SHARDS0 + payout, 'the run paid ' + payout + ' shards into the account');
   check((await text('[data-id=grade-title]')) === legacy, 'the grade screen shows the Legacy Title');
@@ -531,7 +532,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('start').waitFor({ timeout: 90000 });
   check((await page.locator('[data-id=vendor-offer]').count()) === 0 && (await act('vendor-done').count()) === 0, 'a reload on the vendor screen opens home, not the vendor');
   const closed = (await readAccount()).Account;
-  check(closed.Vendor === null && closed.Talents[talentId] === afterBuy.Account.Talents[talentId], 'the reload closed the vendor (none saved) and kept the bought rank');
+  check(closed.Vendor == null && closed.Talents[talentId] === afterBuy.Account.Talents[talentId], 'the reload closed the vendor (none saved) and kept the bought rank');
   await homeTab('talents');
   check(new RegExp('^' + afterBuy.Account.Talents[talentId] + '/').test(await text('[data-id=talent-' + talentId + '] .tag.num')), 'the talent list shows the new rank');
   // ---- the talent loadout (issue #106): an owned talent can be switched off for the next run, free, and back on
@@ -555,7 +556,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
 
   // ---- the Dungeon (specs/21 section 8): one attempt with the sealed monster, paid and saved by the engine
   const towerShards0 = (await readAccount()).Account.Shards;
-  const ticketsSaved = (await readAccount()).Account.Tower.Tickets;
+  const ticketsSaved = (await readAccount()).Account.Tower.Tickets || 0;   // 0 is left out of the save
   await homeTab('dungeon');
   const ticketsBefore = /^(\d+) tickets? · (\d+)\/(\d+) pieces/.exec(await text('[data-id=tower-tickets]'));
   check(!!ticketsBefore && +ticketsBefore[1] === ticketsSaved + 1, 'home shows the Dungeon card with the tickets held plus today\'s free one: ' + (await text('[data-id=tower-tickets]')));
@@ -623,7 +624,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const tower = await readAccount();
   check(tower.Account.Tower.AttemptsUsed === 1 && tower.Account.Tower.Day >= 0 && tower.Account.Tower.GrantDay === tower.Account.Tower.Day,
     'the attempt is counted and saved (day ' + tower.Account.Tower.Day + ')');
-  check(tower.Account.Tower.Tickets === ticketsSaved, 'the free ticket was granted and one ticket spent (' + tower.Account.Tower.Tickets + ' left)');
+  check((tower.Account.Tower.Tickets || 0) === ticketsSaved, 'the free ticket was granted and one ticket spent (' + (tower.Account.Tower.Tickets || 0) + ' left)');
   check((await text('[data-id=shards]')).startsWith(tower.Account.Shards + ' ') && tower.Account.Shards >= towerShards0,
     'the tower paid ' + (tower.Account.Shards - towerShards0) + ' shards: ' + (await text('[data-id=tower-shards]')));
   const shown = /^\+(\d+) Training Shards/.exec(await text('[data-id=tower-shards]'));
@@ -644,18 +645,18 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await homeTab('raise');
   await act('start').click();
   await act('drill-str').waitFor();
-  check((await readAccount()).Account.Vendor === null, 'the next run starts with no vendor');
+  check((await readAccount()).Account.Vendor == null, 'the next run starts with no vendor');
   const frugal = afterBuy.Account.Talents.frugal_drills || 0;
   const costCell = () => page.locator('[data-id=odds] .o-cost').textContent();
   if (frugal > 0) check((await costCell()) === 'Energy -' + (20 - frugal), 'Frugal Drills cut the next run\'s drill cost: ' + (await costCell()));
   await act('tab-log').click();
   await act('abandon').click();
   await act('abandon-no').click();
-  check((await readAccount()).ActiveRun !== null, 'declining the abandon prompt keeps the run');
+  check((await readAccount()).Run !== undefined, 'declining the abandon prompt keeps the run');
   await act('abandon').click();
   await act('abandon-yes').click();
   await act('start').waitFor();
-  check(((await readAccount()).ActiveRun) === null, 'abandoning ends the run without sealing');
+  check(((await readAccount()).Run) === undefined, 'abandoning ends the run without sealing');
   await homeTab('vault');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'and the Vault is unchanged');
 
@@ -718,7 +719,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 9 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v9 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 10 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => !e.Locked), 'dismantling saved the account as v10 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap, 'back at the cap');
   const vw = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -734,7 +735,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     const tpl = base.Account.Vault[0];
     const strKey = Object.keys(tpl.Stats).find((k) => k.toLowerCase() === 'str');
     const mk = (species, grade, rank, floor, title, str, locked, i) => Object.assign(JSON.parse(JSON.stringify(tpl)), {
-      SpeciesId: species, Grade: grade, RankIndex: rank, GauntletFloor: floor, GauntletCleared: floor > 100, LegacyTitle: title,
+      SpeciesId: species, Grade: grade, RankIndex: rank, GauntletFloor: floor, LegacyTitle: title,
       GauntletKiller: floor > 100 || !title ? null : tpl.GauntletKiller, Locked: locked, SealedUtcMs: 1790000000000 + i * 86400000,
       Stats: Object.assign({}, tpl.Stats, { [strKey]: str }) });
     base.Account.Vault = [
@@ -817,7 +818,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     const second = page.locator('[data-id=vault-entry]').nth(1);
     check((await second.locator('[data-act^="lock-"]').getAttribute('data-act')) === 'lock-2', 'the second filtered card\'s lock button names Vault index 2');
     await second.locator('[data-act^="lock-"]').click();
-    const locks = (await readAccount()).Account.Vault.map((e) => e.Locked);
+    const locks = (await readAccount()).Account.Vault.map((e) => !!e.Locked);   // false is left out of the save
     check(same(locks, [false, false, true, true, false, false]), 'locking it under the filter locked Vault entry 2 only: ' + locks.join(','));
     await page.selectOption('[data-act=vault-species]', 'drake');
     check(same(await order(), [4, 1]), 'filtered to the two Drakes');

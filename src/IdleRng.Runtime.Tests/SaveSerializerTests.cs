@@ -42,7 +42,8 @@ namespace IdleRng.Runtime.Tests
         {
             var a = AccountOps.New(TestContent.Db, value);
             var (_, body) = SaveSerializer.Decode(AccountSave.Encode(a));
-            Assert.That((string)body["Account"]["Seed"], Is.EqualTo(value.ToString("x16")));
+            if (value == 0) Assert.That(body["Account"]["Seed"], Is.Null, "a seed of 0 is the starting value, so it is left out");
+            else Assert.That((string)body["Account"]["Seed"], Is.EqualTo(value.ToString("x16")));
             Assert.That(AccountSave.Decode(TestContent.Db, AccountSave.Encode(a)).Seed, Is.EqualTo(value));
         }
 

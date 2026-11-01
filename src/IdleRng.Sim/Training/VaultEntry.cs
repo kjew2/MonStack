@@ -34,9 +34,6 @@ namespace IdleRng.Sim.Training
 
         public string SpeciesId { get; set; }
 
-        /// <summary>The run's seed. The gauntlet wheel replays the floors with it (GauntletSim.Run(c, Fighter(c), Seed)).</summary>
-        public ulong Seed { get; set; }
-
         /// <summary>Skill books the run brought in (used or not).</summary>
         public List<string> Books { get; set; } = new List<string>();
 
@@ -52,26 +49,24 @@ namespace IdleRng.Sim.Training
         public MonsterStats Stats { get; set; } = new MonsterStats();
         public List<VaultTree> Trees { get; set; } = new List<VaultTree>();
 
-        /// <summary>Hash of the finished run (TrainingRun.StateHash), taken at sealing: the run's fingerprint.</summary>
-        public string RunHash { get; set; }
-
         /// <summary>
-        /// The end-of-run gauntlet (specs/19), run at sealing: the floor the monster fell on (GAUNTLET_FLOORS + 1 when it cleared
-        /// the tower), the gauntlet enemy that beat it (null when cleared), the Legacy Title's string key (its text may contain
-        /// {killer}) and the result hash. The wheel shows the floors once, from the seal (FinishResult.Gauntlet); nothing replays them.
+        /// The end-of-run gauntlet's result (specs/19), run at sealing: the floor the monster fell on (GAUNTLET_FLOORS + 1 when it
+        /// cleared the tower), the gauntlet enemy that beat it (null when cleared) and the Legacy Title's string key (its text may
+        /// contain {killer}). Only the result is kept: the wheel shows the floors once, from the seal (kj 2026-11-01).
         /// </summary>
         public int GauntletFloor { get; set; }
-        public bool GauntletCleared { get; set; }
         public string GauntletKiller { get; set; }
         public string LegacyTitle { get; set; }
-        public string GauntletHash { get; set; }
+
+        /// <summary>Cleared the whole gauntlet: it has a result and no killer. A method, so it is not saved.</summary>
+        public bool ClearedGauntlet() => LegacyTitle != null && GauntletKiller == null;
 
         /// <summary>Wall-clock time the run was sealed. The sim has no clock: the caller supplies it (0 = not recorded).</summary>
         public long SealedUtcMs { get; set; }
 
         /// <summary>
         /// The player's lock (specs/18 section 7): a locked entry cannot be dismantled. Account state, not part of the sealed
-        /// monster: it is not in RunHash and toggles freely (AccountOps.SetLocked).
+        /// monster: it toggles freely (AccountOps.SetLocked), and the server keeps it in the Vault index, not the entry (specs/27).
         /// </summary>
         public bool Locked { get; set; }
 
@@ -101,13 +96,13 @@ namespace IdleRng.Sim.Training
 
             var e = new VaultEntry
             {
-                Id = id, SpeciesId = s.SpeciesId, Seed = s.Seed, End = s.End, RankIndex = s.Rank, Grade = c.FightRanks[s.Rank].Id,
+                Id = id, SpeciesId = s.SpeciesId, End = s.End, RankIndex = s.Rank, Grade = c.FightRanks[s.Rank].Id,
                 Cycles = s.Cycle, FightsFought = s.FightsFought, FightsWon = s.FightsWon, Stats = s.Stats.Clone(),
-                RunHash = TrainingRun.StateHash(s), SealedUtcMs = sealedUtcMs,
+                SealedUtcMs = sealedUtcMs,
             };
-            // Books brought into the run = unused ones now + the ones the log used.
+            // Books brought into the run = unused ones now + the ones used.
             e.Books.AddRange(s.Books);
-            foreach (var l in s.Log) if (l.Kind == RunCommandKind.UseBook) e.Books.Add(l.Book);
+            e.Books.AddRange(s.BooksUsed);
             foreach (var slot in s.Slots)
             {
                 if (slot == null) continue;
@@ -116,10 +111,8 @@ namespace IdleRng.Sim.Training
             }
             var g = Gauntlet.GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
             e.GauntletFloor = g.FloorReached;
-            e.GauntletCleared = g.Cleared;
             e.GauntletKiller = g.KillerId;
             e.LegacyTitle = g.TitleKey;
-            e.GauntletHash = g.Hash;
             gauntlet = g;
             return e;
         }

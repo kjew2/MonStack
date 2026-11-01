@@ -41,7 +41,6 @@ namespace IdleRng.Sim.Tests
             var e = Vault.Seal(Db, s, 1234);
 
             Assert.That(e.SpeciesId, Is.EqualTo(s.SpeciesId));
-            Assert.That(e.Seed, Is.EqualTo(s.Seed));
             Assert.That(e.Grade, Is.EqualTo(Db.FightRanks[s.Rank].Id));
             Assert.That(e.RankIndex, Is.EqualTo(s.Rank));
             Assert.That(e.End, Is.EqualTo(s.End));
@@ -51,7 +50,7 @@ namespace IdleRng.Sim.Tests
             foreach (var id in StatIds.Trained) Assert.That(e.Stats.Get(id), Is.EqualTo(s.Stats.Get(id)));
             Assert.That(e.Stats, Is.Not.SameAs(s.Stats), "the entry owns its stats");
             Assert.That(e.Trees.Select(t => (t.TreeId, t.Bought)), Is.EqualTo(s.Slots.Where(t => t != null).Select(t => (t.TreeId, t.Bought))));
-            Assert.That(e.RunHash, Is.EqualTo(TrainingRun.StateHash(s)));
+            Assert.That(typeof(VaultEntry).GetProperty("RunHash"), Is.Null, "only the result is kept (save v10)");
         }
 
         [Test]
@@ -109,7 +108,7 @@ namespace IdleRng.Sim.Tests
         }
     
         [Test]
-        public void Seal_RunsTheGauntlet_AndTheWheelCanReplayIt()
+        public void Seal_RunsTheGauntlet_KeepsTheResult_AndHandsBackTheFloors()
         {
             var db = TestContent.Db;
             var s = TrainingRun.Start(db, "drake", 6);
@@ -120,10 +119,12 @@ namespace IdleRng.Sim.Tests
                 else TrainingRun.Rest(db, s);
             }
             var e = Vault.Seal(db, s);
-            var g = IdleRng.Sim.Gauntlet.GauntletSim.Run(db, e.Fighter(db), e.Seed);
-            Assert.That(e.GauntletHash, Is.EqualTo(g.Hash));
+            var g = IdleRng.Sim.Gauntlet.GauntletSim.Run(db, TrainingRun.MonsterFighter(db, s), s.Seed);
+            Vault.Seal(db, s, 0, -1, out var shown);
+            Assert.That(shown.Hash, Is.EqualTo(g.Hash), "the seal hands back the gauntlet it ran, for the wheel");
+            Assert.That(shown.Floors.Count, Is.EqualTo(g.Floors.Count));
             Assert.That(e.GauntletFloor, Is.EqualTo(g.FloorReached));
-            Assert.That(e.GauntletCleared, Is.EqualTo(g.Cleared));
+            Assert.That(e.ClearedGauntlet(), Is.EqualTo(g.Cleared));
             Assert.That(e.GauntletKiller, Is.EqualTo(g.KillerId));
             Assert.That(e.LegacyTitle, Is.EqualTo(IdleRng.Sim.Gauntlet.GauntletSim.Title(db, e.GauntletFloor).TitleKey));
             Assert.That(e.GauntletFloor, Is.GreaterThanOrEqualTo(1));

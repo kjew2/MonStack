@@ -194,7 +194,7 @@ namespace IdleRng.Sim.Tests
             })
                 Assert.That(TrainingRun.StateHash(Start(m)), Is.Not.EqualTo(plain));
             Assert.That(TrainingRun.StateHash(Start(new RunModifiers { EchoFrac = 0.25 })), Is.Not.EqualTo(TrainingRun.StateHash(Start(new RunModifiers { EchoFrac = 0.5 }))));
-            Assert.That(TrainingRun.HashVersion, Is.EqualTo(8));
+            Assert.That(TrainingRun.HashVersion, Is.EqualTo(9));
             foreach (var m in new[] { new RunModifiers { RestEnergyMult = -0.1 }, new RunModifiers { GlassCannonBonus = -1 }, new RunModifiers { EchoFrac = 1.5 } })
                 Assert.Throws<ArgumentException>(() => Start(m));
         }

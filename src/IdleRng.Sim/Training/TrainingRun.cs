@@ -26,7 +26,8 @@ namespace IdleRng.Sim.Training
         /// exactly as before, version 6 (the rank ladder) or, for a legacy run with an empty Ladder, version 5, so saved runs and
         /// Vault entries keep their hashes.
         /// </summary>
-        public const int HashVersion = 8;
+        public const int HashVersion = 9;   // v9: the state only, no command log (save v10, specs/27 section 3.5)
+        static readonly byte[] StateHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v9");
         static readonly byte[] HashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v8");
         static readonly byte[] CatalogHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v7");
         static readonly byte[] LadderHashMagic = Encoding.ASCII.GetBytes("IDLERNG-RUNHASH-v6");
@@ -318,6 +319,7 @@ namespace IdleRng.Sim.Training
             if (Held(s, tree) || Pending(s, tree)) throw new InvalidOperationException($"{tree} is already slotted or offered");
             s.Books.RemoveAt(i);
             s.Offers.Add(new TreeOffer { Source = OfferSource.Book, Trees = { tree } });
+            s.BooksUsed.Add(bookId);
             s.Log.Add(new RunCommand(RunCommandKind.UseBook) { Book = bookId });
             Reconcile(c, s, null);
         }
@@ -916,14 +918,23 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>
-        /// Lowercase hex SHA-256 over a canonical encoding of the run (specs/03 section 1). Bump HashVersion on change. Version 6
-        /// is version 5 plus the ladder at the end; a legacy run (empty ladder) keeps the exact version 5 bytes.
+        /// Lowercase hex SHA-256 over a canonical encoding of the run's state (specs/03 section 1). Bump HashVersion on change.
+        /// Version 9 leaves out the command log: a run saved as its state (save v10) hashes the same after a reload.
         /// </summary>
-        public static string StateHash(RunState s)
+        public static string StateHash(RunState s) => Hash(s, false);
+
+        /// <summary>
+        /// The hash a pre-v10 save stored with its replay recipe (versions 5 to 8: the state plus the command log), so such a
+        /// save's run is checked once more when it is replayed on load. Version 6 is version 5 plus the ladder at the end; a
+        /// legacy run (empty ladder) keeps the exact version 5 bytes.
+        /// </summary>
+        public static string LegacyRecipeHash(RunState s) => Hash(s, true);
+
+        static string Hash(RunState s, bool withLog)
         {
             bool legacy = s.Ladder.Count == 0, legendary = UsesLegendary(s.Mods), talents = legendary || UsesCatalogV2(s.Mods);
             var w = new CanonicalWriter(512);
-            w.Bytes(legendary ? HashMagic : talents ? CatalogHashMagic : legacy ? LegacyHashMagic : LadderHashMagic);
+            w.Bytes(!withLog ? StateHashMagic : legendary ? HashMagic : talents ? CatalogHashMagic : legacy ? LegacyHashMagic : LadderHashMagic);
             w.Str(s.SpeciesId);
             w.U64(s.Seed);
             w.F64(s.Mods.DrillCostMult); w.F64(s.Mods.StatFloorMult); w.F64(s.Mods.ChaseChance); w.I32(s.Mods.StartSp);
@@ -961,8 +972,11 @@ namespace IdleRng.Sim.Training
             foreach (var m in s.Milestones) { w.Str(m.Stat); w.I32(m.Threshold); w.I32(m.Cycle); }
             w.I32(s.Injuries.Count);
             foreach (var i in s.Injuries) { w.I32(i.Cycle); w.I32(i.BackCycle); w.I32(i.CyclesLost); }
-            w.I32(s.Log.Count);
-            foreach (var l in s.Log) { w.I32((int)l.Kind); w.Str(l.Stat); w.I32(l.Choice); w.I32(l.Slot); w.Str(l.Book); }
+            if (withLog)
+            {
+                w.I32(s.Log.Count);
+                foreach (var l in s.Log) { w.I32((int)l.Kind); w.Str(l.Stat); w.I32(l.Choice); w.I32(l.Slot); w.Str(l.Book); }
+            }
             if (!legacy)
             {
                 w.I32(s.Ladder.Count);

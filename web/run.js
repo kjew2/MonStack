@@ -1511,7 +1511,6 @@
       h('div', { class: 'small muted', text: a.text }),
       a.species ? h('div', { class: 'small gold', 'data-id': 'unlocked-' + a.species, text: a.speciesName + ' unlocked! Pick it on the next run.' }) : null,
     ])));
-    main.append(h('div', { class: 'small muted center', text: 'Run hash ' + e.hash.slice(0, 16) }));
     const acct = run.account;
     if (acct.vaultOver > 0) main.append(h('p', { class: 'small bad center', 'data-id': 'grade-vault-over', role: 'status',
       text: 'Sealed over the Vault cap (' + acct.vault.length + '/' + acct.vaultCap + '). Dismantle ' + acct.vaultOver + ' before the next run.' }));

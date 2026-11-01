@@ -14,9 +14,10 @@ namespace IdleRng.Sim.Account
         /// <summary>
         /// The account save lineage (specs/18 section 6). v2: Vault entries carry Locked. v3: achievements, records and the post-run
         /// vendor. v4: Dungeon progress. v5: Dungeon tickets. v6: the vendor's reroll count. v7: the talent loadout. v8: legacy drafts on
-        /// saved runs. v9: Vault entries gain Id and drop their replay log (AccountSave migrates v1 to v9).
+        /// saved runs. v9: Vault entries gain Id and drop their replay log. v10: entries keep only their result; the run in progress is saved
+        /// as its state (AccountSave migrates v1 to v10).
         /// </summary>
-        public const int CurrentSchemaVersion = 9;
+        public const int CurrentSchemaVersion = 10;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";

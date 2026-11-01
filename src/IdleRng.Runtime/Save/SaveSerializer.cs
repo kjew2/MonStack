@@ -30,7 +30,9 @@ namespace IdleRng.Runtime.Save
         {
             ContractResolver = new SaveContractResolver(),
             Converters = { new StringEnumConverter() },
-            NullValueHandling = NullValueHandling.Include,
+            // Lean JSON (kj, 2026-11-01, specs/27 section 3.5): a null, or a value equal to the field's starting value (what a
+            // new object holds), is left out, and a missing field reads back as that starting value (SaveContractResolver).
+            NullValueHandling = NullValueHandling.Ignore,
             MissingMemberHandling = MissingMemberHandling.Ignore,
             DateParseHandling = DateParseHandling.None,
             FloatParseHandling = FloatParseHandling.Double,
@@ -120,12 +122,23 @@ namespace IdleRng.Runtime.Save
         sealed class SaveContractResolver : DefaultContractResolver
         {
             static readonly HexUInt64Converter Hex = new HexUInt64Converter();
+            static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, object> Fresh = new System.Collections.Concurrent.ConcurrentDictionary<Type, object>();
 
             protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
             {
                 var p = base.CreateProperty(member, memberSerialization);
                 if (p.PropertyType == typeof(ulong) && p.PropertyName.EndsWith("Seed", StringComparison.Ordinal))
                     p.Converter = Hex;
+                // A value-type or string field equal to its starting value is left out of the JSON; reading leaves the starting
+                // value in place, so the round trip is exact without per-field attributes (an Id starting at -1 stays -1).
+                var type = member.DeclaringType;
+                if (p.Readable && p.Writable && p.ValueProvider != null && (p.PropertyType.IsValueType || p.PropertyType == typeof(string))
+                    && type != null && !type.IsAbstract && type.GetConstructor(Type.EmptyTypes) != null)
+                {
+                    var fresh = Fresh.GetOrAdd(type, t => Activator.CreateInstance(t));
+                    p.DefaultValue = p.ValueProvider.GetValue(fresh);
+                    p.DefaultValueHandling = DefaultValueHandling.Ignore;
+                }
                 return p;
             }
         }

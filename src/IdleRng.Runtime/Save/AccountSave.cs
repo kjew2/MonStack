@@ -12,12 +12,13 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 8, "Account": { ...AccountState without Active... },
-    ///   "ActiveRun": { "SpeciesId", "Seed", "Books", "Mods", "Ladder", "Log", "Hash" } | null }
+    /// { "Kind": "monster_account", "SchemaVersion": 10, "Account": { ...AccountState without Active... },
+    ///   "Run": { ...RunState without its Log... } (absent when no run is in progress) }
     /// </code>
-    /// The run in progress is stored as its replay recipe and rebuilt by TrainingRun.Replay on load; the stored hash catches
-    /// a recipe that no longer replays to the same run (for example after a rules change). Such a run is dropped with a
-    /// notice and the rest of the account still loads (specs/06 section 5).
+    /// The run in progress is stored as its state, not its command log (schema v10, kj 2026-11-01, specs/27 section 3.5), so it
+    /// carries on under later rule changes. A state that no longer loads (an id removed from content) is dropped with a notice
+    /// and the rest of the account still loads (specs/06 section 5). Saves before v10 stored a replay recipe ("ActiveRun"),
+    /// which is replayed once on load and written back as a state.
     /// </summary>
     public static class AccountSave
     {
@@ -36,8 +37,8 @@ namespace IdleRng.Runtime.Save
                 ["Kind"] = Kind,
                 ["SchemaVersion"] = AccountState.CurrentSchemaVersion,
                 ["Account"] = acct,
-                ["ActiveRun"] = a.Active == null ? JValue.CreateNull() : Recipe(a.Active),
             };
+            if (a.Active != null) body["Run"] = Snapshot(a.Active);
             return SaveSerializer.EncodeBody(body.ToString(SaveSerializer.Indented ? Formatting.Indented : Formatting.None));
         }
 
@@ -68,7 +69,23 @@ namespace IdleRng.Runtime.Save
             if (a.Tower == null) a.Tower = new TowerProgress();   // a null in the file reads as no attempts yet
             if (a.TalentsOff == null) a.TalentsOff = new List<string>();   // a null in the file reads as every talent on
 
-            if (body["ActiveRun"] is JObject run)
+            if (body["Run"] is JObject state)
+            {
+                try
+                {
+                    a.Active = state.ToObject<RunState>(SaveSerializer.Serializer);
+                    CheckRun(c, a.Active);
+                }
+                catch (Exception e)
+                {
+                    // An id the run refers to is gone from content: drop the run, return every book it brought (specs/06 section 5).
+                    a.Active = null;
+                    foreach (var key in new[] { nameof(RunState.Books), nameof(RunState.BooksUsed) })
+                        if (state[key] is JArray bs) foreach (var b in bs) if (b.Type == JTokenType.String) a.Books[(string)b] = a.BookCount((string)b) + 1;
+                    notice = "Your run in progress refers to something no longer in the game. It was dropped and its books returned. (" + e.Message + ")";
+                }
+            }
+            else if (body["ActiveRun"] is JObject run)   // a save before v10: the run as its replay recipe
             {
                 RunRecipe r = null;
                 try
@@ -76,7 +93,7 @@ namespace IdleRng.Runtime.Save
                     r = run.ToObject<RunRecipe>(SaveSerializer.Serializer);
                     // A recipe saved before the rank pools has no Ladder: an empty one, a legacy run with flat opponents.
                     a.Active = TrainingRun.Replay(c, r.SpeciesId, r.Seed, r.Log, r.Books, r.Mods, r.Ladder ?? new List<string>());
-                    if (r.Hash != TrainingRun.StateHash(a.Active)) throw new InvalidOperationException("the replay hash differs from the saved one");
+                    if (r.Hash != TrainingRun.LegacyRecipeHash(a.Active)) throw new InvalidOperationException("the replay hash differs from the saved one");
                 }
                 catch (Exception e)
                 {
@@ -187,6 +204,17 @@ namespace IdleRng.Runtime.Save
                     }
                 version = 9;
             }
+            if (version == 9)
+            {
+                // v9 -> v10 (kj 2026-11-01, specs/27 section 3.5): Vault entries keep only their result; the gauntlet is not
+                // replayed any more, so the seed and gauntlet hash go, the run hash goes, and Cleared is read from the result.
+                // A run in progress stays a recipe here and is written back as its state after it loads.
+                if (acct["Vault"] is JArray vault)
+                    foreach (var e in vault)
+                        if (e is JObject o)
+                            foreach (var f in new[] { "Seed", "RunHash", "GauntletHash", "GauntletCleared" }) o.Remove(f);
+                version = 10;
+            }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
             return version;
@@ -225,13 +253,41 @@ namespace IdleRng.Runtime.Save
             return null;
         }
 
-        internal static JObject Recipe(RunState s)
+        /// <summary>The run in progress as saved (schema v10): its state without the command log.</summary>
+        public static JObject Snapshot(RunState s)
+        {
+            var o = JObject.FromObject(s, SaveSerializer.Serializer);
+            o.Remove(nameof(RunState.Log));
+            return o;
+        }
+
+        /// <summary>
+        /// Checks that a loaded run's ids exist in today's content (species, ladder, trees and their nodes, offers, books):
+        /// throws when one is gone. Building the fighter and the hash touches every tree node and stat.
+        /// </summary>
+        static void CheckRun(ContentDb c, RunState s)
+        {
+            if (s == null || s.SpeciesId == null || !c.Species.ContainsKey(s.SpeciesId)) throw new InvalidOperationException("unknown species '" + s?.SpeciesId + "'");
+            foreach (var id in s.Ladder) if (!c.RankEnemies.ContainsKey(id)) throw new InvalidOperationException("unknown rank enemy '" + id + "'");
+            foreach (var o in s.Offers) foreach (var t in o.Trees) if (!c.Trees.ContainsKey(t)) throw new InvalidOperationException("unknown tree '" + t + "'");
+            foreach (var b in s.Books) if (!c.SkillBooks.ContainsKey(b)) throw new InvalidOperationException("unknown book '" + b + "'");
+            TrainingRun.MonsterFighter(c, s);
+            TrainingRun.StateHash(s);
+        }
+
+        /// <summary>
+        /// A run as a pre-v10 save stored it (replay recipe with the legacy hash). Only for tests and tools that write old saves:
+        /// the game writes the state (<see cref="Snapshot"/>).
+        /// </summary>
+        public static JObject LegacyRecipe(RunState s) => Recipe(s);
+
+        static JObject Recipe(RunState s)
         {
             // Books brought into the run = the unused ones plus the ones the log used (UseBook removes by id, so the order of
             // the replayed list leaves the unused books in the same order).
             var books = new List<string>(s.Books);
             foreach (var l in s.Log) if (l.Kind == RunCommandKind.UseBook) books.Add(l.Book);
-            var r = new RunRecipe { SpeciesId = s.SpeciesId, Seed = s.Seed, Books = books, Mods = s.Mods, Ladder = s.Ladder, Log = s.Log, Hash = TrainingRun.StateHash(s) };
+            var r = new RunRecipe { SpeciesId = s.SpeciesId, Seed = s.Seed, Books = books, Mods = s.Mods, Ladder = s.Ladder, Log = s.Log, Hash = TrainingRun.LegacyRecipeHash(s) };
             return JObject.FromObject(r, SaveSerializer.Serializer);
         }
 

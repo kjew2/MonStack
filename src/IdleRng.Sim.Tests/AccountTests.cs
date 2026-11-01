@@ -552,7 +552,6 @@ namespace IdleRng.Sim.Tests
             PlayOut(run);
             var sealedStr = run.Stats.Str;
             var entry = AccountOps.FinishRun(Db, a).Entry;
-            Assert.That(entry.RunHash, Is.EqualTo(TrainingRun.StateHash(run)));
             Assert.That(entry.Fighter(Db).Stats.Str, Is.EqualTo(sealedStr));
         }
 
@@ -641,15 +640,16 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void Dismantle_WorksDuringARun_AndLockDoesNotTouchTheRunHash()
+        public void Dismantle_WorksDuringARun_AndLockTogglesOnlyTheLock()
         {
             var a = NewAll(4);
             PlayOut(AccountOps.StartRun(Db, a, "slime"));
             var e = AccountOps.FinishRun(Db, a).Entry;
-            string hash = e.RunHash;
+            double str = e.Stats.Str;
             AccountOps.StartRun(Db, a, "drake");
             AccountOps.SetLocked(Db, a, 0, true);
-            Assert.That(a.Vault[0].RunHash, Is.EqualTo(hash), "the lock is not part of the sealed monster");
+            Assert.That(a.Vault[0].Locked, Is.True);
+            Assert.That(a.Vault[0].Fighter(Db).Stats.Str, Is.EqualTo(str), "the lock is not part of the sealed monster");
             AccountOps.SetLocked(Db, a, 0, false);
             AccountOps.Dismantle(Db, a, 0);
             Assert.That(a.Vault, Is.Empty);

@@ -26,7 +26,7 @@ IDLERNG-SAVE fmt=json crc32=1a2b3c4d len=3917\n
 
 `SaveSerializer.Decode` rejects the file (`SaveCorruptException`) when the header is malformed, fewer or more bytes than `len` follow, the CRC differs, or the body is not JSON. A truncated write therefore fails fast.
 
-JSON conventions (`SaveSerializer.Settings`): property names as declared (PascalCase), explicit `null`s, enums as member names, `ulong` seeds and counters named `*Seed` as 16-character lowercase hex strings (exact past 2^53), doubles round-trip exactly, `MissingMemberHandling.Ignore` on read, invariant culture, `DateParseHandling.None`.
+JSON conventions (`SaveSerializer.Settings`): property names as declared (PascalCase); **lean** (save v10, kj 2026-11-01): a `null`, or a value equal to the field's starting value (what a new object holds: `0`, `false`, an `Id` of `-1`, a multiplier of `1`), is left out, and a missing field reads back as that starting value (`SaveContractResolver`, no per-field attributes); enums as member names, `ulong` seeds and counters named `*Seed` as 16-character lowercase hex strings (exact past 2^53), doubles round-trip exactly, `MissingMemberHandling.Ignore` on read, invariant culture, `DateParseHandling.None`.
 
 ## 3. Stores
 
@@ -47,7 +47,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 ## 5. Schema versions
 
-`AccountState.CurrentSchemaVersion` is 9. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
+`AccountState.CurrentSchemaVersion` is 10. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
 
 | Step | Change |
 |---|---|
@@ -59,12 +59,13 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 | v6 -> v7 | `TalentsOff` (empty: every owned talent on), issue #106 (`specs/18` section 4) |
 | v7 -> v8 | The run in progress and every Vault entry gain `Mods.LegacyDrafts` `true` (a missing `Mods` becomes `{ LegacyDrafts: true }`): they drafted fixed Awakening trees, so they replay that way; new runs roll them (issue #121, `specs/15` section 4.1) |
 | v8 -> v9 | Vault entries keep their result, not their replay (`specs/27` section 3.5): each gains `Id`, the index of the run that made it, found from its seed (`AccountOps.RunSeed(account seed, i) == entry seed` for `i < RunsStarted`; -1 when none matches), and loses `Log`, `Mods` and `Ladder` |
+| v9 -> v10 | Vault entries keep only their result (`specs/27` section 3.5, kj 2026-11-01): `Seed`, `RunHash`, `GauntletHash` and `GauntletCleared` are removed (cleared is read from the result: a title and no killer). The body's run in progress moves from `ActiveRun` (a replay recipe) to `Run` (the run's state without its log): a v9 recipe is replayed once on load, checked against its stored hash (`TrainingRun.LegacyRecipeHash`), and written back as a state. JSON is lean from v10 (section 2) |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
 
 **When content or rules change under a save** (decided 2026-10-31; **(agent)**, kj can veto). A rules or content change must never cost the player the account:
 
-- *Run in progress.* It is stored as a replay recipe, so a change can make it stop replaying (an id removed, a rule or the run hash changed). `Decode` then drops the run, returns every book it brought in to the inventory (as `AbandonRun` does), keeps `RunsStarted` (the next run gets a new seed) and loads the rest of the account. `Decode`/`Load` report a `notice` sentence for the player; the web client shows it and keeps the original save text aside (below). Nothing is quarantined for this. The rank pools (content 4.3) are not such a change: a recipe without a `Ladder` replays as a legacy run against the flat ranks with its version 5 hash (`specs/18` section 6).
+- *Run in progress.* Since v10 it is stored as its state (`Run`, the `RunState` without its command log), so a rules or content tuning change does not stop it: it carries on under the new rules from where it was. It is dropped only when the state refers to an id no longer in content (species, ladder enemy, tree, offer or book; `AccountSave.CheckRun`). A v9 save's recipe can still stop replaying (an id removed, a rule or the run hash changed). In both cases `Decode` drops the run, returns every book it brought in to the inventory (as `AbandonRun` does), keeps `RunsStarted` (the next run gets a new seed) and loads the rest of the account. `Decode`/`Load` report a `notice` sentence for the player; the web client shows it and keeps the original save text aside (below). Nothing is quarantined for this. The rank pools (content 4.3) are not such a change: a recipe without a `Ladder` replays as a legacy run against the flat ranks with its version 5 hash (`specs/18` section 6).
 - *Vault entries.* They store their result (grade, final stats, trees, gauntlet floor, killer, title and hash) as plain data, so listing and displaying them never replays anything. Only the parts that replay (`Fighter`, the gauntlet wheel) can stop working for an entry sealed under older rules; those return an error for that entry and nothing else is affected. The entry's `RunHash` and `GauntletHash` say which rules produced it. Entries are never deleted or rewritten by a load.
 - *Content version.* The account stores the `ContentVersion` it was last loaded with. A load under a different MAJOR adds a notice and re-stamps it. A MAJOR bump (`specs/05` section 4, `E090`) is where a real migration is written, if one is worth it.
 - *Newer schema* is the one case that still refuses: the file is kept and never overwritten.

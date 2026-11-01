@@ -633,9 +633,9 @@ namespace IdleRng.Web
 
         private void Entry(JsonOut w, VaultEntry e)
         {
-            w.Obj().P("species", e.SpeciesId).P("seed", e.Seed.ToString("x16", CultureInfo.InvariantCulture))
+            w.Obj().P("id", e.Id).P("species", e.SpeciesId)
                 .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
-                .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("hash", e.RunHash).P("sealedUtcMs", e.SealedUtcMs)
+                .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("sealedUtcMs", e.SealedUtcMs)
                 .P("locked", e.Locked).P("refund", AccountOps.DismantleRefund(_db, e));
             string apex = ApexForm.TreeOf(_db, e);
             w.P("apex", apex).P("name", ApexForm.Name(_db, e.SpeciesId, apex));
@@ -654,10 +654,11 @@ namespace IdleRng.Web
             {
                 string title = GauntletSim.TitleText(_db, e.LegacyTitle, e.GauntletKiller);
                 // "Floor 42: Professional Punching Bag" (specs/12 section 6); a cleared tower has no losing floor to name.
-                string label = (e.GauntletCleared ? "All " + (e.GauntletFloor - 1) + " floors" : "Floor " + e.GauntletFloor) + ": " + title;
-                w.Obj().P("floor", e.GauntletFloor).P("cleared", e.GauntletCleared).P("killer", e.GauntletKiller)
+                bool cleared = e.ClearedGauntlet();
+                string label = (cleared ? "All " + (e.GauntletFloor - 1) + " floors" : "Floor " + e.GauntletFloor) + ": " + title;
+                w.Obj().P("floor", e.GauntletFloor).P("cleared", cleared).P("killer", e.GauntletKiller)
                     .P("killerName", e.GauntletKiller == null ? null : GauntletSim.EnemyName(_db, e.GauntletKiller))
-                    .P("title", title).P("label", label).P("hash", e.GauntletHash).EndObj();
+                    .P("title", title).P("label", label).EndObj();
             }
             w.EndObj();
         }

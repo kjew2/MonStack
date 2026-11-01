@@ -29,7 +29,7 @@ An account after 50 sealed runs (the `balanced` bot, the starter species), compa
 | `OwnedSpecies`, `Books`, `Talents`, `TalentsOff`, seed, counters | under 100 together | Content size |
 | A mid-run save (whole account, one run in progress) | 12,760 (indented) | The run's log: about 90 commands for a whole run |
 
-Pruned as in section 3.5, the Vault is about 37 KB and the whole account under 50 KB.
+After the audit of 2026-11-01 (section 3.5; save v10), the same kind of account (50 monsters from mixed bot policies, a run in its last cycle) is **32.4 KB in 56 items**, down from 54.4 KB: `training` 6.2 KB to 1.4 KB, the `vault` index 3.5 KB to 1.1 KB, each monster 883 B to about 590 B, every other part under 250 B.
 
 ## 3. The data model
 
@@ -40,13 +40,13 @@ All parts are Cloud Save player items in the **private** access class: only the 
 | Part | Holds | Bound | Written by |
 |---|---|---|---|
 | `head` | The root: `seq`, the account hash, each part's key and hash, the holder device, schema and content version, `debugUsed` | Fixed, under 2 KB | Every commit |
-| `training` | `Seed`, `RunsStarted`, `TalentsOff` (the next run's loadout), the run in progress as its replay recipe, and the post-run vendor while it is open | One run's log (about 100 commands), or `VENDOR_OFFERS` offers | `startRun`, every run command, `finishRun` (opens the vendor), `abandon`, `setLoadout`, `buyOffer`, `rerollVendor`, `closeVendor` |
+| `training` | `Seed`, `RunsStarted`, `TalentsOff` (the next run's loadout), the run in progress as its state (no command log), and the post-run vendor while it is open | About 1.4 KB at most | `startRun`, every run command, `finishRun` (opens the vendor), `abandon`, `setLoadout`, `buyOffer`, `rerollVendor`, `closeVendor` |
 | `wallet` | `Shards`, `Books` (later any premium currency, section 3.4) | Content size | `startRun` (books leave), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `dismantle`, `runTower` |
 | `collection` | `OwnedSpecies`, `Talents` (ranks) | Content size | `finishRun` (unlocks), `buyOffer` |
 | `progress` | `Achievements`, `Records` | Content size | `finishRun` |
 | `dungeon` | `Tower`: tickets, pieces, grant day, attempts, bests | Fixed | `runTower`, `finishRun` (pieces), the daily grant |
-| `vault` | The Vault index: entry ids in Vault order, the locked ids, each entry's hash | `VAULT_CAP` ids | `finishRun`, `dismantle`, `lock` |
-| `mon.<id>` | One sealed monster as its result: species, seed, grade, rank, end, cycles, fights, final stats, trees (bought nodes, rolls, fusions), books used, gauntlet floor, killer and title, the run and gauntlet hashes, seal time | One per entry, about 0.75 KB | `finishRun` creates; `dismantle` deletes; never changed |
+| `vault` | The Vault index: entry ids in Vault order, the locked ids, each entry's short hash (16 hex characters) | `VAULT_CAP` ids, about 1.1 KB at 50 | `finishRun`, `dismantle`, `lock` |
+| `mon.<id>` | One sealed monster as its result: species, grade, rank, end, cycles, fights, final stats, trees (bought nodes, rolls, fusions), books used, gauntlet floor, killer and Legacy Title, seal time | One per entry, about 0.6 KB | `finishRun` creates; `dismantle` deletes; never changed |
 
 Rules behind the split:
 - **By writer set.** Each part changes for one reason. A run command touches only `training`; a vendor buy touches `wallet`, `collection` and `training`. A commit rewrites only the parts its commands changed, so a checkpoint in the middle of a run writes `training` and `head`, a few KB.
@@ -58,7 +58,7 @@ Vault entry ids: an entry is named by the index of the run that made it (`RunsSt
 ### 3.2 Hashes
 
 - **Part hash**: SHA-256 of the part's compact JSON, exactly as the account save writes those fields (`IdleRng.Runtime.Save.AccountParts`: the same Newtonsoft serializer and settings in the browser and on the server) **(agent, 2026-11-01: instead of a hand-written binary encoding, so a field added to `AccountState` is covered without a second field list; a test fails when a field is in no part; kj can veto)**. Doubles are written in round-trip form, the same on every .NET runtime since 3.0.
-- **Entry hash**: SHA-256 of the entry's JSON without `Locked`. The `vault` part lists the ids in Vault order, the locked ids and every entry hash, so it pins every entry without loading them; `Join` refuses an entry that does not match its hash.
+- **Entry hash**: the first 16 hex characters of the SHA-256 of the entry's JSON without `Locked` (enough to catch a damaged item; kj 2026-11-01). The `vault` part lists the ids in Vault order, the locked ids and every entry hash, so it pins every entry without loading them; `Join` refuses an entry that does not match its hash.
 - **Account hash**: SHA-256 over the sorted `key hash` lines of every part except the entries (which the vault part pins). The client computes it after its last pending command and sends it with the commit; the server computes it after re-applying them. Equal hashes mean equal accounts, with no field list to keep in step.
 
 Because the `vault` part pins entries by hash, the server loads only the entries a commit's commands read, not the whole Vault.
@@ -105,7 +105,9 @@ Cloud Save allows 2000 keys per player per access class; at `VAULT_CAP` 50 the p
 |---|---|---|
 | A sealed monster's replay log (`Log`, about 5.5 KB of its 6.7 KB), `Mods` and `Ladder` | No | Only `VaultEntry.Fighter` reads them, to rebuild the final stats and bought nodes the entry already stores (`TrainingRun.MonsterFighter` takes nothing else; the stored trees keep its order, absorbed trees before their slot). The fighter is built from the entry instead. A sealed run needs no re-check: the server re-applied its commands before it sealed |
 | Commands | Until accepted | Applied, then dropped; a sample may go to analytics for desync reports |
-| The run in progress | Until it seals or is abandoned | Its recipe (seed and log, about 90 commands) in `training`; cleared at seal |
+| The run in progress | Until it seals or is abandoned, as its state | Its state (no command log, kj 2026-11-01: the server applies new commands to the state it holds) in `training`; cleared at seal |
+| A sealed monster's seed, run hash, gauntlet hash and cleared flag | No (save v10) | Nothing replays a sealed monster or its gauntlet any more; cleared is read from the result (a title and no killer) |
+| Values at their starting value, nulls | Left out of every item | Lean JSON (save v10, `specs/06` section 2); a missing field reads back as its starting value |
 | The gauntlet floors | Never stored | Shown once by the wheel right after sealing, from the gauntlet the seal just ran; never replayed (kj, 2026-11-01) |
 | Dungeon attempts | Never stored | A result is a pure function of the team, day and content (`specs/21` section 1); only rewards and bests are kept in `dungeon` |
 | The post-run vendor | Only while its screen is open, in the session that sealed the run | Transient (kj, 2026-11-01, `specs/18` section 4): every load of the account closes an open vendor with a `closeVendor` command, so it never survives a reload or a move to another device. Between the commits of that session it sits in `training`, because the server must hold it to re-check a vendor buy |
