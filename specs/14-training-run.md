@@ -93,7 +93,7 @@ kj (2026-10-31): "an RNG pool of monsters at each rank, and we can see the clear
 
 ## 6. Milestones
 
-Content table `stat_milestones`: thresholds, strictly increasing (300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it (the Early Bloom talent lowers the value it is crossed at, `specs/18` section 3), the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens an Awakening, the milestone tree offer (`specs/15` section 4).
+Content table `stat_milestones`: thresholds, strictly increasing (since content 6.0 the single threshold 400, kj 2026-11-01: one Awakening per stat; it was 300, 500, 700, 900). When a drill (or a flat stat node) takes a stat from below a threshold to at or above it (the Early Bloom talent lowers the value it is crossed at, `specs/18` section 3), the run records a `MilestoneHit` (stat, threshold, cycle), once per stat and threshold, returns it in the result and opens an Awakening, the milestone tree offer (`specs/15` section 4).
 
 ## 7. Determinism, replay, hash
 

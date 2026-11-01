@@ -184,8 +184,9 @@ namespace IdleRng.Sim.Tests
         {
             // A legacy run (no ladder) keeps the run hash version 5 encoding. First computed by the code before the rank pools;
             // re-pinned when battle rules change the fights themselves (content 4.6: graze, fortune, DEX crit damage; specs/25),
-            // which specs/06 section 5 allows: entries sealed under older rules may stop replaying.
-            const string V5Hash = "8262eb7467bf036bb757176797b1b7914d39b3c4767a33007fc48373b320996f";
+            // which specs/06 section 5 allows: entries sealed under older rules may stop replaying. Re-pinned again at content 6.0, whose
+            // single 400 milestone changes the recorded milestone hits.
+            const string V5Hash = "c4d4bd0ff6ce6a54ab92a169f95297a2470ff680d00828f164e6ce3c81d9ae4a";
             // Saved before rolled Awakening trees, so it replays with LegacyDrafts (the v7 -> v8 save migration, issue #121).
             var s = Scripted(TrainingRun.Start(Db, "drake", 11, null, new RunModifiers { LegacyDrafts = true }, new List<string>()));
             Assert.That(s.Ladder, Is.Empty);

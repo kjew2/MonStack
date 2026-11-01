@@ -288,7 +288,7 @@ const H = require('./harness.js');
   await act('drill-hp').waitFor();
   check(/^Rest \(\+80 energy\)$/.test(await text('[data-act="rest"]')), 'the rest button shows Deep Rest\'s bigger rest: ' + await text('[data-act="rest"]'));
   const hpTicks = await page.$$eval('[data-id=stat-hp] .bar.gauge .tick', (ts) => ts.map((t) => t.dataset.at));
-  check(hpTicks[0] === '240', 'Early Bloom moves the first milestone tick to 240: ' + hpTicks.join(' '));
+  check(hpTicks[0] === '320', 'Early Bloom moves the milestone tick to 320: ' + hpTicks.join(' '));
   await clickDom('[data-act="tab-trees"]');
   check((await page.locator('.slotcard').count()) === 5, 'Fifth Slot: the monster has five tree slots');
   await clickDom('[data-act="tab-train"]');

@@ -145,7 +145,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(lay.cols === 4 && lay.rows === 2 && lay.padTop > lay.stageBottom, 'the drill tiles sit under the stage in a 4x2 grid');
   check(lay.restBottom <= lay.mainBottom, 'the train screen fits the phone down to the Rest button (' + Math.round(lay.restBottom) + ' <= ' + Math.round(lay.mainBottom) + ')');
   check(/Drill a stat/.test(await text('[data-id=result-hint]')), 'before the first action, the result line explains Drill and Rest');
-  // Stat gauges (issue #115): each bar takes its stat's colour and has a tick per milestone, none reached at the start
+  // Stat gauges (issue #115): each bar takes its stat's colour and has a tick per milestone (one, 400, since content 6.0), none reached at the start
   const statGauges = await page.evaluate(() => [...document.querySelectorAll('.dtile')].map((row) => ({
     fill: getComputedStyle(row.querySelector('.bar.gauge .fill')).backgroundColor,
     st: getComputedStyle(row).getPropertyValue('--st').trim(),
@@ -155,7 +155,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     inBtn: !!row.querySelector('[data-act^="drill-"] .bar.gauge') && !row.querySelector('[data-act^="drill-"] [data-tip]'),
   })));
   check(statGauges.length === 8 && new Set(statGauges.map((g) => g.fill)).size === 8 && statGauges.every((g) => g.st !== ''), 'each stat gauge is filled in its own stat colour: ' + statGauges.map((g) => g.fill).join(' '));
-  check(statGauges.every((g) => g.ticks.length === 4 && g.ticks.every((v, i) => i === 0 || v > g.ticks[i - 1]) && g.hit === 0 && !g.text),
+  check(statGauges.every((g) => g.ticks.join(' ') === '400' && g.hit === 0 && !g.text),
     'each gauge carries the milestones as ticks (' + statGauges[0].ticks.join(' ') + '), none reached, and no milestone numbers as text');
   check(statGauges.every((g) => g.inBtn), 'each tile\'s value and gauge are its Drill button, and its tooltip label sits outside the button');
   await act('drill-str').click();

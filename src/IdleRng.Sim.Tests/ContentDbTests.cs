@@ -13,14 +13,14 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("5.4"));
+            Assert.That(db.Version, Is.EqualTo("6.0"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
             Assert.That(db.FightRanks, Is.Not.Empty);
             Assert.That(db.RankEnemies, Is.Not.Empty);
             Assert.That(db.DrillTiers.Select(t => t.Tier), Is.EqualTo(new[] { DrillTier.Fail, DrillTier.Success, DrillTier.Super }));
-            Assert.That(db.StatMilestones, Is.EqualTo(new[] { 300, 500, 700, 900 }));
+            Assert.That(db.StatMilestones, Is.EqualTo(new[] { 400 }));
             Assert.That(db.TreeList, Is.Not.Empty);
             Assert.That(db.TalentList, Is.Not.Empty);
             Assert.That(db.AchievementList, Is.Not.Empty);
@@ -173,10 +173,10 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void IsCompatibleWith()
         {
-            var db = TestContent.Db;   // 5.0
-            Assert.That(db.IsCompatibleWith("5.0"), Is.True);
-            Assert.That(db.IsCompatibleWith("5.1"), Is.True);
-            Assert.That(db.IsCompatibleWith("4.11"), Is.False);
+            var db = TestContent.Db;   // 6.0
+            Assert.That(db.IsCompatibleWith("6.0"), Is.True);
+            Assert.That(db.IsCompatibleWith("6.1"), Is.True);
+            Assert.That(db.IsCompatibleWith("5.4"), Is.False);
             Assert.That(db.IsCompatibleWith(""), Is.False);
             Assert.That(db.IsCompatibleWith("a.b"), Is.False);
         }

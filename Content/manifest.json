@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "5.4",
+  "content_version": "6.0",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -61,7 +61,7 @@
     },
     "stat_milestones": {
       "file": "stat_milestones.json",
-      "sha256": "06b2c1dda03eb1bf73c0ffd95443197d404e44ca97a4aeb80b6aa05d19718b46"
+      "sha256": "9c61eca70253225171fd58f0c0796ec77bacdcf0746528c48d3c273c3a8fad00"
     },
     "strings": {
       "file": "strings.json",
@@ -81,12 +81,12 @@
     },
     "trees": {
       "file": "trees.json",
-      "sha256": "75c17b1bae7cddfb7fa7d0bab35da685ca660490d27f942c9eda8104ee134535"
+      "sha256": "669c9a294df6b15df04eaf87a6f22aed87b35414a1117e3cc1fc138f282cef99"
     },
     "vendor_rarities": {
       "file": "vendor_rarities.json",
       "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "32db09b6b7076b6a02a58387a688e71b96b4159757b503a2e2a5e2b3b0557fb2"
+  "content_hash": "0b1664e2e7d4c02f9a38561dc038e763b0955f494f8f9a214228de0819fc2760"
 }
