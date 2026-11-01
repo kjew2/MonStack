@@ -6,7 +6,7 @@ Scope: how the player's account is modelled and stored on the server, how the cl
 
 ## 1. Decisions
 
-1. **The server plays every state change** (kj, 2026-11-01: "the rolls should be done by the server and not previewable"). The client sends one command (a drill, a draft pick, a fight, a vendor buy, a Dungeon attempt); the server applies it with `IdleRng.Sim` in a Cloud Code C# module (`specs/08` section 10.1), stores the result and returns it; the client shows it. The client never computes an outcome. This replaces `specs/00` decisions log item 3 ("verification, not a server sim") for the trainer.
+1. **The server plays every state change** (kj, 2026-11-01: "the rolls should be done by the server and not previewable"). The client sends one command (a drill, a draft pick, a fight, a vendor buy, a Dungeon attempt); the server applies it with `IdleRng.Sim` in a Cloud Code C# module (`specs/08` section 10.1), stores the result and returns it; the client shows it. The client never computes a roll; commands that roll nothing (a rest, a skill-point spend) may run on the device first and travel with the next command that rolls, where the server applies them again (section 8.1, option A1). This replaces `specs/00` decisions log item 3 ("verification, not a server sim") for the trainer.
 2. **Seeds never leave the server, and draws do not reveal them** (section 4). The account seed is drawn by the server; responses carry results (a fight's events for playback, the gauntlet floors), never a seed. The generator becomes one-way, because today's SplitMix64 is invertible: one exact draw gives back its stream's seed (section 4.1).
 3. **Online only** (kj, 2026-11-01: no offline play). Without a connection the game shows "Connecting..." and retries; nothing is played on the device.
 4. **One device holds the account at a time** (kj, 2026-11-01: "log out the first client instead"). Signing in takes the account; the device that held it is signed out at its next call. No conflict prompt, no merge.
@@ -103,13 +103,15 @@ What this gives up: a sealed monster can no longer be replayed step by step (bal
 
 ## 4. Hidden rolls
 
-### 4.1 Why seeds alone are not enough
+### 4.1 What can leak
 
-Every stream draws `ToUnit(Derive(seed, counter))`, and `Derive` and `StreamSeed` are SplitMix64 steps, which are bijections (`specs/03` section 5.2). A drill's gain is a draw scaled into the tier's range, so the client sees almost all 53 bits of one draw; trying the 2^11 missing bits and inverting `Mix` gives back the stream's seed, and with it every later drill of the run. The same holds for a revealed fight seed (it inverts to the run seed) and for the Dungeon, whose daily seed comes from the public constant `TOWER_SEED` (`specs/21` section 2), so any future day's fights can be computed today.
+- **A seed, directly.** Every stream draws `ToUnit(Derive(seed, counter))`, and `Derive` and `StreamSeed` are SplitMix64 steps, which are bijections (`specs/03` section 5.2): a revealed fight or run seed inverts to its parent and gives every later roll. So no seed may be sent, not even a used one.
+- **The Dungeon's seed is public today.** It comes from the constant `TOWER_SEED` (`specs/21` section 2), so any future day's fights can be computed now. This one is a real leak.
+- **Results.** What the client sees of a draw is little: a drill's tier and an integer gain (a few bits), a hit or crit (one bit each), an index into a short list. Recovering a 64-bit stream seed from such results means searching about 2^64 seeds, out of practical reach. Making draws one-way (section 4.2 item 1) removes the question for good, at the cost of regenerating the golden files; it is hardening, not a blocker.
 
 ### 4.2 The rule
 
-1. **Draws are one-way.** `RngStream.NextDouble` becomes `ToUnit(PRF(seed, counter))` with a keyed pseudorandom function: SipHash-2-4 keyed by the stream seed (integer arithmetic only, so exact in WebAssembly and on every .NET runtime, `specs/00` contract 1; about 20 ns a draw). A draw then says nothing about its seed or the next draw. `StreamSeed` and `Derive` for child seeds (run, fight, vendor, tower floor) use the same function. Every golden file is regenerated once (the distributions are unchanged; every seeded vector moves) and `balance` is re-run to confirm the numbers stay where they were. `specs/03` section 5 is rewritten with the change.
+1. **Draws are one-way (hardening).** `RngStream.NextDouble` becomes `ToUnit(PRF(seed, counter))` with a keyed pseudorandom function: SipHash-2-4 keyed by the stream seed (integer arithmetic only, so exact in WebAssembly and on every .NET runtime, `specs/00` contract 1; about 20 ns a draw). A draw then says nothing about its seed or the next draw. `StreamSeed` and `Derive` for child seeds (run, fight, vendor, tower floor) use the same function. Every golden file is regenerated once (the distributions are unchanged; every seeded vector moves) and `balance` is re-run to confirm the numbers stay where they were. `specs/03` section 5 is rewritten with the change.
 2. **The account seed** is drawn by the module from a cryptographic source at account creation, stored in `training`, never sent.
 3. **The Dungeon's daily seed** is `PRF(TOWER_SECRET, day)`, with `TOWER_SECRET` a server secret (UGS secret manager), replacing `TOWER_SEED`. The server reveals a day's lineup (bosses and phases, `towerInfo`) only from that day on, and the fights only as results.
 4. **Responses carry results, never seeds.** Views have `Seed` fields removed (the run, Vault entries, the vendor); fight playback is the event list the bridge already returns; the gauntlet wheel and Dungeon floor playback are server reads (section 4.4).
@@ -126,7 +128,7 @@ All calls go to the module with the player's id token (`web/auth.js`); the modul
 | Call | Does | Returns |
 |---|---|---|
 | `Open { deviceId, claim }` | Loads the account, or creates it (genesis: a new seed, the starter species, `seq` 0). `claim: true` makes this device the holder | `seq`, the account view (the bridge's `AccountView` without seeds) and the run view (`RunState` without seeds), content version, server time and day |
-| `Act { deviceId, seq, id, command }` | Applies one command (section 5.2) | The bridge's result JSON for that command (`web/wasm/BRIDGE.md`), the new `seq`, and the views of what changed |
+| `Act { deviceId, seq, id, commands }` | Applies the commands in order: any that roll nothing, already shown on the device, then at most one that rolls (section 5.2). One that rolls nothing alone (a vendor buy, a lock) is sent at once | The bridge's result JSON for that command (`web/wasm/BRIDGE.md`), the new `seq`, and the views of what changed |
 | `Read { deviceId, query }` | Read only: `gauntlet(vaultId)`, `towerInfo()`, `towerFloor(team, floor)` | The floors or lineup, as results |
 
 Commands are the bridge's own: account commands `startRun`, `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `closeVendor`, `setLoadout`, `dismantle`, `lock`, `runTower`, and run commands `drill`, `rest`, `fight`, `take`, `discard`, `reroll`, `spend`, `book`. Two arguments the client sends today are dropped: `finishRun`'s seal time and `runTower`'s day both come from the server clock (#21). The switch that applies them moves from `IdleRng.Web.RunHost` into `IdleRng.Sim.Account.AccountCommands.Apply(content, account, command)`, so the module, the local test server (section 5.5) and the tests run one dispatcher, and each command declares the parts it reads and writes (`AccountCommands.Touches`, tested by applying every command with the other parts absent).
@@ -135,13 +137,14 @@ Commands are the bridge's own: account commands `startRun`, `finishRun`, `abando
 
 ```
 client                                          module
-  tap -> Act { deviceId, seq, id, command } ->
+  tap -> Act { deviceId, seq, id, commands } ->
                                                 read head + the parts the command touches (one batch get)
                                                 holder == deviceId?         else NotHolder
                                                 head.seq == seq?            else: head.lastId == id ? stored response : Stale
                                                 content version matches?    else ContentStale
                                                 debug command from a listed player?  else Refused
-                                                apply (AccountCommands.Apply) with the server's time and day
+                                                apply each (AccountCommands.Apply) with the server's time and day;
+                                                  any refused: Refused, nothing applied
                                                 write changed parts under new keys + head (seq+1, last id and response),
                                                   head with its write lock (one batch set)
   <- result, seq+1, changed views               later: delete superseded keys, update projections
@@ -164,7 +167,7 @@ A command carries a client id (random per command). If the answer is lost, the c
 
 ### 5.4 The client
 
-- **A view, not an engine.** The page keeps its WebAssembly build for content and display (`RunContent`, tooltips, odds, fight playback from events), but every state change is an `Act`. `web/run-engine.js` keeps its interface (`run.cmd`, `run.acct`, `run.account`, `run.state`) but sends the command to the module instead of the local host, so those calls become asynchronous: every place in `web/run.js` that acts on a command's result awaits it. That is the largest client change.
+- **A view, not an engine.** The page keeps its WebAssembly build for content and display (`RunContent`, tooltips, odds, fight playback from events), but every state change reaches the server through an `Act`. Run commands that roll nothing (a rest; a spend that crosses no milestone, `TrainingRun.Draws` says which) are applied at once to the device's copy of the run, which has no seeds, and queued; the queue goes with the next command that rolls, or alone when the page is hidden. `web/run-engine.js` keeps its interface (`run.cmd`, `run.acct`, `run.account`, `run.state`) but sends the command to the module instead of the local host, so those calls become asynchronous: every place in `web/run.js` that acts on a command's result awaits it. That is the largest client change.
 - **One command in flight.** A tap while a command is pending is ignored; the tapped control shows it is waiting. Animations (the drill result, the fight) start when the answer arrives.
 - **Latency.** A warm call is about 65 ms in the spike (`specs/08` section 10.1) plus a Cloud Save read and write, so about 100 to 200 ms a tap. A cold worker takes 12 to 15 s: `Open` shows "Connecting...", waits up to 20 s and retries once; a scheduled keep-warm call is added once there are players (#109).
 - **Nothing on the device but the session.** The account lives only on the server. On the first open of this build the page deletes the old local saves (`idle-rng-account-v1`, its `-unloadable` backups and the older keys) after the server account is open (decision 8), and keeps only `monstack-auth-v1` (the session) and `monstack-device-v1` (a random `deviceId`).
@@ -194,7 +197,7 @@ The module's clock is the only clock: the seal time on `finishRun`, the Dungeon 
 - `.github/workflows/pages.yml` deploys the module (`server/ugs/deploy.sh`, with a UGS service account and `TOWER_SECRET` as secrets: a one-time setup by kj), then the site. Pages open during the gap get `ContentStale` and reload.
 - A run in progress that no longer replays under new rules is dropped by the module exactly as `specs/06` section 5 drops it today (the same load code), with the notice shown on the next `Open`.
 
-## 8. Limits and cost
+## 8. Limits, cost and the options
 
 | Limit | Value | Here |
 |---|---|---|
@@ -203,7 +206,29 @@ The module's clock is the only clock: the seal time on `finishRun`, the Dungeon 
 | Requests per player | 600 a minute (Cloud Code and Cloud Save each) | A command is 1 Cloud Code call with 1 Cloud Save read and 1 write; one command in flight caps a fast player near 5 a second, 300 a minute |
 | Cold start | 12 to 15 s | `Open` waits up to 20 s with one retry |
 
-**Cost changes by an order of magnitude.** At 10 k daily players and about 500 commands a player a day (5 runs of about 90, plus the account): about 150 M Cloud Code calls a month, about 225 USD of invocations at the October 2026 list price plus compute, and about 300 M Cloud Save requests at its own meter. Expect a few hundred USD a month, against about 15 for the checkpoint design. The fallback in `specs/08` section 10.2 (one hosted .NET service, the run kept in memory between taps, one database write per command) costs about 20 to 100 USD a month at that load and answers faster, at the price of running a server. Build on UGS (no operations), measure at step 5 of section 10, and revisit if the bill or the tap latency is wrong. Re-check the pricing pages before launch.
+**Cost of section 5 as written.** At 10 k daily players and about 450 commands a player a day (5 runs of about 90): about 135 M Cloud Code calls a month, about 200 USD of invocations at the October 2026 list price plus compute and Cloud Save's own meter. Expect a few hundred USD a month, against about 15 for the checkpoint design. Re-check the pricing pages before launch.
+
+### 8.1 Options: preventing abuse at the lowest call cost and latency
+
+Measured (2026-11-01, the five bot policies, 200 runs each): a run is 52 to 97 commands in 12 cycles. Only **drills (30 to 44) and fights (4 to 12) roll**. Rests (0 to 16) and skill-point spends (16 to 23) roll nothing, except a spend that crosses a stat milestone, which draws a tree offer. Tree takes and discards (about 2) roll nothing.
+
+The bound: a roll the player must not know before choosing can only reach them after the choice, so every choice that reveals a roll costs one server round trip. Calls can only go down by having fewer such choices, by making each call cheaper, or by hiding the wait.
+
+| Option | Server calls a run | Wait per tap | Cost at 10 k daily players | Abuse prevented | Price |
+|---|---|---|---|---|---|
+| **A. Server plays every command** (section 5) | about 90 | 100 to 200 ms (UGS: call plus a Cloud Save read and write) | about 200 to 300 USD a month | All: forged state, previewed rolls, re-rolls, clock | None beyond cost and latency |
+| **A1. A, with commands that roll nothing run on the device** and sent with the next command that rolls | about 56 | 0 for rests and spends; as A for drills and fights | about 40% below A | All: the server re-applies the batched commands and refuses the batch if any is illegal | The client keeps the run without its seeds and must know which commands draw (`TrainingRun.Draws`) |
+| **B. A or A1 on our own server** (hosted .NET, the run held in memory, one connection per player) | as A or A1 | 30 to 80 ms (no storage on the path; writes batched) | about 50 to 100 USD a month, flat | All | Operations: deploys, TLS, scaling, a database and backups, verifying UGS tokens. A crash loses unsaved taps (a player cannot trigger it, so no re-roll) |
+| **B2. A or A1 on cheaper serverless** (AWS Lambda for .NET with DynamoDB) | as A or A1 | as A, plus cold starts | about 40 to 80 USD a month | All | A second vendor beside UGS sign-in; a storage write per tap |
+| **C. Dealt hands** (game design): each cycle the server deals that cycle's drill rolls face up (for example 4 tier cards), the player assigns them to stats and rests, and the cycle-end call resolves the fight and deals the next hand | about 12 to 15 | 0 inside a cycle; one wait per cycle, covered by the fight animation | about 25 to 40 USD a month on UGS | All: what the player sees before choosing is meant to be seen; nothing beyond the hand is known | A change to the training run (`specs/14`): the roll is known before the choice, so decisions become placement (a dice-placement game) rather than risk. Milestone offers drawn at cycle end |
+| **D. Plan the cycle** (game design): the player submits the cycle's actions, or rules for them (the T11 gambit rulebook), and one call plays the cycle | about 12 to 15 | 0 while planning; results at once | about 25 to 40 USD a month | All | Less reactive play: the player cannot answer a roll inside the cycle |
+| **E. Client plays, server re-checks at checkpoints** (the first draft of this spec) | 1 to 5 | 0 | about 15 USD a month | Forged state, re-rolls, clock. **Not previewed rolls** | Ruled out by kj (rolls must not be previewable) |
+| **F. E with the seed hidden in the client** (obfuscated WebAssembly) | as E | 0 | as E | As E against casual players; nothing against anyone who reads memory | Ruled out: a deterrent, not prevention |
+| **G. E with statistical detection** (flag players whose rolls land improbably well for their choices) | as E | 0 | as E | Detects preview after the fact; does not prevent it | Ruled out as the main defence; worth keeping for ranked play later |
+
+Applies to A, A1 and B whatever is chosen: **hide the wait** by starting the drill or fight animation when the tap is sent and showing the result when the answer lands (a 300 ms animation hides a 200 ms call); keep one connection open (the browser reuses it); a scheduled keep-warm call against UGS cold starts (#109).
+
+**Recommendation.** Build **A1 on UGS**: no change to the game, about 40% fewer calls than A, rests and spends instant, the drill and fight waits hidden by their animations, no servers to run. Revisit infrastructure (**B**) only when the bill passes what a hosted server would cost to run, which is not before thousands of daily players. **C** is the one lever that cuts calls by about 85% and removes the per-tap wait entirely, but it changes how training plays, so it is kj's call (section 11); it can be decided later without changing the data model.
 
 ## 9. Threats left
 
@@ -215,12 +240,12 @@ The module's clock is the only clock: the seal time on `finishRun`, the Dungeon 
 
 Each step merges on its own with `./check.sh` green.
 
-1. **One-way draws.** SipHash-based `RngStream` and seed derivation (section 4.2), `specs/03` section 5 rewritten, golden files regenerated, `balance` compared before and after.
-2. **Sim.** `AccountCommands.Apply` and `Touches` (the bridge's switch moved), `AccountHash`, `VaultEntry.Id` and the pruned entry (`VaultEntry.Fighter` from the stored result, with a test that it equals the replayed fighter for every bot policy and species before the log goes), the part split in `IdleRng.Runtime` (`AccountParts`), views without seeds, finish time and Dungeon day as server inputs.
-3. **Server core.** A netstandard2.1 library `IdleRng.Server`: `Open`, `Act`, `Read` against an `IAccountStore` with an in-memory store; tests for every answer in section 5.3, retries, the holder rule, the sweep, the debug list. In `check.sh` on .NET 8 (#28).
-4. **Client on the local test server.** `web/run-engine.js` over `Open`/`Act`/`Read`; the server core in the page (section 5.5); one command in flight; the browser checks run through it.
-5. **Module and deploy.** `server/ugs/MonStackAccount`, a net10.0 shell over `IdleRng.Server` with a Cloud Save store and the server-secret Dungeon seed; the deploy step in `pages.yml` (kj adds the secrets); the page uses it on Pages; the wipe of old local saves. Measure tap latency and cost here (section 8).
-6. **Projections:** `profile`, then Leaderboards for the Dungeon.
+1. **Sim.** `AccountCommands.Apply` and `Touches` (the bridge's switch moved), `AccountHash`, `VaultEntry.Id` and the pruned entry (`VaultEntry.Fighter` from the stored result, with a test that it equals the replayed fighter for every bot policy and species before the log goes), the part split in `IdleRng.Runtime` (`AccountParts`), views without seeds, finish time and Dungeon day as server inputs.
+2. **Server core.** A netstandard2.1 library `IdleRng.Server`: `Open`, `Act`, `Read` against an `IAccountStore` with an in-memory store; tests for every answer in section 5.3, retries, the holder rule, the sweep, the debug list. In `check.sh` on .NET 8 (#28).
+3. **Client on the local test server.** `web/run-engine.js` over `Open`/`Act`/`Read`; the server core in the page (section 5.5); commands that roll nothing applied on the device and sent with the next one that rolls (section 8.1, A1); one command in flight; animations started on tap; the browser checks run through it.
+4. **Module and deploy.** `server/ugs/MonStackAccount`, a net10.0 shell over `IdleRng.Server` with a Cloud Save store and the server-secret Dungeon seed; the deploy step in `pages.yml` (kj adds the secrets); the page uses it on Pages; the wipe of old local saves. Measure tap latency and cost here (section 8).
+5. **Projections:** `profile`, then Leaderboards for the Dungeon.
+6. **One-way draws (hardening).** SipHash-based `RngStream` and seed derivation (section 4.2 item 1), `specs/03` section 5 rewritten, golden files regenerated, `balance` compared before and after.
 
 ## 11. kj's answers (2026-11-01)
 
@@ -229,4 +254,6 @@ Each step merges on its own with `./check.sh` green.
 3. Look-ahead: **not accepted**; rolls are done by the server and not previewable (section 4).
 4. Offline play: **no** (decision 3).
 
-Left for kj, none blocking: the cost and latency check at build step 5 (section 8), and the local test build for the artifact (section 5.5).
+Left for kj, none blocking:
+- **Dealt hands** (section 8.1, option C): change training so each cycle's drill rolls are dealt face up and placed, cutting server calls by about 85% and the per-tap wait to zero? Recommendation: build A1 first; try C as a design experiment later if the feel or the bill calls for it.
+- The cost and latency check at build step 4 (section 8), and the local test build for the artifact (section 5.5).
