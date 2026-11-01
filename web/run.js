@@ -16,7 +16,7 @@
     pick: null,              // species chosen on the home screen
     showLocked: false,       // the Raise tab's locked species list is open
     howto: false,            // the Raise tab's "How a run works" is open
-    carousel: { x: 0, glide: false, timer: 0, el: null },   // the species carousel: its scroll, whether to glide to the picked card, the swipe-settle timer, the kept row
+    carousel: { x: 0, glide: false, timer: 0, el: null, shown: null },   // the species carousel: its scroll, whether to glide to the picked card, the swipe-settle timer, the kept row, the species its info card last showed
     book: false,             // test option: start with a skill book
     feed: [],                // newest first
     last: null,              // last drill/rest result, shown under the stats
@@ -1159,7 +1159,11 @@
     if (!sp) return;
     const mini = h('div', { class: 'mini' });
     C.stats.forEach((st) => mini.append(h('span', null, [up(st) + ' ', h('b', { text: num(sp.base[st]) })])));
-    main.append(h('div', { class: 'card species-info', 'data-id': 'species-info' }, [mini,
+    // A new pick slides its numbers in from the side its card came from, like the card above (none on the first draw).
+    const ids = C.species.filter((x) => owned(x.id)).map((x) => x.id), prev = ui.carousel.shown;
+    const dir = prev && prev !== sp.id && ids.indexOf(prev) >= 0 ? (ids.indexOf(sp.id) > ids.indexOf(prev) ? ' slide-next' : ' slide-prev') : '';
+    ui.carousel.shown = sp.id;
+    main.append(h('div', { class: 'card species-info' + dir, 'data-id': 'species-info' }, [mini,
       h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') }),
       h('small', { class: 'muted', 'data-id': 'chase-' + sp.id, text: 'Chase trees: ' + treeName(sp.chase[0]) + ', ' + treeName(sp.chase[1]) +
         (sp.book ? ' (needs ' + C.books[sp.book].name + ')' : '') })]));
