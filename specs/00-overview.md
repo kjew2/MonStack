@@ -76,7 +76,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 ```
 CLAUDE.md, README.md, check.sh, play.sh
-specs/                       00 to 19 (the numbers present are the ones that exist)
+specs/                       00 to 26 (the numbers present are the ones that exist); index in specs/README.md
 content_src/*.csv            the content source of truth (specs/05)
 Content/*.json               built by tools/content_build.py, committed, checked for drift
 golden/                      generated reference outputs (bot CLI only)

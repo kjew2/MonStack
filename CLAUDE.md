@@ -17,7 +17,7 @@ When something is discussed and agreed with the user that diverges from what a s
 
 - Edit the affected spec(s) so they describe the agreed design, not the original plan. Fix every spec the change touches, including constants and contracts in `specs/00-overview.md`.
 - Update anything that mirrors the spec in the same change: test vectors, `golden/` files, `tools/` models, and the `web/` prototype where relevant.
-- If the README's spec table no longer matches, update it too.
+- When a spec is added, removed or changes scope, update the index in `specs/README.md`.
 - Do not leave code and specs disagreeing. An existing mismatch with no agreed decision behind it is a gap: handle it with the rules below.
 
 ## When you find a gap
