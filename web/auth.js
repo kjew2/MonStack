@@ -12,7 +12,7 @@
     // client id the Google button says sign-in is not set up (specs/08 section 4.2).
     ugsProjectId: 'e83a4b44-27a7-4f76-8769-08380b340736',
     ugsEnvironment: 'production',
-    googleClientId: '',
+    googleClientId: '1042534114217-99fsfrksjmfo8l44kehq6h511bvhe20b.apps.googleusercontent.com',
     authBase: 'https://player-auth.services.api.unity.com/v1',
   };
   const KEY = 'monstack-auth-v1';             // {userId, sessionToken, google: {email} | null}
