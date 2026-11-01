@@ -58,7 +58,7 @@ namespace IdleRng.Sim.Training
         /// <summary>
         /// The end-of-run gauntlet (specs/19), run at sealing: the floor the monster fell on (GAUNTLET_FLOORS + 1 when it cleared
         /// the tower), the gauntlet enemy that beat it (null when cleared), the Legacy Title's string key (its text may contain
-        /// {killer}) and the result hash. The wheel replays the floors with GauntletSim.Run(c, Fighter(c), Seed).
+        /// {killer}) and the result hash. The wheel shows the floors once, from the seal (FinishResult.Gauntlet); nothing replays them.
         /// </summary>
         public int GauntletFloor { get; set; }
         public bool GauntletCleared { get; set; }
@@ -90,7 +90,10 @@ namespace IdleRng.Sim.Training
         /// Freeze a finished run and send the monster up the gauntlet (specs/19). Throws if the run is still going. <paramref name="id"/>
         /// is the run's index in the account (AccountOps.FinishRun passes it).
         /// </summary>
-        public static VaultEntry Seal(ContentDb c, RunState s, long sealedUtcMs = 0, int id = -1)
+        public static VaultEntry Seal(ContentDb c, RunState s, long sealedUtcMs = 0, int id = -1) => Seal(c, s, sealedUtcMs, id, out _);
+
+        /// <summary>Seal, also handing back the gauntlet floor by floor (for the wheel shown once after sealing).</summary>
+        public static VaultEntry Seal(ContentDb c, RunState s, long sealedUtcMs, int id, out Gauntlet.GauntletResult gauntlet)
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
             if (s == null) throw new ArgumentNullException(nameof(s));
@@ -117,6 +120,7 @@ namespace IdleRng.Sim.Training
             e.GauntletKiller = g.KillerId;
             e.LegacyTitle = g.TitleKey;
             e.GauntletHash = g.Hash;
+            gauntlet = g;
             return e;
         }
     }

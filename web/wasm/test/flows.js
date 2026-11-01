@@ -141,11 +141,12 @@ const H = require('./harness.js');
   check(await act('seal').isVisible(), 'the resumed run plays to its end (' + played.fights + ' more fights)');
   await t.layout('end screen');
   const finalHash = (await t.readAccount()).ActiveRun.Hash;
+  await page.emulateMedia({ reducedMotion: 'reduce' });   // with reduced motion the wheel lands at once, no spin
   await act('seal').click();
   await page.locator('[data-id=climb-reel]').waitFor();
-  await page.waitForTimeout(500);
   await t.layout('gauntlet wheel');
-  await act('climb-skip').click();
+  check((await act('climb-skip').count()) === 0 && /^(Floor \d+|All \d+ floors): \S/.test(await page.locator('[data-id=climb-title]').innerText()), 'with reduced motion the wheel lands at once');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   await act('climb-continue').click();
   await page.locator('[data-id=grade]').waitFor();
   await t.layout('grade screen');

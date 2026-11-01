@@ -81,8 +81,6 @@
         if (r.ok) run.persist();
         return r;
       },
-      // Read only: the floors Vault entry i fought in its gauntlet (the wheel replays them). Changes nothing, so no save.
-      gauntlet(i) { return parse(host.AccountCmd('gauntlet', JSON.stringify([i]))); },
       // Dungeon (specs/21 section 8). The day is the UTC day number from this device's clock; the engine has no clock.
       towerDay() { return Math.floor(Date.now() / 86400000); },
       towerInfo(day) { return parse(host.AccountCmd('towerInfo', JSON.stringify([day]))); },   // read only

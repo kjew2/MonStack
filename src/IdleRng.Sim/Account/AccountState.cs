@@ -168,5 +168,11 @@ namespace IdleRng.Sim.Account
 
         /// <summary>Whole Dungeon tickets those pieces completed.</summary>
         public int TicketsEarned { get; set; }
+
+        /// <summary>
+        /// The gauntlet the monster just climbed, floor by floor, for the wheel shown once after sealing (specs/19 section 7).
+        /// Display only: the entry keeps just the result (floor, killer, title), and nothing replays it later.
+        /// </summary>
+        public Gauntlet.GauntletResult Gauntlet { get; set; }
     }
 }

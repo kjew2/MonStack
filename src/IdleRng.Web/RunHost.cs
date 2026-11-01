@@ -354,7 +354,6 @@ namespace IdleRng.Web
                 switch (name)
                 {
                     // Reads: they change nothing, so they are not commands (specs/27 section 4).
-                    case "gauntlet": Climb(w, a.Int(0)); return w.EndObj().ToString();
                     case "towerInfo": TowerInfo(w, a.Int(0)); return w.EndObj().ToString();
                     case "towerFloor": TowerFloorFight(w, a.Int(0), a.El(1), a.Int(2)); return w.EndObj().ToString();
                 }
@@ -369,6 +368,7 @@ namespace IdleRng.Web
                         var r = (FinishResult)res;
                         w.P("ok", true).P("shards", r.Shards).P("ticketPieces", r.TicketPieces).P("ticketsEarned", r.TicketsEarned);
                         w.Key("entry"); Entry(w, r.Entry);
+                        w.Key("climb"); Climb(w, r.Gauntlet);
                         w.Key("booksReturned").Arr();
                         foreach (var b in r.BooksReturned) w.Str(b);
                         w.EndArr();
@@ -404,18 +404,15 @@ namespace IdleRng.Web
         }
 
         /// <summary>
-        /// The floors a Vault entry fought in its gauntlet, for the wheel (specs/19 section 7): GauntletSim.Run replayed with the
-        /// entry's fighter and seed. Read only. The hash equals the entry's stored gauntlet hash when the replay matches.
+        /// The gauntlet the monster just climbed, floor by floor, returned with finishRun for the wheel shown once after sealing
+        /// (specs/19 section 7). Nothing replays it later: the entry keeps only the result.
         /// </summary>
-        private void Climb(JsonOut w, int index)
+        private static void Climb(JsonOut w, GauntletResult g)
         {
-            if (index < 0 || index >= _acct.Vault.Count) throw new ArgumentException("no Vault entry " + index);
-            var e = _acct.Vault[index];
-            var g = GauntletSim.Run(_db, e.Fighter(_db), e.Seed);
-            w.P("ok", true).P("floorReached", g.FloorReached).P("cleared", g.Cleared).P("killer", g.KillerId).P("hash", g.Hash);
+            w.Obj().P("floorReached", g.FloorReached).P("cleared", g.Cleared).P("killer", g.KillerId).P("hash", g.Hash);
             w.Key("floors").Arr();
             foreach (var f in g.Floors) w.Obj().P("floor", f.Floor).P("enemy", f.EnemyId).P("boss", f.Boss).P("won", f.Won).P("ticks", f.Ticks).EndObj();
-            w.EndArr();
+            w.EndArr().EndObj();
         }
 
         /// <summary>

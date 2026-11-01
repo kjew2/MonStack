@@ -57,16 +57,16 @@ Spread over many seeds: the `balance` report's Gauntlet section (`specs/09` sect
 
 ## 7. Web client (the wheel)
 
-After `finishRun` seals the monster, `web/run.js` asks the bridge for the entry's climb (`gauntlet(i)` replays `GauntletSim.Run(c, entry.Fighter(c), entry.Seed)`; its hash equals the stored `GauntletHash`) and shows the wheel before the grade screen:
+After `finishRun` seals the monster, `web/run.js` shows the wheel before the grade screen, from the climb `finishRun` returns (the gauntlet `Vault.Seal` just ran, floor by floor). **It is shown once (kj, 2026-11-01):** the floors are not stored and nothing replays them later; the Vault entry keeps only the result (floor, killer, Legacy Title).
 
 - A slowing reel of the floors fought, highest on top: it starts on floor 1 and eases out (about 1.6 to 5 s, longer for higher climbs) onto the floor that beat the monster, with the enemy's name under the pointer. Floors won are ticked; up to two unfought floors above show "?". A cleared tower lands on a "Tower cleared" row.
 - Then the comic defeat: the killer lunges and the monster is launched off screen or turned to ash (picked from the result hash, cosmetic only); a cleared tower gets a victory hop. The Legacy Title shows as "Floor N: <title>", and a button goes on to the grade screen.
 - Tapping the wheel or the Skip button lands it at once. With `prefers-reduced-motion` the wheel opens already landed and the defeat is a still pose.
-- The grade screen and every Vault card show "Floor N: <title>"; the grade screen can replay the wheel. The rank stays the grade (kj, 2026-10-30). Entries sealed before the gauntlet existed have no title and show none.
+- The grade screen and every Vault card show "Floor N: <title>"; there is no replay of the wheel. The rank stays the grade (kj, 2026-10-30). Entries sealed before the gauntlet existed have no title and show none.
 
 ## 8. Follow-ups
 
-- Done: `Vault.Seal` runs the gauntlet with the run's final fighter and the run seed, and stores `GauntletFloor`, `GauntletCleared`, `GauntletKiller`, `LegacyTitle` (string key) and `GauntletHash` on the `VaultEntry`. The wheel gets the floor list by running `GauntletSim.Run(c, entry.Fighter(c), entry.Seed)` again; the result is identical.
+- Done: `Vault.Seal` runs the gauntlet with the run's final fighter and the run seed, and stores `GauntletFloor`, `GauntletCleared`, `GauntletKiller`, `LegacyTitle` (string key) and `GauntletHash` on the `VaultEntry`. The wheel gets the floor list from that same run, returned once with `finishRun` (`FinishResult.Gauntlet`); it is never replayed (kj, 2026-11-01).
 - Pay shards by floor instead of by rank once the gauntlet replaces the rank as the grade (kj's call; the rank stays the MVP grade).
 - Done: the wheel spin and the comic defeat animation in the web client (section 7).
 - Enemy skills and boss phases (they share the Dungeon work, `specs/13` T10; boss skills and phases are designed in `specs/21`).
