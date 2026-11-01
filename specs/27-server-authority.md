@@ -230,6 +230,31 @@ Applies to A, A1 and B whatever is chosen: **hide the wait** by starting the dri
 
 **Recommendation.** Build **A1 on UGS**: no change to the game, about 40% fewer calls than A, rests and spends instant, the drill and fight waits hidden by their animations, no servers to run. Revisit infrastructure (**B**) only when the bill passes what a hosted server would cost to run, which is not before thousands of daily players. **C** is the one lever that cuts calls by about 85% and removes the per-tap wait entirely, but it changes how training plays, so it is kj's call (section 11); it can be decided later without changing the data model.
 
+### 8.2 What option E checks, and how far it can be hardened
+
+What the server re-checks in E (the client plays, then sends its commands at checkpoints): the chain (the commit starts from the server's last state, so nothing forks or rolls back), every command's legality, and the result, by re-applying the commands with the server's copy of the seeds and comparing the account hash. That stops forged numbers (shards, stats, monsters, books), illegal moves, edited saves, a client-chosen account seed, and clock tricks (the server's time bounds the seal time and the Dungeon day).
+
+What it cannot see: anything the client tried and threw away. The client holds the run's seed from the first tap, so a script (or a player copying the saved game in the browser's developer tools) can play the same run several ways and send only the best. Rolls do not depend on the choice (a drill's tier comes from the stream's next draw whatever the stat), so this is not luck the server could spot: the rolls are honest, the choices are prescient.
+
+Measured (2026-11-01, 5 species x 100 seeds): the same run played by each of the five bot policies, keeping the best grade.
+
+| | Mean grade (E = 0 ... S = 5) | A or S |
+|---|---|---|
+| `balanced` | 1.86 | 0% |
+| `chaser` (the best single policy) | 3.08 | 35% |
+| Best of the 5 on the same seed | 3.53 | 56% |
+
+Half a grade over the best honest play, and A or S in 56% of runs instead of 35%, from only five tries; a script trying more variations gains more. Hardening E, in order of strength:
+
+| Hardening | Calls a run | What is left |
+|---|---|---|
+| E as is | 1 to 5 | Whole-run replay (above) |
+| Commit the run's start (the server counts it, so a run cannot be restarted for a new seed) | +1 | Same: the run is replayed locally, not restarted |
+| **Per-cycle seeds**: the server sends cycle k's seed only after accepting cycle k-1's commands, and plays the rank fight itself. Needs one-way seed derivation (section 4.2 item 1), or a cycle seed would give back the run seed | about 12 to 15 | Replay inside one cycle (about 4 drills): placing that cycle's Supers on the best stat. Only scripted players get it |
+| Statistical flags (Supers landing on the player's best stat more often than chance) | 0 | Detects, does not prevent; fuzzy for a single player |
+
+Per-cycle seeds cost the same calls as **C (dealt hands)** and leave exactly the knowledge C gives everyone (the cycle's rolls) to cheaters only. So if calls must stay near 12 a run, C is the fair form of hardened E; if the game must stay as it is with no preview at all, it is A1.
+
 ## 9. Threats left
 
 - **Bots playing legal moves** are playing (`specs/10` section 1, non-goals). The server can rate-limit commands per player.
