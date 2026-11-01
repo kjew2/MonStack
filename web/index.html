@@ -98,9 +98,9 @@ small, .small { font-size: 12px; }
 #tabs button { white-space: nowrap; }
 .sticky-start { position: sticky; bottom: 0; z-index: 2; }
 /* Raise tab: the species carousel. Cards snap to the middle and the neighbours peek in from the sides. */
-.carousel { position: relative; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 14% 8px; margin: 0 calc(-1 * var(--gutter-r)) 0 calc(-1 * var(--gutter-l)); scrollbar-width: none; overscroll-behavior-x: contain; }
+.carousel { position: relative; -webkit-overflow-scrolling: touch; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 14% 8px; margin: 0 calc(-1 * var(--gutter-r)) 0 calc(-1 * var(--gutter-l)); scrollbar-width: none; overscroll-behavior-x: contain; }
 .carousel::-webkit-scrollbar { display: none; }
-.card.species-card { flex: 0 0 100%; scroll-snap-align: center; position: relative; padding: 0; gap: 0; overflow: hidden; text-align: left; opacity: .55; transform: scale(.94); transition: opacity var(--dur), transform var(--dur); }
+.card.species-card { flex: 0 0 100%; scroll-snap-align: center; position: relative; padding: 0; gap: 0; overflow: hidden; text-align: left; opacity: .55; transform: scale(.94); transition: opacity var(--dur-fast) ease-out, transform var(--dur-fast) ease-out; will-change: transform; }
 .card.species-card.sel { opacity: 1; transform: none; }
 /* The portraits are square (512 px): show the whole image, edge to edge, and lay the name over its foot */
 .species-card .pimg { display: grid; place-items: center; aspect-ratio: 1; background: var(--art-bg); }

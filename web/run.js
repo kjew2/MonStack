@@ -16,7 +16,7 @@
     pick: null,              // species chosen on the home screen
     showLocked: false,       // the Raise tab's locked species list is open
     howto: false,            // the Raise tab's "How a run works" is open
-    carousel: { x: 0, glide: false, timer: 0 },   // the species carousel: its scroll, whether to glide to the picked card, the swipe-settle timer
+    carousel: { x: 0, glide: false, timer: 0, el: null },   // the species carousel: its scroll, whether to glide to the picked card, the swipe-settle timer, the kept row
     book: false,             // test option: start with a skill book
     feed: [],                // newest first
     last: null,              // last drill/rest result, shown under the stats
@@ -1081,45 +1081,77 @@
   }
   // The owned species as a row of big square cards (the whole portrait, no crop, the name over its foot) that swipes sideways; the card that settles in the middle is the pick (tapping a
   // card or a dot picks it too and glides it to the middle). Locked species stay out of the row, folded under one line.
+  // The row is built once and kept across renders (rebuilding it reloaded every portrait, so the cards popped in after each swipe), and
+  // the card nearest the middle lights up while the row moves; the pick itself (and the re-render) waits for the row to settle.
   function pickSpecies(id) { if (id === ui.pick) return; ui.pick = id; ui.carousel.glide = true; render(); }
+  function markCarousel(car, id) {   // light up one card and its dot without a re-render
+    car.row.querySelectorAll('.species-card').forEach((c) => {
+      const on = c.dataset.sp === id;
+      c.classList.toggle('sel', on); c.setAttribute('aria-selected', String(on));
+      const img = c.querySelector('.pimg');
+      if (on) img.setAttribute('data-id', 'portrait'); else img.removeAttribute('data-id');
+    });
+    if (car.dots) car.dots.querySelectorAll('.dot').forEach((d) => d.classList.toggle('on', d.dataset.sp === id));
+  }
+  function nearestCard(row) {
+    const mid = row.scrollLeft + row.clientWidth / 2;
+    let best = null, dist = Infinity;
+    row.querySelectorAll('.species-card').forEach((c) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < dist) { dist = d; best = c; } });
+    return best;
+  }
+  function buildCarousel(mine) {
+    const row = h('div', { class: 'carousel', 'data-id': 'species-carousel', role: 'listbox', 'aria-label': 'Species' });
+    mine.forEach((sp) => {
+      const art = SP.art(sp.id);   // the species' portrait (specs/26 section 8), else its sprite
+      row.append(h('button', { class: 'card species-card', type: 'button', role: 'option', 'aria-selected': 'false',
+        'data-act': 'species-' + sp.id, 'data-sp': sp.id, onclick: () => pickSpecies(sp.id) }, [
+        h('div', { class: 'pimg' }, [art ? h('img', { src: art.portrait, alt: sp.name, draggable: 'false', decoding: 'async' }) : sprite(sp.id)]),
+        h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element)]),
+      ]));
+    });
+    const dots = mine.length > 1 ? h('div', { class: 'dots', 'aria-hidden': 'true' }, mine.map((sp) =>
+      h('button', { class: 'dot', type: 'button', tabindex: '-1', 'data-sp': sp.id, onclick: () => pickSpecies(sp.id) }))) : null;
+    const car = { key: mine.map((sp) => sp.id).join(','), row, dots, raf: 0, gliding: null };   // gliding: the scrollLeft a tap's glide is heading for (the tapped card stays lit), else null
+    // A swipe: each frame the card nearest the middle lights up; once the row stops moving it becomes the pick.
+    const settle = () => {
+      clearTimeout(ui.carousel.timer);
+      if (!row.isConnected) return;
+      if (car.gliding !== null) { if (Math.abs(row.scrollLeft - car.gliding) > 2) return; car.gliding = null; }   // an earlier scroll settling mid-glide
+      const best = nearestCard(row);
+      if (best && best.dataset.sp !== ui.pick) { ui.pick = best.dataset.sp; render(); }
+    };
+    row.addEventListener('scroll', () => {
+      ui.carousel.x = row.scrollLeft;
+      if (!car.raf && car.gliding === null) car.raf = requestAnimationFrame(() => { car.raf = 0; if (car.gliding !== null) return; const best = nearestCard(row); if (best) markCarousel(car, best.dataset.sp); });
+      clearTimeout(ui.carousel.timer);
+      ui.carousel.timer = setTimeout(settle, 120);   // a fallback for browsers without scrollend
+    }, { passive: true });
+    row.addEventListener('scrollend', settle, { passive: true });
+    row.addEventListener('pointerdown', () => { car.gliding = null; }, { passive: true });   // a finger takes over from a glide
+    return car;
+  }
   function speciesCarousel(main) {
     const mine = C.species.filter((sp) => owned(sp.id));
     if (!mine.length) return;
     clearTimeout(ui.carousel.timer);
-    const row = h('div', { class: 'carousel', 'data-id': 'species-carousel', role: 'listbox', 'aria-label': 'Species' });
-    mine.forEach((sp) => {
-      const sel = sp.id === ui.pick, art = SP.art(sp.id);   // the species' portrait (specs/26 section 8), else its sprite
-      row.append(h('button', { class: 'card species-card' + (sel ? ' sel' : ''), type: 'button', role: 'option', 'aria-selected': String(sel),
-        'data-act': 'species-' + sp.id, 'data-sp': sp.id, onclick: () => pickSpecies(sp.id) }, [
-        h('div', { class: 'pimg', 'data-id': sel ? 'portrait' : null }, [art ? h('img', { src: art.portrait, alt: sp.name, draggable: 'false' }) : sprite(sp.id)]),
-        h('div', { class: 'row' }, [h('b', { text: sp.name }), elementTag(sp.element)]),
-      ]));
-    });
+    const key = mine.map((sp) => sp.id).join(',');
+    const fresh = !ui.carousel.el || ui.carousel.el.key !== key;
+    if (fresh) ui.carousel.el = buildCarousel(mine);
+    const car = ui.carousel.el, row = car.row;
+    markCarousel(car, ui.pick);
     main.append(row);
-    if (mine.length > 1) main.append(h('div', { class: 'dots', 'aria-hidden': 'true' }, mine.map((sp) =>
-      h('button', { class: 'dot' + (sp.id === ui.pick ? ' on' : ''), type: 'button', tabindex: '-1', onclick: () => pickSpecies(sp.id) }))));
-    // Back to where the row was, then the picked card to the middle: a glide after a tap, a jump otherwise.
+    if (car.dots) main.append(car.dots);
+    // Back to where the row was, then the picked card to the middle: a glide after a tap, a jump on a new row. A re-render after a
+    // swipe leaves the row alone (the snap is already centring it, and a jump would fight a finger still on the screen).
+    if (Math.abs(row.scrollLeft - ui.carousel.x) > 1) row.scrollLeft = ui.carousel.x;
     const card = row.querySelector('.sel');
-    row.scrollLeft = ui.carousel.x;
-    if (card) {
+    if (card && (fresh || ui.carousel.glide)) {
       const target = card.offsetLeft - (row.clientWidth - card.offsetWidth) / 2;
       const smooth = ui.carousel.glide && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (Math.abs(row.scrollLeft - target) > 1) { if (smooth) row.scrollTo({ left: target, behavior: 'smooth' }); else row.scrollLeft = target; }
-      ui.carousel.x = row.scrollLeft;
+      if (Math.abs(row.scrollLeft - target) > 1) { if (smooth) { car.gliding = Math.max(0, Math.min(target, row.scrollWidth - row.clientWidth)); row.scrollTo({ left: target, behavior: 'smooth' }); } else row.scrollLeft = target; }
+      if (!smooth) ui.carousel.x = row.scrollLeft;
     }
     ui.carousel.glide = false;
-    // A swipe: once the row stops moving, the card nearest the middle becomes the pick.
-    row.addEventListener('scroll', () => {
-      ui.carousel.x = row.scrollLeft;
-      clearTimeout(ui.carousel.timer);
-      ui.carousel.timer = setTimeout(() => {
-        if (!row.isConnected) return;
-        const mid = row.scrollLeft + row.clientWidth / 2;
-        let best = null, dist = Infinity;
-        row.querySelectorAll('.species-card').forEach((c) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < dist) { dist = d; best = c; } });
-        if (best && best.dataset.sp !== ui.pick) { ui.pick = best.dataset.sp; render(); }
-      }, 150);
-    }, { passive: true });
   }
   // The picked species' numbers: base stats, its trees and its chase trees.
   function speciesDetail(main) {
