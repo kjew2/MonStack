@@ -20,6 +20,8 @@ Magnitudes (stats, damage, HP) are `double`; counts (shards, levels, ticks, RNG 
 
 ## 5. RNG design
 
+> **Planned change** (`specs/27` section 4, kj 2026-11-01: rolls must not be previewable): SplitMix64 is a bijection, so one exact draw gives back its stream's seed and every later draw. Draws and seed derivations become a keyed one-way function (SipHash-2-4 keyed by the stream seed), with the golden files regenerated. Not built; this section describes the current code until it is.
+
 ### 5.1 Requirements
 
 1. Random access: result `k` of a stream is a pure function `Derive(seed, k)`. The commitment in `specs/01` section 6 depends on this: a restored save restores an older counter and re-receives the same results.
