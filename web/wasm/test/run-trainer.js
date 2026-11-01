@@ -175,6 +175,10 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const tier0 = (/^(\w+)/.exec(await text('[data-id=result] b')) || [])[1];
   check(!!pop && /^dpop (fail|success|super)$/.test(pop.cls) && /^\+\d+(\.\d)?$/.test(pop.text) && pop.cls.endsWith(tier0.toLowerCase()),
     'the drill pops its gain styled by its tier: ' + JSON.stringify(pop) + ' for ' + tier0);
+  const monCls = await page.evaluate(() => document.querySelector('#main [data-id=stage-mon]').className);
+  const injured0 = (await page.locator('[data-id=injury-result]').count()) > 0;
+  check(/\bsad\b/.test(monCls) === (tier0 === 'Fail' || injured0) && (/\bsad\b/.test(monCls) || /\bhop\b/.test(monCls)),
+    'the monster droops sadly after a failed or injuring drill and hops otherwise: ' + monCls + ' for ' + tier0);
   await act('rest').click();
   check(/Rest/.test(await text('[data-id=result]')), 'a rest result appears');
   await shot('02-train');
