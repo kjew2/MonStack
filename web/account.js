@@ -65,7 +65,7 @@
       id.renderButton(slot, { type: 'standard', theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill', logo_alignment: 'left' });
     }).catch(() => {
       slot.replaceWith(el('p', { class: 'small muted', 'data-id': 'google-off',
-        text: 'Google sign-in cannot load here. Open the game at kjew2.github.io/monstack to sign in.' }));
+        text: 'Google sign-in cannot load here. Open the game at kjew2.github.io/MonStack to sign in.' }));
     });
   }
 

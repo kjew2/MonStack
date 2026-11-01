@@ -1,4 +1,4 @@
-# Deploys the web game to GitHub Pages (https://kjew2.github.io/monstack/, specs/08 section 4.2) after the check workflow
+# Deploys the web game to GitHub Pages (https://kjew2.github.io/MonStack/, specs/08 section 4.2) after the check workflow
 # passes on main, so only a commit that passed ./check.sh goes live. Google sign-in (issue #19) needs this real address:
 # the claude.ai phone artifact cannot load Google's sign-in script.
 # One-time setup by the repo owner: Settings > Pages > Source: GitHub Actions.

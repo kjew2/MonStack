@@ -56,7 +56,7 @@ If the page says "The C# engine did not load", it names the cause: the bundle is
 
 ### On a phone
 
-**GitHub Pages (the public web build).** https://kjew2.github.io/monstack/ serves `main` after each green check run (`.github/workflows/pages.yml`). It is the copy where Google sign-in works (`specs/08` section 4); the save there is separate from the artifact's.
+**GitHub Pages (the public web build).** https://kjew2.github.io/MonStack/ serves `main` after each green check run (`.github/workflows/pages.yml`). It is the copy where Google sign-in works (`specs/08` section 4); the save there is separate from the artifact's.
 
 **Claude artifact link (no computer needed).** Open https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg in the phone's browser while signed in to claude.ai. It opens the monster trainer. It is private to the owner and runs the same C# engine bundle as `./play.sh`. It is a copy: it changes only when Claude republishes it (`web/wasm/publish-artifact.sh` builds and prints the Artifact publish call: `web/index.html`, root = repo root, and the file map from `web/wasm/artifact-files.py`). The page header shows the commit and date it was built from (`wasm/dist/build-info.json`), so you can tell whether it is current; "dev" means no build stamp.
 

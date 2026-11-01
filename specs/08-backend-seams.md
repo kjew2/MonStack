@@ -86,7 +86,7 @@ Failures (section 9): a network failure (10 s timeout) leaves the game playing, 
 
 ### 4.2 Hosting and configuration
 
-Google sign-in needs a fixed web origin that loads Google's script, which the claude.ai phone artifact cannot (it loads scripts only from a few CDNs). kj (2026-11-01): the game is hosted on GitHub Pages at `https://kjew2.github.io/monstack/`. `.github/workflows/pages.yml` deploys it after the check workflow passes on `main`; `web/wasm/site.sh` lays out the same files the artifact publishes. The artifact stays the phone test build; its account sheet points to the Pages address for Google.
+Google sign-in needs a fixed web origin that loads Google's script, which the claude.ai phone artifact cannot (it loads scripts only from a few CDNs). kj (2026-11-01): the game is hosted on GitHub Pages at `https://kjew2.github.io/MonStack/`. `.github/workflows/pages.yml` deploys it after the check workflow passes on `main`; `web/wasm/site.sh` lays out the same files the artifact publishes. The artifact stays the phone test build; its account sheet points to the Pages address for Google.
 
 Configuration is public identifiers in `web/auth.js` `CONFIG`: the UGS project id and environment (`production`) and the Google OAuth web client id. With no client id the sheet says Google sign-in is not set up. One-time setup outside the repo (kj):
 
