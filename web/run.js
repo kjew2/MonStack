@@ -1515,7 +1515,6 @@
     const acct = run.account;
     if (acct.vaultOver > 0) main.append(h('p', { class: 'small bad center', 'data-id': 'grade-vault-over', role: 'status',
       text: 'Sealed over the Vault cap (' + acct.vault.length + '/' + acct.vaultCap + '). Dismantle ' + acct.vaultOver + ' before the next run.' }));
-    if (ui.climb) main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-replay', text: 'Watch the gauntlet again', onclick: () => openClimb(ui.climb.data) }));
     if (acct.vendor && acct.vendor.offers.length)
       main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'to-vendor', text: 'Visit the vendor', onclick: () => { stopClimb(); ui.view = 'vendor'; startReveal(); render(); } }));
     else main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: closeVendor }));   // a vendor with nothing to sell closes too
@@ -1638,7 +1637,7 @@
   }
 
   // ---- gauntlet wheel (specs/19, specs/12 section 6): a slowing reel of the floors climbed lands on the floor and the enemy
-  // that beat the monster, then a comic defeat. The floors come from the engine (run.gauntlet); this only animates them.
+  // that beat the monster, then a comic defeat. The floors come with the seal (finishRun's climb); this only animates them, once.
   const POINTER_ROW = 2;   // the reel shows 5 rows; the pointer is on the middle one
   const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const foeDef = (id) => C.gauntlet.enemies[id] || { name: id, boss: false };
@@ -1861,13 +1860,8 @@
     if (!r.ok) { toast(r.reason); return; }
     ui.sealed = r.entry; ui.payout = r.shards; ui.ticketGain = { pieces: r.ticketPieces, tickets: r.ticketsEarned }; ui.view = 'grade'; ui.earned = r.achievements || [];
     ui.earned.forEach((a) => toast('Achievement: ' + a.name + (a.species ? '. ' + a.speciesName + ' unlocked!' : '')));
-    if (r.entry.gauntlet) {   // the wheel replays the new entry's climb (read only); without it the grade screen still works
-      try {
-        const g = run.gauntlet(run.account.vault.length - 1);
-        if (g.ok) { openClimb(g); return; }
-        console.warn('gauntlet replay refused:', g.reason);
-      } catch (err) { console.warn('gauntlet replay failed:', err); }
-    }
+    // The wheel shows the climb once, from the floors finishRun returned; only the result is kept (specs/19 section 7).
+    if (r.entry.gauntlet && r.climb) { openClimb(r.climb); return; }
     render();
   }
 

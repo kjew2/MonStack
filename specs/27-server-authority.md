@@ -106,7 +106,7 @@ Cloud Save allows 2000 keys per player per access class; at `VAULT_CAP` 50 the p
 | A sealed monster's replay log (`Log`, about 5.5 KB of its 6.7 KB), `Mods` and `Ladder` | No | Only `VaultEntry.Fighter` reads them, to rebuild the final stats and bought nodes the entry already stores (`TrainingRun.MonsterFighter` takes nothing else; the stored trees keep its order, absorbed trees before their slot). The fighter is built from the entry instead. A sealed run needs no re-check: the server re-applied its commands before it sealed |
 | Commands | Until accepted | Applied, then dropped; a sample may go to analytics for desync reports |
 | The run in progress | Until it seals or is abandoned | Its recipe (seed and log, about 90 commands) in `training`; cleared at seal |
-| The gauntlet floors | Never stored | The wheel replays them from the fighter and seed (`GauntletSim.Run`) and checks `GauntletHash` |
+| The gauntlet floors | Never stored | Shown once by the wheel right after sealing, from the gauntlet the seal just ran; never replayed (kj, 2026-11-01) |
 | Dungeon attempts | Never stored | A result is a pure function of the team, day and content (`specs/21` section 1); only rewards and bests are kept in `dungeon` |
 | The post-run vendor | Only while its screen is open, in the session that sealed the run | Transient (kj, 2026-11-01, `specs/18` section 4): every load of the account closes an open vendor with a `closeVendor` command, so it never survives a reload or a move to another device. Between the commits of that session it sits in `training`, because the server must hold it to re-check a vendor buy |
 

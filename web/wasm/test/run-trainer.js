@@ -480,13 +480,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     'the grade screen shows the Dungeon ticket pieces the run earned (' + pieces + ' saved): ' + gradeTickets);
   await shot('05c-grade');
 
-  // ---- reduced motion: the wheel replays already landed, no spin
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await act('climb-replay').click();
-  check((await act('climb-skip').count()) === 0 && (await text('[data-id=climb-title]')) === legacy, 'with reduced motion the wheel lands at once');
-  await act('climb-continue').click();
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  check(/^[A-Z]$/.test(await text('[data-id=grade]')), 'and continues to the grade screen');
+  check((await act('climb-replay').count()) === 0, 'the wheel is shown once: no replay button (only its result is kept)');
 
   // ---- the post-run vendor (specs/18 section 4): 5 offers, rarity by grade, bought with shards
   await act('to-vendor').click();

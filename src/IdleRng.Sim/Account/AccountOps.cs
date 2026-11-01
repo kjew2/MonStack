@@ -86,7 +86,8 @@ namespace IdleRng.Sim.Account
             var run = a.Active ?? throw new InvalidOperationException("no run in progress");
             if (run.Phase != RunPhase.Finished) throw new InvalidOperationException("the run is not over yet");
 
-            var result = new FinishResult { Shards = Payout(c, run), Entry = Vault.Seal(c, run, sealedUtcMs, Math.Max(0, a.RunsStarted - 1)) };
+            var entry = Vault.Seal(c, run, sealedUtcMs, Math.Max(0, a.RunsStarted - 1), out var climb);
+            var result = new FinishResult { Shards = Payout(c, run), Entry = entry, Gauntlet = climb };
             a.Shards += result.Shards;
             foreach (var b in run.Books) { AddBooks(a, b, 1); result.BooksReturned.Add(b); }
             a.Vault.Add(result.Entry);
