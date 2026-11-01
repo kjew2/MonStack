@@ -1903,7 +1903,6 @@
       ui.speed = loadSpeed();
       watchDebugTaps();
       if (run.state) ui.view = 'run';
-      else if (run.account.vendor) ui.view = 'vendor';   // reloaded on the post-run screens: the vendor is still open until left
       if (run.loadNotice) toast(run.loadNotice);
       if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
       render();

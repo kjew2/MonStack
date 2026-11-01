@@ -157,8 +157,10 @@ const H = require('./harness.js');
   await act('to-vendor').click();                   // the grade screen leads to the post-run vendor (specs/18 section 4)
   await page.locator('[data-id=vendor-offer]').first().waitFor();
   await t.layout('vendor screen');
+  check((await t.readAccount()).Account.Vendor !== null, 'the open vendor is in the save while its screen is up');
   await act('vendor-done').click();
   await act('start').waitFor();
+  check((await t.readAccount()).Account.Vendor === null, 'Done closes the vendor (kj, 2026-11-01: transient)');
   await act('hometab-vault').click();
   await t.layout('Vault (home after a run)');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'the Vault lists the sealed monster');

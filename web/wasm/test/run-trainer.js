@@ -8,7 +8,7 @@
 // browses a varied Vault (sort, filter, search, detail, compare; lock and dismantle under a filter hit the real Vault index).
 // Also checks the header build stamp from dist/build-info.json (vMAJOR.MINOR · commit), and that a missing stamp shows "dev".
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
-// condition; the run is played on an account save that has drake unlocked; after the run the vendor (open until the player leaves it) offers 5 talent offers and
+// condition; the run is played on an account save that has drake unlocked; after the run the vendor (closed by leaving it or by a reload) offers 5 talent offers and
 // buying one spends shards. The Dungeon: ticket pieces on the grade screen, one ticket spent on a climb, its result card, and floor playback (entropy gauges, the next vent, the
 // corruption meter and their tooltips, an earlier floor replayed by towerFloor with the same fight hash; issue #98), and the
 // team picker over a varied Vault (the Vault's search, slot reordering); the test book button is debug only.
@@ -531,19 +531,13 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   } else check(afterBuy.Account.Shards < rerollPrice, 'the reroll is disabled only when the shards do not cover it');
   const vw0 = await page.evaluate(() => document.documentElement.scrollWidth);
   check(vw0 <= 390, 'the vendor fits the phone width (' + vw0 + 'px)');
-  // A reload on the vendor screen comes back to it: the vendor stays open until the player leaves it.
-  await page.reload();
-  await page.locator('[data-id=vendor-offer]').first().waitFor({ timeout: 90000 });
-  check((await page.locator('[data-id=vendor-offer]').count()) === 5 && (await act('vendor-done').count()) === 1, 'a reload on the vendor screen reopens the vendor');
-  // Leaving closes it (kj, 2026-11-01): the offers are gone from home and from the account; bought ranks stay.
-  await act('vendor-done').click();
-  await act('start').waitFor();
-  check((await page.locator('[data-id=vendor-offer]').count()) === 0, 'home shows no vendor offers');
-  const closed = (await readAccount()).Account;
-  check(closed.Vendor === null && closed.Talents[talentId] === afterBuy.Account.Talents[talentId], 'Done closes the vendor (none saved) and keeps the bought rank');
+  // The vendor is transient (kj, 2026-11-01): a reload on the vendor screen closes it. The offers are gone from the page and
+  // the account; bought ranks stay.
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
-  check((await act('vendor-done').count()) === 0, 'after leaving, a reload opens home, not the vendor');
+  check((await page.locator('[data-id=vendor-offer]').count()) === 0 && (await act('vendor-done').count()) === 0, 'a reload on the vendor screen opens home, not the vendor');
+  const closed = (await readAccount()).Account;
+  check(closed.Vendor === null && closed.Talents[talentId] === afterBuy.Account.Talents[talentId], 'the reload closed the vendor (none saved) and kept the bought rank');
   await homeTab('talents');
   check(new RegExp('^' + afterBuy.Account.Talents[talentId] + '/').test(await text('[data-id=talent-' + talentId + '] .tag.num')), 'the talent list shows the new rank');
   // ---- the talent loadout (issue #106): an owned talent can be switched off for the next run, free, and back on

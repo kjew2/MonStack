@@ -112,7 +112,13 @@
       }
     }
     if (!loaded) { parse(host.AccountNew(randomSeedHex())); run.persist(); }
-    else if (run.loadNotice) run.persist();
+    else {
+      // The post-run vendor is transient (kj, 2026-11-01, specs/18 section 4): seen only on the post-run screens of the page
+      // that sealed the run. A load closes one left open, so a reload never brings it back.
+      const v = parse(host.AccountView());
+      if (v.vendor) { parse(host.AccountCmd('closeVendor', '[]')); run.persist(); }
+      else if (run.loadNotice) run.persist();
+    }
     dirty();
     return run;
   }
