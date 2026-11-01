@@ -96,7 +96,7 @@ Cloud Save allows 2000 keys per player per access class; at `VAULT_CAP` 50 the p
 | The run in progress | Until it seals or is abandoned | Its recipe (seed and log, about 90 commands) in `training`; cleared at seal |
 | The gauntlet floors | Never stored | The wheel replays them from the fighter and seed (`GauntletSim.Run`) and checks `GauntletHash` |
 | Dungeon attempts | Never stored | A result is a pure function of the team, day and content (`specs/21` section 1); only rewards and bests are kept in `dungeon` |
-| The post-run vendor | Only while its screen is open | Not available between runs (kj, 2026-11-01, `specs/18` section 4); while open it sits in `training` |
+| The post-run vendor | Only while its screen is open, in the session that sealed the run | Transient (kj, 2026-11-01, `specs/18` section 4): every load of the account closes an open vendor with a `closeVendor` command, so it never survives a reload or a move to another device. Between the commits of that session it sits in `training`, because the server must hold it to re-check a vendor buy |
 
 Kept although derivable: the owned species (from the achievements), so a later content change cannot take a species away.
 
