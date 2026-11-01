@@ -23,8 +23,8 @@ Scope: what the server will own, where the calls go, and what the client does wh
 | Seam | Today (local only) | With the server | Owns | Issue |
 |---|---|---|---|---|
 | Time | Device UTC day (`run.towerDay()` in `web/run-engine.js`) | Server time, synced (section 3) | The Dungeon's free daily ticket | #21 |
-| Account | **Built:** UGS guest sign-in on launch, Google linking on the web (section 4); the save is not bound to it yet | Steam linking on the Steam build; the save bound by `AccountId` with cloud save | Identity, restore on another device | #19 |
-| Save | `localStorage` in the browser, `FileSaveStore` in tools (`specs/06`) | Local first, then a cloud copy (section 5) | Where the account lives; the conflict rule | #25 |
+| Account | **Built:** UGS guest sign-in on launch, Google linking on the web (section 4; Google confirmed on Pages by kj, 2026-11-01); the save is not bound to it yet | Steam linking on the Steam build; the account held by the server (`specs/27`) | Identity, restore on another device | #19 |
+| Save | `localStorage` in the browser, `FileSaveStore` in tools (`specs/06`) | The server holds the account; the device keeps an offline cache and pending commands (`specs/27`) | The account; one device at a time | #25 |
 | PvP battles | None | Cloud Code module (section 10.3) | Matchmaking, battle results, rating | #76 |
 | Purchases | None | Server-validated (section 6), only if purchases ship | Grants for money | #26 |
 | Remote config | None | Content overlay (section 7) | Tuning without a release (P2) | #29 |
@@ -64,7 +64,7 @@ dayUsed  = max(dayUsed, account.Tower.GrantDay)                  never backwards
 **Status: built for the web client (2026-11-01), Google only.** kj (2026-11-01): start with Google; Steam waits for the Steam build (T13), other web providers wait for a request. `web/auth.js` holds the logic, `web/account.js` the header button and the account sheet, `web/wasm/test/auth.js` the browser check (a fake Unity Authentication and a fake Google script, part of `check.sh`).
 
 1. **Guest sign-in** on first open, so play never waits for a login. The session token is kept beside the save (`localStorage['monstack-auth-v1']`), not in it.
-2. **Link Google** from the account sheet. Linking keeps the guest's player id; signing in on a second device gets the same player back. Restoring the save there is cloud save (section 5.2).
+2. **Link Google** from the account sheet. Linking keeps the guest's player id; signing in on a second device gets the same player back. Restoring the account there is the server-held account (`specs/27`).
 3. **Ids.** The UGS player id is the account's identity. It is stored in the save as a nullable `AccountId` when cloud save lands (a schema step, `specs/06` section 5); the save is unchanged until then, and signing in, switching player or signing out never touches it.
 
 ### 4.1 Flow
@@ -103,22 +103,9 @@ Decision for kj (section 12): whether PvP needs a linked login.
 
 `ISaveStore` is raw bytes in and out with two rotating slots; the format, the loading rules and the schema steps are `specs/06`. The browser keeps the same bytes as text under one `localStorage` key. Nothing here waits on the network, and nothing will: the local write always happens first.
 
-### 5.2 Cloud save (#25)
+### 5.2 The account on the server (#25)
 
-The cloud copy is the same save text (`specs/06` section 2) stored as one UGS Cloud Save item per player, with metadata `{ accountId, deviceId, saveSequence, savedAtServerSec, schemaVersion, sha256 }`.
-
-Save:
-1. Write locally, always first.
-2. Queue an upload of the same text, at most one per minute plus one when the page is hidden. The queue holds only the latest. Uploads use Cloud Save's write lock (the item's version) so a stale device cannot overwrite a newer copy without noticing; a lock failure is a `Conflict`.
-
-Load, with `L` the local save and `R` the cloud copy (fetched with a 5 s timeout, else treated as absent):
-1. Only one exists: use it. `R` only: write it locally.
-2. Same `sha256`: use `L`.
-3. Same `deviceId`: the higher `saveSequence` wins with no prompt (one device's lineage; the other is older).
-4. Different devices: **newest `savedAtServerSec` wins**, the stamp taken from the synced clock (section 3).
-5. If the loser is **meaningfully ahead** (the conflict rule is open decision 1), show both and let the player pick, with the newest preselected. The rejected text is kept aside the way `specs/06` section 5 keeps an unloadable save.
-
-Why pick one save rather than merge: run seeds come from the account seed and `RunsStarted` (`specs/18` section 1), so two devices that each started run `k` played the same seed, and merging their Vaults would hold two monsters from one run. Shards, books, tickets and the vendor would need per-field rules each. Picking one lineage is the only operation that is always consistent; the prompt makes the discard the player's choice when it matters.
+Replaced (kj, 2026-11-01) by `specs/27`: the server holds the account, partitioned by domain into Cloud Save items; the client sends the commands it applied at checkpoints and the server accepts them only if re-applying them gives the same hash. One device holds the account at a time, so there is no conflict rule. The client-uploaded save copy first designed here (newest wins, a prompt when the loser is ahead) is in git history.
 
 ## 6. Purchases (#26, only if they ship)
 
@@ -149,11 +136,11 @@ Rule: single-player never waits on the network. Only what the server owns needs 
 
 | Operation | Without a connection | Why |
 |---|---|---|
-| Training runs, the gauntlet, the Vault, the vendor, achievements | Plays as today | Client-side and replayable (section 11) |
+| Training runs, the gauntlet, the Vault, the vendor, achievements | Plays as today; the commands wait for the next checkpoint (`specs/27` section 5.2) | Replayable, so the server checks them later (section 11) |
 | Dungeon attempts | Play as today with the tickets held | Rewards are single-player (section 11) |
 | The free daily ticket | At most one day past the last synced day (section 3) | The device clock is the one input a player changes for free |
-| Save | Local write; upload queued | A save never fails because the network did |
-| Load | Local, after the 5 s cloud fetch timeout; the conflict check waits for the next online load | Start in bounded time |
+| Save | Local write; pending commands kept on the device | A save never fails because the network did |
+| Load | Local at once; the server open runs beside it (`specs/27` section 5.1) | Start in bounded time |
 | PvP | **Needs the connection.** The button says so. | The server resolves the battle |
 | Purchases | **Need the connection**; a started one resolves on the next open | Validation is server-side |
 | Analytics | Queued, oldest dropped past the cap | Never block, never grow unbounded |
@@ -165,7 +152,7 @@ The comparison that picked the vendor. It was first written for the idle game (g
 | | Unity Gaming Services (UGS) | PlayFab (Microsoft) | Firebase + Cloud Functions | Nakama (Heroic Labs) |
 |---|---|---|---|---|
 | Auth | Unity Authentication: anonymous, Apple, Google Play, custom OpenID. Free. | Anonymous device id, Apple, Google, many others. Included. | Firebase Auth: anonymous, Apple, Google. Free at this scale. | Device, email, Apple, Google, custom. Included. |
-| Cloud save | Cloud Save: per-player key-value JSON, plus file storage for larger blobs. The account save fits a single item. | Player Data (title-scoped key-value, JSON values) and Entity Objects. Fits. | Firestore document per profile. Fits. Optimistic concurrency via document versions. | Storage engine: collections of JSON objects per user with a version for optimistic writes and read/write permissions. Fits well; the version field maps directly onto section 5.2. |
+| Cloud save | Cloud Save: per-player key-value JSON, plus file storage for larger blobs. The account save fits a single item. | Player Data (title-scoped key-value, JSON values) and Entity Objects. Fits. | Firestore document per profile. Fits. Optimistic concurrency via document versions. | Storage engine: collections of JSON objects per user with a version for optimistic writes and read/write permissions. Fits well; the version field maps directly onto a write-locked root item (`specs/27` section 4). |
 | Server time | No dedicated endpoint; a one-line Cloud Code script returning `Date.now()`. | `GetTime` client API, built in. | No dedicated endpoint; a Cloud Function, or `serverTimestamp()` on a write. | No dedicated endpoint; a one-line RPC. |
 | Remote config | Remote Config service: key-value JSON with campaigns and overrides. Free. | Title Data: key-value JSON; no staged rollout without CloudScript. | Remote Config: strong, with conditions and percentage rollouts. Free. | None built in; a storage object with public read, or an RPC. |
 | Receipt validation | Economy service redeems Apple and Google Play purchases server-side and grants configured rewards. | `ValidateIOSReceipt`, `ValidateGooglePlayPurchase`, built in. | Not built in; write it in a Cloud Function against the store APIs (about a day), or use RevenueCat. | `ValidatePurchaseApple` / `ValidatePurchaseGoogle` built in, including subscriptions. |
@@ -246,7 +233,7 @@ The spike's `ResolveFight` takes the fighters as the client sends them: right fo
 
 ## 11. What the client keeps, and what the server owns
 
-The client keeps everything single-player. All of it is replayable from stored inputs, so the server can check it after the fact instead of running it:
+The client plays everything single-player. All of it is replayable from stored inputs, so the server checks it after the fact instead of running it: since kj's decision of 2026-11-01 the server holds the account and re-applies the client's commands at checkpoints (`specs/27`). The table lists what the client runs:
 
 | Domain | Specifically | Why the client keeps it |
 |---|---|---|
@@ -264,14 +251,14 @@ The server owns, once it exists:
 | PvP teams, battles and rating | Other players see the result, so it cannot rest on a client claim (section 10.3, `specs/10`) |
 | Purchases and anything bought | Money; the store APIs need a server secret (section 6) |
 
-Why this split is safe until T12: nothing single-player is shared between players. A player who edits their save harms only their own experience and the tuning data (flagged, section 8). The line moves where PvP reads single-player results: a Vault entry entered in PvP is replayed on the server before it counts, and any single-player reward that can be entered in PvP (Skill Books shape a monster) needs the same care. Which ones, and how a client-chosen account seed is handled (a player could try seeds offline for a lucky run), are part of the `specs/10` rewrite (open decision 3).
+With `specs/27` built, the server also owns the account itself: every part of it is accepted only through a re-applied command, and the account seed comes from the server (genesis). Why the earlier split (client-held account) would be safe until T12: nothing single-player is shared between players. A player who edits their save harms only their own experience and the tuning data (flagged, section 8). The line moves where PvP reads single-player results: a Vault entry entered in PvP is replayed on the server before it counts, and any single-player reward that can be entered in PvP (Skill Books shape a monster) needs the same care. Which ones, and how a client-chosen account seed is handled (a player could try seeds offline for a lucky run), are part of the `specs/10` rewrite (open decision 3).
 
 ## 12. Open decisions
 
-1. **Cloud-save conflict rule** (#25, kj). When two devices diverge, newest wins, but when is the loser "meaningfully ahead" enough to ask the player? Recommendation: ask when the loser has a Vault entry the winner lacks (by run seed) or more Skill Books; otherwise keep the newest silently.
+1. **Cloud-save conflict rule** (#25). Closed (kj, 2026-11-01): no conflicts; one device holds the account and a new sign-in signs the old device out (`specs/27` section 6.1).
 2. **Analytics player id** (#27). Hash the player id with a per-build salt (nobody can follow a player across builds) or a fixed one (lifetime cohorts possible). Recommendation: fixed salt, kept out of the repo, decided with the consent question (#50).
-3. **What PvP trusts from single-player** (#76, with the `specs/10` rewrite). Whether a server-issued account seed is needed before a Vault entry may enter PvP (`specs/10` section 3's provenance rule), and which single-player rewards must be checked before a PvP team counts (section 11).
-4. **Server-side plausibility** (#27). Whether the server re-checks a cloud save on upload (replaying sealed runs, comparing grades with the `balance` distributions) or only when an entry enters PvP. Recommendation: only on PvP entry until there is data showing edited saves in the tuning set.
+3. **What PvP trusts from single-player** (#76, with the `specs/10` rewrite). Mostly answered by `specs/27`: a `server`-lineage account has a server-issued seed and only re-applied entries (`specs/27` section 6.2). Left: whether imported accounts may enter PvP (`specs/27` question 1) and whether look-ahead matters for PvP (`specs/27` question 3).
+4. **Server-side plausibility** (#27). Superseded by `specs/27`: every command is re-applied at its checkpoint, so a `server`-lineage account needs no separate check; imported accounts are `specs/27` question 1.
 5. **Linked login for PvP** (#19, kj). Whether async PvP (T12) needs a linked Google (later Steam) account or a guest may play. Recommendation: require a link; a guest loses everything with the device, and a linked account is what a ban or a report attaches to. Not blocking until T12 PvP.
 6. **A Nakama port's language** (only if the fallback in 10.2 is taken). Go, for exact uint64 arithmetic.
 

@@ -76,7 +76,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 ```
 CLAUDE.md, README.md, check.sh, play.sh
-specs/                       00 to 26 (the numbers present are the ones that exist); index in specs/README.md
+specs/                       00 to 27 (the numbers present are the ones that exist); index in specs/README.md
 content_src/*.csv            the content source of truth (specs/05)
 Content/*.json               built by tools/content_build.py, committed, checked for drift
 golden/                      generated reference outputs (bot CLI only)
@@ -96,5 +96,5 @@ Decisions made before the pivot that still shape the code:
 
 1. **Curves are evaluated by repeated multiplication**, never `Math.Pow`, so output is byte-identical across platforms.
 2. **The sim stays free of IO, clocks and JSON.** `IdleRng.Runtime` holds the serializer and stores.
-3. **Online play is built on server verification, not a server sim** (`specs/10`): the engine stays on the device; a server replays command logs to certify, and resolves PvP battles with the same `IdleRng.Sim` source.
+3. **Online play is built on server verification, not a server sim** (`specs/10`): the engine stays on the device; a server replays command logs to certify, and resolves PvP battles with the same `IdleRng.Sim` source. For the trainer (kj, 2026-11-01) the server holds the account, partitioned by domain, and accepts the client's commands at checkpoints only when its re-apply gives the same hash (`specs/27`).
 4. **Pivot decisions** (kj, 2026-10-30) are recorded where they apply: `specs/12` (design), `specs/13` (plan and answers), `specs/14` to `19` and `21` (rules).
