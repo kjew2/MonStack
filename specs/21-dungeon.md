@@ -19,6 +19,8 @@ A 4v1 boss dungeon the player clears floor by floor with a team of Vault monster
 
 ## 2. Flow
 
+> **Planned change** (`specs/27` section 4.2, kj 2026-11-01): `TOWER_SEED` is public, so any future day's fights can be computed in advance. The daily seed becomes `PRF(TOWER_SECRET, day)` with a server secret, the day comes from the server clock, and a day's lineup is revealed only from that day on. Not built.
+
 ```
 day  = UTC day number, passed in by the caller (the sim has no clock)
 seed = Derive(StreamSeed(TOWER_SEED, "tower"), day)       same for every player on a day

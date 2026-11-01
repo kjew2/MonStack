@@ -76,5 +76,5 @@ A save written by a newer schema is not loaded (`SaveInvalidException`) and neve
 
 ## 7. Open
 
-- The account on the server (`specs/27`, issue #25): the device's save becomes an offline cache of the server's account plus pending commands; schema v9 adds `VaultEntry.Id` and drops each entry's replay log, `Mods` and `Ladder` (`specs/27` sections 3.1 and 3.5). Design only.
+- The account on the server (`specs/27`, issue #25): the account lives only on the server and the browser keeps no save; existing local saves are wiped (kj, 2026-11-01). The save format here stays as the server's load code and the local test server's store; Vault entries gain `Id` and lose their replay log, `Mods` and `Ladder` (`specs/27` sections 3.1 and 3.5). Design only.
 - A protobuf body if size ever matters (the header's `fmt` field reserves the switch).
