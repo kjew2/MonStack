@@ -29,6 +29,9 @@ async function open(opts) {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: PHONE, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  // The account server and Google sign-in (web/auth.js, web/account.js) stay offline in the checks; web/wasm/test/auth.js
+  // routes them to fakes instead (later routes win).
+  await ctx.route(/(\.services\.api\.unity\.com|accounts\.google\.com)\//, (r) => r.abort());
   // Read text as written: the skin uppercases labels with CSS (specs/26 section 4.1), and innerText would return the uppercased form.
   await ctx.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
     const st = document.createElement('style');
@@ -42,7 +45,7 @@ async function open(opts) {
   });
 
   const h = {
-    page, check, errors, url: srv.url + 'index.html',
+    page, ctx, check, errors, url: srv.url + 'index.html',
     act: (a) => page.locator('[data-act="' + a + '"]'),
     text: (sel) => page.locator(sel).first().innerText(),
     // Screenshots are debug output only (never compared): written when the check runs with --shots <dir>.

@@ -10,17 +10,20 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `index.html` `:root` | The theme tokens (issue #115): base colours, accents and their tints, per-stat colours (`--st-<stat>`, applied as `--st` through `.st-<stat>`), fonts, radii, shadows and motion timings. No colour literal lives in the stylesheet outside that block (skill tiles add only a per-skill hue), so an art direction (light or dark base) is mostly a swap of it. The live direction is daylight (`specs/26` section 4.1): its tokens are in `:root`, and a skin block at the end of the sheet draws the sky, makes every panel a white rounded card, every button a key that presses down and the tab bar a row of pills. Per-element colours come from the engine. |
 | `vault.js` | The Vault list (`specs/18` sections 7 and 9): count against the cap, lock toggle, dismantle with a confirm (a run start is blocked while over the cap); sort, filters, search, a detail sheet and a side-by-side compare. `VaultView.browse` lends the search, sort and filters to the Dungeon team picker. Lock and dismantle always use the real Vault index. The sort and filters are remembered in `localStorage['idle-rng-vault-view']`. |
 | `tooltips.js` | Tap-to-open tooltips for stats and abilities (`role="tooltip"`, long press, Escape). Text and numbers come from the engine (`wasm/BRIDGE.md`, "Tooltips"). |
+| `auth.js`, `account.js` | Player accounts (issue #19, `specs/08` section 12): anonymous sign-in to Unity Authentication on launch, Google sign-in linking (Google Identity Services, loaded when the sheet opens), sign out; the header's account button and its sheet. Never blocks play. The session is in `localStorage['monstack-auth-v1']`. |
 | `run-engine.js` | Facade over the C# trainer bridge (`IdleRng.Web.Engine.Run*` / `Account*`): the account save (shards, talents, achievements, vendor offers, Vault, active run). |
 | `engine.js` | Loader for the .NET runtime and the content pack. |
 | `sprites.js` | Seeded 12x12 pixel sprites drawn on canvas (a rank opponent: its own shape tinted by its element, horns at the top rank). Cosmetic only, never touches the game's RNG. |
 | `art/` | Generated creature art (`specs/26` section 8): `sprite/<key>.webp` (battle sprites) and `portrait/<key>.webp`, key = the apex form's chase tree id, else the species id. Exported by `tools/art/export.py`; `sprites.js` lists the keys (`IdleSprites.art`). |
 | `wasm/build.sh` | Builds `src/IdleRng.Web` and lays out `wasm/dist/` (gitignored). |
+| `wasm/site.sh` | Lays out the same files as a static site for the GitHub Pages deploy (`.github/workflows/pages.yml`). |
 | `wasm/publish-artifact.sh` | Builds and prints the whole Artifact publish call for republishing the phone artifact (root README, "On a phone"). |
 | `wasm/artifact-files.py` | Prints the `files` map that call uses; fails if a listed file is missing. |
 | `wasm/pack-content.js` | Bundles `Content/*.json` into the content pack the engine loads and hash-checks. |
 | `wasm/BRIDGE.md` | The JS <-> C# contract: exports and JSON shapes. |
 | `wasm/test/run-trainer.js` | Headless-Chromium test that plays a full run through the buttons and browses a varied Vault (part of `./check.sh`). |
 | `wasm/test/flows.js` | Headless-Chromium test of the other flows: no horizontal scroll or console error on each main screen at 390x844, a tree draft overwriting a slot, save/reload/resume with the same run hash, and a stale or damaged save (part of `./check.sh`). |
+| `wasm/test/auth.js` | Headless-Chromium test of accounts against a fake Unity Authentication and a fake Google script: guest, reload, link, second device, sign out, rejected session, offline (part of `./check.sh`). |
 | `wasm/test/harness.js` | Shared helpers for the browser tests (phone-sized page, save encoding, play loop, layout check). |
 
 ## Where things come from

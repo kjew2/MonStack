@@ -1,0 +1,73 @@
+# Deploys the web game to GitHub Pages (https://kjew2.github.io/monstack/, specs/08 section 12.3) after the check workflow
+# passes on main, so only a commit that passed ./check.sh goes live. Google sign-in (issue #19) needs this real address:
+# the claude.ai phone artifact cannot load Google's sign-in script.
+# One-time setup by the repo owner: Settings > Pages > Source: GitHub Actions.
+name: pages
+
+on:
+  workflow_run:
+    workflows: [check]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # .NET 8 only, in its own directory (see check.yml: wasm-tools must match net8.0).
+      - uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
+        with:
+          dotnet-version: "8.0.x"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.*.props', '**/Directory.*.targets') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Install the wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Build the engine and lay out the site
+        run: |
+          bash web/wasm/build.sh
+          bash web/wasm/site.sh "$RUNNER_TEMP/site"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

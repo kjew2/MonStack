@@ -1,6 +1,6 @@
 # 08 - Backend Seams
 
-> **Status after the pivot (`specs/13` T7):** none of this is built. The idle game's local and remote implementations (`IClock`, `IGachaService`, `ISaveStore` wiring, `IdleRng.Remote`) were removed with it; `ISaveStore` survives in `IdleRng.Runtime` (`specs/06`). The seams below are the design for the backend when PvP (T12) and monetization (T13) need one: the clock, cloud save, receipts and a premium ledger. The species gacha was scrapped at T9 (`specs/01`), so `IGachaService` is kept only as the reference design for a server-held random roll. References to heroes, stages, gold and the Unity client are the idle game's and will be rewritten then.
+> **Status after the pivot (`specs/13` T7):** none of this is built, except player accounts for the web client (section 12, issue #19). The idle game's local and remote implementations (`IClock`, `IGachaService`, `ISaveStore` wiring, `IdleRng.Remote`) were removed with it; `ISaveStore` survives in `IdleRng.Runtime` (`specs/06`). The seams below are the design for the backend when PvP (T12) and monetization (T13) need one: the clock, cloud save, receipts and a premium ledger. The species gacha was scrapped at T9 (`specs/01`), so `IGachaService` is kept only as the reference design for a server-held random roll. References to heroes, stages, gold and the Unity client are the idle game's and will be rewritten then.
 
 
 Scope: the interfaces the prototype implements locally that a backend will own later, written so that adding a server is additive: new implementations of existing interfaces, one new assembly, no change to the sim. Each interface is given as a C# sketch with its local implementation named, its remote contract, and the error behaviour when the network is absent. Constants are canonical in `specs/00` section 2; the save shape is `specs/06`; gacha math is `specs/01`; payment rules are `specs/04` section 7.5.
@@ -501,7 +501,43 @@ Why this split is safe: P0 and P1 have no shared surface between players (00 sec
 
 **Revised by `specs/10`.** The table above describes single-player and unranked play. Leaderboards, PvP and paid balances need values the server believes, so for ranked profiles combat, gold and gear are *server-verified* rather than client-authoritative: the client uploads a segment of its command log, the server replays it on the same `IdleRng.Sim` source and accepts the result only if the state hashes match (`specs/10` section 4). The decision recorded here earlier (replay verifier versus plausibility bound) is made: replay, because the sim is deterministic and a day of play replays in tens of milliseconds. Plausibility remains only as the analytics flag in `specs/06` section 12.2.
 
-## 12. Open decisions
+## 12. Player accounts (issue #19, web client)
+
+**Status: built for the web client (2026-11-01), Google only.** kj (2026-11-01): start with Google; Steam waits for the Steam build (T13), other web providers wait for a request. `web/auth.js` holds the logic, `web/account.js` the header button and the account sheet, `web/wasm/test/auth.js` the browser check (a fake Unity Authentication and a fake Google script, part of `check.sh`). The player id is the UGS player id; nothing else is bound to it yet: uploading and restoring the save, and writing `AccountId` into it, is cloud save (#25).
+
+### 12.1 Flow
+
+Unity Authentication through its REST API (`https://player-auth.services.api.unity.com/v1`, headers `ProjectId` and `UnityEnvironment`; no Unity SDK, CORS allows any origin):
+
+| When | Call | Result |
+|---|---|---|
+| First launch | `POST /authentication/anonymous` | A guest player. The session token is stored on the device. |
+| Later launches | `POST /authentication/session-token {sessionToken}` | The same player, fresh id token (1 h; refreshed a minute before it expires). The response's `user.externalIds` says whether Google is linked. |
+| Google on a guest | `POST /authentication/link/google.com {token}` with the guest's id token as Bearer | The guest becomes the Google account's player (same player id). |
+| Google already has a player (a second device) | Link fails, then `POST /authentication/external-token/google.com {token, signInOnly: true}` | This device signs in to that player. The guest it had is abandoned (it owns nothing yet). If sign-in fails too, the link error is shown. |
+| Google with no session (the first sign-in failed) | `external-token/google.com {token, signInOnly: false}` | Signs in to, or creates, the Google account's player. |
+| Sign out | none | The stored session is forgotten and a new guest starts. Google gets the linked player back. |
+
+The Google ID token comes from Google Identity Services (`https://accounts.google.com/gsi/client`, popup mode), loaded only when the account sheet opens. The client reads the token's email for display only; the server verifies the token.
+
+### 12.2 Storage and failures
+
+- `localStorage['monstack-auth-v1']`: `{userId, sessionToken, google: {email} | null}`. The id token is kept in memory only.
+- Local-first (section 9): nothing waits on the account server. A network failure (10 s timeout) leaves the game playing, shows Offline in the header with Try again in the sheet, and keeps the stored session for the next launch. A session the server rejects (401 or 400) is dropped and a new guest started.
+- The account save is not touched by signing in, switching player or signing out. Which save wins when a device switches player is cloud save's conflict rule (#25).
+
+### 12.3 Hosting and configuration
+
+Google sign-in needs a fixed web origin that loads Google's script, which the claude.ai phone artifact cannot (it loads scripts only from a few CDNs). kj (2026-11-01): the game is hosted on GitHub Pages at `https://kjew2.github.io/monstack/`. `.github/workflows/pages.yml` deploys it after the check workflow passes on `main`; `web/wasm/site.sh` lays out the same files the artifact publishes. The artifact stays as the phone test build; its account sheet points to the Pages address for Google.
+
+Configuration is public identifiers in `web/auth.js` `CONFIG`: the UGS project id and environment (`production`) and the Google OAuth web client id. With no client id, the sheet says Google sign-in is not set up. One-time setup outside the repo (kj):
+
+1. GitHub: Settings > Pages > Source: GitHub Actions.
+2. Google Cloud console: an OAuth client of type Web application, authorised JavaScript origins `https://kjew2.github.io` (and `http://localhost:8000` for `./play.sh`), plus the OAuth consent screen.
+3. UGS dashboard: Authentication > Identity providers > Add Google, with that client id. Until then UGS answers Google calls with "id provider not found".
+4. The client id goes into `CONFIG.googleClientId`.
+
+## 13. Open decisions
 
 1. **Local gacha in remote mode as a fallback.** Whether a build configured for remote gacha may fall back to the local roll when the server is unreachable for more than some hours. Current answer is no (section 9), because the local seed would have to be trusted again. Revisit if playtests show the block is felt.
 2. **Payment ledger split.** In P1, gems move server-side while gold stays local. Confirm free-pull credits (daily and banked) move with gems, as 4.3 assumes, since they pay for pulls.
@@ -512,3 +548,4 @@ Why this split is safe: P0 and P1 have no shared surface between players (00 sec
 7. **Server-side plausibility bound.** Whether `plausibility_flag` should also be computed server-side on cloud-save upload in P1, so flagged profiles can be excluded from live tuning data without trusting the client's own flag.
 8. **TypeScript vs Go for a Nakama port.** Only relevant if the fallback is taken; Go for exact uint64 arithmetic unless the team strongly prefers TypeScript.
 9. **Competitive-play seams.** `IAccountService`, `IProgressCertifier`, `ILeaderboardService` and `IPvpService` are fixed in shape by `specs/10`; their contracts are written when P1a to P1d start. The BaaS spike in section 10 must now also cover running the certifier (`Replay` plus `StateHash`) in the chosen server runtime; the gacha vectors no longer apply (T9 cut the gacha). Section 10.1 covers `BattleSim.Resolve` and the Dungeon floors.
+10. **Linked account for PvP** (issue #19, kj). Whether async PvP (T12) needs a linked Google (later Steam) account or a guest may play it. Recommend requiring a link: a guest loses everything with the device, and a linked account is what a ban or a report attaches to. Not blocking until T12 PvP.
