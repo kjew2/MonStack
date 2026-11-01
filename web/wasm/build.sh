@@ -42,11 +42,23 @@ mkdir -p "$DIST"
 cp -r "$SRC/_framework" "$DIST/_framework"
 find "$DIST" \( -name '*.br' -o -name '*.gz' \) -delete
 cp "$ROOT/build/content-pack.json" "$DIST/content-pack.json"
-# Build stamp: index.html shows the commit and date in its header (#build), so kj can tell whether the phone artifact is current.
+# Build stamp: index.html shows the version and commit in its header (#build), so kj can tell whether the phone artifact is current.
 COMMIT=$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)
+# Human-readable version MAJOR.MINOR: MAJOR is the VERSION file (edit it by hand for a big release); MINOR counts the commits
+# on main's first-parent line since VERSION last changed (one per merge, since merges use --no-ff), so it rises on its own.
+# The count needs full history: a shallow clone is deepened first, and if that fails MINOR shows "?".
+MAJOR=$(tr -d '[:space:]' < "$ROOT/VERSION")
+[ "$(git -C "$ROOT" rev-parse --is-shallow-repository 2>/dev/null)" = true ] && git -C "$ROOT" fetch --unshallow --quiet origin >&2 2>/dev/null || true
+MINOR='?'
+if [ "$(git -C "$ROOT" rev-parse --is-shallow-repository 2>/dev/null)" = false ]; then
+  BASE=$(git -C "$ROOT" log -1 --format=%H -- VERSION 2>/dev/null || true)
+  if [ -n "$BASE" ]; then MINOR=$(git -C "$ROOT" rev-list --count --first-parent "$BASE..HEAD"); else MINOR=0; fi
+fi
+VERSION="$MAJOR.$MINOR"
+echo "version: v$VERSION ($COMMIT)"
 DIRTY=false
 [ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null)" ] && DIRTY=true
-printf '%s\n' "{\"built\":\"$(date -u +%FT%TZ)\",\"aot\":$AOT,\"commit\":\"$COMMIT\",\"dirty\":$DIRTY}" > "$DIST/build-info.json"
+printf '%s\n' "{\"version\":\"$VERSION\",\"built\":\"$(date -u +%FT%TZ)\",\"aot\":$AOT,\"commit\":\"$COMMIT\",\"dirty\":$DIRTY}" > "$DIST/build-info.json"
 
 if ! $FAST; then
   RAW=$(find "$DIST" -type f -exec cat {} + | wc -c | tr -d ' ')   # portable (macOS du has no -b)
