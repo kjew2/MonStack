@@ -403,6 +403,10 @@ namespace IdleRng.Web
                     case "rerollVendor":
                         w.P("ok", true).P("cost", AccountOps.RerollVendor(_db, _acct));
                         break;
+                    case "closeVendor":
+                        AccountOps.CloseVendor(_db, _acct);
+                        w.P("ok", true);
+                        break;
                     case "abandon":
                         AccountOps.AbandonRun(_db, _acct);
                         w.P("ok", true);

@@ -36,17 +36,16 @@ All parts are Cloud Save player items in the **private** access class: only the 
 | Part | Holds | Bound | Written by |
 |---|---|---|---|
 | `head` | The root: `seq`, the account hash, each part's key and hash, the holder device, lineage, schema and content version, the last server day the account saw (section 6.3) | Fixed, under 2 KB | Every commit |
-| `training` | `Seed`, `RunsStarted`, `TalentsOff` (the next run's loadout), the run in progress as its replay recipe | One run's log (about 100 commands) | `startRun`, every run command, `finishRun`, `abandon`, `setLoadout` |
+| `training` | `Seed`, `RunsStarted`, `TalentsOff` (the next run's loadout), the run in progress as its replay recipe, and the post-run vendor while it is open | One run's log (about 100 commands), or `VENDOR_OFFERS` offers | `startRun`, every run command, `finishRun` (opens the vendor), `abandon`, `setLoadout`, `buyOffer`, `rerollVendor`, `closeVendor` |
 | `wallet` | `Shards`, `Books` (later any premium currency, section 3.4) | Content size | `startRun` (books leave), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `dismantle`, `runTower` |
 | `collection` | `OwnedSpecies`, `Talents` (ranks) | Content size | `finishRun` (unlocks), `buyOffer` |
 | `progress` | `Achievements`, `Records` | Content size | `finishRun` |
-| `vendor` | The post-run vendor's offers and rerolls, or none | `VENDOR_OFFERS` | `startRun` (clears), `finishRun`, `buyOffer`, `rerollVendor` |
 | `dungeon` | `Tower`: tickets, pieces, grant day, attempts, bests | Fixed | `runTower`, `finishRun` (pieces), the daily grant |
 | `vault` | The Vault index: entry ids in Vault order, the locked ids, each entry's hash | `VAULT_CAP` ids | `finishRun`, `dismantle`, `lock` |
 | `mon.<id>` | One sealed monster as its result: species, seed, grade, rank, end, cycles, fights, final stats, trees (bought nodes, rolls, fusions), books used, gauntlet floor, killer and title, the run and gauntlet hashes, seal time. No replay log (section 3.5) | One per entry, about 0.75 KB | `finishRun` creates; `dismantle` deletes; never changed |
 
 Rules behind the split:
-- **By writer set.** Each part changes for one reason. A run command touches only `training`; a vendor buy touches `wallet`, `collection` and `vendor`. A commit rewrites only the parts its commands changed (section 4), so a checkpoint in the middle of a run writes `training` and `head`, a few KB.
+- **By writer set.** Each part changes for one reason. A run command touches only `training`; a vendor buy touches `wallet`, `collection` and `training`. A commit rewrites only the parts its commands changed (section 4), so a checkpoint in the middle of a run writes `training` and `head`, a few KB.
 - **Immutable things are their own items.** A sealed monster never changes (`specs/18` section 6), so it is written once and never rewritten. `Locked` is the player's flag, not part of the monster (it is outside `RunHash` already), so it moves to the `vault` index and the entry items stay immutable.
 - **A part is either bounded by content or capped by a rule.** New fields join the part whose writer set they share; a field that would grow without a bound goes to section 3.4 instead.
 
@@ -95,14 +94,15 @@ Measured on the 50-run account of section 2: the Vault drops from about 335 KB t
 | The run in progress | Until it seals or is abandoned | Stored as its recipe (seed and log, about 90 commands at most) in `training`, because the server continues it from there; cleared at seal |
 | The gauntlet floors | Never stored | The wheel replays them from the fighter and seed (`GauntletSim.Run`) and checks `GauntletHash` |
 | Dungeon attempts | Never stored | A result is a pure function of the team, day and content (`specs/21` section 1); only its rewards and bests are kept in `dungeon` |
+| The post-run vendor | Only while its screen is open | kj (2026-11-01): the vendor exists from sealing a run until the player leaves its screen (`closeVendor`, `specs/18` section 4); it is not available between runs, so it needs no part of its own. While open it sits in `training` (a few hundred bytes) |
 
-Kept although derivable: the vendor's offers (from the account seed, grade and reroll count) and the owned species (from the achievements). They are a few hundred bytes, and storing them means a later content change cannot rewrite an offer on screen or take a species away.
+Kept although derivable: the owned species (from the achievements). A few bytes, and storing them means a later content change cannot take a species away.
 
 What this gives up: a sealed monster can no longer be replayed run step by run step (to debug a balance question, use the bot CLI, `specs/09`), and an imported account's monsters can never be checked (question 1). It also changes how an old monster survives a rules change: today `Fighter` replays the log under the current rules, so a drill retune would quietly change a sealed monster's stats in battle; built from the stored result, a sealed monster keeps the stats it was sealed with, as `specs/12` section 6 intends ("a Vault entry keeps final stats"). Skills, triggers and rules are still read from content by node id, so a skill's tuning applies to old monsters, and a removed node id is still a content MAJOR (`E090`).
 
 ## 4. Commits
 
-A commit carries the commands since the last accepted one. Commands are the bridge's own (`web/wasm/BRIDGE.md`): account commands `startRun`, `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `setLoadout`, `dismantle`, `lock`, `runTower`, and run commands `drill`, `rest`, `fight`, `take`, `discard`, `reroll`, `spend`, `book`, each `{ k, a }` with the arguments as JSON. Read-only calls (`gauntlet`, `towerInfo`, `towerFloor`) are not commands. The switch that applies them moves from `IdleRng.Web.RunHost` into `IdleRng.Sim.Account.AccountCommands.Apply(content, account, command)`, so the browser, the module and the tests run one dispatcher. Each command also declares the parts it reads and writes (`AccountCommands.Touches`), checked by a test that applies every command against an account where the other parts are absent.
+A commit carries the commands since the last accepted one. Commands are the bridge's own (`web/wasm/BRIDGE.md`): account commands `startRun`, `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `closeVendor`, `setLoadout`, `dismantle`, `lock`, `runTower`, and run commands `drill`, `rest`, `fight`, `take`, `discard`, `reroll`, `spend`, `book`, each `{ k, a }` with the arguments as JSON. Read-only calls (`gauntlet`, `towerInfo`, `towerFloor`) are not commands. The switch that applies them moves from `IdleRng.Web.RunHost` into `IdleRng.Sim.Account.AccountCommands.Apply(content, account, command)`, so the browser, the module and the tests run one dispatcher. Each command also declares the parts it reads and writes (`AccountCommands.Touches`), checked by a test that applies every command against an account where the other parts are absent.
 
 ```
 client                                              module (Cloud Code)
@@ -126,7 +126,7 @@ client                                              module (Cloud Code)
 
 - **Copy-on-write.** Part keys carry the commit that wrote them (`wallet.000124`). The new versions are written first; nothing refers to them until `head` swaps, and `head` is one item, so a commit either lands whole or not at all. A crash after the part writes leaves unreferenced keys; the next commit or open deletes keys `head` does not name. New `mon.<id>` items are written before `head` the same way.
 - **Idempotent.** A commit that repeats an accepted one (same `fromSeq` and `toHash`, `head` already at `seq + 1` with that hash) returns the stored `Accepted`, so a retry after a lost answer is safe.
-- **Size.** A commit holds at most `COMMIT_MAX_COMMANDS` (placeholder 500) and at most one `finishRun`; the client splits a longer offline backlog at seals. A commit then writes at most the 7 parts below `head`, `head` itself and one new entry.
+- **Size.** A commit holds at most `COMMIT_MAX_COMMANDS` (placeholder 500) and at most one `finishRun`; the client splits a longer offline backlog at seals. A commit then writes at most the 6 parts below `head`, `head` itself and one new entry.
 - **Cost of a check.** Re-applying a whole run is about 90 commands, with each rank fight a `BattleSim.Resolve` (0.1 to 1.3 ms in the spike); a `runTower` replays up to the Dungeon's floors. Milliseconds, well inside Cloud Code's 15 s call limit.
 
 | Rejection | Meaning | Client does |
@@ -151,7 +151,7 @@ client                                              module (Cloud Code)
 ### 5.2 Checkpoints (when the client commits)
 
 No timer. The client commits:
-- after a command that changes something besides the run in progress: `startRun`, `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `dismantle`, `lock`, `runTower`, `setLoadout`;
+- after a command that changes something besides the run in progress: `startRun`, `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `closeVendor`, `dismantle`, `lock`, `runTower`, `setLoadout`;
 - when the page is hidden (`visibilitychange`), so the run in progress continues on another device;
 - when `CHECKPOINT_RUN_COMMANDS` (placeholder 25) run commands are pending, so a long run is never far behind;
 - on open, if commands are pending.

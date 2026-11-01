@@ -396,6 +396,16 @@ namespace IdleRng.Sim.Account
             return price;
         }
 
+        /// <summary>
+        /// Close the post-run vendor (kj, 2026-11-01): the player left the vendor screen, so its unbought offers are gone. The
+        /// vendor exists only between sealing a run and leaving that screen (specs/18 section 4). No vendor: nothing changes.
+        /// </summary>
+        public static void CloseVendor(ContentDb c, AccountState a)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            a.Vendor = null;
+        }
+
         // ------------------------------------------------------------------ talent loadout (specs/18 section 4, issue #106)
 
         /// <summary>Whether the talent's tier takes a legendary slot (vendor_rarities.legendary_slot).</summary>
