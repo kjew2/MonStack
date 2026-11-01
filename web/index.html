@@ -530,8 +530,8 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 
 @media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0s; --dur: 0s; --dur-slow: 0s; } .flash, .dtile.flash.t-super, .dtile.flash.t-fail, .stage-mon .sprite, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain, .dpop { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } .stage-mon.sad::before { display: none; } }
 @keyframes spfade { to { opacity: 0; } }
-/* Dungeon loot (run.js towerLoot): a banner with rays (gold on a full clear), then loot tiles that pop in one by one (.anim, once per
-   attempt); a Skill Book glows, floats and bursts sparks, a first clear gets a gold star. */
+/* Dungeon loot (run.js towerLoot): a banner with rays (gold on a full clear) that slams in once per attempt (.anim), then a face-down
+   card per drop glowing its rarity (blue shards, purple books, gold first clears) that flips on a tap; a book wobbles first and bursts. */
 .loot { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 14px 10px 12px; border-radius: var(--r-xl); overflow: hidden;
   border: 2px solid var(--gems); background: radial-gradient(circle at 50% 130%, color-mix(in srgb, var(--gems) 26%, transparent), transparent 62%), var(--gems-deep); }
 .loot::before { content: ''; position: absolute; left: 50%; top: 105%; width: 900px; height: 900px; margin: -450px 0 0 -450px; pointer-events: none;
@@ -546,40 +546,41 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 .loot.clear .lhead .big { color: var(--gold-pop); -webkit-text-stroke: 1.5px var(--gold-stroke); text-shadow: 3px 3px 0 var(--pop-red), 0 0 18px color-mix(in srgb, var(--gold) 60%, transparent); }
 .loot.none .lhead .big { color: var(--muted); text-shadow: none; }
 .lhead .sub { margin-top: 4px; font: 600 14px var(--font-display); color: var(--text); }
-.lrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.ltile { position: relative; flex: 1 1 96px; max-width: 160px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 7px;
-  border-radius: var(--r-lg); border: 2px solid var(--gems); background: var(--panel); box-shadow: 0 3px 0 var(--gems-keycap); text-align: center; }
-.ltile .lico { font-size: 30px; line-height: 1.1; }
-.ltile .lamt { font: 700 16px/1.15 var(--font-title); overflow-wrap: anywhere; }
-.ltile .lamt small { display: inline-block; font: 700 11px var(--font-display); color: var(--muted); }   /* one unit, so innerText keeps "+N Training Shards" */
-.ltile .lsub { font: 700 11px var(--font-display); color: var(--muted); }
-.ltile.shards .lamt { color: var(--gems); font-size: 20px; }
-.ltile.empty { flex-basis: 100%; max-width: none; flex-direction: row; justify-content: center; gap: 8px; border-color: var(--line); box-shadow: none; }
-.ltile.empty .lico { font-size: 20px; } .ltile.empty .lamt { font: 600 13px var(--font-display); color: var(--muted); }
-.ltile.book { border-color: var(--epic); background: radial-gradient(circle at 50% 35%, var(--epic-light), var(--panel) 75%); box-shadow: 0 3px 0 var(--epic-shadow), 0 0 16px color-mix(in srgb, var(--epic) 35%, transparent); }
-.ltile.book .lamt { color: var(--epic); }
-.ltile.book .lico { animation: lfloat 2.4s ease-in-out infinite; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--epic) 70%, transparent)); }
-.ltile.first { border-color: var(--gold); background: var(--gold-deep); box-shadow: 0 3px 0 var(--gold-dark); }
-.ltile.first .lico { color: var(--gold-pop); -webkit-text-stroke: 1px var(--gold-stroke); }
-.ltile.first .lamt { color: var(--gold); }
-.lsparks { position: absolute; left: 50%; top: 22px; pointer-events: none; }
-.lsparks i { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 2px; background: var(--gold-pop); box-shadow: 0 0 6px var(--gold-pop); opacity: 0; }
-/* the reveal: the banner word slams in, then each tile pops up after the one before (--i is its place in the row) */
 .loot.anim .lhead .big { animation: obig .6s cubic-bezier(.2,.8,.3,1.3) both; }
 .loot.anim .lhead .sub { animation: tin .4s ease-out .3s both; }
-.loot.anim .ltile { animation: lpop .55s cubic-bezier(.2,1.6,.4,1) calc(.5s + var(--i) * .32s) both; }
-.loot.anim .ltile .lico { animation: lspin .7s ease-out calc(.5s + var(--i) * .32s) both; }
-.loot.anim .ltile.book .lico { animation: lspin .7s ease-out calc(.5s + var(--i) * .32s) both, lfloat 2.4s ease-in-out calc(1.2s + var(--i) * .32s) infinite; }
-.loot.anim .ltile.book { animation: lpop .55s cubic-bezier(.2,1.6,.4,1) calc(.5s + var(--i) * .32s) both, lglow 1.2s ease-out calc(.8s + var(--i) * .32s) both; }
-.loot.anim .lsparks i { animation: lspark .9s ease-out calc(.75s + var(--i) * .32s) both; }
-@keyframes lpop { from { opacity: 0; transform: translateY(18px) scale(.5); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
-@keyframes lspin { from { transform: scale(.3) rotate(-160deg); } 70% { transform: scale(1.3) rotate(10deg); } to { transform: none; } }
-@keyframes lfloat { 50% { transform: translateY(-4px) rotate(-4deg); } }
-@keyframes lglow { from { box-shadow: 0 3px 0 var(--epic-shadow), 0 0 0 10px color-mix(in srgb, var(--epic) 45%, transparent); }
-  to { box-shadow: 0 3px 0 var(--epic-shadow), 0 0 16px color-mix(in srgb, var(--epic) 35%, transparent); } }
-@keyframes lspark { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) rotate(45deg) scale(1.2); }
-  100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) rotate(45deg) scale(.3); } }
-@media (prefers-reduced-motion: reduce) { .loot::before, .loot .lhead .big, .loot .lhead .sub, .ltile, .ltile .lico, .lsparks i { animation: none !important; } }
+.lempty { padding: 10px; border-radius: var(--r-lg); border: 2px solid var(--line); background: var(--panel); text-align: center; font: 600 13px var(--font-display); color: var(--muted); }
+.lcards-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.lcards { align-self: stretch; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+/* item art drawn in CSS: a cut shard, a skill book, a star */
+.lgem { width: 24px; height: 24px; flex: none; transform: rotate(45deg); border-radius: 4px; margin: 4px 0;
+  background: linear-gradient(135deg, var(--panel) 0 14%, var(--shield) 14% 46%, var(--gems) 46% 100%); box-shadow: inset -3px -3px 0 color-mix(in srgb, var(--text) 14%, transparent), var(--glow-gems); }
+.lbook { position: relative; width: 28px; height: 34px; flex: none; border-radius: 3px 6px 6px 3px; background: linear-gradient(90deg, var(--epic-stroke) 0 20%, var(--epic) 20%);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--epic) 50%, transparent); }
+.lbook::before { content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -3px; border-radius: 50%; background: var(--gold-pop); box-shadow: 0 0 6px var(--gold-pop); }
+.lbook::after { content: ''; position: absolute; right: -3px; top: 3px; bottom: 3px; width: 4px; border-radius: 0 2px 2px 0; background: var(--panel); border: 1px solid var(--epic-shadow); }
+.lstar { width: 30px; height: 30px; flex: none; background: var(--gold-pop); filter: drop-shadow(0 0 4px var(--gold-pop));
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.lcard { --tier: var(--gems); position: relative; flex: 0 1 112px; min-width: 92px; aspect-ratio: 3 / 4; max-width: 100%; padding: 0; border: 0; background: none; perspective: 700px; font: inherit; color: inherit; text-align: center; }
+.lcard.t-book { --tier: var(--epic); } .lcard.t-first { --tier: var(--gold); }
+.lcard.up { cursor: default; }
+.lin { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.3,1.4,.5,1); }
+.lcard.up .lin { transform: rotateY(180deg); }
+.lface { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: var(--r-lg); border: 2px solid var(--tier);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px; }
+.lback { color: var(--tier); font: 700 34px var(--font-title); background: repeating-linear-gradient(45deg, var(--panel-2) 0 8px, var(--panel) 8px 16px);
+  animation: rv-glow .9s ease-in-out infinite alternate; }
+.lfront { transform: rotateY(180deg); background: var(--panel); }
+.lcard.t-book .lfront { background: radial-gradient(circle at 50% 35%, var(--epic-light), var(--panel) 75%); }
+.lcard.t-first .lfront { background: var(--gold-deep); }
+.lfront b { font: 700 16px/1.1 var(--font-title); color: var(--tier); overflow-wrap: anywhere; }
+.lcard.t-shards .lfront b { font-size: 20px; }
+.lfront small, .lfront b small { display: inline-block; font: 700 11px var(--font-display); color: var(--muted); }   /* inline-block: innerText keeps "+N Training Shards" */
+.lcard.wobble .lin { animation: lwobble .5s ease-in-out; }
+@keyframes lwobble { 20% { transform: rotate(-5deg) scale(1.05); } 40% { transform: rotate(5deg) scale(1.08); } 60% { transform: rotate(-4deg) scale(1.08); } 80% { transform: rotate(3deg) scale(1.05); } }
+.lring { position: absolute; inset: 0; border-radius: var(--r-lg); pointer-events: none; }
+.lcard.burst .lring { animation: lburst .7s ease-out both; }
+@keyframes lburst { from { box-shadow: 0 0 0 0 var(--epic); opacity: 1; } to { box-shadow: 0 0 0 26px var(--epic); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .loot::before, .loot .lhead .big, .loot .lhead .sub, .lback, .lcard .lin, .lring { animation: none !important; transition: none !important; } }
 /* Evolution (run.js playEvolve): charge (the old form glows and shakes), morph (white silhouettes swap; .alt shows the new one),
    flash (a white flash), done (the new form in colour, sparkles). */
 .evolve { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
