@@ -76,5 +76,5 @@ A save written by a newer schema is not loaded (`SaveInvalidException`) and neve
 
 ## 7. Open
 
-- Cloud save (`specs/10`, `specs/08`): upload, restore and the conflict rule.
+- Cloud save (`specs/08` section 5.2, issue #25): upload, restore and the conflict rule.
 - A protobuf body if size ever matters (the header's `fmt` field reserves the switch).
