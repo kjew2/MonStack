@@ -69,9 +69,21 @@ Written by the module after an accepted commit, rebuildable from the parts, allo
 
 | Projection | Where | Holds | For |
 |---|---|---|---|
-| `profile` | Cloud Save **public** player item | Display name (later), best grade, best Dungeon floor, achievement count, the showcase monster's result | Other players, profile cards |
+| `profile` | Cloud Save **protected** player item, indexed; other players read it through a server call | Display name (later), best grade, best Dungeon floor, achievement count, the showcase monster's result | Other players, profile cards |
 | Leaderboards | UGS Leaderboards | Dungeon best floor per day, later PvP rating | Rankings |
 | `pvp.team` | Cloud Save **protected** player item, indexed (T12) | The defending team: entry ids, results, the rating bracket | Matchmaking across players (`specs/10` section 9) |
+
+### 3.3.1 Access classes
+
+Cloud Save has four per player: default and public (the player writes them), protected (only the server writes; the owner reads), private (only the server). Anything a player can write can be faked, so the game uses only the server-written classes **(kj, 2026-11-01)**:
+
+| Class | Holds |
+|---|---|
+| Private | The account: every part of section 3.1 and every `mon.<id>` |
+| Protected | The copies others see (`profile`, `pvp.team`), indexed for queries across players |
+| Public, default | Nothing |
+
+Game-wide data (a season's settings, a shared PvP pool) goes on a custom entity (a custom id such as `season-3`) instead of a player, written only by the server. Which classes can be indexed and read across players is to be confirmed against Unity's documentation at build step 4.
 
 ### 3.4 Data that grows without a bound
 
