@@ -337,8 +337,11 @@ small, .small { font-size: 12px; }
 @media (prefers-reduced-motion: reduce) { .tcard, .stile { transition: none; } }
 
 /* Layers */
-#modal > * { flex-shrink: 0; }
-#modal { position: absolute; inset: 0; background: var(--scrim); padding: 14px var(--gutter-r) 14px var(--gutter-l); overflow-y: auto; z-index: 5; display: flex; flex-direction: column; gap: 12px; }
+#modal > *, #account-sheet > * { flex-shrink: 0; }
+#account-sheet p { margin: 0; overflow-wrap: anywhere; }
+.google-slot { min-height: 44px; }
+#modal, #account-sheet { position: absolute; inset: 0; background: var(--scrim); padding: 14px var(--gutter-r) 14px var(--gutter-l); overflow-y: auto; z-index: 5; display: flex; flex-direction: column; gap: 12px; }
+#account-sheet { z-index: 8; }
 .units { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .unit { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .unit .bar .fill { background: var(--ok); } .unit.foe .bar .fill { background: var(--bad); }
@@ -632,6 +635,8 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 <script src="tooltips.js"></script>
 <script src="vault.js"></script>
 <script src="run.js"></script>
+<script src="auth.js"></script>
+<script src="account.js"></script>
 <script>
 // Build stamp from web/wasm/build.sh (commit, dirty flag, date): shows at a glance whether this copy is current. "dev" without one.
 (async () => {

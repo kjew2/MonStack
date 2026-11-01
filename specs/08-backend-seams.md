@@ -1,6 +1,6 @@
 # 08 - Backend Seams
 
-> **Status (rewritten for the trainer on 2026-11-01):** no backend is built. What exists is the UGS Cloud Code spike in `server/ugs/` (section 10.1), which picked the vendor, and the local save store in `IdleRng.Runtime` (`specs/06`). The rest of this spec is the design for when async PvP (T12, issue #76) and purchases (T13, #77) need a server. The idle game's seams (`IGachaService`, the gem ledger, offline gold, the idle chest, `IdleRng.Remote`) were removed at `specs/13` T7 and from this spec with this rewrite; they are in git history.
+> **Status (rewritten for the trainer on 2026-11-01):** no backend is built beyond player accounts: guest and Google sign-in for the web client (section 4, issue #19, built 2026-11-01). Besides that, what exists is the UGS Cloud Code spike in `server/ugs/` (section 10.1), which picked the vendor, and the local save store in `IdleRng.Runtime` (`specs/06`). The rest of this spec is the design for when async PvP (T12, issue #76) and purchases (T13, #77) need a server. The idle game's seams (`IGachaService`, the gem ledger, offline gold, the idle chest, `IdleRng.Remote`) were removed at `specs/13` T7 and from this spec with this rewrite; they are in git history.
 
 Scope: what the server will own, where the calls go, and what the client does when the network is absent. The battle rules a server must run are `specs/16` and `specs/21`; the account save is `specs/06` and `specs/18` section 6; the trust model for competitive play is `specs/10`. Issues: goal #15, children #19, #21, #25, #26, #27, #28, #29, #109, #122.
 
@@ -23,7 +23,7 @@ Scope: what the server will own, where the calls go, and what the client does wh
 | Seam | Today (local only) | With the server | Owns | Issue |
 |---|---|---|---|---|
 | Time | Device UTC day (`run.towerDay()` in `web/run-engine.js`) | Server time, synced (section 3) | The Dungeon's free daily ticket | #21 |
-| Account | None: one anonymous account per browser | UGS anonymous sign-in, then a linked login (section 4) | Identity, restore on another device | #19 |
+| Account | **Built:** UGS guest sign-in on launch, Google linking on the web (section 4); the save is not bound to it yet | Steam linking on the Steam build; the save bound by `AccountId` with cloud save | Identity, restore on another device | #19 |
 | Save | `localStorage` in the browser, `FileSaveStore` in tools (`specs/06`) | Local first, then a cloud copy (section 5) | Where the account lives; the conflict rule | #25 |
 | PvP battles | None | Cloud Code module (section 10.3) | Matchmaking, battle results, rating | #76 |
 | Purchases | None | Server-validated (section 6), only if purchases ship | Grants for money | #26 |
@@ -61,13 +61,41 @@ dayUsed  = max(dayUsed, account.Tower.GrantDay)                  never backwards
 
 ## 4. Accounts
 
-Today an account is the save in one browser: no identity, no restore. With the server (#19):
+**Status: built for the web client (2026-11-01), Google only.** kj (2026-11-01): start with Google; Steam waits for the Steam build (T13), other web providers wait for a request. `web/auth.js` holds the logic, `web/account.js` the header button and the account sheet, `web/wasm/test/auth.js` the browser check (a fake Unity Authentication and a fake Google script, part of `check.sh`).
 
-1. **Anonymous sign-in** on first open, so play never waits for a login. UGS anonymous sign-in took 0.7 s in the spike (section 10.1). The session token is kept beside the save, not in it.
-2. **Link a login** later: Steam on the Steam build, an email or OAuth login on the web. Linking binds the existing account; signing in on a second device restores it from the cloud copy (section 5.2).
-3. **Ids.** The server's player id is the account's identity. It is stored in the save as a nullable `AccountId` when cloud save lands (a schema step, `specs/06` section 5); the save is unchanged until then.
+1. **Guest sign-in** on first open, so play never waits for a login. The session token is kept beside the save (`localStorage['monstack-auth-v1']`), not in it.
+2. **Link Google** from the account sheet. Linking keeps the guest's player id; signing in on a second device gets the same player back. Restoring the save there is cloud save (section 5.2).
+3. **Ids.** The UGS player id is the account's identity. It is stored in the save as a nullable `AccountId` when cloud save lands (a schema step, `specs/06` section 5); the save is unchanged until then, and signing in, switching player or signing out never touches it.
 
-Decisions for kj (in #19): which web login providers, and whether PvP needs a linked login or allows anonymous players.
+### 4.1 Flow
+
+Unity Authentication through its REST API (`https://player-auth.services.api.unity.com/v1`, headers `ProjectId` and `UnityEnvironment`; no Unity SDK, CORS allows any origin):
+
+| When | Call | Result |
+|---|---|---|
+| First launch | `POST /authentication/anonymous` | A guest player. The session token is stored on the device. |
+| Later launches | `POST /authentication/session-token {sessionToken}` | The same player, fresh id token (1 h, kept in memory, refreshed a minute before it expires). The response's `user.externalIds` says whether Google is linked. |
+| Google on a guest | `POST /authentication/link/google.com {token}`, Bearer the guest's id token | The guest becomes the Google account's player (same player id). |
+| Google already has a player (a second device) | The link fails, then `POST /authentication/external-token/google.com {token, signInOnly: true}` | This device signs in to that player; its guest is abandoned (it owns nothing server-side yet). If that sign-in fails too, the link error is shown. |
+| Google with no session (the first sign-in failed) | `external-token/google.com {token, signInOnly: false}` | Signs in to, or creates, the Google account's player. |
+| Sign out | none | The stored session is forgotten and a new guest starts. Google gets the linked player back. |
+
+The Google ID token comes from Google Identity Services (`https://accounts.google.com/gsi/client`, popup mode), loaded only when the account sheet opens. The client reads the token's email for display only; the server verifies the token.
+
+Failures (section 9): a network failure (10 s timeout) leaves the game playing, shows Offline in the header with Try again in the sheet, and keeps the stored session for the next launch. A session the server rejects (401 or 400) is dropped and a new guest started.
+
+### 4.2 Hosting and configuration
+
+Google sign-in needs a fixed web origin that loads Google's script, which the claude.ai phone artifact cannot (it loads scripts only from a few CDNs). kj (2026-11-01): the game is hosted on GitHub Pages at `https://kjew2.github.io/monstack/`. `.github/workflows/pages.yml` deploys it after the check workflow passes on `main`; `web/wasm/site.sh` lays out the same files the artifact publishes. The artifact stays the phone test build; its account sheet points to the Pages address for Google.
+
+Configuration is public identifiers in `web/auth.js` `CONFIG`: the UGS project id and environment (`production`) and the Google OAuth web client id. With no client id the sheet says Google sign-in is not set up. One-time setup outside the repo (kj):
+
+1. GitHub: Settings > Pages > Source: GitHub Actions.
+2. Google Cloud console: an OAuth client of type Web application, authorised JavaScript origins `https://kjew2.github.io` (and `http://localhost:8000` for `./play.sh`), plus the OAuth consent screen.
+3. UGS dashboard: Authentication > Identity providers > Add Google, with that client id. Until then UGS answers Google calls with "id provider not found".
+4. The client id goes into `CONFIG.googleClientId`.
+
+Decision for kj (section 12): whether PvP needs a linked login.
 
 ## 5. Saves
 
@@ -244,6 +272,7 @@ Why this split is safe until T12: nothing single-player is shared between player
 2. **Analytics player id** (#27). Hash the player id with a per-build salt (nobody can follow a player across builds) or a fixed one (lifetime cohorts possible). Recommendation: fixed salt, kept out of the repo, decided with the consent question (#50).
 3. **What PvP trusts from single-player** (#76, with the `specs/10` rewrite). Whether a server-issued account seed is needed before a Vault entry may enter PvP (`specs/10` section 3's provenance rule), and which single-player rewards must be checked before a PvP team counts (section 11).
 4. **Server-side plausibility** (#27). Whether the server re-checks a cloud save on upload (replaying sealed runs, comparing grades with the `balance` distributions) or only when an entry enters PvP. Recommendation: only on PvP entry until there is data showing edited saves in the tuning set.
-5. **A Nakama port's language** (only if the fallback in 10.2 is taken). Go, for exact uint64 arithmetic.
+5. **Linked login for PvP** (#19, kj). Whether async PvP (T12) needs a linked Google (later Steam) account or a guest may play. Recommendation: require a link; a guest loses everything with the device, and a linked account is what a ban or a report attaches to. Not blocking until T12 PvP.
+6. **A Nakama port's language** (only if the fallback in 10.2 is taken). Go, for exact uint64 arithmetic.
 
-Closed: the backend vendor (2026-10-31, UGS, section 10.1). The idle game's decisions (local gacha fallback, the gem ledger split, `PendingReceipt`) went with it.
+Closed: the backend vendor (2026-10-31, UGS, section 10.1); web login providers (2026-11-01, Google first, section 4). The idle game's decisions (local gacha fallback, the gem ledger split, `PendingReceipt`) went with it.

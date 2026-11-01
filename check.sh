@@ -108,6 +108,15 @@ else
 
     step "Web: phone-width screens, tree overwrite, save/reload/resume and stale or damaged saves in headless Chromium"
     node web/wasm/test/flows.js
+
+    step "Web: player accounts (guest, Google link, second device, sign out, offline) in headless Chromium"
+    node web/wasm/test/auth.js
+
+    step "Web: the GitHub Pages site lays out"
+    SITE_TMP=$(mktemp -d)
+    bash web/wasm/site.sh "$SITE_TMP/site" > /dev/null
+    [ -f "$SITE_TMP/site/index.html" ] && [ -f "$SITE_TMP/site/auth.js" ] && [ -f "$SITE_TMP/site/wasm/dist/_framework/dotnet.js" ] || { echo "site.sh left out files" >&2; exit 1; }
+    rm -rf "$SITE_TMP"
   else
     printf '\nSkipped WebAssembly checks (--no-wasm or wasm-tools workload not installed). Not a full pass.\n'
   fi

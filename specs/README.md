@@ -11,7 +11,7 @@ Keep this table current: add a row when a spec is added, and fix the row when a 
 | `03-sim-core-combat.md` | Sim design rules, numeric model, RNG and the streams in use |
 | `05-content-data-schema.md` | Content pipeline, conventions, error codes, `ContentDb` |
 | `06-save-and-offline.md` | Save file format, stores, loading, schema versions |
-| `08-backend-seams.md` | Backend design for T12 and T13: server time, accounts, cloud save, purchases, PvP calls; the UGS spike results |
+| `08-backend-seams.md` | Backend design for T12 and T13: server time, accounts (guest and Google sign-in, built for the web client), cloud save, purchases, PvP calls; the UGS spike results |
 | `09-test-harness-and-bots.md` | Run bots, the run-balance report, golden files, `check.sh` |
 | `10-online-competitive.md` | Trust model for accounts, leaderboards and async PvP (design only) |
 | `12-monster-trainer-design.md` | The game design, merged from kj's drafts, with the decisions recorded |
