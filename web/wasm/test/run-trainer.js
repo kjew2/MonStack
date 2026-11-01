@@ -103,8 +103,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await act('species-drake').isEnabled() && (await page.locator('[data-id=unlock-drake]').count()) === 0, 'an account that unlocked drake can pick it');
   // The carousel (two owned species now): a tap glides the card to the middle and picks it; a swipe back picks the other one.
   await act('species-drake').click();
-  check(/Coremote|Drake/.test(await act('start').innerText()) && (await act('species-drake').getAttribute('aria-selected')) === 'true', 'tapping a carousel card picks it: ' + (await act('start').innerText()));
-  check((await page.locator('[data-id=species-info].slide-next').count()) === 1, 'a tap on the next card slides its info in from the right');
+  check((await act('species-drake').getAttribute('aria-selected')) === 'true' && (await act('start').innerText()).trim() === 'Start run', 'tapping a carousel card picks it; the button says Start run: ' + (await act('start').innerText()));
   await page.waitForTimeout(600);
   await page.evaluate(() => { window.__slimeImg = document.querySelector('[data-act=species-slime] img'); });
   await page.locator('[data-id=species-carousel]').evaluate((r) => r.scrollTo({ left: 0 }));
@@ -112,7 +111,16 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(true, 'swiping the carousel back picks the card that settles in the middle');
   check(await page.evaluate(() => window.__slimeImg && window.__slimeImg === document.querySelector('[data-act=species-slime] img') && window.__slimeImg.isConnected),
     'a swipe keeps the carousel cards (their portraits do not reload and pop in)');
-  check((await page.locator('[data-id=species-info].slide-prev').count()) === 1, 'the info card slides in from the side the swipe came from');
+  // Mid-swipe the info card rides with the middle card; at rest it sits still and shows the pick.
+  const mid = await page.locator('[data-id=species-carousel]').evaluate(async (r) => {
+    const c = r.querySelector('[data-act=species-slime]'); r.style.scrollSnapType = 'none';
+    r.scrollLeft = c.offsetLeft - (r.clientWidth - c.offsetWidth) / 2 + c.offsetWidth * 0.2;
+    await new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
+    const i = document.querySelector('[data-id=species-info]'), out = { t: i.style.transform, o: Number(i.style.opacity), sp: i.dataset.sp };
+    r.style.scrollSnapType = ''; r.scrollTo({ left: 0 }); return out; });
+  check(/translateX\(-/.test(mid.t) && mid.o < 1 && mid.sp === 'slime', 'mid-swipe the info card shifts and fades with the card: ' + JSON.stringify(mid));
+  await page.waitForFunction(() => { const i = document.querySelector('[data-id=species-info]'); return i && i.style.transform === '' && i.dataset.sp === 'slime'; }, null, { timeout: 5000 });
+  check(true, 'at rest the info card sits still and shows the pick');
   check((await page.locator('.dot.on').count()) === 1 && (await page.locator('.species-card.sel').count()) === 1, 'one card and one dot are lit');
   const cw0 = await page.evaluate(() => document.documentElement.scrollWidth);
   check(cw0 <= 390, 'the carousel fits the phone width (' + cw0 + 'px)');

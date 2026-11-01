@@ -111,11 +111,7 @@ small, .small { font-size: 12px; }
 .dots { display: flex; justify-content: center; gap: 8px; margin-top: -6px; }
 .dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: var(--line); }
 .dot.on { background: var(--gems); }
-.species-info { display: flex; flex-direction: column; gap: 6px; }
-.species-info.slide-next { animation: info-in .28s cubic-bezier(.2,.8,.3,1) both; --from: 40px; --tilt: -14deg; }
-.species-info.slide-prev { animation: info-in .28s cubic-bezier(.2,.8,.3,1) both; --from: -40px; --tilt: 14deg; }
-@keyframes info-in { from { opacity: 0; transform: perspective(700px) translateX(var(--from)) rotateY(var(--tilt)) scale(.96); } }
-@media (prefers-reduced-motion: reduce) { .species-info.slide-next, .species-info.slide-prev { animation: none; } }
+.species-info { display: flex; flex-direction: column; gap: 6px; will-change: transform, opacity; }
 .howto summary { cursor: pointer; }
 .howto p { margin: 6px 0 0; }
 /* Skill point gains (issue #86): a float-up by the HUD's SP count, a pulse on the count, the fight result's badge */
