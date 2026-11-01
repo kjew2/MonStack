@@ -522,6 +522,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('tower-climb').click();
   await page.locator('[data-id=tower-result]').waitFor();
   check(await page.locator('#modal').isHidden(), 'at Skip the climb shows the result at once, with no playback');
+  check(await page.locator('[data-id=tower-loot].anim').count() === 1 && (await page.locator('[data-id=tower-loot] .ltile').count()) >= 1,
+    'and reveals the loot as animated tiles');
   // ---- tower floor playback (issue #98): the rank fight's view with entropy gauges, the next vent, the corruption meter and tips
   const fought = await page.locator('[data-id^=tower-fought-]').evaluateAll((els) => els.map((e) => ({ floor: +e.dataset.id.slice(13), hash: e.dataset.hash })));
   const lastFloor = fought[fought.length - 1];
@@ -559,6 +561,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   }
   await act('tower-play-close').click();
   check(await page.locator('#modal').isHidden(), 'Close returns to the tower result');
+  check(await page.locator('[data-id=tower-loot].anim').count() === 0, 'the loot reveal plays once, not again after a playback');
   const tower = await readAccount();
   check(tower.Account.Tower.AttemptsUsed === 1 && tower.Account.Tower.Day >= 0 && tower.Account.Tower.GrantDay === tower.Account.Tower.Day,
     'the attempt is counted and saved (day ' + tower.Account.Tower.Day + ')');

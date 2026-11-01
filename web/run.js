@@ -1346,12 +1346,7 @@
 
   function towerResult(main, r) {
     const last = r.floors[r.floors.length - 1];
-    const card = h('div', { class: 'card alert', 'data-id': 'tower-result' }, [
-      h('b', { text: r.cleared ? 'Cleared all ' + r.floorsCleared + ' floors!' : 'Fell on floor ' + r.floorReached + ' to ' + last.name + ' (' + r.floorsCleared + ' cleared)' }),
-      h('span', { class: 'gems num', 'data-id': 'tower-shards', text: r.shards ? '+' + r.shards + ' Training Shards' : 'No floors cleared: nothing to pay' }),
-      r.books.length ? h('span', { class: 'gold', 'data-id': 'tower-books', text: 'Skill Books: ' + r.books.map((b) => b.name + ' (F' + b.floor + ')').join(', ') }) : null,
-      r.firstClears.length ? h('span', { class: 'small muted', text: 'First clears: floors ' + r.firstClears.join(', ') }) : null,
-    ]);
+    const card = h('div', { class: 'card alert', 'data-id': 'tower-result' }, [towerLoot(r, last)]);
     const rows = h('div', { class: 'small floors-fought' });
     r.floors.forEach((f) => rows.append(h('div', { class: 'row between', 'data-id': 'tower-fought-' + f.floor, 'data-hash': f.hash }, [
       h('span', null, [
@@ -1367,6 +1362,37 @@
     f.actions.forEach((x) => { const l = v.line(x); list.append(h('li', { class: l.cls, text: l.text })); });
     card.append(h('details', null, [h('summary', { class: 'small', text: 'Floor ' + f.floor + ' fight log (' + f.actionCount + ' actions' + (f.actionCount > f.actions.length ? ', first ' + f.actions.length + ' shown' : '') + ')' }), list]));
     main.append(card);
+  }
+
+  // The attempt's loot as a reveal: a banner (gold rays on a full clear), then the shard pile, each Skill Book and the first
+  // clears pop in one after another, books with a glow and a burst of sparks. It animates once per attempt, when the player first
+  // sees it (after the deciding floor's playback closes, or at once on Skip); later renders show it still.
+  function towerLoot(r, last) {
+    const reveal = !r.lootSeen && !ui.towerFight;
+    if (reveal) r.lootSeen = true;
+    const n = r.floorsCleared;
+    const big = r.cleared ? 'Full clear!' : n ? n + (n === 1 ? ' floor cleared' : ' floors cleared') : 'Defeated';
+    const sub = r.cleared ? 'All ' + n + ' floors beaten' : 'Fell on floor ' + r.floorReached + ' to ' + last.name;
+    let i = 0;
+    const tile = (cls, ico, kids) => h('div', { class: 'ltile ' + cls, style: '--i:' + i++ }, [h('span', { class: 'lico', 'aria-hidden': 'true', text: ico }), ...kids]);
+    const sparks = () => {
+      const s = h('span', { class: 'lsparks', 'aria-hidden': 'true' });
+      for (let k = 0; k < 10; k++) s.append(h('i', { style: '--a:' + Math.round(k * 36 + (k % 2) * 14) + 'deg;--d:' + (k % 3 ? 34 : 48) + 'px' }));
+      return s;
+    };
+    const tiles = [r.shards
+      ? tile('shards', '💎', [h('b', { class: 'lamt num', 'data-id': 'tower-shards' }, ['+' + r.shards + ' ', h('small', { text: 'Training Shards' })])])
+      : tile('empty', '🕸', [h('b', { class: 'lamt', 'data-id': 'tower-shards', text: 'No floors cleared: nothing to pay' })])];
+    r.books.forEach((b) => tiles.push(tile('book', '📘', [sparks(), h('b', { class: 'lamt', 'data-id': 'tower-book', text: b.name }),
+      h('small', { class: 'lsub', text: 'Skill Book · floor ' + b.floor })])));
+    const fc = r.firstClears, inRow = fc.every((f, k) => !k || f === fc[k - 1] + 1);   // a range only when they run in a row
+    if (fc.length) tiles.push(tile('first', '★', [h('b', { class: 'lamt', 'data-id': 'tower-first',
+      text: fc.length === 1 ? 'Floor ' + fc[0] : 'Floors ' + (inRow ? fc[0] + '–' + fc[fc.length - 1] : fc.join(', ')) }),
+      h('small', { class: 'lsub', text: fc.length === 1 ? 'First clear' : 'First clears' })]));
+    return h('div', { class: 'loot ' + (r.cleared ? 'clear' : n ? 'some' : 'none') + (reveal ? ' anim' : ''), 'data-id': 'tower-loot' }, [
+      h('div', { class: 'lhead' }, [h('div', { class: 'big', text: big }), h('div', { class: 'sub', text: sub })]),
+      h('div', { class: 'lrow' }, tiles),
+    ]);
   }
 
   // Plays one floor of the shown attempt: the last floor is in the attempt's result; the engine replays any other (read only).
