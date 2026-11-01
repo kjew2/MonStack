@@ -51,7 +51,8 @@ namespace IdleRng.Runtime.Tests
             Assert.That(b.Talents, Is.EqualTo(a.Talents));
             Assert.That(b.Vault.Count, Is.EqualTo(1));
             Assert.That(b.Vault[0].RunHash, Is.EqualTo(a.Vault[0].RunHash));
-            Assert.That(b.Vault[0].Log.Count, Is.EqualTo(a.Vault[0].Log.Count));
+            Assert.That(b.Vault[0].Id, Is.EqualTo(a.Vault[0].Id));
+            Assert.That(b.Vault[0].Fighter(TestContent.Db).Stats.Str, Is.EqualTo(a.Vault[0].Fighter(TestContent.Db).Stats.Str));
             Assert.That(b.Active, Is.Not.Null);
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)));
             Assert.That(Encoding.UTF8.GetString(AccountSave.Encode(b)), Is.EqualTo(Encoding.UTF8.GetString(AccountSave.Encode(a))),
@@ -79,14 +80,13 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
-        public void TheLadder_RoundTrips_InTheRecipeAndTheVault()
+        public void TheLadder_RoundTrips_InTheRecipe()
         {
             var a = Played();
             var b = AccountSave.Decode(TestContent.Db, AccountSave.Encode(a), out var notice);
             Assert.That(notice, Is.Null);
             Assert.That(b.Active.Ladder, Is.EqualTo(a.Active.Ladder));
             Assert.That(b.Active.Ladder, Is.Not.Empty);
-            Assert.That(b.Vault[0].Ladder, Is.EqualTo(a.Vault[0].Ladder));
         }
 
         [Test]
@@ -110,7 +110,6 @@ namespace IdleRng.Runtime.Tests
             Assert.That(notice, Is.Null, "nothing was dropped");
             Assert.That(b.Active.Ladder, Is.Empty);
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(legacy)));
-            Assert.That(b.Vault[0].Ladder, Is.Empty);
         }
 
         [Test]
@@ -211,6 +210,17 @@ namespace IdleRng.Runtime.Tests
             Assert.That(AccountOps.TowerTickets(db, b, 41), Is.EqualTo(db.Constants.TowerAttemptsPerDay), "the next day's free tickets are due");
         }
 
+        /// <summary>Plays a run to its end with rests and fights only (offers discarded).</summary>
+        static void PlayOut(Sim.Content.ContentDb db, RunState run)
+        {
+            while (run.Phase != RunPhase.Finished)
+            {
+                while (run.Offers.Count > 0) TrainingRun.DiscardOffer(db, run);
+                if (run.Phase == RunPhase.AwaitFight) TrainingRun.Fight(db, run);
+                else TrainingRun.Rest(db, run);
+            }
+        }
+
         /// <summary>An account right after its first sealed run: no run in progress, the vendor's offers rolled.</summary>
         static AccountState SealedOnce()
         {
@@ -291,8 +301,42 @@ namespace IdleRng.Runtime.Tests
             var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()));
             Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
             Assert.That(b.Active.Mods.LegacyDrafts, Is.True, "the run in progress replays its fixed drafts");
-            Assert.That(b.Vault.Select(e => e.Mods.LegacyDrafts), Is.All.True);
             Assert.That(AccountSave.Decode(db, AccountSave.Encode(a)).Active.Mods.LegacyDrafts, Is.False, "a v8 save keeps a new run new");
+        }
+
+        [Test]
+        public void V8Save_MigratesToV9_EntriesGetTheirRunIndex_AndLoseTheirReplay()
+        {
+            var db = TestContent.Db;
+            var a = AccountOps.New(db, 77);
+            for (int i = 0; i < 3; i++) { PlayOut(db, AccountOps.StartRun(db, a, "slime")); AccountOps.FinishRun(db, a); }
+            AccountOps.StartRun(db, a, "slime");
+            AccountOps.AbandonRun(db, a);   // a run that left no entry: ids keep counting runs, not entries
+            PlayOut(db, AccountOps.StartRun(db, a, "slime"));
+            AccountOps.FinishRun(db, a);
+            Assert.That(a.Vault.Select(e => e.Id), Is.EqualTo(new[] { 0, 1, 2, 4 }));
+            var want = a.Vault.Select(e => e.Fighter(db)).ToList();
+
+            // Rewrite it as a v8 save: entries without Id, with a replay recipe.
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body["SchemaVersion"] = 8;
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct["SchemaVersion"] = 8;
+            foreach (Newtonsoft.Json.Linq.JObject e in acct["Vault"])
+            {
+                e.Remove("Id");
+                e["Log"] = new Newtonsoft.Json.Linq.JArray(new Newtonsoft.Json.Linq.JObject { ["Kind"] = "Rest" });
+                e["Mods"] = new Newtonsoft.Json.Linq.JObject { ["LegacyDrafts"] = true };
+                e["Ladder"] = new Newtonsoft.Json.Linq.JArray();
+            }
+            var stray = (Newtonsoft.Json.Linq.JObject)acct["Vault"][3];
+            stray["Seed"] = "00000000000000ff";   // no started run has this seed
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.Vault.Select(e => e.Id), Is.EqualTo(new[] { 0, 1, 2, -1 }), "found from the seed; -1 when no run matches");
+            for (int i = 0; i < 3; i++) Assert.That(b.Vault[i].Fighter(db).Stats.Str, Is.EqualTo(want[i].Stats.Str));
+            string saved = SaveBody(AccountSave.Encode(b));
+            Assert.That(saved, Does.Not.Contain("\"Log\"").And.Not.Contain("\"Ladder\""), "the replay recipe is gone from the entries");
         }
 
         [Test]

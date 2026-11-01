@@ -165,10 +165,37 @@ namespace IdleRng.Runtime.Save
                         if (e is JObject o) Legacy(o);
                 version = 8;
             }
+            if (version == 8)
+            {
+                // v8 -> v9 (specs/27 section 3, kj 2026-11-01): Vault entries keep their result, not their replay. Each gains
+                // Id, the index of the run that made it, found from its seed (RunSeed is a pure function of the account seed and
+                // the index; -1 when no started run matches), and loses Log, Mods and Ladder.
+                ulong accountSeed = HexSeed(acct["Seed"]);
+                int started = acct["RunsStarted"]?.Type == JTokenType.Integer ? (int)acct["RunsStarted"] : 0;
+                if (acct["Vault"] is JArray vault)
+                    foreach (var e in vault)
+                    {
+                        if (!(e is JObject o)) continue;
+                        ulong seed = HexSeed(o["Seed"]);
+                        int id = -1;
+                        for (int i = 0; i < started && id < 0; i++)
+                            if (AccountOps.RunSeed(accountSeed, i) == seed) id = i;
+                        o["Id"] = id;
+                        o.Remove("Log");
+                        o.Remove("Mods");
+                        o.Remove("Ladder");
+                    }
+                version = 9;
+            }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
             return version;
         }
+
+        /// <summary>A seed field as the save writes it (16 lowercase hex characters, specs/06 section 2); 0 when missing or malformed.</summary>
+        static ulong HexSeed(JToken t) =>
+            t != null && t.Type == JTokenType.String && ulong.TryParse((string)t, System.Globalization.NumberStyles.AllowHexSpecifier,
+                System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0UL;
 
         public static void Write(ISaveStore store, AccountState a) => store.Write(Encode(a));
 

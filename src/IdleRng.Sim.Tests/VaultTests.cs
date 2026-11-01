@@ -55,30 +55,32 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void Entry_ReplaysToTheSameRun_AndRebuildsTheFighter()
+        public void Entry_BuildsTheRunsFighter_FromItsStoredResult()
         {
-            var s = Play(Db.SpeciesList[1].Id, 99);
-            var e = Vault.Seal(Db, s);
-            var again = TrainingRun.Replay(Db, e.SpeciesId, e.Seed, e.Log, e.Books);
-            Assert.That(TrainingRun.StateHash(again), Is.EqualTo(e.RunHash));
+            foreach (var sp in Db.SpeciesList)
+                foreach (ulong seed in new ulong[] { 99, 31, 7 })
+                {
+                    var s = Play(sp.Id, seed);
+                    var e = Vault.Seal(Db, s);
+                    AssertSameFighter(e.Fighter(Db), TrainingRun.MonsterFighter(Db, s), sp.Id + "/" + seed);
+                }
+        }
 
-            var f = e.Fighter(Db);
-            var direct = TrainingRun.MonsterFighter(Db, s);
-            Assert.That(f.Element, Is.EqualTo(direct.Element));
-            Assert.That(f.Skills.Select(k => k.Id), Is.EqualTo(direct.Skills.Select(k => k.Id)));
-            foreach (var id in StatIds.Trained) Assert.That(f.Stats.Get(id), Is.EqualTo(direct.Stats.Get(id)));
+        /// <summary>Same element, stats, skills (in order), triggers and rules: the battle sees the same monster.</summary>
+        internal static void AssertSameFighter(IdleRng.Sim.Combat.Fighter got, IdleRng.Sim.Combat.Fighter want, string what)
+        {
+            Assert.That(got.Id, Is.EqualTo(want.Id), what);
+            Assert.That(got.Element, Is.EqualTo(want.Element), what);
+            foreach (var id in StatIds.Trained) Assert.That(got.Stats.Get(id), Is.EqualTo(want.Stats.Get(id)), what + " " + id);
+            Assert.That(got.Skills.Select(k => k.Id), Is.EqualTo(want.Skills.Select(k => k.Id)), what + " skills");
+            Assert.That(got.Triggers.Select(t => t.Trigger + ":" + t.Skill.Id), Is.EqualTo(want.Triggers.Select(t => t.Trigger + ":" + t.Skill.Id)), what + " triggers");
+            Assert.That(got.Rules, Is.EqualTo(want.Rules), what + " rules");
         }
 
         [Test]
-        public void Seal_KeepsTheLadder_AndAPrePoolEntryReplaysAgainstTheFlatRanks()
+        public void Seal_KeepsNoReplayLog_AndAPrePoolRunStillBuildsItsFighter()
         {
-            var s = Play(Db.SpeciesList[0].Id, 31);
-            var e = Vault.Seal(Db, s);
-            Assert.That(e.Ladder, Is.EqualTo(s.Ladder));
-            Assert.That(e.Ladder, Is.Not.SameAs(s.Ladder));
-            Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, e.SpeciesId, e.Seed, e.Log, e.Books, e.Mods, e.Ladder)), Is.EqualTo(e.RunHash));
-
-            // An entry sealed before the pools has no ladder (empty after loading): its run fought the flat fight_ranks rows.
+            // A run from before the rank pools fought the flat fight_ranks rows; its entry is a result like any other.
             var legacy = TrainingRun.Start(Db, Db.SpeciesList[0].Id, 31, null, null, new System.Collections.Generic.List<string>());
             while (legacy.Phase != RunPhase.Finished)
             {
@@ -86,11 +88,8 @@ namespace IdleRng.Sim.Tests
                 if (legacy.Phase == RunPhase.AwaitFight) TrainingRun.Fight(Db, legacy); else TrainingRun.Rest(Db, legacy);
             }
             var old = Vault.Seal(Db, legacy);
-            Assert.That(old.Ladder, Is.Empty);
-            var f = old.Fighter(Db);
-            Assert.That(f.Stats.Get(StatIds.Hp), Is.EqualTo(legacy.Stats.Get(StatIds.Hp)));
-            old.Ladder = null;   // a hand-edited save could carry null: still the flat ranks
-            Assert.That(old.Fighter(Db).Stats.Get(StatIds.Hp), Is.EqualTo(legacy.Stats.Get(StatIds.Hp)));
+            AssertSameFighter(old.Fighter(Db), TrainingRun.MonsterFighter(Db, legacy), "legacy");
+            Assert.That(typeof(VaultEntry).GetProperty("Log"), Is.Null, "a Vault entry keeps no replay log (specs/27 section 3.5)");
         }
 
         [Test]
@@ -107,7 +106,6 @@ namespace IdleRng.Sim.Tests
             }
             var e = Vault.Seal(Db, s);
             Assert.That(e.Books, Is.EqualTo(new[] { book }));
-            Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, e.SpeciesId, e.Seed, e.Log, e.Books)), Is.EqualTo(e.RunHash));
         }
     
         [Test]

@@ -396,8 +396,9 @@ namespace IdleRng.Sim.Tests
             Assert.That(run.Mods.StartSp, Is.EqualTo(1), "Head Start is still on");
             Assert.That(a.TalentsOff, Is.EqualTo(new[] { "frugal_drills", "scavenger" }), "saved in content order without duplicates (a talent not owned may be off)");
             PlayOut(run);
+            var stats = run.Stats.Clone();
             var f = AccountOps.FinishRun(Db, a);
-            Assert.That(f.Entry.Mods.DrillCostMult, Is.EqualTo(1), "the Vault entry keeps the run's modifiers, so it replays");
+            Assert.That(f.Entry.Stats.Str, Is.EqualTo(stats.Str), "the Vault entry keeps the result the run's modifiers produced");
 
             Assert.That(AccountOps.DefaultLoadout(Db, a), Is.EqualTo(new[] { "frugal_drills", "scavenger" }));
             Assert.That(AccountOps.Modifiers(Db, a).DrillCostMult, Is.EqualTo(1), "the next run's bonuses follow the last loadout");
@@ -495,7 +496,7 @@ namespace IdleRng.Sim.Tests
             Assert.That(a.Vault.Single(), Is.SameAs(f.Entry));
             Assert.That(f.Entry.SpeciesId, Is.EqualTo("drake"));
             Assert.That(f.Entry.SealedUtcMs, Is.EqualTo(1234));
-            Assert.That(f.Entry.Mods.DrillCostMult, Is.EqualTo(run.Mods.DrillCostMult));
+            Assert.That(f.Entry.Id, Is.EqualTo(0), "the entry is named by its run's index");
             Assert.That(a.Active, Is.Null);
             Assert.Throws<InvalidOperationException>(() => AccountOps.FinishRun(Db, a), "nothing to finish");
         }
@@ -547,12 +548,12 @@ namespace IdleRng.Sim.Tests
             a.Talents[Talent(TalentEffect.StartSp).Id] = 2;
             Assert.That(run.Mods.StartSp, Is.EqualTo(m.StartSp));
 
-            // a vaulted talented monster still replays to its sealed run
+            // a vaulted talented monster fights as it was sealed
             PlayOut(run);
+            var sealedStr = run.Stats.Str;
             var entry = AccountOps.FinishRun(Db, a).Entry;
-            var replayed = TrainingRun.Replay(Db, entry.SpeciesId, entry.Seed, entry.Log, entry.Books, entry.Mods);
-            Assert.That(TrainingRun.StateHash(replayed), Is.EqualTo(entry.RunHash));
-            Assert.That(entry.Fighter(Db).Stats.Str, Is.EqualTo(replayed.Stats.Str));
+            Assert.That(entry.RunHash, Is.EqualTo(TrainingRun.StateHash(run)));
+            Assert.That(entry.Fighter(Db).Stats.Str, Is.EqualTo(sealedStr));
         }
 
         [Test]
@@ -648,7 +649,7 @@ namespace IdleRng.Sim.Tests
             string hash = e.RunHash;
             AccountOps.StartRun(Db, a, "drake");
             AccountOps.SetLocked(Db, a, 0, true);
-            Assert.That(TrainingRun.StateHash(TrainingRun.Replay(Db, e.SpeciesId, e.Seed, e.Log, e.Books, e.Mods)), Is.EqualTo(hash));
+            Assert.That(a.Vault[0].RunHash, Is.EqualTo(hash), "the lock is not part of the sealed monster");
             AccountOps.SetLocked(Db, a, 0, false);
             AccountOps.Dismantle(Db, a, 0);
             Assert.That(a.Vault, Is.Empty);

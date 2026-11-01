@@ -32,6 +32,44 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void EveryPolicy_SealedMonster_FightsAsTheRunDid_AfterASaveRoundTrip()
+        {
+            // A Vault entry keeps its result, not its replay (specs/27 section 3.5): its fighter, built from the stored stats and
+            // trees after the save round trip (rolled trees lose their in-memory node list), must be the finished run's fighter.
+            var db = Content.Db;
+            var books = new List<string>(db.SkillBooks.Keys);
+            var a = IdleRng.Sim.Account.AccountOps.New(db, 9);
+            var want = new List<IdleRng.Sim.Combat.Fighter>();
+            var labels = new List<string>();
+            int id = 0;
+            foreach (var sp in db.SpeciesList)
+                foreach (var name in RunPolicies.Names)
+                    foreach (var withBooks in new[] { false, true })
+                        foreach (ulong seed in new ulong[] { 3, 11 })
+                        {
+                            var s = RunBot.Play(db, RunPolicies.Create(name), sp.Id, seed, null, withBooks ? books : null);
+                            want.Add(TrainingRun.MonsterFighter(db, s));
+                            labels.Add($"{sp.Id} {name} books={withBooks} seed={seed}");
+                            a.Vault.Add(Vault.Seal(db, s, 0, id++));
+                        }
+            var b = IdleRng.Runtime.Save.AccountSave.Decode(db, IdleRng.Runtime.Save.AccountSave.Encode(a));
+            Assert.That(b.Vault.Count, Is.EqualTo(want.Count));
+            Assert.That(b.Vault.Any(e => e.Trees.Any(t => t.Roll != null)), Is.True, "some monster has a rolled tree");
+            for (int i = 0; i < want.Count; i++)
+            {
+                var got = b.Vault[i].Fighter(db);
+                var w = want[i];
+                string what = labels[i];
+                Assert.That(got.Element, Is.EqualTo(w.Element), what);
+                foreach (var st in IdleRng.Sim.Combat.StatIds.Trained) Assert.That(got.Stats.Get(st), Is.EqualTo(w.Stats.Get(st)), what + " " + st);
+                Assert.That(got.Skills.Select(k => k.Id), Is.EqualTo(w.Skills.Select(k => k.Id)), what + " skills");
+                Assert.That(got.Triggers.Select(t => t.Trigger + ":" + t.Skill.Id), Is.EqualTo(w.Triggers.Select(t => t.Trigger + ":" + t.Skill.Id)), what + " triggers");
+                Assert.That(got.Rules, Is.EqualTo(w.Rules), what + " rules");
+                Assert.That(b.Vault[i].Id, Is.EqualTo(i), what + " id");
+            }
+        }
+
+        [Test]
         public void MonoPolicy_DrillsOnlyItsStat_UntilCapped()
         {
             var db = Content.Db;

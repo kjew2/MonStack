@@ -14,5 +14,6 @@
   <ItemGroup>
     <ProjectReference Include="../IdleRng.Bots/IdleRng.Bots.csproj" />
     <ProjectReference Include="../IdleRng.Sim/IdleRng.Sim.csproj" />
+    <ProjectReference Include="../IdleRng.Runtime/IdleRng.Runtime.csproj" />
   </ItemGroup>
 </Project>
