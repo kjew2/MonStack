@@ -58,7 +58,6 @@ This file is how lessons reach the next agent. When the user corrects you on som
 
 - Generated test data is large and not for reading. Never open, grep through or hand-edit `golden/` files: regenerate them through the bot CLI, never edit by hand.
 - The Workflow loop applies to every task, including ones that only edit CLAUDE.md or settings. "Show me X" means merge, then show X in the report: it is not a reason to stop before merging.
-- kj tests from a phone through the artifact https://claude.ai/artifact/LpdHtJ53ujKkXPizqPkkkg. After merging a change to `web/`, `src/` or `Content/`, run `web/wasm/publish-artifact.sh` on the merged main, pass the JSON it prints to the Artifact publish call, then give kj the link (the page header shows the published commit).
 - Google sign-in works only on the GitHub Pages build (https://kjew2.github.io/MonStack/, deployed by `.github/workflows/pages.yml` after a green check on main), never in the artifact: test login there. The path is case-sensitive: `MonStack`, as the repo is named.
 - Any change to `content_src/` (even one string) changes the content hash that `golden/` embeds. Run `golden --update` through the bot CLI and say so in the merge commit.
 - Removing or renaming a content id (any `id` in `content_src/`, not a string key) needs a MAJOR bump of `content_version` in `content_src/meta.csv`, or `check.sh` fails with `E090`. Prefer adding ids.
