@@ -359,7 +359,7 @@
           h('span', { class: 'meta' }, [h('span', { class: 'lbl', text: up(st) })]),
           h('span', { class: 'vrow' }, [
             h('span', { class: 'val num', text: num(v) }),
-            h('small', { class: 'grow num', text: 'x' + s.growth[st].toFixed(2), title: 'Growth: drill gains are multiplied by ' + s.growth[st].toFixed(2) }),
+            h('small', { class: 'gmul num', text: 'x' + s.growth[st].toFixed(2), title: 'Growth: drill gains are multiplied by ' + s.growth[st].toFixed(2) }),
           ]),
           statGauge(s, st)]),
         h('button', { class: 'info', type: 'button', ...TIP.attrs('stat:' + st), 'data-id': 'info-' + st, 'aria-label': up(st) + ': what it does' }, [h('span', { class: 'ic', 'aria-hidden': 'true', text: 'i' })]),
