@@ -1364,35 +1364,75 @@
     main.append(card);
   }
 
-  // The attempt's loot as a reveal: a banner (gold rays on a full clear), then the shard pile, each Skill Book and the first
-  // clears pop in one after another, books with a glow and a burst of sparks. It animates once per attempt, when the player first
-  // sees it (after the deciding floor's playback closes, or at once on Skip); later renders show it still.
+  // The attempt's loot (specs/21 section 8): a banner (gold rays on a full clear) slams in once per attempt, when the player first
+  // sees it (after the deciding floor's playback closes, or at once on Skip). Under it each drop is a face-down card glowing its
+  // rarity colour (blue shards, purple Skill Books, gold first clears) that the player flips with a tap, or all at once with Reveal
+  // all; a book wobbles first and bursts. Which cards are face up is kept on the result, so a re-render keeps them.
   function towerLoot(r, last) {
     const reveal = !r.lootSeen && !ui.towerFight;
     if (reveal) r.lootSeen = true;
     const n = r.floorsCleared;
     const big = r.cleared ? 'Full clear!' : n ? n + (n === 1 ? ' floor cleared' : ' floors cleared') : 'Defeated';
     const sub = r.cleared ? 'All ' + n + ' floors beaten' : 'Fell on floor ' + r.floorReached + ' to ' + last.name;
-    let i = 0;
-    const tile = (cls, ico, kids) => h('div', { class: 'ltile ' + cls, style: '--i:' + i++ }, [h('span', { class: 'lico', 'aria-hidden': 'true', text: ico }), ...kids]);
-    const sparks = () => {
-      const s = h('span', { class: 'lsparks', 'aria-hidden': 'true' });
-      for (let k = 0; k < 10; k++) s.append(h('i', { style: '--a:' + Math.round(k * 36 + (k % 2) * 14) + 'deg;--d:' + (k % 3 ? 34 : 48) + 'px' }));
-      return s;
-    };
-    const tiles = [r.shards
-      ? tile('shards', '💎', [h('b', { class: 'lamt num', 'data-id': 'tower-shards' }, ['+' + r.shards + ' ', h('small', { text: 'Training Shards' })])])
-      : tile('empty', '🕸', [h('b', { class: 'lamt', 'data-id': 'tower-shards', text: 'No floors cleared: nothing to pay' })])];
-    r.books.forEach((b) => tiles.push(tile('book', '📘', [sparks(), h('b', { class: 'lamt', 'data-id': 'tower-book', text: b.name }),
-      h('small', { class: 'lsub', text: 'Skill Book · floor ' + b.floor })])));
-    const fc = r.firstClears, inRow = fc.every((f, k) => !k || f === fc[k - 1] + 1);   // a range only when they run in a row
-    if (fc.length) tiles.push(tile('first', '★', [h('b', { class: 'lamt', 'data-id': 'tower-first',
-      text: fc.length === 1 ? 'Floor ' + fc[0] : 'Floors ' + (inRow ? fc[0] + '–' + fc[fc.length - 1] : fc.join(', ')) }),
-      h('small', { class: 'lsub', text: fc.length === 1 ? 'First clear' : 'First clears' })]));
+    const items = towerLootItems(r);
+    if (!r.flipped) r.flipped = items.map(() => false);
+    let body;
+    if (!items.length) {
+      body = h('div', { class: 'lempty' }, [h('b', { 'data-id': 'tower-shards', text: 'No floors cleared: nothing to pay' })]);
+    } else {
+      const cards = items.map((it, k) => {
+        const up = r.flipped[k];
+        return h('button', { class: 'lcard t-' + it.kind + (up ? ' up' : ''), type: 'button', 'data-act': 'tower-card-' + k,
+          'aria-label': up ? null : 'Flip a ' + (it.kind === 'book' ? 'purple' : it.kind === 'first' ? 'gold' : 'blue') + ' loot card',
+          onclick: () => flipLoot(r, k) }, [
+          h('span', { class: 'lin' }, [
+            h('span', { class: 'lface lback', 'aria-hidden': 'true', text: '?' }),
+            h('span', { class: 'lface lfront' }, it.front),
+          ]),
+          h('span', { class: 'lring', 'aria-hidden': 'true' }),
+        ]);
+      });
+      const left = r.flipped.filter((x) => !x).length;
+      let i = 0;
+      const at = (k) => setTimeout(() => flipLoot(r, k), reducedMotion() ? 0 : 420 * i++);   // Reveal all: one card after another
+      body = h('div', { class: 'lcards-wrap' }, [
+        h('div', { class: 'lcards', 'data-id': 'tower-cards' }, cards),
+        h('button', { class: 'btn small gemsy', type: 'button', 'data-act': 'tower-reveal', hidden: !left, text: 'Reveal all',
+          onclick: (e) => { e.currentTarget.disabled = true; r.flipped.forEach((up, k) => { if (!up) at(k); }); } }),
+      ]);
+    }
     return h('div', { class: 'loot ' + (r.cleared ? 'clear' : n ? 'some' : 'none') + (reveal ? ' anim' : ''), 'data-id': 'tower-loot' }, [
       h('div', { class: 'lhead' }, [h('div', { class: 'big', text: big }), h('div', { class: 'sub', text: sub })]),
-      h('div', { class: 'lrow' }, tiles),
+      body,
     ]);
+  }
+
+  // The attempt's drops in card order: the shards, each Skill Book, then the first clears as one card.
+  function towerLootItems(r) {
+    const art = (cls) => h('span', { class: cls, 'aria-hidden': 'true' });
+    const items = [];
+    if (r.shards) items.push({ kind: 'shards', front: [art('lgem'), h('b', { class: 'num', 'data-id': 'tower-shards' }, ['+' + r.shards + ' ', h('small', { text: 'Training Shards' })])] });
+    r.books.forEach((b) => items.push({ kind: 'book', front: [art('lbook'), h('b', { 'data-id': 'tower-book', text: b.name }), h('small', { text: 'Skill Book · floor ' + b.floor })] }));
+    const fc = r.firstClears, inRow = fc.every((f, k) => !k || f === fc[k - 1] + 1);   // a range only when they run in a row
+    if (fc.length) items.push({ kind: 'first', front: [art('lstar'), h('b', { 'data-id': 'tower-first',
+      text: fc.length === 1 ? 'Floor ' + fc[0] : 'Floors ' + (inRow ? fc[0] + '\u2060–\u2060' + fc[fc.length - 1] : fc.join(', ')) }),
+      h('small', { text: fc.length === 1 ? 'First clear' : 'First clears' })] });
+    return items;
+  }
+
+  // Flips loot card k of attempt r face up, on whatever copy of the card is on screen now (a render may have replaced it).
+  function flipLoot(r, k) {
+    if (r.flipped[k] || ui.towerResult !== r) return;
+    const el = document.querySelector('[data-act="tower-card-' + k + '"]');
+    if (!el || el.dataset.busy) return;
+    const done = () => {
+      r.flipped[k] = true;
+      const cur = document.querySelector('[data-act="tower-card-' + k + '"]');
+      if (cur) { cur.classList.remove('wobble'); cur.classList.add('up'); cur.removeAttribute('aria-label'); if (cur.classList.contains('t-book')) cur.classList.add('burst'); }
+      if (r.flipped.every(Boolean)) { const all = document.querySelector('[data-act="tower-reveal"]'); if (all) all.hidden = true; }
+    };
+    if (el.classList.contains('t-book') && !reducedMotion()) { el.dataset.busy = '1'; el.classList.add('wobble'); setTimeout(done, 500); }
+    else done();
   }
 
   // Plays one floor of the shown attempt: the last floor is in the attempt's result; the engine replays any other (read only).
