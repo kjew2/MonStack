@@ -76,5 +76,5 @@ A save written by a newer schema is not loaded (`SaveInvalidException`) and neve
 
 ## 7. Open
 
-- Cloud save (`specs/08` section 5.2, issue #25): upload, restore and the conflict rule.
+- The account on the server (`specs/27`, issue #25): the device's save becomes an offline cache of the server's account plus pending commands; schema v9 adds `VaultEntry.Id` (`specs/27` section 3.1). Design only.
 - A protobuf body if size ever matters (the header's `fmt` field reserves the switch).

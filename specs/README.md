@@ -11,7 +11,7 @@ Keep this table current: add a row when a spec is added, and fix the row when a 
 | `03-sim-core-combat.md` | Sim design rules, numeric model, RNG and the streams in use |
 | `05-content-data-schema.md` | Content pipeline, conventions, error codes, `ContentDb` |
 | `06-save-and-offline.md` | Save file format, stores, loading, schema versions |
-| `08-backend-seams.md` | Backend design for T12 and T13: server time, accounts (guest and Google sign-in, built for the web client), cloud save, purchases, PvP calls; the UGS spike results |
+| `08-backend-seams.md` | Backend design for T12 and T13: server time, accounts (guest and Google sign-in, built for the web client), purchases, PvP calls; the UGS spike results. The account on the server is `27` |
 | `09-test-harness-and-bots.md` | Run bots, the run-balance report, golden files, `check.sh` |
 | `10-online-competitive.md` | Trust model for accounts, leaderboards and async PvP (design only) |
 | `12-monster-trainer-design.md` | The game design, merged from kj's drafts, with the decisions recorded |
@@ -28,5 +28,6 @@ Keep this table current: add a row when a spec is added, and fix the row when a 
 | `24-spike-creature-inspiration.md` | Spike report: a creature concept for every skill tree (native, generic, book, chase), inspirations from myth, games, anime, film and nature, apex forms for capstones, nature/dark species ideas and questions for kj |
 | `25-spike-stat-systems.md` | Spike report: stat systems for DEX, LUK and all-in single-stat builds, a `mono-<stat>` baseline, a field survey (evasion vs magic, luck, whole stat systems), kj's answers, the content 4.6 DEX/LUK retune (graze, fortune, DEX crit damage) and the content 4.7 signature skills for all-in DEF, WIS, LUK and INT |
 | `26-spike-manhwa-sprites.md` | Spike report: manhwa-style creature art, feasibility (AI, artist, vector), the most popular manhwa style families, a comparison panel of five species in four styles (drawings in `assets/26/`); a second batch of five anime and manga styles (section 7); kj chose hunter / system dark, AI-generated (`tools/art/`), for portraits and battle sprites, now in the web client (section 8) |
+| `27-server-authority.md` | Server authority (design, kj 2026-11-01): the account partitioned by domain into Cloud Save items, copy-on-write commits checked by re-applying the client's commands, one device at a time, checkpoints, projections, questions for kj |
 
 Numbers missing from the sequence (`02`, `04`, `07`, `11`, `17`) were deleted or never written; git history holds the deleted ones. `assets/` holds images referenced by the specs.
