@@ -26,7 +26,7 @@
   --toast-bg: #ffffff; --cd-veil: rgba(29, 53, 87, .55); --keycap: #c9daf0; --arena-top: #dcebff;
   /* accents: --gems is the one accent (focus, selection, skill points): sky blue; --gold for rare things. Text-strength shades, so
      they read on white; --gold-pop is the bright gold for big loud text with an outline. */
-  --gold: #b77b00; --gold-pop: #ffc23d; --gems: #2b6fd6; --shield: #6fd3ff; --ok: #1f9d5c; --bad: #e0384c; --warn: #e06a1b; --epic: #8a4fe0;
+  --gold: #b77b00; --gold-pop: #ffc23d; --gems: #2b6fd6; --shield: #6fd3ff; --tear: #7cc8ff; --ok: #1f9d5c; --bad: #e0384c; --warn: #e06a1b; --epic: #8a4fe0;
   --accent: var(--gems);
   /* accent tints for filled buttons, badges and flashes */
   --ok-bg: #e3f7ec; --ok-bg-2: #d3f1e1; --ok-flash: #c9f0da; --ok-keycap: #9fd9b8; --on-ok: #ffffff; --ok-pop: #1f9d5c;
@@ -182,6 +182,16 @@ small, .small { font-size: 12px; }
 .stage .stage-mon.hop .sprite { animation: hop .45s ease-out; }
 @keyframes bob { 50% { transform: translateY(-4px); } }
 @keyframes hop { 30% { transform: translateY(-14px) scale(1.04); } }
+/* A bad drill (fail tier or an injury): the monster slumps, sways its head and greys out, and a tear drips down */
+.stage .stage-mon.sad .sprite { transform-origin: 50% 100%; animation: sad 2.2s ease-in-out both; }
+.stage-mon.sad::before { content: ""; position: absolute; left: 34%; top: 32%; z-index: 2; width: 11px; height: 15px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: var(--tear); box-shadow: inset -2px -2px 0 color-mix(in srgb, var(--shade) 25%, transparent); clip-path: polygon(50% 0, 100% 60%, 100% 100%, 0 100%, 0 60%);
+  animation: tear 2.2s ease-in both; pointer-events: none; }
+@keyframes sad { 0% { transform: none; filter: none; } 18% { transform: translateY(8px) scale(1.04, .9); filter: saturate(.45) brightness(.88); }
+  38% { transform: translateY(8px) scale(1.04, .9) rotate(-5deg); } 58% { transform: translateY(8px) scale(1.04, .9) rotate(4deg); }
+  78% { transform: translateY(8px) scale(1.04, .9) rotate(-2deg); filter: saturate(.45) brightness(.88); } 100% { transform: none; filter: none; } }
+@keyframes tear { 0%, 20% { opacity: 0; transform: translateY(0) scale(.4); } 30% { opacity: 1; transform: translateY(0) scale(1); }
+  85% { opacity: 1; transform: translateY(44px); } 100% { opacity: 0; transform: translateY(54px); } }
 .stage .result { min-height: 34px; justify-content: center; align-items: center; text-align: center; font-size: 13px; }
 .stage .result.hint { font-size: 12px; }
 /* The drill pad: a 4x2 grid of stat tiles in the stat's colour. The label strip (tooltip) on top, the Drill button below it. */
@@ -511,7 +521,7 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 .nt.cap { box-shadow: var(--glow-gold); }
 .toast { border: 1px solid var(--line); border-radius: var(--r); }
 
-@media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0s; --dur: 0s; --dur-slow: 0s; } .flash, .dtile.flash.t-super, .dtile.flash.t-fail, .stage-mon .sprite, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain, .dpop { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { :root { --dur-fast: 0s; --dur: 0s; --dur-slow: 0s; } .flash, .dtile.flash.t-super, .dtile.flash.t-fail, .stage-mon .sprite, .toast, .now b, .skill.used .tile, .spcount.pulse { animation: none !important; } .spgain, .dpop { animation: spfade 2s step-end both !important; } .bar .fill, .skill .cdfill { transition: none !important; } .stage-mon.sad::before { display: none; } }
 @keyframes spfade { to { opacity: 0; } }
 /* Evolution (run.js playEvolve): charge (the old form glows and shakes), morph (white silhouettes swap; .alt shows the new one),
    flash (a white flash), done (the new form in colour, sparkles). */

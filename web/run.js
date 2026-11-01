@@ -21,7 +21,7 @@
     feed: [],                // newest first
     last: null,              // last drill/rest result, shown under the stats
     flash: null,             // the drill to flash its stat row for: {stat, tier}
-    drillPop: null,          // the drill outcome not yet popped over its stat row (issue #95): {stat, tier, gain}, shown once no modal covers it
+    drillPop: null,          // the drill outcome not yet popped over its stat row (issue #95): {stat, tier, gain, sad}, shown once no modal covers it
     fight: null,             // fight result shown in the modal
     play: null,              // fight playback in progress: {f: the fight, i: actions shown, timer, dom}; null when showing the result
     speed: '1',              // fight playback speed: '1', '2' or 'skip' (remembered, see loadSpeed)
@@ -191,12 +191,13 @@
   }
 
   // ---- drill outcome pop (issue #95): "+x" over the monster on the stage, styled by the tier (fail, success, super), and the monster
-  // hops on a gain. Like the SP gains it lives in #floats and waits out a modal (a milestone's Awakening).
+  // hops on a gain, or droops sadly on a failed or injuring drill. Like the SP gains it lives in #floats and waits out a modal (a milestone's Awakening).
   function showDrillPop() {
     const p = ui.drillPop, mon = p && document.querySelector('#main [data-id=stage-mon]');
     if (!mon) { if (ui.tab !== 'train') ui.drillPop = null; return; }
     ui.drillPop = null;
-    if (p.gain) mon.classList.add('hop');
+    if (p.sad) mon.classList.add('sad');
+    else if (p.gain) mon.classList.add('hop');
     const layer = $('floats'), app = $('app').getBoundingClientRect(), r = mon.getBoundingClientRect();
     const pane = $('main').getBoundingClientRect();   // a fight card drawn above can push the stage down: keep the pop on screen
     const y = Math.min(Math.max(r.top + r.height * 0.4, pane.top + 40), pane.bottom - 30);
@@ -1735,7 +1736,7 @@
     const sp0 = run.state.sp, cycle0 = run.state.cycle;
     const r = run.cmd('drill', stat);
     if (r.ok) {
-      ui.last = r; ui.flash = { stat, tier: r.tier }; ui.drillPop = { stat, tier: r.tier, gain: r.gain };
+      ui.last = r; ui.flash = { stat, tier: r.tier }; ui.drillPop = { stat, tier: r.tier, gain: r.gain, sad: r.tier === 'fail' || !!r.injury };
       log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : '') +
         (r.shielded ? ' (Second Wind stopped an injury)' : '') + (r.free ? ' (free: Momentum)' : '') +
         (r.echoStat ? ' (echo: ' + up(r.echoStat) + ' +' + num(r.echoGain) + ')' : ''));
