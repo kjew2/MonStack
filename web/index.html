@@ -87,7 +87,7 @@ small, .small { font-size: 12px; }
 #top { display: flex; align-items: center; gap: 10px; padding: 8px var(--gutter-r) 8px var(--gutter-l); background: var(--panel); border-bottom: 1px solid var(--line); }
 #top .title { font: 700 16px var(--font-display); flex: 1; }
 .link-btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: var(--r-sm); padding: 6px 10px; font-size: 13px; text-decoration: none; color: var(--text); white-space: nowrap; }
-#main { flex: 1; min-height: 0; overflow-y: auto; padding: 12px var(--gutter-r) 20px var(--gutter-l); -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 12px; }
+#main { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 12px var(--gutter-r) 20px var(--gutter-l); -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 12px; }
 #main > * { flex-shrink: 0; }   /* scroll instead of squeezing a card: .card.stats has overflow:hidden, so a fight card above it left only the HP row (issue #113) */
 #tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); background: var(--panel); border-top: 1px solid var(--line); padding: 0 var(--gutter-r) env(safe-area-inset-bottom, 0px) var(--gutter-l); }
 #tabs button { position: relative; border: 0; background: none; padding: 12px 0 13px; font: 600 13px var(--font-display); letter-spacing: .04em; color: var(--muted); }
@@ -112,6 +112,10 @@ small, .small { font-size: 12px; }
 .dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: var(--line); }
 .dot.on { background: var(--gems); }
 .species-info { display: flex; flex-direction: column; gap: 6px; }
+.species-info.slide-next { animation: info-in .28s cubic-bezier(.2,.8,.3,1) both; --from: 40px; --tilt: -14deg; }
+.species-info.slide-prev { animation: info-in .28s cubic-bezier(.2,.8,.3,1) both; --from: -40px; --tilt: 14deg; }
+@keyframes info-in { from { opacity: 0; transform: perspective(700px) translateX(var(--from)) rotateY(var(--tilt)) scale(.96); } }
+@media (prefers-reduced-motion: reduce) { .species-info.slide-next, .species-info.slide-prev { animation: none; } }
 .howto summary { cursor: pointer; }
 .howto p { margin: 6px 0 0; }
 /* Skill point gains (issue #86): a float-up by the HUD's SP count, a pulse on the count, the fight result's badge */
