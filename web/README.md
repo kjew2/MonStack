@@ -23,6 +23,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `wasm/BRIDGE.md` | The JS <-> C# contract: exports and JSON shapes. |
 | `wasm/test/run-trainer.js` | Headless-Chromium test that plays a full run through the buttons and browses a varied Vault (part of `./check.sh`). |
 | `wasm/test/flows.js` | Headless-Chromium test of the other flows: no horizontal scroll or console error on each main screen at 390x844, a tree draft overwriting a slot, save/reload/resume with the same run hash, and a stale or damaged save (part of `./check.sh`). |
+| `wasm/test/golden.js` | Headless-Chromium check that the WebAssembly build regenerates the four `golden/` files byte for byte (`Engine.GoldenVectors`; part of `./check.sh`). |
 | `wasm/test/auth.js` | Headless-Chromium test of accounts against a fake Unity Authentication and a fake Google script: guest, reload, link, second device, sign out, rejected session, offline (part of `./check.sh`). |
 | `wasm/test/harness.js` | Shared helpers for the browser tests (phone-sized page, save encoding, play loop, layout check). |
 

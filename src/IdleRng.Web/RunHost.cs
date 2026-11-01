@@ -36,6 +36,9 @@ namespace IdleRng.Web
 
         public string ContentVersion => _db.Version;
 
+        /// <summary>The loaded content, for Engine.GoldenVectors (the golden generators only read it).</summary>
+        public ContentDb Db => _db;
+
         // ------------------------------------------------------------------ content (labels, never changes in a session)
 
         public string Content()

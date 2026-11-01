@@ -103,6 +103,9 @@ else
     step "Web: phone artifact publish call lists only files that exist"
     bash web/wasm/publish-artifact.sh --no-build > /dev/null
 
+    step "Web: the WebAssembly build regenerates golden/ byte for byte in headless Chromium (specs/08 section 10.1)"
+    node web/wasm/test/golden.js
+
     step "Web: monster trainer plays a full run in headless Chromium"
     node web/wasm/test/run-trainer.js
 
