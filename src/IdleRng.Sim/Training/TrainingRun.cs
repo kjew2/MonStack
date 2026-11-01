@@ -330,11 +330,23 @@ namespace IdleRng.Sim.Training
         /// </summary>
         public static Fighter MonsterFighter(ContentDb c, RunState s)
         {
-            var f = new Fighter { Id = MonsterId, Element = c.Species[s.SpeciesId].Element, Stats = s.Stats.Clone() };
-            foreach (var ts in AllTrees(s))
+            var trees = new List<(string, TreeRoll, int)>();
+            foreach (var ts in AllTrees(s)) trees.Add((ts.TreeId, ts.Roll, ts.Bought));
+            return BuildFighter(c, s.SpeciesId, s.Stats, trees);
+        }
+
+        /// <summary>
+        /// A monster's battle fighter from its final stats and its trees in order (absorbed trees before their slot, as
+        /// <see cref="AllTrees"/> yields them), each with its roll and how many nodes were bought. The run and a sealed Vault
+        /// entry both build it this way, so an entry needs no replay (specs/27 section 3.5).
+        /// </summary>
+        public static Fighter BuildFighter(ContentDb c, string speciesId, MonsterStats stats, IEnumerable<(string TreeId, TreeRoll Roll, int Bought)> trees)
+        {
+            var f = new Fighter { Id = MonsterId, Element = c.Species[speciesId].Element, Stats = stats.Clone() };
+            foreach (var (treeId, roll, bought) in trees)
             {
-                var nodes = Nodes(c, ts);
-                for (int i = 0; i < ts.Bought; i++)
+                var nodes = Nodes(c, treeId, roll);
+                for (int i = 0; i < bought; i++)
                 {
                     var n = nodes[i];
                     switch (n.Kind)

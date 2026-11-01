@@ -74,7 +74,7 @@ All of it happens inside the `Drill` command: no new phase or command, and no ex
 
 Why: one tap still costs a fight and up to `RUN_AP - 1 + RUN_AP * INJURY_SKIP_CYCLES` actions (9 at the placeholders) of a 60-action run, plus the SP of the skipped cycle and of any win, so a habit of drilling at low energy cripples a monster (the `reckless` bot, section 9) without throwing the run away. Coming back at full energy keeps it readable ("sits out a cycle, comes back rested").
 
-`RunEnd.Injured` stays in the enum for Vault entries sealed before this change; their logs replay to the same fighter under the new rules (the injuring drill was their last command). No achievement or payout depends on it.
+`RunEnd.Injured` stays in the enum for Vault entries sealed before this change; they fight with the stats and trees they were sealed with (entries keep their result, not a replay log, since schema v9). No achievement or payout depends on it.
 
 ## 5. Rank fights
 

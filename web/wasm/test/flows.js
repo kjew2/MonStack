@@ -151,7 +151,7 @@ const H = require('./harness.js');
   await t.layout('grade screen');
   const sealed = await t.readAccount();
   const entry = sealed.Account.Vault[0];
-  check(sealed.ActiveRun === null && sealed.Account.Vault.length === 1 && entry.Log.length > 20, 'the resumed run was sealed into the Vault');
+  check(sealed.ActiveRun === null && sealed.Account.Vault.length === 1 && entry.Log === undefined && Number.isInteger(entry.Id) && entry.Id >= 0, 'the resumed run was sealed into the Vault as its result, named by its run (id ' + entry.Id + ')');
   check(entry.RunHash === finalHash, 'the Vault entry\'s run hash is the hash of the run resumed across the reloads (' + finalHash.slice(0, 12) + ')');
   check((await text('#main')).includes('Run hash ' + finalHash.slice(0, 16)), 'and the grade screen shows it');
   await act('to-vendor').click();                   // the grade screen leads to the post-run vendor (specs/18 section 4)

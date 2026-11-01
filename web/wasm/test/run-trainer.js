@@ -70,7 +70,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^v\d+\.(\d+|\?) · [0-9a-f]{4,}(\+dirty)?$/.test(stamp), 'the header shows the version and commit: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 8, 'a new account owns only the starter species (slime), schema v8');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 9, 'a new account owns only the starter species (slime), schema v9');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -469,7 +469,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^[A-Z]$/.test(grade), 'grade screen shows the rank reached: ' + grade);
   const acct = await readAccount();
   const entry = acct && acct.Account.Vault[0];
-  check(acct && acct.Account.Vault.length === 1 && entry.SpeciesId === 'drake' && entry.Log.length > 20 && acct.ActiveRun === null, 'sealing stored a Vault entry with the run log and cleared the active run');
+  check(acct && acct.Account.Vault.length === 1 && entry.SpeciesId === 'drake' && entry.Log === undefined && entry.Trees.length > 0 && acct.ActiveRun === null, 'sealing stored the monster as its result (no replay log) and cleared the active run');
   check(entry && entry.Grade === grade.toLowerCase() && /^[0-9a-f]{64}$/.test(entry.RunHash), 'entry grade and run hash match');
   const payout = +(/\+(\d+) Training Shards/.exec(await text('[data-id=payout]')) || [])[1];
   check(payout > 0 && acct.Account.Shards === SHARDS0 + payout, 'the run paid ' + payout + ' shards into the account');
@@ -724,7 +724,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 8 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v8 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 9 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => e.Locked === false), 'dismantling saved the account as v9 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap, 'back at the cap');
   const vw = await page.evaluate(() => document.documentElement.scrollWidth);

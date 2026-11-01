@@ -47,7 +47,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 ## 5. Schema versions
 
-`AccountState.CurrentSchemaVersion` is 8. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
+`AccountState.CurrentSchemaVersion` is 9. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
 
 | Step | Change |
 |---|---|
@@ -58,6 +58,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 | v5 -> v6 | `Vendor` (when not null) gains `Rerolls` 0, issue #104 (`specs/18` section 4) |
 | v6 -> v7 | `TalentsOff` (empty: every owned talent on), issue #106 (`specs/18` section 4) |
 | v7 -> v8 | The run in progress and every Vault entry gain `Mods.LegacyDrafts` `true` (a missing `Mods` becomes `{ LegacyDrafts: true }`): they drafted fixed Awakening trees, so they replay that way; new runs roll them (issue #121, `specs/15` section 4.1) |
+| v8 -> v9 | Vault entries keep their result, not their replay (`specs/27` section 3.5): each gains `Id`, the index of the run that made it, found from its seed (`AccountOps.RunSeed(account seed, i) == entry seed` for `i < RunsStarted`; -1 when none matches), and loses `Log`, `Mods` and `Ladder` |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
 
@@ -72,7 +73,7 @@ A save written by a newer schema is not loaded (`SaveInvalidException`) and neve
 
 ## 6. Tests
 
-`src/IdleRng.Runtime.Tests`: `SaveSerializerTests` (header, CRC, truncation, hex seeds), `SaveStoreTests` (rotation, tmp cleanup, crash between renames, quarantine), `AccountSaveTests` (round trip, backup fallback, rejection, the v1 -> v2 to v6 -> v7 migrations, tower progress, vendor reroll and talent loadout round trips).
+`src/IdleRng.Runtime.Tests`: `SaveSerializerTests` (header, CRC, truncation, hex seeds), `SaveStoreTests` (rotation, tmp cleanup, crash between renames, quarantine), `AccountSaveTests` (round trip, backup fallback, rejection, the v1 -> v2 to v8 -> v9 migrations, tower progress, vendor reroll and talent loadout round trips).
 
 ## 7. Open
 

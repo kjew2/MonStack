@@ -125,7 +125,7 @@ A full set of content tables for one `content_version` (`specs/05`), fetched and
 1. Applied at page open only, before the content is loaded; never mid-run.
 2. It goes through the content validator; a rejected overlay falls back to the shipped tables.
 3. A minimum build gates it.
-4. **It must not change how anything already sealed replays.** Vault entries and the run in progress replay against the rules and content they were made with (`specs/06` section 5, `specs/18` section 6). An overlay that would break a replay is a content MAJOR (`E090`) and needs a release, not an overlay.
+4. **It must not change how anything already sealed replays.** The run in progress replays against the rules and content it was made with, and a Vault entry's gauntlet wheel replays its floors (`specs/06` section 5, `specs/18` section 6). An overlay that would break a replay is a content MAJOR (`E090`) and needs a release, not an overlay.
 5. Ranked PvP pins one content version per season (`specs/10` section 11), so an overlay applies to ranked play only at a season change.
 
 ## 8. Analytics (#27)
@@ -227,7 +227,7 @@ Decision (2026-10-31): **UGS Cloud Code stands as the v1 server for battles.** E
 
 The spike's `ResolveFight` takes the fighters as the client sends them: right for proving determinism, wrong for PvP, where a client could send any stats. The T12 module keeps the engine and changes what it trusts. The contract is written with the `specs/10` rewrite at T12; what is fixed now:
 
-- **The server builds both teams from stored Vault entries**, never from fighter stats a client sends. A team is submitted as Vault entries with their replay recipes; the server replays each recipe to its `RunHash` (`specs/18` section 6) before accepting it, and stores the result. A fight then names the two stored teams.
+- **The server builds both teams from stored Vault entries**, never from fighter stats a client sends. A team is named by Vault entry ids; the server already holds those entries, sealed by re-checked commands (`specs/27`), so it builds each fighter from the stored result. A fight then names the two stored teams.
 - **The server picks the battle seed** and returns it with the result, so the client can replay the fight for the animation and get the same hash (#122 makes sure the browser build agrees).
 - **Seeds travel as decimal strings** (JavaScript numbers lose precision past 2^53).
 - **Cold start** (#109): a cold worker takes 12 to 15 s, against Cloud Code's 15 s call limit. The client waits more than 15 s, shows a "resolving" state, and retries once on a timeout (a deterministic fight gives the same result again). A scheduled keep-warm call is added once there are players.
