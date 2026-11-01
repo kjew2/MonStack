@@ -10,7 +10,8 @@ Scope: how the player's account is modelled and stored on the server, how the cl
 2. **One device holds the account at a time** (kj, 2026-11-01: "log out the first client instead"). Signing in on a device takes the account; the device that held it is signed out at its next server call. There is no conflict prompt and no merge.
 3. **The data is partitioned by domain**, not stored as one save blob (kj, 2026-11-01). Each part is its own item with its own hash; the account hash is a hash of the part hashes. Section 3.
 4. **Commits are copy-on-write under one root item.** New part versions are written under new keys, then the `head` item is swapped with a write lock; that swap is the commit (section 4). It does not depend on multi-item atomicity.
-5. **Unbounded data never lives in a part.** Anything that grows without a bound (match history, purchase records) is one item per record with a retention rule, or lives in a service built for it (section 3.4).
+5. **Store results, not history** (kj, 2026-11-01: "prune the model"). A sealed monster is kept as what it became (stats, trees, gauntlet result), not as the commands that made it; commands are kept only until the server accepts them, and the run in progress only until it seals. Section 3.5.
+6. **Unbounded data never lives in a part.** Anything that grows without a bound (match history, purchase records) is one item per record with a retention rule, or lives in a service built for it (section 3.4).
 
 ## 2. Measurements (2026-11-01, content 5.x)
 
@@ -42,13 +43,11 @@ All parts are Cloud Save player items in the **private** access class: only the 
 | `vendor` | The post-run vendor's offers and rerolls, or none | `VENDOR_OFFERS` | `startRun` (clears), `finishRun`, `buyOffer`, `rerollVendor` |
 | `dungeon` | `Tower`: tickets, pieces, grant day, attempts, bests | Fixed | `runTower`, `finishRun` (pieces), the daily grant |
 | `vault` | The Vault index: entry ids in Vault order, the locked ids, each entry's hash | `VAULT_CAP` ids | `finishRun`, `dismantle`, `lock` |
-| `mon.<id>` | One Vault entry's summary: everything the Vault screen and the Dungeon team picker show | One per entry | `finishRun` creates; `dismantle` deletes; never changed |
-| `recipe.<id>` | One Vault entry's replay recipe (`SpeciesId`, `Seed`, `Books`, `Mods`, `Ladder`, `Log`), gzip then base64 | One per entry | With its `mon.<id>`; read only to replay (PvP entry, the gauntlet wheel, audits) |
+| `mon.<id>` | One sealed monster as its result: species, seed, grade, rank, end, cycles, fights, final stats, trees (bought nodes, rolls, fusions), books used, gauntlet floor, killer and title, the run and gauntlet hashes, seal time. No replay log (section 3.5) | One per entry, about 0.75 KB | `finishRun` creates; `dismantle` deletes; never changed |
 
 Rules behind the split:
 - **By writer set.** Each part changes for one reason. A run command touches only `training`; a vendor buy touches `wallet`, `collection` and `vendor`. A commit rewrites only the parts its commands changed (section 4), so a checkpoint in the middle of a run writes `training` and `head`, a few KB.
 - **Immutable things are their own items.** A sealed monster never changes (`specs/18` section 6), so it is written once and never rewritten. `Locked` is the player's flag, not part of the monster (it is outside `RunHash` already), so it moves to the `vault` index and the entry items stay immutable.
-- **Hot reads apart from cold ones.** The Vault screen, the team picker and PvP matchmaking read summaries; only a replay reads the recipe, which is 80% of the bytes. Splitting them keeps the common read small and lets recipes move to Cloud Save Files (1 GB per player) if expansions ever push the private class towards its 5 MB.
 - **A part is either bounded by content or capped by a rule.** New fields join the part whose writer set they share; a field that would grow without a bound goes to section 3.4 instead.
 
 Vault entry ids: an entry is named by the index of the run that made it (`RunsStarted` when it started), which is unique in the account. The sim gains `VaultEntry.Id` (save schema v9); the migration finds each existing entry's index from its seed (`AccountOps.RunSeed(Seed, i) == entry.Seed` for `i < RunsStarted`). Commands keep addressing entries by Vault position, which is deterministic in a replay.
@@ -56,7 +55,7 @@ Vault entry ids: an entry is named by the index of the run that made it (`RunsSt
 ### 3.2 Hashes
 
 - **Part hash**: SHA-256 of the part's canonical binary encoding (`Replay/Canonical.cs`, as `TrainingRun.StateHash` and `BattleSim.StateHash` do: no JSON text, raw double bits), computed by shared code in `IdleRng.Sim` (`AccountHash.Part(name, state)`).
-- **Entry hash**: SHA-256 over the entry's summary and its `RunHash` and `GauntletHash` (which already pin the recipe's outcome), excluding `Locked`. The `vault` part hash covers the ids, the locked set and every entry hash, so it pins every entry without loading them.
+- **Entry hash**: SHA-256 over the entry's fields, excluding `Locked`. The `vault` part hash covers the ids, the locked set and every entry hash, so it pins every entry without loading them.
 - **Account hash**: SHA-256 over the sorted `(part name, part hash)` pairs. The client computes it after its last pending command and sends it with the commit; the server computes it after re-applying them. Equal hashes mean equal accounts, with no field list to keep in step.
 
 Because the `vault` part pins entries by hash, the server loads only the entries a commit's commands read (section 4), not the whole Vault. The account stays cheap to check as the Vault grows.
@@ -83,7 +82,23 @@ None exists yet. When a feature adds it:
 | Commit journal (audit, desync reports) | Analytics events (`specs/08` section 8), not Cloud Save | The analytics provider's |
 | Seasons (T12) | `season.<n>` per season, frozen when it ends | Kept |
 
-Cloud Save allows 2000 keys per player per access class; at `VAULT_CAP` 50 the parts use about 110.
+Cloud Save allows 2000 keys per player per access class; at `VAULT_CAP` 50 the parts use about 60.
+
+### 3.5 What is not kept
+
+Measured on the 50-run account of section 2: the Vault drops from about 335 KB to about 37 KB, and the whole account from 784 KB (indented) to under 50 KB.
+
+| Data | Kept | Why it can go |
+|---|---|---|
+| A sealed monster's replay log (`Log`, about 5.5 KB of its 6.7 KB), `Mods` and `Ladder` | No | Only `VaultEntry.Fighter` reads them, and only to rebuild the final stats and bought nodes the entry already stores (`TrainingRun.MonsterFighter` takes nothing else; the entry's trees are stored in the same order, absorbed trees before their slot). The fighter is built from the entry instead. Re-checking a sealed run is not needed: the server re-applied every command before it sealed (section 6.2) |
+| Commands | Until accepted | A commit's commands are applied, then dropped. A sample may go to analytics for desync reports (`specs/08` section 8) |
+| The run in progress | Until it seals or is abandoned | Stored as its recipe (seed and log, about 90 commands at most) in `training`, because the server continues it from there; cleared at seal |
+| The gauntlet floors | Never stored | The wheel replays them from the fighter and seed (`GauntletSim.Run`) and checks `GauntletHash` |
+| Dungeon attempts | Never stored | A result is a pure function of the team, day and content (`specs/21` section 1); only its rewards and bests are kept in `dungeon` |
+
+Kept although derivable: the vendor's offers (from the account seed, grade and reroll count) and the owned species (from the achievements). They are a few hundred bytes, and storing them means a later content change cannot rewrite an offer on screen or take a species away.
+
+What this gives up: a sealed monster can no longer be replayed run step by run step (to debug a balance question, use the bot CLI, `specs/09`), and an imported account's monsters can never be checked (question 1). It also changes how an old monster survives a rules change: today `Fighter` replays the log under the current rules, so a drill retune would quietly change a sealed monster's stats in battle; built from the stored result, a sealed monster keeps the stats it was sealed with, as `specs/12` section 6 intends ("a Vault entry keeps final stats"). Skills, triggers and rules are still read from content by node id, so a skill's tuning applies to old monsters, and a removed node id is still a content MAJOR (`E090`).
 
 ## 4. Commits
 
@@ -99,7 +114,7 @@ client                                              module (Cloud Code)
                                                     seq == fromSeq, hash == fromHash?  else Stale
                                                     contentHash == the module's?  else ContentStale
                                                     read the parts the commands touch, and the
-                                                      mon/recipe items they reference
+                                                      mon items they reference
                                                     apply each command (AccountCommands.Apply),
                                                       with the server's inputs (section 6.3)
                                                     account hash == toHash?        else Mismatch
@@ -109,9 +124,9 @@ client                                              module (Cloud Code)
   <- Accepted { seq, hash, serverSec, day }  |  Rejected { code, index, reason }
 ```
 
-- **Copy-on-write.** Part keys carry the commit that wrote them (`wallet.000124`). The new versions are written first; nothing refers to them until `head` swaps, and `head` is one item, so a commit either lands whole or not at all. A crash after the part writes leaves unreferenced keys; the next commit or open deletes keys `head` does not name. New `mon.<id>` and `recipe.<id>` items are written before `head` the same way.
+- **Copy-on-write.** Part keys carry the commit that wrote them (`wallet.000124`). The new versions are written first; nothing refers to them until `head` swaps, and `head` is one item, so a commit either lands whole or not at all. A crash after the part writes leaves unreferenced keys; the next commit or open deletes keys `head` does not name. New `mon.<id>` items are written before `head` the same way.
 - **Idempotent.** A commit that repeats an accepted one (same `fromSeq` and `toHash`, `head` already at `seq + 1` with that hash) returns the stored `Accepted`, so a retry after a lost answer is safe.
-- **Size.** A commit holds at most `COMMIT_MAX_COMMANDS` (placeholder 500) and at most one `finishRun`; the client splits a longer offline backlog at seals. A commit then writes at most the 7 parts below `head`, `head` itself and one entry pair.
+- **Size.** A commit holds at most `COMMIT_MAX_COMMANDS` (placeholder 500) and at most one `finishRun`; the client splits a longer offline backlog at seals. A commit then writes at most the 7 parts below `head`, `head` itself and one new entry.
 - **Cost of a check.** Re-applying a whole run is about 90 commands, with each rank fight a `BattleSim.Resolve` (0.1 to 1.3 ms in the spike); a `runTower` replays up to the Dungeon's floors. Milliseconds, well inside Cloud Code's 15 s call limit.
 
 | Rejection | Meaning | Client does |
@@ -127,7 +142,7 @@ client                                              module (Cloud Code)
 
 ### 5.1 Open
 
-`Open { deviceId, claim }` returns the account (all parts and every Vault entry's `mon.*` and `recipe.*` items, since the device replays entries for the gauntlet wheel; assembled by the module into the `AccountSave` text the engine loads, gzip then base64: 21 KB for a full Vault), `seq`, `hash`, the holder, the server time and day.
+`Open { deviceId, claim }` returns the account (all parts and every `mon.*` item, assembled by the module into the `AccountSave` text the engine loads, gzip then base64: a few KB for a full Vault), `seq`, `hash`, the holder, the server time and day.
 
 - No `head` yet: the module creates the account (**genesis**): it draws the account seed, so seeds are never client-chosen (`specs/10` section 3), and writes the parts at `seq` 0 with lineage `server`. Or, for a device that already has a local account from before this spec, imports it (question 1).
 - `claim: true` makes this device the holder. The client claims on a Google sign-in and on a guest's first open; an ordinary page open does not claim, so a device that was signed out by another one cannot take the account back without signing in again.
@@ -187,8 +202,8 @@ Commands are choices, except two values from the device:
 
 | Limit | Value | Here |
 |---|---|---|
-| Cloud Save, per player per access class | 5 MB, 2000 keys | Full Vault: about 350 KB (summaries and recipes, recipes gzipped smaller), about 110 keys |
-| Cloud Code call | 15 s; response 2 MiB | A commit re-applies in milliseconds; an open returns about 21 KB |
+| Cloud Save, per player per access class | 5 MB, 2000 keys | Full Vault: about 40 KB, about 60 keys; room for Vault expansions far past 50 |
+| Cloud Code call | 15 s; response 2 MiB | A commit re-applies in milliseconds; an open returns a few KB |
 | Cloud Code and Cloud Save rate | 600 requests per minute per player | A commit is 1 call; inside it 2 to 4 Cloud Save reads and 2 to 4 writes |
 | Cold start | 12 to 15 s (`specs/08` section 10.1) | Client timeouts above 15 s with one retry; the game never waits |
 
@@ -204,7 +219,7 @@ Load at 10 k daily players, assuming 30 commits and 2 opens a player a day: abou
 
 Each step merges on its own with `./check.sh` green.
 
-1. **Sim.** `AccountCommands.Apply` and `Touches` (the bridge's switch moved), `AccountHash` (parts, entries, account), `VaultEntry.Id` (save schema v9), the part split as a mapping in `IdleRng.Runtime` (`AccountParts.Split` and `Join`), tests: every command's declared touches, split then join round trips, hashes equal across a split.
+1. **Sim.** `AccountCommands.Apply` and `Touches` (the bridge's switch moved), `AccountHash` (parts, entries, account), `VaultEntry.Id` and the pruned entry (save schema v9: entries gain `Id` and lose `Log`, `Mods` and `Ladder`; `VaultEntry.Fighter` builds from the stored stats and trees, with a test that it equals the replayed fighter for every bot policy and species before the log is dropped; `specs/06` section 5 and `specs/18` section 6 updated then), the part split as a mapping in `IdleRng.Runtime` (`AccountParts.Split` and `Join`), tests: every command's declared touches, split then join round trips, hashes equal across a split.
 2. **Server core.** A netstandard2.1 library `IdleRng.Server` with `Open` and `Commit` against an `IAccountStore` (the parts, write-locked `head`), and an in-memory store; tests for every rejection, copy-on-write cleanup, idempotent retries, the holder rule, the day bound. Runs in `check.sh` on .NET 8 (#28).
 3. **Module.** `server/ugs/MonStackAccount`: a thin net10.0 shell over `IdleRng.Server` with a Cloud Save store; the deploy step in `pages.yml` (kj adds the UGS secrets).
 4. **Client.** `web/sync.js`: the pending log, checkpoints, open and claim, sign-out on `NotHolder`, the one-tab rule; the account sheet shows the sync state. A browser check with a fake module (two devices, takeover, offline backlog, rejection, stale content), wired into `check.sh`.
