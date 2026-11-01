@@ -348,18 +348,21 @@
       resultLine(ui.last, s),
     ]));
     main.append(oddsChips(s));
-    // The drill pad in the thumb zone: a 4x2 grid of stat tiles. The tile's label strip opens the stat's tooltip; the rest of the
-    // tile (value and gauge with milestone ticks) is the Drill button.
+    // The drill pad in the thumb zone: a 4x2 grid of stat tiles. The whole tile (label, value and growth, gauge with milestone ticks)
+    // is the Drill button; the small "i" in its corner, a sibling laid over the button, opens the stat's tooltip (issue #124).
     const pad = h('div', { class: 'pad', 'data-id': 'pad' });
     C.stats.forEach((st) => {
       const v = s.stats[st];
       pad.append(h('div', { class: 'dtile st-' + st + (busy ? ' off' : '') + (ui.flash && ui.flash.stat === st ? ' flash t-' + ui.flash.tier : ''), 'data-id': 'stat-' + st }, [
-        h('div', { class: 'meta', ...TIP.attrs('stat:' + st), 'aria-label': up(st) + ': what it does' }, [
-          h('span', { class: 'lbl', text: up(st) }),
-          h('small', { class: 'num', text: 'x' + s.growth[st].toFixed(2), title: 'Growth: drill gains are multiplied by ' + s.growth[st].toFixed(2) }),
-        ]),
         h('button', { class: 'drill', type: 'button', 'data-act': 'drill-' + st, disabled: busy, 'aria-label': 'Drill ' + up(st) + ', now ' + num(v),
-          onclick: () => drill(st) }, [h('span', { class: 'val num', text: num(v) }), statGauge(s, st)]),
+          onclick: () => drill(st) }, [
+          h('span', { class: 'meta' }, [h('span', { class: 'lbl', text: up(st) })]),
+          h('span', { class: 'vrow' }, [
+            h('span', { class: 'val num', text: num(v) }),
+            h('small', { class: 'grow num', text: 'x' + s.growth[st].toFixed(2), title: 'Growth: drill gains are multiplied by ' + s.growth[st].toFixed(2) }),
+          ]),
+          statGauge(s, st)]),
+        h('button', { class: 'info', type: 'button', ...TIP.attrs('stat:' + st), 'data-id': 'info-' + st, 'aria-label': up(st) + ': what it does' }, [h('span', { class: 'ic', 'aria-hidden': 'true', text: 'i' })]),
       ]));
     });
     main.append(pad);
