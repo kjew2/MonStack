@@ -46,9 +46,11 @@
   const treeName = (id) => (X.C.trees[id] ? X.C.trees[id].name : id);
   const treeSize = (id) => (X.C.trees[id] ? X.C.trees[id].nodes.length : '?');
   // An entry reference stays valid only while the entry at that index is still the same monster (a dismantle shifts later ones).
-  const refOk = (r) => { const v = X.run.account.vault; return !!r && r.i >= 0 && r.i < v.length && v[r.i].hash === r.hash; };
-  const ref = (e, i) => ({ i: i, hash: e.hash });
-  const same = (r, e, i) => !!r && r.i === i && r.hash === e.hash;
+  // A monster is named by its id (the run that made it); the seal time and species also tell apart old entries migrated without one.
+  const key = (e) => e.id + ':' + e.sealedUtcMs + ':' + e.species;
+  const refOk = (r) => { const v = X.run.account.vault; return !!r && r.i >= 0 && r.i < v.length && key(v[r.i]) === r.key; };
+  const ref = (e, i) => ({ i: i, key: key(e) });
+  const same = (r, e, i) => !!r && r.i === i && r.key === key(e);
 
   function sorts() {
     const list = [['new', 'Newest first'], ['old', 'Oldest first'], ['grade', 'Grade (best first)'], ['floor', 'Gauntlet floor (highest)'],
@@ -278,7 +280,6 @@
       h('button', { class: 'btn small', type: 'button', 'data-act': 'detail-compare', text: 'Compare with…',
         onclick: () => { st.pick = ref(e, i); st.detail = null; X.rerender(); } }),
     ]));
-    modal.append(h('div', { class: 'small muted center', text: 'Run hash ' + e.hash.slice(0, 16) }));
   }
 
   function compareSheet(modal) {

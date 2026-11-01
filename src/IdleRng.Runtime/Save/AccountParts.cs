@@ -68,8 +68,8 @@ namespace IdleRng.Runtime.Save
             foreach (var kv in Fields)
             {
                 var part = new JObject();
-                foreach (var f in kv.Value) part[f] = acct[f]?.DeepClone() ?? JValue.CreateNull();
-                if (kv.Key == Training) part["ActiveRun"] = a.Active == null ? JValue.CreateNull() : AccountSave.Recipe(a.Active);
+                foreach (var f in kv.Value) if (acct[f] != null) part[f] = acct[f].DeepClone();   // left out = its starting value
+                if (kv.Key == Training && a.Active != null) part["Run"] = AccountSave.Snapshot(a.Active);
                 items[kv.Key] = Text(part);
             }
 
@@ -86,7 +86,7 @@ namespace IdleRng.Runtime.Save
                 items[EntryKey(e.Id)] = text;
                 order.Add(e.Id);
                 if (e.Locked) locked.Add(e.Id);
-                hashes.Add(Hash(text));
+                hashes.Add(ShortHash(text));
             }
             items[Vault] = Text(new JObject { ["Order"] = order, ["Locked"] = locked, ["Hashes"] = hashes });
             return items;
@@ -107,12 +107,12 @@ namespace IdleRng.Runtime.Save
                 catch (JsonException e) { throw new SaveInvalidException("account part " + key + " is not JSON: " + e.Message, e); }
             }
             var acct = new JObject();
-            JToken run = JValue.CreateNull();
+            JToken run = null;
             foreach (var kv in Fields)
             {
                 var part = Part(kv.Key);
-                foreach (var f in kv.Value) acct[f] = part[f]?.DeepClone() ?? JValue.CreateNull();
-                if (kv.Key == Training) run = part["ActiveRun"]?.DeepClone() ?? JValue.CreateNull();
+                foreach (var f in kv.Value) if (part[f] != null) acct[f] = part[f].DeepClone();
+                if (kv.Key == Training) run = part["Run"]?.DeepClone();
             }
 
             var vault = Part(Vault);
@@ -128,7 +128,7 @@ namespace IdleRng.Runtime.Save
                 int id = Id(order[i]);
                 string key = EntryKey(id);
                 if (!items.TryGetValue(key, out var text) || text == null) throw new SaveInvalidException("Vault entry missing: " + key);
-                if (Hash(text) != (string)hashes[i]) throw new SaveInvalidException("Vault entry " + key + " does not match its hash");
+                if (ShortHash(text) != (string)hashes[i]) throw new SaveInvalidException("Vault entry " + key + " does not match its hash");
                 var e = JObject.Parse(text);
                 e[nameof(VaultEntry.Locked)] = lockedIds.Contains(id);
                 entries.Add(e);
@@ -142,10 +142,16 @@ namespace IdleRng.Runtime.Save
                 ["Kind"] = AccountSave.Kind,
                 ["SchemaVersion"] = AccountState.CurrentSchemaVersion,
                 ["Account"] = acct,
-                ["ActiveRun"] = run,
             };
+            if (run is JObject) body["Run"] = run;
             return AccountSave.Decode(c, SaveSerializer.EncodeBody(Text(body)), out notice);
         }
+
+        /// <summary>
+        /// The first 16 hex characters of an entry's hash, as the vault index keeps them (kj, 2026-11-01: enough to catch a damaged
+        /// item; the full hash would be 64).
+        /// </summary>
+        public static string ShortHash(string json) => Hash(json).Substring(0, 16);
 
         /// <summary>SHA-256 (hex) of an item's JSON text.</summary>
         public static string Hash(string json) => Sha256.Hex(Sha256.Compute(Encoding.UTF8.GetBytes(json ?? "")));

@@ -34,16 +34,16 @@ const H = require('./harness.js');
     s.slots = await page.evaluate(() => [...document.querySelectorAll('.slotcard')].map((e) => e.querySelector('b').textContent + ' ' + ((e.querySelector('.num') || {}).textContent || '')).join(' | '));
     await clickDom('[data-act="tab-train"]');
     s.bars = await page.evaluate(() => [...document.querySelectorAll('.dtile .val')].map((e) => e.textContent).join('|'));
-    const r = a && a.ActiveRun;
-    s.recipe = r ? { species: r.SpeciesId, seed: r.Seed, log: r.Log.length, hash: r.Hash } : null;
+    const r = a && a.Run;   // save v10: the run in progress as its state (specs/27 section 3.5); a field at its starting value is left out
+    s.saved = r ? { species: r.SpeciesId, cycle: r.Cycle || 0, drills: r.Drills || 0, rests: r.Rests || 0, log: r.Log !== undefined } : null;
     return s;
   };
   const reloadSame = async (what) => {
     const before = await snapshot();
     await t.reload();
     const after = await snapshot();
-    check(before.recipe && before.hash && before.recipe.hash.startsWith(before.hash), what + ': the saved run hash is the engine\'s state hash (' + before.hash + ', ' + (before.recipe && before.recipe.log) + ' commands)');
-    check(JSON.stringify(before) === JSON.stringify(after), what + ': reload restores the same run (state hash, HUD, stats, trees, recipe)' +
+    check(before.saved && before.hash && before.saved.log === false, what + ': the run is saved as its state, with no command log (' + before.saved.drills + ' drills)');
+    check(JSON.stringify(before) === JSON.stringify(after), what + ': reload restores the same run (state hash, HUD, stats, trees, saved state)' +
       (JSON.stringify(before) === JSON.stringify(after) ? '' : '\n  before ' + JSON.stringify(before) + '\n  after  ' + JSON.stringify(after)));
     return after;
   };
@@ -66,7 +66,7 @@ const H = require('./harness.js');
   await page.locator('[data-id=ladder]').waitFor();
   await t.layout('rank ladder');
   await act('tab-train').click();
-  const r0 = (await t.readAccount()).ActiveRun;
+  const r0 = (await t.readAccount()).Run;
   check(r0 && r0.SpeciesId === speciesId && r0.Books.length === 1, 'the run started with the ' + speciesId + ' and the book');
   await act('drill-str').click();
   await act('rest').click();
@@ -140,7 +140,7 @@ const H = require('./harness.js');
   if (await act('fight-continue').count()) await act('fight-continue').click();
   check(await act('seal').isVisible(), 'the resumed run plays to its end (' + played.fights + ' more fights)');
   await t.layout('end screen');
-  const finalHash = (await t.readAccount()).ActiveRun.Hash;
+  const finalRun = (await t.readAccount()).Run;
   await page.emulateMedia({ reducedMotion: 'reduce' });   // with reduced motion the wheel lands at once, no spin
   await act('seal').click();
   await page.locator('[data-id=climb-reel]').waitFor();
@@ -152,22 +152,22 @@ const H = require('./harness.js');
   await t.layout('grade screen');
   const sealed = await t.readAccount();
   const entry = sealed.Account.Vault[0];
-  check(sealed.ActiveRun === null && sealed.Account.Vault.length === 1 && entry.Log === undefined && Number.isInteger(entry.Id) && entry.Id >= 0, 'the resumed run was sealed into the Vault as its result, named by its run (id ' + entry.Id + ')');
-  check(entry.RunHash === finalHash, 'the Vault entry\'s run hash is the hash of the run resumed across the reloads (' + finalHash.slice(0, 12) + ')');
-  check((await text('#main')).includes('Run hash ' + finalHash.slice(0, 16)), 'and the grade screen shows it');
+  check(sealed.Run === undefined && sealed.Account.Vault.length === 1 && entry.Log === undefined && Number.isInteger(entry.Id) && entry.Id >= 0, 'the resumed run was sealed into the Vault as its result, named by its run (id ' + entry.Id + ')');
+  check(JSON.stringify(entry.Stats) === JSON.stringify(finalRun.Stats) && entry.RunHash === undefined && entry.Seed === undefined,
+    'the Vault entry keeps the final stats of the run resumed across the reloads, and no run hash or seed (save v10)');
   await act('to-vendor').click();                   // the grade screen leads to the post-run vendor (specs/18 section 4)
   await page.locator('[data-id=vendor-offer]').first().waitFor();
   await t.layout('vendor screen');
-  check((await t.readAccount()).Account.Vendor !== null, 'the open vendor is in the save while its screen is up');
+  check((await t.readAccount()).Account.Vendor != null, 'the open vendor is in the save while its screen is up');
   await act('vendor-done').click();
   await act('start').waitFor();
-  check((await t.readAccount()).Account.Vendor === null, 'Done closes the vendor (kj, 2026-11-01: transient)');
+  check((await t.readAccount()).Account.Vendor == null, 'Done closes the vendor (kj, 2026-11-01: transient)');
   await act('hometab-vault').click();
   await t.layout('Vault (home after a run)');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'the Vault lists the sealed monster');
   await act('hometab-raise').click();
 
-  // ---- a save whose run in progress no longer replays (specs/06 section 5): only that run is dropped
+  // ---- a save whose run in progress refers to something no longer in the game (specs/06 section 5): only that run is dropped
   await act('species-' + speciesId).click();
   await act('grant-book').click();
   await act('book-toggle').check();
@@ -175,30 +175,30 @@ const H = require('./harness.js');
   await act('drill-str').waitFor();
   await act('drill-str').click();
   const live = await t.readAccount();
-  check(live.ActiveRun && live.ActiveRun.Books.length === 1, 'a second run is in progress with a book');
+  check(live.Run && live.Run.Books.length === 1, 'a second run is in progress with a book');
   const stale = JSON.parse(JSON.stringify(live));
-  stale.ActiveRun.Hash = (stale.ActiveRun.Hash[0] === '0' ? '1' : '0') + stale.ActiveRun.Hash.slice(1);   // as if the rules changed
+  stale.Run.SpeciesId = 'species_removed_from_content';   // as if a content update removed it
   const staleText = H.encodeSave(stale);
   await t.writeSaveText(staleText);
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   const toasts = await page.locator('#toasts').innerText();
-  check(/older rules/.test(toasts) && /books returned/.test(toasts), 'the player is told the stale run was dropped: ' + toasts.replace(/\s+/g, ' ').slice(0, 90));
+  check(/no longer in the game/.test(toasts) && /books returned/.test(toasts), 'the player is told the stale run was dropped: ' + toasts.replace(/\s+/g, ' ').slice(0, 90));
   const bad1 = await t.readBadTexts();
   check(bad1.length === 1 && bad1[0] === staleText, 'the original save is kept aside under a backup key (' + bad1.length + ' kept)');
   const fixed = await t.readAccount();
-  check(fixed.ActiveRun === null, 'the stale run is gone from the saved account');
-  check(fixed.Account.Shards === live.Account.Shards && fixed.Account.Vault.length === 1 && fixed.Account.Vault[0].RunHash === entry.RunHash,
+  check(fixed.Run === undefined, 'the stale run is gone from the saved account');
+  check(fixed.Account.Shards === live.Account.Shards && fixed.Account.Vault.length === 1 && fixed.Account.Vault[0].Id === entry.Id,
     'shards and Vault are kept (' + fixed.Account.Shards + ' shards, ' + fixed.Account.Vault.length + ' monster)');
-  const bookId = live.ActiveRun.Books[0];
+  const bookId = live.Run.Books[0];
   check((fixed.Account.Books[bookId] || 0) === (live.Account.Books[bookId] || 0) + 1, 'the run\'s book is back in the inventory (' + bookId + ')');
   check(JSON.stringify(fixed.Account.Talents) === JSON.stringify(live.Account.Talents), 'talents are kept');
   await t.layout('home after a stale save');
   await t.reload();
-  check(!/older rules/.test(await page.locator('#toasts').innerText()), 'the notice does not repeat on the next load');
+  check(!/no longer in the game/.test(await page.locator('#toasts').innerText()), 'the notice does not repeat on the next load');
   await act('start').click();
   await act('drill-str').waitFor();
-  check((await t.readAccount()).ActiveRun !== null, 'the account still starts a run');
+  check((await t.readAccount()).Run !== undefined, 'the account still starts a run');
 
   // ---- an injury (specs/14 section 4.1, issue #89): drilling without rest injures the monster; it loses the rest of the cycle
   // and its fight and sits out the next cycle, then the run goes on
@@ -226,7 +226,7 @@ const H = require('./harness.js');
   check(/Back from injury/.test(await text('[data-id=injury]')) && (await text('[data-id=injury]')).includes('Back in cycle ' + (hm && hm[3])),
     'after a reload the run screen still says the monster is back from injury');
   await act('drill-str').click();
-  check((await t.readAccount()).ActiveRun.Log.length > 0, 'and it trains again');
+  check((await t.readAccount()).Run.Drills > 0, 'and it trains again');
 
   // ---- a damaged save: kept aside, and a fresh account that works
   const damaged = (await t.readSaveText()).slice(0, -20);             // cut short: the length and CRC no longer match
@@ -238,7 +238,7 @@ const H = require('./harness.js');
   const bad2 = await t.readBadTexts();
   check(bad2.length === 2 && bad2[0] === staleText && bad2[1] === damaged, 'the damaged save is kept aside, unchanged, next to the stale save kept before (issue #93)');
   const fresh = await t.readAccount();
-  check(fresh && fresh.Kind === 'monster_account' && fresh.ActiveRun === null && fresh.Account.Vault.length === 0 && fresh.Account.Shards === 0, 'a fresh account replaces it');
+  check(fresh && fresh.Kind === 'monster_account' && fresh.Run === undefined && fresh.Account.Vault.length === 0 && !fresh.Account.Shards, 'a fresh account replaces it');
   await t.layout('home after a damaged save');
   await act('hometab-vault').click();
   check((await page.locator('[data-id=vault-entry]').count()) === 0 && (await text('[data-id=shards]')).startsWith('0 '), 'the home screen shows the fresh account');
@@ -247,7 +247,7 @@ const H = require('./harness.js');
   await act('drill-str').waitFor();
   await act('drill-str').click();
   await t.reload();
-  check((await page.locator('[data-act="drill-str"]').count()) === 1 && (await t.readAccount()).ActiveRun.Log.length === 1, 'the fresh account saves and resumes a run');
+  check((await page.locator('[data-act="drill-str"]').count()) === 1 && (await t.readAccount()).Run.Drills === 1, 'the fresh account saves and resumes a run');
   const bad3 = await t.readBadTexts();
   check(bad3.length === 2 && bad3[0] === staleText && bad3[1] === damaged, 'and both kept-aside saves are still there');
 
@@ -271,7 +271,7 @@ const H = require('./harness.js');
   // ---- talent catalog v2 (issue #105, specs/18 section 3): an account with every talent at max rank. The home screen sums the
   // bonuses, the run shows a fifth tree slot and the bigger rest, and a milestone draft can be rerolled once (Second Look)
   const talented = await t.readAccount();
-  talented.ActiveRun = null;
+  delete talented.Run;
   await act('hometab-talents').click();
   const talentIds = await page.evaluate(() => [...document.querySelectorAll('[data-id^="talent-"]')].map((e) => e.getAttribute('data-id').slice(7))
     .filter((id) => id !== 'now'));

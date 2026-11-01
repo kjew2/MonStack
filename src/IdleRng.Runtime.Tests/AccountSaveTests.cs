@@ -50,7 +50,6 @@ namespace IdleRng.Runtime.Tests
             Assert.That(b.Books, Is.EqualTo(a.Books));
             Assert.That(b.Talents, Is.EqualTo(a.Talents));
             Assert.That(b.Vault.Count, Is.EqualTo(1));
-            Assert.That(b.Vault[0].RunHash, Is.EqualTo(a.Vault[0].RunHash));
             Assert.That(b.Vault[0].Id, Is.EqualTo(a.Vault[0].Id));
             Assert.That(b.Vault[0].Fighter(TestContent.Db).Stats.Str, Is.EqualTo(a.Vault[0].Fighter(TestContent.Db).Stats.Str));
             Assert.That(b.Active, Is.Not.Null);
@@ -103,7 +102,7 @@ namespace IdleRng.Runtime.Tests
                 if (legacy.Phase == RunPhase.AwaitFight) TrainingRun.Fight(db, legacy); else TrainingRun.Drill(db, legacy, StatIds.Int);
             }
             a.Active = legacy;
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             ((Newtonsoft.Json.Linq.JObject)body["ActiveRun"]).Remove("Ladder");
             foreach (var e in body["Account"]["Vault"]) ((Newtonsoft.Json.Linq.JObject)e).Remove("Ladder");
             var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
@@ -126,7 +125,7 @@ namespace IdleRng.Runtime.Tests
         {
             // A v1 body as the v1 code wrote it: no Locked on Vault entries.
             var a = Played();
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 1;
             body["Account"]["SchemaVersion"] = 1;
             foreach (var e in body["Account"]["Vault"]) ((Newtonsoft.Json.Linq.JObject)e).Remove("Locked");
@@ -134,7 +133,7 @@ namespace IdleRng.Runtime.Tests
             Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
             Assert.That(b.Vault.Count, Is.EqualTo(1));
             Assert.That(b.Vault[0].Locked, Is.False);
-            Assert.That(b.Vault[0].RunHash, Is.EqualTo(a.Vault[0].RunHash));
+            Assert.That(b.Vault[0].GauntletFloor, Is.EqualTo(a.Vault[0].GauntletFloor));
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)), "the active run still replays");
             Assert.That(SaveBody(AccountSave.Encode(b)), Does.Contain("\"SchemaVersion\": " + AccountState.CurrentSchemaVersion), "it saves back as the current version");
         }
@@ -142,7 +141,7 @@ namespace IdleRng.Runtime.Tests
         /// <summary>A save body as the v2 code wrote it: no achievements, records or vendor; every species owned.</summary>
         static Newtonsoft.Json.Linq.JObject V2Body(AccountState a)
         {
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 2;
             var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
             acct["SchemaVersion"] = 2;
@@ -174,7 +173,7 @@ namespace IdleRng.Runtime.Tests
         {
             var db = TestContent.Db;
             var a = Played();
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 3;
             var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
             acct["SchemaVersion"] = 3;
@@ -194,7 +193,7 @@ namespace IdleRng.Runtime.Tests
             var db = TestContent.Db;
             var a = Played();
             AccountOps.RunTower(db, a, new[] { 0 }, 40);
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 4;
             var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
             acct["SchemaVersion"] = 4;
@@ -243,7 +242,7 @@ namespace IdleRng.Runtime.Tests
             var db = TestContent.Db;
             var a = SealedOnce();
             Assert.That(a.Vendor, Is.Not.Null);
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 5;
             var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
             acct["SchemaVersion"] = 5;
@@ -275,7 +274,7 @@ namespace IdleRng.Runtime.Tests
             var b = AccountSave.Decode(db, AccountSave.Encode(a));
             Assert.That(b.TalentsOff, Is.EqualTo(new[] { db.TalentList[1].Id }), "the loadout round-trips");
 
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 6;
             var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
             acct["SchemaVersion"] = 6;
@@ -293,7 +292,7 @@ namespace IdleRng.Runtime.Tests
             AccountOps.StartRun(db, a, "slime");
             Assume.That(a.Vault, Is.Not.Empty);
             Assert.That(a.Active.Mods.LegacyDrafts, Is.False, "a new run rolls its Awakening trees");
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 7;
             var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
             acct["SchemaVersion"] = 7;
@@ -318,12 +317,13 @@ namespace IdleRng.Runtime.Tests
             var want = a.Vault.Select(e => e.Fighter(db)).ToList();
 
             // Rewrite it as a v8 save: entries without Id, with a replay recipe.
-            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var body = OldSaveBody(a);
             body["SchemaVersion"] = 8;
             var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
             acct["SchemaVersion"] = 8;
             foreach (Newtonsoft.Json.Linq.JObject e in acct["Vault"])
             {
+                e["Seed"] = AccountOps.RunSeed(a.Seed, (int)e["Id"]).ToString("x16");   // v8 entries carried their run seed
                 e.Remove("Id");
                 e["Log"] = new Newtonsoft.Json.Linq.JArray(new Newtonsoft.Json.Linq.JObject { ["Kind"] = "Rest" });
                 e["Mods"] = new Newtonsoft.Json.Linq.JObject { ["LegacyDrafts"] = true };
@@ -421,10 +421,35 @@ namespace IdleRng.Runtime.Tests
             Assert.Throws<SaveCorruptException>(() => AccountSave.Decode(db, Encoding.UTF8.GetBytes("garbage")));
         }
 
-        static byte[] WithTamperedRecipe(AccountState a, Func<string, string> edit)
+        /// <summary>A pre-v10 save of the account (schema 9): the run in progress as its replay recipe under "ActiveRun".</summary>
+        static Newtonsoft.Json.Linq.JObject OldSaveBody(AccountState a)
         {
-            string json = Encoding.UTF8.GetString(AccountSave.Encode(a));
-            return SaveSerializer.EncodeBody(edit(json.Substring(json.IndexOf('\n') + 1)));
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            body.Remove("Run");
+            body["ActiveRun"] = a.Active == null ? (Newtonsoft.Json.Linq.JToken)Newtonsoft.Json.Linq.JValue.CreateNull() : AccountSave.LegacyRecipe(a.Active);
+            body["SchemaVersion"] = 9;
+            body["Account"]["SchemaVersion"] = 9;
+            return body;
+        }
+
+        /// <summary>An old (recipe) save of the account, edited as text: the replay path that pre-v10 saves still take once.</summary>
+        static byte[] WithTamperedRecipe(AccountState a, Func<string, string> edit) =>
+            SaveSerializer.EncodeBody(edit(OldSaveBody(a).ToString(Newtonsoft.Json.Formatting.Indented)));
+
+        [Test]
+        public void ASavedRunState_ThatRefersToRemovedContent_IsDropped_WithEveryBookReturned()
+        {
+            var db = TestContent.Db;
+            var a = Played();   // the run brought two book_echoes and used one
+            Assume.That(a.Active.BooksUsed, Is.EqualTo(new[] { "book_echoes" }));
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            Assert.That(body["Run"]?["Log"], Is.Null, "the run is saved as its state, not its log");
+            body["Run"]["SpeciesId"] = "species_removed_from_content";
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
+            Assert.That(b.Active, Is.Null);
+            Assert.That(notice, Does.Contain("no longer in the game"));
+            Assert.That(b.BookCount("book_echoes"), Is.EqualTo(a.BookCount("book_echoes") + 2), "the used and the unused book both come back");
+            Assert.That(b.Vault.Count, Is.EqualTo(a.Vault.Count));
         }
 
         [Test]

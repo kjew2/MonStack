@@ -332,6 +332,12 @@ namespace IdleRng.Sim.Training
         /// <summary>Skill books the player brought into the run, not yet used.</summary>
         public List<string> Books { get; set; } = new List<string>();
 
+        /// <summary>
+        /// Skill books used in this run, in use order (UseBook moves them here from Books). The saved run is its state, not its
+        /// log (specs/27 section 3.5), so this is how the sealed monster knows every book it brought. Not part of StateHash.
+        /// </summary>
+        public List<string> BooksUsed { get; set; } = new List<string>();
+
         /// <summary>Chase trees offered since they last unlocked; cleared for a tree when its conditions stop holding.</summary>
         public List<string> ChaseOffered { get; set; } = new List<string>();
 
@@ -358,6 +364,7 @@ namespace IdleRng.Sim.Training
             for (int i = 0; i < Slots.Length; i++) c.Slots[i] = Slots[i]?.Clone();
             c.Offers = Offers.ConvertAll(o => o.Clone());
             c.Books = new List<string>(Books);
+            c.BooksUsed = new List<string>(BooksUsed);
             c.ChaseOffered = new List<string>(ChaseOffered);
             c.FusionOffered = new List<string>(FusionOffered);
             c.Tally = Tally.Clone();

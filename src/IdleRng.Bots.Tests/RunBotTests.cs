@@ -70,6 +70,33 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void ARunSavedAsItsState_ContinuesExactly_FromAnyPoint()
+        {
+            // Save v10 keeps the run in progress as its state, not its log (specs/27 section 3.5). Saving and loading the account
+            // in the middle of a run, at several points, must not change how the run ends.
+            var db = Content.Db;
+            var books = new List<string>(db.SkillBooks.Keys);
+            foreach (var sp in db.SpeciesList)
+                foreach (var name in RunPolicies.Names)
+                {
+                    var straight = RunBot.Play(db, RunPolicies.Create(name), sp.Id, 13, null, books);
+                    var a = IdleRng.Sim.Account.AccountOps.New(db, 1);
+                    a.Active = TrainingRun.Start(db, sp.Id, 13, books);
+                    var policy = RunPolicies.Create(name);
+                    for (int step = 0; step < 100000; step++)   // as RunBot.Play: until the policy stops (it spends after the end)
+                    {
+                        if (step % 7 == 3)   // reload from the save every few commands
+                            a = IdleRng.Runtime.Save.AccountSave.Decode(db, IdleRng.Runtime.Save.AccountSave.Encode(a), out var notice);
+                        var cmd = policy.Next(db, a.Active);
+                        if (cmd == null) break;
+                        TrainingRun.Apply(db, a.Active, cmd);
+                    }
+                    Assert.That(TrainingRun.StateHash(a.Active), Is.EqualTo(TrainingRun.StateHash(straight)), $"{sp.Id} {name}");
+                    Assert.That(a.Active.BooksUsed, Is.EqualTo(straight.BooksUsed), $"{sp.Id} {name}: books used survive the reloads");
+                }
+        }
+
+        [Test]
         public void MonoPolicy_DrillsOnlyItsStat_UntilCapped()
         {
             var db = Content.Db;

@@ -194,7 +194,7 @@ namespace IdleRng.Sim.Tests
             var flat = TrainingRun.OpponentFighter(Db, s, 0);
             Assert.That(flat.Id, Is.EqualTo("rank_" + Db.FightRanks[0].Id));
             Assert.That(flat.Skills, Is.Empty);
-            Assert.That(TrainingRun.StateHash(s), Is.EqualTo(V5Hash));
+            Assert.That(TrainingRun.LegacyRecipeHash(s), Is.EqualTo(V5Hash), "an old save's recipe still checks against its version 5 hash");
             Assert.That((s.Rank, s.FightsWon, s.FightsFought), Is.EqualTo((2, 2, 12)));
         }
 
