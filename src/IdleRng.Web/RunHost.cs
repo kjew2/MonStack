@@ -353,13 +353,20 @@ namespace IdleRng.Web
             {
                 switch (name)
                 {
-                    case "startRun":
-                        AccountOps.StartRun(_db, _acct, a.Str(0), a.Has(1) ? IdList(a.El(1)) : null, a.Has(2) ? IdList(a.El(2)) : null);
-                        w.P("ok", true);
-                        break;
-                    case "finishRun":
+                    // Reads: they change nothing, so they are not commands (specs/27 section 4).
+                    case "gauntlet": Climb(w, a.Int(0)); return w.EndObj().ToString();
+                    case "towerInfo": TowerInfo(w, a.Int(0)); return w.EndObj().ToString();
+                    case "towerFloor": TowerFloorFight(w, a.Int(0), a.El(1), a.Int(2)); return w.EndObj().ToString();
+                }
+                if (!AccountCommand.IsCommand(name)) return Fail("unknown command");
+                var cmd = AccountCommand.Parse(name, a);
+                if (AccountCommands.IsRunCommand(cmd.Kind)) return Fail("unknown command");
+                var res = AccountCommands.Apply(_db, _acct, cmd);
+                switch (cmd.Kind)
+                {
+                    case CommandKind.FinishRun:
                     {
-                        var r = AccountOps.FinishRun(_db, _acct, (long)a.Num(0));
+                        var r = (FinishResult)res;
                         w.P("ok", true).P("shards", r.Shards).P("ticketPieces", r.TicketPieces).P("ticketsEarned", r.TicketsEarned);
                         w.Key("entry"); Entry(w, r.Entry);
                         w.Key("booksReturned").Arr();
@@ -377,52 +384,16 @@ namespace IdleRng.Web
                         w.EndArr();
                         break;
                     }
-                    case "gauntlet":
-                        Climb(w, a.Int(0));
-                        break;
-                    case "towerInfo":
-                        TowerInfo(w, a.Int(0));
-                        break;
-                    case "runTower":
-                        RunTower(w, a.Int(0), a.El(1));
-                        break;
-                    case "towerFloor":
-                        TowerFloorFight(w, a.Int(0), a.El(1), a.Int(2));
-                        break;
-                    case "buyOffer":
+                    case CommandKind.RunTower: RunTower(w, cmd, (TowerRunResult)res); break;
+                    case CommandKind.BuyOffer:
                     {
-                        int i = a.Int(0);
-                        var offer = _acct.Vendor != null && i >= 0 && i < _acct.Vendor.Offers.Count ? _acct.Vendor.Offers[i] : null;
-                        w.P("ok", true).P("cost", AccountOps.BuyOffer(_db, _acct, i)).P("talent", offer.Talent);
+                        var r = (OfferBought)res;
+                        w.P("ok", true).P("cost", r.Cost).P("talent", r.Talent);
                         break;
                     }
-                    case "setLoadout":
-                        AccountOps.SetLoadout(_db, _acct, a.Has(0) ? IdList(a.El(0)) : new List<string>());
-                        w.P("ok", true);
-                        break;
-                    case "rerollVendor":
-                        w.P("ok", true).P("cost", AccountOps.RerollVendor(_db, _acct));
-                        break;
-                    case "closeVendor":
-                        AccountOps.CloseVendor(_db, _acct);
-                        w.P("ok", true);
-                        break;
-                    case "abandon":
-                        AccountOps.AbandonRun(_db, _acct);
-                        w.P("ok", true);
-                        break;
-                    case "dismantle":
-                        w.P("ok", true).P("refund", AccountOps.Dismantle(_db, _acct, a.Int(0)));
-                        break;
-                    case "lock":
-                        AccountOps.SetLocked(_db, _acct, a.Int(0), a.Bool(1));
-                        w.P("ok", true);
-                        break;
-                    case "debugGrantBook":
-                        AccountOps.GrantBooks(_db, _acct, a.Str(0), a.Has(1) ? a.Int(1) : 1);
-                        w.P("ok", true);
-                        break;
-                    default: return Fail("unknown command");
+                    case CommandKind.RerollVendor: w.P("ok", true).P("cost", (long)res); break;
+                    case CommandKind.Dismantle: w.P("ok", true).P("refund", (long)res); break;
+                    default: w.P("ok", true); break;   // startRun, abandon, setLoadout, closeVendor, lock, debugGrantBook
                 }
             }
             catch (Exception e) when (e is InvalidOperationException || e is ArgumentException)
@@ -479,10 +450,10 @@ namespace IdleRng.Web
         /// fight for playback (TowerFight). The fight log comes from replaying the attempt with observers, which gives the identical
         /// result (the hash is checked). The other floors' fights come from towerFloor, on demand.
         /// </summary>
-        private void RunTower(JsonOut w, int day, JsonElement indices)
+        private void RunTower(JsonOut w, AccountCommand cmd, TowerRunResult r)
         {
-            var idx = Indices(indices);
-            var r = AccountOps.RunTower(_db, _acct, idx, day);
+            var idx = cmd.Team;
+            int day = cmd.A;
             var res = r.Result;
             var last = res.Floors[res.Floors.Count - 1];
             var (again, log, final) = ReplayTower(idx, day, last.Floor);
@@ -598,13 +569,6 @@ namespace IdleRng.Web
             return id;
         }
 
-        private static List<string> IdList(JsonElement arr)
-        {
-            var list = new List<string>();
-            foreach (var e in arr.EnumerateArray()) list.Add(e.GetString());
-            return list;
-        }
-
         /// <summary>
         /// The account without the active run: shards, owned species, achievements with progress, books, talent ranks, the post-run
         /// vendor's offers with their current price, the Vault, the bonuses runs start with.
@@ -712,11 +676,16 @@ namespace IdleRng.Web
             var w = new JsonOut().Obj();
             try
             {
-                switch (name)
+                if (!AccountCommand.IsCommand(name)) return Fail("unknown command");
+                var cmd = AccountCommand.Parse(name, a);
+                if (!AccountCommands.IsRunCommand(cmd.Kind)) return Fail("unknown command");
+                var log = cmd.Kind == CommandKind.Fight ? new FightLog() : null;
+                var res = AccountCommands.Apply(_db, _acct, cmd, log == null ? null : (Action<FightAction>)log.Record, log == null ? null : (Action<FightState>)log.Watch);
+                switch (cmd.Kind)
                 {
-                    case "drill":
+                    case CommandKind.Drill:
                     {
-                        var r = TrainingRun.Drill(_db, s, a.Str(0));
+                        var r = (DrillResult)res;
                         w.P("ok", true).P("kind", "drill").P("stat", r.Stat).P("tier", r.Tier.ToString().ToLowerInvariant())
                             .P("tierName", _db.Text("drill." + r.Tier.ToString().ToLowerInvariant() + ".name"))
                             .P("gain", r.Gain).P("value", r.NewValue).P("energy", r.EnergyAfter).P("injured", r.Injured)
@@ -726,16 +695,15 @@ namespace IdleRng.Web
                         Milestones(w, r.Milestones);
                         break;
                     }
-                    case "rest":
+                    case CommandKind.Rest:
                     {
-                        var r = TrainingRun.Rest(_db, s);
+                        var r = (RestResult)res;
                         w.P("ok", true).P("kind", "rest").P("restored", r.Restored).P("energy", r.EnergyAfter);
                         break;
                     }
-                    case "fight":
+                    case CommandKind.Fight:
                     {
-                        var log = new FightLog();
-                        var r = TrainingRun.Fight(_db, s, log.Record, log.Watch);
+                        var r = (RankFightResult)res;
                         w.P("ok", true).P("kind", "fight").P("won", r.Won).P("rankBefore", r.RankBefore).P("rankAfter", r.RankAfter).P("sp", r.SpGained);
                         w.Key("opponent"); LadderStep(w, s, r.RankBefore); w.EndObj();   // who was fought (the ladder does not change)
                         w.P("outcome", r.Fight.Outcome.ToString()).P("ticks", r.Fight.Ticks);
@@ -748,27 +716,26 @@ namespace IdleRng.Web
                         w.EndArr();
                         break;
                     }
-                    case "take":
+                    case CommandKind.Take:
                     {
-                        var r = TrainingRun.TakeTree(_db, s, a.Int(0), a.Int(1));
+                        var r = (TakeResult)res;
                         w.P("ok", true).P("kind", "take").P("placed", r.Placed).P("refunded", r.Refunded);
                         w.Key("removed").Arr();
                         foreach (var id in r.Removed) w.Str(id);
                         w.EndArr();
                         break;
                     }
-                    case "discard": TrainingRun.DiscardOffer(_db, s); w.P("ok", true).P("kind", "discard"); break;
-                    case "reroll": TrainingRun.RerollDraft(_db, s); w.P("ok", true).P("kind", "reroll"); break;
-                    case "spend":
+                    case CommandKind.Discard: w.P("ok", true).P("kind", "discard"); break;
+                    case CommandKind.Reroll: w.P("ok", true).P("kind", "reroll"); break;
+                    case CommandKind.Spend:
                     {
-                        var r = TrainingRun.SpendPoint(_db, s, a.Int(0));
+                        var r = (SpendResult)res;
                         var (nn, nd) = NodeText(r.Node);
                         w.P("ok", true).P("kind", "spend").P("node", nn).P("desc", nd).P("statGain", r.StatGain);
                         Milestones(w, r.Milestones);
                         break;
                     }
-                    case "book": TrainingRun.UseBook(_db, s, a.Str(0)); w.P("ok", true).P("kind", "book"); break;
-                    default: return Fail("unknown command");
+                    case CommandKind.Book: w.P("ok", true).P("kind", "book"); break;
                 }
             }
             catch (Exception e) when (e is InvalidOperationException || e is ArgumentException)
