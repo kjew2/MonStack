@@ -225,7 +225,7 @@ namespace IdleRng.Runtime.Save
             return null;
         }
 
-        static JObject Recipe(RunState s)
+        internal static JObject Recipe(RunState s)
         {
             // Books brought into the run = the unused ones plus the ones the log used (UseBook removes by id, so the order of
             // the replayed list leaves the unused books in the same order).
