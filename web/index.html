@@ -73,9 +73,10 @@
 [hidden] { display: none !important; }
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.35 var(--font-body); -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
-/* A game, not a page (issue #123): a long press or a drag selects no text and brings up no copy or look-up callout; real text fields still take typing */
-body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+/* A game, not a page (issue #123): a long press or a drag selects no text and brings up no copy or look-up callout; real text fields still take typing.
+   Set on every element, not only body: iOS Safari still selected text that merely inherited none. The selectstart guard below backs it up. */
+*, *::before, *::after { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, select, [contenteditable], [contenteditable] * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { opacity: .4; cursor: default; }
 button:focus-visible { outline: 2px solid var(--gems); outline-offset: 2px; }
@@ -647,6 +648,12 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 <script src="auth.js"></script>
 <script src="account.js"></script>
 <script>
+// No text selection or long-press menu outside text fields (issue #123): CSS alone did not stop it on iOS
+(() => {
+  const editable = (t) => t instanceof Element && !!t.closest('input, textarea, select, [contenteditable]');
+  document.addEventListener('selectstart', (e) => { if (!editable(e.target instanceof Element ? e.target : e.target.parentElement)) e.preventDefault(); });
+  document.addEventListener('contextmenu', (e) => { if (!editable(e.target)) e.preventDefault(); });
+})();
 // Build stamp from web/wasm/build.sh (version, commit, dirty flag, date): shows at a glance whether this copy is current. "dev" without one.
 (async () => {
   const el = document.getElementById('build');
