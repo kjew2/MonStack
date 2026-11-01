@@ -147,6 +147,14 @@ tree.overclock.name,Overclock
 tree.fortune.name,Fortune
 tree.battle_instinct.name,Battle Instinct
 tree.survivor.name,Survivor
+tree.lifeblood.name,Lifeblood
+tree.berserker.name,Berserker
+tree.runeweaver.name,Runeweaver
+tree.hermit.name,Hermit
+tree.duelist.name,Duelist
+tree.stonewall.name,Stonewall
+tree.quickstep.name,Quickstep
+tree.lucky_star.name,Lucky Star
 tree.tome_of_echoes.name,Tome of Echoes
 tree.unbreakable_will.name,Unbreakable Will
 tree.arcane_overflow.name,Arcane Overflow
@@ -464,3 +472,35 @@ mskill.draw_card.name,Draw a Card
 mskill.draw_card.desc,"Draws a lucky card: +{power:pct} damage dealt for {duration} turns. Cooldown {cooldown}."
 mskill.major_arcana.name,The Star
 mskill.major_arcana.desc,Duo capstone. When hit: heal self for {power:pct} of max HP.
+mskill.body_slam.name,Body Slam
+mskill.body_slam.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.bloodwell.name,Bloodwell
+mskill.bloodwell.desc,Chase trait. When hit: heal self for {power:pct} {scales}.
+mskill.cleave.name,Cleave
+mskill.cleave.desc,Damage all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.berserk.name,Berserk
+mskill.berserk.desc,Chase trait. Permanent +{power:pct} {stat}.
+mskill.rune_bolt.name,Rune Bolt
+mskill.rune_bolt.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.arcane_spark.name,Arcane Spark
+mskill.arcane_spark.desc,Chase trait. Every basic attack: extra hit for {power:pct} {scales}.
+mskill.spirit_lash.name,Spirit Lash
+mskill.spirit_lash.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.inner_peace.name,Inner Peace
+mskill.inner_peace.desc,Chase trait. When hit: heal self for {power:pct} {scales}.
+mskill.lunge.name,Lunge
+mskill.lunge.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.precision.name,Precision
+mskill.precision.desc,Chase trait. Permanent +{power:pct} {stat}.
+mskill.shield_bash.name,Shield Bash
+mskill.shield_bash.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.granite_skin.name,Granite Skin
+mskill.granite_skin.desc,Chase trait. Permanent +{power:pct} {stat}.
+mskill.rush.name,Rush
+mskill.rush.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.momentum.name,Momentum
+mskill.momentum.desc,Chase trait. Every basic attack: +{power:pct} {stat} for {duration} turns.
+mskill.coin_toss.name,Coin Toss
+mskill.coin_toss.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.windfall.name,Windfall
+mskill.windfall.desc,Chase trait. On crit: +{power:pct} {stat} for {duration} turns.

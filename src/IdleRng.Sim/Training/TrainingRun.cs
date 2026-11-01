@@ -696,10 +696,23 @@ namespace IdleRng.Sim.Training
             return pool.GetRange(0, n);
         }
 
-        /// <summary>A generic tree for <paramref name="stat"/> (or any stat; null = every stat) at or below the threshold, not slotted, not offered.</summary>
+        /// <summary>
+        /// A generic tree for <paramref name="stat"/> (or any stat; null = every stat) at or below the threshold, not slotted, not
+        /// offered. A legacy run drafts only <see cref="LegacyGenericTrees"/>, so its log replays as it was played.
+        /// </summary>
         static bool DraftEligible(RunState s, TreeDef t, string stat, int threshold) =>
             t.Kind == TreeKind.Generic && (stat == null || t.OfferStat == null || t.OfferStat == stat) && t.OfferThreshold <= threshold
+            && (!s.Mods.LegacyDrafts || LegacyGenericTrees.Contains(t.Id))
             && !Held(s, t.Id) && !Pending(s, t.Id);
+
+        /// <summary>
+        /// Replay only: the generic trees content had before content 5.4 added a second tree per stat (specs/15 section 4.1). A
+        /// legacy run (<see cref="RunModifiers.LegacyDrafts"/>) was played with these, so it drafts from them alone.
+        /// </summary>
+        static readonly HashSet<string> LegacyGenericTrees = new HashSet<string>
+        {
+            "vital_core", "brute_force", "spellcraft", "sage_mind", "nimble_feet", "bulwark", "overclock", "fortune", "battle_instinct", "survivor",
+        };
 
         /// <summary>
         /// Keep chase trees consistent with their conditions (specs/15 section 5): a slotted chase tree whose conditions fail

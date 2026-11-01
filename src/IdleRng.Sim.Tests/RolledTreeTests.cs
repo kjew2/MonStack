@@ -84,24 +84,31 @@ namespace IdleRng.Sim.Tests
         [Test]
         public void Awakening_AlwaysOffersTheCrossingStatsTreeFirst()
         {
-            var own = Generic.Single(t => t.OfferStat == StatIds.Str);
-            for (ulong seed = 1; seed <= 20; seed++)
+            var own = Generic.Where(t => t.OfferStat == StatIds.Str).Select(t => t.Id).ToList();
+            Assume.That(own.Count, Is.GreaterThan(1), "content 5.4: each stat has more than one Awakening tree");
+            var firsts = new HashSet<string>();
+            for (ulong seed = 1; seed <= 40; seed++)
             {
                 var o = StrAwakening(TrainingRun.Start(Db, "drake", seed));
-                Assert.That(o.Trees[0], Is.EqualTo(own.Id), "kj, issue #121: the crossing stat's own tree is always a card");
+                Assert.That(own, Does.Contain(o.Trees[0]), "kj, issue #121: one of the crossing stat's own trees is always a card");
                 Assert.That(o.Trees.Count, Is.EqualTo(K.DraftSize));
+                firsts.Add(o.Trees[0]);
             }
+            Assert.That(firsts, Is.EquivalentTo(own), "the first card is drawn from all of the stat's own trees");
         }
 
         [Test]
-        public void Awakening_WithTheStatsTreeSlotted_DrawsEveryCardFromAnyStat()
+        public void Awakening_WithTheStatsTreesSlotted_DrawsEveryCardFromAnyStat()
         {
-            var own = Generic.Single(t => t.OfferStat == StatIds.Str);
+            var own = Generic.Where(t => t.OfferStat == StatIds.Str).Select(t => t.Id).ToList();
             var s = TrainingRun.Start(Db, "drake", 4);
-            s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { own.Id } });
-            TrainingRun.TakeTree(Db, s, 0, 2);
+            for (int i = 0; i < own.Count; i++)
+            {
+                s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { own[i] } });
+                TrainingRun.TakeTree(Db, s, 0, 2 + i);
+            }
             var o = StrAwakening(s);
-            Assert.That(o.Trees, Does.Not.Contain(own.Id));
+            Assert.That(o.Trees.Intersect(own), Is.Empty);
             Assert.That(o.Trees.Count, Is.EqualTo(K.DraftSize));
         }
 
@@ -113,6 +120,7 @@ namespace IdleRng.Sim.Tests
                 var o = StrAwakening(TrainingRun.Start(Db, "drake", seed, null, new RunModifiers { LegacyDrafts = true }));
                 Assert.That(o.Rolls, Is.Empty);
                 Assert.That(o.Trees.All(id => Db.Trees[id].OfferStat == null || Db.Trees[id].OfferStat == StatIds.Str));
+                Assert.That(o.Trees, Does.Not.Contain("berserker"), "a legacy run drafts only the trees it was played with (before content 5.4)");
             }
         }
 

@@ -162,6 +162,86 @@
       "fuse_b": null
     },
     {
+      "id": "lifeblood",
+      "name_key": "tree.lifeblood.name",
+      "kind": "generic",
+      "offer_stat": "hp",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "berserker",
+      "name_key": "tree.berserker.name",
+      "kind": "generic",
+      "offer_stat": "str",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "runeweaver",
+      "name_key": "tree.runeweaver.name",
+      "kind": "generic",
+      "offer_stat": "int",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "hermit",
+      "name_key": "tree.hermit.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "duelist",
+      "name_key": "tree.duelist.name",
+      "kind": "generic",
+      "offer_stat": "dex",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "stonewall",
+      "name_key": "tree.stonewall.name",
+      "kind": "generic",
+      "offer_stat": "def",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "quickstep",
+      "name_key": "tree.quickstep.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "lucky_star",
+      "name_key": "tree.lucky_star.name",
+      "kind": "generic",
+      "offer_stat": "luk",
+      "offer_threshold": 300,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
       "id": "tome_of_echoes",
       "name_key": "tree.tome_of_echoes.name",
       "kind": "book",
