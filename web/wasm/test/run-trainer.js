@@ -168,7 +168,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     st: getComputedStyle(row).getPropertyValue('--st').trim(),
     ticks: [...row.querySelectorAll('.bar.gauge .tick')].map((t) => +t.dataset.at),
     hit: row.querySelectorAll('.bar.gauge .tick.hit').length,
-    text: /\d/.test(row.querySelector('.grow').textContent.replace(/^x[\d.]+$/, '')),
+    text: /\d/.test(row.querySelector('.gmul').textContent.replace(/^x[\d.]+$/, '')),
     inBtn: !!row.querySelector('[data-act^="drill-"] .bar.gauge') && !row.querySelector('[data-act^="drill-"] [data-tip]'),
   })));
   check(statGauges.length === 8 && new Set(statGauges.map((g) => g.fill)).size === 8 && statGauges.every((g) => g.st !== ''), 'each stat gauge is filled in its own stat colour: ' + statGauges.map((g) => g.fill).join(' '));
@@ -183,6 +183,19 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       corner: !!ir && Math.abs(ir.right - r.right) <= 2 && Math.abs(ir.top - r.top) <= 2 && ir.width >= 24 && ir.width <= r.width / 3, tips: t.querySelectorAll('[data-tip]').length };
   }));
   check(pad.every((t) => t.fill && t.meta && t.corner && t.tips === 1), 'each drill tile is one Drill button (label strip included, nothing clipped) with one "i" tooltip button in its corner: ' + JSON.stringify(pad[0]));
+  // Nothing clips either with a 4-digit stat in a wide fallback font (CI can lay out before the web font loads)
+  const wide = await page.evaluate(() => {
+    const st = document.createElement('style');
+    st.textContent = '.dtile, .dtile * { font-family: monospace !important; }';
+    document.head.appendChild(st);
+    const vals = [...document.querySelectorAll('.pad .dtile .val')], old = vals.map((v) => v.textContent);
+    vals.forEach((v) => { v.textContent = '9999'; });
+    const out = [...document.querySelectorAll('.pad .dtile')].map((t) => [...t.querySelectorAll('.meta, .vrow')].every((e) => e.scrollWidth <= e.clientWidth));
+    vals.forEach((v, i) => { v.textContent = old[i]; });
+    st.remove();
+    return out;
+  });
+  check(wide.every(Boolean), 'a 4-digit stat in a wide font still fits its drill tile: ' + JSON.stringify(wide));
   // Text is not selectable and shows no long-press callout (issue #123); text fields still are
   const sel = await page.evaluate(() => { const c = getComputedStyle(document.querySelector('.dtile .lbl')); return c.userSelect || c.webkitUserSelect; });
   check(sel === 'none', 'game text cannot be selected (' + sel + ')');
