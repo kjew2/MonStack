@@ -16,7 +16,7 @@
     pick: null,              // species chosen on the home screen
     showLocked: false,       // the Raise tab's locked species list is open
     howto: false,            // the Raise tab's "How a run works" is open
-    carousel: { x: 0, glide: false, timer: 0, el: null, shown: null },   // the species carousel: its scroll, whether to glide to the picked card, the swipe-settle timer, the kept row, the species its info card last showed
+    carousel: { x: 0, glide: false, timer: 0, el: null },   // the species carousel: its scroll, whether to glide to the picked card, the swipe-settle timer, the kept row
     book: false,             // test option: start with a skill book
     feed: [],                // newest first
     last: null,              // last drill/rest result, shown under the stats
@@ -1075,9 +1075,8 @@
 
     // The start button sticks to the bottom of the screen, so it is in reach from anywhere in the species list (not while it is
     // disabled: a faded button over the cards only gets in the way).
-    const pickName = ui.pick ? speciesDef(ui.pick).name : null;
     main.append(h('button', { class: 'btn primary block' + (ui.pick && over <= 0 ? ' sticky-start' : ''), type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
-      text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run with ' + pickName : 'Pick a species', onclick: startRun }));
+      text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
   }
   // The owned species as a row of big square cards (the whole portrait, no crop, the name over its foot) that swipes sideways; the card that settles in the middle is the pick (tapping a
   // card or a dot picks it too and glides it to the middle). Locked species stay out of the row, folded under one line.
@@ -1111,7 +1110,7 @@
     });
     const dots = mine.length > 1 ? h('div', { class: 'dots', 'aria-hidden': 'true' }, mine.map((sp) =>
       h('button', { class: 'dot', type: 'button', tabindex: '-1', 'data-sp': sp.id, onclick: () => pickSpecies(sp.id) }))) : null;
-    const car = { key: mine.map((sp) => sp.id).join(','), row, dots, raf: 0, gliding: null };   // gliding: the scrollLeft a tap's glide is heading for (the tapped card stays lit), else null
+    const car = { key: mine.map((sp) => sp.id).join(','), row, dots, raf: 0, gliding: null, info: null };   // gliding: the scrollLeft a tap's glide is heading for (the tapped card stays lit), else null
     // A swipe: each frame the card nearest the middle lights up; once the row stops moving it becomes the pick.
     const settle = () => {
       clearTimeout(ui.carousel.timer);
@@ -1122,7 +1121,7 @@
     };
     row.addEventListener('scroll', () => {
       ui.carousel.x = row.scrollLeft;
-      if (!car.raf && car.gliding === null) car.raf = requestAnimationFrame(() => { car.raf = 0; if (car.gliding !== null) return; const best = nearestCard(row); if (best) markCarousel(car, best.dataset.sp); });
+      if (!car.raf) car.raf = requestAnimationFrame(() => { car.raf = 0; if (car.gliding === null) { const best = nearestCard(row); if (best) markCarousel(car, best.dataset.sp); } trackInfo(car); });
       clearTimeout(ui.carousel.timer);
       ui.carousel.timer = setTimeout(settle, 120);   // a fallback for browsers without scrollend
     }, { passive: true });
@@ -1153,20 +1152,37 @@
     }
     ui.carousel.glide = false;
   }
-  // The picked species' numbers: base stats, its trees and its chase trees.
+  // The picked species' numbers: base stats, its trees and its chase trees. The card rides along with the carousel: while the row
+  // moves it shifts with the middle card, fading as that card leaves, and shows the next species once its card is nearer the middle.
+  function speciesInfoKids(sp) {
+    const mini = h('div', { class: 'mini' });
+    C.stats.forEach((st) => mini.append(h('span', null, [up(st) + ' ', h('b', { text: num(sp.base[st]) })])));
+    return [mini,
+      h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') }),
+      h('small', { class: 'muted', 'data-id': 'chase-' + sp.id, text: 'Chase trees: ' + treeName(sp.chase[0]) + ', ' + treeName(sp.chase[1]) +
+        (sp.book ? ' (needs ' + C.books[sp.book].name + ')' : '') })];
+  }
   function speciesDetail(main) {
     const sp = ui.pick && speciesDef(ui.pick);
     if (!sp) return;
-    const mini = h('div', { class: 'mini' });
-    C.stats.forEach((st) => mini.append(h('span', null, [up(st) + ' ', h('b', { text: num(sp.base[st]) })])));
-    // A new pick slides its numbers in from the side its card came from, like the card above (none on the first draw).
-    const ids = C.species.filter((x) => owned(x.id)).map((x) => x.id), prev = ui.carousel.shown;
-    const dir = prev && prev !== sp.id && ids.indexOf(prev) >= 0 ? (ids.indexOf(sp.id) > ids.indexOf(prev) ? ' slide-next' : ' slide-prev') : '';
-    ui.carousel.shown = sp.id;
-    main.append(h('div', { class: 'card species-info' + dir, 'data-id': 'species-info' }, [mini,
-      h('small', { class: 'muted', text: 'Trees: ' + sp.trees.map(treeName).join(', ') }),
-      h('small', { class: 'muted', 'data-id': 'chase-' + sp.id, text: 'Chase trees: ' + treeName(sp.chase[0]) + ', ' + treeName(sp.chase[1]) +
-        (sp.book ? ' (needs ' + C.books[sp.book].name + ')' : '') })]));
+    const info = h('div', { class: 'card species-info', 'data-id': 'species-info', 'data-sp': sp.id }, speciesInfoKids(sp));
+    main.append(info);
+    if (ui.carousel.el) { ui.carousel.el.info = info; trackInfo(ui.carousel.el); }
+  }
+  // Moves the info card with the carousel's middle card: the same sideways offset, faded by how far that card is from the middle.
+  function trackInfo(car) {
+    const info = car.info, row = car.row;
+    if (!info || !info.isConnected || !row.isConnected) return;
+    const best = car.gliding !== null ? row.querySelector('.sel') : nearestCard(row);
+    if (!best) return;
+    if (info.dataset.sp !== best.dataset.sp) { info.dataset.sp = best.dataset.sp; info.replaceChildren(...speciesInfoKids(speciesDef(best.dataset.sp))); }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const stride = best.offsetWidth + 12;   // card width plus the row's gap
+    const d = best.offsetLeft + best.offsetWidth / 2 - (row.scrollLeft + row.clientWidth / 2);
+    const f = Math.min(1, Math.abs(d) / (stride / 2));   // 0 centred, 1 halfway to the next card
+    if (Math.abs(d) < 0.5) { info.style.transform = ''; info.style.opacity = ''; return; }
+    info.style.transform = 'translateX(' + d.toFixed(1) + 'px)';
+    info.style.opacity = String(1 - 0.85 * f);
   }
   // Locked species (specs/18 section 8) behind one line; open, each shows the achievement that unlocks it and the progress.
   function lockedSpecies(main) {
