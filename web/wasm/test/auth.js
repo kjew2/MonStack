@@ -111,7 +111,11 @@ const FAKE_GIS = `window.google = { accounts: { id: {
   check((await auth()).userId === first.userId, 'a reload keeps the same player (session token)');
   check(ugs.calls.filter((c) => c.endsWith('/anonymous')).length === 1 && ugs.calls.some((c) => c.endsWith('/session-token')), 'the reload used the session token, not a new sign-in');
 
+  // The shipped config has a Google client id (web/auth.js CONFIG); the sign-in itself goes to the fake script below.
+  check(/\.apps\.googleusercontent\.com$/.test(await page.evaluate(() => MonStackAuth.config.googleClientId)), 'the build carries a Google client id');
+
   // No Google client id: the sheet says so.
+  await page.evaluate(() => { MonStackAuth.config.googleClientId = ''; });
   await openSheet();
   check(/guest/i.test(await sheetText()), 'the sheet says the player is a guest');
   check(await page.locator('[data-id=google-off]').count() === 1, 'with no Google client id the sheet says sign-in is not set up');

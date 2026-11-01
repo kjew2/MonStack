@@ -93,7 +93,7 @@ Configuration is public identifiers in `web/auth.js` `CONFIG`: the UGS project i
 1. GitHub: Settings > Pages > Source: GitHub Actions.
 2. Google Cloud console: an OAuth client of type Web application, authorised JavaScript origins `https://kjew2.github.io` (and `http://localhost:8000` for `./play.sh`), plus the OAuth consent screen.
 3. UGS dashboard: Authentication > Identity providers > Add Google, with that client id. Until then UGS answers Google calls with "id provider not found".
-4. The client id goes into `CONFIG.googleClientId`.
+4. The client id goes into `CONFIG.googleClientId`. Done 2026-11-01: `1042534114217-99fsfrksjmfo8l44kehq6h511bvhe20b.apps.googleusercontent.com` (kj created the OAuth client).
 
 Decision for kj (section 12): whether PvP needs a linked login.
 
