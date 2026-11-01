@@ -4,7 +4,7 @@ Status: **target design, partly built** (`specs/13` section 6 has each phase). *
 
 Source: five design drafts kj wrote on 2026-10-30 ("Fast-Paced Monster Raising & Tower Battles", "Monster Skill Trees & Skill Book System", "Project Monster Trainer", "Rogue-Lite Systems Trainer", "Systems-First Monster Trainer"). This spec merges them: every idea in them is here once. Where they disagreed, section 13 lists the conflict and a proposed resolution. Anything marked **(proposed)** is an agent's reconciliation and needs kj's confirmation; everything else is stated in the drafts.
 
-> **Numbers are placeholders.** The drafts give a few numbers (12 epochs, milestones at 300/500/700/900, 100 gauntlet floors). Treat all of them as placeholders until the systems are built (`CLAUDE.md`, "Current focus").
+> **Numbers are placeholders.** The drafts give a few numbers (12 epochs, milestones at 300/500/700/900, a single 400 since content 6.0, 100 gauntlet floors). Treat all of them as placeholders until the systems are built (`CLAUDE.md`, "Current focus").
 
 ## 1. Pitch
 
@@ -73,7 +73,7 @@ The rank fight replaces the drafts' *Tactical Challenge*: it is the in-run fight
 
 ### 4.4 Attribute milestones and Awakenings
 
-When a stat crosses **300 / 500 / 700 / 900**, the run pauses for an **Awakening** (kj, 2026-10-31: renamed from "tree draft"), a **3-card tree offer**: the crossing stat's own generic tree plus two for **any** stat, each a **premade tree with rolled numbers** (kj, 2026-10-31, issue #121): its nodes are as designed, but the amount of each stat node and a growth bonus on its capstone are random, large on the tree's own stat, so a lucky card can open a build the species struggles with (a drake that finds a good LUK tree can grow LUK for a crit build). Rules: `specs/15` section 4.1. The picked tree goes into a tree slot under the slot rule of section 5.1. Milestone drafts are one way to get a new tree, not the only one. The talent tree can add draft options.
+When a stat crosses **400** (once per stat; kj, 2026-11-01: it was 300 / 500 / 700 / 900), the run pauses for an **Awakening** (kj, 2026-10-31: renamed from "tree draft"), a **3-card tree offer**: the crossing stat's own generic tree plus two for **any** stat, each a **premade tree with rolled numbers** (kj, 2026-10-31, issue #121): its nodes are as designed, but the amount of each stat node and a growth bonus on its capstone are random, large on the tree's own stat, so a lucky card can open a build the species struggles with (a drake that finds a good LUK tree can grow LUK for a crit build). Rules: `specs/15` section 4.1. The picked tree goes into a tree slot under the slot rule of section 5.1. Milestone drafts are one way to get a new tree, not the only one. The talent tree can add draft options.
 
 ### 4.5 End of run
 
@@ -145,8 +145,8 @@ Rule-breaking synergy passive example: maxing *Heavy Armor* and *Unbreakable Wil
 
 The designed signature moment:
 
-1. A high tier tree (say the 700 WIS draft) is out of reach for the first ~8 epochs, so the player banks skill points while drilling stats.
-2. Around epoch 9 the monster crosses 700 WIS and drafts the tree.
+1. A high tier tree (say the 400 WIS draft) is out of reach for the first ~8 epochs, so the player banks skill points while drilling stats.
+2. Around epoch 9 the monster crosses 400 WIS and drafts the tree.
 3. The player dumps the stockpile into it in one burst, maxes it and unlocks its chase trait.
 
 The economy of points, milestones and epochs must make this reachable but not automatic.

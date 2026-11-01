@@ -66,7 +66,7 @@
       "name_key": "tree.vital_core.name",
       "kind": "generic",
       "offer_stat": "hp",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -76,7 +76,7 @@
       "name_key": "tree.brute_force.name",
       "kind": "generic",
       "offer_stat": "str",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -86,7 +86,7 @@
       "name_key": "tree.spellcraft.name",
       "kind": "generic",
       "offer_stat": "int",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -96,7 +96,7 @@
       "name_key": "tree.sage_mind.name",
       "kind": "generic",
       "offer_stat": "wis",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -106,7 +106,7 @@
       "name_key": "tree.nimble_feet.name",
       "kind": "generic",
       "offer_stat": "dex",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -116,7 +116,7 @@
       "name_key": "tree.bulwark.name",
       "kind": "generic",
       "offer_stat": "def",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -126,7 +126,7 @@
       "name_key": "tree.overclock.name",
       "kind": "generic",
       "offer_stat": "spd",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -136,7 +136,7 @@
       "name_key": "tree.fortune.name",
       "kind": "generic",
       "offer_stat": "luk",
-      "offer_threshold": 300,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -146,7 +146,7 @@
       "name_key": "tree.battle_instinct.name",
       "kind": "generic",
       "offer_stat": null,
-      "offer_threshold": 500,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -156,7 +156,7 @@
       "name_key": "tree.survivor.name",
       "kind": "generic",
       "offer_stat": null,
-      "offer_threshold": 500,
+      "offer_threshold": 400,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
