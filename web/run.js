@@ -1006,7 +1006,7 @@
   }
 
   // ---- home and grade
-  // The home screen is split into tabs on the bottom bar (the run screen's bar): Raise (species, start, the vendor's offers),
+  // The home screen is split into tabs on the bottom bar (the run screen's bar): Raise (species, start),
   // Vault, Talents, Dungeon and Goals (achievements). Each tab opens at its top; the header keeps the shards in view.
   const HOME_TABS = [['raise', 'Raise'], ['vault', 'Vault'], ['talents', 'Talents'], ['dungeon', 'Dungeon'], ['goals', 'Goals']];
   function goHomeTab(id) { ui.homeTab = id; render(); }
@@ -1065,13 +1065,6 @@
       main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[bring].name + ' (you have ' + acct.books[bring] + ')' })]));
     }
     lockedSpecies(main);
-    // The vendor's offers stay until the next run starts (specs/18 section 4).
-    if (acct.vendor && acct.vendor.offers.length) {
-      main.append(h('h3', { text: 'Vendor' }));
-      main.append(h('p', { class: 'small muted', text: 'Offers from your last run. They vanish when the next run starts.' }));
-      vendorOffers(main);
-      rerollButton(main);
-    }
 
     const grant = debugOn() ? speciesBook() || Object.keys(C.books)[0] : null;   // debug only: the Dungeon drops books (specs/21 section 7)
     if (grant) main.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'grant-book', text: 'Test: add a ' + C.books[grant].name,
@@ -1525,7 +1518,7 @@
     if (ui.climb) main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-replay', text: 'Watch the gauntlet again', onclick: () => openClimb(ui.climb.data) }));
     if (acct.vendor && acct.vendor.offers.length)
       main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'to-vendor', text: 'Visit the vendor', onclick: () => { stopClimb(); ui.view = 'vendor'; startReveal(); render(); } }));
-    else main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: () => { resetRunUi(); ui.view = 'home'; render(); } }));
+    else main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: closeVendor }));   // a vendor with nothing to sell closes too
   }
 
   // ---- post-run vendor (specs/18 section 4): offers rolled when the run was sealed, rarer with a better grade, bought with shards.
@@ -1620,19 +1613,28 @@
     else toast('Rerolled the offers for ' + r.cost + ' shards');
     render();
   }
+  // Leaving the vendor closes it (kj, 2026-11-01): the unbought offers are gone, and the account no longer holds a vendor.
+  function closeVendor() {
+    stopReveal();
+    const r = run.acct('closeVendor');
+    if (!r.ok) toast('The vendor did not close: ' + r.reason);
+    resetRunUi();
+    ui.view = 'home';
+    render();
+  }
   function renderVendor(main) {
     const acct = run.account, v = acct.vendor;
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Vendor' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]));
     if (!v || !v.offers.length) main.append(h('p', { class: 'muted', text: 'Every talent is maxed: nothing to sell.' }));
     else {
-      main.append(h('p', { class: 'small muted', text: v.offers.length + ' offers for your grade ' + up(v.grade) + ' run: a better grade rolls rarer talents. Each offer adds one rank. Talents apply from the next run on. Unbought offers vanish when the next run starts.' }));
+      main.append(h('p', { class: 'small muted', text: v.offers.length + ' offers for your grade ' + up(v.grade) + ' run: a better grade rolls rarer talents. Each offer adds one rank. Talents apply from the next run on. Unbought offers vanish when you leave.' }));
       if (ui.reveal) main.append(h('div', { class: 'row between' }, [
         h('span', { class: 'small merchant', 'data-id': 'merchant-line', text: 'The merchant lays out the wares…' }),
         h('button', { class: 'btn small', type: 'button', 'data-act': 'reveal-skip', text: 'Skip', onclick: skipReveal })]));
       vendorOffers(main);
       rerollButton(main);
     }
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: () => { stopReveal(); resetRunUi(); ui.view = 'home'; render(); } }));
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: closeVendor }));
   }
 
   // ---- gauntlet wheel (specs/19, specs/12 section 6): a slowing reel of the floors climbed lands on the floor and the enemy
@@ -1901,6 +1903,7 @@
       ui.speed = loadSpeed();
       watchDebugTaps();
       if (run.state) ui.view = 'run';
+      else if (run.account.vendor) ui.view = 'vendor';   // reloaded on the post-run screens: the vendor is still open until left
       if (run.loadNotice) toast(run.loadNotice);
       if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
       render();

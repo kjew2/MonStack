@@ -324,6 +324,27 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void CloseVendor_DropsUnboughtOffers_KeepsWhatWasBought_AndIsANoOpWithNoVendor()
+        {
+            var a = AccountOps.New(Db, 21);
+            PlayOut(AccountOps.StartRun(Db, a, "slime"));
+            AccountOps.FinishRun(Db, a);
+            a.Shards = 10_000;
+            string talent = a.Vendor.Offers[0].Talent;
+            AccountOps.BuyOffer(Db, a, 0);
+            int rank = a.TalentRank(talent);
+            long shards = a.Shards;
+
+            AccountOps.CloseVendor(Db, a);
+            Assert.That(a.Vendor, Is.Null);
+            Assert.That(a.TalentRank(talent), Is.EqualTo(rank), "a bought rank stays");
+            Assert.That(a.Shards, Is.EqualTo(shards), "closing costs nothing");
+            Assert.Throws<InvalidOperationException>(() => AccountOps.BuyOffer(Db, a, 1), "nothing left to buy");
+            Assert.Throws<InvalidOperationException>(() => AccountOps.RerollVendor(Db, a), "nothing left to reroll");
+            Assert.DoesNotThrow(() => AccountOps.CloseVendor(Db, a), "closing twice is fine");
+        }
+
+        [Test]
         public void RerollVendor_Refused_WithNoVendor_AllSold_OrAllMaxed()
         {
             var a = AccountOps.New(Db, 5);

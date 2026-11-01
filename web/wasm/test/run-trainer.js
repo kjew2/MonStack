@@ -8,7 +8,7 @@
 // browses a varied Vault (sort, filter, search, detail, compare; lock and dismantle under a filter hit the real Vault index).
 // Also checks the header build stamp from dist/build-info.json (vMAJOR.MINOR · commit), and that a missing stamp shows "dev".
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
-// condition; the run is played on an account save that has drake unlocked; after the run the vendor offers 5 talent offers and
+// condition; the run is played on an account save that has drake unlocked; after the run the vendor (open until the player leaves it) offers 5 talent offers and
 // buying one spends shards. The Dungeon: ticket pieces on the grade screen, one ticket spent on a climb, its result card, and floor playback (entropy gauges, the next vent, the
 // corruption meter and their tooltips, an earlier floor replayed by towerFloor with the same fight hash; issue #98), and the
 // team picker over a varied Vault (the Vault's search, slot reordering); the test book button is debug only.
@@ -516,8 +516,19 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   } else check(afterBuy.Account.Shards < rerollPrice, 'the reroll is disabled only when the shards do not cover it');
   const vw0 = await page.evaluate(() => document.documentElement.scrollWidth);
   check(vw0 <= 390, 'the vendor fits the phone width (' + vw0 + 'px)');
+  // A reload on the vendor screen comes back to it: the vendor stays open until the player leaves it.
+  await page.reload();
+  await page.locator('[data-id=vendor-offer]').first().waitFor({ timeout: 90000 });
+  check((await page.locator('[data-id=vendor-offer]').count()) === 5 && (await act('vendor-done').count()) === 1, 'a reload on the vendor screen reopens the vendor');
+  // Leaving closes it (kj, 2026-11-01): the offers are gone from home and from the account; bought ranks stay.
   await act('vendor-done').click();
-  check((await page.locator('[data-id=vendor-offer]').count()) === 5, 'home keeps the unbought offers until the next run');
+  await act('start').waitFor();
+  check((await page.locator('[data-id=vendor-offer]').count()) === 0, 'home shows no vendor offers');
+  const closed = (await readAccount()).Account;
+  check(closed.Vendor === null && closed.Talents[talentId] === afterBuy.Account.Talents[talentId], 'Done closes the vendor (none saved) and keeps the bought rank');
+  await page.reload();
+  await act('start').waitFor({ timeout: 90000 });
+  check((await act('vendor-done').count()) === 0, 'after leaving, a reload opens home, not the vendor');
   await homeTab('talents');
   check(new RegExp('^' + afterBuy.Account.Talents[talentId] + '/').test(await text('[data-id=talent-' + talentId + '] .tag.num')), 'the talent list shows the new rank');
   // ---- the talent loadout (issue #106): an owned talent can be switched off for the next run, free, and back on
@@ -630,7 +641,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await homeTab('raise');
   await act('start').click();
   await act('drill-str').waitFor();
-  check((await readAccount()).Account.Vendor === null, 'starting the next run clears the vendor');
+  check((await readAccount()).Account.Vendor === null, 'the next run starts with no vendor');
   const frugal = afterBuy.Account.Talents.frugal_drills || 0;
   const costCell = () => page.locator('[data-id=odds] .o-cost').textContent();
   if (frugal > 0) check((await costCell()) === 'Energy -' + (20 - frugal), 'Frugal Drills cut the next run\'s drill cost: ' + (await costCell()));
