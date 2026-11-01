@@ -17,3 +17,6 @@ TestResults/
 src/**/bin/
 src/**/obj/
 web/wasm/dist/
+
+# Draft art from tools/art/generate.py (picked finals live in tools/art/final)
+tools/art/drafts/

@@ -100,7 +100,7 @@ For issue #115, in the terms of section 4.1: mostly CSS, a few small assets. Pan
 
 ### 8.2 What was made (2026-10-31)
 
-- Drafts, three per species per style, in `tools/art/drafts/abyss/` and `tools/art/drafts/hunter/`, shown on the panel's "AI drafts" tab. kj first picked abyss drafts, asked that the art not look washed out (the abyss prompt now asks for rich colour and deep contrast), then settled on hunter.
+- Drafts, three per species per style, in `tools/art/drafts/abyss/` and `tools/art/drafts/hunter/` (deleted 2026-11-01 once the finals were picked; git history holds them), shown on the panel's "AI drafts" tab. kj first picked abyss drafts, asked that the art not look washed out (the abyss prompt now asks for rich colour and deep contrast), then settled on hunter.
 - **Hunter picks (kj):** Coremote 1, Bastion Drake 1, Mirage Moth 1, Mandrake 3, Shade Hound 3. They are the base portraits as generated, in `tools/art/final/<species>.webp`.
 - The ten apex forms, each drawn from its species' pick, in `tools/art/final/<chase tree>.webp`, and the fifteen battle sprites in `tools/art/final/sprite/`. The sprites came out as hi-bit pixel art with a bold outline, which reads well at 32-88 px. **(agent)** Accepted as is: it keeps the game's pixel look in battle while the portraits carry the painted style.
 
