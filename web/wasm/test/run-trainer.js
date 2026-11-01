@@ -6,7 +6,7 @@
 // screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run,
 // locks and dismantles a Vault entry, loads a v1 save over the Vault cap to check the migration and the blocked run start, and
 // browses a varied Vault (sort, filter, search, detail, compare; lock and dismantle under a filter hit the real Vault index).
-// Also checks the header build stamp from dist/build-info.json, and that a missing stamp shows "dev".
+// Also checks the header build stamp from dist/build-info.json (vMAJOR.MINOR · commit), and that a missing stamp shows "dev".
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
 // condition; the run is played on an account save that has drake unlocked; after the run the vendor offers 5 talent offers and
 // buying one spends shards. The Dungeon: ticket pieces on the grade screen, one ticket spent on a climb, its result card, and floor playback (entropy gauges, the next vent, the
@@ -67,7 +67,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await act('start').isEnabled(), 'a species is pre-picked');
   await page.waitForFunction(() => document.getElementById('build').textContent !== '');
   const stamp = await page.locator('#build').textContent();
-  check(/^[0-9a-f]{4,}(\+dirty)? · \d{4}-\d\d-\d\d$/.test(stamp), 'the header shows the build stamp: ' + stamp);
+  check(/^v\d+\.(\d+|\?) · [0-9a-f]{4,}(\+dirty)?$/.test(stamp), 'the header shows the version and commit: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
   check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 8, 'a new account owns only the starter species (slime), schema v8');

@@ -37,6 +37,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0   # web/wasm/build.sh counts merges since VERSION changed for the version's minor number
 
       - uses: actions/setup-node@v4
         with:

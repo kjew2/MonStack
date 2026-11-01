@@ -630,7 +630,7 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 <div id="app">
   <header id="top">
     <span class="title">MonStack</span>
-    <small id="build" class="muted num" title="Engine build: commit and date"></small>
+    <small id="build" class="muted num" title="Game version and commit"></small>
   </header>
   <main id="main"><p class="muted">Loading the C# engine...</p></main>
   <nav id="tabs" role="tablist" hidden></nav>
@@ -647,14 +647,17 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 <script src="auth.js"></script>
 <script src="account.js"></script>
 <script>
-// Build stamp from web/wasm/build.sh (commit, dirty flag, date): shows at a glance whether this copy is current. "dev" without one.
+// Build stamp from web/wasm/build.sh (version, commit, dirty flag, date): shows at a glance whether this copy is current. "dev" without one.
 (async () => {
   const el = document.getElementById('build');
   let t = 'dev';
   try {
     const r = await fetch('wasm/dist/build-info.json', { cache: 'no-store' });
     const b = r.ok ? await r.json() : null;
-    if (b && b.commit) t = b.commit + (b.dirty ? '+dirty' : '') + (b.built ? ' · ' + String(b.built).slice(0, 10) : '');
+    if (b && b.commit) {
+      t = (b.version ? 'v' + b.version + ' · ' : '') + b.commit + (b.dirty ? '+dirty' : '');
+      if (b.built) el.title = 'Built ' + String(b.built).slice(0, 10) + ' from commit ' + b.commit;
+    }
   } catch (e) { /* no stamp: stay "dev" */ }
   el.textContent = t;
 })();
