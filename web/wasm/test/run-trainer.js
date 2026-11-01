@@ -124,6 +124,13 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('.dot.on').count()) === 1 && (await page.locator('.species-card.sel').count()) === 1, 'one card and one dot are lit');
   const cw0 = await page.evaluate(() => document.documentElement.scrollWidth);
   check(cw0 <= 390, 'the carousel fits the phone width (' + cw0 + 'px)');
+  // Issue #120: the picked card shows its square portrait whole, at most 240 px wide, centred on the screen
+  const card = await page.evaluate(() => {
+    const c = document.querySelector('.species-card.sel'), r = c.getBoundingClientRect(), p = c.querySelector('.pimg').getBoundingClientRect();
+    return { w: Math.round(r.width), mid: Math.round(Math.abs((r.left + r.right) / 2 - document.documentElement.clientWidth / 2)), square: Math.abs(p.width - p.height) <= 1,
+      fit: getComputedStyle(c.querySelector('.pimg img')).objectFit };
+  });
+  check(card.w <= 240 && card.w >= 200 && card.mid <= 2 && card.square && card.fit === 'contain', 'the picked card is a whole square portrait, at most 240 px, centred: ' + JSON.stringify(card));
   await shot('01b-carousel');
 
   // ---- start a run, first drill and rest
@@ -161,13 +168,28 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     st: getComputedStyle(row).getPropertyValue('--st').trim(),
     ticks: [...row.querySelectorAll('.bar.gauge .tick')].map((t) => +t.dataset.at),
     hit: row.querySelectorAll('.bar.gauge .tick.hit').length,
-    text: /\d/.test(row.querySelector('.meta small').textContent.replace(/^x[\d.]+$/, '')),
+    text: /\d/.test(row.querySelector('.grow').textContent.replace(/^x[\d.]+$/, '')),
     inBtn: !!row.querySelector('[data-act^="drill-"] .bar.gauge') && !row.querySelector('[data-act^="drill-"] [data-tip]'),
   })));
   check(statGauges.length === 8 && new Set(statGauges.map((g) => g.fill)).size === 8 && statGauges.every((g) => g.st !== ''), 'each stat gauge is filled in its own stat colour: ' + statGauges.map((g) => g.fill).join(' '));
   check(statGauges.every((g) => g.ticks.join(' ') === '400' && g.hit === 0 && !g.text),
     'each gauge carries the milestones as ticks (' + statGauges[0].ticks.join(' ') + '), none reached, and no milestone numbers as text');
-  check(statGauges.every((g) => g.inBtn), 'each tile\'s value and gauge are its Drill button, and its tooltip label sits outside the button');
+  check(statGauges.every((g) => g.inBtn), 'each tile\'s value and gauge are its Drill button, and its tooltip trigger sits outside the button');
+  // Issue #124: the whole tile drills (its label strip included) and the stat's tooltip is a small "i" in the tile's top right corner
+  const pad = await page.evaluate(() => [...document.querySelectorAll('.pad .dtile')].map((t) => {
+    const r = t.getBoundingClientRect(), b = t.querySelector('[data-act^="drill-"]').getBoundingClientRect(), i = t.querySelector('.info[data-tip]');
+    const ir = i && i.getBoundingClientRect(), meta = t.querySelector('.meta');
+    return { fill: b.width >= r.width - 2 && b.height >= r.height - 2, meta: !!meta && !!meta.closest('[data-act^="drill-"]') && meta.scrollWidth <= meta.clientWidth && [...t.querySelectorAll('.vrow')].every((v) => v.scrollWidth <= v.clientWidth),
+      corner: !!ir && Math.abs(ir.right - r.right) <= 2 && Math.abs(ir.top - r.top) <= 2 && ir.width >= 24 && ir.width <= r.width / 3, tips: t.querySelectorAll('[data-tip]').length };
+  }));
+  check(pad.every((t) => t.fill && t.meta && t.corner && t.tips === 1), 'each drill tile is one Drill button (label strip included, nothing clipped) with one "i" tooltip button in its corner: ' + JSON.stringify(pad[0]));
+  // Text is not selectable and shows no long-press callout (issue #123); text fields still are
+  const sel = await page.evaluate(() => { const c = getComputedStyle(document.querySelector('.dtile .lbl')); return c.userSelect || c.webkitUserSelect; });
+  check(sel === 'none', 'game text cannot be selected (' + sel + ')');
+  const metaBox = await page.locator('[data-id=stat-str] .meta').boundingBox();
+  const val0 = await text('[data-id=stat-str] .val');
+  await page.touchscreen.tap(metaBox.x + 8, metaBox.y + metaBox.height / 2);
+  check(!(await page.locator('#tip').isVisible()) && (await page.locator('[data-id=result-hint]').count()) === 0 && /^(Fail|Success|Super)/.test(await text('[data-id=result] b')), 'a tap on the tile\'s label strip drills and opens no tooltip (STR ' + val0 + ' -> ' + (await text('[data-id=stat-str] .val')) + ')');
   await act('drill-str').click();
   check(/Drill|Fail|Success|Super/.test(await text('[data-id=result]')), 'a drill result appears');
   // Drill outcome pop (issue #95): "+x" over the monster, its class the drill tier
@@ -187,7 +209,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const before = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.dtile .val')].map((e) => e.textContent).join('|') }));
   const saved = await readAccount();
   check(saved && saved.Kind === 'monster_account', 'the save is the C# account save');
-  check(saved && saved.ActiveRun && saved.ActiveRun.SpeciesId === 'drake' && saved.ActiveRun.Log.length === 2, 'the active run is stored as species + seed + command log (' + (saved && saved.ActiveRun && saved.ActiveRun.Log.length) + ' commands)');
+  check(saved && saved.ActiveRun && saved.ActiveRun.SpeciesId === 'drake' && saved.ActiveRun.Log.length === 3, 'the active run is stored as species + seed + command log (' + (saved && saved.ActiveRun && saved.ActiveRun.Log.length) + ' commands)');
   await page.reload();
   await act('drill-str').waitFor({ timeout: 90000 });
   const after = await page.evaluate(() => ({ cycle: document.querySelector('[data-id=cycle]').textContent, bars: [...document.querySelectorAll('.dtile .val')].map((e) => e.textContent).join('|') }));
@@ -206,6 +228,16 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await shot('02b-stat-tip');
   await page.locator('[data-id=odds]').click();
   check(!(await tip.isVisible()) && (await strLabel.getAttribute('aria-describedby')) === null, 'tapping elsewhere closes it');
+  // A long press still opens a tooltip (its release click is swallowed, so the tip stays open); a long press on a drill tile opens none
+  const pressAt = async (sel) => { const b = await page.locator(sel).boundingBox(); await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2); await page.mouse.down(); await page.waitForTimeout(600); };
+  await pressAt('[data-id=info-def]'); await page.mouse.up();
+  check(await tip.isVisible() && /^DEF/.test(await tip.innerText()), 'a long press on the "i" opens the stat tooltip and keeps it open');
+  await page.locator('[data-id=odds]').click();
+  await pressAt('[data-id=stat-def] .val');
+  const tipOnTile = await tip.isVisible();
+  const ob = await page.locator('[data-id=odds]').boundingBox();
+  await page.mouse.move(ob.x + 4, ob.y + 4); await page.mouse.up();   // released off the tile, so the press drills nothing
+  check(!tipOnTile, 'a long press on a drill tile opens no tooltip');
 
   // ---- trees tab
   await act('tab-trees').click();
@@ -748,6 +780,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     await shot('10-vault-filters');
 
     const search = page.locator('[data-act=vault-search]');
+    const searchSel = await search.evaluate((e) => { const c = getComputedStyle(e); return c.userSelect || c.webkitUserSelect; });
+    check(searchSel === 'text', 'the Vault search box still takes text selection (issue #123): ' + searchSel);
     await search.fill('brawler');
     check(same(await order(), [0]), 'search finds a monster by its Legacy Title');
     await search.fill('tower breaker');
