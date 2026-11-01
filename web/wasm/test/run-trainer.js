@@ -186,6 +186,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   // Text is not selectable and shows no long-press callout (issue #123); text fields still are
   const sel = await page.evaluate(() => { const c = getComputedStyle(document.querySelector('.dtile .lbl')); return c.userSelect || c.webkitUserSelect; });
   check(sel === 'none', 'game text cannot be selected (' + sel + ')');
+  const selStart = await page.evaluate(() => { const n = document.querySelector('.dtile .lbl').firstChild, e = new Event('selectstart', { bubbles: true, cancelable: true }); n.dispatchEvent(e); return e.defaultPrevented; });
+  check(selStart, 'a selection started on game text is cancelled (iOS ignores the CSS alone)');
   const metaBox = await page.locator('[data-id=stat-str] .meta').boundingBox();
   const val0 = await text('[data-id=stat-str] .val');
   await page.touchscreen.tap(metaBox.x + 8, metaBox.y + metaBox.height / 2);
@@ -793,6 +795,8 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     const search = page.locator('[data-act=vault-search]');
     const searchSel = await search.evaluate((e) => { const c = getComputedStyle(e); return c.userSelect || c.webkitUserSelect; });
     check(searchSel === 'text', 'the Vault search box still takes text selection (issue #123): ' + searchSel);
+    const searchStart = await search.evaluate((e) => { const ev = new Event('selectstart', { bubbles: true, cancelable: true }); e.dispatchEvent(ev); return ev.defaultPrevented; });
+    check(!searchStart, 'a selection in the Vault search box is not cancelled');
     await search.fill('brawler');
     check(same(await order(), [0]), 'search finds a monster by its Legacy Title');
     await search.fill('tower breaker');
