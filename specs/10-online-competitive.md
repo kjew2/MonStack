@@ -7,7 +7,7 @@ Scope: what must be true in P0 so that accounts, IAP, leaderboards and asynchron
 
 Tags: **P0** = shapes that must exist in the first build (all cheap, none needs a server). **P1** = server features built on those shapes. **P2** = real-time PvP, guilds, anything needing live sessions.
 
-This spec supersedes the sentence in `specs/08` section 11 ("What P2 changes") and the P2 tag on leaderboards and PvP in `specs/00` section 1.
+This spec supersedes the P2 tag on leaderboards and PvP in `specs/00` section 1.
 
 ## 1. Goals and non-goals
 
@@ -32,8 +32,8 @@ Every field in `GameState` falls into one row:
 
 | Domain | Fields | Trust | How |
 |---|---|---|---|
-| Time | server clock, day key, chest timer reads | Authoritative | `IClock` / `ServerClock` (`specs/08` section 3). Signed timestamps, section 4.3. |
-| Gacha | `gacha_hero` seed and counter, pity, results, hero copies, shards | Authoritative | `IGachaService` remote (`specs/08` section 4). |
+| Time | server clock, day key, chest timer reads | Authoritative | Server time (`specs/08` section 3). Signed timestamps, section 4.3. |
+| Gacha | `gacha_hero` seed and counter, pity, results, hero copies, shards | Authoritative | Server roll, as in the idle game's gacha design (removed from `specs/08` on 2026-11-01; in git history). |
 | Premium ledger | gems, free-pull credits, purchase grants | Authoritative | Server ledger; receipts (`specs/08` section 6); section 8. |
 | Identity | account id, profile genesis, seeds | Authoritative | Section 3. |
 | Progress | stage, kills, class advances, first clears | Verified | Segment certification, section 4. |
@@ -190,7 +190,7 @@ This promotes the "replay log of commands" row in `specs/03` section 20 from a P
 
 Fairness angle only; the validator contract is `specs/08` section 6.
 
-- Gems, free-pull credits and purchase grants live in the server ledger. The save's `Currencies` fields for them are a mirror (`specs/08` section 4.3 already applies this).
+- Gems, free-pull credits and purchase grants live in the server ledger. The save's `Currencies` fields for them are a mirror (the server balance wins, `specs/08` section 6).
 - Grants are idempotent on the store `TransactionId`. A refund or chargeback creates a negative ledger entry; the policy for a negative balance (clamp to zero, block pulls, or claw back copies) is an open decision (section 15), because it must be written before launch and not improvised.
 - Pulls from purchased gems use the same server roll and the same rates as free ones. The rate screen (`specs/07` section 11.6) is the player-facing disclosure. Some jurisdictions regulate randomised paid items; that needs a legal check before release and is not decided here.
 - Spending gems on a PvP-relevant advantage is a product decision, not a technical one: see PvP fairness levers (9.4).
@@ -271,7 +271,7 @@ All nullable or defaulted, so no migration and P0 builds ignore them. `specs/06`
 | `AccountId` (string?) | `ProfileHeader` | `null` | section 10 |
 | `RankedLineage` (bool) | `ProfileHeader` | `false` | section 3 |
 | `Cert` (`CertState?`: `Seq`, `StateHash`, `CertifiedAtServerSec`, `GenesisHash`) | `GameState` | `null` | section 4 |
-| `PendingReceipt` (`PendingReceipt?`) | `GameState` | `null` | section 8; the "add now" side of `specs/08` open decision 6 |
+| `PendingReceipt` (`PendingReceipt?`) | `GameState` | `null` | section 8; an idle-era decision; `specs/08` section 6 now adds a pending-purchase field with the feature instead |
 | `CommandLog` (bounded, since last cert) | not in the save | in memory; spilled to a sidecar file | section 4; a crash between certifications must not lose the log, so the save store writes a sidecar `slot0.log` on the same cadence as the save |
 
 The log sidecar is part of the atomic-write rotation in `specs/06` section 5.2: a save and its log are written together or the previous pair is kept.
@@ -284,7 +284,7 @@ The log sidecar is part of the atomic-write rotation in `specs/06` section 5.2: 
 | Modified build that grants items | Same: state is re-derived from legal commands. | None for ranked. |
 | Speed hack, clock change | Signed server time bounds ticks (4.3). Device clock is ignored for ranked. | Slack of 2 percent. |
 | Seed grinding for lucky drops | Seeds server-issued at genesis (3). | Seeds are known to the client after genesis (needed to tick); knowing future gear drops gives no choice except which slot receives a known enhancement success, a small advantage; accepted for P1, revisit if PvP power is gear-dominated. |
-| Peek at or replay gacha | Server-held seed; server roll; idempotency keys (`specs/08` section 4). | None. |
+| Peek at or replay gacha | Server-held seed; server roll; idempotency keys (the idle game's gacha design (removed from `specs/08` on 2026-11-01; in git history)). | None. |
 | Reload an old save to retry | Counters in the log; cert compare-and-swap on `Seq`. | Equivalent to not having played. |
 | Debug commands in ranked | Compiled out of release; rejected and tainted server-side (4.3). | None. |
 | Receipt replay or forgery | Server validation, dedupe on `TransactionId`. | Store-side fraud. |
@@ -313,5 +313,5 @@ Each step is usable without the next. P1a without P1b is a paid game with an hon
 4. **`CERT_INTERVAL_MIN`, `CERT_TIME_SLACK`, `CERT_MAX_SEGMENT_TICKS`** are proposals; tune against real upload sizes and server cost.
 5. **Fairness lever for PvP** (9.4), and how heroes act in battle (9.5).
 6. **One ranked profile per account** versus several (affects leaderboard dedupe and support).
-7. **Where the canonical `StateHash` encoding lives** if the server is not .NET (needs a port plus the fixture in section 5.1, as with the gacha vector file in `specs/08` section 4.3).
+7. **Where the canonical `StateHash` encoding lives** if the server is not .NET (needs a port plus the fixture in section 5.1, as the gacha vector file was in the idle game's gacha design (removed from `specs/08` on 2026-11-01; in git history)).
 8. **IL2CPP floating-point behaviour** (5.1): whether the device fixture passes as is. If not, the fix lands in `specs/03` section 4.
