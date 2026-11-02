@@ -163,11 +163,22 @@ namespace IdleRng.Runtime.Save
         public static string AccountHash(IReadOnlyDictionary<string, string> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
-            var keys = new List<string>();
-            foreach (var k in items.Keys) if (!k.StartsWith(EntryPrefix, StringComparison.Ordinal)) keys.Add(k);
+            var hashes = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var kv in items) if (!kv.Key.StartsWith(EntryPrefix, StringComparison.Ordinal)) hashes[kv.Key] = Hash(kv.Value);
+            return AccountHashOf(hashes);
+        }
+
+        /// <summary>
+        /// The account hash from the parts' own hashes (part key to <see cref="Hash"/> of its text, entries left out), for a host
+        /// that holds the hashes of parts it has not loaded (the server's head, specs/27 section 4).
+        /// </summary>
+        public static string AccountHashOf(IReadOnlyDictionary<string, string> partHashes)
+        {
+            if (partHashes == null) throw new ArgumentNullException(nameof(partHashes));
+            var keys = new List<string>(partHashes.Keys);
             keys.Sort(StringComparer.Ordinal);
             var sb = new StringBuilder();
-            foreach (var k in keys) sb.Append(k).Append(' ').Append(Hash(items[k])).Append('\n');
+            foreach (var k in keys) sb.Append(k).Append(' ').Append(partHashes[k]).Append('\n');
             return Hash(sb.ToString());
         }
 
