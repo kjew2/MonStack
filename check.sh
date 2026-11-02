@@ -86,6 +86,8 @@ $BOTS balance --seeds 2 --format json | python3 -c 'import json, sys; json.load(
 $BOTS balance --seeds 2 --format csv > /dev/null
 $BOTS balance --seeds 2 --books own --no-tower > /dev/null
 
+# The solution's test projects include the account server core (src/IdleRng.Server.Tests, specs/27 section 10 step 2): open,
+# commit, every rejection and the storage rules against the in-memory store, on .NET 8 (issue #28).
 if [ "$FAST" -eq 1 ]; then
   step ".NET: unit tests (no golden)"
   dotnet test IdleRng.sln -c Release --no-build --filter "TestCategory!=Golden"
