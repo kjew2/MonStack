@@ -79,6 +79,9 @@ const H = require('./harness.js');
   const clipped = await page.$$eval('#main [data-id=stage], #main [data-id=pad]', (cs) => cs.map((c) => ({ card: Math.round(c.getBoundingClientRect().height), rows: c.scrollHeight })));
   check(clipped.length === 2 && clipped.every((c) => c.card >= c.rows - 1), 'issue #113: the stage and the drill tiles are not squeezed while a fight is due: ' + JSON.stringify(clipped));
   await act('fight').click();
+  await page.locator('[data-id=fight-intro]').waitFor();
+  await t.layout('fight intro');
+  await act('intro-skip').click();
   await page.locator('[data-id=fight-play]').waitFor();
   await page.waitForTimeout(600);
   await t.layout('fight playback');
@@ -208,7 +211,7 @@ const H = require('./harness.js');
     for (let i = 0; i < 200; i++) {
       if (q('[data-id=injury-result]')) return { cycle: q('[data-id=cycle]').textContent, result: q('[data-id=injury-result]').textContent,
         text: (q('[data-id=injury]') || {}).textContent || '' };
-      if (q('[data-id=fight-play]')) { click('[data-act="speed-skip"]'); continue; }
+      if (q('[data-id=fight-play]') || q('[data-id=fight-intro]')) { click('[data-act="speed-skip"]'); continue; }
       if (click('[data-act="fight-continue"]') || click('[data-act="discard"]') || click('[data-act="fight"]')) continue;
       if (!click('[data-act="drill-str"]')) return null;
     }
@@ -300,7 +303,7 @@ const H = require('./harness.js');
     const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
     for (let i = 0; i < 200; i++) {
       if (q('[data-act="reroll"]')) return [...document.querySelectorAll('[data-id^="offer-"]')].map((e) => e.getAttribute('data-id')).filter((x) => x !== 'offer-title');
-      if (q('[data-id=fight-play]')) { click('[data-act="speed-skip"]'); continue; }
+      if (q('[data-id=fight-play]') || q('[data-id=fight-intro]')) { click('[data-act="speed-skip"]'); continue; }
       if (click('[data-act="fight-continue"]') || click('[data-act="discard"]') || click('[data-act="fight"]')) continue;
       const energy = +((/Energy (\d+)/.exec((q('.bar.energy span') || {}).textContent || '') || [])[1]);
       if (!(energy >= 40) ? !click('[data-act="rest"]') : !click('[data-act="drill-hp"]')) return null;

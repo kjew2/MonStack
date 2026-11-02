@@ -907,6 +907,9 @@ namespace IdleRng.Web
             w.Key("opponent"); LadderStep(w, s, s.Rank);   // the current rank's opponent on the ladder
             w.Key("stats"); Stats(w, opp.Stats);
             TipJson.StatNow(w, _db, opp.Stats, s.Stats, _db.Text(sp.NameKey));
+            // The element matchup of the units' own elements (a skill with an element of its own is not counted): the damage
+            // multiplier on the monster's hits on the opponent, and on the opponent's hits on the monster (the fight intro, issue #126).
+            w.P("elementDealt", _db.ElementMult(sp.Element, opp.Element)).P("elementTaken", _db.ElementMult(opp.Element, sp.Element));
             w.EndObj();
             // The whole ladder, lowest rank first (specs/14 section 5): beaten = the monster won a fight at that rank (below its
             // rank now, or a win at the top rank, where a win does not promote); current = the rank fought next.

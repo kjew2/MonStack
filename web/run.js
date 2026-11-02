@@ -168,6 +168,8 @@
     renderTabs(tabs, s);
     renderModal(modal, s);
     main.scrollTop = prevScroll;
+    const due = modal.hidden && main.querySelector('[data-focus="1"]');
+    if (due) due.scrollIntoView({ block: 'nearest' });   // before the drill pop, which is placed by where the stage ends up
     if (modal.hidden) { showSpGains(); showDrillPop(); } else $('floats').replaceChildren();
   }
 
@@ -430,6 +432,9 @@
     return 'the rest of the cycle and its fight' + (n ? ', then ' + (n === 1 ? 'the next cycle' : 'the next ' + n + ' cycles') : '');
   }
 
+  // The fight card. The first time it shows for a fight (the cycle's actions are spent and no tree offer covers it) it pulses and
+  // scrolls into view, so the player sees the cycle is over (issue #126).
+  let fightCardSeen = null;
   function fightCard(s) {
     const opp = s.opponent;
     const cmp = h('div', { class: 'mini' });
@@ -437,12 +442,45 @@
       const diff = s.stats[st] - opp.stats[st];
       cmp.append(h('span', TIP.attrs('stat:' + st + ':vs'), [up(st) + ' ', h('b', { class: diff >= 0 ? 'ok' : 'bad', text: (diff >= 0 ? '+' : '') + num(diff) })]));
     });
-    return h('div', { class: 'card alert' }, [
+    const key = s.seed + ':' + s.fightsFought + ':' + s.cycle, fresh = fightCardSeen !== key && !s.offers.length;
+    if (fresh) fightCardSeen = key;
+    return h('div', { class: 'card alert fightcard' + (fresh && !reducedMotion() ? ' due' : ''), 'data-id': 'fight-card', 'data-focus': fresh ? '1' : null }, [
       h('div', { class: 'row' }, [oppSprite(opp), h('div', { class: 'grow' }, [
         h('h2', { text: 'Rank ' + opp.letter + ' fight: ' + opp.name, 'data-id': 'fight-opp' }), elementTag(opp.element), oppSkills(opp.skills)])]),
       h('div', { class: 'small muted', text: 'Your stats against theirs:' }), cmp,
+      stakesLine(matchup(s)),
       speedToggle(),
       h('button', { class: 'btn warn block', type: 'button', 'data-act': 'fight', disabled: s.offers.length > 0, text: 'Fight', onclick: fight }),
+    ]);
+  }
+
+  // ---- the matchup of the coming rank fight (issue #126), read from the run state before the fight: both sides, the element edge
+  // (the engine's multipliers, BRIDGE.md opponent.elementDealt/elementTaken), the biggest stat edges and gaps, and the stakes.
+  function matchup(s) {
+    const k = C.consts, opp = s.opponent, sp = speciesDef(s.species);
+    const diffs = C.stats.map((st) => ({ st: st, d: s.stats[st] - opp.stats[st], rel: (s.stats[st] - opp.stats[st]) / Math.max(1, opp.stats[st]) }));
+    const top = (list) => list.sort((a, b) => Math.abs(b.rel) - Math.abs(a.rel)).slice(0, 2);
+    const elName = (e) => (C.elements[e] || { name: e }).name;
+    const x = (m) => '×' + String(Math.round(m * 100) / 100);
+    const dealt = typeof opp.elementDealt === 'number' ? opp.elementDealt : 1, taken = typeof opp.elementTaken === 'number' ? opp.elementTaken : 1;
+    let element = null;
+    if (dealt > 1 && taken > 1) element = { cls: 'mixed', text: elName(sp.element) + ' and ' + elName(opp.element) + ' beat each other: both hit ' + x(dealt) + '.' };
+    else if (dealt > 1) element = { cls: 'ok', text: 'Your ' + elName(sp.element) + ' beats their ' + elName(opp.element) + ': you hit ' + x(dealt) + (taken < 1 ? ', they hit ' + x(taken) : '') + '.' };
+    else if (taken > 1) element = { cls: 'bad', text: 'Their ' + elName(opp.element) + ' beats your ' + elName(sp.element) + ': they hit ' + x(taken) + (dealt < 1 ? ', you hit ' + x(dealt) : '') + '.' };
+    const topRank = s.rank >= C.ranks.length - 1, next = s.cycle + k.fightEvery, lossSp = (s.mods && s.mods.lossSp) || 0;
+    const win = (topRank ? 'stay at ' + rank(s.rank).name + ', the top' : 'promote to ' + rank(s.rank + 1).name) + (k.spPerWin ? ', +' + k.spPerWin + ' SP' : '') + '.';
+    const lose = (next > k.runCycles ? 'no rematch: it is the run\'s last fight' : 'rematch ' + (k.fightEvery === 1 ? 'next cycle' : 'in cycle ' + next))
+      + (lossSp ? ', +' + lossSp + ' SP (Grudge Match)' : '') + '.';
+    return {
+      you: { name: s.name || sp.name, species: s.species, apex: s.apex, rank: rank(s.rank).name, element: sp.element },
+      opp: opp, element: element, win: win, lose: lose,
+      edges: top(diffs.filter((d) => d.d > 0)), gaps: top(diffs.filter((d) => d.d < 0)),
+    };
+  }
+  function stakesLine(m) {
+    return h('div', { class: 'stakes small', 'data-id': 'fight-stakes' }, [
+      h('span', null, [h('b', { class: 'ok', text: 'Win: ' }), m.win]), ' ',
+      h('span', null, [h('b', { class: 'bad', text: 'Lose: ' }), m.lose]),
     ]);
   }
 
@@ -578,6 +616,7 @@
   // ---- modal: fight result and tree offers
   function renderModal(modal, s) {
     modal.replaceChildren();
+    if (ui.fight && ui.play && ui.play.intro) { modal.hidden = false; fightIntro(modal, ui.play.intro.m); return; }
     if (ui.fight && ui.play) { modal.hidden = false; fightPlayView(modal, ui.fight, rankView(ui.fight, s)); return; }
     if (ui.fight) { modal.hidden = false; fightModal(modal, ui.fight, s); return; }
     if (s.offers.length) { modal.hidden = false; offerModal(modal, s); return; }
@@ -666,12 +705,12 @@
   }
 
   // Plays fight f (a rank fight by default) unless the speed is Skip. `force` plays it even at Skip, at 1x (the tower's Watch
-  // button); tapping Skip then stops it.
-  function startPlayback(f, force) {
+  // button); tapping Skip then stops it. `intro` (a rank fight's matchup, issue #126) opens with the versus intro.
+  function startPlayback(f, force, intro) {
     stopPlayback();
     f = f || ui.fight;
     if ((force || ui.speed !== 'skip') && f && f.actions.length) {
-      ui.play = { f: f, i: 0, timer: null, dom: null };
+      ui.play = { f: f, i: 0, timer: null, dom: null, intro: intro ? { m: intro, phase: 'vs' } : null };
       schedulePlayback();
     }
   }
@@ -680,7 +719,9 @@
     ui.play = null;
   }
   function schedulePlayback() {
-    ui.play.timer = setTimeout(stepPlayback, FIGHT_STEP_MS / (Number(ui.speed) || 1));
+    const p = ui.play, speed = Number(ui.speed) || 1;
+    if (p.intro) p.timer = setTimeout(stepIntro, INTRO_MS[p.intro.phase] / speed);
+    else p.timer = setTimeout(stepPlayback, FIGHT_STEP_MS / speed);
   }
   function stepPlayback() {
     const p = ui.play;
@@ -689,6 +730,72 @@
     p.i++;
     if (p.dom && p.dom.root.isConnected) updatePlay(); else render();
     schedulePlayback();
+  }
+
+  // ---- the versus intro of a rank fight (issue #126; kj, 2026-11-01: about 2 seconds, snappy, skippable): both monsters face each
+  // other with their names, ranks and elements over "VS", the matchup and the stakes, then "Fight!" and the playback. 2x halves it,
+  // the Skip speed skips it with the playback, and a tap (or Enter, Space, Escape) anywhere but the speed buttons ends it at once.
+  // Reduced motion keeps the intro but drops its movement. INTRO_MS are placeholders (presentation only, not a game rule).
+  const INTRO_MS = { vs: 1500, go: 500 };
+  function stepIntro() {
+    const p = ui.play;
+    if (!p || !p.intro) return;
+    if (p.intro.phase === 'vs') {
+      p.intro.phase = 'go';
+      if (p.dom && p.dom.intro && p.dom.intro.isConnected) paintIntroPhase(p.dom.intro, 'go'); else render();
+      schedulePlayback();
+    } else endIntro();
+  }
+  function endIntro() {
+    const p = ui.play;
+    if (!p || !p.intro) return;
+    clearTimeout(p.timer);
+    p.intro = null;
+    p.dom = null;
+    render();
+    schedulePlayback();
+  }
+  function paintIntroPhase(root, phase) {
+    root.classList.toggle('go', phase === 'go');
+    root.querySelector('[data-id=intro-vs]').textContent = phase === 'go' ? 'Fight!' : 'VS';
+  }
+  function fightIntro(modal, m) {
+    const p = ui.play, speed = Number(ui.speed) || 1;
+    const youArt = sprite(m.you.species, m.you.apex), oppArt = oppSprite(m.opp);
+    const side = (cls, art, name, rankName, element) => h('div', { class: 'vsside ' + cls }, [
+      h('div', { class: 'vsart' }, [art]), h('b', { class: 'vsname', text: name }),
+      h('div', { class: 'vstags' }, [h('span', { class: 'tag', text: rankName }), elementTag(element)]),
+    ]);
+    const chips = (list) => list.map((d) => h('span', { class: 'vschip ' + (d.d > 0 ? 'ok' : 'bad') }, [up(d.st) + ' ', h('b', { class: 'num', text: (d.d > 0 ? '+' : '') + num(Math.round(d.d)) })]));
+    const anim = !p.intro.drawn && !reducedMotion();   // the entrance plays once, not again on a re-render (a speed change)
+    p.intro.drawn = true;
+    const root = h('div', { class: 'vsintro' + (anim ? ' anim' : ''), 'data-id': 'fight-intro', 'data-ms': String((INTRO_MS.vs + INTRO_MS.go) / speed),
+      role: 'group', 'aria-label': 'Rank ' + m.opp.letter + ' fight: ' + m.you.name + ' versus ' + m.opp.name, tabindex: '-1' }, [
+      h('div', { class: 'vshead' }, [h('span', { text: 'Rank ' + m.opp.letter + ' fight' }), h('button', { class: 'linkish', type: 'button', 'data-act': 'intro-skip', text: 'Skip intro ▸' })]),
+      h('div', { class: 'vsstage' }, [
+        side('you', youArt, m.you.name, m.you.rank, m.you.element),
+        h('div', { class: 'vsmark', 'data-id': 'intro-vs', 'aria-live': 'polite', text: 'VS' }),
+        side('foe', oppArt, m.opp.name, 'Rank ' + m.opp.letter, m.opp.element),
+      ]),
+      h('div', { class: 'vsinfo' }, [
+        m.element ? h('div', { class: 'vsel ' + m.element.cls, 'data-id': 'intro-element', text: m.element.text }) : null,
+        m.edges.length ? h('div', { class: 'vsrow', 'data-id': 'intro-edges' }, [h('span', { class: 'small muted', text: 'You lead' }), ...chips(m.edges)]) : null,
+        m.gaps.length ? h('div', { class: 'vsrow', 'data-id': 'intro-gaps' }, [h('span', { class: 'small muted', text: 'You trail' }), ...chips(m.gaps)]) : null,
+        h('div', { class: 'vsrow', 'data-id': 'intro-skills' }, [h('span', { class: 'small muted', text: 'Their skills' }),
+          ...(m.opp.skills.length ? m.opp.skills.map((id) => h('span', { class: 'tag', text: C.skillTips[id] ? C.skillTips[id].title : id })) : [h('small', { class: 'muted', text: 'Basic attacks only' })])]),
+        stakesLine(m),
+      ]),
+    ]);
+    // a tap anywhere ends it, except on the speed buttons (they set the speed: 2x reschedules the intro, Skip ends the fight)
+    root.addEventListener('click', (e) => { if (!e.target.closest('.speed')) endIntro(); });
+    root.addEventListener('keydown', (e) => {   // Escape anywhere; Enter or Space on the intro itself (a focused button keeps its own)
+      if (e.key === 'Escape' || (e.target === root && (e.key === 'Enter' || e.key === ' '))) { e.preventDefault(); endIntro(); }
+    });
+    root.append(speedToggle());
+    modal.append(root);
+    paintIntroPhase(root, p.intro.phase);
+    p.dom = { intro: root };
+    root.focus({ preventScroll: true });
   }
 
   // Each unit's state after the first `upto` logged actions (null: at the end of the fight): HP and cooldowns; in a tower fight
@@ -1826,11 +1933,11 @@
     after(r);
   }
   function fight() {
-    const sp0 = run.state.sp, cycle0 = run.state.cycle;
+    const sp0 = run.state.sp, cycle0 = run.state.cycle, before = matchup(run.state);   // the intro shows the matchup as it was fought
     const r = run.cmd('fight');
     if (r.ok) {
       ui.fight = r; ui.last = null; ui.showAll = false;
-      startPlayback();
+      startPlayback(null, false, before);
       log('Rank ' + r.opponent.letter + ' fight vs ' + r.opponent.name + ': ' + (r.won ? 'won → ' + rank(r.rankAfter).name + ' (+' + r.sp + ' SP)' : 'lost (rematch next time)'));
       ui.fightGains = spGained(sp0, cycle0, r);
     }
