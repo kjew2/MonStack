@@ -57,11 +57,11 @@
   }
   function hash(str) { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
   // A species' battle sprite: the generated art (apex form) when it has some (specs/26 section 8), else the 12x12 pixel art,
-  // else a seeded sprite. An image that fails to load falls back to the pixel art.
-  function sprite(key, apex) {
+  // else a seeded sprite. An image that fails to load falls back to the pixel art. size: an extra class ('small' is 32px).
+  function sprite(key, apex, size) {
     const art = SP.art(key, apex);
-    if (!art) return pixelSprite(key, apex);
-    const img = h('img', { class: 'sprite art', src: art.sprite, alt: '', 'aria-hidden': 'true', draggable: 'false' });
+    if (!art) { const cv = pixelSprite(key, apex); if (size) cv.classList.add(size); return cv; }
+    const img = h('img', { class: 'sprite art' + (size ? ' ' + size : ''), src: art.sprite, alt: '', 'aria-hidden': 'true', draggable: 'false' });
     img.addEventListener('error', () => { const cv = pixelSprite(key, apex); cv.className = img.className.replace(' art', ''); img.replaceWith(cv); }, { once: true });
     return img;
   }
@@ -1301,7 +1301,7 @@
   // specs/21 section 2) or removable, then the Vault with its search, sort and filters (web/vault.js) to pick from.
   function towerTeamPicker(main, teamMax) {
     const acct = run.account, team = ui.towerTeam;
-    const name = (i) => { const e = acct.vault[i]; return (speciesDef(e.species) || { name: e.species }).name; };
+    const name = (i) => { const e = acct.vault[i]; return e.name || (speciesDef(e.species) || { name: e.species }).name; };   // the apex form's name when it has one, as in the Vault
     const move = (k, d) => { const t = team[k]; team[k] = team[k + d]; team[k + d] = t; render(); };
     const slots = h('div', { class: 'card tslots', 'data-id': 'tower-slots' });
     for (let k = 0; k < teamMax; k++) {
@@ -1330,7 +1330,7 @@
           onchange: (ev) => { if (ev.target.checked) team.push(i); else team.splice(team.indexOf(i), 1); render(); } });
         cb.checked = slot >= 0;
         kids.push(h('label', { class: 'row between small', 'data-id': 'tower-entry', 'data-index': String(i) }, [
-          h('span', { class: 'row', style: 'min-width:0;flex-wrap:wrap' }, [cb, h('b', { text: name(i) }), h('span', { class: 'tag', text: up(e.grade) }),
+          h('span', { class: 'row', style: 'min-width:0;flex-wrap:wrap' }, [cb, sprite(e.species, e.apex, 'small'), h('b', { text: name(i) }), h('span', { class: 'tag', text: up(e.grade) }),
             e.gauntlet ? h('span', { class: 'muted', text: e.gauntlet.label }) : null]),
           h('span', { class: 'row', style: 'gap:6px;flex-shrink:0' }, [h('span', { class: 'muted num', style: 'white-space:nowrap', text: 'Σ ' + num(VAULT.total(e)) }),
             slot >= 0 ? h('span', { class: 'tag num', text: 'Slot ' + (slot + 1) }) : null]),
@@ -1475,7 +1475,7 @@
   }
 
   function vaultHelpers() {
-    return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, treeView: treeView, elementTag: elementTag, up: up, num: num, bar: bar, TIP: TIP };
+    return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, treeView: treeView, elementTag: elementTag, up: up, num: num, bar: bar, TIP: TIP, sprite: sprite };
   }
 
   // The grade screen's Dungeon ticket line: the pieces this grade earned, any whole ticket they made, and the progress after.
