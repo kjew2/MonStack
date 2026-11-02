@@ -292,7 +292,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
       for (let i = 0; i < 1500 && !q('[data-act="seal"]'); i++) {
         stats.steps++;
-        if (q('[data-id=fight-play]')) { click('[data-act="speed-skip"]'); continue; }
+        if (q('[data-id=fight-play]') || q('[data-id=fight-intro]')) { click('[data-act="speed-skip"]'); continue; }
         if (q('[data-act="fight-continue"]')) stats.skillRows = Math.max(stats.skillRows, document.querySelectorAll('[data-id^="skill-0-"]').length);
         if (click('[data-act="fight-continue"]')) continue;
         if (q('[data-id=offer-title]')) {
@@ -370,7 +370,35 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await act('fight').isEnabled(), 'a rank fight is due after ' + played.steps + ' steps');
   check((await act('speed-1').getAttribute('aria-pressed')) === 'true', 'fight speed defaults to 1x');
   check((await text('[data-id=fight-opp]')) === 'Rank E fight: ' + rungs[5].name, 'the fight card names the ladder\'s rank E opponent: ' + (await text('[data-id=fight-opp]')));
+  // issue #126: the card takes the focus when the cycle's actions run out (a pulse, scrolled into view) and shows the stakes
+  const fcard = await page.evaluate(() => {
+    const c = document.querySelector('[data-id=fight-card]'), r = c.getBoundingClientRect(), m = document.getElementById('main').getBoundingClientRect();
+    return { due: c.classList.contains('due'), focus: c.dataset.focus, inView: r.top >= m.top - 1 && r.top < m.bottom, stakes: c.querySelector('[data-id=fight-stakes]').textContent };
+  });
+  check(fcard.due && fcard.focus === '1' && fcard.inView, 'the fight card pulses and is scrolled into view when the actions run out: ' + JSON.stringify(fcard));
+  check(/^Win: promote to Rank D, \+\d+ SP\. Lose: rematch next cycle\.$/.test(fcard.stakes), 'the fight card states the stakes: ' + fcard.stakes);
+  // ---- the versus intro (issue #126): both monsters, the matchup and the stakes, then "Fight!"; a tap ends it at once
   await act('fight').click();
+  const intro = await page.evaluate(() => {
+    const q = (s) => document.querySelector(s), all = (s) => [...document.querySelectorAll(s)].map((e) => e.textContent);
+    const r = q('[data-id=fight-intro]');
+    if (!r) return null;
+    const out = { ms: r.dataset.ms, vs: q('[data-id=intro-vs]').textContent, names: all('.vsname'), tags: all('.vstags .tag'), sprites: r.querySelectorAll('.vsart .sprite').length,
+      chips: r.querySelectorAll('.vschip').length, skills: r.querySelectorAll('[data-id=intro-skills] .tag').length, stakes: r.querySelector('[data-id=fight-stakes]').textContent,
+      skip: !!q('[data-act=intro-skip]'), element: (q('[data-id=intro-element]') || {}).textContent || '', me: q('[data-id=monster-name]').textContent,
+      playing: !!q('[data-id=fight-play]'), result: !!q('[data-act=fight-continue]') };
+    r.click();   // a tap anywhere on it
+    out.after = { intro: !!q('[data-id=fight-intro]'), play: !!q('[data-id=fight-play]') };
+    return out;
+  });
+  check(!!intro && !intro.playing && !intro.result && intro.vs === 'VS' && intro.skip, 'the rank fight opens with the versus intro and a skip button, before the playback: ' + JSON.stringify(intro && { vs: intro.vs, playing: intro.playing }));
+  check(intro.ms === '2000', 'at 1x the intro lasts about 2 seconds: ' + intro.ms + ' ms');
+  check(intro.names.length === 2 && intro.names[0] === intro.me && intro.names[1] === rungs[5].name && intro.sprites === 2,
+    'it shows both monsters face to face by name with their sprites: ' + intro.names.join(' vs '));
+  check(intro.tags.length === 4 && intro.tags[0] === 'Rank E' && intro.tags[2] === 'Rank E', 'with their ranks and element tags: ' + intro.tags.join(', '));
+  check(intro.chips >= 1 && intro.chips <= 4 && intro.skills >= 1, 'the matchup: the biggest stat edges and gaps (' + intro.chips + ') and the opponent\'s skills (' + intro.skills + ')' + (intro.element ? '; ' + intro.element : ''));
+  check(intro.stakes === fcard.stakes, 'and the stakes: ' + intro.stakes);
+  check(!intro.after.intro && intro.after.play, 'a tap ends the intro at once and the playback starts');
   check(await page.locator('[data-id=fight-play]').isVisible(), 'the fight plays back instead of showing the result at once');
   check((await text('[data-id=fight-play]')).includes(rungs[5].name) && (await page.locator('[data-id="unit-1"] canvas.sprite').count()) === 1,
     'the playback names the opponent and shows its sprite: ' + (await text('[data-id=fight-play]')));
@@ -409,6 +437,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(played.slot0 >= 5, 'slot 1 has its skill node before a later fight (' + played.slot0 + ' nodes, ' + played.fights + ' fights)');
   await act('speed-2').click();
   await act('fight').click();
+  check((await page.locator('[data-id=fight-intro]').getAttribute('data-ms')) === '1000', 'the intro follows the remembered speed: 2x halves it');
+  await page.waitForFunction(() => (document.querySelector('[data-id=intro-vs]') || {}).textContent === 'Fight!', null, { timeout: 5000 });
+  check(true, 'the intro ends on "Fight!"');
+  await page.locator('[data-id=fight-play]').waitFor({ timeout: 5000 });
+  check((await page.locator('[data-id=fight-intro]').count()) === 0, 'then the playback starts on its own');
   check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the monster\'s skills are listed during the fight');
   const used = await (await page.waitForFunction(() => {
     const u = document.querySelector('.skill.used');
@@ -433,6 +466,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('fight-continue').waitFor({ timeout: 60000 });                 // plays to the end at 2x
   check((await page.locator('[data-id^="skill-0-"]').count()) >= 1, 'the result keeps the skill tiles with their final cooldowns');
   await shot('04c-fight-result');
+  await act('fight-continue').click();
+  await playUntil('fight');
+  await act('speed-skip').click();                                         // on the fight card
+  await act('fight').click();
+  check((await page.locator('[data-id=fight-intro]').count()) === 0 && await page.locator('[data-id=fight-title]').isVisible(), 'at the Skip speed a rank fight has no intro: its result shows at once');
   await act('fight-continue').click();
 
   await playUntil('end');                                                  // later fights: the loop taps Skip once, which sticks

@@ -86,7 +86,7 @@ async function open(opts) {
       const st = { fights: 0, drafts: 0, bought: 0, steps: 0 };
       for (let i = 0; i < 1500 && !q('[data-act="seal"]'); i++) {
         st.steps++;
-        if (q('[data-id=fight-play]')) { click('[data-act="speed-skip"]'); continue; }
+        if (q('[data-id=fight-play]') || q('[data-id=fight-intro]')) { click('[data-act="speed-skip"]'); continue; }
         if (click('[data-act="fight-continue"]')) continue;
         if (q('[data-id=offer-title]')) {
           st.drafts++;
