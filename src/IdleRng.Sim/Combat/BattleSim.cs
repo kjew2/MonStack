@@ -46,6 +46,10 @@ namespace IdleRng.Sim.Combat
                   && In01(r.DrainShieldCap)))
                 throw new ArgumentException("rule modifier constants out of range (specs/16 section 7)", nameof(r));
             if (r.Tower != null && !r.Tower.Valid) throw new ArgumentException("tower rules out of range (specs/21 section 5)", nameof(r));
+            if (r.Mutators != null)
+                foreach (var kv in r.Mutators.Element)   // the rest is checked by FightMutators.Add; this table can be written directly
+                    if (kv.Key == null || !(kv.Value >= 0) || double.IsInfinity(kv.Value))
+                        throw new ArgumentException("element_mult mutators need an element and a finite value >= 0 (specs/28 section 3.2)", nameof(r));
         }
 
         static void AddSide(FightRules rules, FightState s, IReadOnlyList<Fighter> side, int sideIndex, HashSet<string> ids, string name)
@@ -75,6 +79,7 @@ namespace IdleRng.Sim.Combat
             if (Has(u, RuleModifiers.RootRebirth)) u.RebirthHeal = rules.RebirthHeal;
             if (Has(u, RuleModifiers.EchoCast)) u.DecoysLeft = rules.EchoDecoys;
             if (Has(u, RuleModifiers.NightFeast)) u.FeastDmgBonus = rules.FeastStart;
+            if (rules.Mutators != null && rules.Mutators.StartShield > 0) u.Shield = rules.Mutators.StartShield * u.MaxHp;   // no expiry
             return u;
         }
 
@@ -204,7 +209,7 @@ namespace IdleRng.Sim.Combat
             s.Ticks++;
             if (s.Tower) s.PeakCorruption = Math.Max(s.PeakCorruption, CorruptionLevel(rules, s.Ticks));
             foreach (var u in s.Units)
-                if (u.Alive) u.Gauge += GaugeFill(rules, Eff(rules, u, StatIds.Spd));
+                if (u.Alive) u.Gauge += GaugeFill(rules, Eff(rules, u, StatIds.Spd)) * (rules.Mutators?.Speed ?? 1);
 
             for (int n = 0; n < MaxActionsPerTick; n++)
             {
@@ -319,7 +324,7 @@ namespace IdleRng.Sim.Combat
 
         static void CheckFailed(FightRules r, FightState s, FightUnit u, Action<FightAction> onAction)
         {
-            double heal = Math.Min(u.MaxHp - u.Hp, u.CheckHealFrac * u.MaxHp * HealMult(r, s));
+            double heal = Math.Min(u.MaxHp - u.Hp, u.CheckHealFrac * u.MaxHp * HealScale(r, s));
             u.Hp += heal;
             if (u.CheckBuff > 0) AddEffect(r, u, StatIds.DmgDealt, u.CheckBuff, -1, "phase_check");
             onAction?.Invoke(new FightAction(u.Id, "check_failed", null, heal));
@@ -370,7 +375,7 @@ namespace IdleRng.Sim.Combat
             if (r.Tower != null) u.Entropy = Math.Max(0, u.Entropy - r.Tower.EntropyDecay);
             if (r.TideRegen > 0 && Has(u, RuleModifiers.TidalOverflow))
             {
-                double shield = 0, healed = Heal(r, u, r.TideRegen * u.MaxHp * HealMult(r, s), ref shield);
+                double shield = 0, healed = Heal(r, u, r.TideRegen * u.MaxHp * HealScale(r, s), ref shield);
                 u.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(u.Id, FightAction.TideEvent, u.Id, healed + shield));
             }
@@ -531,12 +536,12 @@ namespace IdleRng.Sim.Combat
                 case SkillKind.Damage: return AnyEnemy(s, u);
                 case SkillKind.Heal:
                 {
-                    double amt = Scaled(r, u, sk) * HealMult(r, s);
+                    double amt = Scaled(r, u, sk) * HealScale(r, s);
                     if (sk.Target != SkillTarget.LowestAlly && sk.Target != SkillTarget.AllAllies) return WantsHeal(r, u, amt);
                     foreach (var a in s.Units) if (a.Side == u.Side && WantsHeal(r, a, amt)) return true;
                     return false;
                 }
-                case SkillKind.Shield: return AnyEnemy(s, u) && WantsShield(s, u, sk, Scaled(r, u, sk) * HealMult(r, s));
+                case SkillKind.Shield: return AnyEnemy(s, u) && WantsShield(s, u, sk, Scaled(r, u, sk) * HealScale(r, s));
                 case SkillKind.Taunt: return u.TauntTicks == 0 && AnyOtherAlly(s, u);   // nobody to protect: a wasted action
                 case SkillKind.Buff:
                 {
@@ -578,7 +583,7 @@ namespace IdleRng.Sim.Combat
                 }
                 case SkillKind.Heal:
                 {
-                    double amt = Scaled(r, src, sk) * HealMult(r, s), total = 0;
+                    double amt = Scaled(r, src, sk) * HealScale(r, s), total = 0;
                     var targets = sk.Target == SkillTarget.LowestAlly ? HealTarget(r, s, src, amt) : Allies(s, src, sk.Target);
                     double shield = 0;
                     foreach (var t in targets) total += Heal(r, t, amt, ref shield);
@@ -588,7 +593,7 @@ namespace IdleRng.Sim.Combat
                 }
                 case SkillKind.Shield:
                 {
-                    double amt = Scaled(r, src, sk) * HealMult(r, s);
+                    double amt = Scaled(r, src, sk) * HealScale(r, s);
                     var targets = Allies(s, src, sk.Target);
                     foreach (var t in targets)
                     {
@@ -665,7 +670,7 @@ namespace IdleRng.Sim.Combat
             if (graze) { raw *= r.GrazeMult; tgt.Tally.Grazes++; }
             else
             {
-                double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate));
+                double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate) + (r.Mutators?.CritBonus ?? 0));
                 bool critLucky = false, deniedLucky = false;
                 crit = Roll(rng, rate, Fortune(r, Eff(r, src, StatIds.Luk)), ref critLucky);
                 if (crit && tgtFortune > 0 && Draw(rng) < tgtFortune)   // the target's fortune makes a landed crit roll again
@@ -681,6 +686,7 @@ namespace IdleRng.Sim.Combat
             raw *= pierce ? Math.Max(1.0, elementMult) * (1 + r.FireBonus) : elementMult;
             double dmgBonus = Bonus(src, StatIds.DmgDealt);
             if (dmgBonus != 0) raw *= Math.Max(0.0, 1 + dmgBonus);
+            if (r.Mutators != null) raw *= r.Mutators.DamageMult(aoe, element);
             double mitStat = Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def);
             if (pierce) mitStat *= 1 - r.FirePierce;
             double after = Mitigate(r, raw, mitStat);
@@ -696,7 +702,7 @@ namespace IdleRng.Sim.Combat
             onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false, graze, lucky));
             if (dealt > 0 && r.DrainFrac > 0 && src.Alive && Has(src, RuleModifiers.AbyssalDrain))
             {
-                double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealMult(r, s), ref shield, r.DrainShieldCap);
+                double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealScale(r, s), ref shield, r.DrainShieldCap);
                 src.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.DrainEvent, src.Id, healed + shield));
             }
@@ -914,17 +920,25 @@ namespace IdleRng.Sim.Combat
 
         // ------------------------------------------------------------------ the tower (specs/21 section 3)
 
-        /// <summary>Arena corruption level at a tick: max(0, (tick - CORRUPT_START_TICK) / CORRUPT_EVERY_TICKS), integer division. 0 without tower rules.</summary>
+        /// <summary>
+        /// Arena corruption level at a tick: max(0, (tick - start) / CORRUPT_EVERY_TICKS), integer division, where start is
+        /// CORRUPT_START_TICK less any corruption_early mutators (never below 0). 0 without tower rules.
+        /// </summary>
         public static int CorruptionLevel(FightRules r, int ticks)
         {
             var t = r.Tower;
-            if (t == null || ticks < t.CorruptStartTick) return 0;
-            return (ticks - t.CorruptStartTick) / t.CorruptEveryTicks;
+            if (t == null) return 0;
+            int start = Math.Max(0, t.CorruptStartTick - (r.Mutators?.CorruptEarlyTicks ?? 0));
+            if (ticks < start) return 0;
+            return (ticks - start) / t.CorruptEveryTicks;
         }
 
         /// <summary>Healing and shield multiplier from corruption: max(CORRUPT_HEAL_FLOOR, 1 - level x CORRUPT_HEAL_PER_LEVEL). Exactly 1 without tower rules.</summary>
         public static double HealMult(FightRules r, FightState s) =>
             r.Tower == null ? 1.0 : Math.Max(r.Tower.CorruptHealFloor, 1 - CorruptionLevel(r, s.Ticks) * r.Tower.CorruptHealPerLevel);
+
+        /// <summary>What heals and shields are multiplied by: corruption's HealMult times the heal_mult mutators (specs/28 section 3.2).</summary>
+        static double HealScale(FightRules r, FightState s) => HealMult(r, s) * (r.Mutators?.Heal ?? 1);
 
         static bool GuardActive(FightState s, FightUnit boss)
         {

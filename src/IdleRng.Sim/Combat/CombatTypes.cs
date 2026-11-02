@@ -292,6 +292,92 @@ namespace IdleRng.Sim.Combat
         }
     }
 
+    /// <summary>Mutator kinds (specs/28 section 3.2): rule changes for every unit in a fight.</summary>
+    public static class MutatorKinds
+    {
+        /// <summary>Heals and shields x value (value >= 0).</summary>
+        public const string HealMult = "heal_mult";
+        /// <summary>All-enemy damage x value (value >= 0).</summary>
+        public const string AoeMult = "aoe_mult";
+        /// <summary>Single-target damage (skills, basic attacks, triggers) x value (value >= 0).</summary>
+        public const string SingleMult = "single_mult";
+        /// <summary>Damage of one element x value (value >= 0; needs the element).</summary>
+        public const string ElementMult = "element_mult";
+        /// <summary>Every unit's ATB gauge fill x value (value > 0).</summary>
+        public const string SpeedMult = "speed_mult";
+        /// <summary>Crit chance + value, in [-1, 1], before the crit cap.</summary>
+        public const string CritBonus = "crit_bonus";
+        /// <summary>The environmental clock starts value ticks earlier (a whole number >= 0; tower fights only).</summary>
+        public const string CorruptionEarly = "corruption_early";
+        /// <summary>Every unit starts with value x its max HP as shield, until broken or replaced (value in [0, 1]).</summary>
+        public const string StartShield = "start_shield";
+
+        public static readonly string[] Known = { HealMult, AoeMult, SingleMult, ElementMult, SpeedMult, CritBonus, CorruptionEarly, StartShield };
+        public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
+    }
+
+    /// <summary>
+    /// The mutators in force in a fight, folded into the numbers BattleSim reads (specs/28 section 3.2). Mutators stack: the
+    /// multipliers multiply, crit bonuses, clock ticks and start shields add. The defaults change nothing.
+    /// </summary>
+    public sealed class FightMutators
+    {
+        public double Heal { get; private set; } = 1;
+        public double Aoe { get; private set; } = 1;
+        public double Single { get; private set; } = 1;
+        public double Speed { get; private set; } = 1;
+        public double CritBonus { get; private set; }
+        public int CorruptEarlyTicks { get; private set; }
+        public double StartShield { get; private set; }
+
+        /// <summary>Element id -> damage multiplier.</summary>
+        public SortedDictionary<string, double> Element { get; } = new SortedDictionary<string, double>(StringComparer.Ordinal);
+
+        /// <summary>Adds one mutator. Throws ArgumentException for an unknown kind, a value out of its range or a missing element.</summary>
+        public FightMutators Add(string kind, double value, string element = null)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value)) throw new ArgumentException($"mutator '{kind}': value must be finite", nameof(value));
+            switch (kind)
+            {
+                case MutatorKinds.HealMult: Heal *= NonNegative(kind, value); break;
+                case MutatorKinds.AoeMult: Aoe *= NonNegative(kind, value); break;
+                case MutatorKinds.SingleMult: Single *= NonNegative(kind, value); break;
+                case MutatorKinds.ElementMult:
+                    if (string.IsNullOrEmpty(element)) throw new ArgumentException("mutator 'element_mult' needs an element", nameof(element));
+                    Element[element] = ElementMult(element) * NonNegative(kind, value);
+                    break;
+                case MutatorKinds.SpeedMult:
+                    if (!(value > 0)) throw new ArgumentException("mutator 'speed_mult' needs a value > 0", nameof(value));
+                    Speed *= value;
+                    break;
+                case MutatorKinds.CritBonus:
+                    if (value < -1 || value > 1) throw new ArgumentException("mutator 'crit_bonus' needs a value in [-1, 1]", nameof(value));
+                    CritBonus += value;
+                    break;
+                case MutatorKinds.CorruptionEarly:
+                    if (value < 0 || value > int.MaxValue || value != Math.Floor(value))
+                        throw new ArgumentException("mutator 'corruption_early' needs a whole number of ticks >= 0", nameof(value));
+                    CorruptEarlyTicks = (int)Math.Min(int.MaxValue, (long)CorruptEarlyTicks + (long)value);
+                    break;
+                case MutatorKinds.StartShield:
+                    if (value < 0 || value > 1) throw new ArgumentException("mutator 'start_shield' needs a value in [0, 1]", nameof(value));
+                    StartShield += value;
+                    break;
+                default: throw new ArgumentException($"unknown mutator kind '{kind}'", nameof(kind));
+            }
+            return this;
+        }
+
+        static double NonNegative(string kind, double value) =>
+            value >= 0 ? value : throw new ArgumentException($"mutator '{kind}' needs a value >= 0", nameof(value));
+
+        public double ElementMult(string element) =>
+            element != null && Element.TryGetValue(element, out var m) ? m : 1.0;
+
+        /// <summary>The damage multiplier for one hit: AoE or single-target, times its element's.</summary>
+        public double DamageMult(bool aoe, string element) => (aoe ? Aoe : Single) * ElementMult(element);
+    }
+
     /// <summary>
     /// The numbers a fight runs on (specs/16 section 7). Plain data so a server can resolve PvP with the same rules; build it
     /// from content with FromContent.
@@ -393,6 +479,9 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>The Dungeon's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
         public TowerRules Tower { get; set; }
+
+        /// <summary>The Endless Tower's mutators, for every unit on both sides; null = none (specs/28 section 3.2).</summary>
+        public FightMutators Mutators { get; set; }
 
         /// <summary>Fight rules from content; <paramref name="tower"/> adds the Dungeon's rules (specs/21 section 3).</summary>
         public static FightRules FromContent(ContentDb c, bool tower)

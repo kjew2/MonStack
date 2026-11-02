@@ -19,7 +19,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower (`28`; its gambit rulebook engine is built, the rest waits on kj's questions), the rulebook editor, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower (`28`; its gambit rulebook and mutators are built in the battle engine, the climb is next), the rulebook editor, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 
