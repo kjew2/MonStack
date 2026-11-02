@@ -1,0 +1,68 @@
+{
+  "table": "mutators",
+  "rows": [
+    {
+      "id": "withering",
+      "name_key": "mutator.withering.name",
+      "kind": "heal_mult",
+      "value": 0.5,
+      "element": null
+    },
+    {
+      "id": "shockwave",
+      "name_key": "mutator.shockwave.name",
+      "kind": "aoe_mult",
+      "value": 1.5,
+      "element": null
+    },
+    {
+      "id": "duelist",
+      "name_key": "mutator.duelist.name",
+      "kind": "single_mult",
+      "value": 1.3,
+      "element": null
+    },
+    {
+      "id": "blazing",
+      "name_key": "mutator.blazing.name",
+      "kind": "element_mult",
+      "value": 1.5,
+      "element": "fire"
+    },
+    {
+      "id": "tidal",
+      "name_key": "mutator.tidal.name",
+      "kind": "element_mult",
+      "value": 1.5,
+      "element": "water"
+    },
+    {
+      "id": "haste",
+      "name_key": "mutator.haste.name",
+      "kind": "speed_mult",
+      "value": 1.3,
+      "element": null
+    },
+    {
+      "id": "keen_edge",
+      "name_key": "mutator.keen_edge.name",
+      "kind": "crit_bonus",
+      "value": 0.15,
+      "element": null
+    },
+    {
+      "id": "early_rot",
+      "name_key": "mutator.early_rot.name",
+      "kind": "corruption_early",
+      "value": 200.0,
+      "element": null
+    },
+    {
+      "id": "bulwarks",
+      "name_key": "mutator.bulwarks.name",
+      "kind": "start_shield",
+      "value": 0.2,
+      "element": null
+    }
+  ]
+}

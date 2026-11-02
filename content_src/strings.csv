@@ -504,3 +504,29 @@ mskill.coin_toss.name,Coin Toss
 mskill.coin_toss.desc,Damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.windfall.name,Windfall
 mskill.windfall.desc,Chase trait. On crit: +{power:pct} {stat} for {duration} turns.
+endless.ember_imp.name,Ember Imp
+endless.mire_sprite.name,Mire Sprite
+endless.bastion_golem.name,Bastion Golem
+endless.iron_warden.name,Iron Warden
+endless.razor_fang.name,Razor Fang
+endless.blaze_hound.name,Blaze Hound
+endless.storm_adept.name,Storm Adept
+endless.tide_seer.name,Tide Seer
+endless.moss_shaman.name,Moss Shaman
+endless.dawn_priest.name,Dawn Priest
+endless.hex_weaver.name,Hex Weaver
+endless.war_drummer.name,War Drummer
+endless.shape.swarm.name,Swarm
+endless.shape.bulwark.name,Bulwark
+endless.shape.fortress.name,Fortress
+endless.shape.mixed.name,Mixed
+endless.shape.skirmish.name,Skirmish
+mutator.withering.name,Withering
+mutator.shockwave.name,Shockwave
+mutator.duelist.name,Duelist
+mutator.blazing.name,Blazing
+mutator.tidal.name,Tidal
+mutator.haste.name,Haste
+mutator.keen_edge.name,Keen Edge
+mutator.early_rot.name,Early Rot
+mutator.bulwarks.name,Bulwarks

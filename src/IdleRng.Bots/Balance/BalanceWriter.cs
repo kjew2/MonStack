@@ -122,6 +122,17 @@ namespace IdleRng.Bots.Balance
                           Pct(w.ClearRate), Num(w.Shards.Mean), Num(w.Books.Mean));
                 t.AppendTo(sb);
             }
+
+            if (o.Endless && r.Endless.Count > 0)
+            {
+                sb.Append($"\n## Endless Tower: floors cleared, season {o.EndlessSeasonBase} + seed index; what stopped the climb (shape check, elite or capped)\n");
+                t = new Table(2);
+                t.Row("policy", "team", "mean", "sd", "p10/p50/p90", "max", "capped%", "stopped by");
+                foreach (var w in r.Endless)
+                    t.Row(w.Policy, w.Team, Num(w.FloorsCleared.Mean), Num(w.FloorsCleared.Sd), Pcts(w.FloorsCleared), Num(w.FloorsCleared.Max),
+                          Pct(w.CappedRate), string.Join(" ", w.StoppedBy.Select(x => x.Key + " " + Pct(w.N == 0 ? 0 : (double)x.Count / w.N))));
+                t.AppendTo(sb);
+            }
             return sb.ToString();
         }
 
@@ -226,6 +237,7 @@ namespace IdleRng.Bots.Balance
             j.Key("options").Open('{')
              .Key("seeds").Num(o.Seeds).Key("seedBase").Num(o.SeedBase)
              .Key("books").Strs(o.Books ?? new string[0]).Key("ownBooks").Bool(o.OwnBooks).Key("talents").Strs(o.Talents ?? new string[0]).Key("tower").Bool(o.Tower).Key("towerDayBase").Num(o.TowerDayBase)
+             .Key("endless").Bool(o.Endless).Key("endlessSeasonBase").Num(o.EndlessSeasonBase)
              .Key("bookCanary").Bool(r.BookCells.Count > 0)
              .Close('}');
             j.Key("ranks").Strs(r.RankIds);
@@ -286,6 +298,18 @@ namespace IdleRng.Bots.Balance
                 j.Key("cleared").Num(w.Cleared).Key("clearRate").Num(w.ClearRate);
                 j.Key("shards"); Dist(j, w.Shards);
                 j.Key("books"); Dist(j, w.Books);
+                j.Close('}');
+            }
+            j.Close(']');
+            j.Key("endless").Open('[');
+            foreach (var w in r.Endless)
+            {
+                j.Open('{').Key("policy").Str(w.Policy).Key("team").Str(w.Team).Key("n").Num(w.N);
+                j.Key("floorsCleared"); Dist(j, w.FloorsCleared);
+                j.Key("capped").Num(w.Capped).Key("cappedRate").Num(w.CappedRate);
+                j.Key("stoppedBy").Open('[');
+                foreach (var x in w.StoppedBy) j.Open('{').Key("key").Str(x.Key).Key("count").Num(x.Count).Close('}');
+                j.Close(']');
                 j.Close('}');
             }
             j.Close(']');
@@ -421,6 +445,12 @@ namespace IdleRng.Bots.Balance
                 Rate(sb, "tower", "", w.Policy, w.Team, "clear_rate", w.N, w.ClearRate);
                 Row(sb, "tower", "", w.Policy, w.Team, "shards", w.Shards);
                 Row(sb, "tower", "", w.Policy, w.Team, "books", w.Books);
+            }
+            foreach (var w in r.Endless)
+            {
+                Row(sb, "endless", "", w.Policy, w.Team, "floors_cleared", w.FloorsCleared);
+                Rate(sb, "endless", "", w.Policy, w.Team, "capped_rate", w.N, w.CappedRate);
+                foreach (var x in w.StoppedBy) Rate(sb, "endless", "", w.Policy, w.Team, "stopped_by_" + x.Key, w.N, w.N == 0 ? 0 : (double)x.Count / w.N);
             }
             foreach (var k in r.Checks)
             {

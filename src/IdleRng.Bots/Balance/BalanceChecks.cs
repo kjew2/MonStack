@@ -66,6 +66,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>tower-not-solved: the full focus team's clear rate stays below this.</summary>
         public const double MaxTowerClearRate = 1;
 
+        /// <summary>endless-reachable: the focus team clears Endless Tower floor 1 in more than this share of seasons.</summary>
+        public const double MinEndlessFirstFloorShare = 0.5;
+
+        /// <summary>endless-not-capped: the focus team reaches ENDLESS_MAX_FLOORS in fewer than this share of seasons.</summary>
+        public const double MaxEndlessCappedRate = 1;
+
         /// <summary>books: bringing every book lowers no cell's mean rank by more than this (a canary for broken books).</summary>
         public const double MaxBookGradeDrop = 1.5;
 
@@ -106,6 +112,12 @@ namespace IdleRng.Bots.Balance
                 teams, t => t.N == 0 ? 0 : (double)t.ReachedFloor1 / t.N, t => t.Team, MinTowerFirstFloorShare, strict: true, none: noTeam));
             checks.Add(Max("tower-not-solved", $"the full {FocusPolicy} team clears the tower on < {Pct(MaxTowerClearRate)} of days",
                 teams, t => t.ClearRate, t => t.Team, MaxTowerClearRate, strict: true, none: noTeam));
+            var endless = r.Endless.Where(e => e.Policy == FocusPolicy).ToList();
+            string noEndless = !r.Options.Endless ? "Endless Tower not run (--no-endless)" : $"no {FocusPolicy} team of MON_SIDE_SIZE species";
+            checks.Add(Min("endless-reachable", $"the {FocusPolicy} team clears Endless Tower floor 1 in > {Pct(MinEndlessFirstFloorShare)} of seasons",
+                endless, e => e.N == 0 ? 0 : (double)e.ReachedFloor1 / e.N, e => e.Team, MinEndlessFirstFloorShare, strict: true, none: noEndless));
+            checks.Add(Max("endless-not-capped", $"the {FocusPolicy} team reaches the Endless Tower's safety cap in < {Pct(MaxEndlessCappedRate)} of seasons",
+                endless, e => e.CappedRate, e => e.Team, MaxEndlessCappedRate, strict: true, none: noEndless));
             checks.Add(Books(r));
             return checks;
         }

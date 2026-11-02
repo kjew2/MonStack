@@ -47,6 +47,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>Tower day for seed index i is TowerDayBase + i, so the lineups vary across the sample.</summary>
         public int TowerDayBase { get; set; }
 
+        /// <summary>Also send one of each species (the first MON_SIDE_SIZE, from the same seed) up the Endless Tower (specs/28).</summary>
+        public bool Endless { get; set; } = true;
+
+        /// <summary>Endless Tower season for seed index i is EndlessSeasonBase + i.</summary>
+        public int EndlessSeasonBase { get; set; }
+
         /// <summary>
         /// When the main pass brings no books, replay every species x policy with every skill book (no tower) for the books
         /// sanity check (BalanceChecks). Ignored when Books or OwnBooks is set.
@@ -140,6 +146,46 @@ namespace IdleRng.Bots.Balance
 
         /// <summary>Skill Books the cleared floors drop (TowerSim.BookDrop).</summary>
         public int Books { get; set; }
+    }
+
+    /// <summary>One Endless Tower climb by a team of sealed monsters in a season (specs/28).</summary>
+    public sealed class EndlessSample
+    {
+        public string Policy { get; set; }
+        public string Team { get; set; }
+        public ulong Seed { get; set; }
+        public int Season { get; set; }
+        public int FloorsCleared { get; set; }
+        public bool Capped { get; set; }
+
+        /// <summary>What stopped the climb: "elite", the losing floor's shape check (aoe, focus, open), or "capped".</summary>
+        public string StoppedBy { get; set; }
+    }
+
+    /// <summary>Endless Tower results for one policy x team.</summary>
+    public sealed class EndlessSummary
+    {
+        public string Policy { get; set; }
+        public string Team { get; set; }
+        public int N { get; set; }
+        public Distribution FloorsCleared { get; set; }
+        public int Capped { get; set; }
+        public double CappedRate => N == 0 ? 0 : (double)Capped / N;
+        public int ReachedFloor1 { get; set; }
+
+        /// <summary>What stopped the climbs, most common first.</summary>
+        public List<Tally> StoppedBy { get; set; }
+
+        public static EndlessSummary From(string policy, string team, IReadOnlyList<EndlessSample> runs) => new EndlessSummary
+        {
+            Policy = policy, Team = team, N = runs.Count,
+            FloorsCleared = Distribution.Of(runs.Select(r => r.FloorsCleared)),
+            Capped = runs.Count(r => r.Capped),
+            ReachedFloor1 = runs.Count(r => r.FloorsCleared >= 1),
+            StoppedBy = runs.GroupBy(r => r.StoppedBy, StringComparer.Ordinal)
+                .Select(g => new Tally { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).ThenBy(x => x.Key, StringComparer.Ordinal).ToList(),
+        };
     }
 
     /// <summary>A metric value counted across runs (a killer, an end reason) with its count.</summary>
@@ -379,6 +425,7 @@ namespace IdleRng.Bots.Balance
         public int GauntletBossEvery { get; set; }
         public List<CellSummary> Cells { get; set; } = new List<CellSummary>();
         public List<TowerSummary> Tower { get; set; } = new List<TowerSummary>();
+        public List<EndlessSummary> Endless { get; set; } = new List<EndlessSummary>();
 
         /// <summary>The book canary pass (BalanceOptions.BookCanary): the same cells, every run bringing every skill book. Empty when not run.</summary>
         public List<CellSummary> BookCells { get; set; } = new List<CellSummary>();
@@ -402,6 +449,7 @@ namespace IdleRng.Bots.Balance
             if (o.Seeds < 1) throw new ArgumentException("--seeds must be at least 1");
             if (o.Jobs < 1) throw new ArgumentException("--jobs must be at least 1");
             if (o.TowerDayBase < 0) throw new ArgumentException("--tower-day must be >= 0");
+            if (o.EndlessSeasonBase < 0) throw new ArgumentException("--endless-season must be >= 0");
             var species = (o.Species ?? c.SpeciesList.Select(s => s.Id).ToList()).ToList();
             var policies = (o.Policies ?? RunPolicies.Names).ToList();
             if (species.Count == 0 || policies.Count == 0) throw new ArgumentException("need at least one species and one policy");
@@ -432,6 +480,7 @@ namespace IdleRng.Bots.Balance
                 report.BookCells = Summarise(c, o, policies, species, PlayAll(c, o, policies, species, all, mods));
             }
             if (o.Tower) ClimbAll(c, o, policies, species, runs, report);
+            if (o.Endless) ClimbEndlessAll(c, o, policies, species, runs, report);
             report.Checks = BalanceChecks.Evaluate(report);
             return report;
         }
@@ -499,6 +548,35 @@ namespace IdleRng.Bots.Balance
                 for (int t = 0; t < teams.Count; t++)
                     report.Tower.Add(TowerSummary.From(policies[p], string.Join("+", teams[t]),
                         new ArraySegment<TowerSample>(towers, p * perPolicyTower + t * perTeam, perTeam)));
+        }
+
+        /// <summary>Per policy, one of each species (the first MON_SIDE_SIZE, same seed) climbs the Endless Tower; needs that many species.</summary>
+        static void ClimbEndlessAll(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, RunSample[] runs, BalanceReport report)
+        {
+            int size = c.Constants.MonSideSize, perPolicy = species.Count * o.Seeds;
+            if (species.Count < size) return;
+            var team = species.Take(size).ToArray();
+            string name = string.Join("+", team);
+            var climbs = new EndlessSample[policies.Count * o.Seeds];
+            For(climbs.Length, o.Jobs, i =>
+            {
+                int p = i / o.Seeds, k = i % o.Seeds;
+                var fighters = team.Select(sp => TrainingRun.MonsterFighter(c, runs[p * perPolicy + species.IndexOf(sp) * o.Seeds + k].State)).ToArray();
+                climbs[i] = ClimbEndless(c, policies[p], name, o.SeedBase + (ulong)k, o.EndlessSeasonBase + k, fighters);
+            });
+            for (int p = 0; p < policies.Count; p++)
+                report.Endless.Add(EndlessSummary.From(policies[p], name, new ArraySegment<EndlessSample>(climbs, p * o.Seeds, o.Seeds)));
+        }
+
+        public static EndlessSample ClimbEndless(ContentDb c, string policy, string team, ulong seed, int season, IReadOnlyList<Fighter> fighters)
+        {
+            var r = EndlessSim.Run(c, fighters, season);
+            var last = r.Floors[r.Floors.Count - 1];
+            string stopped = r.Capped ? "capped" : last.Elite ? "elite" : EndlessSim.Shape(c, last.ShapeId).Check;
+            return new EndlessSample
+            {
+                Policy = policy, Team = team, Seed = seed, Season = season, FloorsCleared = r.FloorsCleared, Capped = r.Capped, StoppedBy = stopped,
+            };
         }
 
         /// <summary>One bot run, sealed the way AccountOps.FinishRun seals it (payout, gauntlet on the run seed).</summary>

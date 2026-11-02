@@ -136,6 +136,14 @@ namespace IdleRng.Sim.Content
         public double CorruptHealFloor { get; internal set; }    // CORRUPT_HEAL_FLOOR
         public double CorruptDmgPerLevel { get; internal set; }  // CORRUPT_DMG_PER_LEVEL
 
+        // Endless Tower (specs/28 section 7)
+        public int EndlessSeed { get; internal set; }            // ENDLESS_SEED
+        public double EndlessBase { get; internal set; }         // ENDLESS_BASE
+        public double EndlessGrowth { get; internal set; }       // ENDLESS_GROWTH
+        public int EndlessBand { get; internal set; }            // ENDLESS_BAND
+        public double EndlessEliteHpMult { get; internal set; }  // ENDLESS_ELITE_HP_MULT
+        public int EndlessMaxFloors { get; internal set; }       // ENDLESS_MAX_FLOORS
+
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
 
@@ -491,6 +499,52 @@ namespace IdleRng.Sim.Content
         /// <summary>tower_bosses id (role add) a split phase spawns, or null.</summary>
         public string Adds { get; internal set; }
         public IReadOnlyList<string> AddSkills { get; internal set; }
+    }
+
+    /// <summary>An Endless Tower enemy (specs/28 section 3.1): stats are Weights x the floor level.</summary>
+    public sealed class EndlessEnemyDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string Element { get; internal set; }
+
+        /// <summary>minion, tank, striker, caster, healer or support: the shape slots it can fill.</summary>
+        public string Role { get; internal set; }
+        public IdleRng.Sim.Combat.MonsterStats Weights { get; internal set; }
+
+        /// <summary>monster_skills ids, in AI priority order.</summary>
+        public IReadOnlyList<string> Skills { get; internal set; }
+
+        /// <summary>The enemy's rulebook (specs/28 section 4). Shared: fighters built from it must not change it.</summary>
+        public IReadOnlyList<IdleRng.Sim.Combat.GambitRule> Gambits { get; internal set; }
+    }
+
+    /// <summary>An Endless Tower squad shape (specs/28 section 3.1): one role per slot and the question it asks.</summary>
+    public sealed class EndlessShapeDef
+    {
+        public const string AoeCheck = "aoe", FocusCheck = "focus", OpenCheck = "open";
+
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+
+        /// <summary>aoe (beats single-target teams), focus (beats AoE teams) or open.</summary>
+        public string Check { get; internal set; }
+        public IReadOnlyList<string> Slots { get; internal set; }
+
+        /// <summary>Slot 0's HP multiplier (the fortress's anchor).</summary>
+        public double AnchorHp { get; internal set; }
+    }
+
+    /// <summary>An Endless Tower mutator row (specs/28 section 3.2): a FightMutators kind and its value.</summary>
+    public sealed class MutatorDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public string Kind { get; internal set; }
+        public double Value { get; internal set; }
+
+        /// <summary>The element for element_mult; else null.</summary>
+        public string Element { get; internal set; }
     }
 
     /// <summary>A Skill Book the Dungeon can drop from MinFloor on, by weight (specs/21 section 7).</summary>

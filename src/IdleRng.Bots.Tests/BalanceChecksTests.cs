@@ -31,7 +31,13 @@ namespace IdleRng.Bots.Tests
                 Policy = policy, Team = team, FloorsCleared = floors, Cleared = floors == 20,
             }).ToList());
 
-        /// <summary>A report every check passes: two species, focus above balanced, a tower team, a book canary pass.</summary>
+        static EndlessSummary Climb(string policy, string team, int floors, bool capped = false, int n = 10) =>
+            EndlessSummary.From(policy, team, Enumerable.Range(0, n).Select(_ => new EndlessSample
+            {
+                Policy = policy, Team = team, FloorsCleared = floors, Capped = capped, StoppedBy = capped ? "capped" : "focus",
+            }).ToList());
+
+        /// <summary>A report every check passes: two species, focus above balanced, a tower team, an Endless climb, a book canary pass.</summary>
         static BalanceReport Healthy()
         {
             var r = new BalanceReport
@@ -39,6 +45,7 @@ namespace IdleRng.Bots.Tests
                 Options = new BalanceOptions(), RankIds = Ranks.ToList(), GauntletFloors = 100, TowerFloors = 20, GauntletBossEvery = 10,
                 Cells = { Cell("a", "balanced", 2), Cell("b", "balanced", 1), Cell("a", "focus", 3), Cell("b", "focus", 2) },
                 Tower = { Team("focus", "a", 5), Team("focus", "b", 3), Team("focus", "a+b", 12) },
+                Endless = { Climb("balanced", "a+b", 20), Climb("focus", "a+b", 30) },
             };
             r.BookCells = r.Cells.Select(c => Cell(c.Species, c.Policy, (int)c.Grade.Mean)).ToList();
             return r;
@@ -56,7 +63,8 @@ namespace IdleRng.Bots.Tests
             Assert.That(checks.Select(k => k.Id), Is.EqualTo(new[]
             {
                 "progress-fights", "progress-grade", "not-all-s", "policy-matters", "injury-resting", "injury-total",
-                "gauntlet-progress", "gauntlet-not-solved", "capstone-ladder", "tower-reachable", "tower-not-solved", "books",
+                "gauntlet-progress", "gauntlet-not-solved", "capstone-ladder", "tower-reachable", "tower-not-solved",
+                "endless-reachable", "endless-not-capped", "books",
             }));
             Assert.That(checks.Where(k => k.Status != CheckStatus.Pass).Select(k => k.Id + " " + k.Detail), Is.Empty);
             Assert.That(BalanceChecks.ExitCode(checks, strict: true), Is.EqualTo(0));
@@ -174,6 +182,26 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void Endless_UnreachableOrCapped_AndSkippedWhenNotRun()
+        {
+            var r = Healthy();
+            r.Endless[1] = Climb("focus", "a+b", 0);
+            Assert.That(Get(r, "endless-reachable").Status, Is.EqualTo(CheckStatus.Warn));
+            r.Endless[0] = Climb("balanced", "a+b", 0);
+            r.Endless[1] = Climb("focus", "a+b", 30);
+            Assert.That(Get(r, "endless-reachable").Status, Is.EqualTo(CheckStatus.Pass), "only the focus team counts");
+            r.Endless[1] = Climb("focus", "a+b", 500, capped: true);
+            var capped = Get(r, "endless-not-capped");
+            Assert.That((capped.Status, capped.Value), Is.EqualTo((CheckStatus.Warn, 1.0)));
+            Assert.That(r.Endless[1].StoppedBy.Single().Key, Is.EqualTo("capped"));
+
+            r.Endless.Clear();
+            r.Options.Endless = false;
+            var skip = Get(r, "endless-reachable");
+            Assert.That((skip.Status, skip.Detail), Is.EqualTo((CheckStatus.Skip, "Endless Tower not run (--no-endless)")));
+        }
+
+        [Test]
         public void Books_WarnsOnALargeDrop_AndSkipsWithoutTheCanary()
         {
             var r = Healthy();
@@ -196,8 +224,10 @@ namespace IdleRng.Bots.Tests
             var r = Healthy();
             r.Cells.RemoveAll(c => c.Policy == "focus");
             r.Tower.Clear();
+            r.Endless.RemoveAll(e => e.Policy == "focus");
             var checks = BalanceChecks.Evaluate(r);
-            foreach (var id in new[] { "progress-fights", "progress-grade", "not-all-s", "policy-matters", "tower-reachable", "tower-not-solved" })
+            foreach (var id in new[] { "progress-fights", "progress-grade", "not-all-s", "policy-matters", "tower-reachable", "tower-not-solved",
+                                       "endless-reachable", "endless-not-capped" })
                 Assert.That(checks.Single(k => k.Id == id).Status, Is.EqualTo(CheckStatus.Skip), id);
         }
 

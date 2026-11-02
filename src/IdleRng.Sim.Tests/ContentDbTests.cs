@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("6.0"));
+            Assert.That(db.Version, Is.EqualTo("6.1"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);
@@ -31,6 +31,9 @@ namespace IdleRng.Sim.Tests
             Assert.That(db.TowerRegulars, Is.Not.Empty);
             Assert.That(db.TowerMarquees, Is.Not.Empty);
             Assert.That(db.BookDrops, Is.Not.Empty);
+            Assert.That(db.EndlessEnemies, Is.Not.Empty);
+            Assert.That(db.EndlessShapes, Is.Not.Empty);
+            Assert.That(db.Mutators, Is.Not.Empty);
             Assert.That(db.Constants.TurnTicks, Is.GreaterThan(0));
         }
 

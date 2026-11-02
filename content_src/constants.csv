@@ -113,3 +113,9 @@ CORRUPT_EVERY_TICKS,int,100,corruption rises one level per this many ticks. Plac
 CORRUPT_HEAL_PER_LEVEL,double,0.2,healing and shields lose this fraction per level. Placeholder
 CORRUPT_HEAL_FLOOR,double,0.2,healing and shields never drop below this fraction. Placeholder
 CORRUPT_DMG_PER_LEVEL,double,0.1,all damage gains this fraction per level. Placeholder
+ENDLESS_SEED,int,20261102,Endless Tower (specs/28): season seeds derive from this and the season number
+ENDLESS_BASE,double,60,Endless Tower: enemy level on floor 1 (stat = weight x level). Placeholder
+ENDLESS_GROWTH,double,1.05,Endless Tower: level x this per floor. Placeholder
+ENDLESS_BAND,int,10,Endless Tower: floors per band; the band's last floor is an elite floor and each full band adds a mutator. Placeholder
+ENDLESS_ELITE_HP_MULT,double,2,Endless Tower: an elite's HP multiplier (a Dungeon marquee boss at 4v4 scale). Placeholder
+ENDLESS_MAX_FLOORS,int,500,Endless Tower: a climb stops here even if the team never loses (safety cap)

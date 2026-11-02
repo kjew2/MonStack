@@ -1,0 +1,6 @@
+id,name_key,check,slots,anchor_hp,#notes
+swarm,endless.shape.swarm.name,aoe,minion|minion|minion|minion,1,"Endless Tower squad shapes (specs/28 section 3.1). check: aoe (beats single-target teams), focus (beats AoE teams), open. slots: MON_SIDE_SIZE roles. anchor_hp multiplies slot 0's HP. Each band holds one aoe and one focus floor. Placeholder"
+bulwark,endless.shape.bulwark.name,focus,tank|healer|striker|caster,1,Placeholder
+fortress,endless.shape.fortress.name,focus,tank|minion|minion|minion,3,Placeholder
+mixed,endless.shape.mixed.name,open,striker|caster|healer|support,1,Placeholder
+skirmish,endless.shape.skirmish.name,open,striker|striker|support|minion,1,Placeholder

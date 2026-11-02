@@ -20,6 +20,7 @@ namespace IdleRng.Sim.Content
             "constants", "elements", "species", "drill_tiers", "fight_ranks", "stat_milestones", "monster_skills", "trees",
             "tree_nodes", "chase_conditions", "skill_books", "talents", "gauntlet_enemies", "legacy_titles",
             "achievements", "vendor_rarities", "tower_bosses", "boss_phases", "book_drops", "rank_enemies",
+            "endless_enemies", "endless_shapes", "mutators",
         };
 
 
@@ -108,6 +109,16 @@ namespace IdleRng.Sim.Content
 
         /// <summary>Skill Book drops in CSV order.</summary>
         public IReadOnlyList<BookDropDef> BookDrops { get; private set; }
+
+        // Endless Tower (specs/28)
+        /// <summary>Endless Tower enemies in CSV order.</summary>
+        public IReadOnlyList<EndlessEnemyDef> EndlessEnemies { get; private set; }
+
+        /// <summary>Endless Tower squad shapes in CSV order.</summary>
+        public IReadOnlyList<EndlessShapeDef> EndlessShapes { get; private set; }
+
+        /// <summary>Mutators in CSV order (the season's draw refills in this order).</summary>
+        public IReadOnlyList<MutatorDef> Mutators { get; private set; }
 
 
         // ---------------------------------------------------------------- derived
@@ -266,6 +277,8 @@ namespace IdleRng.Sim.Content
                 CorruptStartTick = I("CORRUPT_START_TICK"), CorruptEveryTicks = I("CORRUPT_EVERY_TICKS"),
                 CorruptHealPerLevel = D("CORRUPT_HEAL_PER_LEVEL"), CorruptHealFloor = D("CORRUPT_HEAL_FLOOR"),
                 CorruptDmgPerLevel = D("CORRUPT_DMG_PER_LEVEL"),
+                EndlessSeed = I("ENDLESS_SEED"), EndlessBase = D("ENDLESS_BASE"), EndlessGrowth = D("ENDLESS_GROWTH"),
+                EndlessBand = I("ENDLESS_BAND"), EndlessEliteHpMult = D("ENDLESS_ELITE_HP_MULT"), EndlessMaxFloors = I("ENDLESS_MAX_FLOORS"),
             };
             if (errors.Count > 0) return;
             var values = new Dictionary<string, double>(StringComparer.Ordinal);
@@ -401,6 +414,7 @@ namespace IdleRng.Sim.Content
             BuildUnlocks(t, errors);
             BuildGauntlet(t, errors);
             BuildTower(t, errors);
+            BuildEndless(t, errors);
 
             StatMilestones = t["stat_milestones"].Select(r => r.Int("threshold")).ToList().AsReadOnly();
             for (int i = 0; i < StatMilestones.Count; i++)
@@ -876,6 +890,81 @@ namespace IdleRng.Sim.Content
                 if (!(b.MinFloor >= 1 && b.MinFloor <= k.TowerFloors)) errors.Add(new ContentError("E043", loc, "min_floor must be in [1, TOWER_FLOORS]"));
                 if (!(b.Weight > 0)) errors.Add(new ContentError("E043", loc, "weight must be > 0"));
             }
+        }
+
+        static readonly string[] EndlessRoles = { "minion", "tank", "striker", "caster", "healer", "support" };
+
+        /// <summary>Endless Tower (specs/28 section 7). Mirrors validate_endless in tools/content_build.py.</summary>
+        void BuildEndless(Dictionary<string, List<Row>> t, List<ContentError> errors)
+        {
+            var k = Constants;
+            if (!(k.EndlessBase > 0 && k.EndlessGrowth >= 1 && k.EndlessBand >= 3 && k.EndlessEliteHpMult > 0 && k.EndlessMaxFloors > 0))
+                errors.Add(new ContentError("E043", "constants", "Endless Tower constants out of range (specs/28 section 7)"));
+
+            var enemies = new List<EndlessEnemyDef>();
+            foreach (var r in t["endless_enemies"])
+            {
+                var e = new EndlessEnemyDef
+                {
+                    Id = r.Str("id"), NameKey = r.Str("name_key"), Element = r.Str("element"), Role = r.Str("role"),
+                    Weights = StatsFrom(r, ""), Skills = SplitIds(r.NStr("skills")).AsReadOnly(),
+                };
+                string loc = $"endless_enemies[{e.Id}]";
+                if (!Elements.ContainsKey(e.Element)) errors.Add(new ContentError("E023", loc, $"element '{e.Element}' is not an element id"));
+                if (Array.IndexOf(EndlessRoles, e.Role) < 0) errors.Add(new ContentError("E021", loc, $"unknown role '{e.Role}'"));
+                foreach (var id in IdleRng.Sim.Combat.StatIds.Trained)
+                    if (!(e.Weights.Get(id) >= 0)) { errors.Add(new ContentError("E043", loc, "stat weights must be >= 0")); break; }
+                foreach (var sk in e.Skills)
+                    if (!MonsterSkills.ContainsKey(sk)) errors.Add(new ContentError("E023", loc, $"skill '{sk}' is not a monster_skills id"));
+                try { e.Gambits = IdleRng.Sim.Combat.GambitText.Parse(r.NStr("gambits")).AsReadOnly(); }
+                catch (FormatException ex) { errors.Add(new ContentError("E043", loc, ex.Message)); e.Gambits = new List<IdleRng.Sim.Combat.GambitRule>().AsReadOnly(); }
+                foreach (var g in e.Gambits)
+                    if (g.Skill != IdleRng.Sim.Combat.GambitRule.Basic
+                        && !e.Skills.Any(sk => MonsterSkills.TryGetValue(sk, out var ms) && ms.Id == g.Skill && ms.Kind != SkillKind.Passive))
+                        errors.Add(new ContentError("E023", loc, $"gambit action '{g.Skill}' is not one of the enemy's active skills"));
+                enemies.Add(e);
+            }
+            EndlessEnemies = enemies.AsReadOnly();
+
+            var shapes = t["endless_shapes"].Select(r => new EndlessShapeDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), Check = r.Str("check"), Slots = SplitIds(r.Str("slots")).AsReadOnly(),
+                AnchorHp = r.Dbl("anchor_hp"),
+            }).ToList();
+            foreach (var sh in shapes)
+            {
+                string loc = $"endless_shapes[{sh.Id}]";
+                if (sh.Slots.Count != k.MonSideSize) errors.Add(new ContentError("E043", loc, $"slots must list exactly MON_SIDE_SIZE ({k.MonSideSize}) roles"));
+                foreach (var role in sh.Slots)
+                {
+                    if (Array.IndexOf(EndlessRoles, role) < 0) errors.Add(new ContentError("E021", loc, $"slot role '{role}' is not an endless role"));
+                    else if (!enemies.Any(e => e.Role == role)) errors.Add(new ContentError("E044", loc, $"no endless_enemies row has role '{role}'"));
+                }
+                if (!(sh.AnchorHp > 0)) errors.Add(new ContentError("E043", loc, "anchor_hp must be > 0"));
+            }
+            if (!shapes.Any(x => x.Check == EndlessShapeDef.AoeCheck) || !shapes.Any(x => x.Check == EndlessShapeDef.FocusCheck))
+                errors.Add(new ContentError("E044", "endless_shapes", "need at least one aoe and one focus shape"));
+            EndlessShapes = shapes.AsReadOnly();
+
+            var mutators = t["mutators"].Select(r => new MutatorDef
+            {
+                Id = r.Str("id"), NameKey = r.Str("name_key"), Kind = r.Str("kind"), Value = r.Dbl("value"), Element = r.NStr("element"),
+            }).ToList();
+            if (mutators.Count == 0) errors.Add(new ContentError("E044", "mutators", "at least one row is required"));
+            foreach (var m in mutators)
+            {
+                string loc = $"mutators[{m.Id}]";
+                if ((m.Element != null) != (m.Kind == IdleRng.Sim.Combat.MutatorKinds.ElementMult))
+                    errors.Add(new ContentError("E043", loc, "element_mult, and only it, names an element"));
+                else if (m.Element != null && !Elements.ContainsKey(m.Element))
+                    errors.Add(new ContentError("E023", loc, $"element '{m.Element}' is not an element id"));
+                else
+                {
+                    try { new IdleRng.Sim.Combat.FightMutators().Add(m.Kind, m.Value, m.Element); }
+                    catch (ArgumentException) { errors.Add(new ContentError("E043", loc, $"value out of range for kind '{m.Kind}' (specs/28 section 3.2)")); }
+                }
+            }
+            Mutators = mutators.AsReadOnly();
         }
 
         static TowerRole ParseTowerRole(string s)
