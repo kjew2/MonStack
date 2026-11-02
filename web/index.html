@@ -481,6 +481,10 @@ small, .small { font-size: 12px; }
 .vfield { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .vcmp-heads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .vcmp-heads > .card { min-width: 0; padding: 10px; }
+/* a compare header is half the width: the sprite and grade on one line, the name and facts under them (issue #125) */
+.vcmp-heads .vhead { flex-wrap: wrap; gap: 6px 10px; }
+.vcmp-heads .vhead > :last-child { flex-basis: 100%; }
+.vcmp-heads .vhead .sprite { width: 48px; height: 48px; }
 .vcmp { display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 4px 10px; align-items: baseline; }
 .vcmp > :not(:nth-child(4n+1)) { text-align: right; }
 .vcmp .lbl { font: 700 13px var(--font-display); }

@@ -9,7 +9,7 @@
   // Filter values for the title select that are not a title text.
   const HAS_TITLE = '\u0001has', NO_TITLE = '\u0001none';
 
-  let X = null;   // the run screen's helpers, set by render: { h, C, run, toast, rerender, nodeRow, treeView, elementTag, up, num, bar, TIP }
+  let X = null;   // the run screen's helpers, set by render: { h, C, run, toast, rerender, nodeRow, treeView, elementTag, up, num, bar, TIP, sprite }
   const st = {
     view: loadView(),        // { sort, species, element, title, lock }
     search: '',              // text search; not remembered, so a reload never hides monsters behind a forgotten search
@@ -186,7 +186,7 @@
     const h = X.h, sp = spDef(e);
     return h('div', { class: 'card' + (same(st.pick, e, i) ? ' alert' : ''), 'data-id': 'vault-entry', 'data-index': String(i) }, [
       h('div', { class: 'row between' }, [
-        h('div', { class: 'row', style: 'min-width:0' }, [h('span', { class: 'num', style: 'font-size:28px;font-weight:700', text: X.up(e.grade) }),
+        h('div', { class: 'row', style: 'min-width:0' }, [X.sprite(e.species, e.apex, 'small'), h('span', { class: 'num', style: 'font-size:28px;font-weight:700', text: X.up(e.grade) }),
           h('div', { style: 'min-width:0' }, [h('div', { class: 'row', style: 'gap:6px;flex-wrap:wrap' }, [h('b', { 'data-id': 'vault-species', text: sp.name }), sp.element ? X.elementTag(sp.element) : null, e.locked ? h('span', { class: 'small', text: '🔒' }) : null]),
             h('div', { class: 'small muted', text: (e.end === 'injured' ? 'Injured' : 'Completed') + ' · cycle ' + e.cycles + ' · ' + e.fightsWon + ' wins' })])]),
         h('span', { class: 'small muted num', 'data-id': 'vault-total', text: 'Σ ' + X.num(total(e)) }),
@@ -243,7 +243,8 @@
 
   function head(e) {
     const h = X.h, sp = spDef(e);
-    return h('div', { class: 'row' }, [
+    return h('div', { class: 'row vhead' }, [
+      X.sprite(e.species, e.apex),   // its apex form when it has one (issue #125)
       h('span', { class: 'grade ' + e.grade, style: 'font-size:44px', text: X.up(e.grade) }),
       h('div', { style: 'min-width:0' }, [
         h('div', { class: 'row', style: 'gap:6px;flex-wrap:wrap' }, [h('b', { text: sp.name }), sp.element ? X.elementTag(sp.element) : null]),

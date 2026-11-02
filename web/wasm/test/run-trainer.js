@@ -758,6 +758,15 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     const sortBy = async (v) => { await page.selectOption('[data-act=vault-sort]', v); return order(); };
     check(same(await order(), [5, 4, 3, 2, 1, 0]), 'the Vault lists newest first by default');
+    // Each row shows the monster's small sprite (issue #125); the apex entry (index 5) shows its apex form, not the base species.
+    const rowSprites = await page.$$eval('[data-id=vault-entry]', (els) => els.map((e) => !!e.querySelector('.sprite.small')));
+    check(rowSprites.length === 6 && rowSprites.every(Boolean), 'every Vault row shows a small sprite');
+    const spriteKey = (sel) => page.$eval(sel, (s) => s.tagName === 'IMG' ? s.getAttribute('src') : s.toDataURL());
+    const apexSprite = await spriteKey('[data-id=vault-entry][data-index="5"] .sprite'), baseSprite = await spriteKey('[data-id=vault-entry][data-index="2"] .sprite');
+    check(apexSprite !== baseSprite, 'the apex Sprite row draws its apex form, not the base species');
+    const rh = await page.$eval('[data-id=vault-entry] .sprite', (s) => s.getBoundingClientRect().height);
+    check(rh <= 32, 'the row sprite stays small (' + rh + 'px)');
+    await shot('10b-vault-list');
     const apexName = await page.$eval('[data-id=vault-entry][data-index="5"] [data-id=vault-species]', (el) => el.textContent);
     check(apexName === 'Comet Moth', 'a monster that owns a chase capstone shows its apex name in the Vault: ' + apexName);
     check(same(await sortBy('grade'), [5, 1, 3, 0, 4, 2]), 'sort by grade, best first');
@@ -837,6 +846,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     // Detail of one entry: stats, slotted trees with the bought nodes, rank, title and date.
     await act('detail-1').click();
     check(await page.locator('[data-id=detail-title]').isVisible(), 'Details opens the detail sheet');
+    check((await page.locator('#modal .vhead > .sprite:not(.small)').count()) === 1, 'the detail sheet header shows the monster\'s sprite');
     const legacyLine = await text('[data-id=detail-legacy]');
     check(/^Floor 70: .*Food$/.test(legacyLine), 'it shows the floor and Legacy Title: ' + legacyLine);
     const statRows = page.locator('#modal [data-id=detail-stats] .stat');
@@ -858,6 +868,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     check(await page.locator('[data-id=compare-pick]').isVisible(), 'Compare on one monster asks for a second');
     await act('compare-4').click();                                    // after the dismantle, index 4 is the S Sprite
     check(await page.locator('[data-id=compare-grid]').isVisible(), 'Compare on a second opens the compare sheet');
+    check((await page.locator('#modal [data-id^=compare-head-] .vhead > .sprite').count()) === 2, 'each compare header shows its monster\'s sprite');
     check((await text('[data-id=diff-str]')) === '+300' && (await text('[data-id=diff-rank]')) === '+3' && (await text('[data-id=diff-floor]')) === '+71', 'it shows B minus A per stat, rank and floor');
     check((await text('[data-id=diff-hp]')) === '=', 'an equal stat shows =');
     const cw = await page.evaluate(() => { const m = document.getElementById('modal'); return m.scrollWidth - m.clientWidth; });
@@ -881,6 +892,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     if (await act('tower-clear').count()) await act('tower-clear').click();   // the Vault's remembered filters apply here too
     const all = await page.locator('[data-id=tower-entry]').count();
     check(all === (await readAccount()).Account.Vault.length, 'the team picker lists the whole Vault (' + all + ')');
+    check((await page.locator('[data-id=tower-entry] .sprite.small').count()) === all, 'each team picker row shows the monster\'s small sprite');
     await act('vault-search').fill('moth');
     const hits = await page.locator('[data-id=tower-entry]').evaluateAll((els) => els.map((e) => +e.dataset.index));
     check(hits.length > 0 && hits.length < all && /Showing \d+ of \d+/.test(await text('[data-id=tower-showing]')), 'the Vault search narrows the team picker: ' + hits.join(','));
