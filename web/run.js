@@ -448,18 +448,16 @@
       h('div', { class: 'row' }, [oppSprite(opp), h('div', { class: 'grow' }, [
         h('h2', { text: 'Rank ' + opp.letter + ' fight: ' + opp.name, 'data-id': 'fight-opp' }), elementTag(opp.element), oppSkills(opp.skills)])]),
       h('div', { class: 'small muted', text: 'Your stats against theirs:' }), cmp,
-      stakesLine(matchup(s)),
+      ...((m) => [m.element ? h('div', { class: 'vsel ' + m.element.cls, 'data-id': 'fight-element', text: m.element.text }) : null, stakesLine(m)])(matchup(s)),
       speedToggle(),
       h('button', { class: 'btn warn block', type: 'button', 'data-act': 'fight', disabled: s.offers.length > 0, text: 'Fight', onclick: fight }),
     ]);
   }
 
-  // ---- the matchup of the coming rank fight (issue #126), read from the run state before the fight: both sides, the element edge
-  // (the engine's multipliers, BRIDGE.md opponent.elementDealt/elementTaken), the biggest stat edges and gaps, and the stakes.
+  // ---- the matchup of the coming rank fight (issue #126), read from the run state before the fight: both sides (the intro), the
+  // element edge (the engine's multipliers, BRIDGE.md opponent.elementDealt/elementTaken) and the stakes (the fight card).
   function matchup(s) {
     const k = C.consts, opp = s.opponent, sp = speciesDef(s.species);
-    const diffs = C.stats.map((st) => ({ st: st, d: s.stats[st] - opp.stats[st], rel: (s.stats[st] - opp.stats[st]) / Math.max(1, opp.stats[st]) }));
-    const top = (list) => list.sort((a, b) => Math.abs(b.rel) - Math.abs(a.rel)).slice(0, 2);
     const elName = (e) => (C.elements[e] || { name: e }).name;
     const x = (m) => '×' + String(Math.round(m * 100) / 100);
     const dealt = typeof opp.elementDealt === 'number' ? opp.elementDealt : 1, taken = typeof opp.elementTaken === 'number' ? opp.elementTaken : 1;
@@ -474,7 +472,6 @@
     return {
       you: { name: s.name || sp.name, species: s.species, apex: s.apex, rank: rank(s.rank).name, element: sp.element },
       opp: opp, element: element, win: win, lose: lose,
-      edges: top(diffs.filter((d) => d.d > 0)), gaps: top(diffs.filter((d) => d.d < 0)),
     };
   }
   function stakesLine(m) {
@@ -616,6 +613,7 @@
   // ---- modal: fight result and tree offers
   function renderModal(modal, s) {
     modal.replaceChildren();
+    modal.classList.toggle('bleed', !!(ui.fight && ui.play && ui.play.intro));   // the intro fills the screen edge to edge
     if (ui.fight && ui.play && ui.play.intro) { modal.hidden = false; fightIntro(modal, ui.play.intro.m); return; }
     if (ui.fight && ui.play) { modal.hidden = false; fightPlayView(modal, ui.fight, rankView(ui.fight, s)); return; }
     if (ui.fight) { modal.hidden = false; fightModal(modal, ui.fight, s); return; }
@@ -646,9 +644,16 @@
     const you = speciesDef(s.species).name, foe = f.opponent.name;
     modal.append(
       h('h2', { class: f.won ? 'ok' : 'bad', text: f.won ? 'Victory! Promoted to ' + rank(f.rankAfter).name : f.outcome === 'TimedOut' ? 'Time ran out: no promotion' : 'Defeat: no promotion', 'data-id': 'fight-title' }),
-      f.won ? null : h('p', { class: 'muted', text: 'Train more and try again next cycle: ' + foe + ' waits for the rematch.' }),
-      spBadge(ui.fightGains),
-      fightUnits(f, you, foe, null, rankArt(f, s)).root,
+      ...[f.won ? null : h('p', { class: 'muted', text: 'Train more and try again next cycle: ' + foe + ' waits for the rematch.' }),
+        spBadge(ui.fightGains)].filter(Boolean),   // append() would print a null as the text "null"
+    );
+    const units = fightUnits(f, you, foe, null, rankArt(f, s), true);
+    const loser = f.won ? 1 : f.outcome === 'TimedOut' ? -1 : 0;   // the side knocked down (a timeout downs no one)
+    units.refs.forEach((r) => r.el.classList.toggle('down', r.u.side === loser));
+    modal.append(
+      h('div', { class: 'fstage ' + (f.won ? 'won' : 'lost') }, [units.root,
+        h('div', { class: 'stamp', 'aria-hidden': 'true', text: f.won ? 'Victory!' : f.outcome === 'TimedOut' ? 'Time up' : 'Defeat' })]),
+      units.skillRows,
       h('h3', { text: 'Battle log' }),
     );
     const lines = f.actions.map((x) => actionLine(x, foe, you));
@@ -732,10 +737,11 @@
     schedulePlayback();
   }
 
-  // ---- the versus intro of a rank fight (issue #126; kj, 2026-11-01: about 2 seconds, snappy, skippable): both monsters face each
-  // other with their names, ranks and elements over "VS", the matchup and the stakes, then "Fight!" and the playback. 2x halves it,
-  // the Skip speed skips it with the playback, and a tap (or Enter, Space, Escape) anywhere but the speed buttons ends it at once.
-  // Reduced motion keeps the intro but drops its movement. INTRO_MS are placeholders (presentation only, not a game rule).
+  // ---- the rank fight intro (issue #126; kj, 2026-11-01: about 2 seconds, snappy, skippable; kj, 2026-11-02: pure hype, no
+  // matchup, which the fight card shows before the fight): the screen splits on a diagonal, both monsters slam in with their names,
+  // ranks and elements, "VS" lands, then "Fight!" and the playback. 2x halves it, the Skip speed skips it with the playback, and a
+  // tap (or Enter, Space, Escape) anywhere but the speed buttons ends it at once. Reduced motion keeps the intro but drops its
+  // movement. INTRO_MS are placeholders (presentation only, not a game rule).
   const INTRO_MS = { vs: 1500, go: 500 };
   function stepIntro() {
     const p = ui.play;
@@ -761,37 +767,27 @@
   }
   function fightIntro(modal, m) {
     const p = ui.play, speed = Number(ui.speed) || 1;
-    const youArt = sprite(m.you.species, m.you.apex), oppArt = oppSprite(m.opp);
-    const side = (cls, art, name, rankName, element) => h('div', { class: 'vsside ' + cls }, [
-      h('div', { class: 'vsart' }, [art]), h('b', { class: 'vsname', text: name }),
-      h('div', { class: 'vstags' }, [h('span', { class: 'tag', text: rankName }), elementTag(element)]),
+    const elName = (e) => (C.elements[e] || { name: e }).name;
+    const side = (cls, art, name, tag) => h('div', { class: 'hyside ' + cls }, [
+      h('div', { class: 'hyart' }, [art]),
+      h('div', { class: 'hyplate' }, [h('b', { class: 'hyname', text: name }), h('span', { class: 'hytag', text: tag })]),
     ]);
-    const chips = (list) => list.map((d) => h('span', { class: 'vschip ' + (d.d > 0 ? 'ok' : 'bad') }, [up(d.st) + ' ', h('b', { class: 'num', text: (d.d > 0 ? '+' : '') + num(Math.round(d.d)) })]));
     const anim = !p.intro.drawn && !reducedMotion();   // the entrance plays once, not again on a re-render (a speed change)
     p.intro.drawn = true;
-    const root = h('div', { class: 'vsintro' + (anim ? ' anim' : ''), 'data-id': 'fight-intro', 'data-ms': String((INTRO_MS.vs + INTRO_MS.go) / speed),
+    const root = h('div', { class: 'hype' + (anim ? ' anim' : ''), 'data-id': 'fight-intro', 'data-ms': String((INTRO_MS.vs + INTRO_MS.go) / speed),
       role: 'group', 'aria-label': 'Rank ' + m.opp.letter + ' fight: ' + m.you.name + ' versus ' + m.opp.name, tabindex: '-1' }, [
-      h('div', { class: 'vshead' }, [h('span', { text: 'Rank ' + m.opp.letter + ' fight' }), h('button', { class: 'linkish', type: 'button', 'data-act': 'intro-skip', text: 'Skip intro ▸' })]),
-      h('div', { class: 'vsstage' }, [
-        side('you', youArt, m.you.name, m.you.rank, m.you.element),
-        h('div', { class: 'vsmark', 'data-id': 'intro-vs', 'aria-live': 'polite', text: 'VS' }),
-        side('foe', oppArt, m.opp.name, 'Rank ' + m.opp.letter, m.opp.element),
-      ]),
-      h('div', { class: 'vsinfo' }, [
-        m.element ? h('div', { class: 'vsel ' + m.element.cls, 'data-id': 'intro-element', text: m.element.text }) : null,
-        m.edges.length ? h('div', { class: 'vsrow', 'data-id': 'intro-edges' }, [h('span', { class: 'small muted', text: 'You lead' }), ...chips(m.edges)]) : null,
-        m.gaps.length ? h('div', { class: 'vsrow', 'data-id': 'intro-gaps' }, [h('span', { class: 'small muted', text: 'You trail' }), ...chips(m.gaps)]) : null,
-        h('div', { class: 'vsrow', 'data-id': 'intro-skills' }, [h('span', { class: 'small muted', text: 'Their skills' }),
-          ...(m.opp.skills.length ? m.opp.skills.map((id) => h('span', { class: 'tag', text: C.skillTips[id] ? C.skillTips[id].title : id })) : [h('small', { class: 'muted', text: 'Basic attacks only' })])]),
-        stakesLine(m),
-      ]),
+      h('div', { class: 'hyhalf you', 'aria-hidden': 'true' }), h('div', { class: 'hyhalf foe', 'aria-hidden': 'true' }), h('div', { class: 'hyslash', 'aria-hidden': 'true' }),
+      h('div', { class: 'hybanner', text: 'Rank ' + m.opp.letter + ' fight' }),
+      side('you', sprite(m.you.species, m.you.apex), m.you.name, m.you.rank + ' · ' + elName(m.you.element)),
+      h('div', { class: 'hymark' }, [h('span', { 'data-id': 'intro-vs', 'aria-live': 'polite', text: 'VS' })]),
+      side('foe', oppSprite(m.opp), m.opp.name, 'Rank ' + m.opp.letter + ' · ' + elName(m.opp.element)),
+      h('div', { class: 'hyfoot' }, [h('button', { class: 'linkish', type: 'button', 'data-act': 'intro-skip', text: 'Tap to skip ▸' }), speedToggle()]),
     ]);
     // a tap anywhere ends it, except on the speed buttons (they set the speed: 2x reschedules the intro, Skip ends the fight)
     root.addEventListener('click', (e) => { if (!e.target.closest('.speed')) endIntro(); });
     root.addEventListener('keydown', (e) => {   // Escape anywhere; Enter or Space on the intro itself (a focused button keeps its own)
       if (e.key === 'Escape' || (e.target === root && (e.key === 'Enter' || e.key === ' '))) { e.preventDefault(); endIntro(); }
     });
-    root.append(speedToggle());
     modal.append(root);
     paintIntroPhase(root, p.intro.phase);
     p.dom = { intro: root };
@@ -824,8 +820,10 @@
 
   // The unit panels: name, HP bar, and a square tile per active skill (issue #85) whose grey overlay shows the cooldown left and
   // recedes downward as it runs out; a tower fight adds each unit's entropy gauge and next vent. A unit's own `name` (tower
-  // fights) wins over you/foe. Returns the element and refs for repainting.
-  function fightUnits(f, you, foe, upto, art) {
+  // fights) wins over you/foe. `stage` (a rank fight, 2026-11-02) draws the two monsters big and face to face under their names and
+  // HP, with a damage number over the one hit, and moves the skill tiles to rows of their own (skillRows) under the stage.
+  // Returns the element, the skill rows (stage only) and refs for repainting.
+  function fightUnits(f, you, foe, upto, art, stage) {
     const refs = [], tower = f.entropyCap > 0;
     const root = h('div', { class: 'units' + (tower ? ' tower' : '') }, f.units.map((u, k) => {
       const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + (tower ? k : u.side) + '-' + si, 'data-kind': sk.kind }, [
@@ -841,22 +839,42 @@
         entropy = { bar: bar(0, f.entropyCap, '', 'ent'), vent: h('span', { class: 'vent small tipword', 'data-id': 'vent-' + k }) };
         entropy.row = h('div', { class: 'entrow', 'data-id': 'entropy-' + k }, [h('span', { class: 'small muted tipword', text: 'EN', ...towerTip('entropy') }), entropy.bar, entropy.vent]);
       }
-      const el = h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + (tower ? k : u.side) }, [
-        art ? h('div', { class: 'row unithead' }, [art(u), h('b', { text: u.name || (u.side ? foe : you) })]) : h('b', { text: u.name || (u.side ? foe : you) }),
-        hpBar, entropy ? entropy.row : null,
-        upto === null ? h('small', { class: 'muted', text: Math.round(u.damage) + ' dmg · ' + u.crits + ' crits · ' + u.evades + ' dodges' }) : null,
-        h('div', { class: 'skills', 'data-id': 'skills-' + (tower ? k : u.side) }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]),
-      ]);
-      refs.push({ u: u, el: el, hpBar: hpBar, chips: chips, entropy: entropy });
+      const name = u.name || (u.side ? foe : you);
+      const skills = h('div', { class: 'skills', 'data-id': 'skills-' + (tower ? k : u.side) }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]);
+      const totals = upto === null ? h('small', { class: 'muted', text: Math.round(u.damage) + ' dmg · ' + u.crits + ' crits · ' + u.evades + ' dodges' }) : null;
+      const float = stage ? h('div', { class: 'dmgfloat', 'aria-hidden': 'true' }) : null;
+      const el = stage
+        ? h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + u.side }, [h('b', { class: 'uname', text: name }), hpBar, totals, h('div', { class: 'uart' }, [art(u), float])])
+        : h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + (tower ? k : u.side) }, [
+          art ? h('div', { class: 'row unithead' }, [art(u), h('b', { text: name })]) : h('b', { text: name }),
+          hpBar, entropy ? entropy.row : null, totals, skills,
+        ]);
+      refs.push({ u: u, el: el, hpBar: hpBar, chips: chips, entropy: entropy, float: float, skills: skills });
       return el;
     }));
+    const skillRows = stage ? h('div', { class: 'skillrows' }, refs.map((r) => h('div', { class: 'skillrow' + (r.u.side ? ' foe' : '') }, [
+      h('span', { class: 'who', text: r.u.side ? 'Foe' : 'You' }), r.skills]))) : null;
     paintUnits(refs, unitsAt(f, upto), null, f.entropyCap);
-    return { root: root, refs: refs };
+    return { root: root, refs: refs, skillRows: skillRows };
+  }
+  // What floats over a unit the current action lands on (stage only): the damage, a heal, or a dodge.
+  function floatOf(x) {
+    if (!x || x.event) return null;
+    if (x.evaded) return { text: 'Dodged', cls: 'miss' };
+    if (x.kind === 'heal') return x.amount > 0 ? { text: '+' + Math.round(x.amount), cls: 'heal' } : null;
+    if (x.kind === 'shield' || x.kind === 'buff' || x.kind === 'debuff' || x.kind === 'passive' || x.kind === 'taunt') return null;
+    return x.amount > 0 ? { text: '-' + Math.round(x.amount), cls: x.crit ? 'crit' : 'dmg' } : null;
   }
   function paintUnits(refs, now, x, cap) {
     refs.forEach((r, k) => {
       const hp = now[k].hp, sh = now[k].sh || 0, max = r.u.maxHp;
       r.el.hidden = !now[k].here;
+      if (r.float) {   // the stage: the actor lunges, the one hit recoils, and the number floats up (a new node restarts its animation)
+        const fl = x && x.target === r.u.id ? floatOf(x) : null;
+        r.el.classList.toggle('acting', !!x && x.actor === r.u.id && x.target !== r.u.id);
+        r.el.classList.toggle('hit', !!fl && x.actor !== r.u.id && (fl.cls === 'dmg' || fl.cls === 'crit'));
+        r.float.replaceChildren(...(fl ? [h('span', { class: fl.cls, text: fl.text })] : []));
+      }
       r.hpBar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (hp / max) * 100)) + '%';
       // the shield is a band along the bar's bottom, sized against max HP (a shield can exceed what HP is missing)
       const shEl = r.hpBar.querySelector('.shield'), shown = Math.round(sh) > 0;
@@ -903,19 +921,12 @@
   // How a fight is labelled: the rank fight's monster and rank opponent, or a tower floor's units by their own names.
   function rankView(f, s) {
     const you = speciesDef(s.species).name, foe = f.opponent.name;
-    return { you: you, foe: foe, title: 'Rank ' + f.opponent.letter + ' fight: ' + foe, art: rankArt(f, s),
+    return { stage: true, you: you, foe: foe, title: 'Rank ' + f.opponent.letter + ' fight: ' + foe, art: rankArt(f, s),
       name: (id) => (id === 'monster' ? you : foe), ours: (id) => id === 'monster',
       line: (x) => { const l = actionLine(x, foe, you); return { cls: l.you ? 'you' : 'foe', text: l.text }; } };
   }
   // The unit panels' sprites in a rank fight: the monster's and the opponent's (BRIDGE.md, fight.opponent).
-  function rankArt(f, s) {
-    return (u) => {
-      if (u.side) return oppSprite(f.opponent, 'sprite small');
-      const cv = sprite(s.species, s.apex);
-      cv.classList.add('small');
-      return cv;
-    };
-  }
+  const rankArt = (f, s) => (u) => (u.side ? oppSprite(f.opponent) : sprite(s.species, s.apex));
   function towerView(f) {
     const nameOf = {}, sideOf = {};
     f.units.forEach((u) => { nameOf[u.id] = u.name; sideOf[u.id] = u.side; });
@@ -926,7 +937,7 @@
   // The playback view. While ui.play runs it shows the action reached; otherwise (Skip, or the tower floor once played) the end.
   function fightPlayView(modal, f, v, extra) {
     const playing = ui.play && ui.play.f === f;
-    const units = fightUnits(f, v.you, v.foe, playing ? ui.play.i : null, v.art);
+    const units = fightUnits(f, v.you, v.foe, playing ? ui.play.i : null, v.art, !!v.stage);
     const now = h('div', { class: 'now', 'data-id': 'fight-now' });
     const progress = h('span', { class: 'small muted num', 'data-id': 'fight-progress' });
     const recent = h('ul', { class: 'alog' });
@@ -936,7 +947,8 @@
       modal.append(h('h2', { text: v.title, 'data-id': 'fight-play', 'data-hash': f.hash }),
         h('div', { class: 'row between' }, [progress, h('div', { class: 'corrow', 'data-id': 'corruption' }, [h('span', { class: 'small muted tipword', text: tipName('corruption'), ...towerTip('corruption') }), corruption])]));
     } else modal.append(h('div', { class: 'row between' }, [h('h2', { text: v.title, 'data-id': 'fight-play' }), progress]));
-    modal.append(units.root, now, speedToggle(), h('h3', { text: 'Latest' }), recent);
+    if (v.stage) modal.append(h('div', { class: 'fstage' }, [units.root, now]), units.skillRows, speedToggle(), h('h3', { text: 'Latest' }), recent);
+    else modal.append(units.root, now, speedToggle(), h('h3', { text: 'Latest' }), recent);
     if (extra) modal.append(extra);
     const dom = { root: units.root, units: units, now: now, progress: progress, recent: recent, corruption: corruption, v: v };
     if (playing) { ui.play.dom = dom; updatePlay(); } else paintPlay(f, null, dom);

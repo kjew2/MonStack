@@ -377,15 +377,17 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   });
   check(fcard.due && fcard.focus === '1' && fcard.inView, 'the fight card pulses and is scrolled into view when the actions run out: ' + JSON.stringify(fcard));
   check(/^Win: promote to Rank D, \+\d+ SP\. Lose: rematch next cycle\.$/.test(fcard.stakes), 'the fight card states the stakes: ' + fcard.stakes);
-  // ---- the versus intro (issue #126): both monsters, the matchup and the stakes, then "Fight!"; a tap ends it at once
+  const cardEl = await page.evaluate(() => (document.querySelector('[data-id=fight-card] [data-id=fight-element]') || {}).textContent || '');
+  check(!cardEl || /beat/.test(cardEl), 'the fight card states any element edge: ' + (cardEl || 'none'));
+  // ---- the intro (issue #126; 2026-11-02 pure hype): both monsters by name, rank and element, then "Fight!"; a tap ends it at once
   await act('fight').click();
   const intro = await page.evaluate(() => {
     const q = (s) => document.querySelector(s), all = (s) => [...document.querySelectorAll(s)].map((e) => e.textContent);
     const r = q('[data-id=fight-intro]');
     if (!r) return null;
-    const out = { ms: r.dataset.ms, vs: q('[data-id=intro-vs]').textContent, names: all('.vsname'), tags: all('.vstags .tag'), sprites: r.querySelectorAll('.vsart .sprite').length,
-      chips: r.querySelectorAll('.vschip').length, skills: r.querySelectorAll('[data-id=intro-skills] .tag').length, stakes: r.querySelector('[data-id=fight-stakes]').textContent,
-      skip: !!q('[data-act=intro-skip]'), element: (q('[data-id=intro-element]') || {}).textContent || '', me: q('[data-id=monster-name]').textContent,
+    const out = { ms: r.dataset.ms, vs: q('[data-id=intro-vs]').textContent, names: all('.hyname'), tags: all('.hytag'), sprites: r.querySelectorAll('.hyart .sprite').length,
+      matchup: !!r.querySelector('[data-id=fight-stakes], .vsel, .tag'), bleed: q('#modal').classList.contains('bleed'),
+      skip: !!q('[data-act=intro-skip]'), me: q('[data-id=monster-name]').textContent,
       playing: !!q('[data-id=fight-play]'), result: !!q('[data-act=fight-continue]') };
     r.click();   // a tap anywhere on it
     out.after = { intro: !!q('[data-id=fight-intro]'), play: !!q('[data-id=fight-play]') };
@@ -395,14 +397,17 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(intro.ms === '2000', 'at 1x the intro lasts about 2 seconds: ' + intro.ms + ' ms');
   check(intro.names.length === 2 && intro.names[0] === intro.me && intro.names[1] === rungs[5].name && intro.sprites === 2,
     'it shows both monsters face to face by name with their sprites: ' + intro.names.join(' vs '));
-  check(intro.tags.length === 4 && intro.tags[0] === 'Rank E' && intro.tags[2] === 'Rank E', 'with their ranks and element tags: ' + intro.tags.join(', '));
-  check(intro.chips >= 1 && intro.chips <= 4 && intro.skills >= 1, 'the matchup: the biggest stat edges and gaps (' + intro.chips + ') and the opponent\'s skills (' + intro.skills + ')' + (intro.element ? '; ' + intro.element : ''));
-  check(intro.stakes === fcard.stakes, 'and the stakes: ' + intro.stakes);
+  check(intro.tags.length === 2 && intro.tags.every((t) => /^Rank E · \S/.test(t)), 'with their ranks and elements: ' + intro.tags.join(', '));
+  check(!intro.matchup && intro.bleed, 'it is pure hype, edge to edge: no matchup or stakes (the fight card has them)');
   check(!intro.after.intro && intro.after.play, 'a tap ends the intro at once and the playback starts');
   check(await page.locator('[data-id=fight-play]').isVisible(), 'the fight plays back instead of showing the result at once');
   check((await text('[data-id=fight-play]')).includes(rungs[5].name) && (await page.locator('[data-id="unit-1"] canvas.sprite').count()) === 1,
     'the playback names the opponent and shows its sprite: ' + (await text('[data-id=fight-play]')));
   check((await act('fight-continue').count()) === 0, 'no result while it plays');
+  check((await page.locator('.fstage .uart .sprite').count()) === 2 && (await page.locator('.skillrows [data-id=skills-0]').count()) === 1,
+    'the fight plays on a stage: both monsters face to face, the skill tiles in rows below');
+  const floated = await (await page.waitForFunction(() => { const e = document.querySelector('.dmgfloat span'); return e && e.textContent; }, null, { timeout: 15000 })).jsonValue();
+  check(/^([-+]\d+|Dodged)$/.test(floated), 'a hit floats its number over the monster it lands on: ' + floated);
   await page.waitForFunction(() => /\S/.test((document.querySelector('[data-id=fight-now] small') || {}).textContent || ''), null, { timeout: 5000 });
   const now1 = await text('[data-id=fight-now]');
   check(/\S/.test(await text('[data-id=fight-now] b')) && !/Fight!/.test(now1), 'the current action is shown: ' + now1.replace(/\s+/g, ' '));
@@ -416,6 +421,10 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await page.locator('[data-id=fight-title]').isVisible(), 'Skip jumps to the result');
   check((await speedSaved()) === 'skip', 'Skip is remembered');
   check((await page.locator('[data-id^="unit-"] .bar').count()) === 2, 'the result shows both units\' final HP');
+  const fstamp = await page.evaluate(() => ({ text: (document.querySelector('.fstage .stamp') || {}).textContent, down: document.querySelectorAll('.fstage .unit.down').length,
+    title: document.querySelector('[data-id=fight-title]').textContent }));
+  check(/^(Victory!|Defeat|Time up)$/.test(fstamp.text) && (fstamp.text === 'Time up' ? fstamp.down === 0 : fstamp.down === 1) && (fstamp.text === 'Victory!') === /^Victory/.test(fstamp.title),
+    'the result stays on the stage: a stamp and the loser knocked down: ' + JSON.stringify(fstamp));
   // ---- skill point gains (issue #86): the fight starts the next cycle, so it pays SP_PER_CYCLE (and SP_PER_WIN if won)
   const badge = await text('[data-id=fight-sp]');
   check(/^\+\d+ SP/.test(badge) && /skill points: new cycle/.test(badge), 'the fight result shows its SP reward as a badge: ' + badge.replace(/\s+/g, ' '));
