@@ -75,6 +75,8 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
+/* No double-tap zoom mid-play (issue #128). touch-action does not inherit and scroll containers reset it, so set it on every element; pinch-zoom and scrolling still work. */
+*, *::before, *::after { touch-action: manipulation; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.35 var(--font-body); -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
 /* A game, not a page (issue #123): a long press or a drag selects no text and brings up no copy or look-up callout; real text fields still take typing.
    Set on every element, not only body: iOS Safari still selected text that merely inherited none. The selectstart guard below backs it up. */
