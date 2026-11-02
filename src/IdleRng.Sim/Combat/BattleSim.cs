@@ -83,8 +83,8 @@ namespace IdleRng.Sim.Combat
             string at = $"{side}[{slot}]";
             if (f == null) throw new ArgumentException($"{at} is null", side);
             if (string.IsNullOrEmpty(f.Id)) throw new ArgumentException($"{at} needs an id", side);
-            if (f.Stats == null || f.Skills == null || f.Triggers == null || f.Rules == null || f.Phases == null)
-                throw new ArgumentException($"{at} ({f.Id}): Stats, Skills, Triggers, Rules and Phases must not be null", side);
+            if (f.Stats == null || f.Skills == null || f.Triggers == null || f.Rules == null || f.Phases == null || f.Gambits == null)
+                throw new ArgumentException($"{at} ({f.Id}): Stats, Skills, Triggers, Rules, Phases and Gambits must not be null", side);
             foreach (var id in StatIds.Trained)
             {
                 double v = f.Stats.Get(id);
@@ -99,6 +99,33 @@ namespace IdleRng.Sim.Combat
             foreach (var r in f.Rules)
                 if (!RuleModifiers.IsKnown(r)) throw new ArgumentException($"{at} ({f.Id}): unknown rule modifier '{r}'", side);
             ValidatePhases(rules, f, at, side);
+            ValidateGambits(f, at, side);
+        }
+
+        /// <summary>Each rule: a known condition with a value in range, one of the unit's active skills or "basic", a known target.</summary>
+        static void ValidateGambits(Fighter f, string at, string side)
+        {
+            for (int g = 0; g < f.Gambits.Count; g++)
+            {
+                var rule = f.Gambits[g];
+                string where = $"{at} ({f.Id}) gambit {g}";
+                if (rule == null) throw new ArgumentException($"{where} is null", side);
+                if (!GambitConditions.IsKnown(rule.When)) throw new ArgumentException($"{where}: unknown condition '{rule.When}'", side);
+                if (GambitConditions.TakesFraction(rule.When) && !(rule.Value > 0 && rule.Value <= 1))
+                    throw new ArgumentException($"{where}: '{rule.When}' needs an HP fraction in (0, 1]", side);
+                if (GambitConditions.TakesCount(rule.When) && !(rule.Value >= 1 && rule.Value <= int.MaxValue && rule.Value == Math.Floor(rule.Value)))
+                    throw new ArgumentException($"{where}: '{rule.When}' needs a whole count of at least 1", side);
+                if (!GambitTargets.IsKnown(rule.Target)) throw new ArgumentException($"{where}: unknown target '{rule.Target}'", side);
+                if (rule.Skill != GambitRule.Basic && GambitSkill(f.Skills, rule.Skill) < 0)
+                    throw new ArgumentException($"{where}: '{rule.Skill}' is not one of the unit's active skills", side);
+            }
+        }
+
+        /// <summary>The index of the first active (non-passive) skill with this id, or -1.</summary>
+        static int GambitSkill(List<CombatSkill> skills, string id)
+        {
+            for (int i = 0; i < skills.Count; i++) if (skills[i].Id == id && skills[i].Kind != SkillKind.Passive) return i;
+            return -1;
         }
 
         static void ValidatePhases(FightRules rules, Fighter f, string at, string side)
@@ -362,24 +389,123 @@ namespace IdleRng.Sim.Combat
             if (!u.Alive) return;
             for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
             var skills = u.Source.Skills;
-            // Rescue pass first (heal, shield), then everything else; each pass is in list order.
+            var book = u.Source.Gambits;
+            if (book.Count > 0 && ActGambit(r, s, u, rng, onAction)) return;
+            // Rescue pass first (heal, shield), then everything else; each pass is in list order. A skill some gambit names is
+            // used only by its rules (specs/28 section 4.3).
             for (int pass = 0; pass < 2; pass++)
                 for (int i = 0; i < skills.Count; i++)
                 {
                     var sk = skills[i];
                     if ((sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield) != (pass == 0)) continue;
                     if (sk.Kind == SkillKind.Passive || u.Cooldowns[i] > 0 || !Useful(r, s, u, sk)) continue;
-                    u.Cooldowns[i] = sk.Cooldown;
-                    Use(r, s, u, sk, rng, onAction, triggered: false);
-                    if (u.Alive && Has(u, RuleModifiers.EchoCast)
-                        && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield))
-                    {
-                        Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
-                        GainEntropy(r, s, u, r.Tower?.EntropyPerEcho ?? 0, onAction);
-                    }
+                    if (book.Count > 0 && Named(book, sk.Id)) continue;
+                    Cast(r, s, u, i, rng, onAction);
                     return;
                 }
             BasicAttack(r, s, u, rng, onAction);
+        }
+
+        /// <summary>Use the unit's skill at index <paramref name="i"/> as its action: start its cooldown, use it, echo it.</summary>
+        static void Cast(FightRules r, FightState s, FightUnit u, int i, IRandomSource rng, Action<FightAction> onAction)
+        {
+            var sk = u.Source.Skills[i];
+            u.Cooldowns[i] = sk.Cooldown;
+            Use(r, s, u, sk, rng, onAction, triggered: false);
+            if (u.Alive && Has(u, RuleModifiers.EchoCast)
+                && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield))
+            {
+                Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
+                GainEntropy(r, s, u, r.Tower?.EntropyPerEcho ?? 0, onAction);
+            }
+        }
+
+        // ------------------------------------------------------------------ gambits (specs/28 section 4)
+
+        /// <summary>
+        /// The first rule whose condition holds and whose action can go now (the skill is ready and has something to do) is the
+        /// unit's action: logged as a "gambit" event (Amount = the rule's index), then used with the rule's target pick. False when
+        /// no rule fires: the default AI acts instead.
+        /// </summary>
+        static bool ActGambit(FightRules r, FightState s, FightUnit u, IRandomSource rng, Action<FightAction> onAction)
+        {
+            var book = u.Source.Gambits;
+            for (int g = 0; g < book.Count; g++)
+            {
+                var rule = book[g];
+                if (!GambitHolds(s, u, rule)) continue;
+                int i = -1;
+                if (rule.Skill != GambitRule.Basic)
+                {
+                    i = GambitSkill(u.Source.Skills, rule.Skill);
+                    if (i < 0 || u.Cooldowns[i] > 0 || !CanGo(r, s, u, u.Source.Skills[i])) continue;
+                }
+                onAction?.Invoke(new FightAction(u.Id, FightAction.GambitEvent, null, g));
+                u.PickRule = rule.Target;
+                if (i < 0) BasicAttack(r, s, u, rng, onAction);
+                else Cast(r, s, u, i, rng, onAction);
+                u.PickRule = null;
+                return true;
+            }
+            return false;
+        }
+
+        static bool GambitHolds(FightState s, FightUnit u, GambitRule rule)
+        {
+            switch (rule.When)
+            {
+                case GambitConditions.Always: return true;
+                case GambitConditions.SelfHpBelow: return u.Hp / u.MaxHp < rule.Value;
+                case GambitConditions.AllyHpBelow:
+                    foreach (var a in s.Units) if (a.Side == u.Side && a.Alive && a.Hp / a.MaxHp < rule.Value) return true;
+                    return false;
+                case GambitConditions.EnemyHpBelow:
+                    foreach (var e in s.Units) if (e.Side != u.Side && e.Alive && e.Hp / e.MaxHp < rule.Value) return true;
+                    return false;
+                case GambitConditions.EnemiesAtLeast: return LivingOnSide(s, 1 - u.Side) >= rule.Value;
+                case GambitConditions.FirstActions: return u.Tally.Actions <= rule.Value;
+                default: return false;
+            }
+        }
+
+        /// <summary>
+        /// Whether a skill a rule names has something to do: the rule's condition replaces the default AI's timing (a heal needs
+        /// only a hurt target, a shield or damage skill a living enemy), but a taunt, buff or debuff is not cast where it would
+        /// change nothing, exactly as the default AI checks it.
+        /// </summary>
+        static bool CanGo(FightRules r, FightState s, FightUnit u, CombatSkill sk)
+        {
+            switch (sk.Kind)
+            {
+                case SkillKind.Damage:
+                case SkillKind.Shield: return AnyEnemy(s, u);
+                case SkillKind.Heal:
+                    if (sk.Target != SkillTarget.LowestAlly && sk.Target != SkillTarget.AllAllies) return u.Hp < u.MaxHp;
+                    foreach (var a in s.Units) if (a.Side == u.Side && a.Alive && a.Hp < a.MaxHp) return true;
+                    return false;
+                default: return Useful(r, s, u, sk);
+            }
+        }
+
+        static bool Named(List<GambitRule> book, string skillId)
+        {
+            foreach (var rule in book) if (rule.Skill == skillId) return true;
+            return false;
+        }
+
+        /// <summary>A gambit's pick among <paramref name="list"/> by HP fraction (lowest slot on a tie), or null for "auto".</summary>
+        static FightUnit GambitPick(List<FightUnit> list, string pick)
+        {
+            if (pick == null || pick == GambitTargets.Auto || list.Count == 0) return null;
+            bool lowest = pick == GambitTargets.LowestHp;
+            FightUnit best = null;
+            foreach (var e in list)
+            {
+                if (best == null) { best = e; continue; }
+                double f = e.Hp / e.MaxHp, b = best.Hp / best.MaxHp;
+                if (lowest ? f < b : f > b) best = e;
+            }
+            return best;
         }
 
         /// <summary>Basic attack: BasicAttackPower x the higher of STR and INT; magical when INT is higher.</summary>
@@ -674,12 +800,17 @@ namespace IdleRng.Sim.Combat
             return false;
         }
 
-        /// <summary>A taunting enemy (lowest slot) if any; else a random living enemy (one draw).</summary>
+        /// <summary>
+        /// A taunting enemy (lowest slot) if any; else the acting gambit's pick (specs/28 section 4.2); else a random living enemy
+        /// (one draw).
+        /// </summary>
         static FightUnit PickEnemy(FightState s, FightUnit u, IRandomSource rng)
         {
             foreach (var e in s.Units) if (e.Side != u.Side && e.Alive && e.TauntTicks > 0) return e;
             var list = Enemies(s, u);
             if (list.Count == 0) return null;
+            var picked = GambitPick(list, u.PickRule);
+            if (picked != null) return picked;
             if (list.Count == 1 || rng == null) return list[0];
             return list[Math.Min(list.Count - 1, (int)(rng.NextDouble() * list.Count))];
         }
@@ -694,6 +825,8 @@ namespace IdleRng.Sim.Combat
             foreach (var e in s.Units) if (e.Side != u.Side && e.Alive && !HasEffectFrom(e, source)) list.Add(e);
             if (list.Count == 0) return PickEnemy(s, u, rng);
             foreach (var e in list) if (e.TauntTicks > 0) return e;
+            var picked = GambitPick(list, u.PickRule);
+            if (picked != null) return picked;
             if (list.Count == 1 || rng == null) return list[0];
             return list[Math.Min(list.Count - 1, (int)(rng.NextDouble() * list.Count))];
         }
@@ -914,7 +1047,7 @@ namespace IdleRng.Sim.Combat
                 u.Source = new Fighter
                 {
                     Id = u.Source.Id, Element = u.Source.Element, Stats = u.Source.Stats, Skills = skills,
-                    Triggers = u.Source.Triggers, Rules = u.Source.Rules, Phases = u.Source.Phases,
+                    Triggers = u.Source.Triggers, Rules = u.Source.Rules, Phases = u.Source.Phases, Gambits = u.Source.Gambits,
                 };
                 foreach (var sk in p.AddSkills)
                     if (sk.Kind == SkillKind.Passive && u.Alive) Use(r, s, u, sk, rng, onAction, triggered: true);
@@ -941,10 +1074,7 @@ namespace IdleRng.Sim.Combat
             return false;
         }
 
-        static Fighter WithId(Fighter f, string id) => new Fighter
-        {
-            Id = id, Element = f.Element, Stats = f.Stats, Skills = f.Skills, Triggers = f.Triggers, Rules = f.Rules, Phases = f.Phases,
-        };
+        static Fighter WithId(Fighter f, string id) => f.WithId(id);
 
         // ------------------------------------------------------------------ formulas (specs/16 sections 3 and 5.3)
         // The fight uses these, and so do the stat tooltips (BattleText), so what the player reads is what the fight does.

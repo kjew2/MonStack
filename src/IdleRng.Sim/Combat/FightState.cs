@@ -72,6 +72,12 @@ namespace IdleRng.Sim.Combat
 
         public bool Alive => Hp > 0;
 
+        /// <summary>
+        /// The target pick of the gambit rule acting now (GambitTargets), or null. Set only for the length of one action, so it is
+        /// not part of the fight's state and is not hashed.
+        /// </summary>
+        public string PickRule { get; set; }
+
         // ---- tower fields (specs/21 section 3), all zero outside tower fights
 
         /// <summary>Entropy gauge, 0 to the cap.</summary>
@@ -209,6 +215,8 @@ namespace IdleRng.Sim.Combat
         public const string StaggerEvent = RulePrefix + RuleModifiers.WailStagger;
         /// <summary>night_feast after a hit: Amount is the unit's STR bonus plus damage-dealt bonus now.</summary>
         public const string FeastEvent = RulePrefix + RuleModifiers.NightFeast;
+        /// <summary>A gambit rule fired and the unit's action follows (specs/28 section 4); Amount is the rule's index, from 0.</summary>
+        public const string GambitEvent = "gambit";
         /// <summary>echo_cast's mirror twin took a hit for the unit (logged after the evaded hit); Amount is the decoys left.</summary>
         public const string DecoyEvent = RulePrefix + RuleModifiers.EchoCast;
 
@@ -216,8 +224,8 @@ namespace IdleRng.Sim.Combat
         /// Null for an ordinary action. Otherwise a rule modifier's event ("rule:&lt;id&gt;": <see cref="TideEvent"/>,
         /// <see cref="DrainEvent"/>, <see cref="DoubleTurnEvent"/>, <see cref="RebirthEvent"/>, <see cref="StaggerEvent"/>, <see cref="FeastEvent"/>) or a tower event: "phase:&lt;kind&gt;" (a boss entered a phase),
         /// "vent:recoil|stun|enrage|convert" (a unit's entropy gauge vented), "check_failed" (a shield_check shield expired unbroken),
-        /// "channel_broken" or "channel_strike" (a channel was interrupted or landed). Actor is the unit; Amount is damage, heal or
-        /// shield where there is one.
+        /// "channel_broken" or "channel_strike" (a channel was interrupted or landed), or "gambit" (<see cref="GambitEvent"/>). Actor
+        /// is the unit; Amount is damage, heal or shield where there is one.
         /// </summary>
         public string Event { get; }
 

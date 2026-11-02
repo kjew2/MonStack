@@ -55,3 +55,14 @@
   B0 b_shade  hp   2108.00/  2600.00 act   8 dealt    7730.00 taken     702.00 heal      0.00 crit  2 evade  4 kill 2 counter  0
   B1 b_healer hp   2002.50/  3000.00 act   3 dealt     130.00 taken    1711.50 heal    924.00 crit  0 evade  0 kill 0 counter  0
   hash 85166f47311d1b6620d5ba9933e3530374f0364a3f21ee0efb44632297c9460e
+
+4v4 gambits vs default AI seed=9 outcome=SideBWon ticks=222
+  A0 a_tank   hp      0.00/  5200.00 act  12 dealt    6377.93 taken    8224.00 heal      0.00 crit  0 evade  1 kill 1 counter 10
+  A1 a_brawler hp      0.00/  3200.00 act   7 dealt     872.28 taken    4712.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A2 a_mage   hp      0.00/  2400.00 act  43 dealt   13030.29 taken    5970.00 heal      0.00 crit  6 evade  0 kill 1 counter  0
+  A3 a_healer hp      0.00/  3000.00 act  51 dealt    2497.66 taken    8796.00 heal  13902.00 crit  2 evade  0 kill 0 counter  0
+  B0 b_tank   hp      0.00/  5200.00 act   8 dealt    4340.99 taken    7132.00 heal      0.00 crit  3 evade  0 kill 1 counter 11
+  B1 b_brawler hp      0.00/  3200.00 act   9 dealt    2431.80 taken    4888.11 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  B2 b_mage   hp   1920.60/  2400.00 act  48 dealt   17558.15 taken    5817.43 heal      0.00 crit 13 evade  0 kill 2 counter  0
+  B3 b_healer hp   3000.00/  3000.00 act  51 dealt    3371.06 taken    4940.63 heal  13898.77 crit  5 evade  0 kill 1 counter  0
+  hash ca3b94cba7d8a7894166fc2b0d09cefa8469aa6b80394b7bf666c5b135f05d94
