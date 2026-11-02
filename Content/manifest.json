@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "6.0",
+  "content_version": "6.1",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -21,7 +21,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "e42ea6209b8a60873f884be389c31364e8db8923b81f0364b853d756e6da92e9"
+      "sha256": "5be1707aa26ef89d2b5d138e79198990714555591442cdce6605b48e772211a8"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -30,6 +30,14 @@
     "elements": {
       "file": "elements.json",
       "sha256": "e1e0657b38c0f66052178d5796abc118466300b94015717be638352de8804a25"
+    },
+    "endless_enemies": {
+      "file": "endless_enemies.json",
+      "sha256": "08902cb8d09a4c2d201e0e60f11a605d435843d7742be7028fe8549b04bd33ed"
+    },
+    "endless_shapes": {
+      "file": "endless_shapes.json",
+      "sha256": "07cb0886f2d9b68193aa058e13597eed0bf99462032538f326a51b7e549e7bf3"
     },
     "fight_ranks": {
       "file": "fight_ranks.json",
@@ -46,6 +54,10 @@
     "monster_skills": {
       "file": "monster_skills.json",
       "sha256": "bb24d204806f1dc3a4b1f3d07a48b7bada80938d18c0588945503d87ecf1ec5e"
+    },
+    "mutators": {
+      "file": "mutators.json",
+      "sha256": "cc7a5cffa95ceabaf1bcffc02ad8bbc0c1e6026fe46551ef5be69e2ae1d73574"
     },
     "rank_enemies": {
       "file": "rank_enemies.json",
@@ -65,7 +77,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "5af8382c6a77fd10e5baa037b8b812a9b0e45f3717f74f1d5ed54301df4fbb0d"
+      "sha256": "0988bdf1c74b734ca14d9ad9108b73c6517895c1efa7658dd86e251500768345"
     },
     "talents": {
       "file": "talents.json",
@@ -88,5 +100,5 @@
       "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "0b1664e2e7d4c02f9a38561dc038e763b0955f494f8f9a214228de0819fc2760"
+  "content_hash": "c31fcd700c216d7f1b41d68413cb2f46582279ae4c95031a9f2ee099c5826265"
 }

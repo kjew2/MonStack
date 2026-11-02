@@ -2021,6 +2021,110 @@
     {
       "key": "mskill.windfall.desc",
       "text": "Chase trait. On crit: +{power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "endless.ember_imp.name",
+      "text": "Ember Imp"
+    },
+    {
+      "key": "endless.mire_sprite.name",
+      "text": "Mire Sprite"
+    },
+    {
+      "key": "endless.bastion_golem.name",
+      "text": "Bastion Golem"
+    },
+    {
+      "key": "endless.iron_warden.name",
+      "text": "Iron Warden"
+    },
+    {
+      "key": "endless.razor_fang.name",
+      "text": "Razor Fang"
+    },
+    {
+      "key": "endless.blaze_hound.name",
+      "text": "Blaze Hound"
+    },
+    {
+      "key": "endless.storm_adept.name",
+      "text": "Storm Adept"
+    },
+    {
+      "key": "endless.tide_seer.name",
+      "text": "Tide Seer"
+    },
+    {
+      "key": "endless.moss_shaman.name",
+      "text": "Moss Shaman"
+    },
+    {
+      "key": "endless.dawn_priest.name",
+      "text": "Dawn Priest"
+    },
+    {
+      "key": "endless.hex_weaver.name",
+      "text": "Hex Weaver"
+    },
+    {
+      "key": "endless.war_drummer.name",
+      "text": "War Drummer"
+    },
+    {
+      "key": "endless.shape.swarm.name",
+      "text": "Swarm"
+    },
+    {
+      "key": "endless.shape.bulwark.name",
+      "text": "Bulwark"
+    },
+    {
+      "key": "endless.shape.fortress.name",
+      "text": "Fortress"
+    },
+    {
+      "key": "endless.shape.mixed.name",
+      "text": "Mixed"
+    },
+    {
+      "key": "endless.shape.skirmish.name",
+      "text": "Skirmish"
+    },
+    {
+      "key": "mutator.withering.name",
+      "text": "Withering"
+    },
+    {
+      "key": "mutator.shockwave.name",
+      "text": "Shockwave"
+    },
+    {
+      "key": "mutator.duelist.name",
+      "text": "Duelist"
+    },
+    {
+      "key": "mutator.blazing.name",
+      "text": "Blazing"
+    },
+    {
+      "key": "mutator.tidal.name",
+      "text": "Tidal"
+    },
+    {
+      "key": "mutator.haste.name",
+      "text": "Haste"
+    },
+    {
+      "key": "mutator.keen_edge.name",
+      "text": "Keen Edge"
+    },
+    {
+      "key": "mutator.early_rot.name",
+      "text": "Early Rot"
+    },
+    {
+      "key": "mutator.bulwarks.name",
+      "text": "Bulwarks"
     }
   ]
 }

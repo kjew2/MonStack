@@ -1,0 +1,55 @@
+# endless vectors, hash v1 content=6.1/c31fcd70
+
+season 0
+  floor  1 swarm    mire_sprite,ember_imp,ember_imp,ember_imp
+  floor  2 swarm    mire_sprite,mire_sprite,ember_imp,mire_sprite
+  floor  3 fortress bastion_golem,mire_sprite,ember_imp,mire_sprite
+  floor  4 bulwark  bastion_golem,moss_shaman,blaze_hound,storm_adept
+  floor  5 fortress bastion_golem,mire_sprite,mire_sprite,mire_sprite
+  floor  6 swarm    mire_sprite,mire_sprite,ember_imp,mire_sprite
+  floor  7 fortress iron_warden,mire_sprite,ember_imp,ember_imp
+  floor  8 fortress bastion_golem,mire_sprite,mire_sprite,mire_sprite
+  floor  9 swarm    mire_sprite,mire_sprite,mire_sprite,mire_sprite
+  floor 10 elite    apex_chimera,ember_imp,ember_imp,mire_sprite
+  floor 11 swarm    ember_imp,mire_sprite,mire_sprite,ember_imp
+  floor 12 mixed    razor_fang,tide_seer,dawn_priest,war_drummer
+  floor 13 fortress bastion_golem,ember_imp,ember_imp,ember_imp
+  floor 14 fortress iron_warden,ember_imp,mire_sprite,ember_imp
+  floor 15 bulwark  bastion_golem,dawn_priest,blaze_hound,storm_adept
+  floor 16 swarm    mire_sprite,mire_sprite,mire_sprite,mire_sprite
+  floor 17 skirmish blaze_hound,razor_fang,war_drummer,ember_imp
+  floor 18 swarm    mire_sprite,mire_sprite,ember_imp,ember_imp
+  floor 19 skirmish blaze_hound,blaze_hound,hex_weaver,mire_sprite
+  floor 20 elite    void_hydra,dawn_priest,blaze_hound,storm_adept
+  mutators keen_edge,shockwave,withering,blazing,haste
+  slime+drake+sprite+mandrake (default AI) focus seed=7: floor=35 capped=False stopped=fortress elites=3 vents=3
+    hash 54f859c196a0a248666d82bd982aaec3a9bac0e3c62f8beb9db005db8fcfca38
+  slime+drake+sprite+mandrake (rulebooks) focus seed=7: floor=29 capped=False stopped=bulwark elites=2 vents=1
+    hash 8511a1d0f7b0b097720e2736963614b6e603de47650594c328f854d31a15bb32
+
+season 2913
+  floor  1 fortress bastion_golem,mire_sprite,mire_sprite,ember_imp
+  floor  2 skirmish blaze_hound,blaze_hound,hex_weaver,mire_sprite
+  floor  3 fortress iron_warden,ember_imp,ember_imp,ember_imp
+  floor  4 swarm    ember_imp,ember_imp,mire_sprite,mire_sprite
+  floor  5 mixed    blaze_hound,storm_adept,moss_shaman,war_drummer
+  floor  6 skirmish razor_fang,razor_fang,war_drummer,mire_sprite
+  floor  7 fortress iron_warden,mire_sprite,ember_imp,ember_imp
+  floor  8 fortress bastion_golem,ember_imp,ember_imp,mire_sprite
+  floor  9 swarm    mire_sprite,ember_imp,mire_sprite,ember_imp
+  floor 10 elite    apex_chimera,tide_seer,dawn_priest,hex_weaver
+  floor 11 mixed    razor_fang,storm_adept,dawn_priest,hex_weaver
+  floor 12 fortress bastion_golem,ember_imp,mire_sprite,ember_imp
+  floor 13 swarm    mire_sprite,ember_imp,mire_sprite,mire_sprite
+  floor 14 swarm    mire_sprite,mire_sprite,ember_imp,mire_sprite
+  floor 15 fortress iron_warden,ember_imp,mire_sprite,mire_sprite
+  floor 16 fortress bastion_golem,mire_sprite,mire_sprite,mire_sprite
+  floor 17 bulwark  bastion_golem,moss_shaman,blaze_hound,storm_adept
+  floor 18 swarm    mire_sprite,ember_imp,mire_sprite,ember_imp
+  floor 19 bulwark  bastion_golem,moss_shaman,blaze_hound,storm_adept
+  floor 20 elite    void_hydra,mire_sprite,ember_imp,ember_imp
+  mutators tidal,shockwave,duelist,keen_edge,withering
+  slime+drake+sprite+mandrake (default AI) focus seed=7: floor=33 capped=False stopped=fortress elites=3 vents=1
+    hash b1b204409c5a8af398296af1f2242b32a14eba11853d0262e0c68e90f2d48def
+  slime+drake+sprite+mandrake (rulebooks) focus seed=7: floor=32 capped=False stopped=bulwark elites=3 vents=0
+    hash 184f299d01374774ea761d1ca895db569c25ab9ea8604ada00a5341f31f70291

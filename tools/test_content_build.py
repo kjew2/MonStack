@@ -176,5 +176,69 @@ class RankEnemies(unittest.TestCase):
         self.assertIn("E043 rank_enemies[a]", self.errors([self.enemy("a", "e", weight=0.0), self.enemy("b", "d")])[0])
 
 
+class Endless(unittest.TestCase):
+    """validate_endless and parse_gambits (specs/28 section 7). Mirrors EndlessTests in the C# tests."""
+
+    STATS1 = {s: 1.0 for s in cb.STATS}
+    KEYS = {k: {"value": v} for k, v in {"MON_SIDE_SIZE": 4, "ENDLESS_BASE": 60.0, "ENDLESS_GROWTH": 1.05, "ENDLESS_BAND": 10,
+                                         "ENDLESS_ELITE_HP_MULT": 2.0, "ENDLESS_MAX_FLOORS": 500}.items()}
+
+    def tables(self):
+        return {
+            "elements": [{"id": "fire"}],
+            "monster_skills": [{"id": "jab", "kind": "damage"}, {"id": "calm", "kind": "passive"}],
+            "endless_enemies": [dict(self.STATS1, id="imp", element="fire", role="minion", skills="jab|calm",
+                                     gambits="enemy_hp_below:0.4>jab@lowest_hp|always>basic"),
+                                dict(self.STATS1, id="golem", element="fire", role="tank", skills="jab", gambits=None)],
+            "endless_shapes": [{"id": "swarm", "check": "aoe", "slots": "minion|minion|minion|minion", "anchor_hp": 1.0},
+                               {"id": "wall", "check": "focus", "slots": "tank|minion|minion|minion", "anchor_hp": 3.0}],
+            "mutators": [{"id": "haste", "kind": "speed_mult", "value": 1.3, "element": None},
+                         {"id": "blaze", "kind": "element_mult", "value": 1.5, "element": "fire"}],
+        }
+
+    def errors(self, t, keys=None):
+        errs = cb.Errors()
+        cb.validate_endless(t, keys or self.KEYS, errs)
+        return errs
+
+    def test_valid_passes(self):
+        self.assertEqual([], self.errors(self.tables()))
+
+    def test_gambits_parse(self):
+        rules, err = cb.parse_gambits("enemy_hp_below:0.4>jab@lowest_hp|always>basic")
+        self.assertIsNone(err)
+        self.assertEqual([("enemy_hp_below", 0.4, "jab", "lowest_hp"), ("always", 0.0, "basic", "auto")], rules)
+        for bad in ["always", "always>a>b", "never>x", "always>x@random", "always>", "self_hp_below>x", "self_hp_below:1.5>x",
+                    "first_actions:0>x", "enemies_at_least:2.5>x", "always:3>x", "ally_hp_below:nan>x", "first_actions:inf>x"]:
+            self.assertIsNotNone(cb.parse_gambits(bad)[1], bad)
+
+    def test_bad_gambit_action_is_e023(self):
+        t = self.tables()
+        t["endless_enemies"][0]["gambits"] = "always>calm"
+        errs = self.errors(t)
+        self.assertEqual(1, len(errs))
+        self.assertIn("E023 endless_enemies[imp]", errs[0])
+
+    def test_shapes_need_full_slots_and_both_checks(self):
+        t = self.tables()
+        t["endless_shapes"][1]["slots"] = "tank|minion|minion"
+        t["endless_shapes"][0]["check"] = "open"
+        errs = self.errors(t)
+        self.assertTrue(any("E043 endless_shapes[wall]" in e for e in errs))
+        self.assertTrue(any("E044 endless_shapes" in e and "aoe" in e for e in errs))
+
+    def test_mutator_values_and_elements(self):
+        t = self.tables()
+        t["mutators"][0]["value"] = 0.0
+        t["mutators"][1]["element"] = None
+        errs = self.errors(t)
+        self.assertEqual(2, len(errs))
+        self.assertTrue(all("E043 mutators" in e for e in errs))
+
+    def test_constants(self):
+        keys = dict(self.KEYS, ENDLESS_BAND={"value": 2})
+        self.assertIn("E043 constants", self.errors(self.tables(), keys)[0])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -139,6 +139,8 @@ def stream_seed(profile_seed, name): return mix64((profile_seed + fnv1a64(name))
 | `gauntlet` | a gauntlet | derives the seed of each floor's fight |
 | `tower` | `TOWER_SEED` and the UTC day | the day's seed and its lineup draws (`specs/21` section 4) |
 | `tower_fight`, `drop` | the day's seed | derive each floor's fight seed and Skill Book roll (`specs/21` sections 2 and 7) |
+| `endless` | `Derive(StreamSeed(ENDLESS_SEED, "endless"), season)`, then `Derive(that, band)` per band | the Endless Tower's squads, band by band (`specs/28` section 3.1) |
+| `endless_mutators`, `endless_fight` | the season's seed | the season's mutator list and each floor's fight seed (`specs/28` sections 3.2 and 8) |
 | `run` | the account | derives each run's seed (`specs/18` section 2) |
 | `vendor` | the account | the post-run vendor's offers: per offer a rarity draw, then a talent draw; seeded per run index (`specs/18` section 4) |
 

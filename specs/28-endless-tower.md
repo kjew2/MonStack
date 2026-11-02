@@ -1,6 +1,6 @@
 # 28 - Endless Tower and gambits
 
-Status: **design, steps 1 and 2 built** (T11 of `specs/13`, issue #75). The gambit rulebook (section 4) and the mutators (section 3.2) are live in the battle engine; the climb, its content, the account and the web screens are not built yet. kj answered the flow questions on 2026-11-02 (section 10); sections 5 and 6 are still a proposal.
+Status: **steps 1 to 3 built** (T11 of `specs/13`, issue #75). The gambit rulebook (section 4), the mutators (section 3.2) and the climb with its content (`EndlessSim`, sections 3 and 7) are live in the sim, with goldens and a balance report. The account, rewards and the web screens (steps 4 and 5) are not built yet. kj answered every question on 2026-11-02 (section 10).
 
 Source: `specs/12` sections 8.1 and 8.2 ("4v4, escalating, with mutators"; "teams act on an IF/THEN rulebook (gambits), e.g. If enemy HP < 30% -> priority: high-damage burst skill"; the defender sets it for PvP defense), `specs/22` section 3 (FF12 gambits as agency in an auto-battler), `specs/13` section 7 (gambit evaluation is pure and ordered, inside the battle engine).
 
@@ -23,7 +23,7 @@ Goals: a reason to raise *different* monsters (a team, not one carry), a long-te
 
 ## 2. Flow (kj, 2026-11-02: questions 1 and 2)
 
-1. **Team.** Four distinct Vault monsters in slot order, each with its rulebook (section 4.4). Proposed **(agent)**: exactly four, since 4v4 is the mode's identity; fewer may climb but are not helped.
+1. **Team.** Exactly four (`MON_SIDE_SIZE`) distinct Vault monsters in slot order, each with its rulebook (section 4.4; kj, 2026-11-02). `EndlessSim.Team` refuses any other size.
 2. **Climb.** Floor 1, 2, 3 ... each a 4v4 fight with a full heal between floors (kj; as the Dungeon, `specs/21` question 2). The attempt ends at the first lost or timed-out floor. A safety cap `ENDLESS_MAX_FLOORS` (placeholder 500) stops the sim if a team can never lose.
 3. **Season.** The floors, enemy squads and mutators come from a **season seed** that changes weekly (kj). Inside a season the climb is deterministic: the same team and rulebooks reach the same floor. Changing a rulebook or the team and trying again is the loop.
 4. **Attempts.** Unlimited and free (kj). Rewards come only from **new** floors: the first time a season's floor is cleared pays (section 6), so repeating an attempt pays nothing and there is nothing to farm or ration. This needs no ticket or timer.
@@ -36,24 +36,25 @@ Goals: a reason to raise *different* monsters (a team, not one carry), a long-te
 kj: squads and elites, and "squads should also pose a challenge: the team must be well rounded to deal with both" AoE and single-target. So a squad is not four random enemies: it is built from a **shape** that asks a question one kind of team cannot answer.
 
 - New table `endless_enemies` (an enemy per row: element, a role tag, eight stat weights, skills, and its rulebook as gambit columns, so enemies use gambits too and the player can read them). Placeholder roles: `minion` (low HP, real damage, many of them), `tank` (taunt, high HP and DEF), `striker`, `caster`, `healer`, `support`.
-- New table `endless_shapes` **(agent)**: each row lists four role slots and the question it asks. Placeholders:
+- New table `endless_shapes` **(agent)**: each row lists `MON_SIDE_SIZE` role slots, the question it asks (`check`: `aoe`, `focus` or `open`) and `anchor_hp`, slot 0's HP multiplier. Placeholders (content 6.1):
 
-  | Shape | Slots | Beats | Answer |
-  |---|---|---|---|
-  | `swarm` | minion x4 | Single-target teams: four damage dealers, each low on HP | AoE |
-  | `bulwark` | tank, healer, striker, striker | AoE teams: the healer outheals spread damage, the tank soaks | Focus fire on the healer (`lowest_hp` / `highest_hp` picks, burst) |
-  | `fortress` | tank (x2 HP), minion x3 | Teams that cannot finish one huge target | Single-target damage once the minions are down |
-  | `mixed` | striker, caster, healer, support | Nothing in particular | A rounded team |
+  | Shape | Check | Slots | Beats | Answer |
+  |---|---|---|---|---|
+  | `swarm` | aoe | minion x4 | Single-target teams: four damage dealers, each low on HP | AoE |
+  | `bulwark` | focus | tank, healer, striker, caster | AoE teams: the healer outheals spread damage, the tank soaks | Focus fire on the healer (`lowest_hp` / `highest_hp` picks, burst) |
+  | `fortress` | focus | tank (x3 HP), minion x3 | Teams that cannot finish one huge target | Single-target damage once the minions are down |
+  | `mixed` | open | striker, caster, healer, support | Nothing in particular | A rounded team |
+  | `skirmish` | open | striker x2, support, minion | Slow teams | Speed, burst |
 
-- Each floor's shape comes from the season's `endless` stream, rotated so every band of 10 floors holds at least one `swarm` and one of `bulwark` or `fortress` **(agent)**: a team strong at only one of AoE and single-target stalls inside the first bands. Each slot then draws an enemy of its role.
-- Every `ENDLESS_ELITE_EVERY`-th floor (placeholder 10) is an **elite** floor: one elite unit (a Dungeon marquee boss at side scale, without the 4v1 HP multiplier, with its phases) and three of a shape's other slots, so the elite floor too asks for both kinds of damage.
-- Level: `ENDLESS_BASE x ENDLESS_GROWTH^(floor - 1)` by repeated multiplication, stats = weights x level, as the Dungeon (`specs/21` section 4).
+- **Bands** of `ENDLESS_BAND` floors (placeholder 10): band b is floors b x B + 1 to (b + 1) x B. Each band has its own stream (`endless`, seeded `Derive(season seed, b)`), so a floor's squad does not depend on how far anyone climbed. On it, in order: the regular floor (one of the first B - 1) that gets an `aoe` shape, a different one that gets a `focus` shape (**agent**: a team strong at only one of AoE and single-target stalls inside the first bands), then floor by floor its shape (from the aoe shapes, the focus shapes or all of them; one draw) and one enemy of each slot's role (one draw each, among that role's rows in CSV order).
+- The band's last floor is **elite**: slot 0 is a Dungeon marquee boss (drawn), at the floor's level with HP x `ENDLESS_ELITE_HP_MULT` (placeholder 2) instead of the Dungeon's 4v1 multiplier, with its phases (a split phase only fills dead slots, `specs/21` section 3.2); slots 1 to 3 are a drawn shape's.
+- Level: `ENDLESS_BASE x ENDLESS_GROWTH^(floor - 1)` by repeated multiplication (placeholders 60 and 1.05), stats = weights x level, slot 0's HP also x `anchor_hp`. Enemies are named `e<slot>_<id>` and carry their content rulebooks; the team is `t<slot>_<id>`.
 
 ### 3.2 Mutators
 
-A mutator is a rule change for every unit on both sides, listed before the climb and on every floor. kj: one new mutator joins every `ENDLESS_MUTATOR_EVERY` floors (placeholder 10), drawn from the season's stream without repeats, and they stack, so floor 1-9 has none, floor 10-19 one, 20-29 two, and so on. The season's list is fixed and shown in advance, so the player can plan rulebooks for it.
+A mutator is a rule change for every unit on both sides, listed before the climb and on every floor. kj: one new mutator joins every `ENDLESS_BAND` floors, and they stack: floor f has the season's first f / `ENDLESS_BAND` in force, so floors 1-9 have none, 10-19 one, 20-29 two, and so on (the elite floor that ends a band already has the band's new one). The season's list (`EndlessSim.SeasonMutators`) is drawn on its own stream (`endless_mutators`) without repeats until the table is used up, then it refills in CSV order. It is fixed and shown in advance, so the player can plan rulebooks for it.
 
-New table `mutators` (`id`, `kind`, `value`, `element` where the kind needs it; step 3). **Built (step 2):** the engine side, `FightRules.Mutators` (`FightMutators`, null = none). `FightMutators.Add(kind, value, element)` folds each mutator in and rejects an unknown kind or a value out of its range; mutators stack (multipliers multiply; crit bonuses, clock ticks and start shields add). With none, or an empty set, a fight is unchanged (`MutatorTests`).
+Table `mutators` (`id`, `name_key`, `kind`, `value`, `element` only for `element_mult`; content 6.1): nine placeholders, one or two of each kind. **Built (step 2):** the engine side, `FightRules.Mutators` (`FightMutators`, null = none). `FightMutators.Add(kind, value, element)` folds each mutator in and rejects an unknown kind or a value out of its range; mutators stack (multipliers multiply; crit bonuses, clock ticks and start shields add). With none, or an empty set, a fight is unchanged (`MutatorTests`).
 
 | Kind | Effect | Value | Rewards |
 |---|---|---|---|
@@ -102,38 +103,61 @@ On its action, after its `OnAction` triggers and the cooldown tick (`specs/16` s
 
 `BattleSim.Start` rejects an unknown condition or target, a value out of range, a null rule, and an action that is not one of the unit's active skills or `basic`.
 
-### 4.4 Where rulebooks live (question 6)
+### 4.4 Where rulebooks live (kj, 2026-11-02: question 6)
 
-Proposed: one rulebook per Vault monster, at most `GAMBIT_SLOTS` (placeholder 6) rules, used wherever that monster fights in a team (Endless Tower, the Dungeon, and as the PvP defense). Rank fights and the gauntlet stay on the default AI (the run is about training, not tactics). Editing a rulebook is free and does not change the sealed monster's result or hash (the Vault entry stays frozen; the rulebook is account data beside it).
+One rulebook per Vault monster, at most `GAMBIT_SLOTS` (placeholder 6) rules, used wherever that monster fights in a team (Endless Tower, the Dungeon, and as the PvP defense). Rank fights and the gauntlet stay on the default AI (the run is about training, not tactics). Editing a rulebook is free and does not change the sealed monster's result or hash (the Vault entry stays frozen; the rulebook is account data beside it).
 
 ### 4.5 The editor on a phone (step 5)
 
 Each monster's rulebook is a list of rule cards, one line each: **IF** [condition chip] [value] **THEN** [skill chip] **AT** [target chip]. Tapping a chip opens a picker sheet; the skill picker lists the monster's own skills with their tooltips (`specs/16` section 9). Rules reorder with up and down buttons (no drag, so it works with one thumb). A "test" button replays the floor that stopped the team with the edited rulebooks, as a preview with no reward. During playback the acting rule's card lights up.
 
-## 5. Account and server (proposal)
+## 5. Account and server (step 4)
 
 - `AccountState.Endless`: the season id, best floor this season and ever, floors already paid this season. Rulebooks per Vault entry id (`specs/27`: entries have stable `Id`s). A new account save version.
 - `AccountOps.RunEndless(team, season)`: plays the climb, pays new floors, records the bests. Under `specs/27` (option E) this is a checkpoint command: the server re-runs the climb from the team's Vault entries, their rulebooks and the season, so nothing the client reports is trusted. A climb is many fights, so its cost on the server is measured before it ships (`specs/27` section 9, issue #109).
 - The season is the UTC week number from server time (#21), like the Dungeon's day.
 
-## 6. Rewards (proposal, question 7)
+## 6. Rewards (kj, 2026-11-02: question 7)
 
 - Training Shards for each floor cleared for the first time this season: `ENDLESS_SHARDS_BASE + floor x ENDLESS_SHARDS_PER_FLOOR` (placeholders), more on elite floors.
 - Star-Gems on milestone floors **once gems exist** (`specs/12` section 10.2; #49, #77), as the Dungeon.
+- **No Skill Books**: they stay the Dungeon's (kj).
 - Achievements on best floor ever (a species unlock condition can use it, `specs/18` section 8).
 - A season leaderboard needs the server (T12) and comes with PvP.
 
-## 7. Content (step 3)
+## 7. Content (content 6.1, MINOR; step 3)
 
-New tables `endless_enemies` and `mutators`, constants `ENDLESS_*` and `GAMBIT_SLOTS`, strings for enemy and mutator names and the gambit vocabulary (`gambit.when.<id>`, `gambit.target.<id>`). New tables are a MINOR content bump. Validation in both `tools/content_build.py` and `ContentDb`, reusing existing error codes as `specs/21` section 5 does.
+| Table | Columns |
+|---|---|
+| `endless_enemies` | `id`, `name_key`, `element`, `role` (`minion`, `tank`, `striker`, `caster`, `healer`, `support`), eight stat weights, `skills` (ids, `\|`-separated, AI priority order), `gambits` (the enemy's rulebook as text, below; may be empty) |
+| `endless_shapes` | `id`, `name_key`, `check` (`aoe`, `focus`, `open`), `slots` (`MON_SIDE_SIZE` roles, `\|`-separated), `anchor_hp` |
+| `mutators` | `id`, `name_key`, `kind` (section 3.2), `value`, `element` (only for `element_mult`) |
+
+Placeholders: 12 enemies (two per role, kits from existing `monster_skills`), 5 shapes, 9 mutators; strings `endless.<id>.name`, `endless.shape.<id>.name`, `mutator.<id>.name`.
+
+**Rulebook text** (`GambitText.Parse` and `Format`; `parse_gambits` in `tools/content_build.py`): rules split by `|`, each `when[:value]>action[@target]`, for example `enemy_hp_below:0.4>night_fang@lowest_hp|always>basic`. No target means `auto`; `always` takes no value.
+
+| Constant | Value | Range |
+|---|---|---|
+| `ENDLESS_SEED` | 20261102 | whole number |
+| `ENDLESS_BASE` | 60 | `> 0` |
+| `ENDLESS_GROWTH` | 1.05 | `>= 1` |
+| `ENDLESS_BAND` | 10 | `>= 3` (room for an aoe, a focus and an elite floor) |
+| `ENDLESS_ELITE_HP_MULT` | 2 | `> 0` |
+| `ENDLESS_MAX_FLOORS` | 500 | `> 0` |
+
+Validation, in both `tools/content_build.py` (`validate_endless`) and `ContentDb.BuildEndless`, reusing existing codes: element and skill references, and a gambit action that is not one of the enemy's active skills (`E023`); a rulebook that does not parse, negative weights, a shape without exactly `MON_SIDE_SIZE` slots, `anchor_hp <= 0`, a mutator value out of its kind's range or an element on the wrong kind, the constants above (`E043`); an unknown slot role (`E021`); a role no enemy fills, no `aoe` or no `focus` shape, no mutators (`E044`). The rewards' constants and `GAMBIT_SLOTS` come with step 4.
 
 ## 8. Determinism and tests
 
-- No clock, IO, reflection or `Math.Pow`. New stream: `endless` (season lineup and mutators), seeded from the season; each floor's fight seed derives from it.
+- No clock, IO, reflection or `Math.Pow`. New streams: `endless` (one per band: `Derive(season seed, band)`), `endless_mutators` (the season's mutator list) and `endless_fight` (each floor's fight seed, `Derive(StreamSeed(season seed, "endless_fight"), floor)`). The season seed is `Derive(StreamSeed(ENDLESS_SEED, "endless"), season)`.
+- `EndlessSim.Run(content, team, season, onAction, onFloorStart)` returns `EndlessResult`: floor reached, capped, each floor (shape, elite, won, ticks, phases, vents, peak corruption, fight hash) and a hash (`HashVersion` 1). `Lineup`, `Band`, `SeasonMutators`, `Squad`, `Rules` and `Level` serve the preview screen.
 - `MutatorTests` (step 2, built): an empty set changes nothing; each kind does what its row says and only that; mutators stack; bad ones are rejected, including an element table written past `Add`.
 - `GambitTests` (step 1, built): an unused rulebook leaves the fight unchanged; a named skill waits for its rule; rules go in order and skip a skill on cooldown; `first_actions`; `lowest_hp` and `highest_hp` picks with no draw and `auto` keeping it; a taunt still forces; a heal rule fires before the full-amount wait; bad rulebooks are rejected; a cloned fight with gambits continues identically; tower teams keep their rulebooks.
 - `golden/battle-sim-vectors.txt` has a ninth fight, "4v4 gambits vs default AI", covering every condition and target pick (step 1).
-- Later: `EndlessTests` and `golden/endless-vectors.txt` (step 3), the balance harness climbing with bot teams and default rulebooks (step 3; targets agreed with kj first).
+- `EndlessTests` (step 3, built): content loads and is validated; levels; every band has an aoe and a focus floor and ends on an elite, every slot's enemy has the slot's role, and floors carry floor / band mutators; the lineup is fixed for a season, differs across seasons and is prefix-stable; season mutators do not repeat until the table is used up; squads scale, carry rulebooks and boost the anchor and the elite; a climb is deterministic, stops at the first loss, needs exactly four, changes with rulebooks, stops at the safety cap and gets its first mutator at the first full band; rulebook text parses, formats and rejects bad rules. `tools/test_content_build.py` mirrors the validation.
+- `golden/endless-vectors.txt` (`EndlessVectors`): the first four species after a `focus` run at seed 7, in seasons 0 and 2913, on the default AI and with a simple rulebook each (listed in `specs/09` section 3).
+- The balance report (`specs/09` section 7) climbs with each policy's one-of-each-species team and reports floors, the capped rate and what stopped the climb (shape check, elite or capped). First measurement (content 6.1, 8 seeds): bot teams reach floors 22 to 36; `focus` and elite floors stop most climbs and `swarm` (aoe) floors none, so the aoe question is too easy for now. Targets are agreed with kj before any retune.
 
 ## 9. Build order
 
@@ -141,19 +165,19 @@ Each step merges on its own with `./check.sh` green.
 
 1. **Gambit engine** in `BattleSim`: conditions, actions, target picks, validation, tests, a golden fight. **Done.**
 2. **Mutator engine**: `FightRules.Mutators`, off by default so no golden moved; `MutatorTests`. **Done.**
-3. **Endless sim and content**: enemies, shapes, scaling, season lineup, mutators, `EndlessSim.Run`, goldens, balance harness. Question 3 (team size) is still open but easy to change.
-4. **Account**: rulebooks per Vault entry, season records, rewards, save version, server command. Needs questions 6 and 7.
+3. **Endless sim and content**: enemies, shapes, scaling, season lineup, mutators, `EndlessSim.Run`, goldens, balance report. **Done** (content 6.1, `EndlessTests`, `golden/endless-vectors.txt`).
+4. **Account**: rulebooks per Vault entry, season records, rewards, save version, server command.
 5. **Web**: team setup (the Dungeon's picker), the rulebook editor, the climb with playback and the mutator list.
 
 ## 10. Questions for kj
 
-Recommendations first. **Answered (kj, 2026-11-02):** questions 1, 2, 4 and 5. Question 3 does not block (easy to change); 6 and 7 block step 4.
+**All answered (kj, 2026-11-02).** Question 8 stands as built until kj changes it.
 
 1. **Season and attempts. Answered:** weekly season, unlimited free attempts, rewards only for floors new this season. (Alternatives not taken: tickets like the Dungeon; a daily tower.)
 2. **Floor model. Answered:** full heal each floor. (Alternative not taken: HP carries over.)
-3. **Team size.** Exactly four (recommended) or 1 to 4 as the Dungeon.
+3. **Team size. Answered:** exactly four. (Alternative not taken: 1 to 4 as the Dungeon.)
 4. **Mutators. Answered:** one more every 10 floors from a weekly draw, stacking, shown in advance. (Alternatives not taken: one fixed set from floor 1; opt-in mutators for rewards.)
 5. **Enemies. Answered:** generic squads with an elite every 10 floors, and squads must challenge the team so it has to be well rounded, handling both AoE and single-target (section 3.1: squad shapes). (Alternatives not taken: mirror teams; Dungeon bosses only.)
-6. **Rulebooks.** One per Vault monster, up to 6 rules, used in every team mode (recommended). Alternatives: one per team; unlockable rule slots as a progression (as FF12's gambit slots); the single pre-fight rule of `specs/22`.
-7. **Rewards.** Shards for new floors per season, gems once they exist (recommended). Should the Endless Tower drop Skill Books too, or stay the Dungeon's exclusive?
+6. **Rulebooks. Answered:** one per Vault monster, up to 6 rules, used in every team mode. (Alternatives not taken: one per team; unlockable rule slots; the single pre-fight rule of `specs/22`.)
+7. **Rewards. Answered:** shards for new floors per season, gems once they exist, no Skill Books (they stay the Dungeon's).
 8. **Gambit semantics (step 1, built as agent decisions, easy to change):** a named skill is used only by its rules; rules never waste an action on a skill with nothing to do; taunts still force targets. Confirm or change.

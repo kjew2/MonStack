@@ -1,0 +1,13 @@
+id,name_key,element,role,hp,str,int,wis,dex,def,spd,luk,skills,gambits,#notes
+ember_imp,endless.ember_imp.name,fire,minion,0.35,1.1,0.5,0.5,0.9,0.4,1.2,1.0,quick_jab,always>quick_jab@lowest_hp,"Endless Tower (specs/28 section 3.1): stat = weight x floor level. role picks the shape slots it can fill. gambits: rules split by |, each when[:value]>skill-or-basic[@target]. Placeholder"
+mire_sprite,endless.mire_sprite.name,water,minion,0.35,0.5,1.1,0.6,0.9,0.4,1.1,1.0,echo_bolt,always>echo_bolt@lowest_hp,Placeholder
+bastion_golem,endless.bastion_golem.name,nature,tank,1.6,0.8,0.5,0.9,0.6,1.4,0.7,0.8,provoke|rampart|shield_bash,first_actions:1>provoke,Placeholder
+iron_warden,endless.iron_warden.name,light,tank,1.5,0.9,0.5,1.0,0.6,1.3,0.8,0.8,provoke|stand_firm|iron_press,,Placeholder
+razor_fang,endless.razor_fang.name,dark,striker,0.9,1.3,0.6,0.7,1.1,0.8,1.1,1.1,night_fang|rend,enemy_hp_below:0.4>night_fang@lowest_hp,Placeholder
+blaze_hound,endless.blaze_hound.name,fire,striker,0.9,1.3,0.6,0.7,1.0,0.8,1.2,1.0,ember_lance|kindle,always>ember_lance@lowest_hp,Placeholder
+storm_adept,endless.storm_adept.name,light,caster,0.8,0.5,1.3,1.0,0.9,0.7,1.0,1.0,overflow_beam|arcane_blast,enemies_at_least:3>overflow_beam|always>arcane_blast@lowest_hp,Placeholder
+tide_seer,endless.tide_seer.name,water,caster,0.8,0.5,0.9,1.3,0.9,0.7,1.0,1.0,toxic_bloom|spirit_lash,,Placeholder
+moss_shaman,endless.moss_shaman.name,nature,healer,0.9,0.5,0.8,1.3,0.8,0.9,0.9,1.0,gel_mend|ward,ally_hp_below:0.6>gel_mend,Placeholder
+dawn_priest,endless.dawn_priest.name,light,healer,0.9,0.5,0.8,1.3,0.8,0.9,1.0,1.0,gel_mend|inner_peace,ally_hp_below:0.7>gel_mend,Placeholder
+hex_weaver,endless.hex_weaver.name,dark,support,0.9,0.7,1.0,1.0,1.0,0.8,1.0,1.1,boss_roar|confuse|shadow_lunge,first_actions:2>boss_roar,Placeholder
+war_drummer,endless.war_drummer.name,fire,support,1.0,1.0,0.6,0.8,0.9,0.9,1.1,1.0,wail|blitz,always>wail@highest_hp,Placeholder

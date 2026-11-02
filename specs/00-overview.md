@@ -14,12 +14,13 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
 | Dungeon (built as the Daily Tower): daily lineup of 4v1 boss floors, tickets (one free a day, pieces from sealed runs) and rewards (shards, Skill Book drops, the premium gate), a first web screen | `src/IdleRng.Sim/Tower`, `AccountOps.RunTower`, `web/run.js` | `21` |
+| Endless Tower: 4v4 climb of a weekly season, squad shapes, elites, stacking mutators (sim only so far) | `src/IdleRng.Sim/Tower/EndlessSim.cs` | `28` |
 | Content database and pipeline | `content_src/` -> `Content/` -> `ContentDb` | `05` |
 | Account save lineage and stores | `src/IdleRng.Runtime/Save` | `06`, `18` |
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower (`28`; its gambit rulebook and mutators are built in the battle engine, the climb is next), the rulebook editor, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower's account, rewards and screens (`28`; its gambit rulebook, mutators and the climb are built in the sim), the rulebook editor, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 
@@ -76,7 +77,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 ```
 CLAUDE.md, README.md, check.sh, play.sh
-specs/                       00 to 27 (the numbers present are the ones that exist); index in specs/README.md
+specs/                       00 to 28 (the numbers present are the ones that exist); index in specs/README.md
 content_src/*.csv            the content source of truth (specs/05)
 Content/*.json               built by tools/content_build.py, committed, checked for drift
 golden/                      generated reference outputs (bot CLI only)

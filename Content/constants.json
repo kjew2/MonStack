@@ -570,6 +570,36 @@
       "key": "CORRUPT_DMG_PER_LEVEL",
       "type": "double",
       "value": 0.1
+    },
+    {
+      "key": "ENDLESS_SEED",
+      "type": "int",
+      "value": 20261102
+    },
+    {
+      "key": "ENDLESS_BASE",
+      "type": "double",
+      "value": 60.0
+    },
+    {
+      "key": "ENDLESS_GROWTH",
+      "type": "double",
+      "value": 1.05
+    },
+    {
+      "key": "ENDLESS_BAND",
+      "type": "int",
+      "value": 10
+    },
+    {
+      "key": "ENDLESS_ELITE_HP_MULT",
+      "type": "double",
+      "value": 2.0
+    },
+    {
+      "key": "ENDLESS_MAX_FLOORS",
+      "type": "int",
+      "value": 500
     }
   ]
 }

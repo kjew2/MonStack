@@ -1,0 +1,40 @@
+{
+  "table": "endless_shapes",
+  "rows": [
+    {
+      "id": "swarm",
+      "name_key": "endless.shape.swarm.name",
+      "check": "aoe",
+      "slots": "minion|minion|minion|minion",
+      "anchor_hp": 1.0
+    },
+    {
+      "id": "bulwark",
+      "name_key": "endless.shape.bulwark.name",
+      "check": "focus",
+      "slots": "tank|healer|striker|caster",
+      "anchor_hp": 1.0
+    },
+    {
+      "id": "fortress",
+      "name_key": "endless.shape.fortress.name",
+      "check": "focus",
+      "slots": "tank|minion|minion|minion",
+      "anchor_hp": 3.0
+    },
+    {
+      "id": "mixed",
+      "name_key": "endless.shape.mixed.name",
+      "check": "open",
+      "slots": "striker|caster|healer|support",
+      "anchor_hp": 1.0
+    },
+    {
+      "id": "skirmish",
+      "name_key": "endless.shape.skirmish.name",
+      "check": "open",
+      "slots": "striker|striker|support|minion",
+      "anchor_hp": 1.0
+    }
+  ]
+}

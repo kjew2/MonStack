@@ -16,6 +16,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -39,6 +40,10 @@ ENUMS = {
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
     "TowerRole": ["regular", "marquee", "add"],
     "PhaseKind": ["shield_check", "split", "channel", "enrage"],
+    "EndlessRole": ["minion", "tank", "striker", "caster", "healer", "support"],
+    "EndlessCheck": ["aoe", "focus", "open"],
+    "MutatorKind": ["heal_mult", "aoe_mult", "single_mult", "element_mult", "speed_mult", "crit_bonus", "corruption_early",
+                    "start_shield"],
 }
 
 # key -> type. Mirrors IdleRng.Sim.Content.Constants (specs/16 to specs/19 list each group).
@@ -80,6 +85,9 @@ REQUIRED_CONSTANTS = {
     "ENTROPY_ENRAGE_TURNS": "int", "ENTROPY_CONVERT_SHIELD": "double", "ENTROPY_CONVERT_TURNS": "int",
     "CORRUPT_START_TICK": "int", "CORRUPT_EVERY_TICKS": "int", "CORRUPT_HEAL_PER_LEVEL": "double", "CORRUPT_HEAL_FLOOR": "double",
     "CORRUPT_DMG_PER_LEVEL": "double",
+    # Endless Tower (specs/28 section 7)
+    "ENDLESS_SEED": "int", "ENDLESS_BASE": "double", "ENDLESS_GROWTH": "double", "ENDLESS_BAND": "int",
+    "ENDLESS_ELITE_HP_MULT": "double", "ENDLESS_MAX_FLOORS": "int",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -190,6 +198,12 @@ SCHEMA = {
     "boss_phases": T([c("id", "id"), c("boss_id", "id"), c("order", "int"), c("enter_hp", "double"), c("kind", "enum:PhaseKind"),
                       c("power", "double"), c("duration", "int"), c("count", "int"), c("guard", "double"), c("heal_frac", "double"),
                       c("strike", "double"), c("buff", "double"), c("adds", "id", True), c("add_skills", "string", True)], key="id"),
+    "endless_enemies": T([c("id", "id"), c("name_key", "key"), c("element", "id"), c("role", "enum:EndlessRole")]
+                          + [c(s, "double") for s in STATS] + [c("skills", "string", True), c("gambits", "string", True)], key="id"),
+    "endless_shapes": T([c("id", "id"), c("name_key", "key"), c("check", "enum:EndlessCheck"), c("slots", "string"),
+                         c("anchor_hp", "double")], key="id"),
+    "mutators": T([c("id", "id"), c("name_key", "key"), c("kind", "enum:MutatorKind"), c("value", "double"),
+                   c("element", "id", True)], key="id"),
     "book_drops": T([c("book_id", "id"), c("min_floor", "int"), c("weight", "double")], key="book_id"),
     "talents": T([c("id", "id"), c("name_key", "key"), c("desc_key", "key"), c("rarity", "id"), c("effect", "enum:TalentEffect"),
                   c("per_rank", "double"), c("max_rank", "int"), c("cost_base", "int"), c("cost_step", "int")], key="id"),
@@ -461,6 +475,106 @@ def split_ids(text):
     return [x for x in (text or "").split("|") if x]
 
 
+GAMBIT_WHEN = ["always", "self_hp_below", "ally_hp_below", "enemy_hp_below", "enemies_at_least", "first_actions"]
+GAMBIT_TARGETS = ["auto", "lowest_hp", "highest_hp"]
+
+
+def parse_gambits(text):
+    """A rulebook in content (specs/28 section 7): rules split by |, each when[:value]>action[@target].
+    Returns (rules, error); each rule is (when, value, action, target). Mirrors GambitText.Parse."""
+    rules = []
+    for part in split_ids(text):
+        if part.count(">") != 1:
+            return None, f"rule '{part}' needs exactly one '>'"
+        cond, act = part.split(">")
+        when, _, val = cond.partition(":")
+        action, _, target = act.partition("@")
+        target = target or "auto"
+        if when not in GAMBIT_WHEN:
+            return None, f"rule '{part}': unknown condition '{when}'"
+        if target not in GAMBIT_TARGETS:
+            return None, f"rule '{part}': unknown target '{target}'"
+        if not action:
+            return None, f"rule '{part}' names no action"
+        value = 0.0
+        if when != "always":
+            try:
+                value = float(val)
+            except ValueError:
+                return None, f"rule '{part}': '{when}' needs a number"
+            if not math.isfinite(value):
+                return None, f"rule '{part}': '{when}' needs a number"
+            if when in ("self_hp_below", "ally_hp_below", "enemy_hp_below") and not 0 < value <= 1:
+                return None, f"rule '{part}': an HP fraction must be in (0, 1]"
+            if when in ("enemies_at_least", "first_actions") and not (value >= 1 and value == int(value)):
+                return None, f"rule '{part}': a count must be a whole number >= 1"
+        elif val:
+            return None, f"rule '{part}': 'always' takes no value"
+        rules.append((when, value, action, target))
+    return rules, None
+
+
+def validate_endless(t, keys, errs):
+    """Endless Tower (specs/28 section 7). Mirrors ContentDb.BuildEndless."""
+    def k(name, default=0):
+        return keys.get(name, {}).get("value", default)
+    side = k("MON_SIDE_SIZE", 4)
+    if not (k("ENDLESS_BASE") > 0 and k("ENDLESS_GROWTH") >= 1 and k("ENDLESS_BAND") >= 3 and k("ENDLESS_ELITE_HP_MULT") > 0
+            and k("ENDLESS_MAX_FLOORS") > 0):
+        errs.add("E043", "constants", "Endless Tower constants out of range (specs/28 section 7)")
+    elements = {r["id"] for r in t["elements"]}
+    skills = {r["id"]: r for r in t["monster_skills"]}
+    roles = set()
+    for r in t["endless_enemies"]:
+        loc = f"endless_enemies[{r['id']}]"
+        roles.add(r["role"])
+        if r["element"] not in elements:
+            errs.add("E023", loc, f"element '{r['element']}' is not an element id")
+        if any(r[s] < 0 for s in STATS):
+            errs.add("E043", loc, "stat weights must be >= 0")
+        own = split_ids(r["skills"])
+        for sk in own:
+            if sk not in skills:
+                errs.add("E023", loc, f"skill '{sk}' is not a monster_skills id")
+        rules, err = parse_gambits(r["gambits"])
+        if err:
+            errs.add("E043", loc, err)
+            continue
+        active = {sk for sk in own if sk in skills and skills[sk]["kind"] != "passive"}
+        for (_, _, action, _) in rules:
+            if action != "basic" and action not in active:
+                errs.add("E023", loc, f"gambit action '{action}' is not one of the enemy's active skills")
+    checks = set()
+    for r in t["endless_shapes"]:
+        loc = f"endless_shapes[{r['id']}]"
+        checks.add(r["check"])
+        slots = split_ids(r["slots"])
+        if len(slots) != side:
+            errs.add("E043", loc, f"slots must list exactly MON_SIDE_SIZE ({side}) roles")
+        for role in slots:
+            if role not in ENUMS["EndlessRole"]:
+                errs.add("E021", loc, f"slot role '{role}' is not an endless role")
+            elif role not in roles:
+                errs.add("E044", loc, f"no endless_enemies row has role '{role}'")
+        if not r["anchor_hp"] > 0:
+            errs.add("E043", loc, "anchor_hp must be > 0")
+    if "aoe" not in checks or "focus" not in checks:
+        errs.add("E044", "endless_shapes", "need at least one aoe and one focus shape")
+    if not t["mutators"]:
+        errs.add("E044", "mutators", "at least one row is required")
+    for r in t["mutators"]:
+        loc = f"mutators[{r['id']}]"
+        kind, v = r["kind"], r["value"]
+        if (r["element"] is not None) != (kind == "element_mult"):
+            errs.add("E043", loc, "element_mult, and only it, names an element")
+        elif r["element"] is not None and r["element"] not in elements:
+            errs.add("E023", loc, f"element '{r['element']}' is not an element id")
+        ok = {"speed_mult": v > 0, "crit_bonus": -1 <= v <= 1, "corruption_early": v >= 0 and v == int(v),
+              "start_shield": 0 <= v <= 1}.get(kind, v >= 0)
+        if not ok:
+            errs.add("E043", loc, f"value out of range for kind '{kind}' (specs/28 section 3.2)")
+
+
 def validate_tower(t, keys, errs):
     """Dungeon (specs/21 section 5). Mirrors ContentDb.BuildTower."""
     elements = {r["id"] for r in t["elements"]}
@@ -683,6 +797,7 @@ def validate_training(t, keys, errs):
     validate_unlocks(t, errs)
     validate_gauntlet(t, errs)
     validate_tower(t, keys, errs)
+    validate_endless(t, keys, errs)
     ms = [r["threshold"] for r in t["stat_milestones"]]
     for i, v in enumerate(ms):
         if v <= 0 or (i > 0 and v <= ms[i - 1]):

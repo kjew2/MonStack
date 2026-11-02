@@ -36,7 +36,7 @@ namespace IdleRng.Web
 
         /// <summary>
         /// The wasm golden check (specs/08 section 10.1, issue #122): runs every generator of the bot CLI's `golden` verb
-        /// (IdleRng.Bots.Golden.GoldenFiles.All: battle, training-run, gauntlet and tower vectors) on the loaded content and returns
+        /// (IdleRng.Bots.Golden.GoldenFiles.All: battle, training-run, gauntlet, tower and endless vectors) on the loaded content and returns
         /// {"files":[{"name","text"}]}, the text each golden/ file must hold. web/wasm/test/golden.js compares it with golden/, so a
         /// browser build that resolves a fight differently from .NET fails check.sh. Read only: the account is untouched.
         /// </summary>
