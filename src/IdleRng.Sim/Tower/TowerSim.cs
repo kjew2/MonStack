@@ -147,11 +147,7 @@ namespace IdleRng.Sim.Tower
             for (int i = 0; i < team.Count; i++)
             {
                 var f = team[i] ?? throw new ArgumentException($"team[{i}] is null", nameof(team));
-                t[i] = new Fighter
-                {
-                    Id = "t" + i + "_" + f.Id, Element = f.Element, Stats = f.Stats, Skills = f.Skills, Triggers = f.Triggers,
-                    Rules = f.Rules, Phases = f.Phases,
-                };
+                t[i] = f.WithId("t" + i + "_" + f.Id);
             }
             return t;
         }

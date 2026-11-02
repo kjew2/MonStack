@@ -10,7 +10,7 @@ namespace IdleRng.Bots.Golden
 {
     /// <summary>
     /// golden/battle-sim-vectors.txt (specs/16 section 8): fixed fights through BattleSim.Resolve, covering 1v1, 4v1 and 4v4
-    /// plus every skill kind, a trigger and every chase capstone rule modifier. Any change to the battle rules or the content they read moves
+    /// plus every skill kind, a trigger, every chase capstone rule modifier and a gambit rulebook of every condition and target. Any change to the battle rules or the content they read moves
     /// this file. The fighters are placeholder monsters defined here until species content exists (specs/13 T3).
     /// </summary>
     public static class BattleVectors
@@ -172,6 +172,28 @@ namespace IdleRng.Bots.Golden
                 new[] { Bloom("a_bloom"), Echo("a_echo") }, new[] { Starlit("b_starlit"), Brawler("b_brawler") });
             yield return new Vector("2v2 rebirth and stagger vs veil and feast", 8,
                 new[] { Rootwood("a_root"), Mage("a_mage") }, new[] { Shade("b_shade"), Healer("b_healer") });
+            yield return new Vector("4v4 gambits vs default AI", 9,
+                new[]
+                {
+                    Ruled(Tank("a_tank"), new GambitRule(GambitConditions.FirstActions, 1, "guard")),
+                    Ruled(Brawler("a_brawler"),
+                        new GambitRule(GambitConditions.EnemyHpBelow, 0.35, "heavy_strike", GambitTargets.LowestHp),
+                        new GambitRule(GambitConditions.Always, 0, GambitRule.Basic, GambitTargets.LowestHp)),
+                    Ruled(Mage("a_mage"),
+                        new GambitRule(GambitConditions.EnemiesAtLeast, 3, "tidal_wave"),
+                        new GambitRule(GambitConditions.Always, 0, "bolt", GambitTargets.HighestHp)),
+                    Ruled(Healer("a_healer"),
+                        new GambitRule(GambitConditions.SelfHpBelow, 0.5, "blessing"),
+                        new GambitRule(GambitConditions.AllyHpBelow, 0.6, "mend")),
+                },
+                new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
+        }
+
+        /// <summary>The fighter with a gambit rulebook (specs/28 section 4).</summary>
+        static Fighter Ruled(Fighter f, params GambitRule[] rules)
+        {
+            f.Gambits.AddRange(rules);
+            return f;
         }
     }
 }

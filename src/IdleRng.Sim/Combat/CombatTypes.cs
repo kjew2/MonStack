@@ -122,6 +122,79 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>Boss phases, highest enter_hp first (specs/21 section 3.2). Only a fight with <see cref="FightRules.Tower"/> runs them.</summary>
         public List<BossPhase> Phases { get; set; } = new List<BossPhase>();
+
+        /// <summary>
+        /// The unit's gambit rulebook, checked in order before the default AI (specs/28 section 4). Empty: the default AI alone,
+        /// as before rulebooks existed.
+        /// </summary>
+        public List<GambitRule> Gambits { get; set; } = new List<GambitRule>();
+
+        /// <summary>A shallow copy under another id (towers rename team members; split phases number their adds).</summary>
+        public Fighter WithId(string id) => new Fighter
+        {
+            Id = id, Element = Element, Stats = Stats, Skills = Skills, Triggers = Triggers, Rules = Rules, Phases = Phases, Gambits = Gambits,
+        };
+    }
+
+    /// <summary>
+    /// One IF/THEN line of a gambit rulebook (specs/28 section 4): when <see cref="When"/> holds (with <see cref="Value"/>), use
+    /// <see cref="Skill"/> (one of the unit's own active skills by id, or <see cref="Basic"/>), aimed by <see cref="Target"/>.
+    /// </summary>
+    public sealed class GambitRule
+    {
+        /// <summary>The basic attack as a rule's action.</summary>
+        public const string Basic = "basic";
+
+        public GambitRule() { }
+        public GambitRule(string when, double value, string skill, string target = GambitTargets.Auto)
+        {
+            When = when; Value = value; Skill = skill; Target = target;
+        }
+
+        /// <summary>A <see cref="GambitConditions"/> id.</summary>
+        public string When { get; set; } = GambitConditions.Always;
+
+        /// <summary>The condition's threshold: an HP fraction in (0, 1] or a whole count of at least 1; unused by "always".</summary>
+        public double Value { get; set; }
+
+        public string Skill { get; set; }
+
+        /// <summary>A <see cref="GambitTargets"/> id: how the action picks a single enemy.</summary>
+        public string Target { get; set; } = GambitTargets.Auto;
+    }
+
+    /// <summary>Gambit conditions (specs/28 section 4.1). HP conditions compare HP fractions; counts are whole numbers.</summary>
+    public static class GambitConditions
+    {
+        public const string Always = "always";
+        public const string SelfHpBelow = "self_hp_below";
+        public const string AllyHpBelow = "ally_hp_below";
+        public const string EnemyHpBelow = "enemy_hp_below";
+        public const string EnemiesAtLeast = "enemies_at_least";
+        public const string FirstActions = "first_actions";
+
+        public static readonly string[] Known = { Always, SelfHpBelow, AllyHpBelow, EnemyHpBelow, EnemiesAtLeast, FirstActions };
+        public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
+
+        /// <summary>True when the condition's Value is an HP fraction in (0, 1].</summary>
+        public static bool TakesFraction(string id) => id == SelfHpBelow || id == AllyHpBelow || id == EnemyHpBelow;
+
+        /// <summary>True when the condition's Value is a whole count of at least 1.</summary>
+        public static bool TakesCount(string id) => id == EnemiesAtLeast || id == FirstActions;
+    }
+
+    /// <summary>How a gambit's action picks a single enemy (specs/28 section 4.2). A taunting enemy is still forced.</summary>
+    public static class GambitTargets
+    {
+        /// <summary>The default rule: a random living enemy.</summary>
+        public const string Auto = "auto";
+        /// <summary>The living enemy with the lowest HP fraction (lowest slot on a tie); no random draw.</summary>
+        public const string LowestHp = "lowest_hp";
+        /// <summary>The living enemy with the highest HP fraction (lowest slot on a tie); no random draw.</summary>
+        public const string HighestHp = "highest_hp";
+
+        public static readonly string[] Known = { Auto, LowestHp, HighestHp };
+        public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }
 
     /// <summary>The coded boss phase kinds (specs/21 section 3.2).</summary>

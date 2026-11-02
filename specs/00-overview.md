@@ -8,7 +8,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 
 | Part | Where | Spec |
 |---|---|---|
-| Monster battle: sides of 1 to 4, eight-stat sheet, ATB, triggers, rule modifiers | `src/IdleRng.Sim/Combat` | `16` |
+| Monster battle: sides of 1 to 4, eight-stat sheet, ATB, triggers, rule modifiers, gambit rulebooks | `src/IdleRng.Sim/Combat` | `16`, `28` |
 | Training run: action-point cycles of Drill and Rest, rank fights, milestones | `src/IdleRng.Sim/Training` | `14` |
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
 | Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
@@ -19,7 +19,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Bots and golden files | `src/IdleRng.Bots` | `09` |
 | Web client on the C# core in WebAssembly | `web/`, `src/IdleRng.Web` | `web/README.md` |
 
-Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower, the gambit rulebook, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
+Not built yet (designed in `specs/12`, ordered in `specs/13`): the Endless Tower (`28`; its gambit rulebook engine is built, the rest waits on kj's questions), the rulebook editor, async PvP and its server (`10`), monetization. `08` sketches the backend seams.
 
 ## 1a. Scope
 

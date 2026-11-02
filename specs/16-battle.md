@@ -1,6 +1,6 @@
 # 16 - Monster Battle
 
-Status: **live (T1 of `specs/13`)**. Used by the training run's rank fights (`specs/14` section 5); the gauntlet (T4), towers and PvP will call it too. Code: `src/IdleRng.Sim/Combat`. Tests: `src/IdleRng.Sim.Tests/BattleSimTests.cs`. Golden: `golden/battle-sim-vectors.txt`.
+Status: **live (T1 of `specs/13`)**. Used by the training run's rank fights (`specs/14` section 5); the gauntlet (T4), towers and PvP will call it too. Code: `src/IdleRng.Sim/Combat`. Tests: `src/IdleRng.Sim.Tests/BattleSimTests.cs`, `GambitTests.cs`. Golden: `golden/battle-sim-vectors.txt`.
 
 It replaced the idle game's 4v1 boss battle, which was removed with that game at `specs/13` T7; it was rebuilt from the same design (ATB gauge, kit vocabulary, damage formula, triggers).
 
@@ -9,7 +9,7 @@ It replaced the idle game's 4v1 boss battle, which was removed with that game at
 ## 1. Shape
 
 - Two sides, A and B, of 1 to `MON_SIDE_SIZE` (4) units each. 1v1 (gauntlet, in-run Tactical Challenges), 4v1 (Dungeon bosses) and 4v4 (Endless Tower, PvP) are all the same engine.
-- Turn order is an ATB gauge; actions are automatic (default AI, section 5.2). Gambit rulebooks (`specs/12` section 8.1) will replace the AI per unit later.
+- Turn order is an ATB gauge; actions are automatic (default AI, section 5.2). A unit may carry a gambit rulebook (`Fighter.Gambits`, `specs/28` section 4), checked before the default AI; with none it plays exactly as the default AI.
 - Pure and deterministic: same fighters, rules and random draws give the same fight on the client, the bots and a server.
 
 ## 2. API
@@ -80,7 +80,9 @@ Both sides use the same AI, so PvP stays symmetric. On its action a unit fires i
 
 Otherwise it fires `OnBasicAttack` triggers and makes a basic attack: `BASIC_ATTACK_POWER x max(STR, INT)`, magical when INT is higher.
 
-**Targeting:** a single-target enemy action hits a taunting enemy (lowest slot) if there is one, else a random living enemy (one draw; no draw when only one is alive). A lowest-ally heal goes to the ally with the lowest HP fraction among those missing its full amount (the rule above; lowest slot on a tie), else, when none is (a triggered heal), to the ally with the lowest HP fraction. A single-target debuff (an action or a trigger) first narrows the choice to the living enemies that lack its effect, when any does, and applies the same rule among them: so it skips a taunter that already has it (issue #83, kj 2026-10-31). Placeholder until gambits.
+A unit with a gambit rulebook checks its rules first, after the cooldown tick; the first rule that fires is its action, and if none does the default AI above acts, skipping the skills any rule names (`specs/28` section 4.3).
+
+**Targeting:** a single-target enemy action hits a taunting enemy (lowest slot) if there is one, else the acting gambit rule's pick, when it has one (`lowest_hp` or `highest_hp`, no draw; `specs/28` section 4.2), else a random living enemy (one draw; no draw when only one is alive). A lowest-ally heal goes to the ally with the lowest HP fraction among those missing its full amount (the rule above; lowest slot on a tie), else, when none is (a triggered heal), to the ally with the lowest HP fraction. A single-target debuff (an action or a trigger) first narrows the choice to the living enemies that lack its effect, when any does, and applies the same rule among them: so it skips a taunter that already has it (issue #83, kj 2026-10-31).
 
 ### 5.3 A hit
 
@@ -179,7 +181,7 @@ Range violations are `E043` in both `tools/content_build.py` and `ContentDb`. `B
 
 - No clock, IO, reflection or `Math.Pow`; every draw comes from the `IRandomSource` passed in (`specs/00` section 5).
 - `BattleSim.StateHash` is SHA-256 over a canonical encoding of the whole fight (`StateHasher` conventions; version `HashVersion` = 2: v2 added `UnitTally.Grazes`). Changing the encoding bumps the version.
-- `golden/battle-sim-vectors.txt` resolves seven fixed fights (1v1 twice, 4v1, 4v4, 2v3, a 1v1 and a 2v2 of chase capstone carriers) with placeholder fighters defined in `src/IdleRng.Bots/Golden/BattleVectors.cs`, printing outcome, ticks, each unit's HP and tallies, and the hash. It covers every skill kind, a trigger and every chase capstone rule modifier. Any rule or content change that moves it is regenerated with `golden --update` and noted in the merge commit.
+- `golden/battle-sim-vectors.txt` resolves nine fixed fights (1v1 twice, 4v1, 4v4, 2v3, a 1v1 and two 2v2 of chase capstone carriers, and a 4v4 with gambit rulebooks) with placeholder fighters defined in `src/IdleRng.Bots/Golden/BattleVectors.cs`, printing outcome, ticks, each unit's HP and tallies, and the hash. It covers every skill kind, a trigger, every chase capstone rule modifier and every gambit condition and target pick. Any rule or content change that moves it is regenerated with `golden --update` and noted in the merge commit.
 
 ## 9. Descriptions (tooltips)
 
@@ -195,5 +197,4 @@ Template syntax and the constant lookup are `specs/05` section 5.
 ## 10. Open
 
 - What a timeout means per mode (proposed: the challenger loses; rank fights already treat it as a loss).
-- Gambit rulebooks replace the default AI (T11).
 - Whether skills get their own elements in content (supported by the engine; content decides at T3).
