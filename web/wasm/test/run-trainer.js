@@ -623,6 +623,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await act('tower-skip').count()) === 0 && /(Fell on floor \d+ to \S|All \d+ floors beaten)/.test(await text('[data-id=tower-landed]')),
     'tapping lands it on where the team stopped, then the defeat plays: ' + (await text('[data-id=tower-landed]')).replace(/\s+/g, ' '));
   await shot('06a-tower-reel');
+  check((await act('tower-reel-chart').count()) === 1, 'the reel offers the damage chart beside Watch');
   await act('tower-reel-done').click();
   await page.locator('[data-id=tower-result]').waitFor();
   check(await page.locator('#modal').isHidden(), 'See the loot closes the reel onto the result');
