@@ -53,9 +53,9 @@ These are drafted from a stat, so each creature is the purest image of that stat
 
 | Tree (species) | What it does | Creature concept | Inspirations |
 |---|---|---|---|
-| *Tome of Echoes* (sprite) | *Echo Bolt*; *Resonance* INT on action | **Bellfae**: a sprite inside a bell-shaped flower; every spell rings, and the ring repeats. | Echo the nymph (Greek myth), sirens and banshees, singing bowls, whale song |
-| *Codex of Tides* (slime) | *Tide Pool* heal; *Undertow* when hit | **Umibōzu Jelly**: a dark, smooth sea-giant head that rises from the slime; striking it drags you under. | Umibōzu (Japanese sea spirit), jellyfish, La the Ocean Spirit (*Avatar: The Last Airbender*) |
-| *Ember Codex* (drake) | *Ember Lance*; *Kindle* on crit | **Hearth Salamander**: a fire lizard that lives in a forge; its flames are a living spark with a face. | Calcifer (*Howl's Moving Castle*), Hephaestus' forge, the phoenix's embers, Charmander's tail flame |
+| *Echo Song* (sprite) | *Echo Bolt*; *Resonance* INT on action | **Bellfae**: a sprite inside a bell-shaped flower; every spell rings, and the ring repeats. | Echo the nymph (Greek myth), sirens and banshees, singing bowls, whale song |
+| *Riptide* (slime) | *Tide Pool* heal; *Undertow* when hit | **Umibōzu Jelly**: a dark, smooth sea-giant head that rises from the slime; striking it drags you under. | Umibōzu (Japanese sea spirit), jellyfish, La the Ocean Spirit (*Avatar: The Last Airbender*) |
+| *Ember Heart* (drake) | *Ember Lance*; *Kindle* on crit | **Hearth Salamander**: a fire lizard that lives in a forge; its flames are a living spark with a face. | Calcifer (*Howl's Moving Castle*), Hephaestus' forge, the phoenix's embers, Charmander's tail flame |
 
 ### 4.2 Chase trees
 
@@ -85,7 +85,7 @@ kj allowed fusion for **some specific pairs**, with the pair clear in the UI (`s
 
 | Pair | Fused look | Why it fits |
 |---|---|---|
-| *Pyromancy* + *Codex of Tides* | **Geyser Wyrm**: steam vents along its back | fire and water is the classic forbidden pairing; reads as a jackpot |
+| *Pyromancy* + *Riptide* | **Geyser Wyrm**: steam vents along its back | fire and water is the classic forbidden pairing; reads as a jackpot |
 | *Heavy Armor* + *Bulwark* | **Fortress Turtle-Drake**: a walking castle | two tank trees: taunt + armour |
 | *Mind Warp* + *Nimble Feet* | **Mirror Fox**: nine afterimages, only one is real | dodge triggers on both trees |
 | *Fortune* + *Spellcraft* | **Tarot Mimic**: a deck of cards with teeth, deals a random spell | gambling magic; Spellcraft's on-crit trigger feeds on Fortune's crit build |
