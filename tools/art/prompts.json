@@ -48,6 +48,10 @@
   "keepshell_crab": {
    "name": "Keepshell Crab",
    "prompt": "A stubby rust-orange hermit crab that wears a whole stone castle keep as its shell: crenellated towers, a portcullis gate over its face, coral and seaweed growing in the mortar. Its claws are wrapped in riveted gate-plates and raised to punch. Cute, glaring little castle."
+  },
+  "lodge_beaver": {
+   "name": "Lodge Beaver",
+   "prompt": "A stout beaver wearing a wall of stacked logs and mud so thick it can barely waddle, hugging one more log for the pile."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -142,6 +146,16 @@
    "species": "keepshell_crab",
    "name": "Siegebreaker Crab",
    "prompt": "the castle shell has been rebuilt as a dark iron-and-timber siege tower on wheels, its claws replaced by heavy black iron battering rams with crab-claw heads, cracked enemy shields hung on its walls as trophies. Colour palette shifts from grey stone to black iron, dark wood and rust red."
+  },
+  "tail_slap": {
+   "species": "lodge_beaver",
+   "name": "Logjam Warden",
+   "prompt": "the beaver has grown huge, and its log wall is now a massive rampart of dark timber bound with heavy polished steel bands and bolts, bolted to its back; its flat tail is a great timber paddle studded with river stones, raised high to slap. Colour palette shifts to dark wood, steel grey and cold blue highlights."
+  },
+  "great_dam": {
+   "species": "lodge_beaver",
+   "name": "Floodgate Colossus",
+   "prompt": "a colossal beaver grown into its own dam: logs and river stone across its chest with sluice gates pouring white water, a pond and a little lodge on its back."
   }
  }
 }
