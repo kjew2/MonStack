@@ -255,7 +255,20 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 unbreached and shellcrack", 14,
                 new[] { KeepshellCrab("a_keep", RuleModifiers.Unbreached), KeepshellCrab("a_siege", RuleModifiers.Shellcrack) },
                 new[] { Tank("b_tank", "fire"), Mage("b_mage", "nature"), Brawler("b_brawler", "dark") });
+            // Species Iaido Mantis (#159): vantage and iai_draw on both; one waits (still_hunt), one cuts actions off (sever_art).
+            yield return new Vector("2v3 iai, still hunt and severed arts", 1,
+                new[] { Mantis("a_hunt", RuleModifiers.StillHunt), Mantis("a_sever", RuleModifiers.SeverArt) },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "fire"), Tank("b_tank", "light") });
         }
+
+        // Species Iaido Mantis (#159): the native kit (vantage, Draw Cut, iai_draw), Blade Echo from its book, plus one chase capstone.
+        static Fighter Mantis(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(260, 520, 80, 380, 220, 120, 380, 180),
+            Skills = { Dmg("draw_cut", StatIds.Str, 1.7, 3, SkillTarget.Enemy, "nature") },
+            Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Dmg("blade_echo", StatIds.Spd, 0.4, 0)) },
+            Rules = { RuleModifiers.Vantage, RuleModifiers.IaiDraw, chase },
+        };
 
         // Species Fountain Axolotl (#150).
         static Fighter Axolotl(string id) => new Fighter

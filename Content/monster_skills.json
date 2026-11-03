@@ -1380,6 +1380,66 @@
       "cooldown": 4,
       "duration": 3,
       "element": null
+    },
+    {
+      "id": "draw_cut",
+      "name_key": "mskill.draw_cut.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "str",
+      "power": 1.7,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "nature"
+    },
+    {
+      "id": "crescent_draw",
+      "name_key": "mskill.crescent_draw.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "spd",
+      "power": 0.8,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "nature"
+    },
+    {
+      "id": "blade_echo",
+      "name_key": "mskill.blade_echo.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "spd",
+      "power": 0.4,
+      "cooldown": 0,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "petal_veil",
+      "name_key": "mskill.petal_veil.name",
+      "kind": "shield",
+      "target": "self",
+      "stat": null,
+      "scales": "spd",
+      "power": 0.4,
+      "cooldown": 4,
+      "duration": 2,
+      "element": null
+    },
+    {
+      "id": "iai_parry",
+      "name_key": "mskill.iai_parry.name",
+      "kind": "shield",
+      "target": "self",
+      "stat": null,
+      "scales": "spd",
+      "power": 0.5,
+      "cooldown": 4,
+      "duration": 2,
+      "element": null
     }
   ]
 }

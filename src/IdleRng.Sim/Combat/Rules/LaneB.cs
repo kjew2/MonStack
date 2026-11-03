@@ -53,28 +53,48 @@ namespace IdleRng.Sim.Combat
         /// vantage: below MON_VANTAGE_HP of max HP, an enemy's single-target damaging action (not a triggered effect, not a counter)
         /// aimed at the unit meets a basic attack first, once per enemy action; if that kills the attacker (or the unit), the hit
         /// is cancelled. The strike is a counter (GuardKind.Counter): it is never countered, by vantage or counter_mitigated.
+        /// Iaido Mantis (#159): while it waits under still_hunt the window is open at any HP (and area actions are answered before
+        /// they start, BeforeAoe); sever_art may cut the action off without a kill.
         /// </summary>
         static partial void BeforeHitResolves_B(RuleCtx c, HitInfo h)
         {
             var t = h.Tgt;
             var src = h.Src;
             var r = c.Rules;
-            if (h.Aoe || h.Triggered || !(r.VantageHp > 0) || !t.Alive || !src.Alive || src.Side == t.Side) return;
-            if (!(t.Hp < r.VantageHp * t.MaxHp) || !Has(t, RuleModifiers.Vantage) || InGuard(c.State, GuardKind.Counter)) return;
-            if (t.VantageFrom == src.Id && t.VantageAction == src.Tally.Actions) return;   // once per enemy action (an echo is the same action)
+            if (h.Aoe || h.Triggered || !t.Alive || !src.Alive || src.Side == t.Side) return;
+            if (!VantageOpen(r, t) || !Has(t, RuleModifiers.Vantage) || InGuard(c.State, GuardKind.Counter)) return;
+            if (VantageCounter(c, t, src)) h.Cancelled = true;
+        }
+
+        /// <summary>vantage's window: below MON_VANTAGE_HP of max HP, or at any HP while it waits under still_hunt (Iaido Mantis).</summary>
+        static bool VantageOpen(FightRules r, FightUnit t) => t.Hunting || r.VantageHp > 0 && t.Hp < r.VantageHp * t.MaxHp;
+
+        /// <summary>
+        /// vantage's strike: once per enemy action (an echo is the same action), the carrier <paramref name="t"/> basic-attacks
+        /// <paramref name="src"/> as a counter. True when the enemy's action is cancelled: the strike killed the attacker (or the
+        /// unit died), or a species rule cut the action off (sever_art). False also when it did not strike.
+        /// </summary>
+        static bool VantageCounter(RuleCtx c, FightUnit t, FightUnit src)
+        {
+            var r = c.Rules;
+            if (t.VantageFrom == src.Id && t.VantageAction == src.Tally.Actions) return false;   // once per enemy action
             t.VantageFrom = src.Id;
             t.VantageAction = src.Tally.Actions;
-            if (!EnterGuard(r, c.State, GuardKind.Counter, true, out var saved)) return;
+            if (!EnterGuard(r, c.State, GuardKind.Counter, true, out var saved)) return false;
+            double dealt;
             try
             {
                 t.Tally.Counters++;
                 c.Log?.Invoke(new FightAction(t.Id, VantageEvent, src.Id, 0));
                 double str = Eff(r, t, StatIds.Str), intel = Eff(r, t, StatIds.Int);
-                Hit(r, c.State, t, src, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), t.Source.Element, null, false, c.Rng, c.Log);
+                dealt = Hit(r, c.State, t, src, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), t.Source.Element, null, false, c.Rng, c.Log);
                 GainEntropy(r, c.State, t, r.Tower?.EntropyPerCounter ?? 0, c.Rng, c.Log);
             }
             finally { ExitGuard(c.State, saved); }
-            if (!src.Alive || !t.Alive) h.Cancelled = true;
+            if (!src.Alive || !t.Alive) return true;
+            bool cut = false;
+            HookVantageCounter(c, t, src, dealt, ref cut);
+            return cut;
         }
 
         /// <summary>

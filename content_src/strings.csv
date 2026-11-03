@@ -766,3 +766,31 @@ mskill.keep_gate.name,Keep Gate
 mskill.keep_gate.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 mskill.trophy_wall.name,Trophy Wall
 mskill.trophy_wall.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+species.iaido_mantis.name,Iaido Mantis
+tree.leaf_scabbard.name,Leaf Scabbard
+tree.unseen_blade.name,Scroll of the Unseen Blade
+tree.still_hunt.name,Still Hunt
+tree.severed_arts.name,Severed Arts
+tree.still_hunt.apex,Ghost Orchid Reaper
+tree.severed_arts.apex,Thousand-Petal Kensei
+book.book_unseen.name,Skill Book: Scroll of the Unseen Blade
+achievement.quickdraw.name,Quickdraw
+rule.iai_draw.name,Iai
+rule.iai_draw.desc,"Every hit it makes outside its own turn (Vantage counters, when-hit and when-evading effects) deals +{MON_IAI_BONUS:pct} damage with +{MON_IAI_CRIT:pct} crit rate."
+rule.iai_draw.log,draws: +{amount} damage
+rule.still_hunt.name,Still Hunt
+rule.still_hunt.desc,"When its turn comes it waits instead, up to {MON_HUNT_WAITS} turns in a row; each wait gives back {MON_HUNT_KEEP:pct} of a turn's gauge. Until its next turn Vantage answers at any HP and also answers area attacks. Waiting does not ready skills."
+rule.still_hunt.log,waits motionless ({amount} in a row)
+rule.sever_art.name,Severed Arts
+rule.sever_art.desc,"A Vantage counter that deals at least {MON_SEVER_FRAC:pct} of the enemy's max HP cuts off the move it answers: it deals and applies nothing, and the skill still goes on cooldown. Each move cut off adds +{MON_SEVER_DMG:pct} damage against that enemy, up to {MON_SEVER_MAX} cuts."
+rule.sever_art.log,cuts the move off ({amount} cut)
+mskill.draw_cut.name,Draw Cut
+mskill.draw_cut.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.crescent_draw.name,Crescent Draw
+mskill.crescent_draw.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.blade_echo.name,Blade Echo
+mskill.blade_echo.desc,Chase trait. When hit: strike back for {power:pct} {scales}.
+mskill.petal_veil.name,Petal Veil
+mskill.petal_veil.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.iai_parry.name,Iai Parry
+mskill.iai_parry.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.

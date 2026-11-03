@@ -8,3 +8,4 @@ deep_spring,achievement.deep_spring.name,stat_reached,int,650,fountain_axolotl,P
 hp_700,achievement.hp_700.name,stat_reached,hp,700,candlemane,"stat_reached HP at least 700 (#141). Placeholder"
 kindled,achievement.kindled.name,rank_reached,b,,pyre_stag,"Placeholder (#142)"
 castle_walls,achievement.castle_walls.name,stat_reached,def,650,keepshell_crab,"stat_reached DEF at least 650 (#152). Placeholder"
+quickdraw,achievement.quickdraw.name,stat_reached,spd,650,iaido_mantis,"stat_reached SPD at least 650 (#159). Placeholder"

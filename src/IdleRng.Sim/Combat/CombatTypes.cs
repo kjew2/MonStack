@@ -824,6 +824,27 @@ namespace IdleRng.Sim.Combat
         /// <summary>The unit's physical hits ignore the target's DEF and add MON_CRACK_DEF x that DEF to the raw damage. The Siege Pincers book chase capstone (Keepshell Crab).</summary>
         public const string Shellcrack = "shellcrack";
 
+        // Species Iaido Mantis (#159): rules coded in Combat/Rules/IaidoMantis.cs. Its native tree 1 carries lane B's vantage.
+
+        /// <summary>
+        /// Every hit the unit makes outside its own action (vantage counters, its on_hit_taken and on_evade effects) deals x(1 +
+        /// MON_IAI_BONUS) with +MON_IAI_CRIT crit rate. The Leaf Scabbard native capstone (Iaido Mantis).
+        /// </summary>
+        public const string IaiDraw = "iai_draw";
+
+        /// <summary>
+        /// When its turn comes and it has not waited MON_HUNT_WAITS times in a row, the unit waits (no action, MON_HUNT_KEEP of the
+        /// gauge kept); until its next turn vantage's window is open at any HP and answers area actions. The Still Hunt in-run chase
+        /// capstone (Iaido Mantis).
+        /// </summary>
+        public const string StillHunt = "still_hunt";
+
+        /// <summary>
+        /// A vantage counter dealing at least MON_SEVER_FRAC of the enemy's max HP cuts off the action it answers; each cut adds
+        /// MON_SEVER_DMG damage against that enemy, up to MON_SEVER_MAX cuts. The Severed Arts book chase capstone (Iaido Mantis).
+        /// </summary>
+        public const string SeverArt = "sever_art";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
@@ -836,7 +857,8 @@ namespace IdleRng.Sim.Combat
             ClearSpring, Seep, FountainJets,
             MartyrFlame, HollowSun,
             PyreTithe, AshShroud, PyreMercy, EmberEternal,
-            TideMoat, Unbreached, Shellcrack };
+            TideMoat, Unbreached, Shellcrack,
+            IaiDraw, StillHunt, SeverArt };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

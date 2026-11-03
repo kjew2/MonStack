@@ -119,6 +119,9 @@ REQUIRED_CONSTANTS = {
     "MON_EMBER_FLOOR": "double",
     # species Keepshell Crab (#152), tide_moat, unbreached and shellcrack (specs/16 section 6.2)
     "MON_MOAT_DEF": "double", "MON_WALL_DEF": "double", "MON_WALL_ERODE": "double", "MON_CRACK_DEF": "double",
+    # species Iaido Mantis (#159): iai_draw, still_hunt, sever_art
+    "MON_IAI_BONUS": "double", "MON_IAI_CRIT": "double", "MON_HUNT_WAITS": "int", "MON_HUNT_KEEP": "double",
+    "MON_SEVER_FRAC": "double", "MON_SEVER_DMG": "double", "MON_SEVER_MAX": "int",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -148,7 +151,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species pyre_stag (#142), coded in Combat/Rules/PyreStag.cs
             "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal",
             # species Keepshell Crab (#152)
-            "tide_moat", "unbreached", "shellcrack"]
+            "tide_moat", "unbreached", "shellcrack",
+            # species Iaido Mantis (#159)
+            "iai_draw", "still_hunt", "sever_art"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -252,6 +257,11 @@ MON_RANGES = {
     # species Keepshell Crab (#152): the walls must always fall, so the erosion is never 0
     "MON_MOAT_DEF": (">= 0", lambda v: v >= 0), "MON_WALL_DEF": (">= 0", lambda v: v >= 0),
     "MON_WALL_ERODE": ("(0, 1]", lambda v: 0 < v <= 1), "MON_CRACK_DEF": (">= 0", lambda v: v >= 0),
+    # species Iaido Mantis (#159)
+    "MON_IAI_BONUS": (">= 0", lambda v: v >= 0), "MON_IAI_CRIT": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_HUNT_WAITS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1), "MON_HUNT_KEEP": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_SEVER_FRAC": ("(0, 1]", lambda v: 0 < v <= 1), "MON_SEVER_DMG": (">= 0", lambda v: v >= 0),
+    "MON_SEVER_MAX": ("a whole number >= 0", lambda v: v == int(v) and v >= 0),
 }
 
 
