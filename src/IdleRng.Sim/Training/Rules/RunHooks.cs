@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
+using IdleRng.Sim.Rng;
 
 namespace IdleRng.Sim.Training
 {
@@ -109,6 +110,45 @@ namespace IdleRng.Sim.Training
 
         static partial void ModifyStatCap_F(ContentDb c, RunState s, string stat, ref double cap);
         static partial void ModifyStatCap_G(ContentDb c, RunState s, string stat, ref double cap);
+
+        /// <summary>
+        /// RollTree: the rolled tree's own stat, before any filler node is rolled. A lane may change it (drawing on
+        /// <paramref name="r"/>, the draft stream, only for its own trees); the filler nodes on the tree's content own stat then
+        /// move to the new one.
+        /// </summary>
+        static void HookRollOwnStat(ContentDb c, RngStream r, TreeDef t, ref string own)
+        {
+            RollOwnStat_F(c, r, t, ref own);
+            RollOwnStat_G(c, r, t, ref own);
+        }
+
+        static partial void RollOwnStat_F(ContentDb c, RngStream r, TreeDef t, ref string own);
+        static partial void RollOwnStat_G(ContentDb c, RngStream r, TreeDef t, ref string own);
+
+        /// <summary>TreeRemoved: RemoveSlot, once a tree (overwritten, or a chase tree locking again) has left its slot and its refund and flat stats are settled.</summary>
+        static void HookTreeRemoved(ContentDb c, RunState s)
+        {
+            OnTreeRemoved_F(c, s);
+            OnTreeRemoved_G(c, s);
+        }
+
+        static partial void OnTreeRemoved_F(ContentDb c, RunState s);
+        static partial void OnTreeRemoved_G(ContentDb c, RunState s);
+
+        /// <summary>
+        /// KitExtra: MonsterFighter and Vault.Seal, the tree nodes (ids, in kit order) the run adds to the kit beyond the bought
+        /// nodes of its trees. BuildFighter adds them after those, so a sealed Vault entry keeps them without the run state.
+        /// </summary>
+        static List<string> HookKitExtra(ContentDb c, RunState s)
+        {
+            var extra = new List<string>();
+            KitExtra_F(c, s, extra);
+            KitExtra_G(c, s, extra);
+            return extra;
+        }
+
+        static partial void KitExtra_F(ContentDb c, RunState s, List<string> extra);
+        static partial void KitExtra_G(ContentDb c, RunState s, List<string> extra);
 
         /// <summary>HashRun: the run hash, at the end: the lane's run state, only when the run has it (so every other run keeps its hash).</summary>
         static void HookHashRun(CanonicalWriter w, RunState s)

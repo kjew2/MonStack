@@ -340,34 +340,46 @@ namespace IdleRng.Sim.Training
         {
             var trees = new List<(string, TreeRoll, int)>();
             foreach (var ts in AllTrees(s)) trees.Add((ts.TreeId, ts.Roll, ts.Bought));
-            return BuildFighter(c, s.SpeciesId, s.Stats, trees);
+            return BuildFighter(c, s.SpeciesId, s.Stats, trees, KitExtra(c, s));
         }
 
         /// <summary>
-        /// A monster's battle fighter from its final stats and its trees in order (absorbed trees before their slot, as
-        /// <see cref="AllTrees"/> yields them), each with its roll and how many nodes were bought. The run and a sealed Vault
-        /// entry both build it this way, so an entry needs no replay (specs/27 section 3.5).
+        /// Tree nodes (ids, in kit order) a run rule adds to the monster's kit beyond the bought nodes of its trees (specs/15
+        /// section 7). Empty for a run without such a rule. Vault.Seal stores them with the entry.
         /// </summary>
-        public static Fighter BuildFighter(ContentDb c, string speciesId, MonsterStats stats, IEnumerable<(string TreeId, TreeRoll Roll, int Bought)> trees)
+        public static List<string> KitExtra(ContentDb c, RunState s) => HookKitExtra(c, s);
+
+        /// <summary>
+        /// A monster's battle fighter from its final stats and its trees in order (absorbed trees before their slot, as
+        /// <see cref="AllTrees"/> yields them), each with its roll and how many nodes were bought, then the <paramref name="extra"/>
+        /// nodes a run rule adds (<see cref="KitExtra"/>; null = none). The run and a sealed Vault entry both build it this way, so
+        /// an entry needs no replay (specs/27 section 3.5).
+        /// </summary>
+        public static Fighter BuildFighter(ContentDb c, string speciesId, MonsterStats stats, IEnumerable<(string TreeId, TreeRoll Roll, int Bought)> trees,
+                                           IEnumerable<string> extra = null)
         {
             var f = new Fighter { Id = MonsterId, Element = c.Species[speciesId].Element, Stats = stats.Clone() };
             var list = trees.ToList();
             foreach (var (treeId, roll, bought) in list)
             {
                 var nodes = Nodes(c, treeId, roll);
-                for (int i = 0; i < bought; i++)
-                {
-                    var n = nodes[i];
-                    switch (n.Kind)
-                    {
-                        case NodeKind.Skill: f.Skills.Add(n.Skill); break;
-                        case NodeKind.Trigger: f.Triggers.Add(new TriggeredSkill(n.Trigger.Value, n.Skill)); break;
-                        case NodeKind.Rule: if (!f.Rules.Contains(n.RuleId)) f.Rules.Add(n.RuleId); break;
-                    }
-                }
+                for (int i = 0; i < bought; i++) AddToKit(f, nodes[i]);
             }
+            if (extra != null)
+                foreach (var id in extra) AddToKit(f, c.TreeNodes[id]);
             HookKit(c, speciesId, list, f);
             return f;
+        }
+
+        /// <summary>A skill, trigger or rule node joins the fighter's kit (a rule once); a filler node adds nothing.</summary>
+        static void AddToKit(Fighter f, TreeNodeDef n)
+        {
+            switch (n.Kind)
+            {
+                case NodeKind.Skill: f.Skills.Add(n.Skill); break;
+                case NodeKind.Trigger: f.Triggers.Add(new TriggeredSkill(n.Trigger.Value, n.Skill)); break;
+                case NodeKind.Rule: if (!f.Rules.Contains(n.RuleId)) f.Rules.Add(n.RuleId); break;
+            }
         }
 
         // ------------------------------------------------------------------ the rank ladder (specs/14 section 5)
@@ -669,16 +681,18 @@ namespace IdleRng.Sim.Training
         public static TreeRoll RollTree(ContentDb c, RngStream r, TreeDef t)
         {
             var k = c.Constants;
-            string own = t.OfferStat ?? t.Nodes.First(x => x.Kind == NodeKind.Growth || x.Kind == NodeKind.Stat).Stat;
+            string contentOwn = t.OfferStat ?? t.Nodes.First(x => IsFiller(x.Kind)).Stat, own = contentOwn;
+            HookRollOwnStat(c, r, t, ref own);   // a lane rule may roll it (limit_break); its filler nodes follow
             var roll = new TreeRoll { Stat = own, NodeStats = new string[t.Nodes.Count], Amounts = new double[t.Nodes.Count] };
             for (int i = 0; i < t.Nodes.Count; i++)
             {
                 var n = t.Nodes[i];
-                if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
-                bool isOwn = n.Stat == own;
+                if (!IsFiller(n.Kind)) continue;
+                string stat = n.Stat == contentOwn ? own : n.Stat;
+                bool isOwn = stat == own;
                 double u = r.NextDouble();
-                roll.NodeStats[i] = n.Stat;
-                roll.Amounts[i] = n.Kind == NodeKind.Growth
+                roll.NodeStats[i] = stat;
+                roll.Amounts[i] = n.Kind != NodeKind.Stat
                     ? Math.Round(isOwn ? Lerp(k.RollGrowthOwnMin, k.RollGrowthOwnMax, u) : Lerp(k.RollGrowthOffMin, k.RollGrowthOffMax, u), 2, MidpointRounding.AwayFromZero)
                     : Math.Round(isOwn ? Lerp(k.RollFlatOwnMin, k.RollFlatOwnMax, u) : Lerp(k.RollFlatOffMin, k.RollFlatOffMax, u), MidpointRounding.AwayFromZero);
             }
@@ -687,6 +701,9 @@ namespace IdleRng.Sim.Training
         }
 
         static double Lerp(double lo, double hi, double u) => lo + (hi - lo) * u;
+
+        /// <summary>A filler node: growth, flat stat or growth_use (specs/15 section 2). Awakenings roll their amounts.</summary>
+        public static bool IsFiller(NodeKind k) => k == NodeKind.Growth || k == NodeKind.Stat || k == NodeKind.GrowthUse;
 
         /// <summary>The nodes of a slotted tree: its content nodes, with a rolled tree's rolls applied.</summary>
         public static IReadOnlyList<TreeNodeDef> Nodes(ContentDb c, TreeSlot ts) => Nodes(c, ts.TreeId, ts.Roll);
@@ -840,6 +857,7 @@ namespace IdleRng.Sim.Training
             }
             s.Sp += refund;
             s.Slots[slot] = null;
+            HookTreeRemoved(c, s);
             if (result == null) return;
             result.Removed.Add(ts.TreeId);
             result.Refunded += refund;
