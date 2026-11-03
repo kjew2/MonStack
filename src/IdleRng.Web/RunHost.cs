@@ -1100,6 +1100,7 @@ namespace IdleRng.Web
                 public double[] Hp;
                 public double[] Sh;        // every unit's shield after the action
                 public double[] Wd;        // every unit's mana_ward ward after the action; null when no unit carries mana_ward
+                public double[] Rv;        // every unit's holdback Reservoir after the action; null when no unit carries holdback
                 public int[] Cd;
                 public int Si;
                 public double[] Entropy;   // tower fights only, else null
@@ -1130,8 +1131,10 @@ namespace IdleRng.Web
                     e.Sh[i] = Math.Max(0, u.Shield);
                     if (u.Id == x.Actor) actor = u;
                     if (u.Source.Rules.Contains(RuleModifiers.ManaWard)) e.Wd = e.Wd ?? new double[n];
+                    if (u.Source.Rules.Contains(RuleModifiers.Holdback)) e.Rv = e.Rv ?? new double[n];
                 }
                 if (e.Wd != null) for (int i = 0; i < n; i++) e.Wd[i] = Math.Max(0, _live.Units[i].Ward);
+                if (e.Rv != null) for (int i = 0; i < n; i++) e.Rv[i] = Math.Max(0, _live.Units[i].Reservoir);
                 // the actor's skill (by id, so an echo counts) this action used; -1 for basic attacks, counters and triggers not in its list
                 if (actor != null && x.Skill != null)
                     for (int i = 0; i < actor.Source.Skills.Count && e.Si < 0; i++)
@@ -1163,6 +1166,7 @@ namespace IdleRng.Web
         private void FightUnitOut(JsonOut w, FightUnit u, Action<JsonOut> extra = null)
         {
             w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp).P("shield", Math.Max(0, u.Shield)).P("ward", Math.Max(0, u.Ward))
+                .P("reservoir", Math.Max(0, u.Reservoir))
                 .P("damage", u.Tally.DamageDealt).P("crits", u.Tally.Crits).P("evades", u.Tally.Evades);
             w.Key("skills").Arr();   // in the fighter's skill order, the index the actions' "cd" and "si" use
             foreach (var sk in u.Source.Skills)
@@ -1204,6 +1208,12 @@ namespace IdleRng.Web
             {
                 w.Key("wd").Arr();
                 foreach (var v in e.Wd) w.Num(v);
+                w.EndArr();
+            }
+            if (e.Rv != null)   // holdback's Reservoir: HP damage held back, still to land (specs/16 section 6.2)
+            {
+                w.Key("rv").Arr();
+                foreach (var v in e.Rv) w.Num(v);
                 w.EndArr();
             }
             w.Key("cd").Arr();

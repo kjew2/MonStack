@@ -586,11 +586,13 @@ namespace IdleRng.Sim.Combat
                 case SkillKind.Heal:
                 {
                     double amt = Scaled(r, u, sk) * HealScale(r, s);
+                    // mudwork turns the carrier's heal on itself into shield: judged like a shield, not by missing HP
+                    if (sk.Target == SkillTarget.Self && Has(u, RuleModifiers.Mudwork)) return AnyEnemy(s, u) && ShieldWanted(r, u, MudShield(r, u, amt));
                     if (sk.Target != SkillTarget.LowestAlly && sk.Target != SkillTarget.AllAllies) return WantsHeal(r, u, amt);
                     foreach (var a in s.Units) if (a.Side == u.Side && WantsHeal(r, a, amt)) return true;
                     return false;
                 }
-                case SkillKind.Shield: return AnyEnemy(s, u) && WantsShield(s, u, sk, Scaled(r, u, sk) * HealScale(r, s));
+                case SkillKind.Shield: return AnyEnemy(s, u) && WantsShield(r, s, u, sk, Scaled(r, u, sk) * HealScale(r, s));
                 case SkillKind.Taunt: return u.TauntTicks == 0 && AnyOtherAlly(s, u);   // nobody to protect: a wasted action
                 case SkillKind.Buff:
                 {
@@ -1041,13 +1043,14 @@ namespace IdleRng.Sim.Combat
         /// <summary>
         /// Whether a shield of <paramref name="amount"/> would raise one of the skill's targets' shield (specs/16 section 5.2). A
         /// shield guards HP it has not lost yet, so unlike a heal it does not wait for damage: it only waits while the target's
-        /// shield is already at least this big (casting then would change nothing but the timer).
+        /// shield is already at least this big (casting then would change nothing but the timer). A barricade target stacks
+        /// shields, so it wants one while under its cap; a holdback target, while its Reservoir holds damage (ShieldWanted).
         /// </summary>
-        static bool WantsShield(FightState s, FightUnit u, CombatSkill sk, double amount)
+        static bool WantsShield(FightRules r, FightState s, FightUnit u, CombatSkill sk, double amount)
         {
-            if (sk.Target == SkillTarget.Self) return u.Shield < amount;
-            if (sk.Target == SkillTarget.LowestAlly) { var t = LowestAlly(s, u); return t != null && t.Shield < amount; }
-            foreach (var a in s.Units) if (a.Side == u.Side && a.Alive && a.Shield < amount) return true;
+            if (sk.Target == SkillTarget.Self) return ShieldWanted(r, u, amount);
+            if (sk.Target == SkillTarget.LowestAlly) { var t = LowestAlly(s, u); return t != null && ShieldWanted(r, t, amount); }
+            foreach (var a in s.Units) if (a.Side == u.Side && ShieldWanted(r, a, amount)) return true;
             return false;
         }
 

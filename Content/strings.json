@@ -3069,6 +3069,94 @@
     {
       "key": "mskill.trophy_wall.desc",
       "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "species.lodge_beaver.name",
+      "text": "Lodge Beaver"
+    },
+    {
+      "key": "tree.mudwork.name",
+      "text": "Mudwork"
+    },
+    {
+      "key": "tree.tail_slap.name",
+      "text": "Tail Slap"
+    },
+    {
+      "key": "tree.great_dam.name",
+      "text": "Great Dam"
+    },
+    {
+      "key": "tree.tail_slap.apex",
+      "text": "Logjam Warden"
+    },
+    {
+      "key": "tree.great_dam.apex",
+      "text": "Floodgate Colossus"
+    },
+    {
+      "key": "achievement.dam_builder.name",
+      "text": "Dam Builder"
+    },
+    {
+      "key": "rule.mudwork.name",
+      "text": "Mudwork"
+    },
+    {
+      "key": "rule.mudwork.desc",
+      "text": "Every heal it would receive becomes shield instead (up to {MON_MUD_CAP:pct} of max HP, or a larger shield cap it has), lasting {MON_MUD_TURNS} turns. It never regains HP from heals."
+    },
+    {
+      "key": "rule.mudwork.log",
+      "text": "turns a {amount} heal into shield"
+    },
+    {
+      "key": "rule.tail_slap.name",
+      "text": "Tail Slap"
+    },
+    {
+      "key": "rule.tail_slap.desc",
+      "text": "Each hit it lands deals {MON_SLAP_SHIELD:pct} of its current shield as extra damage. The shield is not spent."
+    },
+    {
+      "key": "rule.tail_slap.log",
+      "text": "+{amount} damage from its wall"
+    },
+    {
+      "key": "rule.holdback.name",
+      "text": "Holdback"
+    },
+    {
+      "key": "rule.holdback.desc",
+      "text": "HP damage past its shield is held back in a Reservoir; {MON_DAM_FLOW:pct} of it drains into HP at the start of each of its actions. Each shield it gains washes stored damage out first, dealing {MON_DAM_SPILL:pct} of it to an enemy as true damage. At {MON_DAM_BREAK:pct} of max HP the dam breaks and it all lands at once."
+    },
+    {
+      "key": "rule.holdback.log",
+      "text": "reservoir {amount}"
+    },
+    {
+      "key": "mskill.mud_patch.name",
+      "text": "Mud Patch"
+    },
+    {
+      "key": "mskill.mud_patch.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.tail_thump.name",
+      "text": "Tail Thump"
+    },
+    {
+      "key": "mskill.tail_thump.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.sluice_gate.name",
+      "text": "Sluice Gate"
+    },
+    {
+      "key": "mskill.sluice_gate.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
     }
   ]
 }

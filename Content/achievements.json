@@ -72,6 +72,14 @@
       "ref": "def",
       "amount": 650.0,
       "unlocks_species": "keepshell_crab"
+    },
+    {
+      "id": "dam_builder",
+      "name_key": "achievement.dam_builder.name",
+      "kind": "runs_finished",
+      "ref": null,
+      "amount": 15.0,
+      "unlocks_species": "lodge_beaver"
     }
   ]
 }

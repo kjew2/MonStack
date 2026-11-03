@@ -119,6 +119,9 @@ REQUIRED_CONSTANTS = {
     "MON_EMBER_FLOOR": "double",
     # species Keepshell Crab (#152), tide_moat, unbreached and shellcrack (specs/16 section 6.2)
     "MON_MOAT_DEF": "double", "MON_WALL_DEF": "double", "MON_WALL_ERODE": "double", "MON_CRACK_DEF": "double",
+    # species Lodge Beaver (#146): mudwork, tail_slap and holdback (specs/16 section 6.2)
+    "MON_MUD_CAP": "double", "MON_MUD_TURNS": "int", "MON_SLAP_SHIELD": "double", "MON_DAM_FLOW": "double",
+    "MON_DAM_SPILL": "double", "MON_DAM_BREAK": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -148,7 +151,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species pyre_stag (#142), coded in Combat/Rules/PyreStag.cs
             "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal",
             # species Keepshell Crab (#152)
-            "tide_moat", "unbreached", "shellcrack"]
+            "tide_moat", "unbreached", "shellcrack",
+            # species Lodge Beaver (#146), coded in Combat/Rules/LodgeBeaver.cs
+            "mudwork", "tail_slap", "holdback"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -252,6 +257,10 @@ MON_RANGES = {
     # species Keepshell Crab (#152): the walls must always fall, so the erosion is never 0
     "MON_MOAT_DEF": (">= 0", lambda v: v >= 0), "MON_WALL_DEF": (">= 0", lambda v: v >= 0),
     "MON_WALL_ERODE": ("(0, 1]", lambda v: 0 < v <= 1), "MON_CRACK_DEF": (">= 0", lambda v: v >= 0),
+    # species Lodge Beaver (#146): the Reservoir always drains (flow > 0) and the dam always breaks at some finite height
+    "MON_MUD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_MUD_TURNS": (">= 1", lambda v: v >= 1),
+    "MON_SLAP_SHIELD": (">= 0", lambda v: v >= 0), "MON_DAM_FLOW": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_DAM_SPILL": (">= 0", lambda v: v >= 0), "MON_DAM_BREAK": ("> 0", lambda v: v > 0),
 }
 
 

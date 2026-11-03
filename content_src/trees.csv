@@ -53,7 +53,7 @@ blood_magic,tree.blood_magic.name,native,,,,,,"idea-pool lane A (#134): PoE Bloo
 resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monster Hunter Resentment
 vantage,tree.vantage.name,generic,spd,400,,,,idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage
 deaths_door,tree.deaths_door.name,generic,luk,400,,,,idea-pool lane B (#135): Darkest Dungeon Death's Door
-barricade,tree.barricade.name,generic,def,400,,,,idea-pool lane B (#135): Slay the Spire Barricade
+barricade,tree.barricade.name,native,,,,,,"idea-pool lane B (#135): Slay the Spire Barricade; Lodge Beaver's native tree 1 (#146, kj 2026-11-03)"
 mana_ward,tree.mana_ward.name,generic,wis,400,,,,idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery
 brave_heart,tree.brave_heart.name,generic,spd,400,,,,idea-pool lane C (#136): Bravely Default Brave/Default
 one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
@@ -94,3 +94,6 @@ tide_moat,tree.tide_moat.name,native,,,,,,keepshell crab native tree 2 (#152)
 siege_manual,tree.siege_manual.name,book,,,,,,keepshell crab's book tree (Siege Pincers)
 unbreached_keep,tree.unbreached_keep.name,chase,,,tree.unbreached_keep.apex,,,keepshell crab in-run chase tree
 siege_pincers,tree.siege_pincers.name,chase,,,tree.siege_pincers.apex,,,keepshell crab book-gated chase tree
+mudwork,tree.mudwork.name,native,,,,,,lodge beaver native tree 2 (#146): heals become shield
+tail_slap,tree.tail_slap.name,chase,,,tree.tail_slap.apex,,,lodge beaver in-run chase tree
+great_dam,tree.great_dam.name,chase,,,tree.great_dam.apex,,,lodge beaver harder in-run second chase tree (no book)

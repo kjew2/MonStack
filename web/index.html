@@ -186,6 +186,7 @@ small, .small { font-size: 12px; }
 .bar.hp .shield { position: absolute; left: 0; bottom: 0; height: 40%; width: 0; background: var(--shield); border-top: 1px solid rgba(255, 255, 255, .85); transition: width .2s; }
 .bar.hp.shielded { box-shadow: 0 0 0 1px var(--shield); }
 .bar.hp.warded { outline: 1px dashed var(--shield); outline-offset: 1px; }
+.bar.hp .dam { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: repeating-linear-gradient(135deg, rgba(0, 0, 0, .45) 0 3px, rgba(255, 255, 255, .25) 3px 6px); transition: width .2s, left .2s; }
 .bar span { position: relative; display: block; text-align: center; font: 600 11px/16px var(--font-display); text-shadow: var(--text-shade); }
 .pips { display: flex; gap: 5px; }
 .hud-meters { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }

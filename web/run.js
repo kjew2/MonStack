@@ -683,6 +683,10 @@
     'rule:tide_moat': (n) => 'moat defends with ' + Math.round(n),
     'rule:unbreached': (n) => 'blocked, wall ' + Math.round(n) + ' left',
     'rule:shellcrack': (n) => '+' + Math.round(n) + ' damage from its DEF',
+    // species Lodge Beaver (#146): the heal turned into shield, the damage its wall added, the Reservoir after each change
+    'rule:mudwork': (n) => 'turns a ' + Math.round(n) + ' heal into shield',
+    'rule:tail_slap': (n) => '+' + Math.round(n) + ' damage from its wall',
+    'rule:holdback': (n) => 'reservoir ' + Math.round(n),
   };
 
   function actionResult(x) {
@@ -870,14 +874,14 @@
   // also its entropy and next vent, and whether it is in the fight yet (a split phase's adds join later, BRIDGE.md).
   function unitsAt(f, upto) {
     return f.units.map((u, k) => {
-      if (upto === null) return { hp: u.hp, sh: u.shield || 0, wd: u.ward || 0, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
+      if (upto === null) return { hp: u.hp, sh: u.shield || 0, wd: u.ward || 0, rv: u.reservoir || 0, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
       let cd = [];                                 // no action yet: every skill starts ready
       for (let j = upto - 1; j >= 0; j--) if (f.actions[j].actor === u.id) { cd = f.actions[j].cd; break; }
       const x = upto ? f.actions[upto - 1] : null;
       const here = x ? k < x.hp.length : !u.add;
       // mana_ward's ward before the first logged action is its first entry's (the ward is set at fight start)
       const wd = x ? (here && x.wd ? x.wd[k] : 0) : (f.actions[0] && f.actions[0].wd ? f.actions[0].wd[k] || 0 : 0);
-      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, sh: x && here && x.sh ? x.sh[k] : 0, wd: wd, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
+      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, sh: x && here && x.sh ? x.sh[k] : 0, wd: wd, rv: x && here && x.rv ? x.rv[k] || 0 : 0, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
     });
   }
   const corruptionAt = (f, upto) => (upto === null ? f.corruption : upto ? f.actions[upto - 1].corruption : 0);
@@ -908,6 +912,7 @@
       ])));
       const hpBar = bar(0, 1, '', 'hp');
       hpBar.insertBefore(h('div', { class: 'shield', 'data-id': 'shield-' + (tower ? k : u.side) }), hpBar.querySelector('span'));
+      hpBar.insertBefore(h('div', { class: 'dam', 'data-id': 'dam-' + (tower ? k : u.side) }), hpBar.querySelector('span'));
       let entropy = null;
       if (tower) {
         entropy = { bar: bar(0, f.entropyCap, '', 'ent'), vent: h('span', { class: 'vent small tipword', 'data-id': 'vent-' + k }) };
@@ -941,7 +946,7 @@
   }
   function paintUnits(refs, now, x, cap) {
     refs.forEach((r, k) => {
-      const hp = now[k].hp, sh = now[k].sh || 0, wd = now[k].wd || 0, max = r.u.maxHp;
+      const hp = now[k].hp, sh = now[k].sh || 0, wd = now[k].wd || 0, rv = now[k].rv || 0, max = r.u.maxHp;
       r.el.hidden = !now[k].here;
       if (r.float) {   // the stage: the actor lunges, the one hit recoils, and the number floats up (a new node restarts its animation)
         const fl = x && x.target === r.u.id ? floatOf(x) : null;
@@ -956,8 +961,14 @@
       r.hpBar.classList.toggle('shielded', shown);
       const warded = Math.round(wd) > 0;   // mana_ward's ward: a pool apart from the shield (specs/16 section 6.2)
       r.hpBar.classList.toggle('warded', warded);
-      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max) + (shown ? '  🛡' + Math.round(sh) : '') + (warded ? '  ◈' + Math.round(wd) : '');
-      r.hpBar.title = [shown ? 'Shield ' + Math.round(sh) + ': absorbs damage before HP' : '', warded ? 'Ward ' + Math.round(wd) + ': takes a share of each blow after the shield' : '']
+      // holdback's Reservoir: HP damage held back, drawn as a hatched segment over the end of the HP it will drain away
+      const dammed = Math.round(rv) > 0, damEl = r.hpBar.querySelector('.dam');
+      const damW = dammed ? Math.max(0, Math.min(hp, rv)) / max * 100 : 0;
+      damEl.style.width = damW + '%';
+      damEl.style.left = Math.max(0, Math.min(100, (hp / max) * 100) - damW) + '%';
+      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max) + (shown ? '  🛡' + Math.round(sh) : '') + (warded ? '  ◈' + Math.round(wd) : '') + (dammed ? '  ≋' + Math.round(rv) : '');
+      r.hpBar.title = [shown ? 'Shield ' + Math.round(sh) + ': absorbs damage before HP' : '', warded ? 'Ward ' + Math.round(wd) + ': takes a share of each blow after the shield' : '',
+        dammed ? 'Reservoir ' + Math.round(rv) + ': damage held back; it drains into HP each turn, and a shield washes it out' : '']
         .filter(Boolean).join('. ');
       if (r.entropy) {
         const en = now[k].en || 0, vent = now[k].vent;

@@ -255,6 +255,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 unbreached and shellcrack", 14,
                 new[] { KeepshellCrab("a_keep", RuleModifiers.Unbreached), KeepshellCrab("a_siege", RuleModifiers.Shellcrack) },
                 new[] { Tank("b_tank", "fire"), Mage("b_mage", "nature"), Brawler("b_brawler", "dark") });
+            // Species Lodge Beaver (#146): its chase capstones on its own kit (barricade, mudwork, Stand Firm, Mud Patch, Tail
+            // Thump, Sluice Gate) against a brawler, a caster and a healer.
+            yield return new Vector("2v3 tail slap and holdback", 15,
+                new[] { LodgeBeaver("a_slap", RuleModifiers.TailSlap), LodgeBeaver("a_dam", RuleModifiers.Holdback) },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "fire"), Healer("b_healer", "dark") });
         }
 
         // Species Fountain Axolotl (#150).
@@ -323,6 +328,20 @@ namespace IdleRng.Bots.Golden
             Id = id, Element = "water", Stats = S(420, 70, 50, 160, 120, 600, 140, 240),
             Skills = { Dmg("iron_press", StatIds.Def, 1.2, 2), Dmg("moat_surge", StatIds.Def, 1.3, 2, SkillTarget.Enemy, "water") },
             Rules = { RuleModifiers.FortressFist, RuleModifiers.TideMoat, chase },
+        };
+
+        // Species Lodge Beaver (#146): the native kit (Barricade and Mudwork) plus one chase capstone.
+        static Fighter LodgeBeaver(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(450, 380, 50, 420, 140, 620, 120, 220),
+            Skills =
+            {
+                Fx("stand_firm", SkillKind.Shield, SkillTarget.Self, null, StatIds.Def, 1.5, 4, 3),
+                Fx("mud_patch", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 1.0, 3, 0),
+                Dmg("tail_thump", StatIds.Str, 1.2, 2, SkillTarget.Enemy, "nature"),
+                Fx("sluice_gate", SkillKind.Shield, SkillTarget.Self, null, StatIds.Wis, 1.2, 4, 3),
+            },
+            Rules = { RuleModifiers.Barricade, RuleModifiers.Mudwork, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.
