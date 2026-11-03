@@ -649,7 +649,9 @@
   const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
   function actionResult(x) {
     let body;
-    if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
+    const turnGauge = x.event ? laneCResult(x) : null;   // idea-pool lane C (#136): pips and gauge, not healing
+    if (turnGauge) body = turnGauge;
+    else if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
     else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
     else if (x.kind === 'shield') body = 'shields ' + Math.round(x.amount);
@@ -659,7 +661,19 @@
     return body + (x.graze ? ' (grazed)' : '') + (x.crit ? ' CRIT' : '') + (x.lucky ? ' · lucky!' : '');
   }
 
-  const FIGHT_LOG_LINES = 6;   // lines shown before "Show all", so Continue fits on a phone screen without scrolling
+  // Lane C's rule events (specs/16 section 6.2): what each amount means, or null for another event.
+  function laneCResult(x) {
+    const n = Math.round(x.amount);
+    switch (x.event) {
+      case 'rule:brave_heart': return n > 0 ? 'Defaults · ' + n + (n === 1 ? ' pip' : ' pips') : 'spends a pip: extra action';
+      case 'rule:one_more': return 'gauge +' + Math.round(x.amount * 100) + '%';
+      case 'rule:guard_break': return x.actor === x.target ? 'broken: loses its action' : n > 0 ? 'guard ' + n + ' left' : 'BREAK!';
+      case 'rule:latent_power': return 'awakens: stats +' + Math.round(x.amount * 100) + '%';
+      default: return null;
+    }
+  }
+
+  const FIGHT_LOG_LINES = 6;  // lines shown before "Show all", so Continue fits on a phone screen without scrolling
   function fightModal(modal, f, s) {
     const you = speciesDef(s.species).name, foe = f.opponent.name;
     modal.append(

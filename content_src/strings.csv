@@ -551,3 +551,15 @@ gambit.target.highest_hp.name,Healthiest enemy
 gambit.target.highest_hp.desc,The enemy with the highest share of its HP left. A taunt still forces the target.
 gambit.basic.name,Basic attack
 gambit.basic.desc,"A plain attack, always ready."
+tree.brave_heart.name,Brave Heart
+tree.one_more.name,One More
+tree.guard_break.name,Guard Break
+tree.latent_power.name,Latent Power
+rule.brave_heart.name,Brave Heart
+rule.brave_heart.desc,"When its turn comes at full HP or with a shield, holding under {MON_BRAVE_MAX} pips, it Defaults: no action, +1 pip and {MON_BRAVE_GUARD:pct} less hit damage until its next turn. Otherwise it acts, then spends each pip on an extra action in a row (at most {MON_EXTRA_ACTIONS_CAP} per turn; the rest wait)."
+rule.one_more.name,One More
+rule.one_more.desc,"A crit, or a hit whose element is strong against the target, refunds {MON_ONE_MORE:pct} of its turn gauge, once per action, never past a full gauge."
+rule.guard_break.name,Guard Break
+rule.guard_break.desc,"Each enemy has {MON_BREAK_PIPS} guard pips. Its crits and its hits whose element is strong against the enemy strip one. At 0 the enemy breaks: it loses its next action and takes +{MON_BREAK_BONUS:pct} hit damage until it acts again, then its pips refill."
+rule.latent_power.name,Latent Power
+rule.latent_power.desc,"After its {MON_LATENT_ACTIONS}th action of a fight, all its stats but HP rise by {MON_LATENT_BONUS:pct} for the rest of the fight."

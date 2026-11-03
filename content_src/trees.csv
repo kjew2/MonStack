@@ -46,3 +46,7 @@ geyser_heart,tree.geyser_heart.name,fusion,,,tree.geyser_heart.apex,pyromancy,ti
 living_fortress,tree.living_fortress.name,fusion,,,tree.living_fortress.apex,heavy_armor,bulwark,fusion tree (specs/15 section 5.6)
 hall_of_mirrors,tree.hall_of_mirrors.name,fusion,,,tree.hall_of_mirrors.apex,mind_warp,nimble_feet,fusion tree (specs/15 section 5.6)
 arcana_deck,tree.arcana_deck.name,fusion,,,tree.arcana_deck.apex,fortune,spellcraft,fusion tree (specs/15 section 5.6)
+brave_heart,tree.brave_heart.name,generic,spd,400,,,,idea-pool lane C (#136): Bravely Default Brave/Default
+one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
+guard_break,tree.guard_break.name,generic,str,400,,,,idea-pool lane C (#136): Octopath Break
+latent_power,tree.latent_power.name,generic,spd,400,,,,idea-pool lane C (#136): MH Latent Power

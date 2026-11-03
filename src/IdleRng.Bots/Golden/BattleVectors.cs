@@ -156,6 +156,35 @@ namespace IdleRng.Bots.Golden
             Rules = { RuleModifiers.UmbralVeil, RuleModifiers.NightFeast },
         };
 
+        // Idea-pool lane C (#136): the turn-gauge generic capstones, one per carrier.
+        static Fighter Braveheart(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(340, 300, 80, 200, 240, 260, 300, 160),
+            Skills = { Dmg("blitz", StatIds.Spd, 1.5, 2) },
+            Rules = { RuleModifiers.BraveHeart },
+        };
+
+        static Fighter Gambler(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(280, 160, 300, 200, 260, 180, 260, 520),
+            Skills = { Dmg("coin_toss", StatIds.Luk, 2.0, 3, SkillTarget.Enemy, "water") },
+            Rules = { RuleModifiers.OneMore },
+        };
+
+        static Fighter Breaker(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(400, 300, 60, 160, 220, 260, 260, 600),
+            Skills = { Dmg("smash", StatIds.Str, 2.2, 3, SkillTarget.Enemy, "light") },
+            Rules = { RuleModifiers.GuardBreak },
+        };
+
+        static Fighter Latent(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(300, 280, 200, 200, 240, 220, 340, 160),
+            Skills = { Dmg("rush", StatIds.Spd, 1.0, 1, SkillTarget.Enemy, "dark") },
+            Rules = { RuleModifiers.LatentPower },
+        };
+
         public static IEnumerable<Vector> Vectors()
         {
             yield return new Vector("1v1 brawler vs mage", 1, new[] { Brawler("brawler") }, new[] { Mage("mage") });
@@ -187,6 +216,9 @@ namespace IdleRng.Bots.Golden
                         new GambitRule(GambitConditions.AllyHpBelow, 0.6, "mend")),
                 },
                 new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
+            yield return new Vector("4v2 turn gauge capstones vs boss", 12,
+                new[] { Braveheart("a_brave"), Gambler("a_gambler"), Breaker("a_breaker"), Latent("a_latent") },
+                new[] { Boss("b_boss"), Brawler("b_brawler", "fire") });
         }
 
         /// <summary>The fighter with a gambit rulebook (specs/28 section 4).</summary>

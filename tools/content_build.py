@@ -90,6 +90,9 @@ REQUIRED_CONSTANTS = {
     "ENDLESS_SEED": "int", "ENDLESS_BASE": "double", "ENDLESS_GROWTH": "double", "ENDLESS_BAND": "int",
     "ENDLESS_ELITE_HP_MULT": "double", "ENDLESS_MAX_FLOORS": "int",
     "ENDLESS_SHARDS_BASE": "int", "ENDLESS_SHARDS_PER_FLOOR": "double", "ENDLESS_ELITE_SHARD_MULT": "int", "GAMBIT_SLOTS": "int",
+    # idea-pool lane C, turn-gauge rules (specs/16 section 6.2, #136)
+    "MON_BRAVE_MAX": "int", "MON_BRAVE_GUARD": "double", "MON_ONE_MORE": "double", "MON_BREAK_PIPS": "int",
+    "MON_BREAK_BONUS": "double", "MON_LATENT_ACTIONS": "int", "MON_LATENT_BONUS": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -97,7 +100,9 @@ DRILL_TIERS = ["fail", "success", "super"]
 EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 # Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
 RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
-            "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast"]
+            "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast",
+            # idea-pool lane C (#136)
+            "brave_heart", "one_more", "guard_break", "latent_power"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -157,6 +162,11 @@ MON_RANGES = {
     "CORRUPT_DMG_PER_LEVEL": (">= 0", lambda v: v >= 0),
     "ENDLESS_SHARDS_BASE": (">= 0", lambda v: v >= 0), "ENDLESS_SHARDS_PER_FLOOR": (">= 0", lambda v: v >= 0),
     "ENDLESS_ELITE_SHARD_MULT": (">= 1", lambda v: v >= 1), "GAMBIT_SLOTS": ("> 0", lambda v: v > 0),
+    # idea-pool lane C (#136)
+    "MON_BRAVE_MAX": (">= 1", lambda v: v >= 1), "MON_BRAVE_GUARD": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_ONE_MORE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_BREAK_PIPS": (">= 1", lambda v: v >= 1),
+    "MON_BREAK_BONUS": (">= 0", lambda v: v >= 0), "MON_LATENT_ACTIONS": (">= 1", lambda v: v >= 1),
+    "MON_LATENT_BONUS": (">= 0", lambda v: v >= 0),
 }
 
 
