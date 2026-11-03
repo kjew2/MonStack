@@ -735,6 +735,46 @@
       "key": "MON_LATENT_BONUS",
       "type": "double",
       "value": 0.3
+    },
+    {
+      "key": "VOW_GAIN",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "CURSE_FOE",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "DEVOUR_FRAC",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "DEVOUR_ENERGY",
+      "type": "double",
+      "value": 5.0
+    },
+    {
+      "key": "BREATH_SAFE",
+      "type": "double",
+      "value": 30.0
+    },
+    {
+      "key": "ASCETIC_AP",
+      "type": "int",
+      "value": 1
+    },
+    {
+      "key": "HUNGRY_STAT",
+      "type": "double",
+      "value": 60.0
+    },
+    {
+      "key": "HUNGRY_ENERGY",
+      "type": "double",
+      "value": 10.0
     }
   ]
 }

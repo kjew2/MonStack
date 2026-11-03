@@ -78,6 +78,21 @@ Why: one tap still costs a fight and up to `RUN_AP - 1 + RUN_AP * INJURY_SKIP_CY
 
 `RunEnd.Injured` stays in the enum for Vault entries sealed before this change; they fight with the stats and trees they were sealed with (entries keep their result, not a replay log, since schema v9). No achievement or payout depends on it.
 
+### 4.3 Run-rule capstones (idea-pool lane G, #140)
+
+Six generic trees (`specs/15` section 4) end in a `rule` capstone that changes the run rather than the fight. Each takes effect once its capstone is bought and ends when its tree leaves its slot (overwritten, or a chase tree's removal); an absorbed tree in a fusion still counts. None draws: they only skip a draw (a zero injury chance draws no u3). Code: `Training/Rules/LaneG.cs`, through the hooks of section 2; tests `LaneGRuleTests`. All numbers are placeholders (`content_src/constants.csv`, section 8).
+
+| Rule (tree, stat) | Effect |
+|---|---|
+| `iron_vow` (*Iron Vow*, WIS) | The vow: `Rest` is refused (`CanRest` false, `Rest` throws, the UI locks the button with "Vow") and every drill's gain is `floor(gain x (1 + VOW_GAIN))`, before the cap. **(agent, #140)** The vow lasts while the tree is held: like every rule here, overwriting the tree breaks it, so no run state is added. No soft-lock: `Drill` is never refused for energy, so a vowed run at 0 energy drills on (at the 0-energy fail and injury odds) until the run ends; the bots stop asking for `Rest`. |
+| `cursed_mark` (*Cursed Mark*, DEF) | DEF growth is 0, so drills give no DEF (an Echo Training echo into DEF and flat DEF nodes still count). Every enemy in a run fight has each trained stat x(1 - `CURSE_FOE`): the rank-fight opponent (`OnRankFightStart`) and each gauntlet floor's enemy (`OnGauntletFloor`, from the sealed fighter's rules). No effect in the Dungeon, Endless or PvP. |
+| `devourer` (*Devourer*, STR) | A rank-fight win adds `floor(DEVOUR_FRAC x` the opponent's highest trained stat`)` (its ladder stats, before `cursed_mark`; the first in sheet order on a tie) to the same stat, capped at `StatCap` (`RankFightResult.DevouredStat`, `DevouredGain`; a milestone it crosses opens its Awakening). Each cycle start costs `DEVOUR_ENERGY` energy (not below 0). Not rank-fight loot (agreed loot gives no combat power yet). |
+| `second_breath` (*Second Breath*, HP) | A Super drill refunds what it cost (`DrillResult.Refunded`; not Second Wind's drop to 0). A drill made below `BREATH_SAFE` energy (before the drill) cannot injure (injury chance 0, no u3) and cannot Super (super chance 0: that band is Success). The odds chips show both. |
+| `ascetic` (*Ascetic*, DEX) | Each cycle start adds `ASCETIC_AP` AP (on top of Overtime's in the last cycle); a rank-fight win pays no `SP_PER_WIN` (Grudge Match's loss SP is untouched). |
+| `hungry_core` (*Hungry Core*, INT) | Each cycle start the core eats `HUNGRY_ENERGY` energy, after `devourer`'s cost. Fed (the default, also in the cycle its capstone is bought), every trained stat of the monster is +`HUNGRY_STAT` in that cycle's rank fight (uncapped, fight only). With less energy than that it goes dormant for the cycle: nothing eaten, no bonus (`RunState.CoreDormant`, saved as lean JSON, hashed only when set; the stage shows a "dormant" tag). **(agent, #140)** Rank fights only: the gauntlet and the account modes get no bonus, since the run's energy is gone by then. |
+
+After an injury the monster is set back to `INJURY_RECOVER_ENERGY` before its next cycle starts, so `devourer` and `hungry_core` take their upkeep from that energy. The UI asks before buying the `iron_vow` and `cursed_mark` capstones (two taps). Mode notes: these rules only act in the run (and `cursed_mark` in the gauntlet); in `BattleSim` (1v1, 4v1 Dungeon, 4v4 Endless and PvP) they do nothing.
+
 ## 5. Rank fights
 
 kj (2026-10-31): "an RNG pool of monsters at each rank, and we can see the clear progression as we climb".
@@ -125,6 +140,16 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 | `INJURY_RECOVER_ENERGY` | 100 | `[0, RUN_ENERGY_MAX]` (content 3.11) |
 | `STAT_MAX` | 999 | `> 0` |
 | `FIGHT_EVERY` | 1 | `> 0` |
+| `VOW_GAIN` | 0.25 | `>= 0` (lane G `iron_vow`, section 4.3) |
+| `CURSE_FOE` | 0.2 | `[0, 1]` (`cursed_mark`) |
+| `DEVOUR_FRAC` | 0.05 | `[0, 1]` (`devourer`) |
+| `DEVOUR_ENERGY` | 5 | `>= 0` (`devourer`) |
+| `BREATH_SAFE` | 30 | `>= 0` (`second_breath`, energy points) |
+| `ASCETIC_AP` | 1 | `>= 0` (`ascetic`) |
+| `HUNGRY_STAT` | 60 | `>= 0` (`hungry_core`) |
+| `HUNGRY_ENERGY` | 10 | `>= 0` (`hungry_core`) |
+
+The lane G constants are range-checked (`E043`) in `tools/content_build.py` only, like the idea-pool battle constants (`specs/16` section 7).
 
 | Table | Rules |
 |---|---|
@@ -136,9 +161,9 @@ New in content `2.4`. Range errors are `E043` (and `E023`, `E032`, `E044`, `E047
 
 ## 9. Bots and goldens
 
-- `src/IdleRng.Bots/Training/RunBots.cs`: five policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the best-growth stat that is not capped; `reckless` never rests (so it is injured about four times a run and sits out about four cycles, section 4.1); `hoarder` is `focus` but saves skill points until cycle 9; `chaser` is `focus` planning toward its species' own chase capstone (`specs/15` section 8, issue #111). All fight when a fight is due; tree handling is `specs/15` section 8.
+- `src/IdleRng.Bots/Training/RunBots.cs`: five policies. `balanced` rests below 40% energy and drills the lowest stat; `focus` rests below 30% and drills the best-growth stat that is not capped; `reckless` never rests (so it is injured about four times a run and sits out about four cycles, section 4.1); `hoarder` is `focus` but saves skill points until cycle 9; `chaser` is `focus` planning toward its species' own chase capstone (`specs/15` section 8, issue #111). All fight when a fight is due; tree handling is `specs/15` section 8. A policy rests only while `CanRest` allows it (`iron_vow`, section 4.3).
 - CLI: `dotnet run --project src/IdleRng.Bots -- train --species drake --policy hoarder --seed 7 [--books book_echoes]` prints every command (a fight line names the ladder's opponent, `flat` in a legacy run), the summary and the hash.
-- `golden/training-run-vectors.txt`: every species x policy at seed 7, plus `focus` with every book, summary and hash. Regenerate with `golden --update` when the run rules, the battle or their content change.
+- `golden/training-run-vectors.txt`: every species x policy at seed 7, plus `focus` with every book, summary and hash; then lane G's four runs (#140, `RunBot.LaneGRuns`): drake `focus` with `iron_vow` + `cursed_mark`, slime `focus` with `devourer` + `hungry_core`, sprite `balanced` with `second_breath` + `ascetic` and shade_hound `balanced` with `hungry_core` + `iron_vow`, each holding both trees whole from cycle 1 (book offers taken into the last slots and bought with `StartSp` +22, `RunBot.HoldTrees`; compared by state hash only, since that start is not a command). Regenerate with `golden --update` when the run rules, the battle or their content change.
 
 ## 10. Open
 

@@ -99,6 +99,9 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane C, turn-gauge rules (specs/16 section 6.2, #136)
     "MON_BRAVE_MAX": "int", "MON_BRAVE_GUARD": "double", "MON_ONE_MORE": "double", "MON_BREAK_PIPS": "int",
     "MON_BREAK_BONUS": "double", "MON_LATENT_ACTIONS": "int", "MON_LATENT_BONUS": "double",
+    # idea-pool lane G, run rules (specs/14 section 4.3, #140)
+    "VOW_GAIN": "double", "CURSE_FOE": "double", "DEVOUR_FRAC": "double", "DEVOUR_ENERGY": "double", "BREATH_SAFE": "double",
+    "ASCETIC_AP": "int", "HUNGRY_STAT": "double", "HUNGRY_ENERGY": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -112,7 +115,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane B (#135)
             "resentment", "vantage", "deaths_door", "barricade", "mana_ward",
             # idea-pool lane C (#136)
-            "brave_heart", "one_more", "guard_break", "latent_power"]
+            "brave_heart", "one_more", "guard_break", "latent_power",
+            # idea-pool lane G (#140): run rules, coded in TrainingRun (Training/Rules/LaneG.cs)
+            "iron_vow", "cursed_mark", "devourer", "second_breath", "ascetic", "hungry_core"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -186,6 +191,11 @@ MON_RANGES = {
     "MON_ONE_MORE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_BREAK_PIPS": (">= 1", lambda v: v >= 1),
     "MON_BREAK_BONUS": (">= 0", lambda v: v >= 0), "MON_LATENT_ACTIONS": (">= 1", lambda v: v >= 1),
     "MON_LATENT_BONUS": (">= 0", lambda v: v >= 0),
+    # idea-pool lane G (#140)
+    "VOW_GAIN": (">= 0", lambda v: v >= 0), "CURSE_FOE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "DEVOUR_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "DEVOUR_ENERGY": (">= 0", lambda v: v >= 0),
+    "BREATH_SAFE": (">= 0", lambda v: v >= 0), "ASCETIC_AP": (">= 0", lambda v: v >= 0),
+    "HUNGRY_STAT": (">= 0", lambda v: v >= 0), "HUNGRY_ENERGY": (">= 0", lambda v: v >= 0),
 }
 
 

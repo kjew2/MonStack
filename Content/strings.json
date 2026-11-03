@@ -2385,6 +2385,78 @@
     {
       "key": "rule.latent_power.desc",
       "text": "After its {MON_LATENT_ACTIONS}th action of a fight, all its stats but HP rise by {MON_LATENT_BONUS:pct} for the rest of the fight."
+    },
+    {
+      "key": "tree.iron_vow.name",
+      "text": "Iron Vow"
+    },
+    {
+      "key": "tree.cursed_mark.name",
+      "text": "Cursed Mark"
+    },
+    {
+      "key": "tree.devourer.name",
+      "text": "Devourer"
+    },
+    {
+      "key": "tree.second_breath.name",
+      "text": "Second Breath"
+    },
+    {
+      "key": "tree.ascetic.name",
+      "text": "Ascetic"
+    },
+    {
+      "key": "tree.hungry_core.name",
+      "text": "Hungry Core"
+    },
+    {
+      "key": "rule.iron_vow.name",
+      "text": "Iron Vow"
+    },
+    {
+      "key": "rule.iron_vow.desc",
+      "text": "A vow: once this is bought, Rest is refused and every drill gains +{VOW_GAIN:pct}. Only overwriting the tree breaks the vow."
+    },
+    {
+      "key": "rule.cursed_mark.name",
+      "text": "Cursed Mark"
+    },
+    {
+      "key": "rule.cursed_mark.desc",
+      "text": "Drills no longer train DEF. In run fights (rank fights and the gauntlet) every enemy has {CURSE_FOE:pct} less of every stat. No effect in the Dungeon, Endless or PvP."
+    },
+    {
+      "key": "rule.devourer.name",
+      "text": "Devourer"
+    },
+    {
+      "key": "rule.devourer.desc",
+      "text": "Each rank-fight win adds {DEVOUR_FRAC:pct} of the opponent's highest stat to the same stat. Each new cycle costs {DEVOUR_ENERGY} energy."
+    },
+    {
+      "key": "rule.second_breath.name",
+      "text": "Second Breath"
+    },
+    {
+      "key": "rule.second_breath.desc",
+      "text": "A Super drill refunds its energy cost. A drill made below {BREATH_SAFE} energy cannot injure, and cannot Super."
+    },
+    {
+      "key": "rule.ascetic.name",
+      "text": "Ascetic"
+    },
+    {
+      "key": "rule.ascetic.desc",
+      "text": "+{ASCETIC_AP} action each cycle, but rank-fight wins give no skill points."
+    },
+    {
+      "key": "rule.hungry_core.name",
+      "text": "Hungry Core"
+    },
+    {
+      "key": "rule.hungry_core.desc",
+      "text": "Each new cycle the core eats {HUNGRY_ENERGY} energy. While fed, every trained stat is +{HUNGRY_STAT} in that cycle's rank fight. With too little energy it goes dormant for the cycle: no bonus, nothing eaten."
     }
   ]
 }

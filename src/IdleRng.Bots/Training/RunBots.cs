@@ -59,7 +59,7 @@ namespace IdleRng.Bots.Training
             }
             if (s.Phase == RunPhase.Finished) return null;
             if (s.Phase == RunPhase.AwaitFight) return new RunCommand(RunCommandKind.Fight);
-            if (TrainingRun.EnergyFraction(c.Constants, s.Energy) < _restBelow) return new RunCommand(RunCommandKind.Rest);
+            if (TrainingRun.EnergyFraction(c.Constants, s.Energy) < _restBelow && TrainingRun.CanRest(c, s)) return new RunCommand(RunCommandKind.Rest);
             if (target != null)
                 foreach (var (stat, _) in target.StatGoals)
                     if (s.Stats.Get(stat) < c.Constants.StatMax) return new RunCommand(RunCommandKind.Drill, stat);
@@ -246,9 +246,11 @@ namespace IdleRng.Bots.Training
         /// state at the start and after every command (the balance report's ChaseTracker).
         /// </summary>
         public static RunState Play(ContentDb c, IRunPolicy policy, string speciesId, ulong seed, Action<string> log = null,
-                                    IEnumerable<string> books = null, Action<RunState> observe = null, RunModifiers mods = null)
+                                    IEnumerable<string> books = null, Action<RunState> observe = null, RunModifiers mods = null,
+                                    Action<RunState> setup = null)
         {
             var s = TrainingRun.Start(c, speciesId, seed, books, mods);
+            setup?.Invoke(s);   // a golden vector's fixed start (lane G: capstones held from cycle 1)
             observe?.Invoke(s);
             const int guard = 100000;
             for (int i = 0; ; i++)
@@ -324,6 +326,33 @@ namespace IdleRng.Bots.Training
             return s;
         }
 
+        /// <summary>Lane G's golden runs: species, policy and the two trees held whole (capstone bought) from cycle 1.</summary>
+        static readonly (string Species, string Policy, string[] Trees)[] LaneGRuns =
+        {
+            ("drake", "focus", new[] { "iron_vow", "cursed_mark" }),
+            ("slime", "focus", new[] { "devourer", "hungry_core" }),
+            ("sprite", "balanced", new[] { "second_breath", "ascetic" }),
+            ("shade_hound", "balanced", new[] { "hungry_core", "iron_vow" }),
+        };
+
+        /// <summary>Extra starting SP of a lane G golden run: enough to buy both held trees whole at the start.</summary>
+        const int LaneGStartSp = 22;
+
+        /// <summary>
+        /// A golden run's fixed start: each tree is offered (as a book offer, unrolled), taken into the last free slots and bought
+        /// whole. Not a command log: such a run is compared by its state hash only.
+        /// </summary>
+        public static void HoldTrees(ContentDb c, RunState s, IReadOnlyList<string> trees)
+        {
+            for (int i = 0; i < trees.Count; i++)
+            {
+                int slot = s.Slots.Length - trees.Count + i;
+                s.Offers.Insert(0, new TreeOffer { Source = OfferSource.Book, Trees = { trees[i] } });
+                TrainingRun.TakeTree(c, s, 0, slot);
+                while (s.Slots[slot].Bought < c.Trees[trees[i]].Nodes.Count) TrainingRun.SpendPoint(c, s, slot);
+            }
+        }
+
         public static string Summary(ContentDb c, RunState s) =>
             string.Format(Inv, "end={0} cycle={1} rank={2} fights={3}/{4} drills={5} rests={6} energy={7:0} milestones={8} sp={9} injuries={12}\n  stats {10}\n  trees {11}",
                 s.End, s.Cycle, c.FightRanks[s.Rank].Id, s.FightsWon, s.FightsFought, s.Drills, s.Rests, s.Energy, s.Milestones.Count, s.Sp,
@@ -347,13 +376,17 @@ namespace IdleRng.Bots.Training
                 foreach (var name in RunPolicies.Names) Append(sp.Id, name, null);
                 Append(sp.Id, "focus", allBooks);
             }
+            // Idea-pool lane G (#140): runs that hold two lane G run-rule capstones from cycle 1 (LaneGRuns).
+            foreach (var (species, name, trees) in LaneGRuns) Append(species, name, null, trees);
             return sb.ToString();
 
-            void Append(string species, string name, List<string> books)
+            void Append(string species, string name, List<string> books, string[] held = null)
             {
-                var s = Play(c, RunPolicies.Create(name), species, seed, null, books);
+                var s = Play(c, RunPolicies.Create(name), species, seed, null, books, null,
+                             held == null ? null : new RunModifiers { StartSp = LaneGStartSp }, held == null ? null : (Action<RunState>)(r => HoldTrees(c, r, held)));
                 sb.Append('\n').Append(species).Append(' ').Append(name).Append(" seed=").Append(seed);
                 if (books != null) sb.Append(" books=").Append(string.Join(",", books));
+                if (held != null) sb.Append(" held=").Append(string.Join(",", held)).Append(" start_sp=+").Append(LaneGStartSp);
                 sb.Append('\n').Append("  ").Append(Summary(c, s)).Append('\n');
                 sb.Append("  hash ").Append(TrainingRun.StateHash(s)).Append('\n');
             }

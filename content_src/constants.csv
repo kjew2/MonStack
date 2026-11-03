@@ -146,3 +146,11 @@ MON_BREAK_PIPS,int,4,guard_break rule: guard pips each enemy of a carrier has; a
 MON_BREAK_BONUS,double,0.5,guard_break rule: a broken enemy loses its next action and takes x(1 + this) hit damage until it acts again. Placeholder
 MON_LATENT_ACTIONS,int,8,latent_power rule: after this many of the unit's actions its stats rise for the rest of the fight. Placeholder
 MON_LATENT_BONUS,double,0.3,"latent_power rule: the rise of each of the unit's stats except HP, a fraction of base. Placeholder"
+VOW_GAIN,double,0.25,iron_vow run rule: once its capstone is bought Rest is refused and every drill's gain is multiplied by 1 + this (floored). Placeholder
+CURSE_FOE,double,0.2,"cursed_mark run rule: drills give no DEF, and every enemy in a run fight (rank fights, the gauntlet) has each stat lowered by this fraction. Placeholder"
+DEVOUR_FRAC,double,0.05,devourer run rule: a rank-fight win adds this fraction of the opponent's highest stat to the same stat (floored, capped). Placeholder
+DEVOUR_ENERGY,double,5,devourer run rule: energy each cycle start costs (not below 0). Placeholder
+BREATH_SAFE,double,30,second_breath run rule: a drill made below this much energy cannot injure or Super; a Super drill refunds its energy cost. Placeholder
+ASCETIC_AP,int,1,ascetic run rule: action points added at each cycle start; rank-fight wins give no SP_PER_WIN. Placeholder
+HUNGRY_STAT,double,60,hungry_core run rule: flat bonus to every trained stat in a rank fight while the core is fed. Placeholder
+HUNGRY_ENERGY,double,10,"hungry_core run rule: energy the core eats at each cycle start; with less energy it goes dormant for that cycle (no bonus, nothing eaten). Placeholder"

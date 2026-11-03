@@ -315,7 +315,8 @@
   // Actions left (pips) and energy: in the HUD on the other tabs, in the corners of the Train tab's stage.
   function apPips(s) {
     const pips = h('div', { class: 'pips', 'aria-label': s.ap + ' action points left' });
-    for (let i = 0; i < C.consts.runAp; i++) pips.append(h('span', { class: 'pip' + (i < s.ap ? ' full' : '') }));
+    // More than RUN_AP when a rule adds actions (Overtime's last cycle, lane G's Ascetic).
+    for (let i = 0; i < Math.max(C.consts.runAp, s.ap); i++) pips.append(h('span', { class: 'pip' + (i < s.ap ? ' full' : '') }));
     return pips;
   }
   function energyBar(s) {
@@ -361,7 +362,7 @@
     // An injury that just happened, or one the monster is back from, shows as a banner laid over the monster on the stage (not a
     // card above it, which pushed the drill pad down), until the first action of the cycle it is back in.
     const hurt = s.injuries.length ? s.injuries[s.injuries.length - 1] : null;
-    const hurtBanner = hurt && hurt.back === s.cycle && s.phase === 'training' && s.ap === k.runAp ? h('div', { class: 'injury-banner', 'data-id': 'injury' }, [
+    const hurtBanner = hurt && hurt.back === s.cycle && s.phase === 'training' && s.ap >= k.runAp ? h('div', { class: 'injury-banner', 'data-id': 'injury' }, [
       h('b', { class: 'bad', text: ui.last && ui.last.injury ? 'Injured!' : 'Back from injury' }), h('div', { class: 'small', text: injuryText(hurt) }),
     ]) : null;
     const busy = s.phase !== 'training' || s.offers.length > 0;
@@ -375,6 +376,8 @@
       ]),
       h('div', { class: 'stage-mon', 'data-id': 'stage-mon' }, [sprite(s.species, s.apex)]),
       hurtBanner,
+      s.coreFed === false && s.phase !== 'finished' ? h('div', { class: 'small bad core-banner', 'data-id': 'core-dormant',
+        text: 'Hungry Core dormant this cycle: no bonus in its fight.' }) : null,
       resultLine(ui.last, s),
     ]));
     if (s.phase !== 'finished') main.append(oddsChips(s));   // no drills are left once the run is over (issue #130: keep the stats in view)
@@ -396,8 +399,9 @@
       ]));
     });
     main.append(pad);
-    if (s.phase !== 'finished') main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
-      text: 'Rest (+' + num(s.restEnergy) + ' energy)', onclick: rest }));
+    // Iron Vow (lane G, #140) refuses Rest: the button stays in place, locked, and says why.
+    if (s.phase !== 'finished') main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy || !s.canRest,
+      text: s.canRest ? 'Rest (+' + num(s.restEnergy) + ' energy)' : 'Rest: refused (Vow)', title: s.canRest ? null : ruleText('iron_vow'), onclick: rest }));
     // Under Rest, so it does not push Rest down.
     if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     ui.flash = null;
@@ -443,6 +447,7 @@
         r.shielded ? h('span', { class: 'gold', 'data-id': 'shield-result' }, [h('b', { text: 'Second Wind! ' }), 'Injury prevented, energy 0.']) : null,
         r.free ? h('span', { class: 'gems', 'data-id': 'free-result', text: 'Momentum: free drill.' }) : null,
         r.echoStat ? h('span', { class: 'gold', 'data-id': 'echo-result', text: 'Echo: ' + up(r.echoStat) + ' +' + num(r.echoGain) + '.' }) : null,
+        r.refunded ? h('span', { class: 'gems', 'data-id': 'breath-result', text: 'Second Breath: +' + num(r.refunded) + ' energy back.' }) : null,
       ].filter(Boolean);
       const line = h('div', { class: 'notes' });
       notes.forEach((n, i) => line.append(...(i ? [' · ', n] : [n])));
@@ -505,6 +510,12 @@
     ]);
   }
 
+  // A tree's capstone text (from strings, through the engine's catalog), e.g. why Rest is locked under Iron Vow.
+  function ruleText(treeId) {
+    const t = C.trees[treeId], n = t && t.nodes[t.nodes.length - 1];
+    return n ? n.name + ': ' + n.desc : null;
+  }
+
   // How to get each tree a chase condition names (the engine words it in tree.source).
   function conditionSources(t) {
     const refs = [];
@@ -532,8 +543,11 @@
       ]);
       // The path tiles show the whole tree (issue #115); below them only the next node to buy, the full list one tap away.
       const next = t.nodes[slot.bought];
-      if (next) card.append(nodeRow(next, 'next', h('button', { class: 'btn small primary', type: 'button', 'data-act': 'buy-' + i, disabled: s.sp < next.cost,
-        text: 'Buy ' + next.cost + ' SP', onclick: () => spend(i) })));
+      // A capstone that takes something away (lane G: Iron Vow, Cursed Mark) asks first: the first tap arms the button, the second buys.
+      const arm = next && next.warn ? i + ':' + slot.tree + ':' + slot.bought : null, armed = arm && ui.buyArmed === arm;
+      if (next) card.append(nodeRow(next, 'next', h('button', { class: 'btn small ' + (armed ? 'warn' : 'primary'), type: 'button', 'data-act': 'buy-' + i, disabled: s.sp < next.cost,
+        text: armed ? 'Sure? Buy ' + next.cost + ' SP' : 'Buy ' + next.cost + ' SP', title: next.warn ? next.desc : null,
+        onclick: () => { if (arm && !armed) { ui.buyArmed = arm; toast(next.name + ': ' + next.desc + ' Tap again to buy.'); render(); return; } ui.buyArmed = null; spend(i); } })));
       else card.append(h('small', { class: 'ok', 'data-id': 'maxed-' + i, text: '✓ Every node bought' }));
       const key = i + ':' + slot.tree, open = !!ui.treeOpen[key];
       card.append(h('button', { class: 'linkish', type: 'button', 'data-act': 'slot-nodes-' + i, 'aria-expanded': String(open),
@@ -2531,7 +2545,8 @@
       ui.last = r; ui.flash = { stat, tier: r.tier }; ui.drillPop = { stat, tier: r.tier, gain: r.gain, sad: r.tier === 'fail' || !!r.injury };
       log('Drill ' + up(stat) + ': ' + r.tierName + ' +' + num(r.gain) + ' → ' + num(r.value) + (r.injured ? ' (injured)' : '') +
         (r.shielded ? ' (Second Wind stopped an injury)' : '') + (r.free ? ' (free: Momentum)' : '') +
-        (r.echoStat ? ' (echo: ' + up(r.echoStat) + ' +' + num(r.echoGain) + ')' : ''));
+        (r.echoStat ? ' (echo: ' + up(r.echoStat) + ' +' + num(r.echoGain) + ')' : '') +
+        (r.refunded ? ' (Second Breath: +' + num(r.refunded) + ' energy back)' : ''));
       if (r.shielded) toast('Second Wind! The injury was prevented.');
       milestones(r);
       if (r.injury) {
@@ -2556,6 +2571,8 @@
       ui.fight = r; ui.last = null; ui.showAll = false;
       startPlayback(null, false, before);
       log('Rank ' + r.opponent.letter + ' fight vs ' + r.opponent.name + ': ' + (r.won ? 'won → ' + rank(r.rankAfter).name + ' (+' + r.sp + ' SP)' : 'lost (rematch next time)'));
+      if (r.devouredStat) { log('Devourer: ' + up(r.devouredStat) + ' +' + num(r.devouredGain)); toast('Devoured: ' + up(r.devouredStat) + ' +' + num(r.devouredGain)); }
+      milestones(r);
       ui.fightGains = spGained(sp0, cycle0, r);
     }
     after(r);

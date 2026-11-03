@@ -672,11 +672,33 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string LatentPower = "latent_power";
 
+        // Idea-pool lane G (#140): run rules, coded in TrainingRun (Training/Rules/LaneG.cs; specs/14 section 4.3). In battle they do
+        // nothing, except that GauntletSim weakens the enemies of a cursed_mark carrier.
+
+        /// <summary>Rest is refused while the tree is held; every drill gains x(1 + VOW_GAIN). The Iron Vow generic capstone.</summary>
+        public const string IronVow = "iron_vow";
+
+        /// <summary>Drills give no DEF; run-fight enemies (rank fights, the gauntlet) have each stat x(1 - CURSE_FOE). The Cursed Mark generic capstone.</summary>
+        public const string CursedMark = "cursed_mark";
+
+        /// <summary>A rank-fight win adds DEVOUR_FRAC of the opponent's highest stat; each cycle start costs DEVOUR_ENERGY. The Devourer generic capstone.</summary>
+        public const string Devourer = "devourer";
+
+        /// <summary>A Super drill refunds its energy cost; below BREATH_SAFE energy a drill cannot injure or Super. The Second Breath generic capstone.</summary>
+        public const string SecondBreath = "second_breath";
+
+        /// <summary>+ASCETIC_AP AP every cycle; rank-fight wins pay no SP_PER_WIN. The Ascetic generic capstone.</summary>
+        public const string Ascetic = "ascetic";
+
+        /// <summary>Each cycle start eats HUNGRY_ENERGY; while fed, +HUNGRY_STAT to every trained stat in the cycle's rank fight. The Hungry Core generic capstone.</summary>
+        public const string HungryCore = "hungry_core";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
             Resentment, Vantage, DeathsDoor, Barricade, ManaWard,
-            BraveHeart, OneMore, GuardBreak, LatentPower };
+            BraveHeart, OneMore, GuardBreak, LatentPower,
+            IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }
