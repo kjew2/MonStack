@@ -593,19 +593,19 @@ namespace IdleRng.Sim.Content
                         errors.Add(new ContentError("E023", $"species[{sp.Id}]", $"'{nt}' is not a native tree id"));
                 if (sp.NativeTree1 == sp.NativeTree2) errors.Add(new ContentError("E043", $"species[{sp.Id}]", "native trees must differ"));
 
-                // Each species owns two chase trees: one in-run, one book-gated (specs/15 section 5.1).
-                foreach (var (col, id, book) in new[] { ("chase_tree_run", sp.ChaseTreeRun, false), ("chase_tree_book", sp.ChaseTreeBook, true) })
+                // Each species owns two chase trees: the in-run one, and a second one that is book-gated or, with no book node in its
+                // conditions, a harder in-run chase (kj, 2026-11-03, #160; specs/15 section 5.1).
+                foreach (var (col, id, second) in new[] { ("chase_tree_run", sp.ChaseTreeRun, false), ("chase_tree_book", sp.ChaseTreeBook, true) })
                 {
                     if (!Trees.TryGetValue(id, out var ct) || ct.Kind != TreeKind.Chase)
                     {
                         errors.Add(new ContentError("E023", $"species[{sp.Id}]", $"{col} '{id}' is not a chase tree id"));
                         continue;
                     }
-                    if (ct.Species != null) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"chase tree '{id}' already belongs to species '{ct.Species}'"));
-                    else { ct.Species = sp.Id; ct.BookGated = book; }
                     int needs = BookTreesNeeded(ct).Count();
-                    if (!book && needs > 0) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"in-run chase tree '{id}' must not need a book tree"));
-                    if (book && needs == 0) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"book-gated chase tree '{id}' needs a condition on a book tree"));
+                    if (ct.Species != null) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"chase tree '{id}' already belongs to species '{ct.Species}'"));
+                    else { ct.Species = sp.Id; ct.BookGated = needs > 0; ct.SecondChase = second; }
+                    if (!second && needs > 0) errors.Add(new ContentError("E043", $"species[{sp.Id}]", $"in-run chase tree '{id}' must not need a book tree"));
                 }
                 if (sp.ChaseTreeRun == sp.ChaseTreeBook) errors.Add(new ContentError("E043", $"species[{sp.Id}]", "chase trees must differ"));
             }

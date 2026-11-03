@@ -99,8 +99,8 @@ namespace IdleRng.Bots.Balance
 
         /// <summary>
         /// Chase power (specs/15 section 5.5): the gauntlet floor of the run's monster without any chase tree (its chase tree
-        /// nodes, flat stats included, taken out), then with its species' in-run, or its book-gated, chase tree fully bought on
-        /// top (same seed).
+        /// nodes, flat stats included, taken out), then with its species' in-run, or its second (book-gated or harder in-run; the
+        /// "Book" names stay from the chase_tree_book column), chase tree fully bought on top (same seed).
         /// </summary>
         public int CapstoneBaseFloor { get; set; }
         public int CapstoneRunFloor { get; set; }

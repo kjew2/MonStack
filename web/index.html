@@ -135,7 +135,8 @@ small, .small { font-size: 12px; }
 .species-card .pimg .sprite { width: 45%; height: auto; }
 .species-card > .row { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 14px 12px; background: linear-gradient(transparent, var(--art-shade)); }
 .species-card > .row b { color: var(--on-art); font-size: 20px; }
-.dots { display: flex; justify-content: center; gap: 8px; margin-top: -6px; }
+/* One dot per owned species; with many species (23 at #160) the dots wrap onto a second row instead of widening the page */
+.dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: -6px; }
 .dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: var(--line); }
 .dot.on { background: var(--gems); }
 .species-info { display: flex; flex-direction: column; gap: 6px; will-change: transform, opacity; }
@@ -887,6 +888,7 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 <script src="ugs-transport.js"></script>
 <script src="sync.js"></script>
 <script src="run-engine.js"></script>
+<script src="art/keys.js"></script>
 <script src="sprites.js"></script>
 <script src="tooltips.js"></script>
 <script src="rulebook.js"></script>

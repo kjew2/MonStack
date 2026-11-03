@@ -339,8 +339,14 @@ namespace IdleRng.Sim.Content
         /// <summary>Chase trees: the species that owns it; only that species' runs unlock it (specs/15 section 5.1). Null otherwise.</summary>
         public string Species { get; internal set; }
 
-        /// <summary>Chase trees: true for the species' book-gated chase tree, false for its in-run one.</summary>
+        /// <summary>
+        /// Chase trees: true when its conditions name a book tree (the species' second chase tree, when that one is book-gated); false
+        /// for the in-run one and for a second chase tree with no book (a harder in-run chase; kj, 2026-11-03, specs/15 section 5.1).
+        /// </summary>
         public bool BookGated { get; internal set; }
+
+        /// <summary>Chase trees: true for the species' second chase tree (the species' <c>chase_tree_book</c> column), book-gated or not.</summary>
+        public bool SecondChase { get; internal set; }
 
         /// <summary>
         /// Chase and fusion trees: the name of the apex form the tree gives (specs/15 section 5.3): a chase tree once its capstone

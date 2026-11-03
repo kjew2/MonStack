@@ -176,7 +176,7 @@ namespace IdleRng.Web
             w.Key(t.Id).Obj().P("id", t.Id).P("name", _db.Text(t.NameKey)).P("kind", t.Kind.ToString().ToLowerInvariant());
             NodesAndBoosts(w, t.Nodes, null);
             w.P("source", TreeSource(t));
-            if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated).P("apexName", _db.Text(t.ApexNameKey));
+            if (t.Kind == TreeKind.Chase) w.P("species", t.Species).P("bookGated", t.BookGated).P("second", t.SecondChase).P("apexName", _db.Text(t.ApexNameKey));
             if (t.Kind == TreeKind.Fusion) w.P("fuseA", t.FuseA).P("fuseB", t.FuseB).P("apexName", _db.Text(t.ApexNameKey));
             if (t.FusesInto != null)   // the fusing pair, so the UI can show it (kj: each fusing pair must be clear)
                 w.P("fusesInto", t.FusesInto).P("fusesWith", _db.Trees[t.FusesInto].FuseA == t.Id ? _db.Trees[t.FusesInto].FuseB : _db.Trees[t.FusesInto].FuseA);
@@ -307,12 +307,13 @@ namespace IdleRng.Web
                 {
                     string owner = t.Species != null && _db.Species.TryGetValue(t.Species, out var sp) ? _db.Text(sp.NameKey) : "its species";
                     return t.BookGated ? "Book-gated chase tree of " + owner + ": unlocks when its conditions hold, one of which needs a skill book tree"
+                        : t.SecondChase ? "Second chase tree of " + owner + ", the harder in-run one: unlocks when its conditions hold, no skill book needed"
                         : "Chase tree of " + owner + ": unlocks when its conditions hold";
                 }
             }
         }
 
-        /// <summary>The skill book whose tree the species' book-gated chase tree needs (the first one), or null.</summary>
+        /// <summary>The skill book whose tree the species' second chase tree needs (the first one), or null (no book: a harder in-run chase).</summary>
         private string SpeciesBook(SpeciesDef sp)
         {
             if (!_db.Trees.TryGetValue(sp.ChaseTreeBook, out var t)) return null;
@@ -1305,7 +1306,7 @@ namespace IdleRng.Web
             w.Key("books").Arr();
             foreach (var b in s.Books) w.Str(b);
             w.EndArr();
-            w.Key("chase").Arr();   // the species' own chase trees (in-run, then book-gated) and which conditions hold
+            w.Key("chase").Arr();   // the species' own chase trees (in-run, then the second: book-gated or a harder in-run one) and which conditions hold
             foreach (var t in new[] { sp.ChaseTreeRun, sp.ChaseTreeBook }.Select(id => _db.Trees[id]))
             {
                 w.Obj().P("tree", t.Id).P("open", TrainingRun.ChaseOpen(_db, s, t)).P("unlocked", TrainingRun.ChaseConditionsHold(_db, s, t));

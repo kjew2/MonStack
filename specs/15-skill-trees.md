@@ -11,12 +11,15 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 - A monster has `TREE_SLOTS` (4) slots, plus the Fifth Slot talent's (`specs/18` section 3). A run starts with its species' two **native** trees in slots 0 and 1 and the other slots empty. The Second Look talent rerolls an Awakening (`specs/18` section 3).
 - **Skill points** (SP): `SP_PER_CYCLE` at the start of every cycle (cycle 1 included) plus `SP_PER_WIN` for each rank fight won.
 - SP buy a tree's **nodes in order**. About 75% of nodes are **filler** (a growth bonus or a flat stat boost); the rest grant skills, triggered effects or rule modifiers. The **last node is the tree's chase trait**.
-- Each species owns **two chase trees** of its own: one unlocked in-run, one gated behind a skill book tree (section 5.1).
+- Each species owns **two chase trees** of its own: one unlocked in-run, and a second one gated behind a skill book tree or, for some species, a harder in-run chase with no book (kj, 2026-11-03; section 5.1).
+- A species' **native trees are native-only** (kj, 2026-11-03, #160): Awakenings never offer them, and a species' signature rule is not shared with a generic tree (section 2).
 - New trees arrive as **offers**: an Awakening (a milestone draft of **rolled** trees for any stat, section 4.1), a skill book, or an unlocked chase tree. Any offered tree may go into an empty slot or **overwrite any slot**, native trees included; or the offer is discarded.
 
 ## 2. Trees and nodes
 
 Content table `trees`: `id`, `name_key`, `kind` (`native`, `generic`, `chase`, `book`), for generic trees `offer_stat` (the tree's own stat: most of its rolled nodes and its capstone growth go to it, section 4.1; empty = an any-stat tree, whose own stat is rolled) and `offer_threshold` (the lowest milestone that drafts it), for chase and fusion trees `apex_name_key`, the name of the apex form the tree gives (section 5.3), and for fusion trees `fuse_a` and `fuse_b`, the two trees that fuse into it (section 5.6). `kind` may also be `fusion`.
+
+**Native-only (kj, 2026-11-03, #160).** A `native` tree is never in an Awakening draft (section 4 drafts only `generic` trees), and a species' signature rule lives on its native tree, not on a generic tree too. The idea-pool trees that became species (#160: `blood_magic`, `elemental_avatar`, `fortress_fist`, `vantage`, `barricade`, `mana_ward`, `brave_heart`, `guard_break`, `latent_power`, `hemorrhage`, `equilibrium`, `corruption`, `lone_wolf`, `arise`, `mimic_core`, `limit_break`, `devourer`) were built as `generic` so their rules could be tested first; each species lane turns its tree to `kind` `native` (empty `offer_stat` and `offer_threshold`), keeping its id, nodes and rule capstone, so no id is removed (no MAJOR bump, `E090`). **(agent)** A save made while the tree was generic still loads unchanged (`specs/06` section 5): a run in progress keeps it slotted (and a pending Awakening that offers it can still be taken), and a Vault entry keeps it and fights with it, since slotted trees are looked up by id whatever their kind (rule 1 of #132: a tree a monster holds stays). It is only no longer drafted, and `balance`'s tree power section (`specs/09` section 7) stops measuring it as a generic tree.
 
 Content table `tree_nodes`: `id`, `tree_id`, `index` (0..N-1 contiguous per tree), `cost` (SP, `>= 1`), `kind` and its arguments:
 
@@ -83,7 +86,7 @@ Every tree an Awakening offers (and a Second Look reroll redraws) is a **premade
 Every species owns exactly two chase trees, named in `species`:
 
 - `chase_tree_run`, the **in-run** chase tree: unlocks from the species' own native trees plus stat thresholds and a playstyle tally (the normal chase rules). Its conditions name no book tree.
-- `chase_tree_book`, the **book-gated** chase tree, the one that rewards planning a run: its conditions also need nodes in a species-specific skill book tree (`specs/12` section 5.3), plus nodes in other trees and a playstyle tally. Each species has its own placeholder book.
+- `chase_tree_book`, the **second** chase tree, the top of the species' power ladder (section 5.5). Either **book-gated**, the one that rewards planning a run: its conditions also need nodes in a species-specific skill book tree (`specs/12` section 5.3), plus nodes in other trees and a playstyle tally (each such species has its own placeholder book); or, since kj's decision of 2026-11-03 (#160: Lodge Beaver, Taotie Boar, Anvil Ape, Daybreak Chick, Brimful Hamster, Ronin Tiger), a **harder in-run** chase with no book node in its conditions, gated by both native trees maxed, a higher stat bar and a bigger tally than the in-run tree (every in-run condition asked again, as hard or harder, so it never unlocks before the in-run one; checked by `SpeciesGroundworkTests` on shipped content, not by content validation). The column keeps its name. `TreeDef.BookGated` is true when a chase tree's conditions name a book tree; `TreeDef.SecondChase` marks the `chase_tree_book` tree either way. The Trees tab tags a no-book second tree "harder in-run".
 
 Only the owner's runs unlock a chase tree: another species meeting its conditions is never offered it. Every chase tree belongs to exactly one species. **(agent)** Books are not species-locked: any species may use any book and slot its tree as an ordinary tree; only the owner unlocks the chase tree that needs it.
 
@@ -140,16 +143,16 @@ A monster that owns a chase tree's capstone takes that tree's **apex form**: the
 
 ### 5.5 Power ladder (kj, 2026-10-31)
 
-Where each kind of capstone lands, weakest and commonest first. **The book-gated chase tree is the rarest and the strongest** (kj): it needs an uber rare Skill Book (`specs/21` section 5).
+Where each kind of capstone lands, weakest and commonest first. **The book-gated chase tree is the rarest and the strongest** (kj): it needs an uber rare Skill Book (`specs/21` section 5). A species with no book chase puts its harder in-run second chase tree in that top tier (kj, 2026-11-03, #160).
 
 | Tier | How it is reached | Target: gauntlet floors the whole tree adds |
 |---|---|---|
 | Ordinary tree capstone | max any native or generic tree | (no target) |
 | Fusion capstone | max both trees of a fusing pair (section 5.6) | +3 to +5 |
 | In-run chase tree | its conditions (section 5.1) | +5 to +8 |
-| Book chase tree | the species' own Skill Book plus its conditions | +10 to +15 |
+| Second chase tree (book-gated, or harder in-run) | the species' own Skill Book plus its conditions, or (no book) both native trees maxed and harder conditions | +10 to +15 |
 
-- **Measured** by the `balance` report's chase power section (`specs/09` section 7): each run's monster with its chase trees taken out, then with one chase tree bought in full on top, up the gauntlet on the same seed. The targets hold for each species averaged over the `focus`, `hoarder`, `balanced` and `chaser` policies; single cells may stray. The `capstone-ladder` sanity check WARNs when a species' book chase tree does not beat its in-run one under `focus`.
+- **Measured** by the `balance` report's chase power section (`specs/09` section 7): each run's monster with its chase trees taken out, then with one chase tree bought in full on top, up the gauntlet on the same seed. The targets hold for each species averaged over the `focus`, `hoarder`, `balanced` and `chaser` policies; single cells may stray. The `capstone-ladder` sanity check WARNs when a species' second chase tree (book-gated or harder in-run) does not beat its in-run one under `focus`.
 - **Retune at content 4.4 (agent, to kj's targets):** in-run trees add 5.6-7.7 floors and book trees 10.8-12.0. Survival dominates the gauntlet (a focus-trained monster dies in one or two hits), so three book capstones gained a second part to reach the band: *Arcane Overflow*'s mirror twin takes the first hits (`MON_ECHO_DECOYS`), *Mandragora Scream* works on every action and withers (`MON_WAIL_WITHER`), *Night Feast* starts fed and feeds damage, not only STR (`MON_FEAST_START`, `MON_FEAST_DMG`); *Abyssal Bloom*'s overheal becomes shield (`MON_DRAIN_SHIELD_CAP`). Rules: `specs/16` section 6.2.
 - **Fusion at content 4.5:** a fused tree adds 3.4-5.2 floors on top of both parents maxed, averaged over the pairs each species can hold.
 
@@ -231,7 +234,7 @@ New in content `2.5` (species chase trees in `3.3`), checked by `tools/content_b
 | `monster_skills` | effect stat for buff/debuff/passive, trained `scales` for damage/heal/shield (`E023`); power, cooldown, duration `>= 0` (`E043`); element id or empty (`E023`) |
 | `trees` | generic trees need `offer_threshold > 0` and a trained or empty `offer_stat`; other kinds have neither (`E043`, `E023`). Chase and fusion trees, and only they, have an `apex_name_key`; fusion trees, and only they, name `fuse_a` and `fuse_b` (section 5.6; `E023`, `E043`) |
 | `tree_nodes` | known tree (`E023`); index `0..N-1` (`E060`); at least 2 nodes (`E044`); cost `>= 1`; growth/stat/growth_use need a trained stat and `amount > 0`; skill/trigger need a monster skill; trigger nodes need a trigger and cannot fire a passive; rule nodes need a known rule id, and a `fire_pierce` node needs the `fire` element (`E023`); last node skill/trigger/rule (`E064`) |
-| `species` | `native_tree_1`, `native_tree_2`: two different native trees (`E023`, `E043`); `chase_tree_run`, `chase_tree_book`: two different chase trees (`E023`, `E043`); the in-run one names no book tree in its conditions, the book-gated one names at least one (`E043`); no chase tree belongs to two species and every chase tree belongs to one (`E043`) |
+| `species` | `native_tree_1`, `native_tree_2`: two different native trees (`E023`, `E043`); `chase_tree_run`, `chase_tree_book`: two different chase trees (`E023`, `E043`); the in-run one names no book tree in its conditions (`E043`); the second one may name a book tree or not (kj, 2026-11-03); no chase tree belongs to two species and every chase tree belongs to one (`E043`) |
 | `chase_conditions` | a chase tree (`E023`); refs by type (`E023`); `amount >= 0` for stat and tally (`E043`); every chase tree has a condition (`E065`) |
 | `skill_books` | `tree_id` is a book tree (`E023`) |
 

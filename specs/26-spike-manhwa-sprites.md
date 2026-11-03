@@ -98,7 +98,7 @@ For issue #115, in the terms of section 4.1: mostly CSS, a few small assets. Pan
 
 - `tools/art/generate.py` calls the OpenAI Images API with `OPENAI_API_KEY`. Prompts are in `tools/art/prompts.json`: one per style (`abyss`, `hunter`), one per species and one per apex form, plus `apex_base` and `sprite`. They describe the style in words and name no artist or series. Each species prompt names its one unsettling detail (section 7); only the abyss style uses it.
 - `draft` makes new candidates (`gpt-image-2`). `apex` draws an apex form from a picked image as a reference (`gpt-image-2`, image edit). `sprite` redraws an image as a battle sprite on a transparent background (`gpt-image-1.5`, because `gpt-image-2` cannot make a transparent background).
-- `tools/art/export.py` turns the masters in `tools/art/final/` into the web assets: `web/art/portrait/<key>.webp` (512 px) and `web/art/sprite/<key>.webp` (trimmed to the creature, 192 px), key = the apex form's chase tree id or the species id.
+- `tools/art/export.py` turns the masters in `tools/art/final/` into the web assets: `web/art/portrait/<key>.webp` (512 px) and `web/art/sprite/<key>.webp` (trimmed to the creature, 192 px), key = the apex form's chase tree id or the species id, and `web/art/keys.js`, the list of keys with art that `web/sprites.js` reads (one key per line, so species lanes merge cleanly; rerun the script on a conflict).
 
 ### 8.2 What was made (2026-10-31)
 

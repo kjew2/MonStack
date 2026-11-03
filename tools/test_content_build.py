@@ -135,6 +135,33 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(2, self.build(lambda src: None, ["--baseline", os.path.join(ROOT, "nope")]))
 
 
+    def edit(self, name, old, new):
+        def go(src):
+            path = os.path.join(src, name + ".csv")
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+            self.assertIn(old, text)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text.replace(old, new))
+        return go
+
+    def test_a_generic_tree_turned_native_only_passes(self):
+        # A species lane's flip (#160): same id, nodes and rule capstone; no offer stat or threshold; no MAJOR bump needed.
+        go = self.edit("trees", "blood_magic,tree.blood_magic.name,generic,hp,400,", "blood_magic,tree.blood_magic.name,native,,,")
+        self.assertEqual(0, self.build(go, ["--baseline", os.path.join(ROOT, "Content")]))
+
+    def test_a_second_chase_tree_without_a_book_passes(self):
+        # No book node in the second chase tree's conditions: a harder in-run chase (kj, 2026-11-03, #160).
+        go = self.edit("chase_conditions", "inferno_sovereign_c0,inferno_sovereign,node_owned,ember_codex_n0,",
+                       "inferno_sovereign_c0,inferno_sovereign,tree_maxed,heavy_armor,")
+        self.assertEqual(0, self.build(go, []))
+
+    def test_the_in_run_chase_tree_still_must_not_need_a_book(self):
+        go = self.edit("chase_conditions", "unbreakable_will_c0,unbreakable_will,tree_maxed,heavy_armor,",
+                       "unbreakable_will_c0,unbreakable_will,node_owned,ember_codex_n0,")
+        self.assertEqual(1, self.build(go, []))
+
+
 
 class TalentRules(unittest.TestCase):
     """validate_talents (specs/18 section 4): per_rank ranges of the talent effects. Mirrors ContentDb.BuildAccount."""

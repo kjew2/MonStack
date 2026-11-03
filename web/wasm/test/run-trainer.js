@@ -84,10 +84,10 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     cards: document.querySelectorAll('[data-act^="species-"][data-locked]').length }));
   check(art.portrait.length === 1 && art.portrait[0] > 0, 'the picked species shows its portrait: ' + JSON.stringify(art.portrait));
   check(art.sprites.length === art.cards && art.sprites.every((w) => w > 0), 'every locked species card shows its art sprite: ' + JSON.stringify(art.sprites));
-  const artKeys = JSON.parse(fs.readFileSync(path.join(WEB, 'sprites.js'), 'utf8').match(/const ART_KEYS = new Set\((\[.*?\])\)/)[1]).sort();
+  const artKeys = JSON.parse(fs.readFileSync(path.join(WEB, 'art', 'keys.js'), 'utf8').match(/MONSTACK_ART_KEYS = (\[[\s\S]*?\]);/)[1].replace(/,\s*\]$/, ']')).sort();
   const artFiles = (d) => fs.readdirSync(path.join(WEB, 'art', d)).map((f) => f.replace(/\.webp$/, '')).sort();
   check(JSON.stringify(artFiles('sprite')) === JSON.stringify(artKeys) && JSON.stringify(artFiles('portrait')) === JSON.stringify(artKeys),
-    'web/art/ holds a sprite and a portrait for exactly the keys sprites.js lists (' + artKeys.length + ')');
+    'web/art/ holds a sprite and a portrait for exactly the keys web/art/keys.js lists (' + artKeys.length + ')');
   check((await page.locator('[data-act^="talent-"]').count()) === 0, 'there is no always-on talent shop');
   await shot('01-home');
   await homeTab('goals');

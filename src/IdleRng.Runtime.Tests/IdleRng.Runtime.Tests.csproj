@@ -12,6 +12,10 @@
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Content fixtures for the species groundwork (#160), shared with the Sim tests -->
+    <Compile Include="../IdleRng.Sim.Tests/ContentFixtures.cs" Link="ContentFixtures.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../IdleRng.Runtime/IdleRng.Runtime.csproj" />
     <ProjectReference Include="../IdleRng.Sim/IdleRng.Sim.csproj" />
   </ItemGroup>

@@ -67,7 +67,7 @@ namespace IdleRng.Sim.Tests
         // ------------------------------------------------------------------ content
 
         [Test]
-        public void Content_EveryTree_IsAGenericPlaceholderTree_WithItsRuleCapstone()
+        public void Content_EveryTree_IsAnIdeaPoolPlaceholderTree_WithItsRuleCapstone()
         {
             var stats = new Dictionary<string, string>
             {
@@ -77,9 +77,7 @@ namespace IdleRng.Sim.Tests
             foreach (var id in Trees)
             {
                 var t = Db.Trees[id];
-                Assert.That(t.Kind, Is.EqualTo(TreeKind.Generic), id);
-                Assert.That(t.OfferStat, Is.EqualTo(stats[id]), id);
-                Assert.That(t.OfferThreshold, Is.EqualTo(400), id);
+                IdeaPool.AssertOfferedOrNative(Db, t, stats[id]);
                 Assert.That(t.Nodes.Select(n => n.Kind), Is.EqualTo(new[]
                 {
                     NodeKind.Growth, NodeKind.Stat, NodeKind.Growth, NodeKind.Stat, NodeKind.Skill, NodeKind.Growth, NodeKind.Stat, NodeKind.Rule,

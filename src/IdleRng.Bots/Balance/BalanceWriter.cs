@@ -75,7 +75,7 @@ namespace IdleRng.Bots.Balance
 
             sb.Append("\n## Chase power: gauntlet floors a whole chase tree adds, capstone included (specs/15 section 5.5)\n");
             t = new Table(2);
-            t.Row("species", "policy", "base floor", "fusion +", "in-run +", "in-run p10/p50/p90", "book +", "book p10/p50/p90");
+            t.Row("species", "policy", "base floor", "fusion +", "in-run +", "in-run p10/p50/p90", "second +", "second p10/p50/p90");   // second: book or harder in-run
             foreach (var c in r.Cells)
                 t.Row(c.Species, c.Policy, Num(c.CapstoneBase.Mean), c.FusionGain.N == 0 ? "-" : Num(c.FusionGain.Mean), Num(c.CapstoneGainRun.Mean),
                       Pcts(c.CapstoneGainRun), Num(c.CapstoneGainBook.Mean), Pcts(c.CapstoneGainBook));

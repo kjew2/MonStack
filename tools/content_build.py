@@ -485,7 +485,8 @@ def validate_trees(t, errs):
     for tid, r in trees.items():
         if r["kind"] == "chase" and tid not in with_conds:
             errs.add("E065", f"trees[{tid}]", "a chase tree needs at least one condition")
-    # Each species owns two chase trees: one in-run, one book-gated (specs/15 section 5.1).
+    # Each species owns two chase trees: the in-run one and a second one, book-gated or (no book node) a harder in-run chase
+    # (kj, 2026-11-03; specs/15 section 5.1).
     def book_refs(tid):
         out = 0
         for cd in t["chase_conditions"]:
@@ -512,8 +513,6 @@ def validate_trees(t, errs):
             owner.setdefault(tid, sp["id"])
             if col == "chase_tree_run" and book_refs(tid) > 0:
                 errs.add("E043", loc, f"in-run chase tree '{tid}' must not need a book tree")
-            if col == "chase_tree_book" and book_refs(tid) == 0:
-                errs.add("E043", loc, f"book-gated chase tree '{tid}' needs a condition on a book tree")
         if sp["chase_tree_run"] == sp["chase_tree_book"]:
             errs.add("E043", loc, "chase trees must differ")
     for tid, r in trees.items():

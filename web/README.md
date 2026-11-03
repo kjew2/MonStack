@@ -17,7 +17,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `run-engine.js` | Facade over the C# trainer bridge (`IdleRng.Web.Engine.Run*` / `Account*`): the account (shards, talents, achievements, vendor offers, Vault, active run), opened through `sync.js`. |
 | `engine.js` | Loader for the .NET runtime and the content pack. |
 | `sprites.js` | Seeded 12x12 pixel sprites drawn on canvas (a rank opponent: its own shape tinted by its element, horns at the top rank). Cosmetic only, never touches the game's RNG. |
-| `art/` | Generated creature art (`specs/26` section 8): `sprite/<key>.webp` (battle sprites) and `portrait/<key>.webp`, key = the apex form's chase tree id, else the species id. Exported by `tools/art/export.py`; `sprites.js` lists the keys (`IdleSprites.art`). |
+| `art/` | Generated creature art (`specs/26` section 8): `sprite/<key>.webp` (battle sprites) and `portrait/<key>.webp`, key = the apex form's chase tree id, else the species id. Exported by `tools/art/export.py`, which also writes `art/keys.js`, the keys with art (loaded before `sprites.js`, read by `IdleSprites.art`; never edit it by hand). |
 | `wasm/build.sh` | Builds `src/IdleRng.Web` and lays out `wasm/dist/` (gitignored). |
 | `wasm/site.sh` | Lays out the same files as a static site for the GitHub Pages deploy (`.github/workflows/pages.yml`). |
 | `wasm/publish-artifact.sh` | Builds and prints the whole Artifact publish call for republishing the phone artifact (root README, "On a phone"). |
