@@ -90,6 +90,14 @@ kj allowed fusion for **some specific pairs**, with the pair clear in the UI (`s
 | *Mind Warp* + *Nimble Feet* | **Mirror Fox**: nine afterimages, only one is real | dodge triggers on both trees |
 | *Fortune* + *Spellcraft* | **Tarot Mimic**: a deck of cards with teeth, deals a random spell | gambling magic; Spellcraft's on-crit trigger feeds on Fortune's crit build |
 
+### 5.3 Idea-pool species (epic #160)
+
+The species built on the idea-pool trees (#132), one lane each; concepts and art picks agreed with kj (2026-11-03), drafts on branch `art/species-drafts`.
+
+| Species | Element, tone | Concept | Trees and apex forms |
+|---|---|---|---|
+| **Pyre Stag** (`pyre_stag`, #142) | fire; grimdark with a mythic edge | A gaunt, ash-grey stag whose antlers are its own funeral pyre: hide cracked like cooling charcoal with ember light in the cracks, rusted penitent chains with black bells. It burns itself every turn, and the closer it gets to ash, the harder it hits. The game's glass cannon on a fuse: the only even STR/INT hybrid, the lowest DEF growth (0.5), HP drilled as fuel. | Natives *Funeral Pyre* (`pyre_tithe`) and *Ashen Vigil* (`ash_shroud`, a Life Shield threshold enabler, `specs/22` section 3.1); in-run chase *Inverted Mercy* (`pyre_mercy`: heals become fire) → **Cinder Saint**; book *Litany of Embers*, book chase *Undying Pyre* (`ember_eternal`: death burns max HP instead) → **Everpyre Hart**. Unlocked by *Kindled* (reach rank B). |
+
 ## 6. Questions for kj (answered 2026-10-31)
 
 1. **Tone:** **a mix, the best of all worlds** (kj): cute, mythic, grimdark or hot. No one style is required; each creature takes whichever suits it.

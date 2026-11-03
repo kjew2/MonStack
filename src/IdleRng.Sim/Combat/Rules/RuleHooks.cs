@@ -3,7 +3,8 @@ using IdleRng.Sim.Content;
 namespace IdleRng.Sim.Combat
 {
     // The rule hooks of the idea-pool lanes (specs/16 section 6.4, epic #132). The fight calls each Hook* method at a fixed
-    // point; it calls the same hook of lanes A to E in that order. Each lane's hooks are partial methods that the lane
+    // point; it calls the same hook of lanes A to E in that order, then each species lane's (epic #160: Rules/<Species>.cs, a
+    // _<Species> suffix). Each lane's hooks are partial methods that the lane
     // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
     // until its lane fills it. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
     // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
@@ -17,6 +18,7 @@ namespace IdleRng.Sim.Combat
             OnFightStart_C(c);
             OnFightStart_D(c);
             OnFightStart_E(c);
+            OnFightStart_PyreStag(c);
         }
 
         static partial void OnFightStart_A(RuleCtx c);
@@ -24,6 +26,7 @@ namespace IdleRng.Sim.Combat
         static partial void OnFightStart_C(RuleCtx c);
         static partial void OnFightStart_D(RuleCtx c);
         static partial void OnFightStart_E(RuleCtx c);
+        static partial void OnFightStart_PyreStag(RuleCtx c);
 
         /// <summary>BeforeAction: the start of the unit's action, before it is counted; set skip to lose the action (nothing else of it happens).</summary>
         static void HookBeforeAction(RuleCtx c, FightUnit u, ref bool skip)
@@ -33,6 +36,7 @@ namespace IdleRng.Sim.Combat
             BeforeAction_C(c, u, ref skip);
             BeforeAction_D(c, u, ref skip);
             BeforeAction_E(c, u, ref skip);
+            BeforeAction_PyreStag(c, u, ref skip);
         }
 
         static partial void BeforeAction_A(RuleCtx c, FightUnit u, ref bool skip);
@@ -40,6 +44,7 @@ namespace IdleRng.Sim.Combat
         static partial void BeforeAction_C(RuleCtx c, FightUnit u, ref bool skip);
         static partial void BeforeAction_D(RuleCtx c, FightUnit u, ref bool skip);
         static partial void BeforeAction_E(RuleCtx c, FightUnit u, ref bool skip);
+        static partial void BeforeAction_PyreStag(RuleCtx c, FightUnit u, ref bool skip);
 
         /// <summary>AfterAction: after the unit's action (and after each extra action), before deaths, boss phases and the outcome check.</summary>
         static void HookAfterAction(RuleCtx c, FightUnit u)
@@ -49,6 +54,7 @@ namespace IdleRng.Sim.Combat
             AfterAction_C(c, u);
             AfterAction_D(c, u);
             AfterAction_E(c, u);
+            AfterAction_PyreStag(c, u);
         }
 
         static partial void AfterAction_A(RuleCtx c, FightUnit u);
@@ -56,6 +62,7 @@ namespace IdleRng.Sim.Combat
         static partial void AfterAction_C(RuleCtx c, FightUnit u);
         static partial void AfterAction_D(RuleCtx c, FightUnit u);
         static partial void AfterAction_E(RuleCtx c, FightUnit u);
+        static partial void AfterAction_PyreStag(RuleCtx c, FightUnit u);
 
         /// <summary>ExtraAction: after an action: set evt (the log event, rule:&lt;id&gt;) to grant an extra action now; leave it if already set. MON_EXTRA_ACTIONS_CAP applies.</summary>
         static void HookExtraAction(RuleCtx c, FightUnit u, ref string evt)
@@ -129,6 +136,7 @@ namespace IdleRng.Sim.Combat
             ModifyOutgoing_C(c, h);
             ModifyOutgoing_D(c, h);
             ModifyOutgoing_E(c, h);
+            ModifyOutgoing_PyreStag(c, h);
         }
 
         static partial void ModifyOutgoing_A(RuleCtx c, HitInfo h);
@@ -136,6 +144,7 @@ namespace IdleRng.Sim.Combat
         static partial void ModifyOutgoing_C(RuleCtx c, HitInfo h);
         static partial void ModifyOutgoing_D(RuleCtx c, HitInfo h);
         static partial void ModifyOutgoing_E(RuleCtx c, HitInfo h);
+        static partial void ModifyOutgoing_PyreStag(RuleCtx c, HitInfo h);
 
         /// <summary>ModifyIncoming: the target's damage multipliers on h.Raw, right after ModifyOutgoing.</summary>
         static void HookIncoming(RuleCtx c, HitInfo h)
@@ -193,6 +202,7 @@ namespace IdleRng.Sim.Combat
             ModifyHpDamage_C(c, src, tgt, ref amount);
             ModifyHpDamage_D(c, src, tgt, ref amount);
             ModifyHpDamage_E(c, src, tgt, ref amount);
+            ModifyHpDamage_PyreStag(c, src, tgt, ref amount);
         }
 
         static partial void ModifyHpDamage_A(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
@@ -200,6 +210,7 @@ namespace IdleRng.Sim.Combat
         static partial void ModifyHpDamage_C(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
         static partial void ModifyHpDamage_D(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
         static partial void ModifyHpDamage_E(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
+        static partial void ModifyHpDamage_PyreStag(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
 
         /// <summary>OnWouldDie: a blow brought tgt to 0 HP and root_rebirth did not save it (or its own entropy recoil did: src is tgt then); set saved (and its HP) to keep it alive; leave it if already set.</summary>
         static void HookWouldDie(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved)
@@ -209,6 +220,7 @@ namespace IdleRng.Sim.Combat
             OnWouldDie_C(c, src, tgt, ref saved);
             OnWouldDie_D(c, src, tgt, ref saved);
             OnWouldDie_E(c, src, tgt, ref saved);
+            OnWouldDie_PyreStag(c, src, tgt, ref saved);
         }
 
         static partial void OnWouldDie_A(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
@@ -216,6 +228,7 @@ namespace IdleRng.Sim.Combat
         static partial void OnWouldDie_C(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
         static partial void OnWouldDie_D(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
         static partial void OnWouldDie_E(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
+        static partial void OnWouldDie_PyreStag(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
 
         /// <summary>SkillReady: whether the unit's active skill at index may be used now (the AI and gambits ask; ready starts as cooldown over).</summary>
         static void HookSkillReady(RuleCtx c, FightUnit u, int index, ref bool ready)
@@ -241,6 +254,7 @@ namespace IdleRng.Sim.Combat
             OnSkillUsed_C(c, u, index, sk);
             OnSkillUsed_D(c, u, index, sk);
             OnSkillUsed_E(c, u, index, sk);
+            OnSkillUsed_PyreStag(c, u, index, sk);
         }
 
         static partial void OnSkillUsed_A(RuleCtx c, FightUnit u, int index, CombatSkill sk);
@@ -248,6 +262,7 @@ namespace IdleRng.Sim.Combat
         static partial void OnSkillUsed_C(RuleCtx c, FightUnit u, int index, CombatSkill sk);
         static partial void OnSkillUsed_D(RuleCtx c, FightUnit u, int index, CombatSkill sk);
         static partial void OnSkillUsed_E(RuleCtx c, FightUnit u, int index, CombatSkill sk);
+        static partial void OnSkillUsed_PyreStag(RuleCtx c, FightUnit u, int index, CombatSkill sk);
 
         /// <summary>OnDeath: once per unit that died, after the action or end-of-tick ageing that killed it (u.KilledBy names the killer).</summary>
         static void HookDeath(RuleCtx c, FightUnit u)
@@ -273,6 +288,7 @@ namespace IdleRng.Sim.Combat
             HashUnit_C(w, s, u);
             HashUnit_D(w, s, u);
             HashUnit_E(w, s, u);
+            HashUnit_PyreStag(w, s, u);
         }
 
         static partial void HashUnit_A(CanonicalWriter w, FightState s, FightUnit u);
@@ -280,6 +296,7 @@ namespace IdleRng.Sim.Combat
         static partial void HashUnit_C(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_D(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_E(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_PyreStag(CanonicalWriter w, FightState s, FightUnit u);
 
         /// <summary>HashFight: StateHash, at the end: fight-wide lane state, only when some unit carries the rule.</summary>
         static void HookHashFight(CanonicalWriter w, FightState s)
@@ -305,6 +322,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_C(r, ref ok);
             ValidateRules_D(r, ref ok);
             ValidateRules_E(r, ref ok);
+            ValidateRules_PyreStag(r, ref ok);
         }
 
         static partial void ValidateRules_A(FightRules r, ref bool ok);
@@ -312,6 +330,7 @@ namespace IdleRng.Sim.Combat
         static partial void ValidateRules_C(FightRules r, ref bool ok);
         static partial void ValidateRules_D(FightRules r, ref bool ok);
         static partial void ValidateRules_E(FightRules r, ref bool ok);
+        static partial void ValidateRules_PyreStag(FightRules r, ref bool ok);
 
         /// <summary>StatFlat: a flat amount added to a trained stat's current value (after its effect multiplier and floor; not HP). Hot path: keep it cheap.</summary>
         static void HookStatFlat(FightRules r, FightUnit u, string stat, ref double flat)
@@ -328,6 +347,14 @@ namespace IdleRng.Sim.Combat
         static partial void StatFlat_C(FightRules r, FightUnit u, string stat, ref double flat);
         static partial void StatFlat_D(FightRules r, FightUnit u, string stat, ref double flat);
         static partial void StatFlat_E(FightRules r, FightUnit u, string stat, ref double flat);
+
+        /// <summary>HealIn: a heal of amount (already scaled) is about to land on t; set taken to stop it (t gains no HP and no overflow shield).</summary>
+        static void HookHealIn(FightRules r, FightUnit t, double amount, ref bool taken)
+        {
+            HealIn_PyreStag(r, t, amount, ref taken);
+        }
+
+        static partial void HealIn_PyreStag(FightRules r, FightUnit t, double amount, ref bool taken);
 
         /// <summary>ShieldGain: a skill or entropy_convert gives tgt a timed shield of amount; shield starts as the bigger of the old and new, ticks as the new timer (0 = no expiry).</summary>
         static void HookShieldGain(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks)
@@ -372,6 +399,7 @@ namespace IdleRng.Sim.Combat
             Load_C(r, c);
             Load_D(r, c);
             Load_E(r, c);
+            Load_PyreStag(r, c);
         }
 
         static partial void Load_A(FightRules r, ContentDb c);
@@ -379,6 +407,7 @@ namespace IdleRng.Sim.Combat
         static partial void Load_C(FightRules r, ContentDb c);
         static partial void Load_D(FightRules r, ContentDb c);
         static partial void Load_E(FightRules r, ContentDb c);
+        static partial void Load_PyreStag(FightRules r, ContentDb c);
     }
 
     public sealed partial class FightUnit

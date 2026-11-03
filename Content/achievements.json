@@ -40,6 +40,14 @@
       "ref": null,
       "amount": 20.0,
       "unlocks_species": null
+    },
+    {
+      "id": "kindled",
+      "name_key": "achievement.kindled.name",
+      "kind": "rank_reached",
+      "ref": "b",
+      "amount": null,
+      "unlocks_species": "pyre_stag"
     }
   ]
 }

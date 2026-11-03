@@ -2629,6 +2629,126 @@
     {
       "key": "rule.hungry_core.desc",
       "text": "Each new cycle the core eats {HUNGRY_ENERGY} energy. While fed, every trained stat is +{HUNGRY_STAT} in that cycle's rank fight. With too little energy it goes dormant for the cycle: no bonus, nothing eaten."
+    },
+    {
+      "key": "species.pyre_stag.name",
+      "text": "Pyre Stag"
+    },
+    {
+      "key": "tree.funeral_pyre.name",
+      "text": "Funeral Pyre"
+    },
+    {
+      "key": "tree.ashen_vigil.name",
+      "text": "Ashen Vigil"
+    },
+    {
+      "key": "tree.litany_of_embers.name",
+      "text": "Litany of Embers"
+    },
+    {
+      "key": "tree.inverted_mercy.name",
+      "text": "Inverted Mercy"
+    },
+    {
+      "key": "tree.inverted_mercy.apex",
+      "text": "Cinder Saint"
+    },
+    {
+      "key": "tree.undying_pyre.name",
+      "text": "Undying Pyre"
+    },
+    {
+      "key": "tree.undying_pyre.apex",
+      "text": "Everpyre Hart"
+    },
+    {
+      "key": "book.book_litany.name",
+      "text": "Skill Book: Litany of Embers"
+    },
+    {
+      "key": "achievement.kindled.name",
+      "text": "Kindled"
+    },
+    {
+      "key": "mskill.immolate.name",
+      "text": "Immolate"
+    },
+    {
+      "key": "mskill.immolate.desc",
+      "text": "{element} damage for {power:pct} {scales}, paid with {MON_IMMOLATE_SELF:pct} of its own max HP. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.ember_hymn.name",
+      "text": "Ember Hymn"
+    },
+    {
+      "key": "mskill.ember_hymn.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.cinder_rite.name",
+      "text": "Cinder Rite"
+    },
+    {
+      "key": "mskill.cinder_rite.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.smoke_psalm.name",
+      "text": "Smoke Psalm"
+    },
+    {
+      "key": "mskill.smoke_psalm.desc",
+      "text": "Book trait. When hit: an enemy loses {power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "rule.pyre_tithe.name",
+      "text": "Tithe of Ash"
+    },
+    {
+      "key": "rule.pyre_tithe.desc",
+      "text": "Each action costs {MON_TITHE_COST:pct} of its max HP (never below 1 HP). Its damage rises by the share of max HP it is missing, up to about double near death."
+    },
+    {
+      "key": "rule.pyre_tithe.log",
+      "text": "pays {amount} HP"
+    },
+    {
+      "key": "rule.ash_shroud.name",
+      "text": "Ash Shroud"
+    },
+    {
+      "key": "rule.ash_shroud.desc",
+      "text": "At the start of each fight, {MON_SHROUD_FRAC:pct} of its HP turns into a shield that does not expire."
+    },
+    {
+      "key": "rule.ash_shroud.log",
+      "text": "shrouds {amount} HP in ash"
+    },
+    {
+      "key": "rule.pyre_mercy.name",
+      "text": "Inverted Mercy"
+    },
+    {
+      "key": "rule.pyre_mercy.desc",
+      "text": "It can no longer be healed. Every heal it would receive (its own, its allies', life steal) is dealt instead as fire damage to an enemy. Shields still work."
+    },
+    {
+      "key": "rule.pyre_mercy.log",
+      "text": "mercy burns for {amount}"
+    },
+    {
+      "key": "rule.ember_eternal.name",
+      "text": "Undying Pyre"
+    },
+    {
+      "key": "rule.ember_eternal.desc",
+      "text": "A blow that would knock it out leaves it at 1 HP and burns its max HP instead. Each 1% of max HP burned adds +{MON_EMBER_DMG:pct} damage for the fight. It falls once its max HP would burn below {MON_EMBER_FLOOR:pct} of its start."
+    },
+    {
+      "key": "rule.ember_eternal.log",
+      "text": "burns {amount} max HP and fights on"
     }
   ]
 }

@@ -93,3 +93,7 @@ momentum,mskill.momentum.name,buff,self,spd,,0.1,0,2,
 coin_toss,mskill.coin_toss.name,damage,enemy,,luk,2,3,0,
 windfall,mskill.windfall.name,buff,self,crit_rate,,0.15,0,2,
 hex,mskill.hex.name,debuff,enemy,wis,,0.25,4,3,
+immolate,mskill.immolate.name,damage,enemy,,str,1.8,2,0,fire
+ember_hymn,mskill.ember_hymn.name,damage,enemy,,int,1.6,2,0,fire
+cinder_rite,mskill.cinder_rite.name,heal,self,,str,0.9,3,0,
+smoke_psalm,mskill.smoke_psalm.name,debuff,enemy,dex,,0.3,0,2,

@@ -5,11 +5,11 @@
   "tables": {
     "achievements": {
       "file": "achievements.json",
-      "sha256": "453df9890157138b81f5d194f099009ca9f38cd89ca613d30b3a1830395272ca"
+      "sha256": "3533c0860a7c54fc892aee3a97ecbe01c20937c06803bf457b0150276f57f620"
     },
     "book_drops": {
       "file": "book_drops.json",
-      "sha256": "8962576d739118ac04080cab0bfe75711b608467f5441acfce88d912f76295dc"
+      "sha256": "33a56c8604ed6557535698ea8b04a02d5e5b28d96ea04e4e02f566c46dd6e365"
     },
     "boss_phases": {
       "file": "boss_phases.json",
@@ -17,11 +17,11 @@
     },
     "chase_conditions": {
       "file": "chase_conditions.json",
-      "sha256": "b45717702c915bd8b332eef88cf16bea832885323b5cd1f3d586ef60f5a590b4"
+      "sha256": "8ee4d94a2a93072a6c907957cac7743ec9361d4c52de1ee7908c90d13c5a8a50"
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "12614e41fa2e6238ee79f741ed5edb514a204895e51e2d2f73c05f7bc298df7c"
+      "sha256": "7ec55c3c6022890e42160de2efbcdc6fd9d88b9aa750a083a7b0d7c8aa9ee3ec"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -53,7 +53,7 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "a138c7a070c70562f673a12a3f1f6448c26af656b49208fabdbbdf37444477ab"
+      "sha256": "6f4aacbaebcb42eba370a0c79654736ea87fd9086eb7b3d5b2c062d029f9c04a"
     },
     "mutators": {
       "file": "mutators.json",
@@ -65,11 +65,11 @@
     },
     "skill_books": {
       "file": "skill_books.json",
-      "sha256": "a0809891b35d9240ecb477b32d8a91d34de36a45080c69ba1d3d9537d5d64571"
+      "sha256": "8ce90d6eee9749effa5701f676b8d418b64a2ad40a8ea790fe1fe69cb62a1431"
     },
     "species": {
       "file": "species.json",
-      "sha256": "13cc6c9c98215ec9fdb4be21a580982ac3497022a51f09a67f287abe0b68ce23"
+      "sha256": "7d33647f785dbcd14acf727369bf0ca4a9f19461b982a18388ac111c03d4ce8a"
     },
     "stat_milestones": {
       "file": "stat_milestones.json",
@@ -77,7 +77,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "810c9de604deaa234c268f70211ac8ac77fe95f22909ccf0c406e4e6a70246f2"
+      "sha256": "f80acaf2cdaac17b8a6fc3406ff3e0854f13739d6499a8ac824e816dbcb4e0e5"
     },
     "talents": {
       "file": "talents.json",
@@ -89,16 +89,16 @@
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
-      "sha256": "d6d4879017e8689c1153d9cd649d8ae970273cec5cfbc1d4a7231e265c0009df"
+      "sha256": "3d7396db04ab95deaa9741e7df10cc29b7c0500b095c395e240e0cacf6d2b737"
     },
     "trees": {
       "file": "trees.json",
-      "sha256": "e92b328aad74390c98772cbc3db77efaf36a22c81560c795b879be2ee44b5d15"
+      "sha256": "5e71367386e0981a57a855fd83341e7ea32329992c90e7cb16df004657a0d4d9"
     },
     "vendor_rarities": {
       "file": "vendor_rarities.json",
       "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "e30953ef5e32c581d0f4f90fc7e67f22a3f9e84da76b7e84c3467165c8bb92aa"
+  "content_hash": "f746222cab276baaf98307a7b2f11b2aaa2f2fdd03cec29c5f6ad5d7d76bca5d"
 }

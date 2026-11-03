@@ -32,6 +32,10 @@
   "shade_hound": {
    "name": "Shade Hound",
    "prompt": "A dog made purely of shadow, deep purple-black with soft violet edges, in a real canine pose with a lean body and four jointed legs, its tail dissolving into drifting smoke. Bright acid-green eyes and small white fangs. Unsettling detail: a short row of tiny extra acid-green eyes along its cheek."
+  },
+  "pyre_stag": {
+   "name": "Pyre Stag",
+   "prompt": "A gaunt, ash-grey stag creature that is slowly burning itself alive. Its antlers are a living funeral pyre: stacked charred branches wreathed in roaring orange-gold flame. Its hide is cracked like cooling charcoal, with molten ember light glowing through the cracks along its ribs, spine and legs; flakes of ash and sparks peel off its body and drift upward. Rusted iron penitent chains hang from its neck, with small blackened bells. Lean, long-legged and solemn, head held high; eyes are white-hot embers. Grimdark and mythic, a sacred beast that pays for its power with its own body."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -86,6 +90,16 @@
    "species": "shade_hound",
    "name": "Eclipse Hound",
    "prompt": "the shadow dog is crimson and black, a golden eclipse ring burns like a halo behind its head, and all its eyes glow gold."
+  },
+  "inverted_mercy": {
+   "species": "pyre_stag",
+   "name": "Cinder Saint",
+   "prompt": "the stag has burnt down to a hollow blackened ribcage with a white-hot, blue-white fire burning inside it, a burning antler halo above its head, and its chains glowing white-hot. Colour palette shifts from orange to white and electric blue-white flame on charred black."
+  },
+  "undying_pyre": {
+   "species": "pyre_stag",
+   "name": "Everpyre Hart",
+   "prompt": "a colossal hart of living flame with no hide left, its antler pyre risen into a crown-shaped bonfire, black bells ringing in the smoke."
   }
  }
 }

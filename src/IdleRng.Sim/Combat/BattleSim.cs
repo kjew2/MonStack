@@ -803,10 +803,13 @@ namespace IdleRng.Sim.Combat
         /// <summary>
         /// Heal a unit by <paramref name="amount"/> (already scaled by HealMult), capped at max HP; returns the HP restored. With
         /// tidal_overflow the overflow becomes shield, up to TideShieldCap of max HP (added to <paramref name="shield"/>). It joins the
-        /// unit's one shield pool, so a timed shield's expiry clears it too.
+        /// unit's one shield pool, so a timed shield's expiry clears it too. The heal-in hook may take the heal first (nothing lands).
         /// </summary>
         static double Heal(FightRules r, FightUnit t, double amount, ref double shield, double overflowCap = 0)
         {
+            bool taken = false;
+            HookHealIn(r, t, amount, ref taken);   // pyre_mercy: the heal becomes fire damage instead
+            if (taken) return 0;
             double before = t.Hp, sum = t.Hp + amount;
             t.Hp = Math.Min(t.MaxHp, sum);
             double over = sum - t.MaxHp;

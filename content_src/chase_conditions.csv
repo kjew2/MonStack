@@ -29,3 +29,11 @@ umbral_veil_c2,umbral_veil,tally_at_least,wins,2
 night_feast_c0,night_feast,node_owned,umbral_grimoire_n0,
 night_feast_c1,night_feast,node_owned,shadow_harvest_n4,
 night_feast_c2,night_feast,tally_at_least,damage_dark,7000
+inverted_mercy_c0,inverted_mercy,tree_maxed,funeral_pyre,
+inverted_mercy_c1,inverted_mercy,node_owned,ashen_vigil_n4,
+inverted_mercy_c2,inverted_mercy,stat_at_least,str,450
+inverted_mercy_c3,inverted_mercy,tally_at_least,damage_fire,3000
+undying_pyre_c0,undying_pyre,node_owned,litany_of_embers_n0,
+undying_pyre_c1,undying_pyre,node_owned,funeral_pyre_n7,
+undying_pyre_c2,undying_pyre,node_owned,ashen_vigil_n4,
+undying_pyre_c3,undying_pyre,tally_at_least,wins,4
