@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the previous-build rules of tools/content_build.py (E090, E091). Stdlib only.
+"""Tests for tools/content_build.py: reading tables (E004) and the previous-build rules (E090, E091). Stdlib only.
 
     python3 tools/test_content_build.py
 """
@@ -16,6 +16,33 @@ import content_build as cb  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 with open(os.path.join(ROOT, "content_src", "meta.csv"), encoding="utf-8") as _f:
     CURRENT_MAJOR = int(re.search(r"content_version,(\d+)\.", _f.read()).group(1))
+
+
+class ReadTable(unittest.TestCase):
+    """read_table: an unquoted comma must not cut a cell short without a word (E004)."""
+    SCHEMA = cb.SCHEMA["strings"]
+
+    def read(self, text):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "strings.csv")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+            errs = cb.Errors()
+            rows = cb.read_table(path, "strings", self.SCHEMA, errs)
+            return rows, errs
+
+    def test_quoted_comma_is_kept(self):
+        rows, errs = self.read('key,en\na.b,"one, two"\n')
+        self.assertEqual([], errs)
+        self.assertEqual("one, two", rows[0]["en"])
+
+    def test_unquoted_comma_is_e004(self):
+        _, errs = self.read("key,en\na.b,one, two\n")
+        self.assertTrue(any("E004" in e for e in errs), errs)
+
+    def test_extra_cells_after_a_notes_column_are_allowed(self):
+        _, errs = self.read("key,en,#notes\na.b,one,a note, with a comma\n")
+        self.assertEqual([], errs)
 
 
 class BaselineRules(unittest.TestCase):

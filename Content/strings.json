@@ -808,7 +808,7 @@
     },
     {
       "key": "talent.momentum.desc",
-      "text": "After a Super drill"
+      "text": "After a Super drill, the next drill costs no energy."
     },
     {
       "key": "talent.grudge_match.name",
@@ -2152,7 +2152,7 @@
     },
     {
       "key": "gambit.when.ally_hp_below.desc",
-      "text": "Some ally on its team"
+      "text": "Some ally on its team, this monster included, is below this share of its max HP."
     },
     {
       "key": "gambit.when.enemy_hp_below.name",
@@ -2176,7 +2176,7 @@
     },
     {
       "key": "gambit.when.first_actions.desc",
-      "text": "During this monster's first actions of the fight"
+      "text": "During this monster's first actions of the fight, up to this many."
     },
     {
       "key": "gambit.target.auto.name",
@@ -2208,7 +2208,7 @@
     },
     {
       "key": "gambit.basic.desc",
-      "text": "A plain attack"
+      "text": "A plain attack, always ready."
     }
   ]
 }

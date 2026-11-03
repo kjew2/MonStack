@@ -77,11 +77,16 @@ const H = require('./harness.js');
     'each filled slot shows its rule count and a Rules button');
   await act('endless-slot-up-1').click();             // the monster with the rulebook moves to slot 1
   check((await text('[data-id=endless-rules-n-0]')) === '1 rule' && (await text('[data-id=endless-rules-n-1]')) === 'No rules', 'a slot moves up');
-  if (!(await page.evaluate(() => !!window.RulebookView))) {
-    await act('endless-rules-0').click();
-    await page.locator('.toast', { hasText: 'Rulebook editor not loaded' }).waitFor();
-    check(true, 'without the editor loaded, Rules says so');
-  }
+  // Rules opens the rulebook editor (web/rulebook.js) on this monster, with Test on the next floor for this team of four
+  await act('endless-rules-0').click();
+  await act('rb-sheet').waitFor();
+  check((await count('[data-act=rb-rule-0]')) === 1 && (await act('rb-test').isVisible()) && /Test floor 1/.test(await act('rb-test').innerText()),
+    'Rules opens the editor on that monster, its saved rule as a card, with Test on the next floor');
+  await act('rb-test').click();
+  await act('rb-result').waitFor({ timeout: 30000 });
+  check(/^(Won|Lost on) floor 1/.test(await act('rb-result').innerText()), 'the editor tests floor 1 with this team: ' + (await act('rb-result').innerText()));
+  await act('rb-close').click();
+  check((await count('[data-act=rb-sheet]')) === 0, 'and closes back to the Endless screen');
   await t.layout('endless team');
 
   // ---- climb: the deciding floor plays back at once, a rule firing reads as a rule line

@@ -1,4 +1,4 @@
-# endless vectors, hash v1 content=6.3/8c6dbafc
+# endless vectors, hash v1 content=6.3/c82e5c9b
 
 season 0
   floor  1 swarm    mire_sprite,ember_imp,ember_imp,ember_imp
