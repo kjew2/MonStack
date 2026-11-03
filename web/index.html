@@ -241,6 +241,9 @@ small, .small { font-size: 12px; }
 /* An injury: a banner laid over the monster (not a card above the stage, which pushed the drill pad down) */
 .stage .injury-banner { position: absolute; left: 10px; right: 10px; top: 40px; z-index: 3; padding: 8px 10px; border: 1px solid var(--bad);
   border-radius: var(--r-sm); background: color-mix(in srgb, var(--panel) 92%, transparent); box-shadow: var(--shadow-card); text-align: center; pointer-events: none; }
+/* Hungry Core dormant this cycle (lane G, #140): a slim tag over the monster's feet, laid over the stage so nothing moves */
+.stage .core-banner { position: absolute; left: 10px; right: 10px; bottom: 44px; z-index: 2; text-align: center; pointer-events: none;
+  padding: 2px 6px; border-radius: var(--r-sm); background: color-mix(in srgb, var(--panel) 85%, transparent); }
 /* The drill pad: a 4x2 grid of stat tiles in the stat's colour. The whole tile is the Drill button (issue #124); the stat's
    tooltip is the small "i" in its top right corner, a sibling over the button, so a drill tap never lands on a tooltip trigger. */
 .pad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }

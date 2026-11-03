@@ -71,3 +71,9 @@ privileged_status,tree.privileged_status.name,generic,wis,400,,,,idea-pool lane 
 equilibrium,tree.equilibrium.name,generic,int,400,,,,idea-pool lane D (#137): PoE Elemental Equilibrium
 corruption,tree.corruption.name,generic,wis,400,,,,idea-pool lane D (#137): Slay the Spire Corruption
 dead_branch,tree.dead_branch.name,generic,luk,400,,,,idea-pool lane D (#137): Slay the Spire Dead Branch
+iron_vow,tree.iron_vow.name,generic,wis,400,,,,idea-pool lane G (#140): Hunter x Hunter / Jujutsu Kaisen vows
+cursed_mark,tree.cursed_mark.name,generic,def,400,,,,idea-pool lane G (#140): Shangri-La Frontier curse mark
+devourer,tree.devourer.name,generic,str,400,,,,idea-pool lane G (#140): Berserk of Gluttony / Tensura Predator
+second_breath,tree.second_breath.name,generic,hp,400,,,,idea-pool lane G (#140): Umamusume failure rate
+ascetic,tree.ascetic.name,generic,dex,400,,,,idea-pool lane G (#140): Slay the Spire Ectoplasm
+hungry_core,tree.hungry_core.name,generic,int,400,,,,idea-pool lane G (#140): Reverend Insanity Gu upkeep

@@ -161,3 +161,11 @@ MON_BLEED_BURST,double,0.15,hemorrhage rule: a full bleed gauge bursts for this 
 MON_PRIV_BONUS,double,0.4,privileged_status rule: the unit's hits deal x(1 + this) to a target with at least MON_PRIV_DEBUFFS debuffs. Placeholder
 MON_PRIV_DEBUFFS,int,2,privileged_status rule: active debuffs (any source; stacked copies count) the target needs. Placeholder
 MON_EQ_BONUS,double,0.35,equilibrium rule: a hit of another element than the target's mark deals x(1 + this) and clears the mark. Placeholder
+VOW_GAIN,double,0.25,iron_vow run rule: once its capstone is bought Rest is refused and every drill's gain is multiplied by 1 + this (floored). Placeholder
+CURSE_FOE,double,0.2,"cursed_mark run rule: drills give no DEF, and every enemy in a run fight (rank fights, the gauntlet) has each stat lowered by this fraction. Placeholder"
+DEVOUR_FRAC,double,0.05,devourer run rule: a rank-fight win adds this fraction of the opponent's highest stat to the same stat (floored, capped). Placeholder
+DEVOUR_ENERGY,double,5,devourer run rule: energy each cycle start costs (not below 0). Placeholder
+BREATH_SAFE,double,30,second_breath run rule: a drill made below this much energy cannot injure or Super; a Super drill refunds its energy cost. Placeholder
+ASCETIC_AP,int,1,ascetic run rule: action points added at each cycle start; rank-fight wins give no SP_PER_WIN. Placeholder
+HUNGRY_STAT,double,60,hungry_core run rule: flat bonus to every trained stat in a rank fight while the core is fed. Placeholder
+HUNGRY_ENERGY,double,10,"hungry_core run rule: energy the core eats at each cycle start; with less energy it goes dormant for that cycle (no bonus, nothing eaten). Placeholder"

@@ -638,3 +638,21 @@ rule.dead_branch.name,Dead Branch
 rule.dead_branch.desc,"Whenever one of its skills is locked for the fight, it gains a random active skill it lacks for the rest of the fight. Corruption locks every skill it uses."
 mskill.hex.name,Hex
 mskill.hex.desc,An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
+tree.iron_vow.name,Iron Vow
+tree.cursed_mark.name,Cursed Mark
+tree.devourer.name,Devourer
+tree.second_breath.name,Second Breath
+tree.ascetic.name,Ascetic
+tree.hungry_core.name,Hungry Core
+rule.iron_vow.name,Iron Vow
+rule.iron_vow.desc,"A vow: once this is bought, Rest is refused and every drill gains +{VOW_GAIN:pct}. Only overwriting the tree breaks the vow."
+rule.cursed_mark.name,Cursed Mark
+rule.cursed_mark.desc,"Drills no longer train DEF. In run fights (rank fights and the gauntlet) every enemy has {CURSE_FOE:pct} less of every stat. No effect in the Dungeon, Endless or PvP."
+rule.devourer.name,Devourer
+rule.devourer.desc,"Each rank-fight win adds {DEVOUR_FRAC:pct} of the opponent's highest stat to the same stat. Each new cycle costs {DEVOUR_ENERGY} energy."
+rule.second_breath.name,Second Breath
+rule.second_breath.desc,"A Super drill refunds its energy cost. A drill made below {BREATH_SAFE} energy cannot injure, and cannot Super."
+rule.ascetic.name,Ascetic
+rule.ascetic.desc,"+{ASCETIC_AP} action each cycle, but rank-fight wins give no skill points."
+rule.hungry_core.name,Hungry Core
+rule.hungry_core.desc,"Each new cycle the core eats {HUNGRY_ENERGY} energy. While fed, every trained stat is +{HUNGRY_STAT} in that cycle's rank fight. With too little energy it goes dormant for the cycle: no bonus, nothing eaten."

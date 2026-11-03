@@ -1,4 +1,4 @@
-# training-run vectors, hash v9 content=6.10/01954124
+# training-run vectors, hash v9 content=6.11/e30953ef
 
 slime balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -98,9 +98,9 @@ sprite hoarder seed=7
 
 sprite chaser seed=7
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=2 sp=0 injuries=0
-  stats hp 90 str 60 int 445 wis 155 dex 155 def 70 spd 602 luk 110
-  trees aether_striker:8/8 mind_warp:8/8 quickstep:1/8 starlit_ascension:8/8
-  hash b8c557756a3dfcf51f9f94cff06ae016c8bcb42c63dde478de111cab8ab38336
+  stats hp 90 str 60 int 582 wis 155 dex 155 def 70 spd 519 luk 110
+  trees aether_striker:8/8 mind_warp:7/8 elemental_avatar:4/8 starlit_ascension:8/8
+  hash 6819899e063011106a5f8bc9babeb95dafa59fb3439e73b056015afdf5b20190
 
 sprite focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
@@ -187,3 +187,27 @@ drake focus seed=7 lane-f slots=pyromancy,heavy_armor,mimic_core,mastery,heirloo
   end: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,2,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra heavy_armor_n7 | skills flame_breath,iron_hide,plate_mastery,mirror_feint,enlightened,second_wind,rally_cry,plate_mastery
   fortune over heavy_armor: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,0,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra fortune_n7,heavy_armor_n7 | skills flame_breath,mirror_feint,enlightened,second_wind,rally_cry,jackpot,plate_mastery
   hash 09b6748bf2d42d110d0fa01d5870af85adab1b21a0ff31ce1470f9e4784bd877
+
+drake focus seed=7 held=iron_vow,cursed_mark start_sp=+22
+  end=Completed cycle=12 rank=c fights=2/5 drills=30 rests=0 energy=0 milestones=1 sp=0 injuries=c2,c5,c9,c12
+  stats hp 165 str 693 int 95 wis 130 dex 90 def 205 spd 90 luk 70
+  trees pyromancy:8/8 heavy_armor:8/8 iron_vow:8/8 cursed_mark:8/8
+  hash cc547d69c7e5a73f23ae709e803e56dc27715f2254c17cdaf915e2a7ee0ee647
+
+slime focus seed=7 held=devourer,hungry_core start_sp=+22
+  end=Completed cycle=12 rank=a fights=4/12 drills=41 rests=19 energy=75 milestones=2 sp=4 injuries=0
+  stats hp 485 str 152 int 432 wis 116 dex 90 def 125 spd 128 luk 187
+  trees runeweaver:8/8 gel_armor:8/8 devourer:8/8 hungry_core:8/8
+  hash 270d97fcf301d429bbc696e99bf97da87b5ef4821a047feebc5fc6c1da2f09b9
+
+sprite balanced seed=7 held=second_breath,ascetic start_sp=+22
+  end=Completed cycle=12 rank=b fights=3/12 drills=53 rests=18 energy=60 milestones=0 sp=2 injuries=0
+  stats hp 186 str 186 int 181 wis 185 dex 205 def 177 spd 210 luk 181
+  trees aether_striker:8/8 mind_warp:8/8 second_breath:8/8 ascetic:8/8
+  hash f0c6556f245c55f507f8d9775d92de3afaacda54d6774975c450edf8bf7eb1fc
+
+shade_hound balanced seed=7 held=hungry_core,iron_vow start_sp=+22
+  end=Completed cycle=12 rank=b fights=3/4 drills=30 rests=0 energy=0 milestones=0 sp=0 injuries=c2,c4,c8,c11
+  stats hp 162 str 167 int 152 wis 159 dex 165 def 161 spd 175 luk 168
+  trees umbral_step:8/8 shadow_harvest:8/8 hungry_core:8/8 iron_vow:8/8
+  hash 679c8f4468ee8b9a47ee9f4b7cd1a60c96f54164ca731e0d708179aa1edd2847

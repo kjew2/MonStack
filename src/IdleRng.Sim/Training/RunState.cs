@@ -333,6 +333,9 @@ namespace IdleRng.Sim.Training
         /// <summary>Milestone drafts rerolled so far (Second Look; at most Mods.DraftRerolls).</summary>
         public int RerollsUsed { get; set; }
 
+        /// <summary>hungry_core (lane G, #140): the core went hungry at this cycle's start, so it gives no bonus in the cycle's fight.</summary>
+        public bool CoreDormant { get; set; }
+
         /// <summary>Length TREE_SLOTS; null = empty.</summary>
         public TreeSlot[] Slots { get; set; } = new TreeSlot[0];
 
@@ -414,6 +417,9 @@ namespace IdleRng.Sim.Training
         public string EchoStat { get; set; }
         public double EchoGain { get; set; }
 
+        /// <summary>second_breath: the energy a Super drill gave back (0 otherwise).</summary>
+        public double Refunded { get; set; }
+
         /// <summary>The injury this drill caused (also the last entry of RunState.Injuries); null when not injured.</summary>
         public InjuryHit Injury { get; set; }
         public List<MilestoneHit> Milestones { get; set; } = new List<MilestoneHit>();
@@ -436,6 +442,13 @@ namespace IdleRng.Sim.Training
         public bool Won { get; set; }
         public int SpGained { get; set; }
         public FightResult Fight { get; set; }
+
+        /// <summary>devourer: the stat a win fed on and the points it added (null and 0 otherwise).</summary>
+        public string DevouredStat { get; set; }
+        public double DevouredGain { get; set; }
+
+        /// <summary>Milestones the fight's result crossed (devourer's gain); usually empty.</summary>
+        public List<MilestoneHit> Milestones { get; set; } = new List<MilestoneHit>();
     }
 
     /// <summary>A bought node and its immediate effect.</summary>

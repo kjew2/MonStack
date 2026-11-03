@@ -107,6 +107,9 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane D, debuff and stacking rules (specs/16 section 6.2, #137)
     "MON_BLEED_PER_HIT": "double", "MON_BLEED_DEX_REF": "double", "MON_BLEED_BURST": "double", "MON_PRIV_BONUS": "double",
     "MON_PRIV_DEBUFFS": "int", "MON_EQ_BONUS": "double",
+    # idea-pool lane G, run rules (specs/14 section 4.3, #140)
+    "VOW_GAIN": "double", "CURSE_FOE": "double", "DEVOUR_FRAC": "double", "DEVOUR_ENERGY": "double", "BREATH_SAFE": "double",
+    "ASCETIC_AP": "int", "HUNGRY_STAT": "double", "HUNGRY_ENERGY": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -126,7 +129,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane F (#139): run rules (tree and kit build)
             "mimic_core", "heirloom", "mastery", "limit_break",
             # idea-pool lane D (#137)
-            "hemorrhage", "privileged_status", "equilibrium", "corruption", "dead_branch"]
+            "hemorrhage", "privileged_status", "equilibrium", "corruption", "dead_branch",
+            # idea-pool lane G (#140): run rules, coded in TrainingRun (Training/Rules/LaneG.cs)
+            "iron_vow", "cursed_mark", "devourer", "second_breath", "ascetic", "hungry_core"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -211,6 +216,11 @@ MON_RANGES = {
     "MON_BLEED_PER_HIT": (">= 0", lambda v: v >= 0), "MON_BLEED_DEX_REF": ("> 0", lambda v: v > 0),
     "MON_BLEED_BURST": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_PRIV_BONUS": (">= 0", lambda v: v >= 0),
     "MON_PRIV_DEBUFFS": (">= 1", lambda v: v >= 1), "MON_EQ_BONUS": (">= 0", lambda v: v >= 0),
+    # idea-pool lane G (#140)
+    "VOW_GAIN": (">= 0", lambda v: v >= 0), "CURSE_FOE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "DEVOUR_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "DEVOUR_ENERGY": (">= 0", lambda v: v >= 0),
+    "BREATH_SAFE": (">= 0", lambda v: v >= 0), "ASCETIC_AP": (">= 0", lambda v: v >= 0),
+    "HUNGRY_STAT": (">= 0", lambda v: v >= 0), "HUNGRY_ENERGY": (">= 0", lambda v: v >= 0),
 }
 
 

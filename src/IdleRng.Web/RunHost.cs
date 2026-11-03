@@ -216,6 +216,7 @@ namespace IdleRng.Web
                 }
                 else if (roll != null && roll.NodeStats[i] != null) id += "~" + n.Stat + "~" + Num(n.Amount);
                 w.Obj().P("id", id).P("cost", n.Cost).P("kind", KindName(n.Kind)).P("name", name).P("desc", desc).P("last", last);
+                if (n.Kind == NodeKind.Rule && Array.IndexOf(TrainingRun.BuyWarnRules, n.RuleId) >= 0) w.P("warn", true);   // the UI asks before the purchase
                 if (TrainingRun.IsFiller(n.Kind)) w.P("stat", n.Stat).P("amount", n.Amount);
                 if (roll != null)
                 {
@@ -1013,7 +1014,7 @@ namespace IdleRng.Web
                         w.P("ok", true).P("kind", "drill").P("stat", r.Stat).P("tier", r.Tier.ToString().ToLowerInvariant())
                             .P("tierName", _db.Text("drill." + r.Tier.ToString().ToLowerInvariant() + ".name"))
                             .P("gain", r.Gain).P("value", r.NewValue).P("energy", r.EnergyAfter).P("injured", r.Injured)
-                            .P("shielded", r.Shielded).P("free", r.Free).P("echoStat", r.EchoStat).P("echoGain", r.EchoGain);
+                            .P("shielded", r.Shielded).P("free", r.Free).P("echoStat", r.EchoStat).P("echoGain", r.EchoGain).P("refunded", r.Refunded);
                         w.Key("injury");
                         if (r.Injury == null) w.Null(); else Injury(w, r.Injury);
                         Milestones(w, r.Milestones);
@@ -1029,6 +1030,8 @@ namespace IdleRng.Web
                     {
                         var r = (RankFightResult)res;
                         w.P("ok", true).P("kind", "fight").P("won", r.Won).P("rankBefore", r.RankBefore).P("rankAfter", r.RankAfter).P("sp", r.SpGained);
+                        w.P("devouredStat", r.DevouredStat).P("devouredGain", r.DevouredGain);   // devourer (lane G)
+                        Milestones(w, r.Milestones);
                         w.Key("opponent"); LadderStep(w, s, r.RankBefore); w.EndObj();   // who was fought (the ladder does not change)
                         w.P("outcome", r.Fight.Outcome.ToString()).P("ticks", r.Fight.Ticks);
                         w.Key("units").Arr();
@@ -1237,6 +1240,9 @@ namespace IdleRng.Web
             w.P("fightsFought", s.FightsFought).P("fightsWon", s.FightsWon).P("drills", s.Drills).P("rests", s.Rests);
             w.P("fightDue", s.Phase == RunPhase.AwaitFight);
             w.P("drillCost", TrainingRun.DrillCost(_db, s)).P("restEnergy", TrainingRun.RestEnergy(_db, s));
+            // Lane G run rules (#140): Rest refused by iron_vow, and hungry_core's state this cycle (null without the core).
+            w.P("canRest", TrainingRun.CanRest(_db, s));
+            if (TrainingRun.HasRunRule(_db, s, RuleModifiers.HungryCore)) w.P("coreFed", !s.CoreDormant); else w.Key("coreFed").Null();
             w.P("freeDrills", s.FreeDrills).P("shieldsLeft", s.Mods.InjuryShields - s.ShieldsUsed).P("rerollsLeft", s.Mods.DraftRerolls - s.RerollsUsed)
                 .P("canReroll", TrainingRun.CanRerollDraft(_db, s));
             w.Key("mods"); Mods(w, s.Mods);
@@ -1244,7 +1250,7 @@ namespace IdleRng.Web
             foreach (int t in _db.StatMilestones) w.Num(TrainingRun.MilestoneAt(s, t));
             w.EndArr();
             w.Key("odds").Obj().P("fail", fail).P("super", super).P("success", Math.Max(0, 1 - fail - super))
-                .P("injury", TrainingRun.InjuryChance(k, e)).EndObj();
+                .P("injury", TrainingRun.RunInjuryChance(_db, s, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);
             w.Key("statCaps").Obj();   // each stat's cap this run: STAT_MAX, or higher under a Limit Break (specs/15 section 11)
             foreach (var id in StatIds.Trained) w.P(id, TrainingRun.StatCap(_db, s, id));

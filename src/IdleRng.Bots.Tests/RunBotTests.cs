@@ -158,5 +158,22 @@ namespace IdleRng.Bots.Tests
 
         [Test]
         public void UnknownPolicy_Throws() => Assert.Throws<ArgumentException>(() => RunPolicies.Create("nope"));
+
+        [Test]
+        public void EveryPolicy_PlaysTheLaneGRunRules_WithoutDeadEnding()
+        {
+            // Idea-pool lane G (#140): each run-rule capstone held from cycle 1; every policy still finishes the run, and a vowed
+            // run never rests (the bots ask TrainingRun.CanRest).
+            var db = Content.Db;
+            foreach (var tree in new[] { "iron_vow", "cursed_mark", "devourer", "second_breath", "ascetic", "hungry_core" })
+                foreach (var name in RunPolicies.Names)
+                {
+                    var s = RunBot.Play(db, RunPolicies.Create(name), "drake", 11, null, null, null, new RunModifiers { StartSp = 11 },
+                                        r => RunBot.HoldTrees(db, r, new[] { tree }));
+                    Assert.That(s.Phase, Is.EqualTo(RunPhase.Finished), $"{tree} {name}");
+                    Assert.That(s.Offers, Is.Empty);
+                    if (tree == "iron_vow") Assert.That(s.Rests, Is.Zero, name);
+                }
+        }
     }
 }

@@ -51,6 +51,39 @@ namespace IdleRng.Sim.Training
         static partial void ModifyDrillCost_F(ContentDb c, RunState s, ref double cost);
         static partial void ModifyDrillCost_G(ContentDb c, RunState s, ref double cost);
 
+        /// <summary>ModifySuperChance: RunSuperChance, the super chance at energy fraction e (the result is kept in [0, 1 - fail]).</summary>
+        static void HookSuperChance(ContentDb c, RunState s, double e, ref double super)
+        {
+            ModifySuperChance_F(c, s, e, ref super);
+            ModifySuperChance_G(c, s, e, ref super);
+        }
+
+        static partial void ModifySuperChance_F(ContentDb c, RunState s, double e, ref double super);
+        static partial void ModifySuperChance_G(ContentDb c, RunState s, double e, ref double super);
+
+        /// <summary>ModifyInjuryChance: RunInjuryChance, a drill's injury chance at energy fraction e (0 = no injury roll is drawn).</summary>
+        static void HookInjuryChance(ContentDb c, RunState s, double e, ref double chance)
+        {
+            ModifyInjuryChance_F(c, s, e, ref chance);
+            ModifyInjuryChance_G(c, s, e, ref chance);
+        }
+
+        static partial void ModifyInjuryChance_F(ContentDb c, RunState s, double e, ref double chance);
+        static partial void ModifyInjuryChance_G(ContentDb c, RunState s, double e, ref double chance);
+
+        /// <summary>
+        /// OnDrillDone: Drill, after the gain, the energy cost and Echo, before an injury or the AP is spent. <paramref name="energyBefore"/>
+        /// is the energy before the drill; a hook that changes s.Energy also sets result.EnergyAfter.
+        /// </summary>
+        static void HookDrillDone(ContentDb c, RunState s, DrillResult result, double energyBefore)
+        {
+            OnDrillDone_F(c, s, result, energyBefore);
+            OnDrillDone_G(c, s, result, energyBefore);
+        }
+
+        static partial void OnDrillDone_F(ContentDb c, RunState s, DrillResult result, double energyBefore);
+        static partial void OnDrillDone_G(ContentDb c, RunState s, DrillResult result, double energyBefore);
+
         /// <summary>RestAllowed: CanRest: clear allowed to forbid Rest (Rest then throws, the UI locks the button).</summary>
         static void HookRestAllowed(ContentDb c, RunState s, ref bool allowed)
         {
@@ -100,6 +133,19 @@ namespace IdleRng.Sim.Training
 
         static partial void OnRankFightResult_F(ContentDb c, RunState s, RankFightResult result);
         static partial void OnRankFightResult_G(ContentDb c, RunState s, RankFightResult result);
+
+        /// <summary>
+        /// OnGauntletFloor: GauntletSim.Run, each floor's fresh enemy before its fight (change only <paramref name="enemy"/>: the
+        /// monster's fighter is shared by every floor). The run is over, so only the fighter's rules tell what it holds.
+        /// </summary>
+        public static void HookGauntletFloor(ContentDb c, Fighter monster, Fighter enemy)
+        {
+            OnGauntletFloor_F(c, monster, enemy);
+            OnGauntletFloor_G(c, monster, enemy);
+        }
+
+        static partial void OnGauntletFloor_F(ContentDb c, Fighter monster, Fighter enemy);
+        static partial void OnGauntletFloor_G(ContentDb c, Fighter monster, Fighter enemy);
 
         /// <summary>ModifyStatCap: StatCap, the most the stat can reach (STAT_MAX).</summary>
         static void HookStatCap(ContentDb c, RunState s, string stat, ref double cap)

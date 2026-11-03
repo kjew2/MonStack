@@ -110,13 +110,14 @@ namespace IdleRng.Sim.Training
             double after = Math.Min(StatCap(c, s, stat), before + gain);
             Set(s.Stats, stat, after);
 
-            double injuryP = InjuryChance(k, e);
+            double injuryP = RunInjuryChance(c, s, e);
             bool injured = injuryP > 0 && s.Training.NextDouble() < injuryP;
             if (s.Mods.InjuryImmune) injured = false;   // Iron Constitution: the roll is drawn, never lands
             bool shielded = injured && s.ShieldsUsed < s.Mods.InjuryShields;
             if (shielded) { injured = false; s.ShieldsUsed++; }
 
             bool free = s.FreeDrills > 0;
+            double energyBefore = s.Energy;
             s.Energy = shielded ? 0 : Math.Max(0, s.Energy - DrillCost(c, s));
             if (free) s.FreeDrills--;
             if (tier == DrillTier.Super && s.Mods.MomentumDrills > 0) s.FreeDrills = Math.Max(s.FreeDrills, s.Mods.MomentumDrills);
@@ -139,6 +140,8 @@ namespace IdleRng.Sim.Training
                 result.EchoGain = ea - eb;
                 CrossMilestones(c, s, echo, eb, ea, result.Milestones);
             }
+
+            HookDrillDone(c, s, result, energyBefore);
 
             if (injured) result.Injury = Injure(c, s);
             else SpendAp(c, s);
@@ -558,8 +561,20 @@ namespace IdleRng.Sim.Training
         public static double RunFailChance(ContentDb c, RunState s, double e) => s.Mods.NeverFail ? 0 : Math.Max(0, FailChance(c.Constants, e) + s.Mods.FailChanceDelta);
 
         /// <summary>The run's super chance at energy fraction e: DRILL_SUPER_P plus Super Set, at most what the fail chance leaves.</summary>
-        public static double RunSuperChance(ContentDb c, RunState s, double e) =>
-            Math.Max(0, Math.Min(c.Constants.DrillSuperP + s.Mods.SuperChanceBonus, 1 - RunFailChance(c, s, e)));
+        public static double RunSuperChance(ContentDb c, RunState s, double e)
+        {
+            double fail = RunFailChance(c, s, e), super = Math.Max(0, Math.Min(c.Constants.DrillSuperP + s.Mods.SuperChanceBonus, 1 - fail));
+            HookSuperChance(c, s, e, ref super);
+            return Math.Max(0, Math.Min(super, 1 - fail));
+        }
+
+        /// <summary>The run's injury chance of a drill at energy fraction e: <see cref="InjuryChance"/>, unless a lane's run rule changes it (0 draws no roll).</summary>
+        public static double RunInjuryChance(ContentDb c, RunState s, double e)
+        {
+            double p = InjuryChance(c.Constants, e);
+            HookInjuryChance(c, s, e, ref p);
+            return p;
+        }
 
         /// <summary>Action points cycle <c>s.Cycle</c> starts with: RUN_AP, plus Overtime's in the last cycle.</summary>
         public static int CycleAp(ContentDb c, RunState s) => c.Constants.RunAp + (s.Cycle == c.Constants.RunCycles ? s.Mods.LastCycleAp : 0);
@@ -614,9 +629,11 @@ namespace IdleRng.Sim.Training
             s.Injuries.Add(hit);
             s.ApLeft = 0;
             for (int i = 0; i < k.InjurySkipCycles && s.Cycle < k.RunCycles; i++) { s.Cycle++; hit.CyclesLost++; }
+            // The monster is back at INJURY_RECOVER_ENERGY before its cycle starts, so a cycle-start hook sees that energy; a run the
+            // injury finishes keeps its energy.
+            if (s.Cycle < k.RunCycles) s.Energy = k.InjuryRecoverEnergy;
             NextCycle(c, s);
             if (s.Phase == RunPhase.Finished) return hit;
-            s.Energy = k.InjuryRecoverEnergy;
             hit.BackCycle = s.Cycle;
             return hit;
         }
