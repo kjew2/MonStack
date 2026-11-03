@@ -711,6 +711,61 @@ mskill.wax_psalm.name,Wax Psalm
 mskill.wax_psalm.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.vesper_glow.name,Vesper Glow
 mskill.vesper_glow.desc,Chase trait. When hit: +{power:pct} {stat} for {duration} turns.
+species.pyre_stag.name,Pyre Stag
+tree.funeral_pyre.name,Funeral Pyre
+tree.ashen_vigil.name,Ashen Vigil
+tree.litany_of_embers.name,Litany of Embers
+tree.inverted_mercy.name,Inverted Mercy
+tree.inverted_mercy.apex,Cinder Saint
+tree.undying_pyre.name,Undying Pyre
+tree.undying_pyre.apex,Everpyre Hart
+book.book_litany.name,Skill Book: Litany of Embers
+achievement.kindled.name,Kindled
+mskill.immolate.name,Immolate
+mskill.immolate.desc,"{element} damage for {power:pct} {scales}, paid with {MON_IMMOLATE_SELF:pct} of its own max HP. Cooldown {cooldown}."
+mskill.ember_hymn.name,Ember Hymn
+mskill.ember_hymn.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.cinder_rite.name,Cinder Rite
+mskill.cinder_rite.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.smoke_psalm.name,Smoke Psalm
+mskill.smoke_psalm.desc,Book trait. When hit: an enemy loses {power:pct} {stat} for {duration} turns.
+rule.pyre_tithe.name,Tithe of Ash
+rule.pyre_tithe.desc,"Each action costs {MON_TITHE_COST:pct} of its max HP (never below 1 HP). Its damage rises by the share of max HP it is missing, up to about double near death."
+rule.pyre_tithe.log,pays {amount} HP
+rule.ash_shroud.name,Ash Shroud
+rule.ash_shroud.desc,"At the start of each fight, {MON_SHROUD_FRAC:pct} of its HP turns into a shield that does not expire."
+rule.ash_shroud.log,shrouds {amount} HP in ash
+rule.pyre_mercy.name,Inverted Mercy
+rule.pyre_mercy.desc,"It can no longer be healed. Every heal it would receive (its own, its allies', life steal) is dealt instead as fire damage to an enemy. Shields still work."
+rule.pyre_mercy.log,mercy burns for {amount}
+rule.ember_eternal.name,Undying Pyre
+rule.ember_eternal.desc,"A blow that would knock it out leaves it at 1 HP and burns its max HP instead. Each 1% of max HP burned adds +{MON_EMBER_DMG:pct} damage for the fight. It falls once its max HP would burn below {MON_EMBER_FLOOR:pct} of its start."
+rule.ember_eternal.log,burns {amount} max HP and fights on
+species.keepshell_crab.name,Keepshell Crab
+tree.tide_moat.name,Tide Moat
+tree.siege_manual.name,The Siege Manual
+tree.unbreached_keep.name,Unbreached Keep
+tree.siege_pincers.name,Siege Pincers
+tree.unbreached_keep.apex,Citadel Kingcrab
+tree.siege_pincers.apex,Siegebreaker Crab
+book.book_siege.name,Skill Book: The Siege Manual
+achievement.castle_walls.name,Castle Walls
+rule.tide_moat.name,Tide Moat
+rule.tide_moat.desc,"Against magical hits it defends with the higher of its WIS and {MON_MOAT_DEF:pct} of its DEF."
+rule.unbreached.name,Unbreached
+rule.unbreached.desc,"A hit that would deal at most {MON_WALL_DEF:pct} of its DEF (after defense and crit, before shields) deals 0. Each blocked hit lowers that wall by {MON_WALL_ERODE:pct} of its starting height. True damage and damage based on max HP always get through."
+rule.shellcrack.name,Shellcrack
+rule.shellcrack.desc,"Its physical hits ignore the target's DEF and add {MON_CRACK_DEF:pct} of that DEF to the damage instead."
+mskill.moat_surge.name,Moat Surge
+mskill.moat_surge.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.battering_claw.name,Battering Claw
+mskill.battering_claw.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.rubble_rain.name,Rubble Rain
+mskill.rubble_rain.desc,Chase trait. On crit: {element} damage to all enemies for {power:pct} {scales}.
+mskill.keep_gate.name,Keep Gate
+mskill.keep_gate.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.trophy_wall.name,Trophy Wall
+mskill.trophy_wall.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 species.iaido_mantis.name,Iaido Mantis
 tree.leaf_scabbard.name,Leaf Scabbard
 tree.unseen_blade.name,Scroll of the Unseen Blade

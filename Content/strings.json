@@ -2851,6 +2851,226 @@
       "text": "Chase trait. When hit: +{power:pct} {stat} for {duration} turns."
     },
     {
+      "key": "species.pyre_stag.name",
+      "text": "Pyre Stag"
+    },
+    {
+      "key": "tree.funeral_pyre.name",
+      "text": "Funeral Pyre"
+    },
+    {
+      "key": "tree.ashen_vigil.name",
+      "text": "Ashen Vigil"
+    },
+    {
+      "key": "tree.litany_of_embers.name",
+      "text": "Litany of Embers"
+    },
+    {
+      "key": "tree.inverted_mercy.name",
+      "text": "Inverted Mercy"
+    },
+    {
+      "key": "tree.inverted_mercy.apex",
+      "text": "Cinder Saint"
+    },
+    {
+      "key": "tree.undying_pyre.name",
+      "text": "Undying Pyre"
+    },
+    {
+      "key": "tree.undying_pyre.apex",
+      "text": "Everpyre Hart"
+    },
+    {
+      "key": "book.book_litany.name",
+      "text": "Skill Book: Litany of Embers"
+    },
+    {
+      "key": "achievement.kindled.name",
+      "text": "Kindled"
+    },
+    {
+      "key": "mskill.immolate.name",
+      "text": "Immolate"
+    },
+    {
+      "key": "mskill.immolate.desc",
+      "text": "{element} damage for {power:pct} {scales}, paid with {MON_IMMOLATE_SELF:pct} of its own max HP. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.ember_hymn.name",
+      "text": "Ember Hymn"
+    },
+    {
+      "key": "mskill.ember_hymn.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.cinder_rite.name",
+      "text": "Cinder Rite"
+    },
+    {
+      "key": "mskill.cinder_rite.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.smoke_psalm.name",
+      "text": "Smoke Psalm"
+    },
+    {
+      "key": "mskill.smoke_psalm.desc",
+      "text": "Book trait. When hit: an enemy loses {power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "rule.pyre_tithe.name",
+      "text": "Tithe of Ash"
+    },
+    {
+      "key": "rule.pyre_tithe.desc",
+      "text": "Each action costs {MON_TITHE_COST:pct} of its max HP (never below 1 HP). Its damage rises by the share of max HP it is missing, up to about double near death."
+    },
+    {
+      "key": "rule.pyre_tithe.log",
+      "text": "pays {amount} HP"
+    },
+    {
+      "key": "rule.ash_shroud.name",
+      "text": "Ash Shroud"
+    },
+    {
+      "key": "rule.ash_shroud.desc",
+      "text": "At the start of each fight, {MON_SHROUD_FRAC:pct} of its HP turns into a shield that does not expire."
+    },
+    {
+      "key": "rule.ash_shroud.log",
+      "text": "shrouds {amount} HP in ash"
+    },
+    {
+      "key": "rule.pyre_mercy.name",
+      "text": "Inverted Mercy"
+    },
+    {
+      "key": "rule.pyre_mercy.desc",
+      "text": "It can no longer be healed. Every heal it would receive (its own, its allies', life steal) is dealt instead as fire damage to an enemy. Shields still work."
+    },
+    {
+      "key": "rule.pyre_mercy.log",
+      "text": "mercy burns for {amount}"
+    },
+    {
+      "key": "rule.ember_eternal.name",
+      "text": "Undying Pyre"
+    },
+    {
+      "key": "rule.ember_eternal.desc",
+      "text": "A blow that would knock it out leaves it at 1 HP and burns its max HP instead. Each 1% of max HP burned adds +{MON_EMBER_DMG:pct} damage for the fight. It falls once its max HP would burn below {MON_EMBER_FLOOR:pct} of its start."
+    },
+    {
+      "key": "rule.ember_eternal.log",
+      "text": "burns {amount} max HP and fights on"
+    },
+    {
+      "key": "species.keepshell_crab.name",
+      "text": "Keepshell Crab"
+    },
+    {
+      "key": "tree.tide_moat.name",
+      "text": "Tide Moat"
+    },
+    {
+      "key": "tree.siege_manual.name",
+      "text": "The Siege Manual"
+    },
+    {
+      "key": "tree.unbreached_keep.name",
+      "text": "Unbreached Keep"
+    },
+    {
+      "key": "tree.siege_pincers.name",
+      "text": "Siege Pincers"
+    },
+    {
+      "key": "tree.unbreached_keep.apex",
+      "text": "Citadel Kingcrab"
+    },
+    {
+      "key": "tree.siege_pincers.apex",
+      "text": "Siegebreaker Crab"
+    },
+    {
+      "key": "book.book_siege.name",
+      "text": "Skill Book: The Siege Manual"
+    },
+    {
+      "key": "achievement.castle_walls.name",
+      "text": "Castle Walls"
+    },
+    {
+      "key": "rule.tide_moat.name",
+      "text": "Tide Moat"
+    },
+    {
+      "key": "rule.tide_moat.desc",
+      "text": "Against magical hits it defends with the higher of its WIS and {MON_MOAT_DEF:pct} of its DEF."
+    },
+    {
+      "key": "rule.unbreached.name",
+      "text": "Unbreached"
+    },
+    {
+      "key": "rule.unbreached.desc",
+      "text": "A hit that would deal at most {MON_WALL_DEF:pct} of its DEF (after defense and crit, before shields) deals 0. Each blocked hit lowers that wall by {MON_WALL_ERODE:pct} of its starting height. True damage and damage based on max HP always get through."
+    },
+    {
+      "key": "rule.shellcrack.name",
+      "text": "Shellcrack"
+    },
+    {
+      "key": "rule.shellcrack.desc",
+      "text": "Its physical hits ignore the target's DEF and add {MON_CRACK_DEF:pct} of that DEF to the damage instead."
+    },
+    {
+      "key": "mskill.moat_surge.name",
+      "text": "Moat Surge"
+    },
+    {
+      "key": "mskill.moat_surge.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.battering_claw.name",
+      "text": "Battering Claw"
+    },
+    {
+      "key": "mskill.battering_claw.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.rubble_rain.name",
+      "text": "Rubble Rain"
+    },
+    {
+      "key": "mskill.rubble_rain.desc",
+      "text": "Chase trait. On crit: {element} damage to all enemies for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.keep_gate.name",
+      "text": "Keep Gate"
+    },
+    {
+      "key": "mskill.keep_gate.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.trophy_wall.name",
+      "text": "Trophy Wall"
+    },
+    {
+      "key": "mskill.trophy_wall.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
       "key": "species.iaido_mantis.name",
       "text": "Iaido Mantis"
     },

@@ -514,7 +514,11 @@ namespace IdleRng.Sim.Tests
             }
             Fighter Foe(string id) => Mon(id, x => x.Hp = 1500, "nature");
             var team = LaneRules.Take(4).Select((id, i) => Carrier("a" + i, id)).ToArray();
-            var team2 = new[] { Carrier("a0", RuleModifiers.DeadBranch), Carrier("a1", RuleModifiers.Hemorrhage) };
+            // dead_branch draws from the content skill pool, so team2's fight changes whenever a species adds a skill: its bleeder
+            // gets enough DEX to fill a gauge whatever a0 draws.
+            var bleeder = Carrier("a1", RuleModifiers.Hemorrhage);
+            bleeder.Stats.Dex = 900;
+            var team2 = new[] { Carrier("a0", RuleModifiers.DeadBranch), bleeder };
             var cases = new (Fighter[] a, Fighter[] b)[]
             {
                 (new[] { Carrier("a0", RuleModifiers.Hemorrhage) }, new[] { Foe("b0") }),
