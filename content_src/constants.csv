@@ -175,3 +175,9 @@ MON_JET_POWER,double,0.45,fountain_jets rule: each jet deals this fraction of th
 MON_PYRE_CONV,double,0.2,martyr_flame rule: each heal on the unit deals this fraction of the HP healed as light true damage to its current target (overheal converts at 1). Placeholder
 MON_SUN_RELEASE,double,0.25,hollow_sun rule: each hit the unit lands releases this fraction of its stored Radiance as extra light damage (no mitigation). Placeholder
 MON_SUN_HEAL,double,0.5,hollow_sun rule: the unit heals this fraction of the Radiance it releases. Placeholder
+MON_IMMOLATE_SELF,double,0.05,"Immolate (pyre stag, #142): each cast as an action costs the caster this fraction of its max HP (never below 1 HP, not damage). Placeholder"
+MON_TITHE_COST,double,0.05,"pyre_tithe rule: each action costs this fraction of max HP (never below 1 HP, not damage); its damage is x(1 + the fraction of max HP it is missing). Placeholder"
+MON_SHROUD_FRAC,double,0.25,ash_shroud rule: at fight start this fraction of current HP becomes a shield that does not expire. Placeholder
+MON_MERCY_MULT,double,2.5,"pyre_mercy rule: a heal it would receive burns an enemy for this multiple of the heal, as fire damage (element edge, WIS mitigation). Placeholder"
+MON_EMBER_DMG,double,0.025,"ember_eternal rule: damage bonus for each 1% of its starting max HP burned instead of dying. Placeholder"
+MON_EMBER_FLOOR,double,0.3,"ember_eternal rule: the unit dies once a blow would burn its max HP below this fraction of its starting max HP. Placeholder"

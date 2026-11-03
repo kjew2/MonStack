@@ -245,6 +245,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v2 martyr flame and hollow sun", 13,
                 new[] { Candlemane("a_pyre", RuleModifiers.MartyrFlame), Candlemane("a_sun", RuleModifiers.HollowSun) },
                 new[] { Brawler("b_brawler", "dark"), Healer("b_healer", "water") });
+            // Species lane, Pyre Stag (#142): the tithe with its shroud and Immolate, pyre_mercy (its own heal and the healer
+            // ally's turn into fire) and ember_eternal against a mixed team.
+            yield return new Vector("4v4 pyre stag capstones", 13,
+                new[] { Pyre("a_pyre"), Mercy("a_mercy"), Ember("a_ember"), Healer("a_healer") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Tank("b_tank", "fire"), Healer("b_healer", "dark") });
         }
 
         // Species Fountain Axolotl (#150).
@@ -283,6 +288,28 @@ namespace IdleRng.Bots.Golden
             },
             Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Fx("kindled_grace", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.5, 0, 0)) },
             Rules = { RuleModifiers.BloodMagic, chase },
+        };
+
+        // Species lane, Pyre Stag (#142): its four rules on three units.
+        static Fighter Pyre(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(400, 360, 300, 180, 120, 90, 200, 140),
+            Skills = { Dmg(BattleSim.ImmolateSkill, StatIds.Str, 1.8, 2, SkillTarget.Enemy, "fire") },
+            Rules = { RuleModifiers.PyreTithe, RuleModifiers.AshShroud },
+        };
+
+        static Fighter Mercy(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(380, 320, 200, 300, 120, 90, 210, 140),
+            Skills = { Fx("regenerate", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.8, 3, 0) },
+            Rules = { RuleModifiers.PyreMercy, RuleModifiers.PyreTithe },
+        };
+
+        static Fighter Ember(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(360, 200, 360, 200, 120, 90, 190, 140),
+            Skills = { Dmg("ember_hymn", StatIds.Int, 1.6, 2, SkillTarget.Enemy, "fire") },
+            Rules = { RuleModifiers.EmberEternal, RuleModifiers.PyreTithe },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.

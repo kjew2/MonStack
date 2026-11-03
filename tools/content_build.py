@@ -114,6 +114,9 @@ REQUIRED_CONSTANTS = {
     "MON_SEEP_SHIELD": "double", "MON_JETS": "int", "MON_JET_POWER": "double",
     # species Candlemane (#141): martyr_flame, hollow_sun
     "MON_PYRE_CONV": "double", "MON_SUN_RELEASE": "double", "MON_SUN_HEAL": "double",
+    # species pyre_stag (#142): Immolate's cost and its four rules (specs/16 section 6.2)
+    "MON_IMMOLATE_SELF": "double", "MON_TITHE_COST": "double", "MON_SHROUD_FRAC": "double", "MON_MERCY_MULT": "double", "MON_EMBER_DMG": "double",
+    "MON_EMBER_FLOOR": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -139,7 +142,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species Fountain Axolotl (#150)
             "clear_spring", "seep", "fountain_jets",
             # species Candlemane (#141)
-            "martyr_flame", "hollow_sun"]
+            "martyr_flame", "hollow_sun",
+            # species pyre_stag (#142), coded in Combat/Rules/PyreStag.cs
+            "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -235,6 +240,11 @@ MON_RANGES = {
     # species Candlemane (#141)
     "MON_PYRE_CONV": (">= 0", lambda v: v >= 0), "MON_SUN_RELEASE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_SUN_HEAL": (">= 0", lambda v: v >= 0),
+    # species pyre_stag (#142)
+    "MON_IMMOLATE_SELF": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TITHE_COST": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_SHROUD_FRAC": ("[0, 1)", lambda v: 0 <= v < 1), "MON_MERCY_MULT": (">= 0", lambda v: v >= 0),
+    "MON_EMBER_DMG": (">= 0", lambda v: v >= 0),
+    "MON_EMBER_FLOOR": ("(0, 1]", lambda v: 0 < v <= 1),
 }
 
 

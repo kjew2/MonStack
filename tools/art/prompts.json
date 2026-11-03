@@ -40,6 +40,10 @@
   "candlemane": {
    "name": "Candlemane",
    "prompt": "A majestic lion-like beast of living light and candle wax, ivory-white and pale gold. Its mane is a full ring of tall burning candle flames in white-gold and amber, and soft wax drips and pools down its shoulders and flanks where the flames touch, as if it is slowly burning itself to shine. A thin golden halo-wheel floats behind its head. Its eyes glow bright gold, and molten gold light seeps through cracks in its chest like a lantern. Proud, sacred and solemn, powerful, a light-element monster."
+  },
+  "pyre_stag": {
+   "name": "Pyre Stag",
+   "prompt": "A gaunt, ash-grey stag creature that is slowly burning itself alive. Its antlers are a living funeral pyre: stacked charred branches wreathed in roaring orange-gold flame. Its hide is cracked like cooling charcoal, with molten ember light glowing through the cracks along its ribs, spine and legs; flakes of ash and sparks peel off its body and drift upward. Rusted iron penitent chains hang from its neck, with small blackened bells. Lean, long-legged and solemn, head held high; eyes are white-hot embers. Grimdark and mythic, a sacred beast that pays for its power with its own body."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -114,6 +118,16 @@
    "species": "candlemane",
    "name": "Hollow Sun Lion",
    "prompt": "the same lion, darkened: its body is now charcoal-black wax with molten cracks, its halo is a huge black-cored sun ringed in white fire behind its head, and its chest is an open furnace glowing crimson-orange. Colour palette shifts from gold to black, crimson and white."
+  },
+  "inverted_mercy": {
+   "species": "pyre_stag",
+   "name": "Cinder Saint",
+   "prompt": "the stag has burnt down to a hollow blackened ribcage with a white-hot, blue-white fire burning inside it, a burning antler halo above its head, and its chains glowing white-hot. Colour palette shifts from orange to white and electric blue-white flame on charred black."
+  },
+  "undying_pyre": {
+   "species": "pyre_stag",
+   "name": "Everpyre Hart",
+   "prompt": "a colossal hart of living flame with no hide left, its antler pyre risen into a crown-shaped bonfire, black bells ringing in the smoke."
   }
  }
 }

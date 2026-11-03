@@ -880,6 +880,36 @@
       "key": "MON_SUN_HEAL",
       "type": "double",
       "value": 0.5
+    },
+    {
+      "key": "MON_IMMOLATE_SELF",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_TITHE_COST",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_SHROUD_FRAC",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_MERCY_MULT",
+      "type": "double",
+      "value": 2.5
+    },
+    {
+      "key": "MON_EMBER_DMG",
+      "type": "double",
+      "value": 0.025
+    },
+    {
+      "key": "MON_EMBER_FLOOR",
+      "type": "double",
+      "value": 0.3
     }
   ]
 }

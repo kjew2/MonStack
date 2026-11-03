@@ -175,6 +175,31 @@
       "grow_def": 0.6,
       "grow_spd": 0.9,
       "grow_luk": 1.0
+    },
+    {
+      "id": "pyre_stag",
+      "name_key": "species.pyre_stag.name",
+      "element": "fire",
+      "native_tree_1": "funeral_pyre",
+      "native_tree_2": "ashen_vigil",
+      "chase_tree_run": "inverted_mercy",
+      "chase_tree_book": "undying_pyre",
+      "base_hp": 120.0,
+      "base_str": 140.0,
+      "base_int": 130.0,
+      "base_wis": 100.0,
+      "base_dex": 80.0,
+      "base_def": 60.0,
+      "base_spd": 110.0,
+      "base_luk": 100.0,
+      "grow_hp": 1.1,
+      "grow_str": 1.2,
+      "grow_int": 1.2,
+      "grow_wis": 1.0,
+      "grow_dex": 0.8,
+      "grow_def": 0.5,
+      "grow_spd": 1.0,
+      "grow_luk": 0.8
     }
   ]
 }

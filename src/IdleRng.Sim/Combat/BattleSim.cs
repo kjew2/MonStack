@@ -842,10 +842,14 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>
         /// <see cref="Heal"/>, then the Healed hook (specs/16 section 6.4) with the HP restored and the overheal that went into
-        /// neither HP nor a shield. Every skill, trigger and rule heal comes through here (not a boss phase's failed-check heal).
+        /// neither HP nor a shield. Every skill, trigger and rule heal comes through here (not a boss phase's failed-check heal). The
+        /// heal-in hook may take the heal first: nothing lands and the Healed hook does not run.
         /// </summary>
         static double HealHooked(RuleCtx c, FightUnit t, double amount, ref double shield, double overflowCap = 0)
         {
+            bool taken = false;
+            HookHealIn(c, t, amount, ref taken);   // pyre_mercy: the heal burns an enemy instead
+            if (taken) return 0;
             double before = shield;
             double healed = Heal(c.Rules, t, amount, ref shield, overflowCap);
             HookHealed(c, t, healed, Math.Max(0.0, amount - healed - (shield - before)));

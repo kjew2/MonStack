@@ -41,3 +41,11 @@ martyrs_pyre_c2,martyrs_pyre,tally_at_least,wins,2
 hollow_sun_c0,hollow_sun,node_owned,unburnt_psalter_n0,
 hollow_sun_c1,hollow_sun,node_owned,sanctum_grace_n4,
 hollow_sun_c2,hollow_sun,tally_at_least,damage_light,2000
+inverted_mercy_c0,inverted_mercy,tree_maxed,funeral_pyre,
+inverted_mercy_c1,inverted_mercy,node_owned,ashen_vigil_n4,
+inverted_mercy_c2,inverted_mercy,stat_at_least,str,450
+inverted_mercy_c3,inverted_mercy,tally_at_least,damage_fire,3000
+undying_pyre_c0,undying_pyre,node_owned,litany_of_embers_n0,
+undying_pyre_c1,undying_pyre,node_owned,funeral_pyre_n7,
+undying_pyre_c2,undying_pyre,node_owned,ashen_vigil_n4,
+undying_pyre_c3,undying_pyre,tally_at_least,wins,2
