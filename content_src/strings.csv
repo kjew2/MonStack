@@ -849,6 +849,28 @@ mskill.second_hand.name,Second Hand
 mskill.second_hand.desc,Book trait. On evade: strike back for {power:pct} {scales}.
 mskill.chime_cascade.name,Chime Cascade
 mskill.chime_cascade.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+species.lodge_beaver.name,Lodge Beaver
+tree.mudwork.name,Mudwork
+tree.tail_slap.name,Tail Slap
+tree.great_dam.name,Great Dam
+tree.tail_slap.apex,Logjam Warden
+tree.great_dam.apex,Floodgate Colossus
+achievement.dam_builder.name,Dam Builder
+rule.mudwork.name,Mudwork
+rule.mudwork.desc,"Every heal it would receive becomes shield instead (up to {MON_MUD_CAP:pct} of max HP, or a larger shield cap it has), lasting {MON_MUD_TURNS} turns. It never regains HP from heals."
+rule.mudwork.log,turns a {amount} heal into shield
+rule.tail_slap.name,Tail Slap
+rule.tail_slap.desc,"Each hit it lands deals {MON_SLAP_SHIELD:pct} of its current shield as extra damage. The shield is not spent."
+rule.tail_slap.log,+{amount} damage from its wall
+rule.holdback.name,Holdback
+rule.holdback.desc,"HP damage past its shield is held back in a Reservoir; {MON_DAM_FLOW:pct} of it drains into HP at the start of each of its actions. Each shield it gains washes stored damage out first, dealing {MON_DAM_SPILL:pct} of it to an enemy as true damage. At {MON_DAM_BREAK:pct} of max HP the dam breaks and it all lands at once."
+rule.holdback.log,reservoir {amount}
+mskill.mud_patch.name,Mud Patch
+mskill.mud_patch.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.tail_thump.name,Tail Thump
+mskill.tail_thump.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.sluice_gate.name,Sluice Gate
+mskill.sluice_gate.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 species.anvil_ape.name,Anvil Ape
 tree.ringing_anvil.name,Ringing Anvil
 tree.brittle_quench.name,Brittle Quench

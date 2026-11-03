@@ -6,7 +6,7 @@ namespace IdleRng.Sim.Combat
     // point; it calls the same hook of lanes A to E in that order. Each lane's hooks are partial methods that the lane
     // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
     // until its lane fills it. Species chase rules (specs/14 section 3.1) fill partials named after the species
-    // (Rules/<Species>.cs), called after lane E; the Healed, HpPaid, HitMitigated, BeforeAoe, VantageCounter, Tick, TurnBudget, WardBroke, GuardBroke and CritRolled hooks exist for them. Cuckling's stolen_turn and usurp sit in Step and Act
+    // (Rules/<Species>.cs), called after lane E; the Healed, HpPaid, HitMitigated, BeforeAoe, VantageCounter, Tick, TurnBudget, WardBroke, ShieldIn, HpHeld, GuardBroke and CritRolled hooks exist for them. Cuckling's stolen_turn and usurp sit in Step and Act
     // themselves (BattleSim.StealTurn, BattleSim.Usurp): no hook runs before a turn is taken. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
     // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
     public static partial class BattleSim
@@ -41,6 +41,7 @@ namespace IdleRng.Sim.Combat
             BeforeAction_E(c, u, ref skip);
             BeforeAction_PyreStag(c, u, ref skip);
             BeforeAction_IaidoMantis(c, u, ref skip);
+            BeforeAction_LodgeBeaver(c, u, ref skip);
         }
 
         static partial void BeforeAction_A(RuleCtx c, FightUnit u, ref bool skip);
@@ -50,6 +51,7 @@ namespace IdleRng.Sim.Combat
         static partial void BeforeAction_E(RuleCtx c, FightUnit u, ref bool skip);
         static partial void BeforeAction_PyreStag(RuleCtx c, FightUnit u, ref bool skip);
         static partial void BeforeAction_IaidoMantis(RuleCtx c, FightUnit u, ref bool skip);
+        static partial void BeforeAction_LodgeBeaver(RuleCtx c, FightUnit u, ref bool skip);
 
         /// <summary>AfterAction: after the unit's action (and after each extra action), before deaths, boss phases and the outcome check.</summary>
         static void HookAfterAction(RuleCtx c, FightUnit u)
@@ -204,6 +206,7 @@ namespace IdleRng.Sim.Combat
             ConvertHit_D(c, h);
             ConvertHit_E(c, h);
             ConvertHit_KeepshellCrab(c, h);
+            ConvertHit_LodgeBeaver(c, h);
         }
 
         static partial void ConvertHit_A(RuleCtx c, HitInfo h);
@@ -212,6 +215,7 @@ namespace IdleRng.Sim.Combat
         static partial void ConvertHit_D(RuleCtx c, HitInfo h);
         static partial void ConvertHit_E(RuleCtx c, HitInfo h);
         static partial void ConvertHit_KeepshellCrab(RuleCtx c, HitInfo h);
+        static partial void ConvertHit_LodgeBeaver(RuleCtx c, HitInfo h);
 
         /// <summary>
         /// HitMitigated (species rules): a landed hit's damage after mitigation, crit and the tower's multipliers, before the shield
@@ -220,9 +224,11 @@ namespace IdleRng.Sim.Combat
         static void HookHitMitigated(RuleCtx c, HitInfo h, ref double damage)
         {
             OnHitMitigated_KeepshellCrab(c, h, ref damage);
+            OnHitMitigated_LodgeBeaver(c, h, ref damage);
         }
 
         static partial void OnHitMitigated_KeepshellCrab(RuleCtx c, HitInfo h, ref double damage);
+        static partial void OnHitMitigated_LodgeBeaver(RuleCtx c, HitInfo h, ref double damage);
 
         /// <summary>ModifyOutgoing: the attacker's damage multipliers on h.Raw, after crit, element and dmg_dealt, before mitigation.</summary>
         static void HookOutgoing(RuleCtx c, HitInfo h)
@@ -330,6 +336,18 @@ namespace IdleRng.Sim.Combat
             ModifyHpDamage_PyreStag(c, src, tgt, ref amount);
         }
 
+        /// <summary>
+        /// HpHeld (species rules): the HP loss of any damage (after the HP-damage hook) is about to land on tgt. A rule may hold part of
+        /// it back: move it out of amount into held, which still counts as damage dealt (tallies, lifesteal, the returned amount) but
+        /// leaves HP alone. A rule may also take HP itself here (a dam break); a death that causes is credited to src.
+        /// </summary>
+        static void HookHpHeld(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount, ref double held)
+        {
+            HpHeld_LodgeBeaver(c, src, tgt, ref amount, ref held);
+        }
+
+        static partial void HpHeld_LodgeBeaver(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount, ref double held);
+
         static partial void ModifyHpDamage_A(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
         static partial void ModifyHpDamage_B(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
         static partial void ModifyHpDamage_C(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
@@ -423,6 +441,7 @@ namespace IdleRng.Sim.Combat
             HashUnit_IaidoMantis(w, s, u);
             HashUnit_Cuckling(w, s, u);
             HashUnit_GearbellJelly(w, s, u);
+            HashUnit_LodgeBeaver(w, s, u);
             HashUnit_AnvilApe(w, s, u);
         }
 
@@ -437,6 +456,7 @@ namespace IdleRng.Sim.Combat
         static partial void HashUnit_IaidoMantis(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_Cuckling(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_GearbellJelly(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_LodgeBeaver(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_AnvilApe(CanonicalWriter w, FightState s, FightUnit u);
 
         /// <summary>HashFight: StateHash, at the end: fight-wide lane state, only when some unit carries the rule.</summary>
@@ -470,6 +490,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_IaidoMantis(r, ref ok);
             ValidateRules_Cuckling(r, ref ok);
             ValidateRules_GearbellJelly(r, ref ok);
+            ValidateRules_LodgeBeaver(r, ref ok);
             ValidateRules_AnvilApe(r, ref ok);
         }
 
@@ -484,6 +505,7 @@ namespace IdleRng.Sim.Combat
         static partial void ValidateRules_IaidoMantis(FightRules r, ref bool ok);
         static partial void ValidateRules_Cuckling(FightRules r, ref bool ok);
         static partial void ValidateRules_GearbellJelly(FightRules r, ref bool ok);
+        static partial void ValidateRules_LodgeBeaver(FightRules r, ref bool ok);
         static partial void ValidateRules_AnvilApe(FightRules r, ref bool ok);
 
         /// <summary>StatFlat: a flat amount added to a trained stat's current value (after its effect multiplier and floor; not HP). Hot path: keep it cheap.</summary>
@@ -505,10 +527,23 @@ namespace IdleRng.Sim.Combat
         /// <summary>HealIn: a heal of amount (already scaled) is about to land on t; set taken to stop it (t gains no HP and no overflow shield).</summary>
         static void HookHealIn(RuleCtx c, FightUnit t, double amount, ref bool taken)
         {
+            HealIn_LodgeBeaver(c, t, amount, ref taken);   // mudwork first: a heal it turns into shield heals nothing for the others to see
             HealIn_PyreStag(c, t, amount, ref taken);
         }
 
+        static partial void HealIn_LodgeBeaver(RuleCtx c, FightUnit t, double amount, ref bool taken);
         static partial void HealIn_PyreStag(RuleCtx c, FightUnit t, double amount, ref bool taken);
+
+        /// <summary>
+        /// ShieldIn (species rules): t is about to gain amount of shield (a shield skill or trigger, entropy_convert, ash_shroud, overheal
+        /// turned into shield, mudwork); a rule may take part of it first (lower amount). Called before the cap and the shield-gain hook.
+        /// </summary>
+        static void HookShieldIn(RuleCtx c, FightUnit t, ref double amount)
+        {
+            ShieldIn_LodgeBeaver(c, t, ref amount);
+        }
+
+        static partial void ShieldIn_LodgeBeaver(RuleCtx c, FightUnit t, ref double amount);
 
         /// <summary>ShieldGain: a skill or entropy_convert gives tgt a timed shield of amount; shield starts as the bigger of the old and new, ticks as the new timer (0 = no expiry).</summary>
         static void HookShieldGain(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks)
@@ -560,6 +595,7 @@ namespace IdleRng.Sim.Combat
             Load_IaidoMantis(r, c);
             Load_Cuckling(r, c);
             Load_GearbellJelly(r, c);
+            Load_LodgeBeaver(r, c);
             Load_AnvilApe(r, c);
         }
 
@@ -574,6 +610,7 @@ namespace IdleRng.Sim.Combat
         static partial void Load_IaidoMantis(FightRules r, ContentDb c);
         static partial void Load_Cuckling(FightRules r, ContentDb c);
         static partial void Load_GearbellJelly(FightRules r, ContentDb c);
+        static partial void Load_LodgeBeaver(FightRules r, ContentDb c);
         static partial void Load_AnvilApe(FightRules r, ContentDb c);
     }
 

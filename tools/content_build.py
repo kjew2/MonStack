@@ -127,6 +127,9 @@ REQUIRED_CONSTANTS = {
     # species Gearbell Jelly (#158), ward_rewind, ward_toll and escapement (specs/16 section 6.2)
     "MON_REWIND_WIS": "double", "MON_TOLL_DMG": "double", "MON_TOLL_SHARE": "double", "MON_TOLL_REFORM": "double", "MON_TOLL_DELAY": "int", "MON_TOLL_MAX": "int",
     "MON_ESCAPE_POWER": "double",
+    # species Lodge Beaver (#146): mudwork, tail_slap and holdback (specs/16 section 6.2)
+    "MON_MUD_CAP": "double", "MON_MUD_TURNS": "int", "MON_SLAP_SHIELD": "double", "MON_DAM_FLOW": "double",
+    "MON_DAM_SPILL": "double", "MON_DAM_BREAK": "double",
     # species Anvil Ape (#153): anvil_rhythm, brittle_guard, shatterpoint (specs/16 section 6.2)
     "MON_RHYTHM_HITS": "int", "MON_BRITTLE_STEP": "int", "MON_BRITTLE_MIN": "int", "MON_SHATTER_FRAC": "double", "MON_SHATTER_SHARDS": "int",
     "MON_SHATTER_BOSS": "double",
@@ -166,6 +169,8 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             "stolen_turn", "usurp", "foundling_egg",
             # species Gearbell Jelly (#158), coded in Combat/Rules/GearbellJelly.cs
             "ward_rewind", "ward_toll", "escapement",
+            # species Lodge Beaver (#146), coded in Combat/Rules/LodgeBeaver.cs
+            "mudwork", "tail_slap", "holdback",
             # species Anvil Ape (#153), coded in Combat/Rules/AnvilApe.cs
             "anvil_rhythm", "brittle_guard", "shatterpoint"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
@@ -285,6 +290,10 @@ MON_RANGES = {
     "MON_REWIND_WIS": (">= 0", lambda v: v >= 0), "MON_TOLL_DMG": (">= 0", lambda v: v >= 0),
     "MON_TOLL_REFORM": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_SHARE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_DELAY": (">= 0", lambda v: v >= 0),
     "MON_TOLL_MAX": (">= 0", lambda v: v >= 0), "MON_ESCAPE_POWER": (">= 0", lambda v: v >= 0),
+    # species Lodge Beaver (#146): the Reservoir always drains (flow > 0) and the dam always breaks at some finite height
+    "MON_MUD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_MUD_TURNS": (">= 1", lambda v: v >= 1),
+    "MON_SLAP_SHIELD": (">= 0", lambda v: v >= 0), "MON_DAM_FLOW": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_DAM_SPILL": (">= 0", lambda v: v >= 0), "MON_DAM_BREAK": ("> 0", lambda v: v > 0),
     # species Anvil Ape (#153); MON_BRITTLE_MIN <= MON_BREAK_PIPS is checked in validate()
     "MON_RHYTHM_HITS": ("a whole number >= 2", lambda v: v == int(v) and v >= 2),
     "MON_BRITTLE_STEP": ("a whole number >= 0", lambda v: v == int(v) and v >= 0),

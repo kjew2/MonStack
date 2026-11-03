@@ -844,6 +844,26 @@ namespace IdleRng.Sim.Combat
         /// chase capstone (Gearbell Jelly).
         /// </summary>
         public const string Escapement = "escapement";
+        // Species Lodge Beaver (#146), coded in Combat/Rules/LodgeBeaver.cs.
+
+        /// <summary>
+        /// Every heal the unit would receive becomes shield instead (up to MON_MUD_CAP of max HP, or a larger cap it has), lasting
+        /// MON_MUD_TURNS turns; it never regains HP from heals. The Mudwork native capstone (Lodge Beaver).
+        /// </summary>
+        public const string Mudwork = "mudwork";
+
+        /// <summary>Each hit the unit lands adds MON_SLAP_SHIELD x its current shield to the raw damage; the shield is not spent. The Tail Slap in-run chase capstone (Lodge Beaver).</summary>
+        public const string TailSlap = "tail_slap";
+
+        /// <summary>
+        /// HP damage past the unit's shield goes into a Reservoir that drains MON_DAM_FLOW of itself into HP at the start of each own
+        /// action; every shield it gains washes stored damage out first, dealing MON_DAM_SPILL of it to an enemy as true damage; at
+        /// MON_DAM_BREAK x max HP the dam breaks. The Great Dam harder in-run chase capstone (Lodge Beaver).
+        /// </summary>
+        public const string Holdback = "holdback";
+
+        /// <summary>The nature element (holdback's release).</summary>
+        public const string NatureElement = "nature";
 
         // Species Iaido Mantis (#159): rules coded in Combat/Rules/IaidoMantis.cs. Its native tree 1 carries lane B's vantage.
 
@@ -920,6 +940,7 @@ namespace IdleRng.Sim.Combat
             IaiDraw, StillHunt, SeverArt,
             StolenTurn, Usurp, FoundlingEgg,
             WardRewind, WardToll, Escapement,
+            Mudwork, TailSlap, Holdback,
             AnvilRhythm, BrittleGuard, Shatterpoint };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;

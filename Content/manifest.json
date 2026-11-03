@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "content_version": "6.18",
+  "content_version": "6.19",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
       "file": "achievements.json",
-      "sha256": "fae394617c33bdf2622418446b3c95c5329037bb8b3ac4af40c082b48988df11"
+      "sha256": "65f3653988e47bc0d6101675c76a157f5a397d0643fc00d16dec8be97d094605"
     },
     "book_drops": {
       "file": "book_drops.json",
@@ -17,11 +17,11 @@
     },
     "chase_conditions": {
       "file": "chase_conditions.json",
-      "sha256": "21e0351d788730c57561a0f451e248e3c0efb1532e2a9d84dbc86d275e57b679"
+      "sha256": "d11e73886149115c43b6c335604af1684c270f8113a759bd0c5b7bfc76a6e8ea"
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "5f97d12cb2a6be9087c46a65d55a07f738517ad0ee5371d852d67642ce694538"
+      "sha256": "e5c23a3480f31c37f556cecf49693502f6de13ac0db8cc2ad771d1d29a684158"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -53,7 +53,7 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "8859d4ede8377273964b97f34b50e7baa2ca2c67909c89857f155f6ccec4a500"
+      "sha256": "1930ca524b5f6bac37aea5a6959480c2022fa8d241adc009f9d1e7d6655d0f0f"
     },
     "mutators": {
       "file": "mutators.json",
@@ -69,7 +69,7 @@
     },
     "species": {
       "file": "species.json",
-      "sha256": "d662f222b193766cb112d79b6f90e6711849faf277d45c473f66d74561d748a3"
+      "sha256": "fa3cc0a9c5eb62d2ebcdbebd48f74822d7b446d06000c64ad5b21c76d154e610"
     },
     "stat_milestones": {
       "file": "stat_milestones.json",
@@ -77,7 +77,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "43b3c810d4a6f00e286bc7c1501dd9a52dd6b1c7e4b2f5fb3006ee695761b12f"
+      "sha256": "5af9f88445f7ade0c88693205a96e3f07cd387ab9598f541fb2f3a5f9c439ce3"
     },
     "talents": {
       "file": "talents.json",
@@ -89,16 +89,16 @@
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
-      "sha256": "bc51408e074598403eaaa6954e7af4aaababc1a3d1066b69c4c9fcb7e0533d87"
+      "sha256": "89706fcde5320e23d292cc97372234a9462321fa58406efa4b6ff7c0707e47a4"
     },
     "trees": {
       "file": "trees.json",
-      "sha256": "5315cb5f489def1f494051d398a14c44f0364680f12d1190fc42035f97f36f77"
+      "sha256": "ced843641d9ba85f1d8641412a79e94019d371f217ecdf69f54f1da83a564fbe"
     },
     "vendor_rarities": {
       "file": "vendor_rarities.json",
       "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "fcbd92e8ac739b25aa4168c405f545438c95de02235b30295ad78887d8dc21cf"
+  "content_hash": "1d9ecfaf0a11582244b95f1a66ad8daa2b51be2d821cdf4f683b5a5ca1b9c1ab"
 }

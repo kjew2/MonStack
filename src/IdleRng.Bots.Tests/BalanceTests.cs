@@ -262,8 +262,8 @@ namespace IdleRng.Bots.Tests
             foreach (var sp in db.SpeciesList)
             {
                 var own = db.SkillBooks.Keys.Where(b => ChaseTarget.IsOwnBook(db, sp.Id, b)).ToList();
-                // A book species has one own book; a species whose second chase is a harder in-run one (#160) has none and plays bookless.
-                Assert.That(own, Has.Count.EqualTo(db.Trees[sp.ChaseTreeBook].BookGated ? 1 : 0), sp.Id + " has one own book, or none without a book chase");
+                // a species whose second chase is a harder in-run chase (no book, #160) has none
+                Assert.That(own, Has.Count.EqualTo(db.Trees[sp.ChaseTreeBook].BookGated ? 1 : 0), sp.Id + " has one own book, or none");
                 var cell = r.Cells.Single(c => c.Species == sp.Id);
                 var want = CellSummary.From(sp.Id, "focus", db.FightRanks.Count,
                     new[] { BalanceHarness.Play(db, "focus", sp.Id, 1, own), BalanceHarness.Play(db, "focus", sp.Id, 2, own) });

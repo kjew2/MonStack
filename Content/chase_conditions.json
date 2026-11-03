@@ -520,6 +520,55 @@
       "amount": 2.0
     },
     {
+      "id": "tail_slap_c0",
+      "tree_id": "tail_slap",
+      "type": "tree_maxed",
+      "ref": "barricade",
+      "amount": null
+    },
+    {
+      "id": "tail_slap_c1",
+      "tree_id": "tail_slap",
+      "type": "stat_at_least",
+      "ref": "def",
+      "amount": 500.0
+    },
+    {
+      "id": "tail_slap_c2",
+      "tree_id": "tail_slap",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "great_dam_c0",
+      "tree_id": "great_dam",
+      "type": "tree_maxed",
+      "ref": "barricade",
+      "amount": null
+    },
+    {
+      "id": "great_dam_c1",
+      "tree_id": "great_dam",
+      "type": "tree_maxed",
+      "ref": "mudwork",
+      "amount": null
+    },
+    {
+      "id": "great_dam_c2",
+      "tree_id": "great_dam",
+      "type": "stat_at_least",
+      "ref": "def",
+      "amount": 700.0
+    },
+    {
+      "id": "great_dam_c3",
+      "tree_id": "great_dam",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 3.0
+    },
+    {
       "id": "brittle_quench_c0",
       "tree_id": "brittle_quench",
       "type": "tree_maxed",

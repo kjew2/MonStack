@@ -53,7 +53,7 @@ blood_magic,tree.blood_magic.name,native,,,,,,"idea-pool lane A (#134): PoE Bloo
 resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monster Hunter Resentment
 vantage,tree.vantage.name,native,,,,,,"idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage; native-only, Iaido Mantis native tree 1 (#159)"
 deaths_door,tree.deaths_door.name,generic,luk,400,,,,idea-pool lane B (#135): Darkest Dungeon Death's Door
-barricade,tree.barricade.name,generic,def,400,,,,idea-pool lane B (#135): Slay the Spire Barricade
+barricade,tree.barricade.name,native,,,,,,"idea-pool lane B (#135): Slay the Spire Barricade; Lodge Beaver's native tree 1 (#146, kj 2026-11-03)"
 mana_ward,tree.mana_ward.name,native,,,,,,"idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery; Gearbell Jelly's native tree 1 (#158, kj 2026-11-03)"
 brave_heart,tree.brave_heart.name,generic,spd,400,,,,idea-pool lane C (#136): Bravely Default Brave/Default
 one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
@@ -106,6 +106,9 @@ rune_gearwork,tree.rune_gearwork.name,native,,,,,,gearbell jelly native tree 2 (
 still_hours_codex,tree.still_hours_codex.name,book,,,,,,gearbell jelly's book tree (Perpetual Escapement)
 carillon,tree.carillon.name,chase,,,tree.carillon.apex,,,gearbell jelly in-run chase tree
 perpetual_escapement,tree.perpetual_escapement.name,chase,,,tree.perpetual_escapement.apex,,,gearbell jelly book-gated chase tree
+mudwork,tree.mudwork.name,native,,,,,,lodge beaver native tree 2 (#146): heals become shield
+tail_slap,tree.tail_slap.name,chase,,,tree.tail_slap.apex,,,lodge beaver in-run chase tree
+great_dam,tree.great_dam.name,chase,,,tree.great_dam.apex,,,lodge beaver harder in-run second chase tree (no book)
 ringing_anvil,tree.ringing_anvil.name,native,,,,,,anvil ape native tree 2 (#153): the trigger supplier of Guard Break
 brittle_quench,tree.brittle_quench.name,chase,,,tree.brittle_quench.apex,,,anvil ape in-run chase tree
 shatterpoint,tree.shatterpoint.name,chase,,,tree.shatterpoint.apex,,,anvil ape harder in-run second chase tree (no book)
