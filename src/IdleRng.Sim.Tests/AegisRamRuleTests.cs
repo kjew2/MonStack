@@ -232,7 +232,11 @@ namespace IdleRng.Sim.Tests
                         "each borrow is logged with the pips after it");
 
             // Its next turns are skipped, unguarded and with no Default, one pip back each, until it is at 0; then it acts again.
-            var log2 = RunUntilActions(r, s, a, 2 + borrowed);
+            var log2 = new List<FightAction>();
+            bool guarded = false;
+            while (a.Tally.Actions < 2 + borrowed && s.Ticks < 500)
+                BattleSim.Step(r, s, new Fixed(0.99), x => { log2.Add(x); if (x.Event == BattleSim.DebtEvent) guarded |= a.BraveGuarded; });
+            Assert.That(guarded, Is.False, "a debt skip is unguarded");
             var repays = log2.Where(x => x.Event == BattleSim.DebtEvent && x.Actor == "a").ToList();
             Assert.That(repays.Take(borrowed).Select(x => x.Amount), Is.EqualTo(Enumerable.Range(0, borrowed).Select(i => (double)(i - borrowed + 1))));
             Assert.That(log2.Any(x => x.Event == BattleSim.BraveEvent && x.Amount > 0), Is.False, "no Default while in debt");
