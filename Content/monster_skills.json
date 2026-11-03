@@ -1548,6 +1548,42 @@
       "cooldown": 4,
       "duration": 0,
       "element": "dark"
+    },
+    {
+      "id": "mud_patch",
+      "name_key": "mskill.mud_patch.name",
+      "kind": "heal",
+      "target": "self",
+      "stat": null,
+      "scales": "wis",
+      "power": 1.0,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "nature"
+    },
+    {
+      "id": "tail_thump",
+      "name_key": "mskill.tail_thump.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "str",
+      "power": 1.2,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "nature"
+    },
+    {
+      "id": "sluice_gate",
+      "name_key": "mskill.sluice_gate.name",
+      "kind": "shield",
+      "target": "self",
+      "stat": null,
+      "scales": "wis",
+      "power": 1.2,
+      "cooldown": 4,
+      "duration": 3,
+      "element": "nature"
     }
   ]
 }

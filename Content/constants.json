@@ -1030,6 +1030,36 @@
       "key": "MON_ESCAPE_POWER",
       "type": "double",
       "value": 1.3
+    },
+    {
+      "key": "MON_MUD_CAP",
+      "type": "double",
+      "value": 0.3
+    },
+    {
+      "key": "MON_MUD_TURNS",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "MON_SLAP_SHIELD",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "MON_DAM_FLOW",
+      "type": "double",
+      "value": 0.3
+    },
+    {
+      "key": "MON_DAM_SPILL",
+      "type": "double",
+      "value": 1.0
+    },
+    {
+      "key": "MON_DAM_BREAK",
+      "type": "double",
+      "value": 1.0
     }
   ]
 }

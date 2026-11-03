@@ -544,9 +544,9 @@
     {
       "id": "barricade",
       "name_key": "tree.barricade.name",
-      "kind": "generic",
-      "offer_stat": "def",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -1068,6 +1068,36 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.perpetual_escapement.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "mudwork",
+      "name_key": "tree.mudwork.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "tail_slap",
+      "name_key": "tree.tail_slap.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.tail_slap.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "great_dam",
+      "name_key": "tree.great_dam.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.great_dam.apex",
       "fuse_a": null,
       "fuse_b": null
     }

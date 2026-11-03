@@ -73,3 +73,10 @@ carillon_c2,carillon,tally_at_least,wins,2
 perpetual_escapement_c0,perpetual_escapement,node_owned,still_hours_codex_n0,
 perpetual_escapement_c1,perpetual_escapement,node_owned,rune_gearwork_n4,
 perpetual_escapement_c2,perpetual_escapement,tally_at_least,evades,2
+tail_slap_c0,tail_slap,tree_maxed,barricade,
+tail_slap_c1,tail_slap,stat_at_least,def,500
+tail_slap_c2,tail_slap,tally_at_least,wins,2
+great_dam_c0,great_dam,tree_maxed,barricade,
+great_dam_c1,great_dam,tree_maxed,mudwork,
+great_dam_c2,great_dam,stat_at_least,def,700
+great_dam_c3,great_dam,tally_at_least,wins,3
