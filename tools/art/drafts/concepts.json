@@ -1,0 +1,1210 @@
+{
+ "species_concepts": [
+  {
+   "id": "candlemane",
+   "name": "Candlemane",
+   "element": "light",
+   "tone": "mythic",
+   "pitch": "A sacred lion of living light and candle wax. Its mane is a ring of burning votive candles, and wax runs down its flanks because it burns its own body to shine. It pays HP for its light and turns the HP it loses, and the healing it gets, into radiant damage.",
+   "base_growth": "species.csv columns: base_hp 160, base_str 120, base_int 80, base_wis 140, base_dex 80, base_def 60, base_spd 100, base_luk 100 (total 840, the same as mandrake and shade_hound). grow_hp 1.3, grow_str 1.1, grow_int 0.7, grow_wis 1.2, grow_dex 0.8, grow_def 0.6, grow_spd 0.9, grow_luk 1.0 (sum 7.6, the same as drake and shade_hound). Role: a self-burning HP/WIS bruiser. The stats a player normally trains to survive (HP and WIS) become its damage, and it has the lowest DEF of any species on purpose.",
+   "native_tree_1": "Votive Flame (`votive_flame`, HP). Fillers on HP growth and stat. The index-4 skill is a new *Votive Strike*: a light single-target hit that scales on STR and HP and costs 5% of max HP to cast. The capstone REUSES lane A's `blood_magic` rule (#134): active skills have no cooldown, each cast costs MON_BLOOD_COST (6%) of max HP, and the AI stops casting below MON_BLOOD_FLOOR (25%). On this species, blood_magic is the HP drain that its chase trees convert into damage, so the native tree is the source of the HP loss.",
+   "native_tree_2": "Sanctum Grace (`sanctum_grace`, WIS). Fillers on WIS growth and stat. The index-4 skill is a new *Halo Mend*: a self heal that scales on WIS. The capstone is a trigger, *Kindled Grace*: when hit, the unit casts Halo Mend at 50% power. This uses the existing on-hit trigger shape, the same as Ooze Back, so it is new content but no new rule. Alone it is an ordinary sustain tree. Together with Votive Flame it makes a pay-and-refill loop, and the in-run chase tree turns that loop into damage.",
+   "inrun_chase": "Martyr's Pyre (`martyrs_pyre`), new rule `martyr_flame`. Every heal on the unit also deals MON_PYRE_CONV (0.6) of the HP healed as light true damage to its current target. Healing above max HP converts at 100% instead of being lost. The damage is a triggered effect, so it never fires heal triggers again (wave 0 loop guard). It is logged as rule:martyr_flame with the amount converted. Conditions follow the in-run pattern: tree_maxed votive_flame, stat_at_least hp 500, tally_at_least wins 2. Apex form: **Martyr Pyrelion**, the candles burn white and the wax mane flares into a pyre. It is distinct from the slime's `tidal_overflow`, where overheal becomes a shield: here overheal becomes damage.",
+   "book_chase": "Hollow Sun (`hollow_sun`), new rule `hollow_sun`. Book: *Psalter of the Unburnt* (`unburnt_psalter`, a new book tree that any species can slot). Rule: every point of HP the unit pays (blood_magic costs, Votive Strike) or loses to hits is stored as Radiance, capped at max HP. Each of its hits releases MON_SUN_RELEASE (0.25) of the stored Radiance as extra light damage that ignores WIS, and heals the unit for half of what it released. Losing HP charges it, hitting spends the charge, and the heal from spending feeds Martyr's Pyre. Conditions follow the book pattern: node_owned unburnt_psalter_n0, node_owned sanctum_grace_n4, tally_at_least damage_light 2000 (the `damage_<element>` tally already supports light). Apex form: **Hollow Sun Lion**, the halo becomes a black-cored sun ringed in white fire, and its chest is an open furnace.",
+   "why_different": "It is the only species that wants to lose HP. HP and WIS are survival stats for every other species; here they are its damage, because HP fuels the costs and Radiance, and WIS fuels the heals that the Pyre turns into damage. DEF is close to useless for it: mitigation shrinks the HP it loses, so it charges less Radiance. A DEF-drilled run is the wrong plan, which is the reverse of Bastion Drake. Its pieces look weak alone: an HP-tax tree and a plain self-heal tree. But all three of its rules feed one loop, pay HP, heal, convert to damage, which is the Exiled Heavy Knight's pattern (specs/22 section 3.1): drawbacks become fuel. It is also the opposite of the existing light species, Mirage Moth, a fragile, fast INT/WIS caster that dodges, while Candlemane is a slow, heavy beast that takes hits and burns. In modes: it is best in 1v1 and the Dungeon (4v1), where a long boss fight lets Radiance stack. In 4v4 the Pyre's converted damage only hits its current target, so it does not scale across a team.",
+   "art_files": [
+    "c1_candlemane_1.webp",
+    "c1_candlemane_2.webp"
+   ],
+   "art_prompt": "The hunter style prompt from tools/art/prompts.json, unchanged, followed by: \"Creature: A majestic lion-like beast of living light and candle wax, ivory-white and pale gold. Its mane is a full ring of tall burning candle flames in white-gold and amber, and soft wax drips and pools down its shoulders and flanks where the flames touch, as if it is slowly burning itself to shine. A thin golden halo-wheel floats behind its head. Its eyes glow bright gold, and molten gold light seeps through cracks in its chest like a lantern. Proud, sacred and solemn, powerful, a light-element monster.\" Made with gpt-image-2, quality medium, 1024x1024, n=2, by the throwaway script /tmp/claude-0/-home-user-MonStack/ddb57ec9-2c24-5a2d-8de9-68765b97c91f/scratchpad/c1_art.py, which imports generate.py. The repo's prompts.json was not edited.",
+   "problems": "The user's request says no species uses the light element yet, but content_src/species.csv already has `sprite` (Mirage Moth) as element light. Candlemane is still light, as briefed, and is built to play as the opposite of Mirage Moth. The orchestrator should correct this in the comparison artifact. Votive Flame's capstone depends on lane A's `blood_magic` (#134) landing first; otherwise that tree needs its own copy of the rule. No API or network failures."
+  },
+  {
+   "id": "pyre_stag",
+   "name": "Pyre Stag",
+   "element": "fire",
+   "tone": "grimdark (with a mythic edge: a sacred beast that burns itself as an offering)",
+   "pitch": "A gaunt, ash-grey stag whose antlers are its own funeral pyre. Its hide is cracked like cooling charcoal with ember light in the cracks, ash peels off it as it moves, and rusted penitent chains with black bells hang from its neck. It burns itself every turn, and the closer it gets to ash, the harder it hits.",
+   "base_growth": "base_hp 120, base_str 140, base_int 130, base_wis 100, base_dex 80, base_def 60, base_spd 110, base_luk 100 (total 840, the same as mandrake and shade_hound). grow_hp 1.1, grow_str 1.2, grow_int 1.2, grow_wis 1.0, grow_dex 0.8, grow_def 0.5, grow_spd 1.0, grow_luk 0.8 (sum 7.6, the same as drake, mandrake and shade_hound). Role: a fragile STR/INT hybrid nuker, the only species split evenly across both damage stats. Its HP is fuel, not armour: DEF growth of 0.5 is the lowest in the game, so it is an underdog by design and DEF drills are wasted on it. Notes column: \"placeholder: STR/INT hybrid that burns its own HP for damage\".",
+   "native_tree_1": "Funeral Pyre (`funeral_pyre`, native). Placeholder shape: filler on HP, STR and INT, then a skill at index 4, *Immolate*: a new fire nuke scaling from STR, priced at extra self-damage (`MON_IMMOLATE_SELF`, 0.05 of max HP). The capstone is the new rule `pyre_tithe`, *Tithe of Ash*: each action the unit pays `MON_TITHE_COST` (0.05) of max HP, never going below 1 HP, and all its damage is multiplied by (1 + the fraction of max HP it is missing), so up to about x2 near death. The HP cost reuses lane A `blood_magic`'s rules (#134): it is not damage, so it triggers no OnHitTaken, adds to no tallies, and `resentment`/`night_feast` do not see it. This is the built-in drawback, and the power comes from it.",
+   "native_tree_2": "Ashen Vigil (`ashen_vigil`, native). Filler on HP, WIS and DEF, then a skill at index 4: reuse `ward` or a new *Smolder Veil* shield. The capstone is the new rule `ash_shroud`, which reuses the threshold enabler from specs/22 section 3.1 (Life Shield) directly: at fight start, turn `MON_SHROUD_FRAC` (0.25) of current HP into a shield. From turn 1 the Stag is then 25% down on HP, so *Tithe of Ash* already gives +25%, and every \"below X% HP\" rule is closer while it is safe. It also lights up idea-pool rules: lane B `vantage` (below 50% HP), `resentment` and `deaths_door`; lane A `blood_magic`. This is the tree that keeps the drawback survivable, and it rewards owning both native trees, like the Heavy Knight's Oath tree.",
+   "inrun_chase": "Tree: *Inverted Mercy* (`inverted_mercy`, chase, in-run). New rule `pyre_mercy`: the unit can no longer be healed. Every heal it would receive (its own skills, triggers, lifesteal and allies' heals) is dealt instead as fire damage to its current target, or to a random enemy in teams. Shields are not heals, so `ash_shroud` and Ward still work. Rule-breaking conversion (specs/22 pattern 3): generic heal trees such as *Vital Core*'s Second Wind or *Survivor*'s Regenerate become nukes, so a \"wrong\" training plan turns right. The no-heal drawback is real: with the tithe it shortens fights rather than stalling them. Modes: in 4v4 a teammate's heal on it becomes damage. Placeholder conditions: `tree_maxed funeral_pyre`, `node_owned ashen_vigil` index 4, `stat_at_least str 450`, `tally_at_least damage_fire 3000`. Apex form: **Cinder Saint**, the body burnt to a hollow ribcage full of fire under a burning antler halo, with chains glowing white-hot.",
+   "book_chase": "Book: *Litany of Embers* (`litany_of_embers`, kind book, the species' own uber-rare Skill Book). Filler on INT and WIS, index-4 skill *Ember Hymn* (an INT fire nuke), capstone trigger *Smoke Psalm* (when hit, blind the attacker). Book chase tree: *Undying Pyre* (`undying_pyre`). New rule `ember_eternal`: when a hit would take the unit below 1 HP, it does not die. The overflow comes out of its **max HP** instead, and each 1% of max HP burned this way adds `MON_EMBER_DMG` (+1.5%) damage for the rest of the fight. It only dies once max HP has burned below `MON_EMBER_FLOOR` (0.3) of its starting value, or from the overflow of a hit that crosses that floor. The fuel is bounded and the tithe keeps burning, so this cannot stall a fight: check timeouts. It ranks after `root_rebirth`, like `deaths_door`. Placeholder conditions: `node_owned litany_of_embers` index 0 (the specs/15 5.2 rule since 4.10), `node_owned funeral_pyre` index 7 (the tithe capstone), `node_owned ashen_vigil` index 4, `tally_at_least wins 4`. Apex form: **Everpyre Hart**, a colossal hart of living flame with no hide left, its antler pyre risen into a crown-shaped bonfire and black bells ringing in the smoke.",
+   "why_different": "Every other species protects its HP. The Pyre Stag spends it on purpose: its native capstone damages itself each action, and its damage climbs as its HP falls. Training is therefore inverted. HP is drilled as fuel and DEF is skipped (lowest DEF growth in the game). It is the only true STR/INT hybrid, so it can go physical or fire caster. Its second native tree is a drawback-canceller and threshold enabler (the Heavy Knight's Life Shield), not a second damage tree, so the build lives in the combination. Its chase capstones break rules instead of adding numbers: heals become damage, and death burns max HP instead of ending the fight. It is a hub for the idea-pool trees: lane B vantage/deaths_door/resentment/mana_ward, lane A blood_magic, and generic heal trees turned into nukes. It is distinct from the drake (fire too, but an armoured tank-bruiser) and from Mandrake/Coremote (sustain): it is the game's glass cannon on a fuse.",
+   "art_files": [
+    "c2_pyre_stag_1.webp",
+    "c2_pyre_stag_2.webp"
+   ],
+   "art_prompt": "The \"hunter\" style prompt from tools/art/prompts.json, word for word, followed by \"Creature: A gaunt, ash-grey stag creature that is slowly burning itself alive. Its antlers are a living funeral pyre: stacked charred branches wreathed in roaring orange-gold flame. Its hide is cracked like cooling charcoal, with molten ember light glowing through the cracks along its ribs, spine and legs; flakes of ash and sparks peel off its body and drift upward. Rusted iron penitent chains hang from its neck, with small blackened bells. Lean, long-legged and solemn, head held high; eyes are white-hot embers. Grimdark and mythic, a sacred beast that pays for its power with its own body.\" Settings: gpt-image-2, medium quality, 1024x1024, n=2. Generated through /tmp/claude-0/-home-user-MonStack/ddb57ec9-2c24-5a2d-8de9-68765b97c91f/scratchpad/c2_art.py, which imports generate.py's generate() and save(); the repo's prompts.json is unchanged. No artist, studio or series is named.",
+   "problems": "None failed: the API worked and both images were generated. Gaps found: (1) The brief says no species uses light yet, but content_src/species.csv lists sprite (Mirage Moth) as element light. The other concept agent's \"first light species\" premise is therefore off; the orchestrator should check. (2) git status shows the drafts as untracked-ignored or not shown, so tools/art/drafts/ seems to be gitignored; keep that in mind if the drafts should be committed. (3) All numbers are placeholders. *Tithe of Ash* reuses blood_magic's \"HP cost is not damage\" rule, so the species lane depends on lane A (#134) merging first, or it re-implements that helper. ember_eternal and pyre_mercy also need the wave 0 would-die and heal hooks."
+  },
+  {
+   "id": "cuckling",
+   "name": "Cuckling",
+   "element": "dark",
+   "tone": "cute, with a wrong edge (specs/24 section 6). It looks like an adorable fluffy chick, but it is a brood parasite. It wears the shell of an egg that was not its own, and the egg it pushed out lies next to the nest.",
+   "pitch": "A round, soot-black and violet cuckoo chick, too big for its thorny nest. Half of a stolen speckled eggshell sits on its head like a helmet, and its begging beak gapes open on a glowing magenta throat. It is a turn thief: it takes other units' turns, copies other trees' capstones, and its book apex lays an egg that breaks the team-size rule.",
+   "base_growth": "species.csv row: cuckling,species.cuckling.name,dark,nest_thief,brood_nest,usurper_cuckoo,clutch_empress, base_hp 140, base_str 110, base_int 60, base_wis 60, base_dex 80, base_def 90, base_spd 130, base_luk 170 (total 840, the same as mandrake and shade_hound); grow_hp 1.2, grow_str 1.0, grow_int 0.6, grow_wis 0.6, grow_dex 0.8, grow_def 0.9, grow_spd 1.2, grow_luk 1.3 (sum 7.6, the same as drake, mandrake and shade_hound). Role: a well-fed LUK/SPD/HP tempo thief. It has the highest base LUK of any species and is middling elsewhere, so its power comes from taking turns, not from hitting hard. This sets it apart from shade_hound (DEX/SPD/STR dodger) and the INT/WIS sprite.",
+   "native_tree_1": "Nest Thief (id `nest_thief`, NEW rule `stolen_turn`). Shape per specs/15 section 2: growth spd 0.1 / stat spd 15 / growth luk 0.1 / stat luk 15 / skill `coin_toss` (existing row, LUK 2.0, cd 3) / growth spd 0.1 / stat luk 20 / capstone rule `stolen_turn` (cost 3). Rule: when an enemy's turn comes and the unit's gauge is at least `MON_STEAL_GAUGE` (0.5) full, the unit acts first in its place, once per enemy per fight. The enemy's turn is lost (its gauge resets as if it had acted), and the unit's gauge drops to 0. This breaks turn order: a swap, not a free action. In 1v1 it is about one denied enemy action per fight; in 4v4 it can be up to 4, which is mode asymmetry to report. Loop guards (wave 0): a stolen turn cannot be stolen back by another carrier, does not refund through `one_more` within the same action, and counts toward `MON_EXTRA_ACTIONS_CAP`. Logged as `rule:stolen_turn` with the victim. New idea, close in family to lane C (#136) turn-gauge rules.",
+   "native_tree_2": "Brood Nest (id `brood_nest`). It REUSES lane F's `mimic_core` rule (#139, Balatro Blueprint) as a native tree: growth luk 0.1 / stat hp 15 / growth hp 0.1 / stat luk 15 / skill `windfall` (existing crit-rate buff) / growth luk 0.1 / stat hp 20 / capstone rule `mimic_core` (copies the capstone of the tree in the slot just before it, bought or not; never chase or fusion trees). The designed twist is the cuckoo behaviour. The natives start in slots 0 and 1, so by default Brood Nest copies Nest Thief's `stolen_turn`, and copying a rule the unit already has does nothing. The tree only pays off once the player overwrites its own native Nest Thief (slot 0) with a better tree: a book or generic capstone such as `blood_magic` or `vantage`. The cuckoo pushes its own sibling out of the nest. This works as a planned drawback-to-conversion in the Exiled Heavy Knight spirit, and it is in tension with the in-run chase, which needs Nest Thief maxed.",
+   "inrun_chase": "Tree: Usurped Nest (id `usurper_cuckoo`, NEW rule `usurp`). Apex form: **Usurper Cuckoo**, a grown cuckoo, larger than any host, wearing a crown of broken eggshell. Conditions: tree_maxed `nest_thief`; stat_at_least spd 500; tally_at_least kills 3 (a new tally choice; every other in-run chase uses wins 2). Rule: each stolen turn (`stolen_turn`) is spent on the victim's own skill. The unit casts the victim's highest-priority off-cooldown active skill against the victim's side, using the unit's own stats, and that skill goes on cooldown for the victim. If no such skill exists, the unit makes a basic attack. This breaks the kit rule by casting skills the unit does not own. Target: +5 to +8 gauntlet floors (specs/15 section 5.5); it might sit low in 1v1 because steals are once per foe. If it measures under the band, raise steals per foe to 2.",
+   "book_chase": "Tree: Clutch Throne (id `clutch_empress`, NEW rule `foundling_egg`). Book: The Foundling's Ledger (book tree id `foundling_ledger`). Apex form: **Clutch Empress**, a towering brood-mother cuckoo whose plumage hangs with stolen speckled eggs. Conditions: node_owned `foundling_ledger_n0`; node_owned `brood_nest_n4`; tally_at_least damage_dark 2000. Rule: at fight start the unit lays an egg on its side, **even when the side is already full**. This breaks the team-size rule: a 1v1 becomes 2v1 and a 4v4 becomes 5v4. The egg is a non-acting unit with HP = `MON_EGG_HP` (0.3) of the unit's max HP. It hatches after `MON_HATCH_ACTIONS` (3) of the unit's own actions into a Foundling at `MON_HATCH_STATS` (0.5) of the unit's stats, with the unit's index-4 skills and no rules (so it never lays eggs or steals turns). The egg also soaks single-target AI hits, like Arcane Overflow's decoys. The egg and the Foundling never count for kills, tallies, rewards or last-unit-standing. This reuses lane E's mid-fight unit machinery from `arise` (#138). Target: +10 to +15 gauntlet floors.",
+   "why_different": "It is the only species built around breaking turn order and team size rather than raising a stat. Its damage is middling, and its power comes from denying enemy actions and fielding an extra unit. Its two native trees work against each other on purpose:\n- Brood Nest (mimic_core) is dead weight until the player overwrites the species' own first native tree. That is the cuckoo pushing its sibling out of the nest.\n- The in-run chase needs that same tree maxed.\n\nSo every run forks early: keep the nest and become the Usurper (who casts the enemy's skills back at it), or evict it and use Brood Nest to copy a strong book or generic capstone toward the Clutch Empress. It also leans on LUK and HP growth that no other species prioritises, and its steals and egg are deliberately mode-asymmetric. That is a Vault-identity choice the balance report must show per mode.",
+   "art_files": [
+    "c3_cuckling_1.webp",
+    "c3_cuckling_2.webp"
+   ],
+   "art_prompt": "The hunter style prompt from tools/art/prompts.json (styles.hunter.prompt, used verbatim) + \"\\n\\nCreature: Cuckling: a plump, fluffy cuckoo chick, round as a ball and oddly large for its nest, with soot-black and deep violet down, a pale lavender belly, tiny stubby wings and oversized clawed orange feet gripping a nest of black thorny twigs. It wears the cracked top half of a white speckled eggshell like a little helmet tilted over one eye: the shell of an egg that was not its own. Its huge beak gapes wide open, begging, and the inside of its mouth glows bright magenta-violet. Large glossy round eyes with violet glints, adorable but greedy. On the ground beside the nest lies a small pale blue egg that has been pushed out. Cute, with something quietly wrong about it.\" Settings: gpt-image-2, 1024x1024, medium quality, n=2, one call through generate.py's generate()/save(), driven by the scratch script /tmp/claude-0/-home-user-MonStack/ddb57ec9-2c24-5a2d-8de9-68765b97c91f/scratchpad/c3_art.py. The repo's prompts.json was not edited. The prompt names no artist, studio or series.",
+   "problems": "No API or network failures; both drafts were generated. Both drafts are close variations: the front-facing chick in the eggshell helmet and the pushed-out egg read well, but the pose is frontal rather than the style's three-quarter view. Gaps to settle before building:\n(1) `stolen_turn` and `foundling_egg` are new rules that depend on lane C's gauge hooks and lane E's mid-fight unit (#136, #138), so this lane must follow both.\n(2) Brood Nest reuses the `mimic_core` rule from lane F (#139) as a native capstone. The epic does not say whether a rule id may sit on two trees. Chase rules must be unique, but this one is not a chase rule.\n(3) Breaking the team-size cap in PvP 4v4 (a fifth unit) is kj's call. Options: allow it, or suppress the egg in PvP only.\n(4) The in-run chase uses tally `kills` 3, unlike every other species' wins 2. Check its reachability with `balance`.\n(5) The new string keys, the achievement unlock and the book drop row are not designed yet."
+  }
+ ],
+ "tree_creatures": [
+  {
+   "tree_id": "iron_reflexes",
+   "tree_name": "Iron Reflexes",
+   "rule_summary": "No evade or graze; mitigation uses DEF + 0.6 x DEX.",
+   "concepts": [
+    {
+     "name": "Bulwark Mantis",
+     "element": "nature",
+     "tone": "mythic",
+     "look": "Moss-green mantis whose scythe arms are hammered into crossed bronze tower shields, in samurai-style lamellar plates.",
+     "why_fits": "Its quickest weapons became armour: it stands still and blocks instead of dodging.",
+     "inspiration": "Praying mantis; samurai o-yoroi armour",
+     "art_file": "tree_iron_reflexes_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Forgehide Cheetah",
+     "element": "fire",
+     "tone": "hot",
+     "look": "Sleek cheetah covered in red-hot forged iron scales, molten seams where its spots were, legs braced wide.",
+     "why_fits": "The fastest animal has turned its speed into plating: agility becomes armour.",
+     "inspiration": "Cheetah; forge-hammered lamellar armour",
+     "art_file": "tree_iron_reflexes_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Mailcoil Moray",
+     "element": "water",
+     "tone": "grimdark",
+     "look": "Teal-black moray eel whose slick skin is replaced by rusted chainmail and barnacled iron collars.",
+     "why_fits": "Too heavy to slip away any more, it takes every hit on its mail.",
+     "inspiration": "Moray eel; medieval chainmail",
+     "art_file": "tree_iron_reflexes_3.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    }
+   ]
+  },
+  {
+   "tree_id": "elemental_avatar",
+   "tree_name": "Elemental Avatar",
+   "rule_summary": "All its damage takes its own element and deals x1.25.",
+   "concepts": [
+    {
+     "name": "Ember Ifrit",
+     "element": "fire",
+     "tone": "cute",
+     "look": "Chubby djinn cub, flame from the waist down, tiny horns and gold bracelets; rocks it touches turn to fire.",
+     "why_fits": "Fists, tail and breath are all fire: every hit becomes its element.",
+     "inspiration": "Ifrit / djinn of Arabian folklore",
+     "art_file": "tree_elemental_avatar_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Fountain Axolotl",
+     "element": "water",
+     "tone": "cute",
+     "look": "Pink-aqua axolotl whose six gills are glowing fountains, a water ring orbiting it; claws and tail are water jets.",
+     "why_fits": "Its whole body is a water source, so anything it does strikes as water.",
+     "inspiration": "Axolotl; fountains and tides",
+     "art_file": "tree_elemental_avatar_2.webp",
+     "status": "species"
+    },
+    {
+     "name": "Inkshade Qilin",
+     "element": "dark",
+     "tone": "mythic",
+     "look": "Qilin of living shadow and ink, one violet horn, smoky mane, hooves leaving pools of darkness.",
+     "why_fits": "It converts everything it touches into shadow: an avatar of its element.",
+     "inspiration": "Qilin of Chinese myth; ink-wash painting",
+     "art_file": "tree_elemental_avatar_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "fortress_fist",
+   "tree_name": "Fortress Fist",
+   "rule_summary": "Hits add 0.5 x DEF damage; STR and INT count as 0 for damage.",
+   "concepts": [
+    {
+     "name": "Keepshell Crab",
+     "element": "water",
+     "tone": "cute",
+     "look": "Hermit crab wearing a stone castle tower as its shell, gate-plated claws raised to punch.",
+     "why_fits": "It fights by slamming its fortress: its defence is its attack.",
+     "inspiration": "Hermit crab; castle keeps",
+     "art_file": "tree_fortress_fist_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Rampart Gargoyle",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Granite gargoyle ram with buttress horns and a wall-like body, cracks leaking violet light.",
+     "why_fits": "No claws or magic, only stone weight: it headbutts with its own wall.",
+     "inspiration": "Cathedral gargoyles; bighorn ram",
+     "art_file": "tree_fortress_fist_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Dome Pillbug",
+     "element": "light",
+     "tone": "cute",
+     "look": "Giant pillbug with a marble-and-gold cathedral-dome shell, half curled to roll and ram.",
+     "why_fits": "Its armour is the wrecking ball: it hits by rolling its shell into you.",
+     "inspiration": "Pill bug; cathedral domes",
+     "art_file": "tree_fortress_fist_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "blood_magic",
+   "tree_name": "Blood Magic",
+   "rule_summary": "Skills have no cooldown; each cast costs 6% max HP.",
+   "concepts": [
+    {
+     "name": "Hemorune Bat",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Gaunt vampire bat with rune-slashed crimson wings, blood ribbons from its wrists forming spell circles.",
+     "why_fits": "Wasted and feverish, it pays for every spell in its own blood.",
+     "inspiration": "Vampire bats; vampire folklore",
+     "art_file": "tree_blood_magic_1.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Bleeding Rafflesia",
+     "element": "nature",
+     "tone": "hot",
+     "look": "Huge red corpse flower on thorny root legs, veins bleeding sap that rises into thorn spells, petals wilting.",
+     "why_fits": "It bleeds its sap to cast and visibly withers as it does.",
+     "inspiration": "Rafflesia corpse flower",
+     "art_file": "tree_blood_magic_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Martyr Pelican",
+     "element": "light",
+     "tone": "mythic",
+     "look": "White gold-haloed pelican piercing its own breast, blood drops turning into golden holy sigils.",
+     "why_fits": "Self-sacrifice as power: each wound becomes a spell.",
+     "inspiration": "Medieval 'pelican in her piety' symbol",
+     "art_file": "tree_blood_magic_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "resentment",
+   "tree_name": "Resentment",
+   "rule_summary": "Half the HP damage it takes becomes a red pool added to its STR, and each of its own actions drains a quarter of the pool.",
+   "concepts": [
+    {
+     "name": "Grudge Boar",
+     "element": "fire",
+     "tone": "grimdark",
+     "look": "A huge wounded boar bristling with broken arrows; every wound leaks molten red light into tusks that swell and blaze.",
+     "why_fits": "Each wound feeds its tusks, so the more it is hurt the harder it hits.",
+     "inspiration": "Wild boars; Japanese tatarigami (wrathful curse spirits)",
+     "art_file": "tree_resentment_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Grudge-Mask Crab",
+     "element": "water",
+     "tone": "mythic",
+     "look": "A teal and bone armoured crab with a scowling warrior face on its shell; red-glowing cracks flow into one jagged, swelling claw.",
+     "why_fits": "Every crack in its shell is a grudge, stored in a claw that grows heavier.",
+     "inspiration": "The Heike crab legend (samurai faces on crab shells)",
+     "art_file": "tree_resentment_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Spitebud",
+     "element": "nature",
+     "tone": "cute",
+     "look": "A pouting moss ball with puffed cheeks; every scratch sprouts a blood-red thorn, and it clutches one like a spear.",
+     "why_fits": "Damage literally grows into weapons that it spends as it fights.",
+     "inspiration": "Bramble thickets, porcupines",
+     "art_file": "tree_resentment_3.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    }
+   ]
+  },
+  {
+   "tree_id": "vantage",
+   "tree_name": "Vantage",
+   "rule_summary": "Below half HP, when an enemy aims a single-target attack at it, it strikes that enemy first, and cancels the attack if the strike kills.",
+   "concepts": [
+    {
+     "name": "Iaido Mantis",
+     "element": "nature",
+     "tone": "hot",
+     "look": "A cracked jade-and-orchid mantis with a torn wing, crouched in a quick-draw stance with one scythe in a leaf scabbard.",
+     "why_fits": "Wounded, it waits for your move and cuts first.",
+     "inspiration": "Iaijutsu quick-draw; orchid mantis",
+     "art_file": "tree_vantage_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Cornered Viper",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "A scarred black-and-violet viper with missing scales, reared high, fangs dripping violet venom a split second before the strike.",
+     "why_fits": "A cornered snake always strikes before you reach it.",
+     "inspiration": "Rattlesnakes; the cornered-animal reflex",
+     "art_file": "tree_vantage_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Snapback Shrimp",
+     "element": "water",
+     "tone": "cute",
+     "look": "A chubby bandaged coral-pink shrimp with a bent antenna and one huge pistol claw firing a flash of bubbles.",
+     "why_fits": "Its snap is faster than any attacker, and it only gets angry when hurt.",
+     "inspiration": "Pistol (snapping) shrimp and their cavitation bubbles",
+     "art_file": "tree_vantage_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "deaths_door",
+   "tree_name": "Death's Door",
+   "rule_summary": "Once per fight a killing hit leaves it at 1 HP; after that each hit is survived with odds that drop by 10% per hit already survived.",
+   "concepts": [
+    {
+     "name": "Ninewick Cat",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "A gaunt black cat with nine candle-wick tails, most snuffed into smoke and one still burning violet; ribs show through torn fur.",
+     "why_fits": "Each survived hit snuffs a wick, so its luck visibly runs out.",
+     "inspiration": "Cats' nine lives; bakeneko/nekomata",
+     "art_file": "tree_deaths_door_1.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Marigold Xolo",
+     "element": "fire",
+     "tone": "cute",
+     "look": "A small hairless grey dog painted in marigold skull patterns, a guttering half-melted candle on its head, petals drifting.",
+     "why_fits": "Its tiny flame keeps almost going out but never quite does, for now.",
+     "inspiration": "Xoloitzcuintli, the Aztec guide of the dead; D\u00eda de Muertos",
+     "art_file": "tree_deaths_door_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Obol Eel",
+     "element": "water",
+     "tone": "mythic",
+     "look": "A ghostly translucent eel, half flesh and half skeleton, with gold coins over its eyes, coiling by a half-open doorway of light.",
+     "why_fits": "It is already paying the ferryman, but it stays on the near side of the door.",
+     "inspiration": "Charon's obol, the coin for the ferryman of the dead",
+     "art_file": "tree_deaths_door_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "barricade",
+   "tree_name": "Barricade",
+   "rule_summary": "Its shields never expire, and its shield cap rises to 60% of max HP.",
+   "concepts": [
+    {
+     "name": "Nacre Snail",
+     "element": "water",
+     "tone": "mythic",
+     "look": "A calm blue sea snail under a huge spiral shell of overlapping pearl layers, the newest still glowing as it forms.",
+     "why_fits": "Every shield is a new layer of nacre that is never shed.",
+     "inspiration": "Pearl nacre layering; the nautilus",
+     "art_file": "tree_barricade_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Lodge Beaver",
+     "element": "nature",
+     "tone": "cute",
+     "look": "A stout beaver wearing a wall of stacked logs and mud so thick it can barely waddle, hugging one more log for the pile.",
+     "why_fits": "It never takes the wall down, only adds to it.",
+     "inspiration": "Beaver dams and lodges",
+     "art_file": "tree_barricade_2.webp",
+     "status": "species"
+    },
+    {
+     "name": "Gemcase Caddis",
+     "element": "light",
+     "tone": "hot",
+     "look": "A hound-sized larva in a long radiant case of golden and white crystals cemented layer on layer; only its head and forelegs show.",
+     "why_fits": "It builds its armour case one gem at a time and keeps every one.",
+     "inspiration": "Caddisfly larvae, which build cases from stones and gems",
+     "art_file": "tree_barricade_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "mana_ward",
+   "tree_name": "Mana Ward",
+   "rule_summary": "It starts each fight with a ward of 1.5 x WIS that soaks 30% of each hit, and while the ward holds its cooldowns tick 50% faster.",
+   "concepts": [
+    {
+     "name": "Rune-Orbit Owl",
+     "element": "light",
+     "tone": "mythic",
+     "look": "A white-gold horned owl inside a sphere of fast-spinning luminous rune rings, eyes glowing gold.",
+     "why_fits": "Its orbiting runes are both the ward and the engine that speeds its spells.",
+     "inspiration": "Athena's owl; armillary spheres",
+     "art_file": "tree_mana_ward_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Gearbell Jelly",
+     "element": "dark",
+     "tone": "cute",
+     "look": "A floating indigo moon jelly whose bell is a mana barrier with tiny glowing rune gears turning inside.",
+     "why_fits": "The bell soaks hits while the gears inside keep its cooldowns ticking.",
+     "inspiration": "Moon jellyfish; clockwork",
+     "art_file": "tree_mana_ward_2.webp",
+     "status": "species"
+    },
+    {
+     "name": "Prayer-Wheel Salamander",
+     "element": "fire",
+     "tone": "hot",
+     "look": "A lithe black-and-gold salamander with three spinning golden prayer wheels on its spine, wrapped in a heat-haze ward.",
+     "why_fits": "While the haze holds, the wheels spin faster and so do its skills.",
+     "inspiration": "Tibetan prayer wheels; the alchemical fire salamander",
+     "art_file": "tree_mana_ward_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "brave_heart",
+   "tree_name": "Brave Heart",
+   "rule_summary": "While unhurt or shielded it skips turns to bank up to 3 pips (and guards), then acts and spends every pip as extra actions in a row.",
+   "concepts": [
+    {
+     "name": "Aegis Ram",
+     "element": "light",
+     "tone": "mythic",
+     "look": "White-and-gold bighorn ram braced inside a golden shield of light; three glowing pips charge on its horns.",
+     "why_fits": "It stands firm behind its guard, banking charges, then rams three times in a row.",
+     "inspiration": "Bighorn rams bracing before a head-on charge",
+     "art_file": "tree_brave_heart_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Bellows Toad",
+     "element": "fire",
+     "tone": "cute",
+     "look": "Fat ember-red toad puffed up holding its breath, three fire sacs on its back filling like pips.",
+     "why_fits": "It holds its breath to store fire, then lets it all out at once.",
+     "inspiration": "Cane toad puffing up; held breath",
+     "art_file": "tree_brave_heart_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Vigil Scorpion",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Black-violet scorpion hunkered behind crossed pincers, three violet orbs coiled up its raised tail.",
+     "why_fits": "A still fortress that waits, loading its stinger for a flurry of strikes.",
+     "inspiration": "Emperor scorpion's ambush posture",
+     "art_file": "tree_brave_heart_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "one_more",
+   "tree_name": "One More",
+   "rule_summary": "A crit or strong-element hit refunds 40% of a full turn gauge, once per action.",
+   "concepts": [
+    {
+     "name": "Skipjack Flyfish",
+     "element": "water",
+     "tone": "cute",
+     "look": "Silver-blue flying fish leaping from a wave, a trail of sparkling skip-splashes behind it.",
+     "why_fits": "Every lucky splash lets it skip off the water and go again.",
+     "inspiration": "Flying fish; stone skipping",
+     "art_file": "tree_one_more_1.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Horseshoe Falcon",
+     "element": "light",
+     "tone": "mythic",
+     "look": "White-gold peregrine with horseshoe charm feathers diving in a stoop, golden afterimages striking again.",
+     "why_fits": "A lucky hit pulls it straight back up for another dive.",
+     "inspiration": "Peregrine falcon's stoop; horseshoe luck charm",
+     "art_file": "tree_one_more_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Blaze Mongoose",
+     "element": "fire",
+     "tone": "hot",
+     "look": "Red mongoose with a blazing tail darting low, zig-zag spark trail where it hit and dashed again.",
+     "why_fits": "Each clean hit fuels the next instant dash.",
+     "inspiration": "Mongoose vs cobra speed",
+     "art_file": "tree_one_more_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "guard_break",
+   "tree_name": "Guard Break",
+   "rule_summary": "Enemies have 4 guard pips; each crit or strong hit strips one, and at 0 the enemy loses its next action and takes +50% damage.",
+   "concepts": [
+    {
+     "name": "Pryhorn Beetle",
+     "element": "nature",
+     "tone": "mythic",
+     "look": "Bronze-green rhinoceros beetle whose forked horn pries a round shield into four glowing cracked pieces.",
+     "why_fits": "It wedges guards apart piece by piece until they fall.",
+     "inspiration": "Hercules beetle wrestling with its horn",
+     "art_file": "tree_guard_break_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Anvil Ape",
+     "element": "fire",
+     "tone": "hot",
+     "look": "Silverback with molten cracks and iron hammer fists, smashing a shield into glowing shards.",
+     "why_fits": "A smith's blows that shatter any defence.",
+     "inspiration": "Silverback gorilla; forge-god smiths",
+     "art_file": "tree_guard_break_2.webp",
+     "status": "species"
+    },
+    {
+     "name": "Clamcracker Otter",
+     "element": "water",
+     "tone": "cute",
+     "look": "Small sea otter floating on its back, bashing a big stone on an armoured clam with four cracks.",
+     "why_fits": "Patient knocks crack the shell open, then dinner is defenceless.",
+     "inspiration": "Sea otters using stones to crack shells",
+     "art_file": "tree_guard_break_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "latent_power",
+   "tree_name": "Latent Power",
+   "rule_summary": "After its 8th action, all the unit's stats rise 30% for the rest of the fight.",
+   "concepts": [
+    {
+     "name": "Brood Cicada",
+     "element": "nature",
+     "tone": "mythic",
+     "look": "Hound-sized cicada splitting out of its old nymph shell, jade-gold wings unfolding, eight rings lit on its body.",
+     "why_fits": "A long wait, then it bursts out in its true, stronger form.",
+     "inspiration": "Periodical cicadas emerging after years",
+     "art_file": "tree_latent_power_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Kiln Komodo",
+     "element": "fire",
+     "tone": "grimdark",
+     "look": "Grey-black komodo dragon with eight ember vents on its spine, molten veins spreading as it heats up.",
+     "why_fits": "A slow burner that turns white-hot the longer the fight lasts.",
+     "inspiration": "Komodo dragon's patience; a kiln heating up",
+     "art_file": "tree_latent_power_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Daybreak Chick",
+     "element": "light",
+     "tone": "cute",
+     "look": "Round sleepy yellow chick, a sunrise behind it, eight feathers lit like dawn rays as its eyes snap open.",
+     "why_fits": "It starts sleepy and wakes up to full power as the sun rises.",
+     "inspiration": "Rooster greeting the dawn; sunrise",
+     "art_file": "tree_latent_power_3.webp",
+     "status": "species"
+    }
+   ]
+  },
+  {
+   "tree_id": "hemorrhage",
+   "tree_name": "Hemorrhage",
+   "rule_summary": "Hits fill a bleed gauge that bursts for 15% of the target's max HP at 100.",
+   "concepts": [
+    {
+     "name": "Lamprey Wyrm",
+     "element": "water",
+     "tone": "grimdark",
+     "look": "A slate-blue lamprey serpent with a spiral tooth-ring mouth and a glass throat-bladder nearly full of glowing blood.",
+     "why_fits": "Its throat bladder is the bleed gauge, filling with every bite until it bursts.",
+     "inspiration": "Sea lamprey",
+     "art_file": "tree_hemorrhage_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Vampire Finch",
+     "element": "nature",
+     "tone": "cute",
+     "look": "A fluffy little finch with a needle beak and a tiny hourglass vial on its chest, filling drop by drop.",
+     "why_fits": "Tiny pecks add up to a big burst, so even small birds can bring down giants.",
+     "inspiration": "Galapagos vampire ground finch",
+     "art_file": "tree_hemorrhage_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Obsidian Jaguar",
+     "element": "fire",
+     "tone": "hot",
+     "look": "A black-and-amber jaguar with obsidian-blade claws and fangs; glowing glyphs on its flanks fill like a burning gauge.",
+     "why_fits": "Its flank glyphs fill with each strike until the last one ignites into a burst.",
+     "inspiration": "Aztec obsidian blades and jaguar warriors",
+     "art_file": "tree_hemorrhage_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "privileged_status",
+   "tree_name": "Privileged Status",
+   "rule_summary": "+40% damage against a target that has at least 2 active debuffs.",
+   "concepts": [
+    {
+     "name": "Hex Vulture",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "A ragged black-violet vulture with a bone-white head under a floating crown of curse sigils.",
+     "why_fits": "A scavenger that strikes hardest at prey already weakened by curses.",
+     "inspiration": "Vultures circling weakened prey",
+     "art_file": "tree_privileged_status_1.webp",
+     "status": "parked (#144)"
+    },
+    {
+     "name": "Hexpin Hedgehog",
+     "element": "nature",
+     "tone": "cute",
+     "look": "A round chestnut hedgehog whose quills carry coloured hex pins; it wields one like a tiny rapier.",
+     "why_fits": "Each quill is a different curse, and it wins by stacking them first.",
+     "inspiration": "Hedgehogs and folk hex pins",
+     "art_file": "tree_privileged_status_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Verdict Ibis",
+     "element": "light",
+     "tone": "mythic",
+     "look": "A tall white ibis with gold-tipped wings and golden scales hanging from its neck, one pan heavy with dark marks.",
+     "why_fits": "It weighs the target's marks, and the more marks it sees, the harder its judgement.",
+     "inspiration": "Thoth's ibis and Ma'at's scales of judgement",
+     "art_file": "tree_privileged_status_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "equilibrium",
+   "tree_name": "Equilibrium",
+   "rule_summary": "A hit marks the target with its element; the next hit of another element deals +35% and clears the mark.",
+   "concepts": [
+    {
+     "name": "Sun-Moon Koi",
+     "element": "water",
+     "tone": "mythic",
+     "look": "A two-tailed koi, half pearl-gold sun scales and half ink-blue moon scales, with gold and silver orbs orbiting it.",
+     "why_fits": "Its two halves alternate, so each strike sets up the other.",
+     "inspiration": "Koi and the yin-yang",
+     "art_file": "tree_equilibrium_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Prism Chameleon",
+     "element": "light",
+     "tone": "cute",
+     "look": "A big-eyed chameleon with shifting red, blue and green skin panels, holding a prism, its tongue tipped with a different-coloured orb.",
+     "why_fits": "It swaps colour between strikes to cash in the opposite element.",
+     "inspiration": "Chameleon colour shifts and a light prism",
+     "art_file": "tree_equilibrium_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Frostfire Ouroboros",
+     "element": "fire",
+     "tone": "hot",
+     "look": "A serpent biting its own tail, its front half molten flame and its back half frost, steaming where the two meet.",
+     "why_fits": "Fire and ice in a loop: every hit of one sets up the other.",
+     "inspiration": "Ouroboros",
+     "art_file": "tree_equilibrium_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "corruption",
+   "tree_name": "Corruption",
+   "rule_summary": "Each active skill is cast twice at full power, then locked for the rest of the fight.",
+   "concepts": [
+    {
+     "name": "Cinderwick Firebird",
+     "element": "fire",
+     "tone": "hot",
+     "look": "A crimson-gold firebird casting twin flame bursts from both wings; spent tail feathers turn to sealed grey ash.",
+     "why_fits": "It burns at both ends: double casts, then each feather burns out for the fight.",
+     "inspiration": "Phoenix; burning a candle at both ends",
+     "art_file": "tree_corruption_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Blight Amphisbaena",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "A black two-headed serpent veined with violet corruption, both heads spitting the same spell, padlocked chains clamped on its scales.",
+     "why_fits": "Two heads fire each spell together, then chains lock that spell away.",
+     "inspiration": "Amphisbaena",
+     "art_file": "tree_corruption_2.webp",
+     "status": "species"
+    },
+    {
+     "name": "Ofuda Frog",
+     "element": "nature",
+     "tone": "cute",
+     "look": "A plump green tree frog croaking a double echo, with a red-inked paper seal stuck on its back.",
+     "why_fits": "Every croak comes twice, then a talisman seals that spell shut.",
+     "inspiration": "Tree frog and ofuda seal talismans",
+     "art_file": "tree_corruption_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "dead_branch",
+   "tree_name": "Dead Branch",
+   "rule_summary": "Whenever one of its skills is locked, it gains a random active skill for the rest of the fight.",
+   "concepts": [
+    {
+     "name": "Deadwood Stag",
+     "element": "nature",
+     "tone": "mythic",
+     "look": "A moss-coated stag with dead grey antlers; every snapped stump sprouts a different new bud: a flower, a crystal, a flame.",
+     "why_fits": "Each broken branch regrows as something new and random.",
+     "inspiration": "Forest stag myths and pollarded trees",
+     "art_file": "tree_dead_branch_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Trinket Magpie",
+     "element": "light",
+     "tone": "cute",
+     "look": "A glossy magpie holding a broken twig and a shiny trinket, with mismatched glowing keys, gems and bells tucked under its wings.",
+     "why_fits": "It trades every lost twig for a random shiny prize.",
+     "inspiration": "Magpies hoarding shiny objects",
+     "art_file": "tree_dead_branch_2.webp",
+     "status": "parked (#144)"
+    },
+    {
+     "name": "Gallows Willow",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "A gnarled walking willow spirit with a hollow trunk and pale eyes; its snapped branches have regrown as random ghostly weapons.",
+     "why_fits": "Dead limbs come back as something new and different each time.",
+     "inspiration": "Haunted-willow folklore",
+     "art_file": "tree_dead_branch_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "lone_wolf",
+   "tree_name": "Lone Wolf",
+   "rule_summary": "Alone on its side at fight start, all its stats rise 40%; with allies, they fall 20%.",
+   "concepts": [
+    {
+     "name": "Ronin Tiger",
+     "element": "fire",
+     "tone": "hot",
+     "look": "A scarred ember-striped tiger with a snapped red tether at its neck, coals glowing in its stripes.",
+     "why_fits": "A solitary hunter that broke free of every pack, strongest with no one beside it.",
+     "inspiration": "Tigers as solitary hunters; the masterless ronin",
+     "art_file": "tree_lone_wolf_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Hermitclaw",
+     "element": "water",
+     "tone": "cute",
+     "look": "A round sky-blue hermit crab with one huge claw and a spiral shell home with a tiny coral gate.",
+     "why_fits": "Its shell fits exactly one, so company only cramps it.",
+     "inspiration": "Hermit crabs",
+     "art_file": "tree_lone_wolf_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Monoceros",
+     "element": "light",
+     "tone": "mythic",
+     "look": "A wild white unicorn with a misty silver mane, rearing alone in a ring of pale light.",
+     "why_fits": "The untamable loner of legend, which no herd or rider can join.",
+     "inspiration": "The medieval unicorn/monoceros, which could not be tamed",
+     "art_file": "tree_lone_wolf_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "arise",
+   "tree_name": "Arise",
+   "rule_summary": "Once per fight, the first enemy it kills (if not the last) rises on its side at 30% stats.",
+   "concepts": [
+    {
+     "name": "Gravecap",
+     "element": "nature",
+     "tone": "cute",
+     "look": "A sleepy red toadstool creature trailing green spores, beside a beaten beetle that stands up again as a mushroom puppet.",
+     "why_fits": "Its spores take over the first fallen foe and make it fight for the mushroom.",
+     "inspiration": "Cordyceps fungus that takes over its host",
+     "art_file": "tree_arise_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Valkyrie Owl",
+     "element": "light",
+     "tone": "mythic",
+     "look": "A snowy owl in a winged gold helm, wings spread, with a golden spirit of a fallen beast rising behind it.",
+     "why_fits": "It picks one of the slain and raises it to fight at its side.",
+     "inspiration": "Norse valkyries choosing the slain (einherjar)",
+     "art_file": "tree_arise_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Husk Weaver",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "A huge black spider with violet eyes, working a hollow beast husk like a puppet on shadow-silk strings.",
+     "why_fits": "What it kills becomes its weaker puppet: rules gone, skills kept.",
+     "inspiration": "Marionettes; parasitoid wasps and spiders that control prey",
+     "art_file": "tree_arise_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "last_rite",
+   "tree_name": "Last Rite",
+   "rule_summary": "When it dies, each living ally gains a share of 30% of its base stats for the rest of the fight.",
+   "concepts": [
+    {
+     "name": "Whalefall",
+     "element": "water",
+     "tone": "mythic",
+     "look": "A vast barnacled whale-beast sinking peacefully, life motes drifting from it and coral blooming on its ribs.",
+     "why_fits": "In death its body feeds everything around it.",
+     "inspiration": "Real whale falls that feed deep-sea life",
+     "art_file": "tree_last_rite_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Pyre Hen",
+     "element": "fire",
+     "tone": "cute",
+     "look": "An ember-feathered mother hen with a flame crown, sheltering three chicks of light as her tail burns to ash.",
+     "why_fits": "She burns down so her warmth flows into the little ones.",
+     "inspiration": "Mother hens sheltering chicks; the funeral pyre",
+     "art_file": "tree_last_rite_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Ossuary Elephant",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "A huge old elephant in a tattered funeral shroud with name-carved tusks, violet soul wisps streaming off it.",
+     "why_fits": "Its soul splits among the herd when it falls.",
+     "inspiration": "Elephants mourning their dead; the elephant graveyard legend",
+     "art_file": "tree_last_rite_3.webp",
+     "status": "parked (#144)"
+    }
+   ]
+  },
+  {
+   "tree_id": "mimic_core",
+   "tree_name": "Mimic Core",
+   "rule_summary": "Copies the capstone of the tree in the slot just before it, bought or not.",
+   "concepts": [
+    {
+     "name": "Echo Lyrebird",
+     "element": "light",
+     "tone": "mythic",
+     "look": "Silver-white lyrebird whose lyre tail is an empty golden frame holding a ghostly copy of a borrowed rune.",
+     "why_fits": "A frame that shows whatever capstone sits behind it: a living Blueprint.",
+     "inspiration": "Lyrebird, the bird that mimics any sound it hears",
+     "art_file": "tree_mimic_core_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Inkprint Octopus",
+     "element": "water",
+     "tone": "cute",
+     "look": "Round cream-and-blue mimic octopus tracing glowing blueprint lines with its tentacles, big curious eyes.",
+     "why_fits": "It copies a neighbour's sigil line by line, like a blueprint.",
+     "inspiration": "Mimic octopus, which copies other sea animals",
+     "art_file": "tree_mimic_core_2.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Hollow Double",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Tall, faceless clay-smooth stalker with a stolen glowing sigil pressed into its blank face and chest.",
+     "why_fits": "It has no power of its own, only what it steals from whoever stands before it.",
+     "inspiration": "Doppelg\u00e4nger folklore",
+     "art_file": "tree_mimic_core_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "heirloom",
+   "tree_name": "Heirloom",
+   "rule_summary": "Growth nodes get stronger the more you drill their stat after buying them (capstone doubles the step).",
+   "concepts": [
+    {
+     "name": "Locket Crab",
+     "element": "nature",
+     "tone": "cute",
+     "look": "Orange hermit crab carrying an antique brass locket as its shell, polished bright where it has been worn by use.",
+     "why_fits": "A keepsake that shines more the longer it is used.",
+     "inspiration": "Hermit crabs, family keepsake lockets",
+     "art_file": "tree_heirloom_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Forgebead Gila",
+     "element": "fire",
+     "tone": "hot",
+     "look": "Stocky black-and-molten gila monster whose beaded scales are forged medallions, the oldest glowing white-hot.",
+     "why_fits": "Each bead heats up with every drill, like growth that compounds with use.",
+     "inspiration": "Gila monster's beaded skin, smith-forged heirlooms",
+     "art_file": "tree_heirloom_2.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Nacre Dugong",
+     "element": "water",
+     "tone": "mythic",
+     "look": "Serene sea-green dugong cradling a huge luminous pearl with visible growth layers, kelp ribbons around it.",
+     "why_fits": "A pearl grows layer by layer, just as the node grows with each drill.",
+     "inspiration": "How pearls form; dugongs in mermaid myths",
+     "art_file": "tree_heirloom_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "mastery",
+   "tree_name": "Mastery",
+   "rule_summary": "A slotted tree with its capstone that wins 2 rank fights is mastered, and its capstone stays in the kit after the tree is overwritten.",
+   "concepts": [
+    {
+     "name": "Scroll Owl",
+     "element": "light",
+     "tone": "mythic",
+     "look": "Cream-and-gold great horned owl with spectacles, its wings lined with sealed technique scrolls.",
+     "why_fits": "Every mastered capstone becomes a sealed scroll it keeps forever.",
+     "inspiration": "The owl of Athena, wisdom",
+     "art_file": "tree_mastery_1.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Kata Mantis",
+     "element": "nature",
+     "tone": "hot",
+     "look": "Lean green praying mantis in a kung-fu stance, a coloured belt tied on its limbs for each style it has mastered.",
+     "why_fits": "Each style mastered in a fight leaves a belt it never takes off.",
+     "inspiration": "Mantis-style kung fu, martial-arts belts",
+     "art_file": "tree_mastery_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Lore Raven",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Ragged black-violet raven wearing a heavy chain of carved bone tokens, each etched with a kept technique.",
+     "why_fits": "It remembers every technique it won, long after the tree is gone.",
+     "inspiration": "Huginn and Muninn, Odin's ravens of thought and memory",
+     "art_file": "tree_mastery_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "limit_break",
+   "tree_name": "Limit Break",
+   "rule_summary": "The tree's own stat can rise above STAT_MAX, up to 1299, for this monster.",
+   "concepts": [
+    {
+     "name": "Breaker Rhino",
+     "element": "fire",
+     "tone": "hot",
+     "look": "Armoured charcoal rhino with magma veins, its horn smashing through a shattered glowing gauge bar.",
+     "why_fits": "It literally breaks the stat bar's ceiling.",
+     "inspiration": "Rhino charge; breaking through a ceiling",
+     "art_file": "tree_limit_break_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Gateleap Koi",
+     "element": "water",
+     "tone": "mythic",
+     "look": "Golden koi leaping up a roaring waterfall, sprouting dragon whiskers and horns as it clears the top.",
+     "why_fits": "Passing the limit turns it into something past its kind.",
+     "inspiration": "Chinese legend of the carp leaping the Dragon Gate",
+     "art_file": "tree_limit_break_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Brimful Hamster",
+     "element": "light",
+     "tone": "cute",
+     "look": "Tiny honey-cream hamster flexing huge glowing arms, burst out of a cracked measuring cup beside a snapped ruler.",
+     "why_fits": "Too much stat to fit in the container meant to hold it.",
+     "inspiration": "Hamsters stuffing their cheeks past capacity",
+     "art_file": "tree_limit_break_3.webp",
+     "status": "species"
+    }
+   ]
+  },
+  {
+   "tree_id": "iron_vow",
+   "tree_name": "Iron Vow",
+   "rule_summary": "Swear a vow: Rest is banned for the rest of the run, but every drill gains +25%.",
+   "concepts": [
+    {
+     "name": "Vigil Crane",
+     "element": "light",
+     "tone": "mythic",
+     "look": "White crane on one leg, eyes wide open, a sacred straw-rope vow knotted at its neck and a gold seal on its chest.",
+     "why_fits": "A sleeper's pose with eyes that never close: it has sworn off rest.",
+     "inspiration": "Shinto shimenawa rope, cranes sleeping on one leg",
+     "art_file": "tree_iron_vow_1.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Oathfire Macaque",
+     "element": "fire",
+     "tone": "hot",
+     "look": "Ember-red monkey monk, burning blindfold, prayer beads wrapped round flaming fists, wax-sealed oath scroll at the hip.",
+     "why_fits": "A monk who trains without pause, made stronger by the oath.",
+     "inspiration": "Fire-walking monks, snow macaques",
+     "art_file": "tree_iron_vow_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Stitched Gargoyle",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Gaunt stone gargoyle, eyelids stitched open with iron, wrapped in rune-carved oath chains glowing violet.",
+     "why_fits": "Bound by its own oath, it can never close its eyes to rest.",
+     "inspiration": "Cathedral gargoyles keeping their vigil",
+     "art_file": "tree_iron_vow_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "cursed_mark",
+   "tree_name": "Cursed Mark",
+   "rule_summary": "Drills stop giving DEF, but every enemy in run fights starts with -20% on all stats.",
+   "concepts": [
+    {
+     "name": "Hexmark Toad",
+     "element": "water",
+     "tone": "cute",
+     "look": "Fat, soft, unarmoured teal toad with a purple witch sigil branded on its back, curse smoke drifting toward foes.",
+     "why_fits": "Soft and defenceless, but its brand weakens everything it faces.",
+     "inspiration": "The witch's familiar toad",
+     "art_file": "tree_cursed_mark_1.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Evil-Eye Peacock",
+     "element": "light",
+     "tone": "mythic",
+     "look": "White-gold peacock whose fanned tail is all staring evil-eye feathers, a burning curse mark on its bare chest.",
+     "why_fits": "Every eye on its tail curses its foes, and it wears no armour.",
+     "inspiration": "The nazar evil eye, the peacock of Hera's Argus",
+     "art_file": "tree_cursed_mark_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Branded Jackal",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Starved black jackal in torn wrappings, a red curse brand on its flank sending shadow-hieroglyph chains at its prey.",
+     "why_fits": "The brand costs it its armour and drags down whatever it hunts.",
+     "inspiration": "Egyptian tomb curses, Anubis' jackal",
+     "art_file": "tree_cursed_mark_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "devourer",
+   "tree_name": "Devourer",
+   "rule_summary": "Each rank-fight win steals 5% of the foe's best stat, but every cycle start costs 5 energy.",
+   "concepts": [
+    {
+     "name": "Taotie Boar",
+     "element": "fire",
+     "tone": "mythic",
+     "look": "Huge fanged boar with a furnace-glowing belly, wearing the horns and plates of beasts it ate as trophies.",
+     "why_fits": "It grows by wearing what it eats, and its furnace is always hungry.",
+     "inspiration": "Taotie, the Chinese glutton beast",
+     "art_file": "tree_devourer_1.webp",
+     "status": "species"
+    },
+    {
+     "name": "Pitcher Gulp",
+     "element": "nature",
+     "tone": "cute",
+     "look": "Round pitcher-plant sprout with a lid hat, a stolen horn and beetle shell poking out of its mouth.",
+     "why_fits": "It digests rivals' parts into its own power.",
+     "inspiration": "Carnivorous pitcher plants",
+     "art_file": "tree_devourer_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Gulper Eel",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Black deep-sea eel with a huge unhinged jaw and a clear belly full of glowing swallowed power orbs.",
+     "why_fits": "You can see the stolen stats glowing inside it.",
+     "inspiration": "The deep-sea gulper eel",
+     "art_file": "tree_devourer_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "second_breath",
+   "tree_name": "Second Breath",
+   "rule_summary": "Super drills refund their energy; drills below 30 energy can't injure and can't Super.",
+   "concepts": [
+    {
+     "name": "Second-Wind Puffer",
+     "element": "water",
+     "tone": "cute",
+     "look": "Aqua pufferfish puffed into a spiky ball after one huge breath, bubbles bursting around it.",
+     "why_fits": "One deep breath refills it: the energy comes straight back.",
+     "inspiration": "Pufferfish inflating",
+     "art_file": "tree_second_breath_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Bellows Ram",
+     "element": "fire",
+     "tone": "hot",
+     "look": "Muscled ram with obsidian horns and a forge-bellows chest, breathing white-hot flame as embers stream back in.",
+     "why_fits": "A bellows chest that breathes power out and pulls it back in.",
+     "inspiration": "Blacksmith's forge bellows, mountain rams",
+     "art_file": "tree_second_breath_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Moss Sloth",
+     "element": "nature",
+     "tone": "cute",
+     "look": "Shaggy sloth hanging from a mossy branch, half asleep, cushioned by ferns and a soft green glow.",
+     "why_fits": "When tired it goes slow and safe, so nothing can hurt it.",
+     "inspiration": "Sloths and the algae growing in their fur",
+     "art_file": "tree_second_breath_3.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    }
+   ]
+  },
+  {
+   "tree_id": "ascetic",
+   "tree_name": "Ascetic",
+   "rule_summary": "+1 AP every cycle, but rank-fight wins give no SP.",
+   "concepts": [
+    {
+     "name": "Hermit Mantis",
+     "element": "nature",
+     "tone": "mythic",
+     "look": "Lean jade mantis monk in a plain rope sash, mid-strike with afterimages trailing its blade arms.",
+     "why_fits": "No ornaments and no rewards, just more action.",
+     "inspiration": "Praying mantis kung fu",
+     "art_file": "tree_ascetic_1.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Alms Otter",
+     "element": "water",
+     "tone": "cute",
+     "look": "Small sea otter in a patched rope robe, holding an empty wooden alms bowl, spinning nimbly on a wet rock.",
+     "why_fits": "The empty bowl means no prize from wins, and it's quicker for it.",
+     "inspiration": "Mendicant monks' alms bowls, sea otters",
+     "art_file": "tree_ascetic_2.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Fasting Cat",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Gaunt ash-marked black cat sitting in a fasting pose, ghostly afterimages of itself acting all around it.",
+     "why_fits": "It starves itself of rewards and gains extra actions, shown as its many selves.",
+     "inspiration": "Sadhu ascetics, the Celtic cat s\u00ecth",
+     "art_file": "tree_ascetic_3.webp",
+     "status": "alternative"
+    }
+   ]
+  },
+  {
+   "tree_id": "hungry_core",
+   "tree_name": "Hungry Core",
+   "rule_summary": "While fed, +60 to every trained stat; each cycle it eats 10 energy, or goes dormant if energy is short.",
+   "concepts": [
+    {
+     "name": "Gu Centipede",
+     "element": "dark",
+     "tone": "grimdark",
+     "look": "Armoured centipede coiled round a pulsing jade core in its chest, feeding tendrils in it, a cracked sorcery jar beside it.",
+     "why_fits": "The core must be fed every cycle or it goes dark.",
+     "inspiration": "Chinese gu sorcery (the jar of venomous creatures)",
+     "art_file": "tree_hungry_core_1.webp",
+     "status": "cut (tree stays an Awakening tree)"
+    },
+    {
+     "name": "Ember Grub",
+     "element": "fire",
+     "tone": "cute",
+     "look": "Chubby cream-and-orange larva munching coal, a blazing ember core glowing through its belly.",
+     "why_fits": "Its core burns bright only while it keeps eating.",
+     "inspiration": "Silkworms, coal stoves",
+     "art_file": "tree_hungry_core_2.webp",
+     "status": "alternative"
+    },
+    {
+     "name": "Lumen Axolotl",
+     "element": "light",
+     "tone": "mythic",
+     "look": "Pearl-white axolotl with golden gills and a radiant crystal heart, glowing as it feeds on motes of light.",
+     "why_fits": "A visible heart that shines when fed and dims when hungry.",
+     "inspiration": "Axolotls, glass-bodied deep-sea animals",
+     "art_file": "tree_hungry_core_3.webp",
+     "status": "alternative"
+    }
+   ]
+  }
+ ]
+}
