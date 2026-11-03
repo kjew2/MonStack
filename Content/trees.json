@@ -504,9 +504,9 @@
     {
       "id": "blood_magic",
       "name_key": "tree.blood_magic.name",
-      "kind": "generic",
-      "offer_stat": "hp",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -818,6 +818,46 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.six_fountains.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "sanctum_grace",
+      "name_key": "tree.sanctum_grace.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "unburnt_psalter",
+      "name_key": "tree.unburnt_psalter.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "martyrs_pyre",
+      "name_key": "tree.martyrs_pyre.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.martyrs_pyre.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "hollow_sun",
+      "name_key": "tree.hollow_sun.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.hollow_sun.apex",
       "fuse_a": null,
       "fuse_b": null
     }

@@ -2224,7 +2224,7 @@
     },
     {
       "key": "tree.blood_magic.name",
-      "text": "Blood Magic"
+      "text": "Votive Flame"
     },
     {
       "key": "rule.iron_reflexes.name",
@@ -2741,6 +2741,114 @@
     {
       "key": "achievement.deep_spring.name",
       "text": "Deep Spring"
+    },
+    {
+      "key": "species.candlemane.name",
+      "text": "Candlemane"
+    },
+    {
+      "key": "tree.sanctum_grace.name",
+      "text": "Sanctum Grace"
+    },
+    {
+      "key": "tree.unburnt_psalter.name",
+      "text": "Psalter of the Unburnt"
+    },
+    {
+      "key": "tree.martyrs_pyre.name",
+      "text": "Martyr's Pyre"
+    },
+    {
+      "key": "tree.hollow_sun.name",
+      "text": "Hollow Sun"
+    },
+    {
+      "key": "tree.martyrs_pyre.apex",
+      "text": "Martyr Pyrelion"
+    },
+    {
+      "key": "tree.hollow_sun.apex",
+      "text": "Hollow Sun Lion"
+    },
+    {
+      "key": "book.book_psalter.name",
+      "text": "Skill Book: Psalter of the Unburnt"
+    },
+    {
+      "key": "achievement.hp_700.name",
+      "text": "Living Candle"
+    },
+    {
+      "key": "rule.martyr_flame.name",
+      "text": "Martyr Flame"
+    },
+    {
+      "key": "rule.martyr_flame.desc",
+      "text": "Every heal it gets also deals {MON_PYRE_CONV:pct} of the HP healed as light true damage to its current target. Healing past max HP converts in full instead of being lost."
+    },
+    {
+      "key": "rule.hollow_sun.name",
+      "text": "Hollow Sun"
+    },
+    {
+      "key": "rule.hollow_sun.desc",
+      "text": "HP it pays or loses to hits is stored as Radiance, up to its max HP. Each hit it lands releases {MON_SUN_RELEASE:pct} of the Radiance as extra light damage that ignores defenses, and heals it for {MON_SUN_HEAL:pct} of what it released."
+    },
+    {
+      "key": "mskill.votive_strike.name",
+      "text": "Votive Strike"
+    },
+    {
+      "key": "mskill.votive_strike.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.halo_mend.name",
+      "text": "Halo Mend"
+    },
+    {
+      "key": "mskill.halo_mend.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.kindled_grace.name",
+      "text": "Kindled Grace"
+    },
+    {
+      "key": "mskill.kindled_grace.desc",
+      "text": "Chase trait. When hit: heal self for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.pyre_hymn.name",
+      "text": "Pyre Hymn"
+    },
+    {
+      "key": "mskill.pyre_hymn.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.sunfall.name",
+      "text": "Sunfall"
+    },
+    {
+      "key": "mskill.sunfall.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.wax_psalm.name",
+      "text": "Wax Psalm"
+    },
+    {
+      "key": "mskill.wax_psalm.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.vesper_glow.name",
+      "text": "Vesper Glow"
+    },
+    {
+      "key": "mskill.vesper_glow.desc",
+      "text": "Chase trait. When hit: +{power:pct} {stat} for {duration} turns."
     }
   ]
 }

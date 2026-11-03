@@ -418,7 +418,7 @@ namespace IdleRng.Sim.Combat
             if (r.Tower != null) u.Entropy = Math.Max(0, u.Entropy - r.Tower.EntropyDecay);
             if (r.TideRegen > 0 && Has(u, RuleModifiers.TidalOverflow))
             {
-                double shield = 0, healed = Heal(r, u, r.TideRegen * u.MaxHp * HealScale(r, s), ref shield);
+                double shield = 0, healed = HealHooked(ctx, u, r.TideRegen * u.MaxHp * HealScale(r, s), ref shield);
                 u.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(u.Id, FightAction.TideEvent, u.Id, healed + shield));
             }
@@ -635,7 +635,8 @@ namespace IdleRng.Sim.Combat
                     double amt = Scaled(r, src, sk) * HealScale(r, s), total = 0;
                     var targets = sk.Target == SkillTarget.LowestAlly ? HealTarget(r, s, src, amt) : Allies(s, src, sk.Target);
                     double shield = 0;
-                    foreach (var t in targets) total += Heal(r, t, amt, ref shield);
+                    var ctx = new RuleCtx(r, s, rng, onAction);
+                    foreach (var t in targets) total += HealHooked(ctx, t, amt, ref shield);
                     src.Tally.HealingDone += total;
                     onAction?.Invoke(new FightAction(src.Id, sk, targets.Count == 1 ? targets[0].Id : null, total, false, false, aoe, false));
                     break;
@@ -782,7 +783,7 @@ namespace IdleRng.Sim.Combat
             onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false, graze, lucky));
             if (dealt > 0 && r.DrainFrac > 0 && src.Alive && Has(src, RuleModifiers.AbyssalDrain))
             {
-                double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealScale(r, s), ref shield, r.DrainShieldCap);
+                double shield = 0, healed = HealHooked(ctx, src, r.DrainFrac * dealt * HealScale(r, s), ref shield, r.DrainShieldCap);
                 src.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.DrainEvent, src.Id, healed + shield));
             }
@@ -837,6 +838,18 @@ namespace IdleRng.Sim.Combat
                 }
             }
             return t.Hp - before;
+        }
+
+        /// <summary>
+        /// <see cref="Heal"/>, then the Healed hook (specs/16 section 6.4) with the HP restored and the overheal that went into
+        /// neither HP nor a shield. Every skill, trigger and rule heal comes through here (not a boss phase's failed-check heal).
+        /// </summary>
+        static double HealHooked(RuleCtx c, FightUnit t, double amount, ref double shield, double overflowCap = 0)
+        {
+            double before = shield;
+            double healed = Heal(c.Rules, t, amount, ref shield, overflowCap);
+            HookHealed(c, t, healed, Math.Max(0.0, amount - healed - (shield - before)));
+            return healed;
         }
 
         /// <summary>

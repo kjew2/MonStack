@@ -76,11 +76,18 @@ namespace IdleRng.Sim.Combat
         /// <summary>elemental_avatar acts only for a unit with an element.</summary>
         static bool Avatar(FightUnit u) => u.Source.Element != null && Has(u, RuleModifiers.ElementalAvatar);
 
-        /// <summary>blood_magic: an active skill is ready whatever its cooldown, unless the cast would leave the unit under the floor.</summary>
+        /// <summary>
+        /// blood_magic: an active skill is ready whatever its cooldown, unless the cast would leave the unit under the floor. A heal
+        /// on itself alone is ready only while it would restore at least twice what the cast costs (#141): with no cooldown, a heal
+        /// that nets less than one cast's cost is cast again and again and the unit stops fighting.
+        /// </summary>
         static partial void SkillReady_A(RuleCtx c, FightUnit u, int index, ref bool ready)
         {
-            if (!Has(u, RuleModifiers.BloodMagic) || u.Source.Skills[index].Kind == SkillKind.Passive) return;
-            ready = u.Hp - BloodCost(c.Rules, u) >= c.Rules.BloodFloor * u.MaxHp;
+            var sk = u.Source.Skills[index];
+            if (!Has(u, RuleModifiers.BloodMagic) || sk.Kind == SkillKind.Passive) return;
+            double cost = BloodCost(c.Rules, u);
+            ready = u.Hp - cost >= c.Rules.BloodFloor * u.MaxHp
+                    && !(sk.Kind == SkillKind.Heal && sk.Target == SkillTarget.Self && Scaled(c.Rules, u, sk) * HealScale(c.Rules, c.State) < 2 * cost);
         }
 
         /// <summary>blood_magic: the cast leaves no cooldown and costs HP (not damage: no shield, hooks, triggers or tallies).</summary>
@@ -92,6 +99,7 @@ namespace IdleRng.Sim.Combat
             double cost = BloodCost(c.Rules, u);
             u.Hp -= cost;
             c.Log?.Invoke(new FightAction(u.Id, BloodEvent, u.Id, cost));
+            if (cost > 0) HookHpPaid(c, u, cost);   // species rules: Candlemane's hollow_sun stores it
         }
 
         /// <summary>The HP a blood_magic cast costs now: MON_BLOOD_COST of max HP, but never taking the unit below 1 HP.</summary>

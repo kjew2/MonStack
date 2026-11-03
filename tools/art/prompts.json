@@ -36,6 +36,10 @@
   "fountain_axolotl": {
    "name": "Fountain Axolotl",
    "prompt": "A pink-aqua axolotl whose six feathery gills are glowing little fountains, with a ring of water orbiting it; its claws and tail are water jets."
+  },
+  "candlemane": {
+   "name": "Candlemane",
+   "prompt": "A majestic lion-like beast of living light and candle wax, ivory-white and pale gold. Its mane is a full ring of tall burning candle flames in white-gold and amber, and soft wax drips and pools down its shoulders and flanks where the flames touch, as if it is slowly burning itself to shine. A thin golden halo-wheel floats behind its head. Its eyes glow bright gold, and molten gold light seeps through cracks in its chest like a lantern. Proud, sacred and solemn, powerful, a light-element monster."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -100,6 +104,16 @@
    "species": "fountain_axolotl",
    "name": "Xolotl Wellspring",
    "prompt": "the axolotl has become a huge mythic river-dragon: a long, powerful dragon body with the axolotl's face, deep teal and turquoise scales with gold accents, its six gills now towering geysers shooting high, a carved stone fountain basin floating behind it like a halo, rain falling upward. Much larger and more majestic. Colour palette: deep teal, turquoise and gold."
+  },
+  "martyrs_pyre": {
+   "species": "candlemane",
+   "name": "Martyr Pyrelion",
+   "prompt": "the same lion, but its fire has turned white-hot: the whole wax mane is now a tall roaring pyre of white and pale ice-blue flame, the candles burn white, the body is pale ivory wax streaked with blue-white light. Colour palette shifts from warm gold to white and pale blue."
+  },
+  "hollow_sun": {
+   "species": "candlemane",
+   "name": "Hollow Sun Lion",
+   "prompt": "the same lion, darkened: its body is now charcoal-black wax with molten cracks, its halo is a huge black-cored sun ringed in white fire behind its head, and its chest is an open furnace glowing crimson-orange. Colour palette shifts from gold to black, crimson and white."
   }
  }
 }

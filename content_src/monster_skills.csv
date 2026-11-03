@@ -98,3 +98,10 @@ riptide,mskill.riptide.name,damage,enemy,,int,2.0,2,0,water
 gill_jet,mskill.gill_jet.name,damage,enemy,,int,1.5,3,0,water
 gill_spray,mskill.gill_spray.name,damage,enemy,,int,0.35,0,0,water
 wellspring_rain,mskill.wellspring_rain.name,damage,all_enemies,,int,0.9,3,0,water
+votive_strike,mskill.votive_strike.name,damage,enemy,,hp,0.12,2,0,light
+halo_mend,mskill.halo_mend.name,heal,self,,wis,1.0,3,0,
+kindled_grace,mskill.kindled_grace.name,heal,self,,wis,0.5,0,0,
+pyre_hymn,mskill.pyre_hymn.name,heal,self,,hp,0.12,2,0,
+sunfall,mskill.sunfall.name,damage,enemy,,hp,0.16,3,0,light
+wax_psalm,mskill.wax_psalm.name,damage,enemy,,wis,1.4,2,0,light
+vesper_glow,mskill.vesper_glow.name,buff,self,wis,,0.1,0,2,

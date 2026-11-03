@@ -554,7 +554,7 @@ gambit.basic.desc,"A plain attack, always ready."
 tree.iron_reflexes.name,Iron Reflexes
 tree.elemental_avatar.name,Elemental Avatar
 tree.fortress_fist.name,Fortress Fist
-tree.blood_magic.name,Blood Magic
+tree.blood_magic.name,Votive Flame
 rule.iron_reflexes.name,Iron Reflexes
 rule.iron_reflexes.desc,"It never evades or grazes. Against physical hits its DEF counts {MON_IRON_DEX:pct} of its DEX on top. Overrides Umbral Veil."
 rule.elemental_avatar.name,Elemental Avatar
@@ -684,3 +684,30 @@ rule.fountain_jets.name,Fountain Jets
 rule.fountain_jets.desc,"Each single-target hit of its skills and basic attacks splits into {MON_JETS} jets of {MON_JET_POWER:pct} power. Each jet rolls evade, graze and crit on its own and counts as a hit for on-hit and on-crit effects. Area skills, heals, shields and triggered hits do not split."
 rule.fountain_jets.log,{amount} of {MON_JETS} jets land
 achievement.deep_spring.name,Deep Spring
+species.candlemane.name,Candlemane
+tree.sanctum_grace.name,Sanctum Grace
+tree.unburnt_psalter.name,Psalter of the Unburnt
+tree.martyrs_pyre.name,Martyr's Pyre
+tree.hollow_sun.name,Hollow Sun
+tree.martyrs_pyre.apex,Martyr Pyrelion
+tree.hollow_sun.apex,Hollow Sun Lion
+book.book_psalter.name,Skill Book: Psalter of the Unburnt
+achievement.hp_700.name,Living Candle
+rule.martyr_flame.name,Martyr Flame
+rule.martyr_flame.desc,"Every heal it gets also deals {MON_PYRE_CONV:pct} of the HP healed as light true damage to its current target. Healing past max HP converts in full instead of being lost."
+rule.hollow_sun.name,Hollow Sun
+rule.hollow_sun.desc,"HP it pays or loses to hits is stored as Radiance, up to its max HP. Each hit it lands releases {MON_SUN_RELEASE:pct} of the Radiance as extra light damage that ignores defenses, and heals it for {MON_SUN_HEAL:pct} of what it released."
+mskill.votive_strike.name,Votive Strike
+mskill.votive_strike.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.halo_mend.name,Halo Mend
+mskill.halo_mend.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.kindled_grace.name,Kindled Grace
+mskill.kindled_grace.desc,Chase trait. When hit: heal self for {power:pct} {scales}.
+mskill.pyre_hymn.name,Pyre Hymn
+mskill.pyre_hymn.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.sunfall.name,Sunfall
+mskill.sunfall.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.wax_psalm.name,Wax Psalm
+mskill.wax_psalm.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.vesper_glow.name,Vesper Glow
+mskill.vesper_glow.desc,Chase trait. When hit: +{power:pct} {stat} for {duration} turns.

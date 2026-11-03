@@ -241,6 +241,10 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("3v3 fountain axolotl vs walls", 13,
                 new[] { Axolotl("a_axolotl"), Seeper("a_seep"), Jetter("a_jets") },
                 new[] { Barricade("b_barricade"), Warded("b_ward"), Mage("b_mage", "nature") });
+            // Species Candlemane (#141): its chase capstones on its own kit (blood_magic, Votive Strike, Halo Mend, Kindled Grace).
+            yield return new Vector("2v2 martyr flame and hollow sun", 13,
+                new[] { Candlemane("a_pyre", RuleModifiers.MartyrFlame), Candlemane("a_sun", RuleModifiers.HollowSun) },
+                new[] { Brawler("b_brawler", "dark"), Healer("b_healer", "water") });
         }
 
         // Species Fountain Axolotl (#150).
@@ -265,6 +269,20 @@ namespace IdleRng.Bots.Golden
             Skills = { Dmg("lunge", StatIds.Dex, 1.4, 2) },
             Triggers = { new TriggeredSkill(FightTrigger.OnCrit, Fx("lucky_break", SkillKind.Buff, SkillTarget.Self, StatIds.CritRate, null, 0.1, 0, 2)) },
             Rules = { RuleModifiers.FountainJets, RuleModifiers.ClearSpring },
+        };
+
+
+        // Species Candlemane (#141): the native kit plus one chase capstone.
+        static Fighter Candlemane(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(560, 300, 80, 700, 160, 120, 200, 200),
+            Skills =
+            {
+                Dmg("votive_strike", StatIds.Hp, 0.12, 2, SkillTarget.Enemy, "light"),
+                Fx("halo_mend", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 1.0, 3, 0),
+            },
+            Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Fx("kindled_grace", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.5, 0, 0)) },
+            Rules = { RuleModifiers.BloodMagic, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.

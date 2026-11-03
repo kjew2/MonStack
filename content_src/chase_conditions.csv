@@ -35,3 +35,9 @@ aquifer_c2,aquifer,tally_at_least,wins,2
 six_fountains_c0,six_fountains,node_owned,springs_almanac_n0,
 six_fountains_c1,six_fountains,node_owned,clear_spring_n4,
 six_fountains_c2,six_fountains,tally_at_least,damage_water,2500
+martyrs_pyre_c0,martyrs_pyre,tree_maxed,blood_magic,
+martyrs_pyre_c1,martyrs_pyre,stat_at_least,hp,500
+martyrs_pyre_c2,martyrs_pyre,tally_at_least,wins,2
+hollow_sun_c0,hollow_sun,node_owned,unburnt_psalter_n0,
+hollow_sun_c1,hollow_sun,node_owned,sanctum_grace_n4,
+hollow_sun_c2,hollow_sun,tally_at_least,damage_light,2000

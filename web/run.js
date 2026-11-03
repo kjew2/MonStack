@@ -676,6 +676,9 @@
     'rule:equilibrium': (n) => 'element shift, +' + Math.round(n * 100) + '% damage',
     'rule:corruption': (n) => 'casts it again, then locks it (' + Math.round(n) + ' locked)',
     'rule:dead_branch': () => 'gains a random skill',
+    // Candlemane (#141): heals burned into light damage, and stored Radiance released on a hit
+    'rule:martyr_flame': (n) => 'burns ' + Math.round(n) + ' light dmg',
+    'rule:hollow_sun': (n) => 'releases ' + Math.round(n) + ' light dmg',
   };
 
   function actionResult(x) {

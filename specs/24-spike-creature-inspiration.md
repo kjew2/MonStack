@@ -80,6 +80,14 @@ These are drafted from a stat, so each creature is the purest image of that stat
 | dark | **Shade Hound**: a dog made of a shadow, with no body casting it. Its shadow eats what it defeats. Pairs with the rank-fight loot of `specs/22` 8.6. | *Umbral Step* (evasion, first strike from the shadows), *Shadow Harvest* (grows from defeated foes) | Black Shuck and other black dogs of British folklore, shadow extraction in *Solo Leveling*, Dementors, the nuckelavee |
 | water | **Fountain Axolotl** (#160, species of the idea-pool tree *Elemental Avatar*; built in #150): a pink-aqua axolotl whose six feathery gills are glowing little fountains, with a ring of water orbiting it; claws and tail are water jets, so everything it does lands as water. A lucky INT/LUK/WIS caster that converts (*Elemental Avatar*), cancels the conversion's drawback (*Clear Spring*), seeps past defences and shields (*Aquifer*, apex **Aquifer Olm**, a pale translucent cave olm glowing aqua in cracked bedrock) and splits every hit into jets (*Six Fountains*, apex **Xolotl Wellspring**, a mythic river-dragon axolotl with geyser gills and a floating fountain-basin halo). Distinct from the slime (an HP/LUK/WIS regeneration and drain tank) | Elemental Avatar (lane A), Clear Spring, Aquifer, Six Fountains | The axolotl; fountains and springs; the olm ("baby dragon" of folk tales); Xolotl |
 
+### 5.1.1 Idea-pool species (epic #160)
+
+The species lanes of #160 add creatures built around the idea-pool trees (#132); each lane's issue holds the full concept, and `specs/15` section 7 its trees.
+
+| Species | Element, tone | Concept | Trees and capstones |
+|---|---|---|---|
+| **Candlemane** (`candlemane`, #141) | light, mythic | A sacred lion of living light and candle wax: its mane is a ring of burning votive candles and it burns its own body to shine. The only species that wants to lose HP: HP and WIS, the stats others train to survive, are its damage, and DEF is close to useless to it (the reverse of Bastion Drake). The opposite of Mirage Moth, the other light species: slow and heavy, it takes hits and burns. | *Votive Flame* (`blood_magic`: pay HP, no cooldowns), *Sanctum Grace* (a self-heal and *Kindled Grace*); in-run *Martyr's Pyre* (`martyr_flame`: heals become light damage; apex Martyr Pyrelion), book *Hollow Sun* (`hollow_sun`: HP lost is stored as Radiance and released on hits; apex Hollow Sun Lion, book *Psalter of the Unburnt*). All three rules feed one loop, pay HP, heal, convert to damage: the Exiled Heavy Knight's pattern (`specs/22` section 3.1). |
+
 ### 5.2 Fusion looks
 
 kj allowed fusion for **some specific pairs**, with the pair clear in the UI (`specs/22` section 6.5). A fused creature that shows both parents makes the pair readable. Candidates from today's trees:

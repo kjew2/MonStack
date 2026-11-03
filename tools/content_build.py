@@ -112,6 +112,8 @@ REQUIRED_CONSTANTS = {
     "ASCETIC_AP": "int", "HUNGRY_STAT": "double", "HUNGRY_ENERGY": "double",
     # species Fountain Axolotl (#150), seep and fountain_jets (specs/16 section 6.2)
     "MON_SEEP_SHIELD": "double", "MON_JETS": "int", "MON_JET_POWER": "double",
+    # species Candlemane (#141): martyr_flame, hollow_sun
+    "MON_PYRE_CONV": "double", "MON_SUN_RELEASE": "double", "MON_SUN_HEAL": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -135,7 +137,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane G (#140): run rules, coded in TrainingRun (Training/Rules/LaneG.cs)
             "iron_vow", "cursed_mark", "devourer", "second_breath", "ascetic", "hungry_core",
             # species Fountain Axolotl (#150)
-            "clear_spring", "seep", "fountain_jets"]
+            "clear_spring", "seep", "fountain_jets",
+            # species Candlemane (#141)
+            "martyr_flame", "hollow_sun"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -228,6 +232,9 @@ MON_RANGES = {
     # species Fountain Axolotl (#150)
     "MON_SEEP_SHIELD": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_JETS": ("a whole number in [2, 6]", lambda v: v == int(v) and 2 <= v <= 6),
     "MON_JET_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
+    # species Candlemane (#141)
+    "MON_PYRE_CONV": (">= 0", lambda v: v >= 0), "MON_SUN_RELEASE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_SUN_HEAL": (">= 0", lambda v: v >= 0),
 }
 
 

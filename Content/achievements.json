@@ -48,6 +48,14 @@
       "ref": "int",
       "amount": 650.0,
       "unlocks_species": "fountain_axolotl"
+    },
+    {
+      "id": "hp_700",
+      "name_key": "achievement.hp_700.name",
+      "kind": "stat_reached",
+      "ref": "hp",
+      "amount": 700.0,
+      "unlocks_species": "candlemane"
     }
   ]
 }

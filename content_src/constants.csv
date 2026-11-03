@@ -172,3 +172,6 @@ HUNGRY_ENERGY,double,10,"hungry_core run rule: energy the core eats at each cycl
 MON_SEEP_SHIELD,double,0.5,"seep rule: each of the unit's hits is mitigated by the lower of the target's DEF and WIS, and this fraction of it passes through shields straight to HP. Placeholder"
 MON_JETS,int,4,"fountain_jets rule: each single-target hit of the unit's active skills and basic attacks splits into this many jets (whole number, 2 to 6). Placeholder"
 MON_JET_POWER,double,0.45,fountain_jets rule: each jet deals this fraction of the hit's power; each rolls and procs on its own. Placeholder
+MON_PYRE_CONV,double,0.2,martyr_flame rule: each heal on the unit deals this fraction of the HP healed as light true damage to its current target (overheal converts at 1). Placeholder
+MON_SUN_RELEASE,double,0.25,hollow_sun rule: each hit the unit lands releases this fraction of its stored Radiance as extra light damage (no mitigation). Placeholder
+MON_SUN_HEAL,double,0.5,hollow_sun rule: the unit heals this fraction of the Radiance it releases. Placeholder

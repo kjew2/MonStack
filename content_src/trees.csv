@@ -49,7 +49,7 @@ arcana_deck,tree.arcana_deck.name,fusion,,,tree.arcana_deck.apex,fortune,spellcr
 iron_reflexes,tree.iron_reflexes.name,generic,dex,400,,,,idea-pool lane A (#134): PoE Iron Reflexes
 elemental_avatar,tree.elemental_avatar.name,native,,,,,,"idea-pool lane A (#134): PoE Avatar of Fire; native-only, Fountain Axolotl native tree 1 (#150)"
 fortress_fist,tree.fortress_fist.name,generic,def,400,,,,idea-pool lane A (#134): Bofuri all-VIT Maple
-blood_magic,tree.blood_magic.name,generic,hp,400,,,,idea-pool lane A (#134): PoE Blood Magic
+blood_magic,tree.blood_magic.name,native,,,,,,"idea-pool lane A (#134): PoE Blood Magic; Candlemane's native tree 1 (#141, kj 2026-11-03)"
 resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monster Hunter Resentment
 vantage,tree.vantage.name,generic,spd,400,,,,idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage
 deaths_door,tree.deaths_door.name,generic,luk,400,,,,idea-pool lane B (#135): Darkest Dungeon Death's Door
@@ -81,3 +81,7 @@ clear_spring,tree.clear_spring.name,native,,,,,,Fountain Axolotl native tree 2 (
 springs_almanac,tree.springs_almanac.name,book,,,,,,Fountain Axolotl book tree (Six Fountains)
 aquifer,tree.aquifer.name,chase,,,tree.aquifer.apex,,,Fountain Axolotl in-run chase tree
 six_fountains,tree.six_fountains.name,chase,,,tree.six_fountains.apex,,,Fountain Axolotl book-gated chase tree
+sanctum_grace,tree.sanctum_grace.name,native,,,,,,candlemane native tree 2 (#141)
+unburnt_psalter,tree.unburnt_psalter.name,book,,,,,,candlemane's book tree (Hollow Sun)
+martyrs_pyre,tree.martyrs_pyre.name,chase,,,tree.martyrs_pyre.apex,,,candlemane in-run chase tree
+hollow_sun,tree.hollow_sun.name,chase,,,tree.hollow_sun.apex,,,candlemane book-gated chase tree

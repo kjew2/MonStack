@@ -1,4 +1,4 @@
-# tower vectors, hash v1 content=6.12/f69aaa36
+# tower vectors, hash v1 content=6.13/8cc8ee35
 
 day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_king tide_warden tide_warden gloom_stalker apex_chimera* bramble_king mire_brute sun_idol cinder_wyrm storm_titan* tide_warden sun_idol gloom_stalker cinder_wyrm storm_titan*
   slime focus seed=7: floor=17 cleared=False vents=5 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
@@ -13,6 +13,8 @@ day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_k
     hash eeaa8929f46700b0506f3b852f9c3ff52cf20bf5ba1e05331f8a025ec8f4f092
   fountain_axolotl focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage
     hash 5a51d8c5b04b804134baf97f20223c488263f3d1abf4d9f9efe70f5a61b9cc68
+  candlemane focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split
+    hash 098ab18348361afef50809714dbac5cd364e92f3cd15bef6cb05098e8ceacf20
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=2 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
     hash 6d346f21af11d5e3bae558c2741bebb86f0305bc0286efd01f10bd235bf7c600
 
@@ -29,5 +31,7 @@ day 20391 lineup sun_idol cinder_wyrm bramble_king tide_warden apex_chimera* glo
     hash 3f1bfef781c9efdc497dfa68e6a2389ec35157dacdf081e2567c9f39d80e8a00
   fountain_axolotl focus seed=7: floor=10 cleared=False vents=0 phases=5:shield_check,5:split,10:split
     hash 98a9864118d03789a1ea4985d8a9b67ba8f29dc3723299c27f19394bc3f2bac7
+  candlemane focus seed=7: floor=10 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel
+    hash fd341887f22267c4066ab9f51fea00506c8ae9825fa75fdd47fb1547eab2403d
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
     hash c28aa190d9d58a3d5fab7b16bbb54e8fd2f3a5a461617520c53015830720bc55

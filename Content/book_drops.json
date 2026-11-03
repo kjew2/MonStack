@@ -30,6 +30,11 @@
       "book_id": "book_springs",
       "min_floor": 10,
       "weight": 1.0
+    },
+    {
+      "book_id": "book_psalter",
+      "min_floor": 10,
+      "weight": 1.0
     }
   ]
 }
