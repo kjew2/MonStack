@@ -2211,6 +2211,54 @@
       "text": "A plain attack, always ready."
     },
     {
+      "key": "tree.iron_reflexes.name",
+      "text": "Iron Reflexes"
+    },
+    {
+      "key": "tree.elemental_avatar.name",
+      "text": "Elemental Avatar"
+    },
+    {
+      "key": "tree.fortress_fist.name",
+      "text": "Fortress Fist"
+    },
+    {
+      "key": "tree.blood_magic.name",
+      "text": "Blood Magic"
+    },
+    {
+      "key": "rule.iron_reflexes.name",
+      "text": "Iron Reflexes"
+    },
+    {
+      "key": "rule.iron_reflexes.desc",
+      "text": "It never evades or grazes. Against physical hits its DEF counts {MON_IRON_DEX:pct} of its DEX on top. Overrides Umbral Veil."
+    },
+    {
+      "key": "rule.elemental_avatar.name",
+      "text": "Elemental Avatar"
+    },
+    {
+      "key": "rule.elemental_avatar.desc",
+      "text": "All its hits (skills, basic attacks, triggered hits) take its own element and deal +{MON_AVATAR_BONUS:pct} damage."
+    },
+    {
+      "key": "rule.fortress_fist.name",
+      "text": "Fortress Fist"
+    },
+    {
+      "key": "rule.fortress_fist.desc",
+      "text": "Each hit it lands adds {MON_FORTRESS_DEF:pct} of its DEF as damage. Drawback: its STR and INT count as 0 for damage (not for heals or shields)."
+    },
+    {
+      "key": "rule.blood_magic.name",
+      "text": "Blood Magic"
+    },
+    {
+      "key": "rule.blood_magic.desc",
+      "text": "Its active skills have no cooldown, but each cast costs {MON_BLOOD_COST:pct} of max HP (never below 1 HP). It does not cast if that would leave it under {MON_BLOOD_FLOOR:pct} HP."
+    },
+    {
       "key": "tree.resentment.name",
       "text": "Resentment"
     },

@@ -551,6 +551,18 @@ gambit.target.highest_hp.name,Healthiest enemy
 gambit.target.highest_hp.desc,The enemy with the highest share of its HP left. A taunt still forces the target.
 gambit.basic.name,Basic attack
 gambit.basic.desc,"A plain attack, always ready."
+tree.iron_reflexes.name,Iron Reflexes
+tree.elemental_avatar.name,Elemental Avatar
+tree.fortress_fist.name,Fortress Fist
+tree.blood_magic.name,Blood Magic
+rule.iron_reflexes.name,Iron Reflexes
+rule.iron_reflexes.desc,"It never evades or grazes. Against physical hits its DEF counts {MON_IRON_DEX:pct} of its DEX on top. Overrides Umbral Veil."
+rule.elemental_avatar.name,Elemental Avatar
+rule.elemental_avatar.desc,"All its hits (skills, basic attacks, triggered hits) take its own element and deal +{MON_AVATAR_BONUS:pct} damage."
+rule.fortress_fist.name,Fortress Fist
+rule.fortress_fist.desc,"Each hit it lands adds {MON_FORTRESS_DEF:pct} of its DEF as damage. Drawback: its STR and INT count as 0 for damage (not for heals or shields)."
+rule.blood_magic.name,Blood Magic
+rule.blood_magic.desc,"Its active skills have no cooldown, but each cast costs {MON_BLOOD_COST:pct} of max HP (never below 1 HP). It does not cast if that would leave it under {MON_BLOOD_FLOOR:pct} HP."
 tree.resentment.name,Resentment
 tree.vantage.name,Vantage
 tree.deaths_door.name,Death's Door

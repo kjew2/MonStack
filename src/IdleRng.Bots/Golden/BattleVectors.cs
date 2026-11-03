@@ -187,11 +187,44 @@ namespace IdleRng.Bots.Golden
                         new GambitRule(GambitConditions.AllyHpBelow, 0.6, "mend")),
                 },
                 new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
+            // Idea-pool lane A (#134): the conversion capstones against a mixed team.
+            yield return new Vector("4v4 conversion capstones", 10,
+                new[] { IronReflexes("a_iron"), Avatar("a_avatar"), FortressFist("a_fortress"), BloodMagic("a_blood") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
             // Idea-pool lane B (#135): the survival capstones (vantage and deaths_door share a carrier) against a mixed team.
             yield return new Vector("4v4 survival capstones", 11,
                 new[] { Spiteful("a_spite"), Vantage("a_vantage"), Barricade("a_barricade"), Warded("a_ward") },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
         }
+
+        // Idea-pool lane A (#134): one conversion capstone each.
+        static Fighter IronReflexes(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(380, 300, 80, 200, 420, 260, 230, 140),
+            Skills = { Fx("iron_hide", SkillKind.Buff, SkillTarget.Self, StatIds.Def, null, 0.3, 4, 3), Dmg("lash", StatIds.Dex, 1.2, 2) },
+            Rules = { RuleModifiers.IronReflexes },
+        };
+
+        static Fighter Avatar(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(260, 60, 440, 280, 180, 150, 220, 180),
+            Skills = { Dmg("arcane_blast", StatIds.Int, 2.0, 3, SkillTarget.Enemy, "light"), Dmg("cinder", StatIds.Int, 0.7, 3, SkillTarget.AllEnemies, "fire") },
+            Rules = { RuleModifiers.ElementalAvatar },
+        };
+
+        static Fighter FortressFist(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(420, 260, 120, 220, 120, 460, 160, 100),
+            Skills = { Dmg("iron_press", StatIds.Def, 1.2, 2), Dmg("smash", StatIds.Str, 2.2, 3) },
+            Rules = { RuleModifiers.FortressFist },
+        };
+
+        static Fighter BloodMagic(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(520, 280, 100, 160, 160, 200, 210, 120),
+            Skills = { Dmg("body_slam", StatIds.Hp, 0.12, 3) },
+            Rules = { RuleModifiers.BloodMagic },
+        };
 
         // Idea-pool lane B (#135): the survival capstones.
         static Fighter Spiteful(string id) => new Fighter

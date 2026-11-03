@@ -171,12 +171,14 @@
       return;
     }
     if (ui.view === 'tower') {   // a floor playback (issue #98) opens in the modal over the tower screen
-      tabs.hidden = true; modal.hidden = true; modal.replaceChildren(); renderTower(main, modal);
+      tabs.hidden = false; renderHomeTabs(tabs);   // the home tabs stay: the Dungeon tab is the one selected
+      modal.hidden = true; modal.replaceChildren(); renderTower(main, modal);
       if (wasView === 'tower') main.scrollTop = prevScroll;
       return;
     }
     if (ui.view === 'endless') {   // a floor playback opens in the modal over the Endless screen (the rulebook editor draws its own overlay)
-      tabs.hidden = true; modal.hidden = true; modal.replaceChildren(); renderEndless(main, modal);
+      tabs.hidden = false; renderHomeTabs(tabs);
+      modal.hidden = true; modal.replaceChildren(); renderEndless(main, modal);
       if (wasView === 'endless') main.scrollTop = prevScroll;
       return;
     }
@@ -647,9 +649,19 @@
     return { text: a + ' · ' + actionName(x) + ' → ' + t + ': ' + actionResult(x), you: x.actor === 'monster', skillId: x.skillId };
   }
   const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
+  // Rule events whose amount is not HP restored (specs/16 section 6.2): idea-pool lane A logs its conversions at fight start
+  // and blood_magic's HP cost at each cast.
+  const RULE_RESULT = {
+    'rule:iron_reflexes': (n) => 'never evades, +' + Math.round(n) + ' DEF from DEX',
+    'rule:elemental_avatar': (n) => 'all hits take its element, +' + Math.round(n * 100) + '% damage',
+    'rule:fortress_fist': (n) => '+' + Math.round(n) + ' damage per hit from DEF',
+    'rule:blood_magic': (n) => 'pays ' + Math.round(n) + ' HP',
+  };
+
   function actionResult(x) {
     let body;
     if (x.note) body = x.note;   // a rule's own log line, from strings (rule.<id>.log)
+    else if (x.event && RULE_RESULT[x.event]) body = RULE_RESULT[x.event](x.amount);
     else if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
     else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
@@ -1161,7 +1173,19 @@
   // Vault, Talents, Dungeon, Goals (achievements) and Ranks (the leaderboards). Each tab opens at its top; the header keeps the
   // shards in view.
   const HOME_TABS = [['raise', 'Raise'], ['vault', 'Vault'], ['talents', 'Talents'], ['dungeon', 'Dungeon'], ['goals', 'Goals'], ['rankings', 'Ranks']];
-  function goHomeTab(id) { if (id === 'rankings') ui.rankShown = null; ui.homeTab = id; render(); }
+  // Back to the home screen from the Dungeon or the Endless Tower: stop any playback or reel and drop the shown climb.
+  function leaveDungeon() {
+    stopPlayback();
+    if (ui.view === 'tower') { stopReel(ui.towerReel); ui.towerResult = null; ui.towerFight = null; ui.towerReel = null; }
+    if (ui.view === 'endless') { stopReel(ui.endlessReel); ui.endlessResult = null; ui.endlessFight = null; ui.endlessReel = null; }
+    ui.view = 'home';
+  }
+  // A home tab; from the Dungeon or Endless screen (which keep the tabs) it leaves that screen first.
+  function goHomeTab(id) {
+    if (ui.view === 'tower' || ui.view === 'endless') leaveDungeon();
+    if (id === 'rankings') ui.rankShown = null;
+    ui.homeTab = id; render();
+  }
   function renderHomeTabs(tabs) {
     tabs.replaceChildren();
     const acct = run.account, ti = run.towerInfo(run.towerDay());
@@ -1422,7 +1446,7 @@
 
   function renderTower(main, modal) {
     const acct = run.account, day = run.towerDay(), ti = run.towerInfo(day);
-    main.append(screenHead('Dungeon', 'tower-back', () => { stopPlayback(); stopReel(ui.towerReel); ui.view = 'home'; ui.towerResult = null; ui.towerFight = null; ui.towerReel = null; render(); },
+    main.append(screenHead('Dungeon', 'tower-back', () => { leaveDungeon(); render(); },
       h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })),
       h('p', { class: 'small muted', 'data-id': 'tower-status', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday +
         ' of ' + ti.floors.length + ' floors · best ever ' + ti.clearedEver }));
@@ -1747,7 +1771,7 @@
   function renderEndless(main, modal) {
     const acct = run.account, season = run.endlessSeason(), ei = run.endlessInfo(season), r = ui.endlessResult;
     const size = ei.teamSize, team = ui.endlessTeam, next = Math.min(ei.maxFloors, ei.clearedSeason + 1);
-    main.append(screenHead('Endless Tower', 'endless-back', () => { stopPlayback(); stopReel(ui.endlessReel); ui.view = 'home'; ui.endlessResult = null; ui.endlessFight = null; ui.endlessReel = null; render(); },
+    main.append(screenHead('Endless Tower', 'endless-back', () => { leaveDungeon(); render(); },
       h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })),
       h('p', { class: 'small muted', 'data-id': 'endless-status', 'data-season': String(season), text: 'Season ' + season + ' · ' + seasonLeft(season) +
         ' · best this season ' + ei.clearedSeason + ' · best ever ' + ei.clearedEver + ' · ' + plural(ei.climbs, 'climb', 'climbs') + ' this season' }));
