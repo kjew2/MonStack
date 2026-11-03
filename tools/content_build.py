@@ -71,6 +71,7 @@ REQUIRED_CONSTANTS = {
     "MON_DOUBLE_TURNS": "int", "MON_REBIRTH_HEAL": "double", "MON_WAIL_STAGGER": "double", "MON_WAIL_WITHER": "double", "MON_VEIL_EVADE_CAP": "double",
     "MON_FEAST_STR": "double", "MON_COUNTER_MULT": "double", "MON_FIRE_BONUS": "double", "MON_VEIL_EVADE_BONUS": "double",
     "MON_FEAST_DMG": "double", "MON_FEAST_START": "double", "MON_ECHO_DECOYS": "int", "MON_DRAIN_SHIELD_CAP": "double",
+    "MON_TRIGGER_DEPTH": "int", "MON_EXTRA_ACTIONS_CAP": "int",
     # account and meta-progression (specs/18)
     "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int", "REROLL_BASE": "int", "REROLL_STEP": "int", "LEGENDARY_SLOTS": "int",
     # end-of-run gauntlet (specs/19)
@@ -132,6 +133,7 @@ MON_RANGES = {
     "MON_VEIL_EVADE_BONUS": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_FEAST_DMG": (">= 0", lambda v: v >= 0), "MON_FEAST_START": (">= 0", lambda v: v >= 0), "MON_ECHO_DECOYS": (">= 0", lambda v: v >= 0),
     "MON_DRAIN_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_TRIGGER_DEPTH": (">= 1", lambda v: v >= 1), "MON_EXTRA_ACTIONS_CAP": (">= 0", lambda v: v >= 0),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
     "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
     "REROLL_BASE": (">= 0", lambda v: v >= 0), "REROLL_STEP": (">= 0", lambda v: v >= 0), "LEGENDARY_SLOTS": (">= 0", lambda v: v >= 0),

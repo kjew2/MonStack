@@ -260,7 +260,7 @@ namespace IdleRng.Sim.Content
                 MonRebirthHeal = D("MON_REBIRTH_HEAL"), MonWailStagger = D("MON_WAIL_STAGGER"), MonWailWither = D("MON_WAIL_WITHER"), MonVeilEvadeCap = D("MON_VEIL_EVADE_CAP"),
                 MonFeastStr = D("MON_FEAST_STR"), MonCounterMult = D("MON_COUNTER_MULT"), MonFireBonus = D("MON_FIRE_BONUS"),
                 MonVeilEvadeBonus = D("MON_VEIL_EVADE_BONUS"), MonFeastDmg = D("MON_FEAST_DMG"), MonFeastStart = D("MON_FEAST_START"), MonEchoDecoys = I("MON_ECHO_DECOYS"),
-                MonDrainShieldCap = D("MON_DRAIN_SHIELD_CAP"),
+                MonDrainShieldCap = D("MON_DRAIN_SHIELD_CAP"), MonTriggerDepth = I("MON_TRIGGER_DEPTH"), MonExtraActionsCap = I("MON_EXTRA_ACTIONS_CAP"),
                 ShardsPerCycle = I("SHARDS_PER_CYCLE"), ShardsPerRank = I("SHARDS_PER_RANK"),
                 VaultCap = I("VAULT_CAP"), VendorOffers = I("VENDOR_OFFERS"), RerollBase = I("REROLL_BASE"), RerollStep = I("REROLL_STEP"), LegendarySlots = I("LEGENDARY_SLOTS"),
                 GauntletFloors = I("GAUNTLET_FLOORS"), GauntletBase = D("GAUNTLET_BASE"), GauntletGrowth = D("GAUNTLET_GROWTH"),
@@ -341,6 +341,7 @@ namespace IdleRng.Sim.Content
                   && k.MonRebirthHeal > 0 && k.MonRebirthHeal <= 1 && In01(k.MonWailStagger) && In01(k.MonWailWither) && In01(k.MonVeilEvadeCap) && k.MonFeastStr >= 0
                   && k.MonCounterMult >= 0 && k.MonFireBonus >= 0 && In01(k.MonVeilEvadeBonus)
                   && k.MonFeastDmg >= 0 && k.MonFeastStart >= 0 && k.MonEchoDecoys >= 0 && In01(k.MonDrainShieldCap)
+                  && k.MonTriggerDepth >= 1 && k.MonExtraActionsCap >= 0
                   && k.ShardsPerCycle >= 0 && k.ShardsPerRank >= 0 && k.VaultCap > 0 && k.VendorOffers > 0 && k.RerollBase >= 0 && k.RerollStep >= 0 && k.LegendarySlots >= 0 && k.GauntletFloors > 0 && k.GauntletBase > 0
                   && k.GauntletGrowth >= 1 && k.GauntletBossEvery > 0 && k.GauntletBossMult > 0))
                 errors.Add(new ContentError("E043", "constants", "training run constants out of range (specs/14 section 8)"));

@@ -1,0 +1,354 @@
+using IdleRng.Sim.Content;
+
+namespace IdleRng.Sim.Combat
+{
+    // The rule hooks of the idea-pool lanes (specs/16 section 6.4, epic #132). The fight calls each Hook* method at a fixed
+    // point; it calls the same hook of lanes A to E in that order. Each lane's hooks are partial methods that the lane
+    // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
+    // until its lane fills it. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
+    // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
+    public static partial class BattleSim
+    {
+        /// <summary>OnFightStart: the first Step, before the BattleStart triggers (all units are in place).</summary>
+        static void HookFightStart(RuleCtx c)
+        {
+            OnFightStart_A(c);
+            OnFightStart_B(c);
+            OnFightStart_C(c);
+            OnFightStart_D(c);
+            OnFightStart_E(c);
+        }
+
+        static partial void OnFightStart_A(RuleCtx c);
+        static partial void OnFightStart_B(RuleCtx c);
+        static partial void OnFightStart_C(RuleCtx c);
+        static partial void OnFightStart_D(RuleCtx c);
+        static partial void OnFightStart_E(RuleCtx c);
+
+        /// <summary>BeforeAction: the start of the unit's action, before it is counted; set skip to lose the action (nothing else of it happens).</summary>
+        static void HookBeforeAction(RuleCtx c, FightUnit u, ref bool skip)
+        {
+            BeforeAction_A(c, u, ref skip);
+            BeforeAction_B(c, u, ref skip);
+            BeforeAction_C(c, u, ref skip);
+            BeforeAction_D(c, u, ref skip);
+            BeforeAction_E(c, u, ref skip);
+        }
+
+        static partial void BeforeAction_A(RuleCtx c, FightUnit u, ref bool skip);
+        static partial void BeforeAction_B(RuleCtx c, FightUnit u, ref bool skip);
+        static partial void BeforeAction_C(RuleCtx c, FightUnit u, ref bool skip);
+        static partial void BeforeAction_D(RuleCtx c, FightUnit u, ref bool skip);
+        static partial void BeforeAction_E(RuleCtx c, FightUnit u, ref bool skip);
+
+        /// <summary>AfterAction: after the unit's action (and after each extra action), before deaths, boss phases and the outcome check.</summary>
+        static void HookAfterAction(RuleCtx c, FightUnit u)
+        {
+            AfterAction_A(c, u);
+            AfterAction_B(c, u);
+            AfterAction_C(c, u);
+            AfterAction_D(c, u);
+            AfterAction_E(c, u);
+        }
+
+        static partial void AfterAction_A(RuleCtx c, FightUnit u);
+        static partial void AfterAction_B(RuleCtx c, FightUnit u);
+        static partial void AfterAction_C(RuleCtx c, FightUnit u);
+        static partial void AfterAction_D(RuleCtx c, FightUnit u);
+        static partial void AfterAction_E(RuleCtx c, FightUnit u);
+
+        /// <summary>ExtraAction: after an action: set evt (the log event, rule:&lt;id&gt;) to grant an extra action now; leave it if already set. MON_EXTRA_ACTIONS_CAP applies.</summary>
+        static void HookExtraAction(RuleCtx c, FightUnit u, ref string evt)
+        {
+            ExtraAction_A(c, u, ref evt);
+            ExtraAction_B(c, u, ref evt);
+            ExtraAction_C(c, u, ref evt);
+            ExtraAction_D(c, u, ref evt);
+            ExtraAction_E(c, u, ref evt);
+        }
+
+        static partial void ExtraAction_A(RuleCtx c, FightUnit u, ref string evt);
+        static partial void ExtraAction_B(RuleCtx c, FightUnit u, ref string evt);
+        static partial void ExtraAction_C(RuleCtx c, FightUnit u, ref string evt);
+        static partial void ExtraAction_D(RuleCtx c, FightUnit u, ref string evt);
+        static partial void ExtraAction_E(RuleCtx c, FightUnit u, ref string evt);
+
+        /// <summary>OnGaugeTick: each tick, the living unit's gauge fill before it is added.</summary>
+        static void HookGaugeTick(RuleCtx c, FightUnit u, ref double fill)
+        {
+            OnGaugeTick_A(c, u, ref fill);
+            OnGaugeTick_B(c, u, ref fill);
+            OnGaugeTick_C(c, u, ref fill);
+            OnGaugeTick_D(c, u, ref fill);
+            OnGaugeTick_E(c, u, ref fill);
+        }
+
+        static partial void OnGaugeTick_A(RuleCtx c, FightUnit u, ref double fill);
+        static partial void OnGaugeTick_B(RuleCtx c, FightUnit u, ref double fill);
+        static partial void OnGaugeTick_C(RuleCtx c, FightUnit u, ref double fill);
+        static partial void OnGaugeTick_D(RuleCtx c, FightUnit u, ref double fill);
+        static partial void OnGaugeTick_E(RuleCtx c, FightUnit u, ref double fill);
+
+        /// <summary>BeforeHitResolves: the start of a hit, before the decoy and every roll; set h.Cancelled to stop it.</summary>
+        static void HookBeforeHit(RuleCtx c, HitInfo h)
+        {
+            BeforeHitResolves_A(c, h);
+            BeforeHitResolves_B(c, h);
+            BeforeHitResolves_C(c, h);
+            BeforeHitResolves_D(c, h);
+            BeforeHitResolves_E(c, h);
+        }
+
+        static partial void BeforeHitResolves_A(RuleCtx c, HitInfo h);
+        static partial void BeforeHitResolves_B(RuleCtx c, HitInfo h);
+        static partial void BeforeHitResolves_C(RuleCtx c, HitInfo h);
+        static partial void BeforeHitResolves_D(RuleCtx c, HitInfo h);
+        static partial void BeforeHitResolves_E(RuleCtx c, HitInfo h);
+
+        /// <summary>ConvertHit: the conversion step: once per hit, before the avoid roll and every multiplier (stat and element conversions).</summary>
+        static void HookConvert(RuleCtx c, HitInfo h)
+        {
+            ConvertHit_A(c, h);
+            ConvertHit_B(c, h);
+            ConvertHit_C(c, h);
+            ConvertHit_D(c, h);
+            ConvertHit_E(c, h);
+        }
+
+        static partial void ConvertHit_A(RuleCtx c, HitInfo h);
+        static partial void ConvertHit_B(RuleCtx c, HitInfo h);
+        static partial void ConvertHit_C(RuleCtx c, HitInfo h);
+        static partial void ConvertHit_D(RuleCtx c, HitInfo h);
+        static partial void ConvertHit_E(RuleCtx c, HitInfo h);
+
+        /// <summary>ModifyOutgoing: the attacker's damage multipliers on h.Raw, after crit, element and dmg_dealt, before mitigation.</summary>
+        static void HookOutgoing(RuleCtx c, HitInfo h)
+        {
+            ModifyOutgoing_A(c, h);
+            ModifyOutgoing_B(c, h);
+            ModifyOutgoing_C(c, h);
+            ModifyOutgoing_D(c, h);
+            ModifyOutgoing_E(c, h);
+        }
+
+        static partial void ModifyOutgoing_A(RuleCtx c, HitInfo h);
+        static partial void ModifyOutgoing_B(RuleCtx c, HitInfo h);
+        static partial void ModifyOutgoing_C(RuleCtx c, HitInfo h);
+        static partial void ModifyOutgoing_D(RuleCtx c, HitInfo h);
+        static partial void ModifyOutgoing_E(RuleCtx c, HitInfo h);
+
+        /// <summary>ModifyIncoming: the target's damage multipliers on h.Raw, right after ModifyOutgoing.</summary>
+        static void HookIncoming(RuleCtx c, HitInfo h)
+        {
+            ModifyIncoming_A(c, h);
+            ModifyIncoming_B(c, h);
+            ModifyIncoming_C(c, h);
+            ModifyIncoming_D(c, h);
+            ModifyIncoming_E(c, h);
+        }
+
+        static partial void ModifyIncoming_A(RuleCtx c, HitInfo h);
+        static partial void ModifyIncoming_B(RuleCtx c, HitInfo h);
+        static partial void ModifyIncoming_C(RuleCtx c, HitInfo h);
+        static partial void ModifyIncoming_D(RuleCtx c, HitInfo h);
+        static partial void ModifyIncoming_E(RuleCtx c, HitInfo h);
+
+        /// <summary>OnHitLanded: a hit that was not evaded has landed (h.Dealt set), for the attacker's rules; before OnHitTaken triggers.</summary>
+        static void HookHitLanded(RuleCtx c, HitInfo h)
+        {
+            OnHitLanded_A(c, h);
+            OnHitLanded_B(c, h);
+            OnHitLanded_C(c, h);
+            OnHitLanded_D(c, h);
+            OnHitLanded_E(c, h);
+        }
+
+        static partial void OnHitLanded_A(RuleCtx c, HitInfo h);
+        static partial void OnHitLanded_B(RuleCtx c, HitInfo h);
+        static partial void OnHitLanded_C(RuleCtx c, HitInfo h);
+        static partial void OnHitLanded_D(RuleCtx c, HitInfo h);
+        static partial void OnHitLanded_E(RuleCtx c, HitInfo h);
+
+        /// <summary>OnHitTaken: the same point, for the target's rules.</summary>
+        static void HookHitTaken(RuleCtx c, HitInfo h)
+        {
+            OnHitTaken_A(c, h);
+            OnHitTaken_B(c, h);
+            OnHitTaken_C(c, h);
+            OnHitTaken_D(c, h);
+            OnHitTaken_E(c, h);
+        }
+
+        static partial void OnHitTaken_A(RuleCtx c, HitInfo h);
+        static partial void OnHitTaken_B(RuleCtx c, HitInfo h);
+        static partial void OnHitTaken_C(RuleCtx c, HitInfo h);
+        static partial void OnHitTaken_D(RuleCtx c, HitInfo h);
+        static partial void OnHitTaken_E(RuleCtx c, HitInfo h);
+
+        /// <summary>ModifyHpDamage: any damage (hits, counters, wail, channel strikes) after the shield took its part, before HP.</summary>
+        static void HookHpDamage(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount)
+        {
+            ModifyHpDamage_A(c, src, tgt, ref amount);
+            ModifyHpDamage_B(c, src, tgt, ref amount);
+            ModifyHpDamage_C(c, src, tgt, ref amount);
+            ModifyHpDamage_D(c, src, tgt, ref amount);
+            ModifyHpDamage_E(c, src, tgt, ref amount);
+        }
+
+        static partial void ModifyHpDamage_A(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
+        static partial void ModifyHpDamage_B(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
+        static partial void ModifyHpDamage_C(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
+        static partial void ModifyHpDamage_D(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
+        static partial void ModifyHpDamage_E(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
+
+        /// <summary>OnWouldDie: a blow brought tgt to 0 HP and root_rebirth did not save it; set saved (and its HP) to keep it alive; leave it if already set.</summary>
+        static void HookWouldDie(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved)
+        {
+            OnWouldDie_A(c, src, tgt, ref saved);
+            OnWouldDie_B(c, src, tgt, ref saved);
+            OnWouldDie_C(c, src, tgt, ref saved);
+            OnWouldDie_D(c, src, tgt, ref saved);
+            OnWouldDie_E(c, src, tgt, ref saved);
+        }
+
+        static partial void OnWouldDie_A(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
+        static partial void OnWouldDie_B(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
+        static partial void OnWouldDie_C(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
+        static partial void OnWouldDie_D(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
+        static partial void OnWouldDie_E(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
+
+        /// <summary>SkillReady: whether the unit's active skill at index may be used now (the AI and gambits ask; ready starts as cooldown over).</summary>
+        static void HookSkillReady(RuleCtx c, FightUnit u, int index, ref bool ready)
+        {
+            SkillReady_A(c, u, index, ref ready);
+            SkillReady_B(c, u, index, ref ready);
+            SkillReady_C(c, u, index, ref ready);
+            SkillReady_D(c, u, index, ref ready);
+            SkillReady_E(c, u, index, ref ready);
+        }
+
+        static partial void SkillReady_A(RuleCtx c, FightUnit u, int index, ref bool ready);
+        static partial void SkillReady_B(RuleCtx c, FightUnit u, int index, ref bool ready);
+        static partial void SkillReady_C(RuleCtx c, FightUnit u, int index, ref bool ready);
+        static partial void SkillReady_D(RuleCtx c, FightUnit u, int index, ref bool ready);
+        static partial void SkillReady_E(RuleCtx c, FightUnit u, int index, ref bool ready);
+
+        /// <summary>OnSkillUsed: after an active skill was cast as an action (cooldown set, echo done).</summary>
+        static void HookSkillUsed(RuleCtx c, FightUnit u, int index, CombatSkill sk)
+        {
+            OnSkillUsed_A(c, u, index, sk);
+            OnSkillUsed_B(c, u, index, sk);
+            OnSkillUsed_C(c, u, index, sk);
+            OnSkillUsed_D(c, u, index, sk);
+            OnSkillUsed_E(c, u, index, sk);
+        }
+
+        static partial void OnSkillUsed_A(RuleCtx c, FightUnit u, int index, CombatSkill sk);
+        static partial void OnSkillUsed_B(RuleCtx c, FightUnit u, int index, CombatSkill sk);
+        static partial void OnSkillUsed_C(RuleCtx c, FightUnit u, int index, CombatSkill sk);
+        static partial void OnSkillUsed_D(RuleCtx c, FightUnit u, int index, CombatSkill sk);
+        static partial void OnSkillUsed_E(RuleCtx c, FightUnit u, int index, CombatSkill sk);
+
+        /// <summary>OnDeath: once per unit that died, after the action or end-of-tick ageing that killed it (u.KilledBy names the killer).</summary>
+        static void HookDeath(RuleCtx c, FightUnit u)
+        {
+            OnDeath_A(c, u);
+            OnDeath_B(c, u);
+            OnDeath_C(c, u);
+            OnDeath_D(c, u);
+            OnDeath_E(c, u);
+        }
+
+        static partial void OnDeath_A(RuleCtx c, FightUnit u);
+        static partial void OnDeath_B(RuleCtx c, FightUnit u);
+        static partial void OnDeath_C(RuleCtx c, FightUnit u);
+        static partial void OnDeath_D(RuleCtx c, FightUnit u);
+        static partial void OnDeath_E(RuleCtx c, FightUnit u);
+
+        /// <summary>HashUnit: StateHash, per unit after the core rules' state: write the lane's state for carriers only.</summary>
+        static void HookHashUnit(CanonicalWriter w, FightState s, FightUnit u)
+        {
+            HashUnit_A(w, s, u);
+            HashUnit_B(w, s, u);
+            HashUnit_C(w, s, u);
+            HashUnit_D(w, s, u);
+            HashUnit_E(w, s, u);
+        }
+
+        static partial void HashUnit_A(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_B(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_C(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_D(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_E(CanonicalWriter w, FightState s, FightUnit u);
+
+        /// <summary>HashFight: StateHash, at the end: fight-wide lane state, only when some unit carries the rule.</summary>
+        static void HookHashFight(CanonicalWriter w, FightState s)
+        {
+            HashFight_A(w, s);
+            HashFight_B(w, s);
+            HashFight_C(w, s);
+            HashFight_D(w, s);
+            HashFight_E(w, s);
+        }
+
+        static partial void HashFight_A(CanonicalWriter w, FightState s);
+        static partial void HashFight_B(CanonicalWriter w, FightState s);
+        static partial void HashFight_C(CanonicalWriter w, FightState s);
+        static partial void HashFight_D(CanonicalWriter w, FightState s);
+        static partial void HashFight_E(CanonicalWriter w, FightState s);
+
+        /// <summary>Validate: a hand-built FightRules with a lane's constants out of range is refused (set ok to false).</summary>
+        static void HookValidateRules(FightRules r, ref bool ok)
+        {
+            ValidateRules_A(r, ref ok);
+            ValidateRules_B(r, ref ok);
+            ValidateRules_C(r, ref ok);
+            ValidateRules_D(r, ref ok);
+            ValidateRules_E(r, ref ok);
+        }
+
+        static partial void ValidateRules_A(FightRules r, ref bool ok);
+        static partial void ValidateRules_B(FightRules r, ref bool ok);
+        static partial void ValidateRules_C(FightRules r, ref bool ok);
+        static partial void ValidateRules_D(FightRules r, ref bool ok);
+        static partial void ValidateRules_E(FightRules r, ref bool ok);
+    }
+
+    public sealed partial class FightRules
+    {
+        /// <summary>FromContent: each lane reads its constants (ContentDb.ConstantValues, MON_&lt;RULE&gt;_*) into its own properties.</summary>
+        static void LoadLanes(FightRules r, ContentDb c)
+        {
+            Load_A(r, c);
+            Load_B(r, c);
+            Load_C(r, c);
+            Load_D(r, c);
+            Load_E(r, c);
+        }
+
+        static partial void Load_A(FightRules r, ContentDb c);
+        static partial void Load_B(FightRules r, ContentDb c);
+        static partial void Load_C(FightRules r, ContentDb c);
+        static partial void Load_D(FightRules r, ContentDb c);
+        static partial void Load_E(FightRules r, ContentDb c);
+    }
+
+    public sealed partial class FightUnit
+    {
+        /// <summary>Clone: each lane deep-copies the reference-type state it added (value fields are already copied).</summary>
+        void CloneLanes(FightUnit copy)
+        {
+            Clone_A(copy);
+            Clone_B(copy);
+            Clone_C(copy);
+            Clone_D(copy);
+            Clone_E(copy);
+        }
+
+        partial void Clone_A(FightUnit copy);
+        partial void Clone_B(FightUnit copy);
+        partial void Clone_C(FightUnit copy);
+        partial void Clone_D(FightUnit copy);
+        partial void Clone_E(FightUnit copy);
+    }
+}

@@ -8,7 +8,7 @@ namespace IdleRng.Sim.Combat
     /// A fight in progress (specs/16 section 4). Plain mutable graph, so it can be saved and cloned; Clone plus
     /// the same random draws continues identically.
     /// </summary>
-    public sealed class FightState
+    public sealed partial class FightState
     {
         /// <summary>Ticks stepped so far.</summary>
         public int Ticks { get; set; }
@@ -27,6 +27,13 @@ namespace IdleRng.Sim.Combat
         /// <summary>Side A in slot order, then side B in slot order. This order breaks every tie.</summary>
         public List<FightUnit> Units { get; set; } = new List<FightUnit>();
 
+        /// <summary>
+        /// The loop guards (specs/16 section 6.4): trigger levels running now, and a bit per GuardKind running now. Both are 0
+        /// between actions, so they are not hashed.
+        /// </summary>
+        internal int TriggerDepth { get; set; }
+        internal int GuardMask { get; set; }
+
         /// <summary>Scratch list for trigger collection (not saved, not hashed).</summary>
         internal List<CombatSkill> Scratch => _scratch ??= new List<CombatSkill>();
         List<CombatSkill> _scratch;
@@ -42,7 +49,7 @@ namespace IdleRng.Sim.Combat
     }
 
     /// <summary>One combatant during a fight. Source is the fighter snapshot it was built from (shared, read-only).</summary>
-    public sealed class FightUnit
+    public sealed partial class FightUnit
     {
         public Fighter Source { get; set; }
         public string Id => Source.Id;
@@ -127,6 +134,12 @@ namespace IdleRng.Sim.Combat
         /// <summary>echo_cast: hits its mirror twin still takes for it this fight.</summary>
         public int DecoysLeft { get; set; }
 
+        /// <summary>The id of the unit whose blow killed this one; null while alive or for a death without a killer. Not hashed.</summary>
+        public string KilledBy { get; set; }
+
+        /// <summary>The unit's death hook has run (BattleSim.ProcessDeaths). Not hashed: it is "dead" once the action is over.</summary>
+        internal bool DeathSeen { get; set; }
+
         public FightUnit Clone()
         {
             var c = (FightUnit)MemberwiseClone();
@@ -134,6 +147,7 @@ namespace IdleRng.Sim.Combat
             c.Effects = new List<FightEffect>(Effects.Count);
             foreach (var e in Effects) c.Effects.Add(e.Clone());
             c.Tally = Tally.Clone();
+            CloneLanes(c);
             return c;
         }
     }

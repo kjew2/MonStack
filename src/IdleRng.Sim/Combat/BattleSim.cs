@@ -9,9 +9,10 @@ namespace IdleRng.Sim.Combat
     /// <summary>
     /// The monster battle (specs/16): two sides of 1..SideSize units, ATB turn order, automatic actions. Pure functions over a
     /// FightState plus a random source, so the same fighters, rules and draws give the same fight on the client, the bots and a
-    /// server (specs/10 section 9.2).
+    /// server (specs/10 section 9.2). Partial: the trigger and rule guards are in BattleGuards.cs, the rule hooks in
+    /// Rules/RuleHooks.cs and each idea-pool lane's rules in Rules/Lane*.cs (specs/16 section 6.4).
     /// </summary>
-    public static class BattleSim
+    public static partial class BattleSim
     {
         public const string StreamName = "battle_sim";
         public const int HashVersion = 2;   // v2: UnitTally.Grazes (specs/25)
@@ -43,8 +44,11 @@ namespace IdleRng.Sim.Combat
             if (!(In01(r.EchoPower) && In01(r.TideRegen) && In01(r.TideShieldCap) && r.DrainFrac >= 0 && In01(r.FirePierce) && r.DoubleTurns >= 0
                   && In01(r.RebirthHeal) && In01(r.WailStagger) && In01(r.WailWither) && In01(r.VeilEvadeCap) && r.FeastStr >= 0
                   && r.CounterMult >= 0 && r.FireBonus >= 0 && In01(r.VeilEvadeBonus) && r.FeastDmg >= 0 && r.FeastStart >= 0 && r.EchoDecoys >= 0
-                  && In01(r.DrainShieldCap)))
+                  && In01(r.DrainShieldCap) && r.TriggerDepth >= 1 && r.ExtraActionsCap >= 0))
                 throw new ArgumentException("rule modifier constants out of range (specs/16 section 7)", nameof(r));
+            bool lanesOk = true;
+            HookValidateRules(r, ref lanesOk);
+            if (!lanesOk) throw new ArgumentException("rule modifier constants out of range (specs/16 section 7)", nameof(r));
             if (r.Tower != null && !r.Tower.Valid) throw new ArgumentException("tower rules out of range (specs/21 section 5)", nameof(r));
             if (r.Mutators != null)
                 foreach (var kv in r.Mutators.Element)   // the rest is checked by FightMutators.Add; this table can be written directly
@@ -199,36 +203,50 @@ namespace IdleRng.Sim.Combat
         public static FightOutcome Step(FightRules rules, FightState s, IRandomSource rng, Action<FightAction> onAction = null)
         {
             if (s.Outcome != FightOutcome.Ongoing) return s.Outcome;
+            var ctx = new RuleCtx(rules, s, rng, onAction);
             if (!s.Started)
             {
                 s.Started = true;
+                HookFightStart(ctx);
                 foreach (var u in s.Units) Fire(rules, s, u, FightTrigger.BattleStart, rng, onAction);
+                ProcessDeaths(ctx);
                 var start = Decide(s, 0);
                 if (start != FightOutcome.Ongoing) return s.Outcome = start;
             }
             s.Ticks++;
             if (s.Tower) s.PeakCorruption = Math.Max(s.PeakCorruption, CorruptionLevel(rules, s.Ticks));
             foreach (var u in s.Units)
-                if (u.Alive) u.Gauge += GaugeFill(rules, Eff(rules, u, StatIds.Spd)) * (rules.Mutators?.Speed ?? 1);
+                if (u.Alive)
+                {
+                    double fill = GaugeFill(rules, Eff(rules, u, StatIds.Spd)) * (rules.Mutators?.Speed ?? 1);
+                    HookGaugeTick(ctx, u, ref fill);
+                    u.Gauge += fill;
+                }
 
             for (int n = 0; n < MaxActionsPerTick; n++)
             {
                 var actor = NextActor(s, rules.GaugeSize);
                 if (actor == null) break;
                 actor.Gauge -= rules.GaugeSize;
-                bool extra = false;
+                // One turn: the action the gauge paid for, then at most MON_EXTRA_ACTIONS_CAP extra actions (specs/16 section 6.4).
+                string extra = null;
+                int extras = 0;
                 do
                 {
-                    if (extra) onAction?.Invoke(new FightAction(actor.Id, FightAction.DoubleTurnEvent, actor.Id, 0));
+                    if (extra != null) onAction?.Invoke(new FightAction(actor.Id, extra, actor.Id, 0));
                     Act(rules, s, actor, rng, onAction);
+                    HookAfterAction(ctx, actor);
+                    ProcessDeaths(ctx);
                     CheckPhases(rules, s, rng, onAction);
                     var o = Decide(s, actor.Side);
                     if (o != FightOutcome.Ongoing) return s.Outcome = o;
-                    extra = true;
-                } while (ExtraTurn(rules, actor));
+                    extra = extras < rules.ExtraActionsCap ? ExtraAction(ctx, actor) : null;
+                    extras++;
+                } while (extra != null);
             }
 
-            int strikeSide = AgeAll(rules, s, onAction);
+            int strikeSide = AgeAll(rules, s, rng, onAction);
+            ProcessDeaths(ctx);
             if (strikeSide >= 0)
             {
                 var o = Decide(s, strikeSide);
@@ -238,9 +256,20 @@ namespace IdleRng.Sim.Combat
             return s.Outcome;
         }
 
-        /// <summary>double_turn_start: after each of the unit's first DoubleTurns actions (an odd action count) it acts again at once.</summary>
-        static bool ExtraTurn(FightRules r, FightUnit u) =>
-            u.Alive && u.Tally.Actions % 2 == 1 && u.Tally.Actions < 2 * r.DoubleTurns && Has(u, RuleModifiers.DoubleTurnStart);
+        /// <summary>
+        /// The event of the extra action <paramref name="u"/> takes now, or null for none. double_turn_start first (after each of
+        /// the unit's first DoubleTurns actions, an odd action count, it acts again at once), then the lanes' sources in lane order.
+        /// The caller applies MON_EXTRA_ACTIONS_CAP.
+        /// </summary>
+        static string ExtraAction(RuleCtx c, FightUnit u)
+        {
+            if (!u.Alive) return null;
+            if (u.Tally.Actions % 2 == 1 && u.Tally.Actions < 2 * c.Rules.DoubleTurns && Has(u, RuleModifiers.DoubleTurnStart))
+                return FightAction.DoubleTurnEvent;
+            string evt = null;
+            HookExtraAction(c, u, ref evt);
+            return evt;
+        }
 
         static FightUnit NextActor(FightState s, double gauge)
         {
@@ -270,8 +299,9 @@ namespace IdleRng.Sim.Combat
         /// buff, a shield_check shield's expiry and a channel's countdown. Returns the side of a unit whose channel strike landed
         /// (the caller re-checks the outcome), or -1.
         /// </summary>
-        static int AgeAll(FightRules r, FightState s, Action<FightAction> onAction)
+        static int AgeAll(FightRules r, FightState s, IRandomSource rng, Action<FightAction> onAction)
         {
+            var ctx = new RuleCtx(r, s, rng, onAction);
             int strikeSide = -1;
             foreach (var u in s.Units)
             {
@@ -295,7 +325,7 @@ namespace IdleRng.Sim.Combat
                     {
                         double amt = u.ChannelStrike * Math.Max(Eff(r, u, StatIds.Str), Eff(r, u, StatIds.Int)), total = 0;
                         var hit = Enemies(s, u);
-                        foreach (var e in hit) total += Absorb(u, e, amt, null);
+                        foreach (var e in hit) total += Absorb(ctx, u, e, amt, null);
                         onAction?.Invoke(new FightAction(u.Id, "channel_strike", null, total));
                         foreach (var e in hit) Reborn(e, onAction);
                         strikeSide = u.Side;
@@ -359,18 +389,28 @@ namespace IdleRng.Sim.Combat
             CollectTriggers(u, trigger, shared);
             if (shared.Count == 0) return;
             var list = shared.ToArray();
-            foreach (var sk in list)
-                if (u.Alive)
-                {
-                    Use(r, s, u, sk, rng, onAction, triggered: true);
-                    if (trigger != FightTrigger.BattleStart) GainEntropy(r, s, u, r.Tower?.EntropyPerTrigger ?? 0, onAction);
-                }
+            // Loop guards (specs/16 section 6.4): never inside an effect of the same trigger, never past MON_TRIGGER_DEPTH.
+            if (!EnterGuard(r, s, (GuardKind)trigger, true, out var saved)) return;
+            try
+            {
+                foreach (var sk in list)
+                    if (u.Alive)
+                    {
+                        Use(r, s, u, sk, rng, onAction, triggered: true);
+                        if (trigger != FightTrigger.BattleStart) GainEntropy(r, s, u, r.Tower?.EntropyPerTrigger ?? 0, onAction);
+                    }
+            }
+            finally { ExitGuard(s, saved); }
         }
 
         // ------------------------------------------------------------------ actions
 
         static void Act(FightRules r, FightState s, FightUnit u, IRandomSource rng, Action<FightAction> onAction)
         {
+            var ctx = new RuleCtx(r, s, rng, onAction);
+            bool skip = false;
+            HookBeforeAction(ctx, u, ref skip);
+            if (skip || !u.Alive) return;
             u.Tally.Actions++;
             if (r.Tower != null) u.Entropy = Math.Max(0, u.Entropy - r.Tower.EntropyDecay);
             if (r.TideRegen > 0 && Has(u, RuleModifiers.TidalOverflow))
@@ -384,7 +424,7 @@ namespace IdleRng.Sim.Combat
                 foreach (var e in Enemies(s, u))
                 {
                     e.Gauge -= Math.Min(e.Gauge, r.WailStagger * r.GaugeSize);
-                    double dmg = Absorb(u, e, r.WailWither * e.MaxHp, null);
+                    double dmg = Absorb(ctx, u, e, r.WailWither * e.MaxHp, null);
                     onAction?.Invoke(new FightAction(u.Id, FightAction.StaggerEvent, e.Id, dmg));
                     Reborn(e, onAction);
                 }
@@ -403,7 +443,7 @@ namespace IdleRng.Sim.Combat
                 {
                     var sk = skills[i];
                     if ((sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield) != (pass == 0)) continue;
-                    if (sk.Kind == SkillKind.Passive || u.Cooldowns[i] > 0 || !Useful(r, s, u, sk)) continue;
+                    if (sk.Kind == SkillKind.Passive || !Ready(ctx, u, i) || !Useful(r, s, u, sk)) continue;
                     if (book.Count > 0 && Named(book, sk.Id)) continue;
                     Cast(r, s, u, i, rng, onAction);
                     return;
@@ -418,11 +458,17 @@ namespace IdleRng.Sim.Combat
             u.Cooldowns[i] = sk.Cooldown;
             Use(r, s, u, sk, rng, onAction, triggered: false);
             if (u.Alive && Has(u, RuleModifiers.EchoCast)
-                && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield))
+                && (sk.Kind == SkillKind.Damage || sk.Kind == SkillKind.Heal || sk.Kind == SkillKind.Shield)
+                && EnterGuard(r, s, GuardKind.Echo, false, out var saved))   // an echo is part of the cast: no depth, never echoed again
             {
-                Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
-                GainEntropy(r, s, u, r.Tower?.EntropyPerEcho ?? 0, onAction);
+                try
+                {
+                    Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
+                    GainEntropy(r, s, u, r.Tower?.EntropyPerEcho ?? 0, onAction);
+                }
+                finally { ExitGuard(s, saved); }
             }
+            HookSkillUsed(new RuleCtx(r, s, rng, onAction), u, i, sk);
         }
 
         // ------------------------------------------------------------------ gambits (specs/28 section 4)
@@ -443,7 +489,7 @@ namespace IdleRng.Sim.Combat
                 if (rule.Skill != GambitRule.Basic)
                 {
                     i = GambitSkill(u.Source.Skills, rule.Skill);
-                    if (i < 0 || u.Cooldowns[i] > 0 || !CanGo(r, s, u, u.Source.Skills[i])) continue;
+                    if (i < 0 || !Ready(new RuleCtx(r, s, rng, onAction), u, i) || !CanGo(r, s, u, u.Source.Skills[i])) continue;
                 }
                 onAction?.Invoke(new FightAction(u.Id, FightAction.GambitEvent, null, g));
                 u.PickRule = rule.Target;
@@ -634,14 +680,22 @@ namespace IdleRng.Sim.Combat
         // ------------------------------------------------------------------ damage
 
         /// <summary>
-        /// One hit (specs/16 section 5.3): avoid roll (a physical hit misses, a magical one grazes unless umbral_veil makes it a
-        /// miss), crit roll (none on a graze), element, mitigation K/(K+DEF or WIS), shield, tallies, then OnEvade / OnHitTaken /
-        /// OnCrit triggers and the counter rule. Fortune (LUK) rerolls a failed evade and a failed crit of its owner, and a crit
-        /// landed against its owner. Draw order: see <see cref="Roll"/>. Returns the damage dealt.
+        /// One hit (specs/16 section 5.3): the before-hit hook, the decoy, the conversion step (specs/16 section 6.4), avoid roll
+        /// (a physical hit misses, a magical one grazes unless umbral_veil makes it a miss), crit roll (none on a graze), element,
+        /// the damage multipliers, mitigation K/(K+DEF or WIS), shield, tallies, then the landed and taken hooks, OnHitTaken /
+        /// OnCrit triggers and the counter rule (OnEvade on an evade). Fortune (LUK) rerolls a failed evade and a failed crit of its
+        /// owner, and a crit landed against its owner. Draw order: see <see cref="Roll"/>. Returns the damage dealt.
         /// </summary>
         static double Hit(FightRules r, FightState s, FightUnit src, FightUnit tgt, double raw, bool magical, string element, CombatSkill sk,
                           bool aoe, IRandomSource rng, Action<FightAction> onAction)
         {
+            var ctx = new RuleCtx(r, s, rng, onAction);
+            var h = new HitInfo
+            {
+                Src = src, Tgt = tgt, Raw = raw, Magical = magical, Element = element, Skill = sk, Aoe = aoe, Triggered = s.TriggerDepth > 0,
+            };
+            HookBeforeHit(ctx, h);
+            if (h.Cancelled) return 0;
             if (tgt.DecoysLeft > 0)   // echo_cast's mirror twin takes the hit instead
             {
                 tgt.DecoysLeft--;
@@ -649,12 +703,18 @@ namespace IdleRng.Sim.Combat
                 onAction?.Invoke(new FightAction(tgt.Id, FightAction.DecoyEvent, tgt.Id, tgt.DecoysLeft));
                 return 0;
             }
+
+            // The conversion step: once per hit, before every multiplier and before the avoid roll.
             bool veil = Has(tgt, RuleModifiers.UmbralVeil);
+            h.Evade = veil ? Clamp(EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex), 1) + r.VeilEvadeBonus, 0, r.VeilEvadeCap)
+                           : EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
+            h.Mitigation = Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def);
+            HookConvert(ctx, h);
+            magical = h.Magical; element = h.Element; raw = h.Raw;
+
             double tgtFortune = Fortune(r, Eff(r, tgt, StatIds.Luk));
             bool lucky = false, graze = false;
-            double evade = veil ? Clamp(EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex), 1) + r.VeilEvadeBonus, 0, r.VeilEvadeCap)
-                                : EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
-            if (Roll(rng, evade, tgtFortune, ref lucky))
+            if (Roll(rng, h.Evade, tgtFortune, ref lucky))
             {
                 if (magical && !veil) graze = true;
                 else
@@ -681,13 +741,18 @@ namespace IdleRng.Sim.Combat
                 lucky |= crit ? critLucky : deniedLucky;
                 if (crit) raw *= CritMult(r, Eff(r, src, StatIds.Dex), Bonus(src, StatIds.CritDmg));
             }
+            h.Graze = graze; h.Crit = crit;
             bool pierce = element == RuleModifiers.FireElement && Has(src, RuleModifiers.FirePierce);
             double elementMult = r.ElementMult(element, tgt.Source.Element);
             raw *= pierce ? Math.Max(1.0, elementMult) * (1 + r.FireBonus) : elementMult;
             double dmgBonus = Bonus(src, StatIds.DmgDealt);
             if (dmgBonus != 0) raw *= Math.Max(0.0, 1 + dmgBonus);
             if (r.Mutators != null) raw *= r.Mutators.DamageMult(aoe, element);
-            double mitStat = Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def);
+            h.Raw = raw;
+            HookOutgoing(ctx, h);
+            HookIncoming(ctx, h);
+            raw = h.Raw;
+            double mitStat = h.Mitigation;
             if (pierce) mitStat *= 1 - r.FirePierce;
             double after = Mitigate(r, raw, mitStat);
             double mitigated = raw - after;
@@ -696,7 +761,8 @@ namespace IdleRng.Sim.Combat
                 after *= 1 + CorruptionLevel(r, s.Ticks) * r.Tower.CorruptDmgPerLevel;
                 if (tgt.Guard > 0 && GuardActive(s, tgt)) after *= Math.Max(0.0, 1 - tgt.Guard);
             }
-            double dealt = Absorb(src, tgt, after, element);
+            double dealt = Absorb(ctx, src, tgt, after, element);
+            h.Dealt = dealt; h.Mitigated = mitigated;
 
             if (crit) src.Tally.Crits++;
             onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false, graze, lucky));
@@ -713,16 +779,23 @@ namespace IdleRng.Sim.Combat
                 src.FeastDmgBonus += r.FeastDmg;
                 onAction?.Invoke(new FightAction(src.Id, FightAction.FeastEvent, src.Id, src.FeastBonus + src.FeastDmgBonus));
             }
+            HookHitLanded(ctx, h);
+            HookHitTaken(ctx, h);
             Fire(r, s, tgt, FightTrigger.OnHitTaken, rng, onAction);
             if (crit) Fire(r, s, src, FightTrigger.OnCrit, rng, onAction);
 
-            if (!magical && !aoe && mitigated > 0 && tgt.Alive && src.Alive && Has(tgt, RuleModifiers.CounterMitigated))
+            if (!magical && !aoe && mitigated > 0 && tgt.Alive && src.Alive && Has(tgt, RuleModifiers.CounterMitigated)
+                && EnterGuard(r, s, GuardKind.Counter, true, out var saved))   // a counter is a triggered effect: no counter of a counter
             {
-                tgt.Tally.Counters++;
-                double c = Absorb(tgt, src, mitigated * r.CounterMult, null);
-                onAction?.Invoke(new FightAction(tgt.Id, null, src.Id, c, false, false, false, true));
-                Reborn(src, onAction);
-                GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, onAction);
+                try
+                {
+                    tgt.Tally.Counters++;
+                    double c = Absorb(ctx, tgt, src, mitigated * r.CounterMult, null);
+                    onAction?.Invoke(new FightAction(tgt.Id, null, src.Id, c, false, false, false, true));
+                    Reborn(src, onAction);
+                    GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, onAction);
+                }
+                finally { ExitGuard(s, saved); }
             }
             return dealt;
         }
@@ -751,12 +824,17 @@ namespace IdleRng.Sim.Combat
             return t.Hp - before;
         }
 
-        /// <summary>Shield first, then HP. Records damage and kills. Element null = no per-element tally.</summary>
-        static double Absorb(FightUnit src, FightUnit tgt, double amount, string element)
+        /// <summary>
+        /// Shield first, then HP (the lanes' HP-damage hook sits between them). Records damage and kills; a blow that would kill
+        /// meets root_rebirth first, then the would-die hook. Element null = no per-element tally.
+        /// </summary>
+        static double Absorb(RuleCtx c, FightUnit src, FightUnit tgt, double amount, string element)
         {
             double absorbed = Math.Min(tgt.Shield, amount);
             tgt.Shield -= absorbed;
-            double dealt = Math.Min(tgt.Hp, amount - absorbed);
+            double hpDamage = amount - absorbed;
+            HookHpDamage(c, src, tgt, ref hpDamage);
+            double dealt = Math.Min(tgt.Hp, hpDamage);
             bool wasAlive = tgt.Alive;
             tgt.Hp -= dealt;
             if (tgt.Hp < 0) tgt.Hp = 0;
@@ -770,13 +848,20 @@ namespace IdleRng.Sim.Combat
             if (tgt.ChannelTicks > 0) tgt.ChannelDealt += absorbed + dealt;
             if (wasAlive && !tgt.Alive)
             {
+                bool saved = false;
                 if (tgt.RebirthHeal > 0)   // root_rebirth: it survives this one blow, once per fight
                 {
                     tgt.Hp = tgt.RebirthHeal * tgt.MaxHp;
                     tgt.RebirthHeal = 0;
                     tgt.RebornPending = true;
+                    saved = true;
                 }
-                else src.Tally.Kills++;
+                else HookWouldDie(c, src, tgt, ref saved);
+                if (!saved && !tgt.Alive)
+                {
+                    src.Tally.Kills++;
+                    tgt.KilledBy = src.Id;
+                }
             }
             return dealt;
         }
@@ -1251,6 +1336,7 @@ namespace IdleRng.Sim.Combat
                 if (Has(u, RuleModifiers.RootRebirth)) w.F64(u.RebirthHeal);
                 if (Has(u, RuleModifiers.NightFeast)) { w.F64(u.FeastBonus); w.F64(u.FeastDmgBonus); }
                 if (Has(u, RuleModifiers.EchoCast)) w.I32(u.DecoysLeft);
+                HookHashUnit(w, s, u);   // the lanes' rule state, for carriers only
                 if (s.Tower)   // only tower fights hash the tower fields, so every other fight keeps its hash
                 {
                     w.F64(u.Entropy); w.I32(u.Vents); w.I32(u.PhaseNext); w.Bool(u.IsAdd); w.I32(u.Spawned); w.F64(u.Guard);
@@ -1259,6 +1345,7 @@ namespace IdleRng.Sim.Combat
                 }
             }
             if (s.Tower) w.I32(s.PeakCorruption);
+            HookHashFight(w, s);
             return Sha256.Hex(Sha256.Compute(w.ToArray()));
         }
     }

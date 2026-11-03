@@ -89,6 +89,8 @@ namespace IdleRng.Sim.Content
         public int MonEchoDecoys { get; internal set; }          // MON_ECHO_DECOYS
         public double MonDrainShieldCap { get; internal set; }   // MON_DRAIN_SHIELD_CAP
         public int MonDoubleTurns { get; internal set; }         // MON_DOUBLE_TURNS
+        public int MonTriggerDepth { get; internal set; }        // MON_TRIGGER_DEPTH (loop guard, specs/16 section 6.4)
+        public int MonExtraActionsCap { get; internal set; }     // MON_EXTRA_ACTIONS_CAP (loop guard, specs/16 section 6.4)
 
         // Account and meta-progression (specs/18 section 5). Placeholders.
         public int ShardsPerCycle { get; internal set; }         // SHARDS_PER_CYCLE
