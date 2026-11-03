@@ -255,12 +255,30 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 unbreached and shellcrack", 14,
                 new[] { KeepshellCrab("a_keep", RuleModifiers.Unbreached), KeepshellCrab("a_siege", RuleModifiers.Shellcrack) },
                 new[] { Tank("b_tank", "fire"), Mage("b_mage", "nature"), Brawler("b_brawler", "dark") });
+            // Species Iaido Mantis (#159): vantage and iai_draw on both; one waits (still_hunt), one cuts actions off (sever_art).
+            yield return new Vector("2v3 iai, still hunt and severed arts", 1,
+                new[] { Mantis("a_hunt", RuleModifiers.StillHunt), Mantis("a_sever", RuleModifiers.SeverArt) },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "fire"), Tank("b_tank", "light") });
+            // Species Cuckling (#143): Nest Thief's stolen_turn on both, one with the Usurped Nest capstone, one with the Clutch
+            // Throne's egg (a third unit on side A), against a skill user, a healer and a mage to steal from.
+            yield return new Vector("2v3 usurper cuckoo and clutch empress", 13,
+                new[] { Cuckling("a_usurp", RuleModifiers.Usurp), Cuckling("a_empress", RuleModifiers.FoundlingEgg) },
+                new[] { Brawler("b_brawler", "light"), Healer("b_healer", "water"), Mage("b_mage", "nature") });
             // Species Lodge Beaver (#146): its chase capstones on its own kit (barricade, mudwork, Stand Firm, Mud Patch, Tail
             // Thump, Sluice Gate) against a brawler, a caster and a healer.
             yield return new Vector("2v3 tail slap and holdback", 15,
                 new[] { LodgeBeaver("a_slap", RuleModifiers.TailSlap), LodgeBeaver("a_dam", RuleModifiers.Holdback) },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "fire"), Healer("b_healer", "dark") });
         }
+
+        // Species Iaido Mantis (#159): the native kit (vantage, Draw Cut, iai_draw), Blade Echo from its book, plus one chase capstone.
+        static Fighter Mantis(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(260, 520, 80, 380, 220, 120, 380, 180),
+            Skills = { Dmg("draw_cut", StatIds.Str, 1.7, 3, SkillTarget.Enemy, "nature") },
+            Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Dmg("blade_echo", StatIds.Spd, 0.4, 0)) },
+            Rules = { RuleModifiers.Vantage, RuleModifiers.IaiDraw, chase },
+        };
 
         // Species Fountain Axolotl (#150).
         static Fighter Axolotl(string id) => new Fighter
@@ -342,6 +360,18 @@ namespace IdleRng.Bots.Golden
                 Fx("sluice_gate", SkillKind.Shield, SkillTarget.Self, null, StatIds.Wis, 1.2, 4, 3),
             },
             Rules = { RuleModifiers.Barricade, RuleModifiers.Mudwork, chase },
+        };
+
+        // Species Cuckling (#143): its native kit (Coin Toss, Windfall, stolen_turn) plus one chase capstone.
+        static Fighter Cuckling(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(420, 300, 60, 160, 200, 240, 420, 520),
+            Skills =
+            {
+                Dmg("coin_toss", StatIds.Luk, 2.0, 3),
+                Fx("windfall", SkillKind.Buff, SkillTarget.Self, StatIds.CritRate, null, 0.15, 0, 2),
+            },
+            Rules = { RuleModifiers.StolenTurn, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.

@@ -844,6 +844,44 @@ namespace IdleRng.Sim.Combat
         /// <summary>The nature element (holdback's release).</summary>
         public const string NatureElement = "nature";
 
+        // Species Iaido Mantis (#159): rules coded in Combat/Rules/IaidoMantis.cs. Its native tree 1 carries lane B's vantage.
+
+        /// <summary>
+        /// Every hit the unit makes outside its own action (vantage counters, its on_hit_taken and on_evade effects) deals x(1 +
+        /// MON_IAI_BONUS) with +MON_IAI_CRIT crit rate. The Leaf Scabbard native capstone (Iaido Mantis).
+        /// </summary>
+        public const string IaiDraw = "iai_draw";
+
+        /// <summary>
+        /// When its turn comes and it has not waited MON_HUNT_WAITS times in a row, the unit waits (no action, MON_HUNT_KEEP of the
+        /// gauge kept); until its next turn vantage's window is open at any HP and answers area actions. The Still Hunt in-run chase
+        /// capstone (Iaido Mantis).
+        /// </summary>
+        public const string StillHunt = "still_hunt";
+
+        /// <summary>
+        /// A vantage counter dealing at least MON_SEVER_FRAC of the enemy's max HP cuts off the action it answers; each cut adds
+        /// MON_SEVER_DMG damage against that enemy, up to MON_SEVER_MAX cuts. The Severed Arts book chase capstone (Iaido Mantis).
+        /// </summary>
+        public const string SeverArt = "sever_art";
+
+        // Species Cuckling (#143): coded in Combat/Rules/Cuckling.cs; its native tree 2 carries lane F's mimic_core.
+
+        /// <summary>
+        /// When an enemy's turn comes and the unit's gauge is at least MON_STEAL_GAUGE full, it acts in the enemy's place (the
+        /// enemy loses the turn, the unit's gauge drops to 0), MON_STEALS_PER_FOE per enemy per fight. Nest Thief's capstone.
+        /// </summary>
+        public const string StolenTurn = "stolen_turn";
+
+        /// <summary>A stolen turn casts the victim's first ready skill with the unit's stats and puts it on cooldown for the victim. The Usurped Nest chase capstone.</summary>
+        public const string Usurp = "usurp";
+
+        /// <summary>
+        /// At fight start the unit lays an egg on its side (even a full one) that hatches into a Foundling after MON_HATCH_ACTIONS
+        /// of its actions. The Clutch Throne chase capstone.
+        /// </summary>
+        public const string FoundlingEgg = "foundling_egg";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
@@ -857,6 +895,8 @@ namespace IdleRng.Sim.Combat
             MartyrFlame, HollowSun,
             PyreTithe, AshShroud, PyreMercy, EmberEternal,
             TideMoat, Unbreached, Shellcrack,
+            IaiDraw, StillHunt, SeverArt,
+            StolenTurn, Usurp, FoundlingEgg,
             Mudwork, TailSlap, Holdback };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;

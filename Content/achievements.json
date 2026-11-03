@@ -74,6 +74,22 @@
       "unlocks_species": "keepshell_crab"
     },
     {
+      "id": "quickdraw",
+      "name_key": "achievement.quickdraw.name",
+      "kind": "stat_reached",
+      "ref": "spd",
+      "amount": 650.0,
+      "unlocks_species": "iaido_mantis"
+    },
+    {
+      "id": "luk_650",
+      "name_key": "achievement.luk_650.name",
+      "kind": "stat_reached",
+      "ref": "luk",
+      "amount": 650.0,
+      "unlocks_species": "cuckling"
+    },
+    {
       "id": "dam_builder",
       "name_key": "achievement.dam_builder.name",
       "kind": "runs_finished",

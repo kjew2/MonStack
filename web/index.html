@@ -554,6 +554,7 @@ small, .small { font-size: 12px; }
 .fstage .unit .bar .fill { background: var(--ok); }
 .uart { position: relative; align-self: center; margin-top: 2px; transition: transform var(--dur-fast) ease-out, opacity var(--dur-fast), filter var(--dur-slow); }
 .fstage .uart .sprite { display: block; width: min(36vw, 150px); height: min(36vw, 150px); padding: 0; background: none; border: 0; }
+.fstage .unit.add .uart .sprite { width: min(20vw, 80px); height: min(20vw, 80px); }   /* foundling_egg's egg (#143): a smaller third unit */
 .unit.foe .uart .sprite { transform: scaleX(-1); }
 .unit.acting .uart { transform: translateX(14px); } .unit.foe.acting .uart { transform: translateX(-14px); }
 .unit.hit .uart { transform: translateX(-8px); opacity: .7; } .unit.foe.hit .uart { transform: translateX(8px); }

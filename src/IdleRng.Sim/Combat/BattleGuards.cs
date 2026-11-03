@@ -74,6 +74,12 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public double FlatShare = 1;
 
+        /// <summary>Crit rate a rule adds to this hit only (iai_draw), set before the crit roll.</summary>
+        public double CritBonus;
+
+        /// <summary>iai_draw applies to this hit (an out-of-turn hit of a carrier), for its multiplier and log line.</summary>
+        public bool Iai;
+
         /// <summary>seep lowered the hit's mitigation to the lower of the target's DEF and WIS (for its log line).</summary>
         public bool SeepLowered;
 

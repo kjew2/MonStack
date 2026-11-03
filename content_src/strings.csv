@@ -608,7 +608,7 @@ rule.arise.unit,{name} (risen)
 rule.last_rite.name,Last Rite
 rule.last_rite.desc,"When it is knocked out, its living allies split {MON_RITE_SHARE:pct} of its base stats among them for the rest of the fight. A save from Rebirth or Death's Door is not a knockout. Does nothing in a one-on-one fight."
 rule.last_rite.log,each ally gains {amount:pct} of its stats
-tree.mimic_core.name,Mimic Core
+tree.mimic_core.name,Brood Nest
 tree.heirloom.name,Heirloom
 tree.mastery.name,Mastery
 tree.limit_break.name,Limit Break
@@ -766,6 +766,61 @@ mskill.keep_gate.name,Keep Gate
 mskill.keep_gate.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 mskill.trophy_wall.name,Trophy Wall
 mskill.trophy_wall.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+species.iaido_mantis.name,Iaido Mantis
+tree.leaf_scabbard.name,Leaf Scabbard
+tree.unseen_blade.name,Scroll of the Unseen Blade
+tree.still_hunt.name,Still Hunt
+tree.severed_arts.name,Severed Arts
+tree.still_hunt.apex,Ghost Orchid Reaper
+tree.severed_arts.apex,Thousand-Petal Kensei
+book.book_unseen.name,Skill Book: Scroll of the Unseen Blade
+achievement.quickdraw.name,Quickdraw
+rule.iai_draw.name,Iai
+rule.iai_draw.desc,"Every hit it makes outside its own turn (Vantage counters, when-hit and when-evading effects) deals +{MON_IAI_BONUS:pct} damage with +{MON_IAI_CRIT:pct} crit rate."
+rule.iai_draw.log,draws: +{amount} damage
+rule.still_hunt.name,Still Hunt
+rule.still_hunt.desc,"When its turn comes it waits instead, up to {MON_HUNT_WAITS} turns in a row; each wait gives back {MON_HUNT_KEEP:pct} of a turn's gauge. Until its next turn Vantage answers at any HP and also answers area attacks. Waiting does not ready skills."
+rule.still_hunt.log,waits motionless ({amount} in a row)
+rule.sever_art.name,Severed Arts
+rule.sever_art.desc,"A Vantage counter that deals at least {MON_SEVER_FRAC:pct} of the enemy's max HP cuts off the move it answers: it deals and applies nothing, and the skill still goes on cooldown. Each move cut off adds +{MON_SEVER_DMG:pct} damage against that enemy, up to {MON_SEVER_MAX} cuts."
+rule.sever_art.log,cuts the move off ({amount} cut)
+mskill.draw_cut.name,Draw Cut
+mskill.draw_cut.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.crescent_draw.name,Crescent Draw
+mskill.crescent_draw.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.blade_echo.name,Blade Echo
+mskill.blade_echo.desc,Chase trait. When hit: strike back for {power:pct} {scales}.
+mskill.petal_veil.name,Petal Veil
+mskill.petal_veil.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.iai_parry.name,Iai Parry
+mskill.iai_parry.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+species.cuckling.name,Cuckling
+tree.nest_thief.name,Nest Thief
+tree.foundling_ledger.name,The Foundling's Ledger
+tree.usurper_cuckoo.name,Usurped Nest
+tree.clutch_empress.name,Clutch Throne
+tree.usurper_cuckoo.apex,Usurper Cuckoo
+tree.clutch_empress.apex,Clutch Empress
+book.book_ledger.name,Skill Book: The Foundling's Ledger
+achievement.luk_650.name,Stolen Fortune
+rule.stolen_turn.name,Stolen Turn
+rule.stolen_turn.desc,"When an enemy's turn comes and its gauge is at least {MON_STEAL_GAUGE:pct} full, it acts first in the enemy's place: the enemy loses that turn and its gauge empties. {MON_STEALS_PER_FOE} steal per enemy per fight; a stolen turn has no extra actions."
+rule.usurp.name,Usurp
+rule.usurp.desc,"Each turn it steals is spent on the victim's own skill: it casts the victim's first ready skill with its own stats, and that skill goes on cooldown for the victim. With none ready, a basic attack. It may steal {MON_USURP_STEALS} turns from each enemy per fight."
+rule.foundling_egg.name,Foundling Egg
+rule.foundling_egg.desc,"At the start of a fight it lays an egg on its side, even on a full side. The egg has {MON_EGG_HP:pct} of its max HP and does not act; after {MON_HATCH_ACTIONS} of its actions it hatches into a Foundling with {MON_HATCH_STATS:pct} of its stats and its skills, but no rules. Egg and Foundling never keep the side alive or count for kills."
+mskill.begging_cry.name,Begging Cry
+mskill.begging_cry.desc,An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
+mskill.nest_down.name,Nest Down
+mskill.nest_down.desc,Chase trait. When hit: +{power:pct} {stat} for {duration} turns.
+mskill.crown_peck.name,Crown Peck
+mskill.crown_peck.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.clutch_call.name,Clutch Call
+mskill.clutch_call.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+rule.stolen_turn.log,"steals the turn ({amount} more on this foe)"
+rule.usurp.log,turns the stolen turn on its owner
+rule.foundling_egg.log,{amount} HP
+rule.foundling_egg.unit,{name}'s Foundling
 species.lodge_beaver.name,Lodge Beaver
 tree.mudwork.name,Mudwork
 tree.tail_slap.name,Tail Slap

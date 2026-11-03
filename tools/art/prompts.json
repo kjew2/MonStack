@@ -49,6 +49,14 @@
    "name": "Keepshell Crab",
    "prompt": "A stubby rust-orange hermit crab that wears a whole stone castle keep as its shell: crenellated towers, a portcullis gate over its face, coral and seaweed growing in the mortar. Its claws are wrapped in riveted gate-plates and raised to punch. Cute, glaring little castle."
   },
+  "iaido_mantis": {
+   "name": "Iaido Mantis",
+   "prompt": "A cracked jade-and-orchid mantis with a torn wing, crouched in a quick-draw stance with one scythe in a leaf scabbard."
+  },
+  "cuckling": {
+   "name": "Cuckling",
+   "prompt": "A plump, fluffy cuckoo chick, round as a ball and oddly large for its nest, with soot-black and deep violet down, a pale lavender belly, tiny stubby wings and oversized clawed orange feet gripping a nest of black thorny twigs. It wears the cracked top half of a white speckled eggshell like a little helmet tilted over one eye: the shell of an egg that was not its own. Its huge beak gapes wide open, begging, and the inside of its mouth glows bright magenta-violet. Large glossy round eyes with violet glints, adorable but greedy. On the ground beside the nest lies a small pale blue egg that has been pushed out. Cute, with something quietly wrong about it."
+  },
   "lodge_beaver": {
    "name": "Lodge Beaver",
    "prompt": "A stout beaver wearing a wall of stacked logs and mud so thick it can barely waddle, hugging one more log for the pile."
@@ -146,6 +154,26 @@
    "species": "keepshell_crab",
    "name": "Siegebreaker Crab",
    "prompt": "the castle shell has been rebuilt as a dark iron-and-timber siege tower on wheels, its claws replaced by heavy black iron battering rams with crab-claw heads, cracked enemy shields hung on its walls as trophies. Colour palette shifts from grey stone to black iron, dark wood and rust red."
+  },
+  "still_hunt": {
+   "species": "iaido_mantis",
+   "name": "Ghost Orchid Reaper",
+   "prompt": "the jade fades to translucent white-and-violet like a ghost orchid, the torn wing a fan of petals; perfectly still, both scythes sheathed, petals frozen in the air."
+  },
+  "severed_arts": {
+   "species": "iaido_mantis",
+   "name": "Thousand-Petal Kensei",
+   "prompt": "a tall mantis sword saint with both scythes drawn, the wing regrown as a cloak of orchid petals, cut paper talismans pinned along its scabbard."
+  },
+  "usurper_cuckoo": {
+   "species": "cuckling",
+   "name": "Usurper Cuckoo",
+   "prompt": "a grown cuckoo, larger than any host, wearing a crown of broken eggshell."
+  },
+  "clutch_empress": {
+   "species": "cuckling",
+   "name": "Clutch Empress",
+   "prompt": "the chick has grown into a tall, elegant, regal brood-mother cuckoo empress: sleek glossy plumage in deep violet and black with a soft lavender chest, a long flowing train of tail feathers like a royal gown, and a small cracked-eggshell tiara. She sits on a grand throne-like nest of woven thorny branches, gently sheltering just three large pale-blue speckled eggs under one wing. Calm, proud, motherly expression. Smooth feathers with no clusters, no bumps, no holes, no eggs attached to her body. Colour palette adds soft lavender and warm gold accents to the violet."
   },
   "tail_slap": {
    "species": "lodge_beaver",
