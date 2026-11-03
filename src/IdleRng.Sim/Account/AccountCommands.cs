@@ -20,7 +20,7 @@ namespace IdleRng.Sim.Account
         Wallet = 2,
         /// <summary>Owned species and talent ranks.</summary>
         Collection = 4,
-        /// <summary>Achievements and records.</summary>
+        /// <summary>Achievements, records and the display name.</summary>
         Progress = 8,
         /// <summary>Dungeon tickets, attempts and bests.</summary>
         Dungeon = 16,
@@ -38,7 +38,7 @@ namespace IdleRng.Sim.Account
     public enum CommandKind
     {
         StartRun, FinishRun, Abandon, BuyOffer, RerollVendor, CloseVendor, SetLoadout, Dismantle, Lock, RunTower, DebugGrantBook,
-        SetRulebook, RunEndless,
+        SetRulebook, RunEndless, SetName,
         // run commands from here on (AccountCommands.IsRunCommand)
         Drill, Rest, Fight, Take, Discard, Reroll, Spend, Book,
     }
@@ -62,7 +62,10 @@ namespace IdleRng.Sim.Account
     {
         public CommandKind Kind { get; set; }
 
-        /// <summary>startRun: species. drill: stat. book, debugGrantBook: book id. setRulebook: the rulebook text ("" clears it).</summary>
+        /// <summary>
+        /// startRun: species. drill: stat. book, debugGrantBook: book id. setRulebook: the rulebook text ("" clears it). setName: the
+        /// display name ("" clears it).
+        /// </summary>
         public string Id { get; set; }
 
         /// <summary>startRun: books brought (null = none). setLoadout: talents switched off.</summary>
@@ -96,6 +99,7 @@ namespace IdleRng.Sim.Account
             ["setLoadout"] = CommandKind.SetLoadout, ["dismantle"] = CommandKind.Dismantle, ["lock"] = CommandKind.Lock,
             ["runTower"] = CommandKind.RunTower, ["debugGrantBook"] = CommandKind.DebugGrantBook,
             ["setRulebook"] = CommandKind.SetRulebook, ["runEndless"] = CommandKind.RunEndless,
+            ["setName"] = CommandKind.SetName,
             ["drill"] = CommandKind.Drill, ["rest"] = CommandKind.Rest, ["fight"] = CommandKind.Fight, ["take"] = CommandKind.Take,
             ["discard"] = CommandKind.Discard, ["reroll"] = CommandKind.Reroll, ["spend"] = CommandKind.Spend, ["book"] = CommandKind.Book,
         };
@@ -132,6 +136,7 @@ namespace IdleRng.Sim.Account
                 case CommandKind.Lock: c.A = Int(a, 0); c.Flag = a.Bool(1); break;
                 case CommandKind.RunTower: case CommandKind.RunEndless: c.A = Int(a, 0); c.Team = a.IntList(1); break;
                 case CommandKind.SetRulebook: c.A = Int(a, 0); c.Id = a.Has(1) ? a.Str(1) : ""; break;
+                case CommandKind.SetName: c.Id = a.Has(0) ? a.Str(0) : ""; break;
                 case CommandKind.DebugGrantBook: c.Id = a.Str(0); c.A = a.Has(1) ? Int(a, 1) : 1; break;
                 case CommandKind.Drill: case CommandKind.Book: c.Id = a.Str(0); break;
                 case CommandKind.Take: c.A = Int(a, 0); c.B = Int(a, 1); break;
@@ -178,6 +183,7 @@ namespace IdleRng.Sim.Account
                 case CommandKind.DebugGrantBook: return AccountPart.Wallet;
                 case CommandKind.SetRulebook: return AccountPart.Rulebooks;
                 case CommandKind.RunEndless: return AccountPart.Wallet | AccountPart.Endless | AccountPart.Progress | AccountPart.Collection;
+                case CommandKind.SetName: return AccountPart.Progress;
                 default: return AccountPart.Training;   // run commands
             }
         }
@@ -245,6 +251,7 @@ namespace IdleRng.Sim.Account
                         if (i < 0 || i >= a.Vault.Count) throw new ArgumentException("no Vault entry " + i);
                     return AccountOps.RunEndless(c, a, team, cmd.A);
                 }
+                case CommandKind.SetName: AccountOps.SetName(a, cmd.Id); return null;
                 case CommandKind.Drill: return TrainingRun.Drill(c, s, cmd.Id);
                 case CommandKind.Rest: return TrainingRun.Rest(c, s);
                 case CommandKind.Fight: return TrainingRun.Fight(c, s, onAction, onStart);

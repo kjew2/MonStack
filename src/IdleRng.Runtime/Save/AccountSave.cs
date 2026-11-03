@@ -223,6 +223,12 @@ namespace IdleRng.Runtime.Save
                 // writes as nothing, so the step only moves the version.
                 version = 11;
             }
+            if (version == 11)
+            {
+                // v11 -> v12 (specs/28 section 6): the display name. It starts as null, which lean JSON writes as nothing, so the
+                // step only moves the version.
+                version = 12;
+            }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
             return version;

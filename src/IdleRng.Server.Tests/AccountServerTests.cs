@@ -584,12 +584,13 @@ namespace IdleRng.Server.Tests
             for (int i = 0; i < 3; i++) a.SealOne(rig.Now);
             One("setRulebook", 1, "always>basic@lowest_hp");
             One("runEndless", EndlessSim.SeasonOf(AccountServer.DayOf(rig.Now)), new List<int> { 0, 1, 2, 3 });
+            One("setName", "Ash");
             One("lock", 0, false);
             One("startRun", Db.StarterSpecies.Id);
             One("abandon");
             One("dismantle", 0);
 
-            Assert.That(seen, Is.SupersetOf(new[] { "debugGrantBook", "startRun", "finishRun", "buyOffer", "rerollVendor", "closeVendor", "setLoadout", "lock", "runTower", "setRulebook", "runEndless", "abandon", "dismantle" }));
+            Assert.That(seen, Is.SupersetOf(new[] { "debugGrantBook", "startRun", "finishRun", "buyOffer", "rerollVendor", "closeVendor", "setLoadout", "lock", "runTower", "setRulebook", "runEndless", "setName", "abandon", "dismantle" }));
             var b = rig.Device("a");
             b.Open();
             Assert.That(AccountParts.Split(b.Acct), Is.EqualTo(AccountParts.Split(a.Acct)), "the server holds the client's account, item by item");

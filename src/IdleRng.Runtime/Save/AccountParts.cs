@@ -28,7 +28,7 @@ namespace IdleRng.Runtime.Save
             [Training] = new[] { nameof(AccountState.Seed), nameof(AccountState.RunsStarted), nameof(AccountState.TalentsOff), nameof(AccountState.Vendor) },
             [Wallet] = new[] { nameof(AccountState.Shards), nameof(AccountState.Books) },
             [Collection] = new[] { nameof(AccountState.OwnedSpecies), nameof(AccountState.Talents) },
-            [Progress] = new[] { nameof(AccountState.Achievements), nameof(AccountState.Records) },
+            [Progress] = new[] { nameof(AccountState.Achievements), nameof(AccountState.Records), nameof(AccountState.Name) },
             [Dungeon] = new[] { nameof(AccountState.Tower) },
             [Endless] = new[] { nameof(AccountState.Endless) },
             [Rulebooks] = new[] { nameof(AccountState.Rulebooks) },

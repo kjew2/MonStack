@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using IdleRng.Runtime.Save;
+using IdleRng.Server;
 using IdleRng.Sim.Account;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
@@ -26,6 +27,12 @@ namespace IdleRng.Web
 
         private readonly ContentDb _db;
         private AccountState _acct;
+
+        /// <summary>
+        /// The player id of the page's local Endless Tower board (specs/28 section 6.1): the server core's EndlessBoard over memory,
+        /// built on each read from this account only, until the page commits to the server (specs/27 step 3) and reads its board.
+        /// </summary>
+        private const string LocalPlayer = "local";
         private RunState _run => _acct?.Active;
 
         public RunHost(string contentJson)
@@ -372,6 +379,7 @@ namespace IdleRng.Web
                     case "endlessInfo": EndlessInfo(w, a.Int(0)); return w.EndObj().ToString();
                     case "endlessFloor": EndlessFloorRead(w, a.Int(0), a.El(1), a.Int(2), null); return w.EndObj().ToString();
                     case "endlessPreview": EndlessFloorRead(w, a.Int(0), a.El(1), a.Int(2), a.El(3)); return w.EndObj().ToString();
+                    case "endlessBoard": EndlessBoardRead(w, a.Int(0), a.Has(1) ? a.Int(1) : EndlessBoard.DefaultTop); return w.EndObj().ToString();
                 }
                 if (!AccountCommand.IsCommand(name)) return Fail("unknown command");
                 var cmd = AccountCommand.Parse(name, a);
@@ -410,6 +418,7 @@ namespace IdleRng.Web
                     }
                     case CommandKind.RerollVendor: w.P("ok", true).P("cost", (long)res); break;
                     case CommandKind.Dismantle: w.P("ok", true).P("refund", (long)res); break;
+                    case CommandKind.SetName: w.P("ok", true).P("name", _acct.Name); break;
                     default: w.P("ok", true); break;   // startRun, abandon, setLoadout, closeVendor, lock, debugGrantBook, setRulebook
                 }
             }
@@ -503,6 +512,32 @@ namespace IdleRng.Web
             }
             w.EndArr();
         }
+
+        /// <summary>
+        /// endlessBoard(season, top?), read only (specs/28 section 6.1): the season board as the server's EndlessBoard.ReadAsync
+        /// gives it, from a local board holding this account only: its season best and name are put on it first, as the server
+        /// does when it accepts a commit (EndlessBoard.RecordAsync; the time is 0, as the board holds one player). `local` tells
+        /// the page the rows are this device's only.
+        /// </summary>
+        private void EndlessBoardRead(JsonOut w, int season, int top)
+        {
+            if (season < 0) throw new ArgumentException("the season must not be negative");
+            var board = new EndlessBoard(new MemoryLeaderboardStore());   // fresh each read: another account loaded since never shows
+            board.SetNameAsync(LocalPlayer, _acct.Name).GetAwaiter().GetResult();
+            board.RecordAsync(LocalPlayer, _acct.Endless, 0).GetAwaiter().GetResult();
+            var v = board.ReadAsync(LocalPlayer, season, top).GetAwaiter().GetResult();
+            w.P("ok", true).P("season", v.Season).P("total", v.Total).P("local", true).P("name", _acct.Name)
+                .P("fallbackName", EndlessBoard.FallbackName(LocalPlayer)).P("nameMin", DisplayName.Min).P("nameMax", DisplayName.Max);
+            w.Key("top").Arr();
+            foreach (var r in v.Top) BoardRowJson(w, r);
+            w.EndArr();
+            w.Key("you");
+            if (v.You == null) w.Null();
+            else BoardRowJson(w, v.You);
+        }
+
+        private static void BoardRowJson(JsonOut w, BoardRow r) =>
+            w.Obj().P("rank", r.Rank).P("name", r.Name).P("floor", r.Floor).P("you", r.You).EndObj();
 
         /// <summary>
         /// One Endless Tower climb (AccountOps.RunEndless): the rewards, the records after it, and each floor fought with its fight
@@ -797,7 +832,7 @@ namespace IdleRng.Web
             var ac = _acct;
             var m = AccountOps.Modifiers(_db, ac);
             var w = new JsonOut().Obj();
-            w.P("seed", ac.Seed.ToString("x16", CultureInfo.InvariantCulture)).P("runsStarted", ac.RunsStarted).P("shards", ac.Shards).P("hasRun", ac.Active != null);
+            w.P("seed", ac.Seed.ToString("x16", CultureInfo.InvariantCulture)).P("name", ac.Name).P("runsStarted", ac.RunsStarted).P("shards", ac.Shards).P("hasRun", ac.Active != null);
             w.Key("owned").Arr();
             foreach (var s in ac.OwnedSpecies) w.Str(s);
             w.EndArr();

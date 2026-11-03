@@ -668,6 +668,16 @@ namespace IdleRng.Sim.Account
             else a.Rulebooks[e.Id] = book;
         }
 
+        /// <summary>
+        /// Set (or with empty text clear) the player's display name, checked and normalised by <see cref="DisplayName.Check"/>
+        /// (throws ArgumentException with the reason). Free, at any time.
+        /// </summary>
+        public static void SetName(AccountState a, string name)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            a.Name = DisplayName.Check(name);
+        }
+
         // ------------------------------------------------------------------ Endless Tower (specs/28 sections 5 and 6)
 
         /// <summary>

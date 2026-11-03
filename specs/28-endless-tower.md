@@ -129,7 +129,21 @@ Each monster's rulebook is a list of rule cards, one line each: **IF** [conditio
 - Star-Gems on milestone floors **once gems exist** (`specs/12` section 10.2; #49, #77), as the Dungeon.
 - **No Skill Books**: they stay the Dungeon's (kj).
 - Achievements on best floor ever: achievement kind `endless_floor` (`specs/18` section 8) reads `Endless.ClearedEver`; placeholder `spire_20` (Spire Breaker, 20 floors in one climb, unlocks no species). Checked after each climb and when an account loads.
-- A season leaderboard needs the server (T12) and comes with PvP.
+- **Season board** (kj, 2026-11-03), built ahead of PvP on the server core; it goes online when the page syncs with the server (`specs/27` section 10, steps 3 and 4). Details in section 6.1.
+
+### 6.1 Season board (kj, 2026-11-03)
+
+kj's answers: build it in the server core now with a local board in the page; rank by floor, ties to whoever got there first; accept the public-seed preview risk for now; build display names too.
+
+- **One board per season** (`endless-<season>`), ranked by `ClearedSeason`, the most floors one climb cleared that season. **Ties go to whoever reached that floor first** by the server's clock (the time of the commit that first put it there); equal floors never share a rank. One row per account.
+- **Written only by the server** (`specs/10` section 4.7, `specs/27` section 3.3): after it accepts a commit holding a `runEndless`, `AccountServer` puts the account's season best on the board (`EndlessBoard.RecordAsync`: a higher floor replaces the row and its time, the same or a lower one changes nothing). A commit with a climb or a `setName` also refreshes the shown name. No call takes a floor from a client. It is a projection: best effort after the commit lands, so a failed write leaves the board behind until the next climb, and a retried commit writes nothing.
+- **Left out:** an account that used a debug command (`specs/27` section 6.3). The commit that first uses one takes it off this season's, the last season's and its last climb's boards, and it is never written again.
+- **Reads** (`EndlessBoard.ReadAsync(player, season, top)`): the best `ENDLESS_BOARD_TOP` (placeholder 20, at most 100) rows as `{rank, name, floor, you}`, the reader's own row also when it is below them, and how many are on the board. Rows carry no player ids.
+- **Display names** (`DisplayName`, the same rule on the client and the server): `NAME_MIN` (3) to `NAME_MAX` (16) characters after trimming and folding spaces; ASCII letters, digits, spaces, `-` and `_`, at least one letter; no blocked word (a placeholder list, #129). Stored on the account as `Name` (progress part, save v12) by the command `setName(text)` (empty clears it), so the server re-checks it like any command. A player with no name shows as `Trainer XXXX`, four hex digits of the SHA-256 of their player id. Names need not be unique.
+- **Store:** `ILeaderboardStore` (keep-best submit, remove, top, one entry with its rank, names), `MemoryLeaderboardStore` in tests and the page; on UGS, Leaderboards with keep-best scores and the player name (`specs/27` step 4).
+- **The page until it syncs:** `endlessBoard(season)` reads the server core's board over memory holding only this account (`local: true`), so the screen shows the player's own row and name; other players appear once the page commits to the server.
+- **Replay risk** (`specs/27` section 9): the season's floors come from a public seed, so a script can try teams offline. Accepted for now (kj): climbs are free and unlimited, so a preview gains little; revisit before ranked rewards.
+- **Screen:** a Season board card on the Endless screen under the Climb button: the rows (the player's marked, and shown under the top when below it), how many trainers, the tie rule, the local note, and the player's name with Change (an inline field; a refused name shows the engine's reason). Checked by `web/wasm/test/endless.js`.
 
 ## 7. Content (content 6.1, MINOR; step 3; 6.2 added the rewards and `GAMBIT_SLOTS`, step 4)
 
@@ -179,6 +193,7 @@ Each step merges on its own with `./check.sh` green.
 3. **Endless sim and content**: enemies, shapes, scaling, season lineup, mutators, `EndlessSim.Run`, goldens, balance report. **Done** (content 6.1, `EndlessTests`, `golden/endless-vectors.txt`).
 4. **Account**: rulebooks per Vault entry, season records, rewards, save version, server command. **Done** (content 6.2, save v11, `EndlessAccountTests`).
 5. **Web**: team setup (the Dungeon's picker), the rulebook editor, the climb with playback and the mutator list. **Done.** The Endless Tower card on the home screen's Dungeon tab opens the Endless screen (`web/run.js`): the season (the UTC week, with the time left), its bests and climbs, the season's mutators (each with its effect and the floor it joins, those in force marked), the next `ENDLESS_BAND` floors (shape and its check as a hint, elite, enemies, shards), the team picker (the Dungeon's, generalized; exactly four, in slot order, each slot with its rule count and a Rules button opening the editor with Test on the floor that stopped the shown climb, else the next floor not cleared this season), the climb, its result (where it fell, the shards for new floors, first clears, achievements, every floor fought with Watch) and floor playback in the Dungeon's view, 4v4, with the floor's mutators and a rule firing shown as "follows rule N". The editor is `web/rulebook.js` (section 4.5), also opened from the Vault detail sheet. Bridge reads `endlessFloor` and `endlessPreview` (section 5). Browser checks `web/wasm/test/endless.js` and `web/wasm/test/rulebook.js` in `check.sh`; rule firings in Dungeon playback read the same way.
+6. **Season board** (section 6.1, kj 2026-11-03): display names (`setName`, save v12), `EndlessBoard` and `ILeaderboardStore` in the server core, written by `AccountServer` at accepted commits; the page's local board and the board card. **Done.** Online with `specs/27` steps 3 and 4.
 
 ## 10. Questions for kj
 
