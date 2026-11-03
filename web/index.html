@@ -106,6 +106,17 @@ small, .small { font-size: 12px; }
 #tabs .tabsp.pill { position: absolute; top: -7px; right: 0; padding: 0 5px; border-radius: var(--r-pill); background: var(--panel-2); border: 1px solid var(--line); font-size: 10px; line-height: 15px; letter-spacing: 0; }
 #tabs button { white-space: nowrap; }
 .sticky-start { position: sticky; bottom: 0; z-index: 2; }
+/* The action bar (issue #130): a screen's main buttons ride the bottom of its scrolling pane (#main or #modal), so they are in
+   reach without a scroll. It is the pane's last child: margin-top:auto drops it to the bottom of a short screen, and the negative
+   bottom margin and inset cover the pane's bottom padding, so content scrolls away under it. --pane-pb is that padding. */
+#main, .rbbody { --pane-pb: 20px; } #modal { --pane-pb: 14px; }
+.actionbar { position: sticky; bottom: calc(-1 * var(--pane-pb)); z-index: 3; display: flex; flex-wrap: wrap; gap: 8px; margin: auto calc(-1 * var(--gutter-r)) calc(-1 * var(--pane-pb)) calc(-1 * var(--gutter-l));
+  padding: 14px var(--gutter-r) calc(var(--pane-pb) - 4px) var(--gutter-l); background: linear-gradient(transparent, var(--bg) 14px); }
+.actionbar > .btn { flex: 1 1 auto; margin: 0; }
+.actionbar > .btn.block { flex-basis: 100%; }
+/* A screen's own header: Back on the left, the title, then what it shows on the right (issue #130: Back is never at the page's foot) */
+.screenhead { display: flex; align-items: center; gap: 10px; }
+.screenhead h2 { flex: 1; min-width: 0; }
 /* Raise tab: the species carousel. Cards snap to the middle and the neighbours peek in from the sides. */
 .carousel { --card: 240px; position: relative; -webkit-overflow-scrolling: touch; display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
   padding: 4px max(14%, calc(50% + (var(--gutter-l) + var(--gutter-r)) / 2 - var(--card) / 2)) 8px; margin: 0 calc(-1 * var(--gutter-r)) 0 calc(-1 * var(--gutter-l)); scrollbar-width: none; overscroll-behavior-x: contain; }
@@ -180,6 +191,9 @@ small, .small { font-size: 12px; }
 .stat { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: center; min-height: 46px; margin: 0 -12px; padding: 5px 12px; }
 .stat + .stat { border-top: 1px solid var(--line); }
 .stat .lbl { font: 700 13px var(--font-display); color: var(--st, var(--text)); }
+/* Two columns of compact stat rows (grade screen, Vault detail; issue #130) */
+.statgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 14px; row-gap: 6px; }
+.statgrid .stat, .statgrid .stat + .stat { min-height: 0; margin: 0; padding: 2px 0; border-top: 0; grid-template-columns: 34px minmax(0, 1fr); gap: 6px; }
 /* The stage (Train tab): the monster in the middle, actions and energy along its top, the last action's result under it */
 .hud.staged { grid-template-columns: 1fr; }
 .card.stage { position: relative; gap: 4px; padding: 8px 10px; background: radial-gradient(ellipse 60% 50% at 50% 60%, var(--arena-top), transparent 75%), var(--panel); }
@@ -623,13 +637,14 @@ small, .small { font-size: 12px; }
 .vcmp { display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 4px 10px; align-items: baseline; }
 .vcmp > :not(:nth-child(4n+1)) { text-align: right; }
 .vcmp .lbl { font: 700 13px var(--font-display); }
-#toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
+#toasts { position: absolute; left: 12px; right: 12px; top: calc(8px + env(safe-area-inset-top, 0px));   /* at the top, so a toast never covers the action bar or the tabs (issue #130) */
+  display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; background: var(--toast-bg); box-shadow: var(--shadow-pop); animation: tin .2s ease-out; }
-@keyframes tin { from { transform: translateY(8px); opacity: 0; } }
+@keyframes tin { from { transform: translateY(-8px); opacity: 0; } }   /* drops in from the top edge */
 /* ---- Rulebook editor (specs/28 section 4.5): web/rulebook.js. A full-screen sheet in #app over the Vault sheet or the Endless
    screen; rule cards on one line where they fit; chips open a bottom picker inside the sheet; the acting rule's card lights up. */
 .rbsheet { position: absolute; inset: 0; z-index: 9; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
-.rbbody { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 14px var(--gutter-r) 20px var(--gutter-l); display: flex; flex-direction: column; gap: 12px; }
+.rbbody { isolation: isolate; /* its action bar stays under the picker sheet and its scrim */ flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 14px var(--gutter-r) 20px var(--gutter-l); display: flex; flex-direction: column; gap: 12px; }
 .rbbody > * { flex-shrink: 0; }
 .rbhead h2 { line-height: 1.1; }
 .rbhelp { margin: 0; }

@@ -262,26 +262,28 @@
       h('div', { class: 'small muted', 'data-id': 'detail-facts', text: e.fightsWon + ' of ' + e.fightsFought + ' rank fights won · dismantles for ' + e.refund + ' shards' +
         (e.sealedUtcMs ? ' · sealed ' + new Date(e.sealedUtcMs).toLocaleString() : '') }),
     );
-    const stats = h('div', { class: 'card', 'data-id': 'detail-stats' }, [h('div', { class: 'row between' }, [h('h3', { text: 'Stats' }), h('span', { class: 'small muted num', text: 'Σ ' + X.num(total(e)) })])]);
-    X.C.stats.forEach((s) => stats.append(h('div', { class: 'stat', style: 'grid-template-columns:38px 1fr' }, [
-      h('span', { class: 'lbl', text: X.up(s), ...X.TIP.attrs('stat:' + s) }), X.bar(e.stats[s], X.C.consts.statMax, X.num(e.stats[s]))])));
-    modal.append(stats);
-    e.trees.forEach((t, k) => {
-      const def = X.treeView(t.id, t.rolled);   // a rolled Awakening tree shows its own rolls (specs/15 section 4.1)
-      const tc = h('div', { class: 'card', 'data-id': 'detail-tree-' + k }, [h('div', { class: 'row between' }, [h('b', { text: treeName(t.id) }),
-        h('span', { class: 'small muted num', text: t.bought + '/' + treeSize(t.id) + ' bought' })])]);
-      // Nodes are bought in order (specs/15 section 1), so the first `bought` nodes are the bought ones.
-      if (def) def.nodes.forEach((n, ni) => tc.append(X.nodeRow(n, ni < t.bought ? 'got' : 'locked')));
-      modal.append(tc);
-    });
-    if (!e.trees.length) modal.append(h('p', { class: 'small muted', text: 'No trees slotted.' }));
-    modal.append(h('div', { class: 'row', style: 'flex-wrap:wrap' }, [
+    // The actions come right under the facts, before the stats and every tree node (issue #130: no scroll to find them).
+    modal.append(h('div', { class: 'row', 'data-id': 'detail-actions', style: 'flex-wrap:wrap' }, [
       h('button', { class: 'btn small', type: 'button', 'data-act': 'detail-lock', 'aria-pressed': e.locked ? 'true' : 'false', text: e.locked ? '🔒 Locked' : '🔓 Lock',
         onclick: () => { const r = X.run.acct('lock', i, !e.locked); if (!r.ok) X.toast(r.reason); X.rerender(); } }),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'detail-compare', text: 'Compare with…',
         onclick: () => { st.pick = ref(e, i); st.detail = null; X.rerender(); } }),
       rulebookButton(e, i),
     ]));
+    const stats = h('div', { class: 'card', 'data-id': 'detail-stats' }, [h('div', { class: 'row between' }, [h('h3', { text: 'Stats' }), h('span', { class: 'small muted num', text: 'Σ ' + X.num(total(e)) })]),
+      X.statGrid(e.stats)]);
+    modal.append(stats);
+    e.trees.forEach((t, k) => {
+      const def = X.treeView(t.id, t.rolled);   // a rolled Awakening tree shows its own rolls (specs/15 section 4.1)
+      const tc = h('div', { class: 'card', 'data-id': 'detail-tree-' + k }, [h('div', { class: 'row between' }, [h('b', { text: treeName(t.id) }),
+        h('span', { class: 'small muted num', text: t.bought + '/' + treeSize(t.id) + ' bought' })])]);
+      // Nodes are bought in order (specs/15 section 1), so the first `bought` nodes are the bought ones.
+      // The node list folds away (issue #130), so the sheet stays a summary; the path tiles show the tree at a glance.
+      if (def) tc.append(X.nodePath(def, t.bought), h('details', { class: 'small' }, [h('summary', { class: 'linkish', text: 'All ' + def.nodes.length + ' nodes' }),
+        ...def.nodes.map((n, ni) => X.nodeRow(n, ni < t.bought ? 'got' : 'locked'))]));
+      modal.append(tc);
+    });
+    if (!e.trees.length) modal.append(h('p', { class: 'small muted', text: 'No trees slotted.' }));
   }
 
   // Opens the monster's gambit rulebook editor (web/rulebook.js, specs/28 section 4.5) over the detail sheet.

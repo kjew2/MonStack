@@ -123,6 +123,14 @@
       h('span', { text: text }),
     ]);
   }
+  // A screen's main buttons, kept at the bottom of its scrolling pane (issue #130). Append it last.
+  const actionBar = (kids) => h('div', { class: 'actionbar', 'data-id': 'actionbar' }, kids);
+  // A screen header with Back on the left (issue #130): the way out is at the top, not after the whole page.
+  const screenHead = (title, act, onBack, right) => h('div', { class: 'screenhead' }, [
+    h('button', { class: 'btn small', type: 'button', 'data-act': act, 'aria-label': 'Back', text: '‹ Back', onclick: onBack }), h('h2', { text: title }), right]);
+  // The eight stats as two columns of compact bars (grade screen, Vault detail).
+  const statGrid = (stats) => h('div', { class: 'statgrid' }, C.stats.map((st) => h('div', { class: 'stat' }, [
+    h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(stats[st], C.consts.statMax, num(stats[st]))])));
   const speciesDef = (id) => C.species.find((s) => s.id === id);
   const rank = (i) => C.ranks[i];
   const elementTag = (e) => h('span', { class: 'tag', text: (C.elements[e] || { name: e }).name, style: C.elements[e] && C.elements[e].color ? 'border-color:' + C.elements[e].color : '' });
@@ -179,6 +187,7 @@
     main.scrollTop = prevScroll;
     const due = modal.hidden && main.querySelector('[data-focus="1"]');
     if (due) due.scrollIntoView({ block: 'nearest' });   // before the drill pop, which is placed by where the stage ends up
+    if (ui.tab !== 'train') $('floats').querySelectorAll('.dpop').forEach((e) => e.remove());   // a drill's pop belongs to the stage, not the other tabs
     if (modal.hidden) { showSpGains(); showDrillPop(); } else $('floats').replaceChildren();
   }
 
@@ -335,9 +344,9 @@
       const lastHurt = s.injuries.length ? s.injuries[s.injuries.length - 1] : null;
       main.append(h('div', { class: 'card alert' }, [
         h('h2', { text: 'Run complete' }),
-        h('p', { class: 'muted', text: 'All ' + k.runCycles + ' cycles are done.' +
+        h('div', { class: 'small muted', text: 'All ' + k.runCycles + ' cycles are done.' +
           (lastHurt && !lastHurt.back ? ' An injury in cycle ' + lastHurt.cycle + ' cost the rest of the run.' : '') }),
-        s.sp > 0 ? h('p', { class: 'gems', text: s.sp + ' unspent skill points are lost when you seal. Spend them on the Trees tab first.' }) : null,
+        s.sp > 0 ? h('div', { class: 'small gems', text: s.sp + ' unspent skill points are lost when you seal. Spend them on the Trees tab first.' }) : null,
         h('button', { class: 'btn primary block', type: 'button', 'data-act': 'seal', text: 'Seal in the Vault', onclick: seal }),
       ]));
     } else if (s.phase === 'awaitfight') {
@@ -358,7 +367,7 @@
       h('div', { class: 'stage-mon', 'data-id': 'stage-mon' }, [sprite(s.species, s.apex)]),
       resultLine(ui.last, s),
     ]));
-    main.append(oddsChips(s));
+    if (s.phase !== 'finished') main.append(oddsChips(s));   // no drills are left once the run is over (issue #130: keep the stats in view)
     // The drill pad in the thumb zone: a 4x2 grid of stat tiles. The whole tile (label, value and growth, gauge with milestone ticks)
     // is the Drill button; the small "i" in its corner, a sibling laid over the button, opens the stat's tooltip (issue #124).
     const pad = h('div', { class: 'pad', 'data-id': 'pad' });
@@ -378,7 +387,7 @@
     });
     main.append(pad);
     if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
-    main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
+    if (s.phase !== 'finished') main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
       text: 'Rest (+' + num(s.restEnergy) + ' energy)', onclick: rest }));
     ui.flash = null;
   }
@@ -508,9 +517,11 @@
 
   function renderTrees(main, s) {
     main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Skill trees' }), h('span', { class: 'num ' + (s.sp ? 'gems' : 'muted'), text: s.sp + ' SP', 'data-id': 'sp2' })]));
+    const firstEmpty = s.slots.indexOf(null);
     s.slots.forEach((slot, i) => {
-      if (!slot) {
-        main.append(h('div', { class: 'card slotcard empty' }, [h('b', { text: 'Slot ' + (i + 1) + ': empty' }), h('small', { text: 'Fills from tree offers (Awakenings at stat milestones, books, chase unlocks).' })]));
+      if (!slot) {   // one slim line per empty slot, the explanation once (issue #130: they pushed the chase trees off screen)
+        main.append(h('div', { class: 'card slotcard empty' }, [h('b', { text: 'Slot ' + (i + 1) + ': empty' }),
+          i === firstEmpty ? h('small', { text: 'Fills from tree offers (Awakenings at stat milestones, books, chase unlocks).' }) : null]));
         return;
       }
       const t = treeView(slot.tree, slot.rolled);
@@ -671,7 +682,7 @@
       ...(l.skillId ? TIP.attrs((l.you ? 'skill:' : 'mskill:') + l.skillId) : null) }))));
     if (lines.length > shown.length) modal.append(h('button', { class: 'btn small', type: 'button', text: 'Show all ' + f.actionCount + ' actions', onclick: () => { ui.showAll = true; render(); } }));
     if (f.actionCount > f.actions.length) modal.append(h('p', { class: 'small muted', text: 'Log capped at ' + f.actions.length + ' of ' + f.actionCount + ' actions.' }));
-    modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'fight-continue', text: 'Continue', onclick: () => { ui.fight = null; ui.showAll = false; render(); } }));
+    modal.append(actionBar(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'fight-continue', text: 'Continue', onclick: () => { ui.fight = null; ui.showAll = false; render(); } })));
   }
 
   // The fight's skill point reward as a badge (issue #86): the total, and a line per source (rank win, the next cycle).
@@ -1028,10 +1039,11 @@
       s.offers.length > 1 ? h('span', { class: 'more', text: '+' + (s.offers.length - 1) + ' more' }) : null,
     ]));
     o.trees.forEach((id, choice) => modal.append(offerCard(s, id, choice, choice === ui.offer.pick, o.rolled && o.rolled[choice])));
-    if (s.canReroll) modal.append(h('button', { class: 'btn block gemsy', type: 'button', 'data-act': 'reroll',
-      text: '🎲 Second Look: reroll, any stat (' + s.rerollsLeft + ' left)', onclick: reroll }));
-    modal.append(h('button', { class: 'btn ghost block', type: 'button', 'data-act': 'discard',
-      text: o.source === 'milestone' ? 'Skip — keep my trees' : 'Discard this offer', onclick: discard }));
+    modal.append(actionBar([
+      s.canReroll ? h('button', { class: 'btn block gemsy', type: 'button', 'data-act': 'reroll',
+        text: '🎲 Second Look: reroll, any stat (' + s.rerollsLeft + ' left)', onclick: reroll }) : null,
+      h('button', { class: 'btn ghost block', type: 'button', 'data-act': 'discard',
+        text: o.source === 'milestone' ? 'Skip — keep my trees' : 'Discard this offer', onclick: discard })]));
   }
 
   function offerCard(s, id, choice, sel, rolled) {
@@ -1404,7 +1416,8 @@
 
   function renderTower(main, modal) {
     const acct = run.account, day = run.towerDay(), ti = run.towerInfo(day);
-    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Dungeon' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
+    main.append(screenHead('Dungeon', 'tower-back', () => { stopPlayback(); ui.view = 'home'; ui.towerResult = null; ui.towerFight = null; render(); },
+      h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })),
       h('p', { class: 'small muted', 'data-id': 'tower-status', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday +
         ' of ' + ti.floors.length + ' floors · best ever ' + ti.clearedEver }));
     if (ui.towerResult) towerResult(main, ui.towerResult);
@@ -1412,7 +1425,7 @@
     main.append(h('h3', { text: 'Team' }));
     if (!acct.vault.length) main.append(h('p', { class: 'muted', text: 'Finish a run first: the team comes from your Vault.' }));
     else towerTeamPicker(main, ti.teamMax);
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-climb', disabled: !ui.towerTeam.length || ti.tickets <= 0,
+    const climb = h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-climb', disabled: !ui.towerTeam.length || ti.tickets <= 0,
       text: ti.tickets <= 0 ? 'No tickets: finish a run for pieces, or come back tomorrow' : ui.towerTeam.length ? 'Enter with ' + ui.towerTeam.length + (ui.towerTeam.length === 1 ? ' monster' : ' monsters') : 'Pick up to ' + ti.teamMax + ' monsters',
       onclick: () => {
         const r = run.runTower(day, ui.towerTeam.slice());
@@ -1424,7 +1437,7 @@
         if (ui.towerFight) startPlayback(r.final);
         render();
         $('main').scrollTop = 0;
-      } }));
+      } });
 
     main.append(h('h3', { text: "Today's floors" }));
     const fl = h('div', { class: 'card' });
@@ -1436,8 +1449,7 @@
       ]),
     ])));
     main.append(fl);
-    main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'tower-back', text: 'Back',
-      onclick: () => { stopPlayback(); ui.view = 'home'; ui.towerResult = null; ui.towerFight = null; render(); } }));
+    main.append(actionBar(climb));
 
     if (ui.towerFight) { modal.hidden = false; towerPlayModal(modal, ui.towerFight); }
   }
@@ -1604,7 +1616,7 @@
       prev ? h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-prev', text: '← Floor ' + prev.floor, onclick: () => watchFloor(prev.floor) }) : null,
       next ? h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-next', text: 'Floor ' + next.floor + ' →', onclick: () => watchFloor(next.floor) }) : null,
     ]));
-    modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-play-close', text: 'Close', onclick: close }));
+    modal.append(actionBar(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'tower-play-close', text: 'Close', onclick: close })));
   }
 
   // One line of a tower fight's log: an ordinary action, or a tower event (rule events read like actions).
@@ -1664,7 +1676,8 @@
   function renderEndless(main, modal) {
     const acct = run.account, season = run.endlessSeason(), ei = run.endlessInfo(season), r = ui.endlessResult;
     const size = ei.teamSize, team = ui.endlessTeam, next = Math.min(ei.maxFloors, ei.clearedSeason + 1);
-    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Endless Tower' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
+    main.append(screenHead('Endless Tower', 'endless-back', () => { stopPlayback(); ui.view = 'home'; ui.endlessResult = null; ui.endlessFight = null; render(); },
+      h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })),
       h('p', { class: 'small muted', 'data-id': 'endless-status', 'data-season': String(season), text: 'Season ' + season + ' · ' + seasonLeft(season) +
         ' · best this season ' + ei.clearedSeason + ' · best ever ' + ei.clearedEver + ' · ' + plural(ei.climbs, 'climb', 'climbs') + ' this season' }));
     if (r) endlessResult(main, r, season);
@@ -1681,9 +1694,9 @@
       ]);
     });
     const ready = team.length === size;
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'endless-climb', disabled: !ready,
+    const climb = h('button', { class: 'btn primary block', type: 'button', 'data-act': 'endless-climb', disabled: !ready,
       text: ready ? 'Climb with this team' : 'Pick ' + (team.length ? plural(size - team.length, 'more monster', 'more monsters') : size + ' monsters'),
-      onclick: climbEndless }));
+      onclick: climbEndless });
 
     endlessBoard(main, season);
 
@@ -1721,8 +1734,7 @@
       ...ei.floors.slice(3).map(floorRow),
     ]));
     main.append(fl);
-    main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'endless-back', text: 'Back',
-      onclick: () => { stopPlayback(); ui.view = 'home'; ui.endlessResult = null; ui.endlessFight = null; render(); } }));
+    main.append(actionBar(climb));
 
     if (ui.endlessFight) { modal.hidden = false; endlessPlayModal(modal, ui.endlessFight); }
   }
@@ -1870,7 +1882,7 @@
       prev ? h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-prev', text: '← Floor ' + prev.floor, onclick: () => endlessWatch(prev.floor) }) : null,
       next ? h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-next', text: 'Floor ' + next.floor + ' →', onclick: () => endlessWatch(next.floor) }) : null,
     ]));
-    modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'endless-play-close', text: 'Close', onclick: close }));
+    modal.append(actionBar(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'endless-play-close', text: 'Close', onclick: close })));
   }
 
   // An Endless floor's fight is labelled as a tower floor's ("Floor N: <name>", units named by the bridge), laid out 4v4, with
@@ -1885,7 +1897,7 @@
   }
 
   function vaultHelpers() {
-    return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, treeView: treeView, elementTag: elementTag, up: up, num: num, bar: bar, TIP: TIP, sprite: sprite };
+    return { h: h, C: C, run: run, toast: toast, rerender: render, nodeRow: nodeRow, nodePath: nodePath, treeView: treeView, elementTag: elementTag, up: up, num: num, bar: bar, statGrid: statGrid, TIP: TIP, sprite: sprite };
   }
 
   // The grade screen's Dungeon ticket line: the pieces this grade earned, any whole ticket they made, and the progress after.
@@ -1911,9 +1923,7 @@
       h('div', { class: 'center gems num', 'data-id': 'payout', text: '+' + ui.payout + ' Training Shards' }),
       ticketLine(),
     );
-    const card = h('div', { class: 'card' }, [h('h3', { text: 'Stat breakdown' })]);
-    C.stats.forEach((st) => card.append(h('div', { class: 'stat', style: 'grid-template-columns:38px 1fr' }, [h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(e.stats[st], C.consts.statMax, num(e.stats[st]))])));
-    main.append(card);
+    main.append(h('div', { class: 'card', 'data-id': 'grade-stats' }, [h('h3', { text: 'Stat breakdown' }), statGrid(e.stats)]));
     main.append(h('div', { class: 'card' }, [h('h3', { text: 'Trees' }),
       ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
     ui.earned.forEach((a) => main.append(h('div', { class: 'card alert', 'data-id': 'earned-' + a.id }, [
@@ -1924,9 +1934,9 @@
     const acct = run.account;
     if (acct.vaultOver > 0) main.append(h('p', { class: 'small bad center', 'data-id': 'grade-vault-over', role: 'status',
       text: 'Sealed over the Vault cap (' + acct.vault.length + '/' + acct.vaultCap + '). Dismantle ' + acct.vaultOver + ' before the next run.' }));
-    if (acct.vendor && acct.vendor.offers.length)
-      main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'to-vendor', text: 'Visit the vendor', onclick: () => { stopClimb(); ui.view = 'vendor'; startReveal(); render(); } }));
-    else main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: closeVendor }));   // a vendor with nothing to sell closes too
+    main.append(actionBar(acct.vendor && acct.vendor.offers.length
+      ? h('button', { class: 'btn primary block', type: 'button', 'data-act': 'to-vendor', text: 'Visit the vendor', onclick: () => { stopClimb(); ui.view = 'vendor'; startReveal(); render(); } })
+      : h('button', { class: 'btn primary block', type: 'button', 'data-act': 'new-run', text: 'New run', onclick: closeVendor })));   // a vendor with nothing to sell closes too
   }
 
   // ---- post-run vendor (specs/18 section 4): offers rolled when the run was sealed, rarer with a better grade, bought with shards.
@@ -2008,11 +2018,11 @@
     render();
   }
   // Vendor reroll (specs/18 section 4, issue #104): replaces the unbought offers; the price rises with each reroll this visit.
-  function rerollButton(main) {
+  function rerollButton() {
     const acct = run.account, v = acct.vendor;
-    if (!v || !v.canReroll) return;
-    main.append(h('button', { class: 'btn small block gemsy', type: 'button', 'data-act': 'vendor-reroll', disabled: acct.shards < v.rerollPrice,
-      text: 'Reroll unbought offers · ' + v.rerollPrice + ' shards', onclick: rerollVendor }));
+    if (!v || !v.canReroll) return null;
+    return h('button', { class: 'btn gemsy', type: 'button', 'data-act': 'vendor-reroll', disabled: acct.shards < v.rerollPrice,
+      text: 'Reroll · ' + v.rerollPrice + ' shards', 'aria-label': 'Reroll unbought offers for ' + v.rerollPrice + ' shards', onclick: rerollVendor });
   }
   function rerollVendor() {
     stopReveal();
@@ -2040,9 +2050,9 @@
         h('span', { class: 'small merchant', 'data-id': 'merchant-line', text: 'The merchant lays out the wares…' }),
         h('button', { class: 'btn small', type: 'button', 'data-act': 'reveal-skip', text: 'Skip', onclick: skipReveal })]));
       vendorOffers(main);
-      rerollButton(main);
     }
-    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: closeVendor }));
+    main.append(actionBar([v && v.offers.length ? rerollButton() : null,
+      h('button', { class: 'btn primary', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: closeVendor })]));
   }
 
   // ---- gauntlet wheel (specs/19, specs/12 section 6): a slowing reel of the floors climbed lands on the floor and the enemy
