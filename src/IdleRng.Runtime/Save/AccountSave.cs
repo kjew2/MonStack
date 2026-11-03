@@ -12,7 +12,7 @@ namespace IdleRng.Runtime.Save
     /// The monster-trainer account save (specs/18 section 6): a new save lineage in its own store slot (specs/13 section 1).
     /// Same file shape as SaveSerializer (header line with CRC, then JSON):
     /// <code>
-    /// { "Kind": "monster_account", "SchemaVersion": 10, "Account": { ...AccountState without Active... },
+    /// { "Kind": "monster_account", "SchemaVersion": 11, "Account": { ...AccountState without Active... },
     ///   "Run": { ...RunState without its Log... } (absent when no run is in progress) }
     /// </code>
     /// The run in progress is stored as its state, not its command log (schema v10, kj 2026-11-01, specs/27 section 3.5), so it
@@ -68,6 +68,8 @@ namespace IdleRng.Runtime.Save
             if (a.Records == null) AccountOps.RebuildRecords(a);
             if (a.Tower == null) a.Tower = new TowerProgress();   // a null in the file reads as no attempts yet
             if (a.TalentsOff == null) a.TalentsOff = new List<string>();   // a null in the file reads as every talent on
+            if (a.Endless == null) a.Endless = new EndlessProgress();   // a null in the file reads as no climbs yet
+            if (a.Rulebooks == null) a.Rulebooks = new SortedDictionary<int, string>();
 
             if (body["Run"] is JObject state)
             {
@@ -214,6 +216,12 @@ namespace IdleRng.Runtime.Save
                         if (e is JObject o)
                             foreach (var f in new[] { "Seed", "RunHash", "GauntletHash", "GauntletCleared" }) o.Remove(f);
                 version = 10;
+            }
+            if (version == 10)
+            {
+                // v10 -> v11 (specs/28 section 5): Endless Tower progress and the rulebooks. Both start empty, which lean JSON
+                // writes as nothing, so the step only moves the version.
+                version = 11;
             }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;

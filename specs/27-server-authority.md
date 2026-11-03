@@ -41,10 +41,12 @@ All parts are Cloud Save player items in the **private** access class: only the 
 |---|---|---|---|
 | `head` | The root: `seq`, the account hash and the one before the last commit, each part's stored key and hash, each Vault entry's stored key, the holder device, schema and content version, `debugUsed` | About 2 KB at a full Vault | Every commit, and a claim (section 5.1) |
 | `training` | `Seed`, `RunsStarted`, `TalentsOff` (the next run's loadout), the run in progress as its state (no command log), and the post-run vendor while it is open | About 1.4 KB at most | `startRun`, every run command, `finishRun` (opens the vendor), `abandon`, `setLoadout`, `buyOffer`, `rerollVendor`, `closeVendor` |
-| `wallet` | `Shards`, `Books` (later any premium currency, section 3.4) | Content size | `startRun` (books leave), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `dismantle`, `runTower` |
-| `collection` | `OwnedSpecies`, `Talents` (ranks) | Content size | `finishRun` (unlocks), `buyOffer` |
-| `progress` | `Achievements`, `Records` | Content size | `finishRun` |
+| `wallet` | `Shards`, `Books` (later any premium currency, section 3.4) | Content size | `startRun` (books leave), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `dismantle`, `runTower`, `runEndless` |
+| `collection` | `OwnedSpecies`, `Talents` (ranks) | Content size | `finishRun` (unlocks), `buyOffer`, `runEndless` (unlocks) |
+| `progress` | `Achievements`, `Records` | Content size | `finishRun`, `runEndless` (achievements) |
 | `dungeon` | `Tower`: tickets, pieces, grant day, attempts, bests | Fixed | `runTower`, `finishRun` (pieces), the daily grant |
+| `endless` | `Endless`: the season of the last climb, climbs this season, floors cleared this season and ever (`specs/28` section 5) | Fixed | `runEndless` |
+| `rulebooks` | `Rulebooks`: each Vault monster's gambit rulebook as text, by entry id (`specs/28` section 4.4); apart from the entries, which never change, and from the other parts, since the editor writes it often | At most `VAULT_CAP` rulebooks of `GAMBIT_SLOTS` rules, about 3 KB at 50 | `setRulebook`, `dismantle` (the monster's rulebook goes with it) |
 | `vault` | The Vault index: entry ids in Vault order, the locked ids, each entry's short hash (16 hex characters) | `VAULT_CAP` ids, about 1.1 KB at 50 | `finishRun`, `dismantle`, `lock` |
 | `mon.<id>` | One sealed monster as its result: species, grade, rank, end, cycles, fights, final stats, trees (bought nodes, rolls, fusions), books used, gauntlet floor, killer and Legacy Title, seal time | One per entry, about 0.6 KB | `finishRun` creates; `dismantle` deletes; never changed |
 
@@ -61,7 +63,7 @@ Vault entry ids: an entry is named by the index of the run that made it (`RunsSt
 - **Entry hash**: the first 16 hex characters of the SHA-256 of the entry's JSON without `Locked` (enough to catch a damaged item; kj 2026-11-01). The `vault` part lists the ids in Vault order, the locked ids and every entry hash, so it pins every entry without loading them; `Join` refuses an entry that does not match its hash.
 - **Account hash**: SHA-256 over the sorted `key hash` lines of every part except the entries (which the vault part pins). The client computes it after its last pending command and sends it with the commit; the server computes it after re-applying them. Equal hashes mean equal accounts, with no field list to keep in step.
 
-Because the `vault` part pins entries by hash, a commit loads only the parts its commands declare (`AccountCommands.Reads` and `Writes`); the parts it does not load are stood in for by a new account's, which cannot change the result (step 1's test proves it per command), and only loaded parts are written back. The index and its entries load together: a commit whose commands touch the Vault (`startRun`, `finishRun`, `dismantle`, `lock`, `runTower`) loads every entry, and a commit of run or vendor commands loads none **(agent, 2026-11-02: simpler than loading single entries, at most about 30 KB; kj can veto)**.
+Because the `vault` part pins entries by hash, a commit loads only the parts its commands declare (`AccountCommands.Reads` and `Writes`); the parts it does not load are stood in for by a new account's, which cannot change the result (step 1's test proves it per command), and only loaded parts are written back. The index and its entries load together: a commit whose commands touch the Vault (`startRun`, `finishRun`, `dismantle`, `lock`, `runTower`, `setRulebook`, `runEndless`) loads every entry, and a commit of run or vendor commands loads none **(agent, 2026-11-02: simpler than loading single entries, at most about 30 KB; kj can veto)**.
 
 ### 3.3 Projections (read by others, never the truth)
 
@@ -118,7 +120,7 @@ What this gives up: a sealed monster can no longer be replayed step by step (bal
 
 ## 4. Commits
 
-A commit carries the commands since the last accepted one. Commands are the bridge's own (`web/wasm/BRIDGE.md`): account commands `startRun`, `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `closeVendor`, `setLoadout`, `dismantle`, `lock`, `runTower`, and run commands `drill`, `rest`, `fight`, `take`, `discard`, `reroll`, `spend`, `book`, each `{ k, a }` with the arguments as JSON. Read-only calls (`gauntlet`, `towerInfo`, `towerFloor`) are not commands. The switch that applies them moves from `IdleRng.Web.RunHost` into `IdleRng.Sim.Account.AccountCommands.Apply(content, account, command)`, so the browser, the module and the tests run one dispatcher. Each command declares the parts it reads and writes (`AccountCommands.Touches`), checked by a test that applies every command with the other parts absent.
+A commit carries the commands since the last accepted one. Commands are the bridge's own (`web/wasm/BRIDGE.md`): account commands `startRun`, `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `closeVendor`, `setLoadout`, `dismantle`, `lock`, `runTower`, `setRulebook`, `runEndless`, and run commands `drill`, `rest`, `fight`, `take`, `discard`, `reroll`, `spend`, `book`, each `{ k, a }` with the arguments as JSON. Read-only calls (`gauntlet`, `towerInfo`, `towerFloor`, `endlessInfo`) are not commands. The switch that applies them moves from `IdleRng.Web.RunHost` into `IdleRng.Sim.Account.AccountCommands.Apply(content, account, command)`, so the browser, the module and the tests run one dispatcher. Each command declares the parts it reads and writes (`AccountCommands.Touches`), checked by a test that applies every command with the other parts absent.
 
 ```
 client                                              module (Cloud Code)
@@ -144,7 +146,7 @@ client                                              module (Cloud Code)
 - **Idempotent.** A commit that repeats the last accepted one (same `fromSeq`, `fromHash` and `toHash`, `head` already at `fromSeq + 1` with that hash) returns `Accepted` with that `seq` and hash and applies nothing, so a retry after a lost answer is safe. An older one is `Stale`.
 - **Content changes.** When `head` was written under other content than the module's, the next commit loads and rewrites every part, so whatever loading under the new content changed (a run in progress that no longer loads, an achievement added) is stored as the client's own load made it; `head` then carries the new version. An open does not write: it returns the account as loaded under the module's content, with the stored `seq` and hash as the client's base.
 - **Size.** A commit holds at least one command, at most `COMMIT_MAX_COMMANDS` (placeholder 500) and at most one `finishRun`; anything else is `Refused` before a command is applied. It writes at most the 6 parts below `head`, `head` itself and one new entry. `COMMIT_MAX_COMMANDS` and `CLOCK_SLACK_SEC` are server configuration (`IdleRng.Server.ServerConfig`), not content constants **(agent, 2026-11-02: they bound the server, not the game; kj can veto)**.
-- **Cost of a check.** Re-applying a whole run is about 90 commands, each rank fight a `BattleSim.Resolve` (0.1 to 1.3 ms in the spike); a `runTower` replays up to the Dungeon's floors. Milliseconds, inside Cloud Code's 15 s limit.
+- **Cost of a check.** Re-applying a whole run is about 90 commands, each rank fight a `BattleSim.Resolve` (0.1 to 1.3 ms in the spike); a `runTower` replays up to the Dungeon's floors. Milliseconds, inside Cloud Code's 15 s limit. An Endless Tower climb is one 4v4 fight per floor: measured 2026-11-03 on .NET 8 Release with bot teams (`focus` and `balanced`, 24 to 32 floors), 7 to 25 ms a climb, 0.2 to 0.8 ms a floor, so under 0.5 s even at `ENDLESS_MAX_FLOORS`. A commit carries at most `COMMIT_MAX_CLIMBS` (placeholder 10) climbs **(agent, 2026-11-03)**: a client sends each climb as its own checkpoint, so the cap only stops a scripted commit from tying up a call (worst case about 4 s).
 
 | Rejection | Meaning | Client does |
 |---|---|---|
@@ -167,7 +169,7 @@ client                                              module (Cloud Code)
 ### 5.2 Checkpoints (when the client commits)
 
 No timer. The client commits:
-- after a command that changes something besides the run in progress: `startRun` (so the server counts the run before it is played), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `closeVendor`, `dismantle`, `lock`, `runTower`, `setLoadout`;
+- after a command that changes something besides the run in progress: `startRun` (so the server counts the run before it is played), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `closeVendor`, `dismantle`, `lock`, `runTower`, `setLoadout`, `setRulebook`, `runEndless`;
 - when the page is hidden (`visibilitychange`), so the run in progress continues on another device;
 - when `CHECKPOINT_RUN_COMMANDS` (placeholder 25) run commands are pending;
 - on open, if commands are pending.
@@ -196,12 +198,13 @@ On the first open of this build the device's old account (`idle-rng-account-v1` 
 
 ### 6.2 Inputs the client supplies
 
-Commands are choices, except two values from the device:
+Commands are choices, except three values from the device:
 
 | Input | Command | Server rule |
 |---|---|---|
 | Seal time | `finishRun(sealedUtcMs)` | Display only. Accepted if not after the server's time plus `CLOCK_SLACK_SEC` (placeholder 300); else `Refused` |
 | Dungeon day | `runTower(day, team)` | The day the server gave the client at its last `Open` or commit (the device clock is not used), accepted if it is the server's day or the day before (a commit landing just after midnight). The daily free ticket follows from the day, so a moved device clock grants nothing (#21) |
+| Endless season | `runEndless(season, team)` | `EndlessSim.SeasonOf` of the server's day (the UTC week from Monday 00:00 UTC, `specs/28` section 5), accepted if it is the season of the server's day or of the day before (a commit landing just after Monday midnight). Rewards follow from the season, so a moved device clock pays nothing twice |
 
 ### 6.3 Debug commands
 

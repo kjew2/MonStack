@@ -70,7 +70,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^v\d+\.(\d+|\?) · [0-9a-f]{4,}(\+dirty)?$/.test(stamp), 'the header shows the version and commit: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 10, 'a new account owns only the starter species (slime), schema v10');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 11, 'a new account owns only the starter species (slime), schema v11');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -766,7 +766,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 10 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => !e.Locked), 'dismantling saved the account as v10 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 11 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => !e.Locked), 'dismantling saved the account as v11 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap, 'back at the cap');
   const vw = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -1005,6 +1005,52 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await page.locator('[data-id=evolve].done').waitFor({ timeout: 6000 });
   check(true, 'left alone, the evolution reaches the new form by itself');
   await page.locator('[data-id=evolve]').click();
+
+  // ---- Endless Tower on the bridge (specs/28 section 5; the screens come with step 5): this account in an engine of its own
+  {
+    // The Vault here came from the v1 save above, whose monsters have no id (-1): give the first four ids, so they can hold
+    // rulebooks, and leave the rest as they are (a monster with no id is refused a rulebook). The header's CRC is rewritten.
+    const crc32 = (buf) => { let c, crc = 0xffffffff; for (const b of buf) { c = (crc ^ b) & 0xff; for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1; crc = (crc >>> 8) ^ c; } return (crc ^ 0xffffffff) >>> 0; };
+    const raw = await page.evaluate(() => localStorage.getItem('idle-rng-account-v1'));
+    const body = JSON.parse(raw.slice(raw.indexOf('\n') + 1));
+    body.Account.Vault.slice(0, 4).forEach((v, i) => { v.Id = 9000 + i; });
+    const bodyText = JSON.stringify(body), bytes = Buffer.from(bodyText, 'utf8');
+    const saveText = 'IDLERNG-SAVE fmt=json crc32=' + crc32(bytes).toString(16).padStart(8, '0') + ' len=' + bytes.length + '\n' + bodyText;
+    const ectx = await browser.newContext();
+    await ectx.addInitScript((t) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('idle-rng-account-v1', t); sessionStorage.setItem('seeded', '1'); } }, saveText);
+    const ep = await ectx.newPage();
+    ep.on('pageerror', (e) => errors.push('pageerror (endless): ' + e.message));
+    // A bare page at the web root (as golden.js uses): the engine and its wrapper, none of the UI, so this is the only engine.
+    const bareUrl = new URL('endless-check.html', url).href;
+    await ep.route(bareUrl, (r) => r.fulfill({ contentType: 'text/html', body: '<!doctype html><script src="engine.js"></script><script src="run-engine.js"></script>' }));
+    await ep.goto(bareUrl);
+    const e = await ep.evaluate(async () => {
+      const r = await RunEngine.create();
+      const season = r.endlessSeason(20759), info = r.endlessInfo(season);
+      const noId = r.account.vault.findIndex((v) => v.id < 0), idx = r.account.vault.findIndex((v) => v.id >= 0);
+      const refusedNoId = noId < 0 ? null : r.setRulebook(noId, 'always>basic');
+      const set = r.setRulebook(idx, 'always>basic@lowest_hp|self_hp_below:0.3>basic');
+      const bad = r.setRulebook(idx, 'always>no_such_skill');
+      const climb = r.runEndless(season, [0, 1, 2, 3]);
+      const again = r.runEndless(season, [0, 1, 2, 3]);
+      const three = r.runEndless(season, [0, 1, 2]);
+      const saved = JSON.parse(localStorage.getItem('idle-rng-account-v1').split('\n').slice(1).join('\n'));
+      return { season, info, set, bad, refusedNoId, climb, again, three, entry: r.account.vault[idx], after: r.endlessInfo(season), saved: saved.Account };
+    });
+    check(e.season === 2966 && e.info.ok && e.info.teamSize === 4 && e.info.gambitSlots > 0 && e.info.floors.length === e.info.band
+      && e.info.floors[0].floor === 1 && e.info.floors[e.info.band - 1].elite && e.info.floors.every((f) => f.enemies.length === 4 && f.shards > 0),
+      'endlessInfo shows the season\'s first band with squads and shards');
+    check(e.set.ok && e.entry.rulebook === 'always>basic@lowest_hp|self_hp_below:0.3>basic' && e.bad.ok === false
+      && (e.refusedNoId === null || e.refusedNoId.ok === false), 'setRulebook stores a rulebook on the entry and refuses an unknown skill or a monster with no id');
+    check(e.climb.ok && e.climb.floors.length === e.climb.floorReached - (e.climb.capped ? 1 : 0) && e.climb.newFloors.length === e.climb.floorsCleared
+      && e.climb.clearedSeason === e.climb.floorsCleared && e.climb.climbs === 1, 'runEndless climbs and pays each floor cleared');
+    check(e.again.ok && e.again.hash === e.climb.hash && e.again.shards === 0 && e.again.climbs === 2, 'a retry replays the same climb and pays nothing new');
+    check(e.three.ok === false, 'a team of three is refused');
+    check(e.after.clearedSeason === e.climb.floorsCleared && e.after.floors.length > 0 && e.after.floors[0].floor === e.climb.floorsCleared + 1, 'endlessInfo moves past the season best');
+    check(e.saved.Endless && e.saved.Endless.Season === e.season && (e.saved.Endless.Climbs || 0) === 2
+      && Object.values(e.saved.Rulebooks || {}).length === 1, 'the climbs and the rulebook are saved');
+    await ectx.close();
+  }
 
   // ---- without a build stamp (an older dist) the header says "dev" and nothing errors
   const bare = await ctx.newPage();

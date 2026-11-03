@@ -28,12 +28,18 @@ namespace IdleRng.Sim.Account
         Vault = 32,
         /// <summary>The Vault entries themselves (one stored item each).</summary>
         Entries = 64,
+        /// <summary>Endless Tower season and bests.</summary>
+        Endless = 128,
+        /// <summary>The rulebooks by Vault entry id (edited often, so stored apart).</summary>
+        Rulebooks = 256,
     }
 
     /// <summary>Every command that changes the account, by its bridge name (web/wasm/BRIDGE.md).</summary>
     public enum CommandKind
     {
         StartRun, FinishRun, Abandon, BuyOffer, RerollVendor, CloseVendor, SetLoadout, Dismantle, Lock, RunTower, DebugGrantBook,
+        SetRulebook, RunEndless,
+        // run commands from here on (AccountCommands.IsRunCommand)
         Drill, Rest, Fight, Take, Discard, Reroll, Spend, Book,
     }
 
@@ -56,7 +62,7 @@ namespace IdleRng.Sim.Account
     {
         public CommandKind Kind { get; set; }
 
-        /// <summary>startRun: species. drill: stat. book, debugGrantBook: book id.</summary>
+        /// <summary>startRun: species. drill: stat. book, debugGrantBook: book id. setRulebook: the rulebook text ("" clears it).</summary>
         public string Id { get; set; }
 
         /// <summary>startRun: books brought (null = none). setLoadout: talents switched off.</summary>
@@ -65,10 +71,13 @@ namespace IdleRng.Sim.Account
         /// <summary>startRun: talents switched off (null = the saved loadout).</summary>
         public List<string> TalentsOff { get; set; }
 
-        /// <summary>runTower: the team as Vault positions, in slot order.</summary>
+        /// <summary>runTower, runEndless: the team as Vault positions, in slot order.</summary>
         public List<int> Team { get; set; }
 
-        /// <summary>buyOffer: offer. dismantle, lock: Vault position. take: choice. spend: slot. runTower: day. debugGrantBook: count.</summary>
+        /// <summary>
+        /// buyOffer: offer. dismantle, lock, setRulebook: Vault position. take: choice. spend: slot. runTower: day. runEndless: season.
+        /// debugGrantBook: count.
+        /// </summary>
         public int A { get; set; }
 
         /// <summary>take: slot.</summary>
@@ -86,6 +95,7 @@ namespace IdleRng.Sim.Account
             ["buyOffer"] = CommandKind.BuyOffer, ["rerollVendor"] = CommandKind.RerollVendor, ["closeVendor"] = CommandKind.CloseVendor,
             ["setLoadout"] = CommandKind.SetLoadout, ["dismantle"] = CommandKind.Dismantle, ["lock"] = CommandKind.Lock,
             ["runTower"] = CommandKind.RunTower, ["debugGrantBook"] = CommandKind.DebugGrantBook,
+            ["setRulebook"] = CommandKind.SetRulebook, ["runEndless"] = CommandKind.RunEndless,
             ["drill"] = CommandKind.Drill, ["rest"] = CommandKind.Rest, ["fight"] = CommandKind.Fight, ["take"] = CommandKind.Take,
             ["discard"] = CommandKind.Discard, ["reroll"] = CommandKind.Reroll, ["spend"] = CommandKind.Spend, ["book"] = CommandKind.Book,
         };
@@ -120,7 +130,8 @@ namespace IdleRng.Sim.Account
                 case CommandKind.BuyOffer: case CommandKind.Dismantle: case CommandKind.Spend: c.A = Int(a, 0); break;
                 case CommandKind.SetLoadout: c.Ids = a.Has(0) ? a.StrList(0) : new List<string>(); break;
                 case CommandKind.Lock: c.A = Int(a, 0); c.Flag = a.Bool(1); break;
-                case CommandKind.RunTower: c.A = Int(a, 0); c.Team = a.IntList(1); break;
+                case CommandKind.RunTower: case CommandKind.RunEndless: c.A = Int(a, 0); c.Team = a.IntList(1); break;
+                case CommandKind.SetRulebook: c.A = Int(a, 0); c.Id = a.Has(1) ? a.Str(1) : ""; break;
                 case CommandKind.DebugGrantBook: c.Id = a.Str(0); c.A = a.Has(1) ? Int(a, 1) : 1; break;
                 case CommandKind.Drill: case CommandKind.Book: c.Id = a.Str(0); break;
                 case CommandKind.Take: c.A = Int(a, 0); c.B = Int(a, 1); break;
@@ -161,10 +172,12 @@ namespace IdleRng.Sim.Account
                 case CommandKind.BuyOffer: return AccountPart.Training | AccountPart.Wallet | AccountPart.Collection;
                 case CommandKind.RerollVendor: return AccountPart.Training | AccountPart.Wallet;
                 case CommandKind.CloseVendor: case CommandKind.SetLoadout: return AccountPart.Training;
-                case CommandKind.Dismantle: return AccountPart.Wallet | AccountPart.Vault | AccountPart.Entries;
+                case CommandKind.Dismantle: return AccountPart.Wallet | AccountPart.Vault | AccountPart.Entries | AccountPart.Rulebooks;
                 case CommandKind.Lock: return AccountPart.Vault;
                 case CommandKind.RunTower: return AccountPart.Wallet | AccountPart.Dungeon;
                 case CommandKind.DebugGrantBook: return AccountPart.Wallet;
+                case CommandKind.SetRulebook: return AccountPart.Rulebooks;
+                case CommandKind.RunEndless: return AccountPart.Wallet | AccountPart.Endless | AccountPart.Progress | AccountPart.Collection;
                 default: return AccountPart.Training;   // run commands
             }
         }
@@ -175,17 +188,21 @@ namespace IdleRng.Sim.Account
             switch (k)
             {
                 case CommandKind.StartRun: return AccountPart.Collection | AccountPart.Vault;   // owned species, talents, the Vault cap
+                case CommandKind.FinishRun: return AccountPart.Endless;   // the endless_floor achievements
                 case CommandKind.RerollVendor: return AccountPart.Collection;                    // maxed talents
                 case CommandKind.SetLoadout: return AccountPart.Collection;
                 case CommandKind.Dismantle: return AccountPart.None;
-                case CommandKind.RunTower: return AccountPart.Vault | AccountPart.Entries;
+                case CommandKind.RunTower: return AccountPart.Vault | AccountPart.Entries | AccountPart.Rulebooks;
+                case CommandKind.SetRulebook: return AccountPart.Vault | AccountPart.Entries;
+                case CommandKind.RunEndless: return AccountPart.Vault | AccountPart.Entries | AccountPart.Rulebooks;
                 default: return AccountPart.None;
             }
         }
 
         /// <summary>
         /// Apply one command. Returns what the command produced for feedback: the new run (startRun), a FinishResult, the books
-        /// returned (abandon), an OfferBought, the shards spent (rerollVendor) or refunded (dismantle) as a long, a TowerRunResult,
+        /// returned (abandon), an OfferBought, the shards spent (rerollVendor) or refunded (dismantle) as a long, a TowerRunResult, an
+        /// EndlessRunResult,
         /// the run command's own result (DrillResult, RestResult, RankFightResult, TakeResult, SpendResult), or null.
         /// <paramref name="onAction"/> and <paramref name="onStart"/> watch a rank fight (playback only; they change nothing).
         /// </summary>
@@ -220,6 +237,14 @@ namespace IdleRng.Sim.Account
                     return AccountOps.RunTower(c, a, team, cmd.A);
                 }
                 case CommandKind.DebugGrantBook: AccountOps.GrantBooks(c, a, cmd.Id, cmd.A); return null;
+                case CommandKind.SetRulebook: AccountOps.SetRulebook(c, a, cmd.A, cmd.Id); return null;
+                case CommandKind.RunEndless:
+                {
+                    var team = cmd.Team ?? throw new ArgumentException("argument 1 missing");
+                    foreach (var i in team)
+                        if (i < 0 || i >= a.Vault.Count) throw new ArgumentException("no Vault entry " + i);
+                    return AccountOps.RunEndless(c, a, team, cmd.A);
+                }
                 case CommandKind.Drill: return TrainingRun.Drill(c, s, cmd.Id);
                 case CommandKind.Rest: return TrainingRun.Rest(c, s);
                 case CommandKind.Fight: return TrainingRun.Fight(c, s, onAction, onStart);

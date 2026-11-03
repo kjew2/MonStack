@@ -35,7 +35,7 @@ ENUMS = {
                      "shard_mult", "momentum", "loss_sp", "specialist", "tree_slots", "injury_shield", "last_cycle_ap",
                      "milestone_mult", "draft_rerolls", "iron_constitution", "gamblers_blood", "glass_cannon",
                      "echo_training"],
-    "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors"],
+    "AchievementKind": ["runs_finished", "rank_reached", "stat_reached", "gauntlet_floors", "endless_floor"],
     "SkillKind": ["damage", "heal", "shield", "taunt", "buff", "debuff", "passive"],
     "SkillTarget": ["enemy", "all_enemies", "self", "lowest_ally", "all_allies"],
     "TowerRole": ["regular", "marquee", "add"],
@@ -88,6 +88,7 @@ REQUIRED_CONSTANTS = {
     # Endless Tower (specs/28 section 7)
     "ENDLESS_SEED": "int", "ENDLESS_BASE": "double", "ENDLESS_GROWTH": "double", "ENDLESS_BAND": "int",
     "ENDLESS_ELITE_HP_MULT": "double", "ENDLESS_MAX_FLOORS": "int",
+    "ENDLESS_SHARDS_BASE": "int", "ENDLESS_SHARDS_PER_FLOOR": "double", "ENDLESS_ELITE_SHARD_MULT": "int", "GAMBIT_SLOTS": "int",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -152,6 +153,8 @@ MON_RANGES = {
     "CORRUPT_START_TICK": (">= 0", lambda v: v >= 0), "CORRUPT_EVERY_TICKS": ("> 0", lambda v: v > 0),
     "CORRUPT_HEAL_PER_LEVEL": (">= 0", lambda v: v >= 0), "CORRUPT_HEAL_FLOOR": ("[0, 1]", lambda v: 0 <= v <= 1),
     "CORRUPT_DMG_PER_LEVEL": (">= 0", lambda v: v >= 0),
+    "ENDLESS_SHARDS_BASE": (">= 0", lambda v: v >= 0), "ENDLESS_SHARDS_PER_FLOOR": (">= 0", lambda v: v >= 0),
+    "ENDLESS_ELITE_SHARD_MULT": (">= 1", lambda v: v >= 1), "GAMBIT_SLOTS": ("> 0", lambda v: v > 0),
 }
 
 

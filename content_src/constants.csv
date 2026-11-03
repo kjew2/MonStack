@@ -119,3 +119,7 @@ ENDLESS_GROWTH,double,1.05,Endless Tower: level x this per floor. Placeholder
 ENDLESS_BAND,int,10,Endless Tower: floors per band; the band's last floor is an elite floor and each full band adds a mutator. Placeholder
 ENDLESS_ELITE_HP_MULT,double,2,Endless Tower: an elite's HP multiplier (a Dungeon marquee boss at 4v4 scale). Placeholder
 ENDLESS_MAX_FLOORS,int,500,Endless Tower: a climb stops here even if the team never loses (safety cap)
+ENDLESS_SHARDS_BASE,int,2,Endless Tower rewards (specs/28 section 6): a floor cleared for the first time this season pays floor(ENDLESS_SHARDS_BASE + floor x ENDLESS_SHARDS_PER_FLOOR) shards. Placeholder
+ENDLESS_SHARDS_PER_FLOOR,double,0.5,Endless Tower: shards added per floor number. Placeholder
+ENDLESS_ELITE_SHARD_MULT,int,2,Endless Tower: an elite floor pays this many times its shards. Placeholder
+GAMBIT_SLOTS,int,6,most rules in one monster's rulebook (specs/28 section 4.4). Placeholder

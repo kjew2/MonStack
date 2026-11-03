@@ -14,7 +14,7 @@ namespace IdleRng.Sim.Tests
         static Content.ContentDb Db => TestContent.Db;
 
         /// <summary>Positional arguments as plain objects (string, double, bool, string[] or int[]; null = absent).</summary>
-        sealed class ObjArgs : ICommandArgs
+        internal sealed class ObjArgs : ICommandArgs
         {
             readonly object[] _a;
             public ObjArgs(params object[] a) { _a = a; }

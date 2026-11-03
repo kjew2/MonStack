@@ -357,6 +357,43 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void EndlessProgressAndRulebooks_RoundTrip()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            a.Endless = new EndlessProgress { Season = 2913, Climbs = 3, ClearedSeason = 12, ClearedEver = 17 };
+            AccountOps.SetRulebook(db, a, 0, "self_hp_below:0.3>basic@lowest_hp|always>basic");
+            var b = AccountSave.Decode(db, AccountSave.Encode(a));
+            Assert.That((b.Endless.Season, b.Endless.Climbs, b.Endless.ClearedSeason, b.Endless.ClearedEver), Is.EqualTo((2913, 3, 12, 17)));
+            Assert.That(b.Rulebooks, Is.EqualTo(a.Rulebooks));
+            Assert.That(b.Rulebook(b.Vault[0].Id), Is.EqualTo("self_hp_below:0.3>basic@lowest_hp|always>basic"));
+
+            var fresh = AccountSave.Decode(db, AccountSave.Encode(AccountOps.New(db, 4)));
+            Assert.That((fresh.Endless.Season, fresh.Endless.ClearedEver), Is.EqualTo((-1, 0)), "nothing saved reads as no climbs yet");
+            Assert.That(fresh.Rulebooks, Is.Empty);
+        }
+
+        [Test]
+        public void V10Save_MigratesToV11_WithNoClimbsAndNoRulebooks()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(a)));
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            acct.Remove("Endless");
+            acct.Remove("Rulebooks");
+            body["SchemaVersion"] = 10;
+            acct["SchemaVersion"] = 10;
+            var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
+            Assert.That(notice, Is.Null);
+            Assert.That(b.SchemaVersion, Is.EqualTo(11));
+            Assert.That((b.Endless.Season, b.Endless.Climbs, b.Endless.ClearedSeason, b.Endless.ClearedEver), Is.EqualTo((-1, 0, 0, 0)));
+            Assert.That(b.Rulebooks, Is.Empty);
+            Assert.That(b.Vault.Count, Is.EqualTo(a.Vault.Count));
+            Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(a.Active)));
+        }
+
+        [Test]
         public void AchievementsRecordsAndVendor_RoundTrip()
         {
             var db = TestContent.Db;

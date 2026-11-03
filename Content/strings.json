@@ -915,6 +915,10 @@
       "text": "Climber"
     },
     {
+      "key": "achievement.spire_20.name",
+      "text": "Spire Breaker"
+    },
+    {
       "key": "rarity.common.name",
       "text": "Common"
     },

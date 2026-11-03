@@ -31,7 +31,7 @@ namespace IdleRng.Bots.Tests
         {
             var a = Busy(61);
             var items = AccountParts.Split(a);
-            Assert.That(items.Keys, Is.SupersetOf(new[] { "training", "wallet", "collection", "progress", "dungeon", "vault" }));
+            Assert.That(items.Keys, Is.SupersetOf(new[] { "training", "wallet", "collection", "progress", "dungeon", "endless", "rulebooks", "vault" }));
             Assert.That(items.Keys.Count(k => k.StartsWith("mon.")), Is.EqualTo(a.Vault.Count));
             var b = AccountParts.Join(Db, items, out var notice);
             Assert.That(notice, Is.Null);
@@ -79,7 +79,7 @@ namespace IdleRng.Bots.Tests
             var seen = new HashSet<CommandKind>();
             void Run(AccountCommand cmd) { Check(a, cmd, decoy); seen.Add(cmd.Kind); }
 
-            for (int round = 0; round < 2; round++)
+            for (int round = 0; round < 4; round++)   // four monsters: an Endless Tower team
             {
                 var books = round == 0 ? new List<string> { Db.SkillBooks.Keys.First() } : null;
                 Run(new AccountCommand { Kind = CommandKind.StartRun, Id = "drake", Ids = books });
@@ -97,9 +97,13 @@ namespace IdleRng.Bots.Tests
             }
             Run(new AccountCommand { Kind = CommandKind.SetLoadout, Ids = new List<string>() });
             Run(new AccountCommand { Kind = CommandKind.Lock, A = 0, Flag = true });
+            var skill = a.Vault[1].Fighter(Db).Skills.FirstOrDefault(k => k.Kind != Sim.Content.SkillKind.Passive)?.Id ?? "basic";
+            Run(new AccountCommand { Kind = CommandKind.SetRulebook, A = 1, Id = "always>" + skill + "@lowest_hp" });
             Run(new AccountCommand { Kind = CommandKind.RunTower, A = 20391, Team = new List<int> { 0, 1 } });
+            Run(new AccountCommand { Kind = CommandKind.RunEndless, A = 2913, Team = new List<int> { 3, 2, 1, 0 } });
+            Run(new AccountCommand { Kind = CommandKind.RunEndless, A = 2913, Team = new List<int> { 0, 1, 2, 3 } });
             Run(new AccountCommand { Kind = CommandKind.Lock, A = 0, Flag = false });
-            Run(new AccountCommand { Kind = CommandKind.Dismantle, A = 0 });
+            Run(new AccountCommand { Kind = CommandKind.Dismantle, A = 1 });   // the one with a rulebook
             Run(new AccountCommand { Kind = CommandKind.DebugGrantBook, Id = Db.SkillBooks.Keys.First(), A = 1 });
             Run(new AccountCommand { Kind = CommandKind.StartRun, Id = "slime" });
             Run(new AccountCommand { Kind = CommandKind.Abandon });
@@ -157,6 +161,8 @@ namespace IdleRng.Bots.Tests
             AccountOps.GrantBooks(Db, d, Db.SkillBooks.Keys.Last(), 3);
             d.Tower.Tickets = 2;
             d.TalentsOff.Add(Db.TalentList[0].Id);
+            d.Endless = new EndlessProgress { Season = 2913, Climbs = 4, ClearedSeason = 3, ClearedEver = 9 };
+            d.Rulebooks[d.Vault[0].Id] = "always>basic@highest_hp";
             return AccountParts.Split(d);
         }
 

@@ -15,9 +15,9 @@ namespace IdleRng.Sim.Account
         /// The account save lineage (specs/18 section 6). v2: Vault entries carry Locked. v3: achievements, records and the post-run
         /// vendor. v4: Dungeon progress. v5: Dungeon tickets. v6: the vendor's reroll count. v7: the talent loadout. v8: legacy drafts on
         /// saved runs. v9: Vault entries gain Id and drop their replay log. v10: entries keep only their result; the run in progress is saved
-        /// as its state (AccountSave migrates v1 to v10).
+        /// as its state. v11: Endless Tower progress and the rulebooks (AccountSave migrates v1 to v11).
         /// </summary>
-        public const int CurrentSchemaVersion = 10;
+        public const int CurrentSchemaVersion = 11;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";
@@ -58,9 +58,19 @@ namespace IdleRng.Sim.Account
         /// <summary>Dungeon tickets, attempts and bests (specs/21 section 7).</summary>
         public TowerProgress Tower { get; set; } = new TowerProgress();
 
+        /// <summary>Endless Tower season and bests (specs/28 section 5).</summary>
+        public EndlessProgress Endless { get; set; } = new EndlessProgress();
+
+        /// <summary>
+        /// Gambit rulebooks by Vault entry id, in rulebook text (GambitText; specs/28 section 4.4). One per monster, used wherever it
+        /// fights in a team. Account data beside the frozen entry: editing one never changes the entry. A missing id has none.
+        /// </summary>
+        public SortedDictionary<int, string> Rulebooks { get; set; } = new SortedDictionary<int, string>();
+
         /// <summary>The run in progress, or null.</summary>
         public RunState Active { get; set; }
 
+        public string Rulebook(int entryId) => Rulebooks != null && Rulebooks.TryGetValue(entryId, out var r) ? r : "";
         public int TalentRank(string id) => Talents.TryGetValue(id, out var r) ? r : 0;
         public int BookCount(string id) => Books.TryGetValue(id, out var n) ? n : 0;
     }
@@ -108,6 +118,42 @@ namespace IdleRng.Sim.Account
 
         /// <summary>UTC day the free daily tickets were last granted up to; -1 before the first.</summary>
         public int GrantDay { get; set; } = -1;
+    }
+
+    /// <summary>
+    /// Endless Tower progress (specs/28 section 5). Floors are counted as floors cleared. Floors pay once a season and are cleared
+    /// from floor 1 up, so the floors already paid this season are floors 1 to ClearedSeason.
+    /// </summary>
+    public sealed class EndlessProgress
+    {
+        /// <summary>The season (UTC week, EndlessSim.SeasonOf) of the last climb; -1 before the first. A later season resets the season fields.</summary>
+        public int Season { get; set; } = -1;
+
+        /// <summary>Climbs made in Season (free and unlimited; shown only).</summary>
+        public int Climbs { get; set; }
+
+        /// <summary>Most floors one climb cleared in Season: every floor up to it has been paid this season.</summary>
+        public int ClearedSeason { get; set; }
+
+        /// <summary>Most floors one climb ever cleared (a floor above it is a first clear; the endless_floor achievements read it).</summary>
+        public int ClearedEver { get; set; }
+    }
+
+    /// <summary>What one Endless Tower climb did and paid (AccountOps.RunEndless).</summary>
+    public sealed class EndlessRunResult
+    {
+        public IdleRng.Sim.Tower.EndlessResult Result { get; set; }
+        public long Shards { get; set; }
+
+        /// <summary>Floors cleared for the first time this season: the floors this climb paid.</summary>
+        public List<int> NewFloors { get; set; } = new List<int>();
+
+        /// <summary>Floors cleared for the first time ever (they will pay Star-Gems on milestones once gems exist, specs/28 section 6).</summary>
+        public List<int> FirstClears { get; set; } = new List<int>();
+
+        /// <summary>Achievements this climb earned, in content order, and the species they unlocked.</summary>
+        public List<string> Achievements { get; set; } = new List<string>();
+        public List<string> SpeciesUnlocked { get; set; } = new List<string>();
     }
 
     /// <summary>What one Dungeon attempt did and paid (AccountOps.RunTower).</summary>

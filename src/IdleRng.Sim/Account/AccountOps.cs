@@ -151,7 +151,8 @@ namespace IdleRng.Sim.Account
 
         /// <summary>
         /// Dismantle Vault entry <paramref name="index"/> (oldest first): the entry is removed for good and pays its grade's
-        /// refund (<see cref="DismantleRefund"/>). Locked entries are refused. Later entries move down one index. Returns the refund.
+        /// refund (<see cref="DismantleRefund"/>). Its rulebook goes with it. Locked entries are refused. Later entries move down
+        /// one index. Returns the refund.
         /// </summary>
         public static long Dismantle(ContentDb c, AccountState a, int index)
         {
@@ -160,6 +161,7 @@ namespace IdleRng.Sim.Account
             if (e.Locked) throw new InvalidOperationException("that monster is locked: unlock it to dismantle it");
             long refund = DismantleRefund(c, e);
             a.Vault.RemoveAt(index);
+            a.Rulebooks?.Remove(e.Id);
             a.Shards += refund;
             return refund;
         }
@@ -205,6 +207,7 @@ namespace IdleRng.Sim.Account
             {
                 case AchievementKind.RunsFinished: cur = r.RunsFinished; break;
                 case AchievementKind.GauntletFloors: cur = r.BestFloorsCleared; break;
+                case AchievementKind.EndlessFloor: cur = a.Endless?.ClearedEver ?? 0; break;
                 case AchievementKind.StatReached:
                     cur = 0;
                     foreach (var id in StatIds.Trained) if (d.Ref == null || d.Ref == id) cur = Math.Max(cur, r.BestStat(id));
@@ -571,7 +574,7 @@ namespace IdleRng.Sim.Account
             {
                 if (i < 0 || i >= a.Vault.Count) throw new ArgumentOutOfRangeException(nameof(vaultIndices), $"no Vault entry {i}");
                 if (!seen.Add(i)) throw new ArgumentException($"Vault entry {i} is on the team twice", nameof(vaultIndices));
-                team.Add(a.Vault[i].Fighter(c));
+                team.Add(TeamFighter(c, a, i));
             }
 
             var result = IdleRng.Sim.Tower.TowerSim.Run(c, team, day);
@@ -598,6 +601,135 @@ namespace IdleRng.Sim.Account
             a.Shards += r.Shards;
             foreach (var (_, book) in r.Books) AddBooks(a, book, 1);
             r.TicketsLeft = TowerTickets(c, a, day);
+            return r;
+        }
+
+        // ------------------------------------------------------------------ rulebooks (specs/28 section 4.4)
+
+        /// <summary>
+        /// Vault entry <paramref name="index"/> (oldest first) as a team fighter: the entry's fighter with its rulebook. Every team
+        /// mode (the Dungeon, the Endless Tower, later the PvP defense) builds its team through this. A rulebook stored under
+        /// older content is used as far as it still fits (agent): text that no longer parses is ignored, a rule whose action is
+        /// no longer one of the monster's active skills is skipped, and only the first GAMBIT_SLOTS rules count, so a content
+        /// change never stops a monster from fighting. Editing the rulebook stores it clean again.
+        /// </summary>
+        public static Fighter TeamFighter(ContentDb c, AccountState a, int index)
+        {
+            var e = VaultAt(a, index);
+            var f = e.Fighter(c);
+            string book = a.Rulebook(e.Id);
+            if (book.Length == 0) return f;
+            List<GambitRule> rules;
+            try { rules = GambitText.Parse(book); }
+            catch (FormatException) { return f; }
+            foreach (var g in rules)
+                if (f.Gambits.Count < c.Constants.GambitSlots && (g.Skill == GambitRule.Basic || HasActiveSkill(f, g.Skill))) f.Gambits.Add(g);
+            return f;
+        }
+
+        static bool HasActiveSkill(Fighter f, string id)
+        {
+            foreach (var sk in f.Skills) if (sk.Id == id && sk.Kind != SkillKind.Passive) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// The rulebook <paramref name="text"/> checked for Vault entry <paramref name="e"/>, in its canonical text (GambitText.Format):
+        /// it parses, holds at most GAMBIT_SLOTS rules, and every action is "basic" or one of the monster's active skills. Throws
+        /// ArgumentException naming the problem. Null or empty text is an empty rulebook ("").
+        /// </summary>
+        public static string CheckRulebook(ContentDb c, VaultEntry e, string text)
+        {
+            if (e == null) throw new ArgumentNullException(nameof(e));
+            List<GambitRule> rules;
+            try { rules = GambitText.Parse(text); }
+            catch (FormatException x) { throw new ArgumentException(x.Message, nameof(text), x); }
+            if (rules.Count > c.Constants.GambitSlots)
+                throw new ArgumentException($"a rulebook holds at most {c.Constants.GambitSlots} rules, got {rules.Count}", nameof(text));
+            var fighter = e.Fighter(c);
+            foreach (var g in rules)
+                if (g.Skill != GambitRule.Basic && !HasActiveSkill(fighter, g.Skill))
+                    throw new ArgumentException($"'{g.Skill}' is not one of this monster's active skills", nameof(text));
+            return GambitText.Format(rules);
+        }
+
+        /// <summary>
+        /// Set (or with empty text clear) the rulebook of Vault entry <paramref name="index"/> (oldest first), checked as
+        /// <see cref="CheckRulebook"/> does. Free, at any time, also during a run; the entry itself does not change.
+        /// </summary>
+        public static void SetRulebook(ContentDb c, AccountState a, int index, string text)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            var e = VaultAt(a, index);
+            if (e.Id < 0) throw new InvalidOperationException("this monster has no id: it cannot hold a rulebook");
+            string book = CheckRulebook(c, e, text);
+            if (a.Rulebooks == null) a.Rulebooks = new SortedDictionary<int, string>();
+            if (book.Length == 0) a.Rulebooks.Remove(e.Id);
+            else a.Rulebooks[e.Id] = book;
+        }
+
+        // ------------------------------------------------------------------ Endless Tower (specs/28 sections 5 and 6)
+
+        /// <summary>
+        /// Training Shards for clearing Endless floor <paramref name="floor"/> for the first time in a season:
+        /// floor(ENDLESS_SHARDS_BASE + floor x ENDLESS_SHARDS_PER_FLOOR), times ENDLESS_ELITE_SHARD_MULT on an elite floor.
+        /// </summary>
+        public static long EndlessFloorShards(ContentDb c, int floor)
+        {
+            var k = c.Constants;
+            long pay = (long)Math.Floor(k.EndlessShardsBase + floor * k.EndlessShardsPerFloor);
+            return IdleRng.Sim.Tower.EndlessSim.IsElite(c, floor) ? pay * k.EndlessEliteShardMult : pay;
+        }
+
+        /// <summary>
+        /// One Endless Tower climb in <paramref name="season"/> (the caller's UTC week, EndlessSim.SeasonOf) with the Vault
+        /// entries at <paramref name="vaultIndices"/> (oldest-first indices, in slot order, exactly MON_SIDE_SIZE distinct), each
+        /// with its rulebook. Free and unlimited (kj, 2026-11-02). Pays <see cref="EndlessFloorShards"/> for each floor above the
+        /// season's best (each floor once a season), records the bests and checks the achievements. A run in progress does not
+        /// block it. Rejected (throws, changes nothing) for a bad team or a season before the last climb's (the clock went back).
+        /// </summary>
+        public static EndlessRunResult RunEndless(ContentDb c, AccountState a, IList<int> vaultIndices, int season)
+        {
+            if (a == null) throw new ArgumentNullException(nameof(a));
+            if (vaultIndices == null) throw new ArgumentNullException(nameof(vaultIndices));
+            if (season < 0) throw new ArgumentOutOfRangeException(nameof(season), "season must be >= 0");
+            var p = a.Endless ?? new EndlessProgress();
+            if (season < p.Season) throw new InvalidOperationException($"season {season} is before the last Endless Tower climb (season {p.Season})");
+            int size = c.Constants.MonSideSize;
+            if (vaultIndices.Count != size) throw new ArgumentException($"an Endless Tower team needs exactly {size} monsters", nameof(vaultIndices));
+            var seen = new HashSet<int>();
+            var team = new List<Fighter>(size);
+            foreach (int i in vaultIndices)
+            {
+                if (i < 0 || i >= a.Vault.Count) throw new ArgumentOutOfRangeException(nameof(vaultIndices), $"no Vault entry {i}");
+                if (!seen.Add(i)) throw new ArgumentException($"Vault entry {i} is on the team twice", nameof(vaultIndices));
+                team.Add(TeamFighter(c, a, i));
+            }
+
+            var result = IdleRng.Sim.Tower.EndlessSim.Run(c, team, season);
+            bool newSeason = season > p.Season;
+            int paid = newSeason ? 0 : p.ClearedSeason;
+            var r = new EndlessRunResult { Result = result };
+            for (int f = paid + 1; f <= result.FloorsCleared; f++)
+            {
+                r.NewFloors.Add(f);
+                r.Shards += EndlessFloorShards(c, f);
+                if (f > p.ClearedEver) r.FirstClears.Add(f);
+            }
+
+            // commit
+            a.Endless = p;
+            if (newSeason) { p.Season = season; p.Climbs = 0; p.ClearedSeason = 0; }
+            p.Climbs++;
+            p.ClearedSeason = Math.Max(p.ClearedSeason, result.FloorsCleared);
+            p.ClearedEver = Math.Max(p.ClearedEver, result.FloorsCleared);
+            a.Shards += r.Shards;
+            var ownedBefore = new HashSet<string>(a.OwnedSpecies, StringComparer.Ordinal);
+            foreach (var d in CheckAchievements(c, a))
+            {
+                r.Achievements.Add(d.Id);
+                if (d.UnlocksSpecies != null && ownedBefore.Add(d.UnlocksSpecies)) r.SpeciesUnlocked.Add(d.UnlocksSpecies);
+            }
             return r;
         }
 

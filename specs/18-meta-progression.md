@@ -165,7 +165,7 @@ A flat list for now; a branching talent tree is a later content change. Rules (`
 A new save lineage (kj: clean break, `specs/13` section 1), in its own store slot (`AccountSave.SlotName` = `account`), using the file shape of `specs/06` (header with CRC, JSON body) and its two-slot rotation:
 
 ```
-{ "Kind": "monster_account", "SchemaVersion": 10,
+{ "Kind": "monster_account", "SchemaVersion": 11,
   "Account": { ...AccountState without Active... },
   "Run": { ...RunState without its Log... } }      (absent when no run is in progress)
 ```
@@ -174,7 +174,7 @@ A new save lineage (kj: clean break, `specs/13` section 1), in its own store slo
 - `Load` falls back to the backup slot when the primary is corrupt or invalid and quarantines the bad slot. No slot: a new account is the caller's job.
 - Vault entries are stored as their result (schema v9 and v10, kj 2026-11-01, `specs/27` section 3.5): `Id` (the index of the run that made it, `RunsStarted` when it started), species, books brought, grade, rank, end, cycles, fights, final stats, trees (bought nodes, rolls, fusions), the gauntlet result (floor, killer, Legacy Title), seal time and `Locked`. No replay log, `Mods`, `Ladder`, seed, run hash or gauntlet hash: `VaultEntry.Fighter` is built from the stored stats and trees (`TrainingRun.BuildFighter`, the same code the run uses), so a sealed monster keeps the stats it was sealed with under later rule changes.
 - `Ladder` (content 4.3, `specs/14` section 5) is the run's rolled rank ladder, in the recipe of the run in progress, so a replay fights the same opponents even if the pools change later. A save from before the pools has none: it loads as an empty ladder, a legacy run that fights the flat `fight_ranks` opponents and keeps its version 5 run hash, so the run in progress goes on. The field is additive with that default, so the schema version does not change **(agent)**.
-- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves; v5 (`specs/21` section 7) adds the Dungeon tickets to it, none for older saves; v6 (issue #104) adds `Vendor.Rerolls`, 0 for older saves; v7 (issue #106) adds `TalentsOff`, empty (every talent on) for older saves; v8 (issue #121) marks saved runs as legacy drafts; v9 (`specs/27`) gives Vault entries `Id` and drops their replay recipe. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
+- Schema versions (`specs/06` section 5): v1 was the first; v2 (issue #82) adds `Locked` to Vault entries; v3 (issue #73) adds `Achievements`, `Records` and `Vendor`; v4 (`specs/21`) adds `Tower`, empty for older saves; v5 (`specs/21` section 7) adds the Dungeon tickets to it, none for older saves; v6 (issue #104) adds `Vendor.Rerolls`, 0 for older saves; v7 (issue #106) adds `TalentsOff`, empty (every talent on) for older saves; v8 (issue #121) marks saved runs as legacy drafts; v9 (`specs/27`) gives Vault entries `Id` and drops their replay recipe; v10 keeps only their result and saves the run in progress as its state; v11 (`specs/28` section 5) adds `Endless` (Endless Tower progress) and `Rulebooks`, empty for older saves. Saves migrate forward on load: v1 entries are unlocked; a v2 account **keeps every species it owned** (accounts from before T9 owned them all) and its talents, starts with no vendor, and gets its records rebuilt from the Vault (each entry one finished run; dismantled monsters are not counted, so the records are a lower bound), after which achievements already met are earned.
 - On every load the account's achievements are checked again, so an achievement added to content later is granted when the records already meet it (section 8).
 
 ## 7. Vault cap and dismantling
@@ -208,6 +208,7 @@ kj (T9): species unlock "through other random achievements" instead of a gacha. 
 | `rank_reached` | a `fight_ranks` id | empty | a sealed run reached that rank (progress counts ranks from 1, E = 1) |
 | `stat_reached` | a stat id, or empty for any stat | > 0 | a sealed monster finished with that stat (any stat) `>= amount` |
 | `gauntlet_floors` | empty | whole number > 0 | a sealed monster cleared `>= amount` gauntlet floors |
+| `endless_floor` | empty | whole number > 0 | one Endless Tower climb cleared `>= amount` floors (`Endless.ClearedEver`, `specs/28` section 6); also checked after each climb (content 6.2) |
 
 Placeholder achievements (thresholds checked against the bots: balanced runs reach B, focused runs pass 500 in one stat):
 
@@ -217,6 +218,7 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 | Prodigy | Finish a run with any stat at 500 or more | sprite (Mirage Moth) |
 | Veteran | Finish 5 runs | mandrake (Mandrake; kj, 2026-10-31, `specs/24` section 6) |
 | Climber | Clear 10 gauntlet floors | shade_hound (Shade Hound; kj, 2026-10-31) |
+| Spire Breaker | Clear 20 Endless Tower floors in one climb | none **(agent: a goal, not an unlock, until a species is meant for it)** |
 
 Rules (both `tools/content_build.py` and `ContentDb`): `ref` and `amount` as in the table (`E023` for a bad reference, `E043` otherwise); `unlocks_species` is a species id (`E023`) and not the starter (`E043`); every species but the starter is unlocked by at least one achievement (`E044`), so none is unobtainable.
 

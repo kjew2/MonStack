@@ -117,6 +117,13 @@ namespace IdleRng.Server
         /// <summary>COMMIT_MAX_COMMANDS (specs/27 section 4, placeholder).</summary>
         public int CommitMaxCommands { get; set; } = 500;
 
+        /// <summary>
+        /// COMMIT_MAX_CLIMBS: most Endless Tower climbs in one commit (specs/27 section 4, placeholder). A climb is many fights
+        /// (about 7 to 25 ms for a 24 to 32 floor climb, under 0.5 s at ENDLESS_MAX_FLOORS; specs/28 section 5), and a client
+        /// sends each climb as its own checkpoint, so this only stops a scripted commit from tying up a call.
+        /// </summary>
+        public int CommitMaxClimbs { get; set; } = 10;
+
         /// <summary>CLOCK_SLACK_SEC: how far past the server's time a seal time may be (section 6.2, placeholder).</summary>
         public int ClockSlackSec { get; set; } = 300;
 
