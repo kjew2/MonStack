@@ -236,7 +236,24 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("4v4 debuff and lock capstones", 11,
                 new[] { Hemorrhage("a_bleed"), Privileged("a_priv"), Equilibrium("a_eq"), CorruptBranch("a_corrupt") },
                 new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
+            // Species Candlemane (#141): its chase capstones on its own kit (blood_magic, Votive Strike, Halo Mend, Kindled Grace).
+            yield return new Vector("2v2 martyr flame and hollow sun", 13,
+                new[] { Candlemane("a_pyre", RuleModifiers.MartyrFlame), Candlemane("a_sun", RuleModifiers.HollowSun) },
+                new[] { Brawler("b_brawler", "dark"), Healer("b_healer", "water") });
         }
+
+        // Species Candlemane (#141): the native kit plus one chase capstone.
+        static Fighter Candlemane(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(560, 300, 80, 700, 160, 120, 200, 200),
+            Skills =
+            {
+                Dmg("votive_strike", StatIds.Hp, 0.12, 2, SkillTarget.Enemy, "light"),
+                Fx("halo_mend", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 1.0, 3, 0),
+            },
+            Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Fx("kindled_grace", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.5, 0, 0)) },
+            Rules = { RuleModifiers.BloodMagic, chase },
+        };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.
         static Fighter Hemorrhage(string id) => new Fighter

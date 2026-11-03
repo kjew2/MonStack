@@ -210,6 +210,48 @@
       "type": "tally_at_least",
       "ref": "damage_dark",
       "amount": 7000.0
+    },
+    {
+      "id": "martyrs_pyre_c0",
+      "tree_id": "martyrs_pyre",
+      "type": "tree_maxed",
+      "ref": "blood_magic",
+      "amount": null
+    },
+    {
+      "id": "martyrs_pyre_c1",
+      "tree_id": "martyrs_pyre",
+      "type": "stat_at_least",
+      "ref": "hp",
+      "amount": 500.0
+    },
+    {
+      "id": "martyrs_pyre_c2",
+      "tree_id": "martyrs_pyre",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "hollow_sun_c0",
+      "tree_id": "hollow_sun",
+      "type": "node_owned",
+      "ref": "unburnt_psalter_n0",
+      "amount": null
+    },
+    {
+      "id": "hollow_sun_c1",
+      "tree_id": "hollow_sun",
+      "type": "node_owned",
+      "ref": "sanctum_grace_n4",
+      "amount": null
+    },
+    {
+      "id": "hollow_sun_c2",
+      "tree_id": "hollow_sun",
+      "type": "tally_at_least",
+      "ref": "damage_light",
+      "amount": 2000.0
     }
   ]
 }

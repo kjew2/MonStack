@@ -755,6 +755,20 @@ namespace IdleRng.Sim.Combat
         /// <summary>Each cycle start eats HUNGRY_ENERGY; while fed, +HUNGRY_STAT to every trained stat in the cycle's rank fight. The Hungry Core generic capstone.</summary>
         public const string HungryCore = "hungry_core";
 
+        // Species Candlemane (#141): chase rules, coded in Combat/Rules/Candlemane.cs.
+
+        /// <summary>
+        /// Every heal on the unit also deals MON_PYRE_CONV of the HP healed, plus all the overheal it would lose, as light true
+        /// damage to its current target. The Martyr's Pyre chase capstone.
+        /// </summary>
+        public const string MartyrFlame = "martyr_flame";
+
+        /// <summary>
+        /// HP the unit pays or loses to hits is stored as Radiance (up to max HP); each hit it lands releases MON_SUN_RELEASE of it
+        /// as extra light true damage and heals MON_SUN_HEAL of the release. The Hollow Sun chase capstone.
+        /// </summary>
+        public const string HollowSun = "hollow_sun";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
@@ -763,7 +777,8 @@ namespace IdleRng.Sim.Combat
             LoneWolf, Arise, LastRite,
             MimicCore, Heirloom, Mastery, LimitBreak,
             Hemorrhage, PrivilegedStatus, Equilibrium, Corruption, DeadBranch,
-            IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore };
+            IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore,
+            MartyrFlame, HollowSun };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

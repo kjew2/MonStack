@@ -93,3 +93,10 @@ momentum,mskill.momentum.name,buff,self,spd,,0.1,0,2,
 coin_toss,mskill.coin_toss.name,damage,enemy,,luk,2,3,0,
 windfall,mskill.windfall.name,buff,self,crit_rate,,0.15,0,2,
 hex,mskill.hex.name,debuff,enemy,wis,,0.25,4,3,
+votive_strike,mskill.votive_strike.name,damage,enemy,,hp,0.12,2,0,light
+halo_mend,mskill.halo_mend.name,heal,self,,wis,1.0,3,0,
+kindled_grace,mskill.kindled_grace.name,heal,self,,wis,0.5,0,0,
+pyre_hymn,mskill.pyre_hymn.name,heal,self,,hp,0.12,2,0,
+sunfall,mskill.sunfall.name,damage,enemy,,hp,0.16,3,0,light
+wax_psalm,mskill.wax_psalm.name,damage,enemy,,wis,1.4,2,0,light
+vesper_glow,mskill.vesper_glow.name,buff,self,wis,,0.1,0,2,

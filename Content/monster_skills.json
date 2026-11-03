@@ -1128,6 +1128,90 @@
       "cooldown": 4,
       "duration": 3,
       "element": null
+    },
+    {
+      "id": "votive_strike",
+      "name_key": "mskill.votive_strike.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "hp",
+      "power": 0.12,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "light"
+    },
+    {
+      "id": "halo_mend",
+      "name_key": "mskill.halo_mend.name",
+      "kind": "heal",
+      "target": "self",
+      "stat": null,
+      "scales": "wis",
+      "power": 1.0,
+      "cooldown": 3,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "kindled_grace",
+      "name_key": "mskill.kindled_grace.name",
+      "kind": "heal",
+      "target": "self",
+      "stat": null,
+      "scales": "wis",
+      "power": 0.5,
+      "cooldown": 0,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "pyre_hymn",
+      "name_key": "mskill.pyre_hymn.name",
+      "kind": "heal",
+      "target": "self",
+      "stat": null,
+      "scales": "hp",
+      "power": 0.12,
+      "cooldown": 2,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "sunfall",
+      "name_key": "mskill.sunfall.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "hp",
+      "power": 0.16,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "light"
+    },
+    {
+      "id": "wax_psalm",
+      "name_key": "mskill.wax_psalm.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "wis",
+      "power": 1.4,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "light"
+    },
+    {
+      "id": "vesper_glow",
+      "name_key": "mskill.vesper_glow.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "wis",
+      "scales": null,
+      "power": 0.1,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
     }
   ]
 }

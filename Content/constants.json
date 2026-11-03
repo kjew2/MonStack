@@ -850,6 +850,21 @@
       "key": "HUNGRY_ENERGY",
       "type": "double",
       "value": 10.0
+    },
+    {
+      "key": "MON_PYRE_CONV",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "MON_SUN_RELEASE",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_SUN_HEAL",
+      "type": "double",
+      "value": 0.5
     }
   ]
 }

@@ -79,6 +79,14 @@ These are drafted from a stat, so each creature is the purest image of that stat
 | nature | **Mandrake**: a root creature that grows on the training ground; its scream stuns. Strong with *Vital Core* and *Survivor*. | *Rootbound* (regrowth, thorns when hit), *Mandrake Wail* (stun, poison) | The mandrake root, kodama (*Princess Mononoke*), Groot, Bulbasaur |
 | dark | **Shade Hound**: a dog made of a shadow, with no body casting it. Its shadow eats what it defeats. Pairs with the rank-fight loot of `specs/22` 8.6. | *Umbral Step* (evasion, first strike from the shadows), *Shadow Harvest* (grows from defeated foes) | Black Shuck and other black dogs of British folklore, shadow extraction in *Solo Leveling*, Dementors, the nuckelavee |
 
+### 5.1.1 Idea-pool species (epic #160)
+
+The species lanes of #160 add creatures built around the idea-pool trees (#132); each lane's issue holds the full concept, and `specs/15` section 7 its trees.
+
+| Species | Element, tone | Concept | Trees and capstones |
+|---|---|---|---|
+| **Candlemane** (`candlemane`, #141) | light, mythic | A sacred lion of living light and candle wax: its mane is a ring of burning votive candles and it burns its own body to shine. The only species that wants to lose HP: HP and WIS, the stats others train to survive, are its damage, and DEF is close to useless to it (the reverse of Bastion Drake). The opposite of Mirage Moth, the other light species: slow and heavy, it takes hits and burns. | *Votive Flame* (`blood_magic`: pay HP, no cooldowns), *Sanctum Grace* (a self-heal and *Kindled Grace*); in-run *Martyr's Pyre* (`martyr_flame`: heals become light damage; apex Martyr Pyrelion), book *Hollow Sun* (`hollow_sun`: HP lost is stored as Radiance and released on hits; apex Hollow Sun Lion, book *Psalter of the Unburnt*). All three rules feed one loop, pay HP, heal, convert to damage: the Exiled Heavy Knight's pattern (`specs/22` section 3.1). |
+
 ### 5.2 Fusion looks
 
 kj allowed fusion for **some specific pairs**, with the pair clear in the UI (`specs/22` section 6.5). A fused creature that shows both parents makes the pair readable. Candidates from today's trees:

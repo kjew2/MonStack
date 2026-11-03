@@ -40,6 +40,14 @@
       "ref": null,
       "amount": 20.0,
       "unlocks_species": null
+    },
+    {
+      "id": "hp_700",
+      "name_key": "achievement.hp_700.name",
+      "kind": "stat_reached",
+      "ref": "hp",
+      "amount": 700.0,
+      "unlocks_species": "candlemane"
     }
   ]
 }

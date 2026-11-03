@@ -25,6 +25,11 @@
       "id": "book_shadows",
       "name_key": "book.book_shadows.name",
       "tree_id": "umbral_grimoire"
+    },
+    {
+      "id": "book_psalter",
+      "name_key": "book.book_psalter.name",
+      "tree_id": "unburnt_psalter"
     }
   ]
 }
