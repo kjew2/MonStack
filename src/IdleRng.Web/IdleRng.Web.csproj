@@ -21,7 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="../IdleRng.Sim/IdleRng.Sim.csproj" />
     <ProjectReference Include="../IdleRng.Runtime/IdleRng.Runtime.csproj" />
-    <!-- The server core, for the page's local Endless Tower board (specs/28 section 6) until the page syncs with the server (specs/27 step 3). -->
+    <!-- The server core: the page's local test server (specs/27 section 5.4, LocalServer.cs) and its local Endless Tower board (specs/28 section 6). -->
     <ProjectReference Include="../IdleRng.Server/IdleRng.Server.csproj" />
     <!-- Only for Engine.GoldenVectors (the wasm golden check, BRIDGE.md): the same vector generators the bot CLI's `golden` verb runs. -->
     <ProjectReference Include="../IdleRng.Bots/IdleRng.Bots.csproj" />
@@ -35,6 +35,7 @@
   <ItemGroup>
     <TrimmerRootAssembly Include="IdleRng.Sim" />
     <TrimmerRootAssembly Include="IdleRng.Runtime" />
+    <TrimmerRootAssembly Include="IdleRng.Server" />
     <TrimmerRootAssembly Include="Newtonsoft.Json" />
   </ItemGroup>
 

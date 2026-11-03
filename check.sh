@@ -123,10 +123,13 @@ else
     step "Web: player accounts (guest, Google link, second device, sign out, offline) in headless Chromium"
     node web/wasm/test/auth.js
 
+    step "Web: sync with the account server (checkpoints, lost connection, takeover, rejection, stale content, one tab) in headless Chromium"
+    node web/wasm/test/sync.js
+
     step "Web: the GitHub Pages site lays out"
     SITE_TMP=$(mktemp -d)
     bash web/wasm/site.sh "$SITE_TMP/site" > /dev/null
-    [ -f "$SITE_TMP/site/index.html" ] && [ -f "$SITE_TMP/site/auth.js" ] && [ -f "$SITE_TMP/site/wasm/dist/_framework/dotnet.js" ] || { echo "site.sh left out files" >&2; exit 1; }
+    [ -f "$SITE_TMP/site/index.html" ] && [ -f "$SITE_TMP/site/auth.js" ] && [ -f "$SITE_TMP/site/sync.js" ] && [ -f "$SITE_TMP/site/wasm/dist/_framework/dotnet.js" ] || { echo "site.sh left out files" >&2; exit 1; }
     rm -rf "$SITE_TMP"
   else
     printf '\nSkipped WebAssembly checks (--no-wasm or wasm-tools workload not installed). Not a full pass.\n'

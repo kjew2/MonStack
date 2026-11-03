@@ -4,7 +4,7 @@
 // nodes), watches two rank fights play back (current ability, live HP, skill cooldown tiles, the remembered 1x/2x/Skip speed),
 // checks the skill point gain indicators (HUD float-up, fight badge, Trees tab count, log lines), seals it, checks the grade
 // screen (after the gauntlet wheel) and Vault list, reloads mid-run and after the end to prove the replay save restores the same run,
-// locks and dismantles a Vault entry, loads a v1 save over the Vault cap to check the migration and the blocked run start, and
+// locks and dismantles a Vault entry, installs an account over the Vault cap to check the blocked run start, and
 // browses a varied Vault (sort, filter, search, detail, compare; lock and dismantle under a filter hit the real Vault index).
 // Also checks the header build stamp from dist/build-info.json (vMAJOR.MINOR · commit), and that a missing stamp shows "dev".
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
@@ -50,12 +50,13 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const url = srv.url + 'index.html';
   // The account save is AccountSave text: a header line, then JSON.
   const readAccount = () => page.evaluate(() => { const t = localStorage.getItem('idle-rng-account-v1'); return t ? JSON.parse(t.slice(t.indexOf('\n') + 1)) : null; });
-  // Encode a save body as AccountSave text (header line with CRC and length, then the JSON) and store it; the page loads it on reload.
-  const writeAccount = (body) => {
+  // Encode a save body as AccountSave text (header line with CRC and length, then the JSON).
+  const saveText = (body) => {
     const bytes = Buffer.from(JSON.stringify(body), 'utf8');
-    const t = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(bytes) >>> 0).toString(16).padStart(8, '0') + ' len=' + bytes.length + '\n' + bytes.toString('utf8');
-    return page.evaluate((x) => localStorage.setItem('idle-rng-account-v1', x), t);
+    return 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(bytes) >>> 0).toString(16).padStart(8, '0') + ' len=' + bytes.length + '\n' + bytes.toString('utf8');
   };
+  // The account comes from the server (web/sync.js, specs/27): store it on the page's local test server; the next load opens it.
+  const writeAccount = (body) => page.evaluate((x) => MonStackSync.install(x), saveText(body));
 
   // ---- home screen
   await page.goto(url);
@@ -739,20 +740,15 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
 
-  // Over the cap: a v1 save (written before the lock existed) whose Vault holds cap + 1 copies of the sealed entry. Loading it
-  // migrates it to the current schema (v3); the run start is blocked until one is dismantled.
-  const v2 = await readAccount();
-  const v1 = JSON.parse(JSON.stringify(v2));
-  v1.SchemaVersion = 1; v1.Account.SchemaVersion = 1;
-  const one = v1.Account.Vault[0];
+  // Over the cap: an account whose Vault holds cap + 1 copies of the sealed entry (each its own id, as the server keeps entries by
+  // id); the run start is blocked until one is dismantled.
+  const over = JSON.parse(JSON.stringify(await readAccount()));
+  const one = over.Account.Vault[0];
   delete one.Locked;
-  v1.Account.Vault = Array.from({ length: cap + 1 }, () => one);
-  const v1Body = Buffer.from(JSON.stringify(v1), 'utf8');
-  const v1Text = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(v1Body) >>> 0).toString(16).padStart(8, '0') + ' len=' + v1Body.length + '\n' + v1Body.toString('utf8');
-  await page.evaluate((t) => localStorage.setItem('idle-rng-account-v1', t), v1Text);
+  over.Account.Vault = Array.from({ length: cap + 1 }, (_, i) => Object.assign({}, one, { Id: 1000 + i }));
+  await writeAccount(over);
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
-  check((await page.evaluate(() => RunEngine.badKeys().length)) === 0, 'a v1 save loads (migrated), not kept aside');
   check((await page.locator('[data-act=vault-over-open]').count()) === 1, 'the start screen links to the Vault');
   check(await act('start').isDisabled() && /dismantle 1/i.test(await act('start').innerText()), 'starting a run is blocked: ' + (await act('start').innerText()));
   check(/Dismantle 1 monster/.test(await text('[data-id=vault-over]')), 'with a clear message: ' + (await text('[data-id=vault-over]')));
@@ -793,11 +789,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       mk('drake', 'd', 1, 12, 'title.warm_up_act', 150, false, 4),
       mk('sprite', 's', 5, 101, 'title.tower_breaker', 400, false, 5),
     ];
+    base.Account.Vault.forEach((e, i) => { e.Id = 2000 + i; });       // the server keeps entries by id: each its own
     base.Account.Vault[1].Trees[0].Bought = 3;                         // a part-bought tree for the detail sheet
     base.Account.Vault[5].Trees.push({ TreeId: 'starlit_ascension', Bought: 8 });   // a capstone owned: the apex form (specs/15 section 5.3)
-    const body = Buffer.from(JSON.stringify(base), 'utf8');
-    const saveTxt = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(body) >>> 0).toString(16).padStart(8, '0') + ' len=' + body.length + '\n' + body.toString('utf8');
-    await page.evaluate((t) => { localStorage.setItem('idle-rng-account-v1', t); localStorage.removeItem('idle-rng-vault-view'); }, saveTxt);
+    await writeAccount(base);
+    await page.evaluate(() => localStorage.removeItem('idle-rng-vault-view'));
     await page.reload();
     await act('start').waitFor({ timeout: 90000 });
     await homeTab('vault');
@@ -1008,11 +1004,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
 
   // ---- Endless Tower on the bridge (specs/28 section 5; the screens come with step 5): this account in an engine of its own
   {
-    // The Vault here came from the v1 save above, whose monsters have no id (-1): give the first four ids, so they can hold
-    // rulebooks, and leave the rest as they are (a monster with no id is refused a rulebook). The header's CRC is rewritten.
+    // This page's own account (no server: a bare page keeps it on the device). The first four monsters get ids, so they can hold
+    // rulebooks, and the rest none (-1, as before Vault ids): a monster with no id is refused a rulebook. The header's CRC is rewritten.
     const raw = await page.evaluate(() => localStorage.getItem('idle-rng-account-v1'));
     const body = JSON.parse(raw.slice(raw.indexOf('\n') + 1));
-    body.Account.Vault.slice(0, 4).forEach((v, i) => { v.Id = 9000 + i; });
+    body.Account.Vault.forEach((v, i) => { v.Id = i < 4 ? 9000 + i : -1; });
     const bodyText = JSON.stringify(body), bytes = Buffer.from(bodyText, 'utf8');
     const saveText = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(bytes) >>> 0).toString(16).padStart(8, '0') + ' len=' + bytes.length + '\n' + bodyText;
     const ectx = await browser.newContext();

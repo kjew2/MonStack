@@ -14,7 +14,7 @@ Scope: what the server will own, where the calls go, and what the client does wh
 |---|---|---|
 | `IdleRng.Sim` | The rules: training runs, the gauntlet, the Vault, the vendor, the Dungeon (`TowerSim`), battles (`BattleSim`). Shared with the server. | Built |
 | `IdleRng.Runtime` | The account save: `AccountSave`, `ISaveStore` with `FileSaveStore` and `MemorySaveStore` (`specs/06`). | Built |
-| `IdleRng.Web` + `web/` | The browser client. Today: the account in `localStorage`, the Dungeon day from the device clock. Later: the server calls in this spec. | Built (local only) |
+| `IdleRng.Web` + `web/` | The browser client. Since `specs/27` step 3: the account from the account server through `web/sync.js` (the local test server in the page until the Cloud Code module is deployed), the Dungeon day and Endless season from the server's time. | Built (local test server) |
 | `server/ugs/IdleRngBattle` | The Cloud Code C# module. Today one spike endpoint, `ResolveFight` (section 10.1). Becomes the T12 PvP module (section 10.3). | Spike |
 | Server tests | An in-process fake of the module's handlers so `dotnet test` and `check.sh` cover the remote paths without credentials (#28). | Not started |
 
@@ -42,7 +42,7 @@ A failed remote call always reports one of these kinds, so the client handles er
 
 ## 3. Server time (the Dungeon day)
 
-**Simplified by `specs/27`** (a connection is needed): the Dungeon day is the one the server gave at the last open or commit, and the seal time is bounded by the server's clock (`specs/27` section 6.2); the device clock and the offline bound below no longer apply once it is built.
+**Simplified by `specs/27`** (a connection is needed; built in step 3, 2026-11-03): the Dungeon day, the Endless season and the seal time come from the server's time at the last open or commit, carried forward by the page's monotonic clock (`performance.now()`) and asked again when the page is shown after 10 minutes hidden (`web/sync.js`), and the server checks them (`specs/27` section 6.2). The device clock and the offline bound below no longer apply; the rest of this section is the earlier design, kept for the record.
 
 The only clock rule the trainer has: the Dungeon grants `TOWER_ATTEMPTS_PER_DAY` free tickets per UTC day, banked up to `TOWER_TICKET_CAP` (`specs/21` section 7). The account remembers `Tower.GrantDay`, the last day it granted. Today the day is `floor(Date.now() / 86400000)` from the device, so moving the device clock forward grants tickets.
 

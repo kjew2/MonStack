@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // Browser checks of the gambit rulebook editor (web/rulebook.js, specs/28 section 4.5) at phone width 390x844: the Vault detail's
 // Rulebook button; rule cards built through the pickers (condition, value, action, target), reordered, deleted and capped at the
-// slot count; Save stores the canonical text in the save and survives a reload; Clear all removes it; a monster with no id cannot
-// hold one; Escape closes the picker, then the sheet; the Test preview plays a floor back with the acting rule's card lit and
+// slot count; Save stores the canonical text in the save and survives a reload; Clear all removes it; Escape closes the picker, then the sheet; the Test preview plays a floor back with the acting rule's card lit and
 // pays nothing. Fails (exit 1) on any page error, console error or failed assertion.
 // Usage: node web/wasm/test/rulebook.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
@@ -183,19 +182,8 @@ const H = require('./harness.js');
   check(!(await sheetOpen()), 'the sheet closes during a playback');
   await page.waitForTimeout(600);
 
-  // ---- a monster with no id (lean JSON: an Id of -1 is left out) cannot hold a rulebook
-  const noId = await t.readAccount();
-  delete noId.Account.Vault[3].Id;
-  await t.writeSaveText(H.encodeSave(noId));
-  await t.reload();
-  await act('hometab-vault').click();
-  await act('detail-3').click();
-  await act('detail-rulebook').click();
-  check((await page.locator('[data-id=rb-noid]').innerText()).includes('cannot hold a rulebook') && (await act('rb-add').count()) === 0 && (await act('rb-save').count()) === 0,
-    'a monster with no id shows the no-id message and no editing');
-  await t.layout('rulebook no id');
-  await page.keyboard.press('Escape');
-  check(!(await sheetOpen()), 'Escape closes it');
+  // A monster with no id cannot hold a rulebook: the server keeps every Vault entry by its id (specs/27 section 3.1), so such a
+  // monster no longer reaches the page; the bridge's refusal is checked on a bare page in run-trainer.js.
 
   await t.finish();
 })().catch((e) => { console.error(e); process.exit(1); });

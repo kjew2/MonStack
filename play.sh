@@ -92,7 +92,7 @@ DIST=web/wasm/dist
 need_build=$REBUILD
 if [ ! -f "$DIST/_framework/dotnet.js" ] || [ ! -f "$DIST/content-pack.json" ]; then
   need_build=1
-elif [ -n "$(find src/IdleRng.Sim src/IdleRng.Runtime src/IdleRng.Web Content web/wasm/pack-content.js \
+elif [ -n "$(find src/IdleRng.Sim src/IdleRng.Runtime src/IdleRng.Server src/IdleRng.Web Content web/wasm/pack-content.js \
           -newer "$DIST/content-pack.json" -type f \( -name '*.cs' -o -name '*.csproj' -o -name '*.json' -o -name '*.js' \) \
           -not -path '*/bin/*' -not -path '*/obj/*' 2>/dev/null | head -1)" ]; then
   need_build=1
