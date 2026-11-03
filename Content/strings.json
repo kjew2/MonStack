@@ -2904,7 +2904,7 @@
     },
     {
       "key": "rule.still_hunt.desc",
-      "text": "When its turn comes it waits instead, up to {MON_HUNT_WAITS} turns in a row, keeping {MON_HUNT_KEEP:pct} of its turn gauge. Until its next turn Vantage answers at any HP and also answers area attacks. Waiting does not ready skills."
+      "text": "When its turn comes it waits instead, up to {MON_HUNT_WAITS} turns in a row; each wait gives back {MON_HUNT_KEEP:pct} of a turn's gauge. Until its next turn Vantage answers at any HP and also answers area attacks. Waiting does not ready skills."
     },
     {
       "key": "rule.still_hunt.log",

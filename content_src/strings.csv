@@ -724,7 +724,7 @@ rule.iai_draw.name,Iai
 rule.iai_draw.desc,"Every hit it makes outside its own turn (Vantage counters, when-hit and when-evading effects) deals +{MON_IAI_BONUS:pct} damage with +{MON_IAI_CRIT:pct} crit rate."
 rule.iai_draw.log,draws: +{amount} damage
 rule.still_hunt.name,Still Hunt
-rule.still_hunt.desc,"When its turn comes it waits instead, up to {MON_HUNT_WAITS} turns in a row, keeping {MON_HUNT_KEEP:pct} of its turn gauge. Until its next turn Vantage answers at any HP and also answers area attacks. Waiting does not ready skills."
+rule.still_hunt.desc,"When its turn comes it waits instead, up to {MON_HUNT_WAITS} turns in a row; each wait gives back {MON_HUNT_KEEP:pct} of a turn's gauge. Until its next turn Vantage answers at any HP and also answers area attacks. Waiting does not ready skills."
 rule.still_hunt.log,waits motionless ({amount} in a row)
 rule.sever_art.name,Severed Arts
 rule.sever_art.desc,"A Vantage counter that deals at least {MON_SEVER_FRAC:pct} of the enemy's max HP cuts off the move it answers: it deals and applies nothing, and the skill still goes on cooldown. Each move cut off adds +{MON_SEVER_DMG:pct} damage against that enemy, up to {MON_SEVER_MAX} cuts."
