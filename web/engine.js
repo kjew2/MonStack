@@ -25,7 +25,9 @@
       const { dotnet } = await import(abs(base + '_framework/dotnet.js'));
       const runtime = await dotnet.withDiagnosticTracing(false).create();
       const exports = await runtime.getAssemblyExports('IdleRng.Web.dll');
-      const r = await fetch(base + 'content-pack.json');
+      // Revalidate like dotnet.js does for its own files: a cached pack from the last deploy with this deploy's engine
+      // fails to load (E040 "required constant missing" when a constant was added).
+      const r = await fetch(base + 'content-pack.json', { cache: 'no-cache' });
       if (!r.ok) throw new Error('content-pack.json missing from ' + base + '. Rerun `web/wasm/build.sh`.');
       return { host: exports.IdleRng.Web.Engine, contentPack: await r.text() };
     };
