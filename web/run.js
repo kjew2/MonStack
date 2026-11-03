@@ -29,7 +29,7 @@
     sealed: null,            // Vault entry of the finished run
     payout: 0,               // shards that run paid
     ticketGain: null,        // Dungeon ticket pieces that run earned and the whole tickets they made ({pieces, tickets})
-    climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf }
+    climb: null,             // the sealed monster's gauntlet floors for the wheel: { data, t0, done, raf } (reelState)
     spGains: [],             // skill point gains not yet shown by the HUD (issue #86): [{n, why, cycle}], shown once no modal covers it
     fightGains: [],          // the gains the shown fight brought, for its result badge
     earned: [],              // achievements the sealed run earned (specs/18 section 8), shown on the grade screen
@@ -39,12 +39,14 @@
     treeOpen: {},            // Trees tab: the slots whose full node list is open, by 'slot:tree' (a new tree in the slot starts closed)
     heldToasts: [],          // toasts waiting for the tree offer to close (issue #115: they covered it)
     towerFight: null,        // the tower floor fight shown in the playback modal (issue #98), or null
+    towerReel: null,         // the reel of the attempt just made, in the modal (specs/21 section 8): { t0, done, raf }, or null once closed
     reveal: null,            // the merchant's card reveal on the vendor screen (issue #108): {i, phase: 'hint'|'flip', timer}, or null
     endlessTeam: [],         // Endless Tower team: exactly teamSize Vault indices in slot order (specs/28 section 2)
     endlessTab: 'team',      // the Endless screen's section: 'team', 'floors' or 'board' (issue #130: one phone screen each)
     endlessPickOpen: false,  // the Vault list under a full Endless team, unfolded to swap a monster
     endlessResult: null,     // the last climb's result from the engine (run.runEndless) plus its season and team, shown on the Endless screen
     endlessFight: null,      // the Endless floor fight shown in the playback modal, or null
+    endlessReel: null,       // the reel of the climb just made, in the modal (specs/28 section 9 step 5): { t0, done, raf }, or null once closed
     nameEdit: null,          // the season board's name field while it is open: {draft, error}, else null
   };
 
@@ -1389,7 +1391,7 @@
       h('div', { class: 'row between' }, [
         h('span', { class: 'small num', 'data-id': 'tower-tickets', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday + ' floors' }),
         h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Enter',
-          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); $('main').scrollTop = 0; } }),
+          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerReel = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); $('main').scrollTop = 0; } }),
       ]),
     ]));
     // The Endless Tower (specs/28): free, unlimited, a new lineup every week.
@@ -1405,9 +1407,9 @@
   }
 
   // ---- Dungeon (specs/21 section 8): today's lineup, a team of Vault monsters, one attempt at a time. The engine runs the
-  // climb and pays the rewards (run.runTower); this screen only lays out what it returns. A floor's fight plays back in the rank
-  // fight's view (issue #98): the last floor right after the climb (unless the speed is Skip), any floor fought from its Watch
-  // button (run.towerFloor replays it, read only).
+  // climb and pays the rewards (run.runTower); this screen only lays out what it returns. The attempt first plays out on the
+  // reel (towerReelModal); a floor's fight plays back in the rank fight's view (issue #98) from the reel's or the result card's
+  // Watch button (run.towerFloor replays any floor but the last, read only).
   // "3 tickets · 2/4 pieces": tickets ready (held plus today's free one, from towerInfo) and pieces toward the next.
   function ticketStatus(ti) {
     return ti.tickets + (ti.tickets === 1 ? ' ticket' : ' tickets') + ' · ' + ti.ticketPieces + '/' + ti.piecesPerTicket + ' pieces';
@@ -1418,7 +1420,7 @@
 
   function renderTower(main, modal) {
     const acct = run.account, day = run.towerDay(), ti = run.towerInfo(day);
-    main.append(screenHead('Dungeon', 'tower-back', () => { stopPlayback(); ui.view = 'home'; ui.towerResult = null; ui.towerFight = null; render(); },
+    main.append(screenHead('Dungeon', 'tower-back', () => { stopPlayback(); stopReel(ui.towerReel); ui.view = 'home'; ui.towerResult = null; ui.towerFight = null; ui.towerReel = null; render(); },
       h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })),
       h('p', { class: 'small muted', 'data-id': 'tower-status', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday +
         ' of ' + ti.floors.length + ' floors · best ever ' + ti.clearedEver }));
@@ -1435,8 +1437,8 @@
         r.day = day; r.team = ui.towerTeam.slice();   // what towerFloor needs to replay this attempt's other floors
         ui.towerResult = r;
         stopPlayback();
-        ui.towerFight = ui.speed === 'skip' ? null : r.final;   // the deciding floor plays at once, unless the speed is Skip
-        if (ui.towerFight) startPlayback(r.final);
+        ui.towerFight = null;
+        ui.towerReel = reelState();   // the climb plays out on the reel first; the loot waits under it
         render();
         $('main').scrollTop = 0;
       } });
@@ -1454,6 +1456,7 @@
     main.append(actionBar(climb));
 
     if (ui.towerFight) { modal.hidden = false; towerPlayModal(modal, ui.towerFight); }
+    else if (ui.towerReel && ui.towerResult) { modal.hidden = false; towerReelModal(modal, ui.towerResult); }
   }
 
   // The team (issue #98): the slots in order, each movable up or down (slot order breaks ATB ties and sets default targets,
@@ -1534,11 +1537,11 @@
   }
 
   // The attempt's loot (specs/21 section 8): a banner (gold rays on a full clear) slams in once per attempt, when the player first
-  // sees it (after the deciding floor's playback closes, or at once on Skip). Under it each drop is a face-down card glowing its
+  // sees it (once the reel, and any playback opened from it, is closed). Under it each drop is a face-down card glowing its
   // rarity colour (blue shards, purple Skill Books, gold first clears) that the player flips with a tap, or all at once with Reveal
   // all; a book wobbles first and bursts. Which cards are face up is kept on the result, so a re-render keeps them.
   function towerLoot(r, last) {
-    const reveal = !r.lootSeen && !ui.towerFight;
+    const reveal = !r.lootSeen && !ui.towerFight && !ui.towerReel;
     if (reveal) r.lootSeen = true;
     const n = r.floorsCleared;
     const big = r.cleared ? 'Full clear!' : n ? n + (n === 1 ? ' floor cleared' : ' floors cleared') : 'Defeated';
@@ -1610,6 +1613,7 @@
     if (!r) return;
     const f = floor === r.final.floor ? r.final : run.towerFloor(r.day, r.team, floor);
     if (f.ok === false) { toast(f.reason); return; }
+    stopReel(ui.towerReel); ui.towerReel = null;
     ui.towerFight = f;
     startPlayback(f, true);
     render();
@@ -1654,11 +1658,11 @@
 
   // ---- Endless Tower (specs/28 sections 2, 3, 5 and 6): this week's season, its mutators and the next floors, a team of exactly
   // teamSize Vault monsters (each fights by its own rulebook) and free, unlimited climbs. The engine runs the climb and pays the
-  // floors new this season (run.runEndless); this screen only lays out what it returns. The deciding floor plays back at once
-  // (unless the speed is Skip), any floor fought from its Watch button (run.endlessFloor replays it, read only).
+  // floors new this season (run.runEndless); this screen only lays out what it returns. The climb first plays out on the reel
+  // (endlessReelModal); any floor fought plays back from a Watch button (run.endlessFloor replays it, read only).
   function openEndless() {
     stopPlayback();
-    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null; ui.nameEdit = null; ui.endlessTab = 'team'; ui.endlessPickOpen = false;
+    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null; ui.endlessReel = null; ui.nameEdit = null; ui.endlessTab = 'team'; ui.endlessPickOpen = false;
     ui.endlessTeam = ui.endlessTeam.filter((i) => i < run.account.vault.length);
     render();
     $('main').scrollTop = 0;
@@ -1685,7 +1689,7 @@
   function renderEndless(main, modal) {
     const acct = run.account, season = run.endlessSeason(), ei = run.endlessInfo(season), r = ui.endlessResult;
     const size = ei.teamSize, team = ui.endlessTeam, next = Math.min(ei.maxFloors, ei.clearedSeason + 1);
-    main.append(screenHead('Endless Tower', 'endless-back', () => { stopPlayback(); ui.view = 'home'; ui.endlessResult = null; ui.endlessFight = null; render(); },
+    main.append(screenHead('Endless Tower', 'endless-back', () => { stopPlayback(); stopReel(ui.endlessReel); ui.view = 'home'; ui.endlessResult = null; ui.endlessFight = null; ui.endlessReel = null; render(); },
       h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })),
       h('p', { class: 'small muted', 'data-id': 'endless-status', 'data-season': String(season), text: 'Season ' + season + ' · ' + seasonLeft(season) +
         ' · best this season ' + ei.clearedSeason + ' · best ever ' + ei.clearedEver + ' · ' + plural(ei.climbs, 'climb', 'climbs') + ' this season' }));
@@ -1761,6 +1765,7 @@
     main.append(actionBar(climb));
 
     if (ui.endlessFight) { modal.hidden = false; endlessPlayModal(modal, ui.endlessFight); }
+    else if (ui.endlessReel && r) { modal.hidden = false; endlessReelModal(modal, r, ei); }
   }
 
   // The season board (specs/28 section 6): the best floors cleared this season, ties to whoever got there first, the player's
@@ -1834,17 +1839,17 @@
     ui.endlessResult = r;
     (r.achievements || []).forEach((a) => toast('Achievement: ' + a.name + (a.species ? '. ' + a.speciesName + ' unlocked!' : '')));
     stopPlayback();
-    ui.endlessFight = ui.speed === 'skip' ? null : r.final;   // the deciding floor plays at once, unless the speed is Skip
-    if (ui.endlessFight) startPlayback(r.final);
+    ui.endlessFight = null;
+    ui.endlessReel = reelState();   // the climb plays out on the reel first; the result card waits under it
     render();
     $('main').scrollTop = 0;
   }
 
-  // The climb's result: a banner (it slams in once, when the player first sees it: after the deciding floor's playback closes, or
-  // at once on Skip), what it paid, then every floor fought with a Watch button and the deciding floor's log.
+  // The climb's result: a banner (it slams in once, when the player first sees it: once the reel, and any playback opened from it,
+  // is closed), what it paid, then every floor fought with a Watch button and the deciding floor's log.
   const FOUGHT_SHOWN = 3;   // a long climb lists its last floors, the rest one tap away (issue #130: the result card fits a phone)
   function endlessResult(main, r, season) {
-    const reveal = !r.seen && !ui.endlessFight;
+    const reveal = !r.seen && !ui.endlessFight && !ui.endlessReel;
     if (reveal) r.seen = true;
     const n = r.floorsCleared;
     const big = r.capped ? 'Reached the top!' : n ? plural(n, 'floor cleared', 'floors cleared') : 'Defeated';
@@ -1890,6 +1895,7 @@
     if (!r) return;
     const f = floor === r.final.floor && teamBooks(r.team) === r.books ? r.final : run.endlessFloor(r.season, r.team, floor);
     if (f.ok === false) { toast(f.reason); return; }
+    stopReel(ui.endlessReel); ui.endlessReel = null;
     ui.endlessFight = f;
     startPlayback(f, true);
     render();
@@ -2079,106 +2085,171 @@
       h('button', { class: 'btn primary', type: 'button', 'data-act': 'vendor-done', text: 'Done', onclick: closeVendor })]));
   }
 
-  // ---- gauntlet wheel (specs/19, specs/12 section 6): a slowing reel of the floors climbed lands on the floor and the enemy
-  // that beat the monster, then a comic defeat. The floors come with the seal (finishRun's climb); this only animates them, once.
+  // ---- the reel (specs/19 section 7): a slowing slot-machine strip of floors, highest on top, that eases out from floor 1 onto
+  // the floor where a climb ended. The gauntlet wheel, the Dungeon and the Endless Tower all play out on it (specs/21 section 8,
+  // specs/28 section 9 step 5); it only animates floors the engine already fought. Its state { t0, done, raf } is kept across renders,
+  // so a re-render mid-spin carries on. Tapping the reel or Skip lands it at once; with prefers-reduced-motion it opens landed.
   const POINTER_ROW = 2;   // the reel shows 5 rows; the pointer is on the middle one
+  const REEL_MAX_ROWS = 100;   // a long Endless climb spins through its highest floors only
   const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const foeDef = (id) => C.gauntlet.enemies[id] || { name: id, boss: false };
-  function foeSprite(id, boss, cls) {
+  const reelState = () => ({ t0: null, done: reducedMotion(), raf: 0 });
+  function stopReel(st) { if (st && st.raf) { cancelAnimationFrame(st.raf); st.raf = 0; } }
+  function landReel(st) { if (!st || st.done) return; stopReel(st); st.done = true; render(); }
+  // An enemy's reel and arena sprite, seeded by a key of its own (cosmetic only).
+  function foeSprite(key, boss, cls) {
     const cv = h('canvas', { class: cls || '', 'aria-hidden': 'true' });
-    SP.draw(cv, SP.enemy(hash('gauntlet-' + id) % 100000, boss, 0));
+    SP.draw(cv, SP.enemy(hash(key) % 100000, boss, 0));
     return cv;
   }
-  function openClimb(data) {
-    stopClimb();
-    ui.climb = { data: data, t0: null, done: reducedMotion(), raf: 0 };
-    ui.view = 'climb';
-    render();
-  }
-  function stopClimb() { if (ui.climb && ui.climb.raf) { cancelAnimationFrame(ui.climb.raf); ui.climb.raf = 0; } }
-  function landClimb() { if (!ui.climb || ui.climb.done) return; stopClimb(); ui.climb.done = true; render(); }
-
-  // Reel rows from the top: up to two unfought floors above the fall (the summit when cleared), then the floors fought down to 1.
-  function climbRows(g) {
+  // Reel rows: { el, label }. A floor fought (its art, name, won or not; `tag`, e.g. ' (boss)', marks a big foe and gives the
+  // row the boss look), a floor not reached, the top.
+  const reelFloor = (floor, art, name, tag, won) => ({ label: 'Floor ' + floor + ' · ' + name,
+    el: h('div', { class: 'floor ' + (won ? 'won' : 'fell') + (tag ? ' boss' : '') }, [
+      h('span', { class: 'fl', text: 'F' + floor }), art, h('span', { class: 'nm', text: name + (tag || '') }), h('span', { class: 'mk', text: won ? '✓' : '' })]) });
+  const reelUnfought = (floor) => ({ label: 'Floor ' + floor,
+    el: h('div', { class: 'floor unfought' }, [h('span', { class: 'fl', text: 'F' + floor }), h('span'), h('span', { class: 'nm', text: '?' }), h('span', { class: 'mk' })]) });
+  const reelSummit = (text) => ({ label: text,
+    el: h('div', { class: 'floor summit' }, [h('span', { class: 'fl', text: 'TOP' }), h('span', { class: 'gold', text: '★' }), h('span', { class: 'nm', text: text }), h('span', { class: 'mk' })]) });
+  // The strip from the top: the summit row when the climb reached the top, else up to two floors not reached (to `max`), then
+  // the floors fought (floor rows, lowest first) top down. Returns the rows and the landing row.
+  function reelRows(fought, floorReached, max, summit) {
     const rows = [];
-    if (g.cleared) rows.push({ summit: true });
-    else for (let f = Math.min(C.gauntlet.floors, g.floorReached + 2); f > g.floorReached; f--) rows.push({ floor: f, unfought: true });
-    for (let i = g.floors.length - 1; i >= 0; i--) rows.push(g.floors[i]);
-    return rows;
+    if (summit) rows.push(reelSummit(summit));
+    else for (let f = Math.min(max, floorReached + 2); f > floorReached; f--) rows.push(reelUnfought(f));
+    const end = summit ? 0 : rows.length;
+    for (let i = fought.length - 1; i >= 0; i--) rows.push(fought[i]);
+    return { rows: rows, end: end };
   }
-  function climbRow(r) {
-    if (r.summit) return h('div', { class: 'floor summit' }, [h('span', { class: 'fl', text: 'TOP' }), h('span', { class: 'gold', text: '★' }), h('span', { class: 'nm', text: 'Tower cleared' }), h('span', { class: 'mk' })]);
-    if (r.unfought) return h('div', { class: 'floor unfought' }, [h('span', { class: 'fl', text: 'F' + r.floor }), h('span'), h('span', { class: 'nm', text: '?' }), h('span', { class: 'mk' })]);
-    const d = foeDef(r.enemy);
-    return h('div', { class: 'floor ' + (r.won ? 'won' : 'fell') + (r.boss ? ' boss' : '') }, [
-      h('span', { class: 'fl', text: 'F' + r.floor }), foeSprite(r.enemy, r.boss), h('span', { class: 'nm', text: d.name + (r.boss ? ' (boss)' : '') }),
-      h('span', { class: 'mk', text: r.won ? '✓' : '' }),
-    ]);
-  }
-  const rowLabel = (r) => (r.summit ? 'Tower cleared' : r.unfought ? 'Floor ' + r.floor : 'Floor ' + r.floor + ' · ' + foeDef(r.enemy).name);
-
-  function renderClimb(main) {
-    const cl = ui.climb, g = cl.data, e = ui.sealed, sp = speciesDef(e.species) || { name: e.species };
-    const rows = climbRows(g);
-    const start = rows.length - 1, end = rows.length - g.floors.length - (g.cleared ? 1 : 0);   // floor 1 -> where it stops
-    const els = rows.map(climbRow);
-    const strip = h('div', { class: 'strip' }, els);
-    const now = h('div', { class: 'climb-now', 'data-id': 'climb-now' });
+  // The reel itself: the floor under the pointer, the strip and, while it spins, a Skip button. o = { id (prefix of its data-id
+  // and data-act), hash, land (lands it), live (whether this reel is still the one on screen) }.
+  function reelBlock(st, rows, end, o) {
+    const start = rows.length - 1;
+    const strip = h('div', { class: 'strip' }, rows.map((r) => r.el));
+    const now = h('div', { class: 'climb-now', 'data-id': o.id + '-now' });
     let shown = -1;
     const place = (idx) => {
       strip.style.transform = 'translateY(calc(var(--row) * ' + (POINTER_ROW - idx).toFixed(3) + '))';
       const i = Math.round(idx);
-      if (i !== shown) { shown = i; now.textContent = rowLabel(rows[i]); }
+      if (i !== shown) { shown = i; now.textContent = rows[i].label; }
     };
-    const reel = h('div', { class: 'reel', 'data-id': 'climb-reel', 'data-hash': g.hash, role: 'button', tabindex: '0',
-      'aria-label': cl.done ? rowLabel(rows[end]) : 'The wheel is spinning through the floors. Tap to skip.', onclick: landClimb,
-      onkeydown: (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); landClimb(); } } },
+    const reel = h('div', { class: 'reel', 'data-id': o.id + '-reel', 'data-hash': o.hash, role: 'button', tabindex: '0',
+      'aria-label': st.done ? rows[end].label : 'The wheel is spinning through the floors. Tap to skip.', onclick: o.land,
+      onkeydown: (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); o.land(); } } },
     [strip, h('div', { class: 'pointer' })]);
+    stopReel(st);   // a re-render mid-spin restarts the loop on the new elements (t0 is kept)
+    if (st.done) {
+      place(end);
+      const r = rows[end].el;
+      r.classList.add('landed');
+      if (r.classList.contains('fell')) r.querySelector('.mk').textContent = '✗';
+      return [now, reel];
+    }
+    place(start);
+    // Ease-out-quart from floor 1 to the landing row; longer climbs spin longer, up to about 5 s.
+    const dur = Math.min(5200, 1600 + 36 * (start - end));
+    const tick = (t) => {
+      if (!o.live() || st.done) return;
+      if (st.t0 === null) st.t0 = t;
+      const k = Math.min(1, (t - st.t0) / dur);
+      place(start + (end - start) * (1 - Math.pow(1 - k, 4)));
+      if (k >= 1) { o.land(); return; }
+      st.raf = requestAnimationFrame(tick);
+    };
+    st.raf = requestAnimationFrame(tick);
+    return [now, reel, h('button', { class: 'btn block', type: 'button', 'data-act': o.id + '-skip', text: 'Skip ▸▸', onclick: o.land })];
+  }
+  // The comic defeat once the reel lands: the killer strikes and the monster (or the whole team) is launched off screen or turned
+  // to ash (picked from the result hash, cosmetic only); reaching the top gets a victory hop instead. you: sprites; foe: null at
+  // the top, else { art, name, boss }.
+  function defeatArena(id, you, label, foe, resultHash) {
+    const me = h('div', { class: 'fighter you' + (you.length > 1 ? ' team' : '') }, [h('div', { class: 'squad' }, you), h('span', { text: label })]);
+    if (!foe) {
+      me.classList.add('hop');
+      return h('div', { class: 'arena', 'data-id': id }, [me, h('div', { class: 'pow', style: 'left:auto;right:10%', text: '★ CLEARED ★' })]);
+    }
+    const ash = parseInt(resultHash.slice(-1), 16) % 2 === 1;
+    me.classList.add(ash ? 'ash' : 'launch');
+    const killer = h('div', { class: 'fighter foe strike' + (foe.boss ? ' boss' : '') }, [foe.art, h('span', { text: foe.name })]);
+    return h('div', { class: 'arena', 'data-id': id }, [me, killer, h('div', { class: 'pow', text: ash ? 'FWOOSH!' : 'BONK!' })]);
+  }
+  // A team's sprites for the arena, in slot order.
+  const teamSprites = (team) => team.map((i) => run.account.vault[i]).filter(Boolean).map((e) => sprite(e.species, e.apex));
+  const teamLabel = (team) => (team.length === 1 ? ((run.account.vault[team[0]] || {}).name || 'Your monster') : 'Your team');
+
+  // ---- gauntlet wheel (specs/19, specs/12 section 6): the reel of the floors climbed lands on the floor and the enemy that beat
+  // the monster, then the comic defeat. The floors come with the seal (finishRun's climb); this only animates them, once.
+  const foeDef = (id) => C.gauntlet.enemies[id] || { name: id, boss: false };
+  function openClimb(data) {
+    stopClimb();
+    ui.climb = Object.assign(reelState(), { data: data });
+    ui.view = 'climb';
+    render();
+  }
+  function stopClimb() { stopReel(ui.climb); }
+  function landClimb() { landReel(ui.climb); }
+
+  function renderClimb(main) {
+    const cl = ui.climb, g = cl.data, e = ui.sealed, sp = speciesDef(e.species) || { name: e.species };
+    const fought = g.floors.map((f) => { const d = foeDef(f.enemy); return reelFloor(f.floor, foeSprite('gauntlet-' + f.enemy, f.boss), d.name, f.boss ? ' (boss)' : '', f.won); });
+    const { rows, end } = reelRows(fought, g.floorReached, C.gauntlet.floors, g.cleared ? 'Tower cleared' : null);
     main.append(
       h('h2', { class: 'center', text: 'The Gauntlet' }),
       h('div', { class: 'center small muted', text: sp.name + ' climbs a ' + C.gauntlet.floors + '-floor tower, a boss every ' + C.gauntlet.bossEvery + ' floors, until a floor beats it.' }),
-      now, reel,
+      ...reelBlock(cl, rows, end, { id: 'climb', hash: g.hash, land: landClimb, live: () => ui.climb === cl }),
     );
-    if (!cl.done) {
-      stopClimb();   // a re-render mid-spin restarts the loop on the new elements (t0 is kept)
-      place(start);
-      main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'climb-skip', text: 'Skip ▸▸', onclick: landClimb }));
-      // A slowing wheel: ease-out-quart from floor 1 to the landing row; longer climbs spin longer, up to about 5 s.
-      const dur = Math.min(5200, 1600 + 36 * (start - end));
-      const tick = (t) => {
-        if (ui.climb !== cl || cl.done) return;
-        if (cl.t0 === null) cl.t0 = t;
-        const k = Math.min(1, (t - cl.t0) / dur);
-        place(start + (end - start) * (1 - Math.pow(1 - k, 4)));
-        if (k >= 1) { landClimb(); return; }
-        cl.raf = requestAnimationFrame(tick);
-      };
-      cl.raf = requestAnimationFrame(tick);
-      return;
-    }
-    place(end);
-    els[end].classList.add('landed');
-    if (!g.cleared) els[end].querySelector('.mk').textContent = '✗';
-    main.append(climbArena(g, e, sp));
+    if (!cl.done) return;
+    const d = foeDef(g.killer);
+    main.append(defeatArena('climb-arena', [sprite(e.species, e.apex)], e.name || sp.name,
+      g.cleared ? null : { art: foeSprite('gauntlet-' + g.killer, !!d.boss, 'sprite'), name: d.name, boss: !!d.boss }, g.hash));
     main.append(h('div', { class: 'card alert center' }, [
-      h('div', { class: 'small muted', text: g.cleared ? sp.name + ' cleared every floor. Legacy Title:' : sp.name + ' fell on floor ' + g.floorReached + ' to ' + foeDef(g.killer).name + '. Legacy Title:' }),
+      h('div', { class: 'small muted', text: g.cleared ? sp.name + ' cleared every floor. Legacy Title:' : sp.name + ' fell on floor ' + g.floorReached + ' to ' + d.name + '. Legacy Title:' }),
       h('div', { class: 'legacy', 'data-id': 'climb-title', text: e.gauntlet.label }),
     ]));
     main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'climb-continue', text: 'See the grade', onclick: () => { stopClimb(); ui.view = 'grade'; render(); } }));
   }
 
-  // The comic defeat: the killer strikes and the monster is launched off screen or turned to ash (picked from the result hash,
-  // cosmetic only); a cleared tower gets a victory hop instead.
-  function climbArena(g, e, sp) {
-    const you = h('div', { class: 'fighter you' }, [sprite(e.species, e.apex), h('span', { text: e.name || sp.name })]);
-    if (g.cleared) {
-      you.classList.add('hop');
-      return h('div', { class: 'arena', 'data-id': 'climb-arena' }, [you, h('div', { class: 'pow', style: 'left:auto;right:10%', text: '★ CLEARED ★' })]);
-    }
-    const d = foeDef(g.killer), boss = !!d.boss, ash = parseInt(g.hash.slice(-1), 16) % 2 === 1;
-    you.classList.add(ash ? 'ash' : 'launch');
-    const foe = h('div', { class: 'fighter foe strike' + (boss ? ' boss' : '') }, [foeSprite(g.killer, boss, 'sprite'), h('span', { text: d.name })]);
-    return h('div', { class: 'arena', 'data-id': 'climb-arena' }, [you, foe, h('div', { class: 'pow', text: ash ? 'FWOOSH!' : 'BONK!' })]);
+  // ---- the Dungeon and Endless Tower reels (specs/21 section 8, specs/28 section 9 step 5): right after a climb, its floors spin on the
+  // reel in the modal over the screen and land on the floor that stopped the team (or the top), then the comic defeat. Close goes
+  // to the result card under it (whose banner slams in then); Watch plays the deciding floor's fight.
+  function climbReelModal(modal, o) {
+    const st = o.st, { rows, end } = reelRows(o.fought, o.floorReached, o.max, o.summit);
+    modal.append(h('h2', { class: 'center', text: o.title }), h('div', { class: 'center small muted', text: o.blurb }),
+      ...reelBlock(st, rows, end, { id: o.id, hash: o.hash, land: () => landReel(st), live: o.live }));
+    if (!st.done) return;
+    modal.append(defeatArena(o.id + '-arena', teamSprites(o.team), teamLabel(o.team), o.killer, o.hash),
+      h('div', { class: 'card alert center', 'data-id': o.id + '-landed' }, [h('div', { class: 'legacy', text: o.big }), h('div', { class: 'small muted', text: o.sub })]),
+      actionBar([
+        h('button', { class: 'btn', type: 'button', 'data-act': o.id + '-reel-watch', text: 'Watch floor ' + o.lastFloor, onclick: o.watch }),
+        h('button', { class: 'btn primary', type: 'button', 'data-act': o.id + '-reel-done', text: o.done, onclick: o.close }),
+      ]));
+  }
+  function towerReelModal(modal, r) {
+    const n = run.towerInfo(r.day).floors.length, last = r.floors[r.floors.length - 1], st = ui.towerReel;
+    climbReelModal(modal, {
+      st: st, id: 'tower', hash: r.hash, team: r.team, live: () => ui.towerReel === st,
+      title: 'The Dungeon', blurb: (r.team.length === 1 ? teamLabel(r.team) + ' takes' : 'The team takes') + " on today's " + n + ' boss floors until one stops it.',
+      fought: r.floors.slice(-REEL_MAX_ROWS).map((f) => reelFloor(f.floor, foeSprite('tower-' + f.name, !!f.marquee), f.name, f.marquee ? ' ★' : '', f.won)),
+      floorReached: r.floorReached, max: n, summit: r.cleared ? 'Dungeon cleared' : null,
+      killer: r.cleared ? null : { art: foeSprite('tower-' + last.name, !!last.marquee, 'sprite'), name: last.name, boss: !!last.marquee },
+      big: r.cleared ? 'Full clear!' : r.floorsCleared ? plural(r.floorsCleared, 'floor cleared', 'floors cleared') : 'Defeated',
+      sub: r.cleared ? 'All ' + r.floorsCleared + ' floors beaten' : 'Fell on floor ' + r.floorReached + ' to ' + last.name,
+      lastFloor: last.floor, watch: () => watchFloor(last.floor), done: 'See the loot',
+      close: () => { stopReel(st); ui.towerReel = null; render(); },
+    });
+  }
+  function endlessReelModal(modal, r, ei) {
+    const last = r.floors[r.floors.length - 1], st = ui.endlessReel, f = r.final;
+    climbReelModal(modal, {
+      st: st, id: 'endless', hash: r.hash, team: r.team, live: () => ui.endlessReel === st,
+      title: 'Endless Tower', blurb: 'The team climbs squad after squad, each floor stronger, until one stops it.',
+      fought: r.floors.slice(-REEL_MAX_ROWS).map((x) => reelFloor(x.floor, foeSprite('endless-' + x.shape, !!x.elite), x.shapeName || x.shape, x.elite ? ' (elite)' : '', x.won)),
+      floorReached: r.floorReached, max: ei.maxFloors, summit: r.capped ? 'Reached the top' : null,
+      killer: r.capped ? null : { art: foeSprite('endless-' + f.shape, !!f.elite, 'sprite'), name: f.name, boss: !!f.elite },
+      big: r.capped ? 'Reached the top!' : r.floorsCleared ? plural(r.floorsCleared, 'floor cleared', 'floors cleared') : 'Defeated',
+      sub: r.capped ? 'All ' + r.floorsCleared + ' floors cleared: nothing stopped this team' : 'Fell on floor ' + r.floorReached + ' to ' + f.name,
+      lastFloor: last.floor, watch: () => endlessWatch(last.floor), done: 'See the result',
+      close: () => { stopReel(st); ui.endlessReel = null; render(); },
+    });
   }
 
   // ------------------------------------------------------------ actions
