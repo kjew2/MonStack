@@ -1529,7 +1529,7 @@
       ]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-watch-' + f.floor, text: 'Watch', onclick: () => watchFloor(f.floor) }),
     ])));
-    card.append(rows, chartButton('tower-chart'));
+    card.append(chartButton('tower-chart'), rows);
     // The last floor's fight, as a log: ordinary actions plus the tower's events (phases, entropy vents, channels).
     const f = r.final, v = towerView(f);
     const list = h('ul', { class: 'alog', 'data-id': 'tower-log' });
@@ -1543,7 +1543,7 @@
   // rarity colour (blue shards, purple Skill Books, gold first clears) that the player flips with a tap, or all at once with Reveal
   // all; a book wobbles first and bursts. Which cards are face up is kept on the result, so a re-render keeps them.
   function towerLoot(r, last) {
-    const reveal = !r.lootSeen && !ui.towerFight && !ui.towerReel;
+    const reveal = !r.lootSeen && !ui.towerFight && !ui.towerReel && !ui.chart;
     if (reveal) r.lootSeen = true;
     const n = r.floorsCleared;
     const big = r.cleared ? 'Full clear!' : n ? n + (n === 1 ? ' floor cleared' : ' floors cleared') : 'Defeated';
@@ -1663,9 +1663,10 @@
   // floor fought or one floor. The numbers come with the result (floors[].team, in slot order); the names are the deciding
   // fight's team units, which are the same monsters in the same order.
   function chartButton(act) {
-    return h('button', { class: 'btn small', type: 'button', 'data-act': act, text: '📊 Damage chart',
-      onclick: () => { ui.chart = { floor: 0 }; render(); } });
+    return h('button', { class: 'btn small', type: 'button', 'data-act': act, text: '📊 Damage chart', onclick: openChart });
   }
+
+  function openChart() { ui.chart = { floor: 0 }; render(); }
 
   function chartTotals(r, floor) {
     const shown = floor ? r.floors.filter((f) => f.floor === floor) : r.floors;
@@ -1906,7 +1907,7 @@
   // is closed), what it paid, then every floor fought with a Watch button and the deciding floor's log.
   const FOUGHT_SHOWN = 3;   // a long climb lists its last floors, the rest one tap away (issue #130: the result card fits a phone)
   function endlessResult(main, r, season) {
-    const reveal = !r.seen && !ui.endlessFight && !ui.endlessReel;
+    const reveal = !r.seen && !ui.endlessFight && !ui.endlessReel && !ui.chart;
     if (reveal) r.seen = true;
     const n = r.floorsCleared;
     const big = r.capped ? 'Reached the top!' : n ? plural(n, 'floor cleared', 'floors cleared') : 'Defeated';
@@ -1937,7 +1938,7 @@
       ]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-watch-' + f.floor, text: 'Watch', onclick: () => endlessWatch(f.floor) }),
     ])));
-    card.append(rows, chartButton('endless-chart'));
+    card.append(chartButton('endless-chart'), rows);
     const f = r.final, v = endlessView(f);
     const list = h('ul', { class: 'alog', 'data-id': 'endless-log' });
     f.actions.forEach((x) => { const l = v.line(x); list.append(h('li', { class: l.cls, text: l.text })); });
@@ -2267,7 +2268,8 @@
 
   // ---- the Dungeon and Endless Tower reels (specs/21 section 8, specs/28 section 9 step 5): right after a climb, its floors spin on the
   // reel in the modal over the screen and land on the floor that stopped the team (or the top), then the comic defeat. Close goes
-  // to the result card under it (whose banner slams in then); Watch plays the deciding floor's fight.
+  // to the result card under it (whose banner slams in then); Watch plays the deciding floor's fight; Damage closes the reel onto
+  // the team's damage chart (every floor added up).
   function climbReelModal(modal, o) {
     const st = o.st, { rows, end } = reelRows(o.fought, o.floorReached, o.max, o.summit);
     modal.append(h('h2', { class: 'center', text: o.title }), h('div', { class: 'center small muted', text: o.blurb }),
@@ -2277,6 +2279,7 @@
       h('div', { class: 'card alert center', 'data-id': o.id + '-landed' }, [h('div', { class: 'legacy', text: o.big }), h('div', { class: 'small muted', text: o.sub })]),
       actionBar([
         h('button', { class: 'btn', type: 'button', 'data-act': o.id + '-reel-watch', text: 'Watch floor ' + o.lastFloor, onclick: o.watch }),
+        h('button', { class: 'btn', type: 'button', 'data-act': o.id + '-reel-chart', text: '📊 Damage', onclick: () => { ui.chart = { floor: 0 }; o.close(); } }),   // chart first, so the card under it keeps its banner for later
         h('button', { class: 'btn primary', type: 'button', 'data-act': o.id + '-reel-done', text: o.done, onclick: o.close }),
       ]));
   }
@@ -2304,7 +2307,7 @@
       killer: r.capped ? null : { art: foeSprite('endless-' + f.shape, !!f.elite, 'sprite'), name: f.name, boss: !!f.elite },
       big: r.capped ? 'Reached the top!' : r.floorsCleared ? plural(r.floorsCleared, 'floor cleared', 'floors cleared') : 'Defeated',
       sub: r.capped ? 'All ' + r.floorsCleared + ' floors cleared: nothing stopped this team' : 'Fell on floor ' + r.floorReached + ' to ' + f.name,
-      lastFloor: last.floor, watch: () => endlessWatch(last.floor), done: 'See the result',
+      lastFloor: last.floor, watch: () => endlessWatch(last.floor), done: 'Continue',
       close: () => { stopReel(st); ui.endlessReel = null; render(); },
     });
   }

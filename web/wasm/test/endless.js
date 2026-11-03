@@ -175,10 +175,15 @@ const H = require('./harness.js');
   await t.layout('endless board');
   await t.layout('endless result');
 
-  // ---- a second climb pays nothing new (the reel again; See the result closes it onto the card, its banner slamming in)
+  // ---- a second climb pays nothing new (the reel again; its Damage button opens the chart, every floor added up; Close goes on
+  // to the card, its banner slamming in then)
   await act('endless-climb').click();
-  await act('endless-reel-done').click();
-  check((await count('#modal [data-id=endless-reel]')) === 0 && (await count('[data-id=endless-banner].anim')) === 1, 'See the result closes the reel and slams in the banner');
+  await act('endless-reel-chart').click();
+  await page.locator('#modal [data-id=chart-endless]').waitFor();
+  check((await count('#modal [data-id=endless-reel]')) === 0 && (await page.locator('#modal [data-id=chart-endless]').getAttribute('data-floor')) === '0',
+    'the reel\'s Damage button opens the damage chart on every floor added up');
+  await act('chart-close').click();
+  check((await count('#modal [data-id=chart-endless]')) === 0 && (await count('[data-id=endless-banner].anim')) === 1, 'closing the chart shows the card and slams in the banner');
   const a2 = await acct();
   check((await count('#modal [data-id=fight-play]')) === 0 && /^No new floors this season/.test(await text('[data-id=endless-shards]'))
     && (a2.Endless.Climbs || 0) === 2 && (a2.Shards || 0) === (a1.Shards || 0), 'a second climb pays nothing new and counts a second climb');
