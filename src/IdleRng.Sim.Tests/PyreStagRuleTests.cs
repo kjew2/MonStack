@@ -182,7 +182,7 @@ namespace IdleRng.Sim.Tests
             Play(r, s, null, () => s.Ticks >= 200);
             Assert.That(a.Shield, Is.EqualTo(max * r.ShroudFrac).Within(1e-6), "still there");
 
-            // with the tithe it already hits harder from its first action
+            // it starts the fight missing MON_SHROUD_FRAC of its HP (what pyre_tithe and "below X% HP" rules read)
             Assert.That(1 - a.Hp / a.MaxHp, Is.EqualTo(r.ShroudFrac).Within(1e-9));
 
             // off
