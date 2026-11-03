@@ -4,4 +4,6 @@ stat_500,achievement.stat_500.name,stat_reached,,500,sprite,"stat_reached: a sea
 veteran,achievement.veteran.name,runs_finished,,5,mandrake,"runs_finished: amount runs sealed (abandoned runs do not count). Placeholder"
 climber,achievement.climber.name,gauntlet_floors,,10,shade_hound,"gauntlet_floors: a sealed monster clears at least amount gauntlet floors. Placeholder"
 spire_20,achievement.spire_20.name,endless_floor,,20,,"endless_floor: the best Endless Tower climb ever cleared at least amount floors (specs/28 section 6). Placeholder; unlocks no species"
+deep_spring,achievement.deep_spring.name,stat_reached,int,650,fountain_axolotl,Placeholder (#150)
+hp_700,achievement.hp_700.name,stat_reached,hp,700,candlemane,"stat_reached HP at least 700 (#141). Placeholder"
 kindled,achievement.kindled.name,rank_reached,b,,pyre_stag,"Placeholder (#142)"

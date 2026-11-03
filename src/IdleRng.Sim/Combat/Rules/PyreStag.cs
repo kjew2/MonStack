@@ -11,7 +11,8 @@ namespace IdleRng.Sim.Combat
     //   ember_eternal  a blow that would kill leaves it at 1 HP and burns the overflow from its max HP; each 1% of max HP burned
     //                  adds MON_EMBER_DMG damage; it dies once the burn would take max HP under MON_EMBER_FLOOR of its start
     // and the cost of its Immolate skill (MON_IMMOLATE_SELF of max HP per cast). An HP cost is never damage: no shield, no
-    // HP-damage hook, no trigger, no tally (blood_magic's rule, lane A). Only pyre_mercy draws (the enemy it burns, in teams).
+    // HP-damage hook, no trigger, no tally (blood_magic's rule, lane A); it goes to the HpPaid hook. Only pyre_mercy draws (the
+    // enemy it burns, in teams).
     public static partial class BattleSim
     {
         /// <summary>The Pyre Stag's Immolate skill: each cast as an action costs MON_IMMOLATE_SELF of the caster's max HP.</summary>
@@ -57,6 +58,7 @@ namespace IdleRng.Sim.Combat
             double pay = HpCost(c.Rules.TitheCost, u);
             if (!(pay > 0)) return;
             u.Hp -= pay;
+            HookHpPaid(c, u, pay);
             c.Log?.Invoke(new FightAction(u.Id, TitheEvent, u.Id, pay));
         }
 
@@ -64,7 +66,9 @@ namespace IdleRng.Sim.Combat
         static partial void OnSkillUsed_PyreStag(RuleCtx c, FightUnit u, int index, CombatSkill sk)
         {
             if (sk.Id != ImmolateSkill || !u.Alive || !(c.Rules.ImmolateSelf > 0)) return;
-            u.Hp -= HpCost(c.Rules.ImmolateSelf, u);
+            double cost = HpCost(c.Rules.ImmolateSelf, u);
+            u.Hp -= cost;
+            if (cost > 0) HookHpPaid(c, u, cost);
         }
 
         /// <summary>An HP cost of frac x max HP, never taking the unit below 1 HP.</summary>
@@ -86,7 +90,7 @@ namespace IdleRng.Sim.Combat
         static double EmberBurnedFrac(FightUnit u) => u.EmberBurned / (u.MaxHp + u.EmberBurned);
 
         /// <summary>pyre_mercy: the heal lands as nothing; its amount waits to burn an enemy at the end of the action.</summary>
-        static partial void HealIn_PyreStag(FightRules r, FightUnit t, double amount, ref bool taken)
+        static partial void HealIn_PyreStag(RuleCtx c, FightUnit t, double amount, ref bool taken)
         {
             if (taken || !Has(t, RuleModifiers.PyreMercy)) return;
             taken = true;

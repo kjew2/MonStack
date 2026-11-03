@@ -301,6 +301,22 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void BloodMagic_SelfHealNeedsTwiceItsCost()
+        {
+            // #141: with no cooldown, a self-heal that nets less than one cast's cost would be cast again and again. Max HP 3000:
+            // a cast costs 180, so a self-heal is ready from 360 on; a heal on allies is not held back.
+            var r = Rules;
+            foreach (var (power, target, casts) in new[] { (1.19, SkillTarget.Self, false), (1.2, SkillTarget.Self, true), (0.5, SkillTarget.LowestAlly, true) })
+            {
+                var a = Fast("a", x => { x.Hp = 300; x.Wis = 300; }, null, RuleModifiers.BloodMagic);
+                a.Skills.Add(new CombatSkill { Id = "mend", Kind = SkillKind.Heal, Target = target, Scales = StatIds.Wis, Power = power });
+                var log = Play(r, a, Wall("b", x => { x.Str = 0; x.Int = 0; }), 1, 0.99, s => s.Units[0].Hp = 1000);
+                Assert.That(log.Any(x => x.Skill?.Id == "mend"), Is.EqualTo(casts), $"{power} {target}");
+                Assert.That(log.Any(x => x.Actor == "a" && x.Event == null && x.Skill == null), Is.EqualTo(!casts), "else it attacks");
+            }
+        }
+
+        [Test]
         public void BloodMagic_NeverBelowOneHp()
         {
             var r = Rules;

@@ -27,6 +27,16 @@
       "tree_id": "umbral_grimoire"
     },
     {
+      "id": "book_springs",
+      "name_key": "book.book_springs.name",
+      "tree_id": "springs_almanac"
+    },
+    {
+      "id": "book_psalter",
+      "name_key": "book.book_psalter.name",
+      "tree_id": "unburnt_psalter"
+    },
+    {
       "id": "book_litany",
       "name_key": "book.book_litany.name",
       "tree_id": "litany_of_embers"
