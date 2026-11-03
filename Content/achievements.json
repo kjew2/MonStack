@@ -58,6 +58,14 @@
       "unlocks_species": "candlemane"
     },
     {
+      "id": "kindled",
+      "name_key": "achievement.kindled.name",
+      "kind": "rank_reached",
+      "ref": "b",
+      "amount": null,
+      "unlocks_species": "pyre_stag"
+    },
+    {
       "id": "castle_walls",
       "name_key": "achievement.castle_walls.name",
       "kind": "stat_reached",

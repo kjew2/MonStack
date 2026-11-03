@@ -790,6 +790,25 @@ namespace IdleRng.Sim.Combat
         /// as extra light true damage and heals MON_SUN_HEAL of the release. The Hollow Sun chase capstone.
         /// </summary>
         public const string HollowSun = "hollow_sun";
+        // Species lane: the Pyre Stag (#142), coded in Combat/Rules/PyreStag.cs.
+
+        /// <summary>
+        /// Each action costs MON_TITHE_COST of max HP (never below 1 HP, not damage); the unit's damage is x(1 + the fraction of max
+        /// HP it is missing). The Funeral Pyre native capstone.
+        /// </summary>
+        public const string PyreTithe = "pyre_tithe";
+
+        /// <summary>At fight start, MON_SHROUD_FRAC of the unit's HP becomes a shield that does not expire. The Ashen Vigil native capstone.</summary>
+        public const string AshShroud = "ash_shroud";
+
+        /// <summary>The unit cannot be healed: every heal it would receive burns an enemy as fire damage instead. The Inverted Mercy chase capstone.</summary>
+        public const string PyreMercy = "pyre_mercy";
+
+        /// <summary>
+        /// A blow that would kill leaves the unit at 1 HP and burns the overflow from its max HP, each 1% adding MON_EMBER_DMG damage;
+        /// it dies once max HP would burn under MON_EMBER_FLOOR of its start. The Undying Pyre chase capstone.
+        /// </summary>
+        public const string EmberEternal = "ember_eternal";
         // Species Keepshell Crab (#152), coded in Combat/Rules/KeepshellCrab.cs.
 
         /// <summary>Against magical hits the unit mitigates with the higher of its WIS and MON_MOAT_DEF x its DEF. The Tide Moat native capstone (Keepshell Crab).</summary>
@@ -816,6 +835,7 @@ namespace IdleRng.Sim.Combat
             IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore,
             ClearSpring, Seep, FountainJets,
             MartyrFlame, HollowSun,
+            PyreTithe, AshShroud, PyreMercy, EmberEternal,
             TideMoat, Unbreached, Shellcrack };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;

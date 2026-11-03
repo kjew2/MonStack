@@ -220,6 +220,7 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 | Climber | Clear 10 gauntlet floors | shade_hound (Shade Hound; kj, 2026-10-31) |
 | Deep Spring | Finish a run with INT at 650 or more | fountain_axolotl (Fountain Axolotl; #150, placeholder) |
 | Living Candle | Finish a run with HP at 700 or more (`stat_reached`, ref `hp`) | candlemane (Candlemane, #141) |
+| Kindled | Reach rank B in a run | pyre_stag (Pyre Stag, #142) |
 | Castle Walls | Finish a run with DEF at 650 or more (`stat_reached`, ref `def`) | keepshell_crab (Keepshell Crab, #152, placeholder) |
 | Spire Breaker | Clear 20 Endless Tower floors in one climb | none **(agent: a goal, not an unlock, until a species is meant for it)** |
 

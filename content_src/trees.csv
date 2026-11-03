@@ -85,6 +85,11 @@ sanctum_grace,tree.sanctum_grace.name,native,,,,,,candlemane native tree 2 (#141
 unburnt_psalter,tree.unburnt_psalter.name,book,,,,,,candlemane's book tree (Hollow Sun)
 martyrs_pyre,tree.martyrs_pyre.name,chase,,,tree.martyrs_pyre.apex,,,candlemane in-run chase tree
 hollow_sun,tree.hollow_sun.name,chase,,,tree.hollow_sun.apex,,,candlemane book-gated chase tree
+funeral_pyre,tree.funeral_pyre.name,native,,,,,,"pyre stag native tree (#142): Tithe of Ash, burns its own HP for damage"
+ashen_vigil,tree.ashen_vigil.name,native,,,,,,pyre stag native tree (#142): Ash Shroud turns HP into a shield
+litany_of_embers,tree.litany_of_embers.name,book,,,,,,pyre stag's book tree (Undying Pyre)
+inverted_mercy,tree.inverted_mercy.name,chase,,,tree.inverted_mercy.apex,,,pyre stag in-run chase tree
+undying_pyre,tree.undying_pyre.name,chase,,,tree.undying_pyre.apex,,,pyre stag book-gated chase tree
 tide_moat,tree.tide_moat.name,native,,,,,,keepshell crab native tree 2 (#152)
 siege_manual,tree.siege_manual.name,book,,,,,,keepshell crab's book tree (Siege Pincers)
 unbreached_keep,tree.unbreached_keep.name,chase,,,tree.unbreached_keep.apex,,,keepshell crab in-run chase tree

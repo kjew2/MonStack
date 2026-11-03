@@ -1274,6 +1274,54 @@
       "element": null
     },
     {
+      "id": "immolate",
+      "name_key": "mskill.immolate.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "str",
+      "power": 1.8,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "fire"
+    },
+    {
+      "id": "ember_hymn",
+      "name_key": "mskill.ember_hymn.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "int",
+      "power": 1.6,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "fire"
+    },
+    {
+      "id": "cinder_rite",
+      "name_key": "mskill.cinder_rite.name",
+      "kind": "heal",
+      "target": "self",
+      "stat": null,
+      "scales": "str",
+      "power": 0.9,
+      "cooldown": 3,
+      "duration": 0,
+      "element": null
+    },
+    {
+      "id": "smoke_psalm",
+      "name_key": "mskill.smoke_psalm.name",
+      "kind": "debuff",
+      "target": "enemy",
+      "stat": "dex",
+      "scales": null,
+      "power": 0.3,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
+    },
+    {
       "id": "moat_surge",
       "name_key": "mskill.moat_surge.name",
       "kind": "damage",

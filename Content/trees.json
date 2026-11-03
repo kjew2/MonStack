@@ -862,6 +862,56 @@
       "fuse_b": null
     },
     {
+      "id": "funeral_pyre",
+      "name_key": "tree.funeral_pyre.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "ashen_vigil",
+      "name_key": "tree.ashen_vigil.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "litany_of_embers",
+      "name_key": "tree.litany_of_embers.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "inverted_mercy",
+      "name_key": "tree.inverted_mercy.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.inverted_mercy.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "undying_pyre",
+      "name_key": "tree.undying_pyre.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.undying_pyre.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
       "id": "tide_moat",
       "name_key": "tree.tide_moat.name",
       "kind": "native",

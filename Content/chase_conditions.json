@@ -296,6 +296,62 @@
       "amount": 2000.0
     },
     {
+      "id": "inverted_mercy_c0",
+      "tree_id": "inverted_mercy",
+      "type": "tree_maxed",
+      "ref": "funeral_pyre",
+      "amount": null
+    },
+    {
+      "id": "inverted_mercy_c1",
+      "tree_id": "inverted_mercy",
+      "type": "node_owned",
+      "ref": "ashen_vigil_n4",
+      "amount": null
+    },
+    {
+      "id": "inverted_mercy_c2",
+      "tree_id": "inverted_mercy",
+      "type": "stat_at_least",
+      "ref": "str",
+      "amount": 450.0
+    },
+    {
+      "id": "inverted_mercy_c3",
+      "tree_id": "inverted_mercy",
+      "type": "tally_at_least",
+      "ref": "damage_fire",
+      "amount": 3000.0
+    },
+    {
+      "id": "undying_pyre_c0",
+      "tree_id": "undying_pyre",
+      "type": "node_owned",
+      "ref": "litany_of_embers_n0",
+      "amount": null
+    },
+    {
+      "id": "undying_pyre_c1",
+      "tree_id": "undying_pyre",
+      "type": "node_owned",
+      "ref": "funeral_pyre_n7",
+      "amount": null
+    },
+    {
+      "id": "undying_pyre_c2",
+      "tree_id": "undying_pyre",
+      "type": "node_owned",
+      "ref": "ashen_vigil_n4",
+      "amount": null
+    },
+    {
+      "id": "undying_pyre_c3",
+      "tree_id": "undying_pyre",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
       "id": "unbreached_keep_c0",
       "tree_id": "unbreached_keep",
       "type": "tree_maxed",

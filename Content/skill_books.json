@@ -37,6 +37,11 @@
       "tree_id": "unburnt_psalter"
     },
     {
+      "id": "book_litany",
+      "name_key": "book.book_litany.name",
+      "tree_id": "litany_of_embers"
+    },
+    {
       "id": "book_siege",
       "name_key": "book.book_siege.name",
       "tree_id": "siege_manual"
