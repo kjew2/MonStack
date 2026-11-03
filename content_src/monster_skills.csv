@@ -123,6 +123,11 @@ begging_cry,mskill.begging_cry.name,debuff,enemy,spd,,0.15,3,2,
 nest_down,mskill.nest_down.name,buff,self,def,,0.1,0,2,
 crown_peck,mskill.crown_peck.name,damage,enemy,,luk,1.6,2,0,dark
 clutch_call,mskill.clutch_call.name,damage,all_enemies,,luk,0.8,3,0,dark
+bell_sting,mskill.bell_sting.name,damage,enemy,,wis,1.3,3,0,dark
+knell,mskill.knell.name,damage,all_enemies,,wis,0.8,3,0,dark
+hour_hand,mskill.hour_hand.name,damage,enemy,,wis,1.6,4,0,dark
+second_hand,mskill.second_hand.name,damage,enemy,,wis,0.3,0,0,dark
+chime_cascade,mskill.chime_cascade.name,damage,all_enemies,,wis,1.0,4,0,dark
 mud_patch,mskill.mud_patch.name,heal,self,,wis,1.0,3,0,nature
 tail_thump,mskill.tail_thump.name,damage,enemy,,str,1.2,2,0,nature
 sluice_gate,mskill.sluice_gate.name,shield,self,,wis,1.2,4,3,nature

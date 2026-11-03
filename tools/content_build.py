@@ -124,6 +124,9 @@ REQUIRED_CONSTANTS = {
     "MON_SEVER_FRAC": "double", "MON_SEVER_DMG": "double", "MON_SEVER_MAX": "int",
     # species Cuckling (#143): stolen_turn, foundling_egg
     "MON_STEAL_GAUGE": "double", "MON_STEALS_PER_FOE": "int", "MON_USURP_STEALS": "int", "MON_EGG_HP": "double", "MON_HATCH_ACTIONS": "int", "MON_HATCH_STATS": "double",
+    # species Gearbell Jelly (#158), ward_rewind, ward_toll and escapement (specs/16 section 6.2)
+    "MON_REWIND_WIS": "double", "MON_TOLL_DMG": "double", "MON_TOLL_SHARE": "double", "MON_TOLL_REFORM": "double", "MON_TOLL_DELAY": "int", "MON_TOLL_MAX": "int",
+    "MON_ESCAPE_POWER": "double",
     # species Lodge Beaver (#146): mudwork, tail_slap and holdback (specs/16 section 6.2)
     "MON_MUD_CAP": "double", "MON_MUD_TURNS": "int", "MON_SLAP_SHIELD": "double", "MON_DAM_FLOW": "double",
     "MON_DAM_SPILL": "double", "MON_DAM_BREAK": "double",
@@ -161,6 +164,8 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             "iai_draw", "still_hunt", "sever_art",
             # species Cuckling (#143)
             "stolen_turn", "usurp", "foundling_egg",
+            # species Gearbell Jelly (#158), coded in Combat/Rules/GearbellJelly.cs
+            "ward_rewind", "ward_toll", "escapement",
             # species Lodge Beaver (#146), coded in Combat/Rules/LodgeBeaver.cs
             "mudwork", "tail_slap", "holdback"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
@@ -276,6 +281,10 @@ MON_RANGES = {
     "MON_USURP_STEALS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
     "MON_EGG_HP": ("(0, 1]", lambda v: 0 < v <= 1), "MON_HATCH_ACTIONS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
     "MON_HATCH_STATS": ("(0, 1]", lambda v: 0 < v <= 1),
+    # species Gearbell Jelly (#158)
+    "MON_REWIND_WIS": (">= 0", lambda v: v >= 0), "MON_TOLL_DMG": (">= 0", lambda v: v >= 0),
+    "MON_TOLL_REFORM": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_SHARE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_DELAY": (">= 0", lambda v: v >= 0),
+    "MON_TOLL_MAX": (">= 0", lambda v: v >= 0), "MON_ESCAPE_POWER": (">= 0", lambda v: v >= 0),
     # species Lodge Beaver (#146): the Reservoir always drains (flow > 0) and the dam always breaks at some finite height
     "MON_MUD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_MUD_TURNS": (">= 1", lambda v: v >= 1),
     "MON_SLAP_SHIELD": (">= 0", lambda v: v >= 0), "MON_DAM_FLOW": ("(0, 1]", lambda v: 0 < v <= 1),

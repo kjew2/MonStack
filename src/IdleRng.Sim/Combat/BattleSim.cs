@@ -222,6 +222,15 @@ namespace IdleRng.Sim.Combat
                     HookGaugeTick(ctx, u, ref fill);
                     u.Gauge += fill;
                 }
+            int tickSide = -1;
+            HookTick(ctx, ref tickSide);   // species rules: escapement's clock casts, out of turn
+            if (tickSide >= 0)
+            {
+                ProcessDeaths(ctx);
+                CheckPhases(rules, s, rng, onAction);
+                var o = Decide(s, tickSide);
+                if (o != FightOutcome.Ongoing) return s.Outcome = o;
+            }
 
             for (int n = 0; n < MaxActionsPerTick; n++)
             {
@@ -236,7 +245,8 @@ namespace IdleRng.Sim.Combat
                 }
                 // One turn: the action the gauge paid for, then at most MON_EXTRA_ACTIONS_CAP extra actions (specs/16 section 6.4).
                 string extra = null;
-                int extras = 0;
+                int extras = 0, spent = 0;
+                HookTurnBudget(ctx, actor, ref spent);   // out-of-turn casts since its last turn count toward the cap
                 do
                 {
                     if (extra != null) onAction?.Invoke(new FightAction(actor.Id, extra, actor.Id, 0));
@@ -249,7 +259,7 @@ namespace IdleRng.Sim.Combat
                     CheckPhases(rules, s, rng, onAction);
                     var o = Decide(s, actor.Side);
                     if (o != FightOutcome.Ongoing) return s.Outcome = o;
-                    extra = acted && extras < rules.ExtraActionsCap ? ExtraAction(ctx, actor) : null;
+                    extra = acted && extras + spent < rules.ExtraActionsCap ? ExtraAction(ctx, actor) : null;
                     extras++;
                 } while (extra != null);
             }
@@ -447,7 +457,8 @@ namespace IdleRng.Sim.Combat
             }
             Fire(r, s, u, FightTrigger.OnAction, rng, onAction);
             if (!u.Alive) return;
-            for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
+            if (!Has(u, RuleModifiers.Escapement))   // escapement: its cooldowns run on the fight clock instead
+                for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
             if (u.UsurpVictim != null && Usurp(r, s, u, rng, onAction)) return;   // usurp: a stolen turn casts the victim's skill
             var skills = u.Source.Skills;
             var book = u.Source.Gambits;

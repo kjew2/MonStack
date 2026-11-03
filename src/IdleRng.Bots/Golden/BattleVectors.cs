@@ -264,6 +264,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 usurper cuckoo and clutch empress", 13,
                 new[] { Cuckling("a_usurp", RuleModifiers.Usurp), Cuckling("a_empress", RuleModifiers.FoundlingEgg) },
                 new[] { Brawler("b_brawler", "light"), Healer("b_healer", "water"), Mage("b_mage", "nature") });
+            // Species Gearbell Jelly (#158): Mana Ward with Rewind on both, one tolling jelly and one on the clock, against a team
+            // of hitters (the brawler breaks the bell) and a healer.
+            yield return new Vector("2v3 gearbell jelly toll and escapement", 15,
+                new[] { GearbellJelly("a_toll", RuleModifiers.WardToll), GearbellJelly("a_clock", RuleModifiers.Escapement) },
+                new[] { Brawler("b_brawler", "light"), Mage("b_mage", "nature"), Healer("b_healer", "water") });
             // Species Lodge Beaver (#146): its chase capstones on its own kit (barricade, mudwork, Stand Firm, Mud Patch, Tail
             // Thump, Sluice Gate) against a brawler, a caster and a healer.
             yield return new Vector("2v3 tail slap and holdback", 15,
@@ -372,6 +377,14 @@ namespace IdleRng.Bots.Golden
                 Fx("windfall", SkillKind.Buff, SkillTarget.Self, StatIds.CritRate, null, 0.15, 0, 2),
             },
             Rules = { RuleModifiers.StolenTurn, chase },
+        };
+
+        // Species Gearbell Jelly (#158): the native kit (Mana Ward, Rune Gearwork's Rewind and Bell Sting) plus one chase capstone.
+        static Fighter GearbellJelly(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(260, 60, 140, 520, 360, 140, 180, 300),
+            Skills = { Dmg("bell_sting", StatIds.Wis, 1.3, 3, SkillTarget.Enemy, "dark"), Dmg("knell", StatIds.Wis, 0.8, 3, SkillTarget.AllEnemies, "dark") },
+            Rules = { RuleModifiers.ManaWard, RuleModifiers.WardRewind, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.
