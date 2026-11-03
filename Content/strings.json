@@ -2631,6 +2631,118 @@
       "text": "Each new cycle the core eats {HUNGRY_ENERGY} energy. While fed, every trained stat is +{HUNGRY_STAT} in that cycle's rank fight. With too little energy it goes dormant for the cycle: no bonus, nothing eaten."
     },
     {
+      "key": "species.fountain_axolotl.name",
+      "text": "Fountain Axolotl"
+    },
+    {
+      "key": "tree.clear_spring.name",
+      "text": "Clear Spring"
+    },
+    {
+      "key": "tree.springs_almanac.name",
+      "text": "Almanac of Springs"
+    },
+    {
+      "key": "tree.aquifer.name",
+      "text": "Aquifer"
+    },
+    {
+      "key": "tree.aquifer.apex",
+      "text": "Aquifer Olm"
+    },
+    {
+      "key": "tree.six_fountains.name",
+      "text": "Six Fountains"
+    },
+    {
+      "key": "tree.six_fountains.apex",
+      "text": "Xolotl Wellspring"
+    },
+    {
+      "key": "book.book_springs.name",
+      "text": "Skill Book: Almanac of Springs"
+    },
+    {
+      "key": "mskill.fountain_spout.name",
+      "text": "Fountain Spout"
+    },
+    {
+      "key": "mskill.fountain_spout.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.riptide.name",
+      "text": "Riptide"
+    },
+    {
+      "key": "mskill.riptide.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.gill_jet.name",
+      "text": "Gill Jet"
+    },
+    {
+      "key": "mskill.gill_jet.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.gill_spray.name",
+      "text": "Gill Spray"
+    },
+    {
+      "key": "mskill.gill_spray.desc",
+      "text": "Chase trait. On crit: {element} damage for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.wellspring_rain.name",
+      "text": "Wellspring Rain"
+    },
+    {
+      "key": "mskill.wellspring_rain.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "rule.clear_spring.name",
+      "text": "Clear Spring"
+    },
+    {
+      "key": "rule.clear_spring.desc",
+      "text": "Its element has no weakness: its hits of its own element deal full damage to the element that beats it (not {ELEMENT_WEAK_MULT:pct}), and hits of that element deal it full damage (not {ELEMENT_STRONG_MULT:pct}). Its strong matchups still count."
+    },
+    {
+      "key": "rule.clear_spring.log",
+      "text": "element matchup x{amount} cancelled"
+    },
+    {
+      "key": "rule.seep.name",
+      "text": "Water Finds a Way"
+    },
+    {
+      "key": "rule.seep.desc",
+      "text": "Each of its hits is mitigated by the lower of the target's DEF and WIS, physical or magical. {MON_SEEP_SHIELD:pct} of each hit passes through shields straight to HP."
+    },
+    {
+      "key": "rule.seep.log",
+      "text": "seeps past: only {amount} defence"
+    },
+    {
+      "key": "rule.fountain_jets.name",
+      "text": "Fountain Jets"
+    },
+    {
+      "key": "rule.fountain_jets.desc",
+      "text": "Each single-target hit of its skills and basic attacks splits into {MON_JETS} jets of {MON_JET_POWER:pct} power. Each jet rolls evade, graze and crit on its own and counts as a hit for on-hit and on-crit effects. Area skills, heals, shields and triggered hits do not split."
+    },
+    {
+      "key": "rule.fountain_jets.log",
+      "text": "{amount} of {MON_JETS} jets land"
+    },
+    {
+      "key": "achievement.deep_spring.name",
+      "text": "Deep Spring"
+    },
+    {
       "key": "species.candlemane.name",
       "text": "Candlemane"
     },

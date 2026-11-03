@@ -656,6 +656,34 @@ rule.ascetic.name,Ascetic
 rule.ascetic.desc,"+{ASCETIC_AP} action each cycle, but rank-fight wins give no skill points."
 rule.hungry_core.name,Hungry Core
 rule.hungry_core.desc,"Each new cycle the core eats {HUNGRY_ENERGY} energy. While fed, every trained stat is +{HUNGRY_STAT} in that cycle's rank fight. With too little energy it goes dormant for the cycle: no bonus, nothing eaten."
+species.fountain_axolotl.name,Fountain Axolotl
+tree.clear_spring.name,Clear Spring
+tree.springs_almanac.name,Almanac of Springs
+tree.aquifer.name,Aquifer
+tree.aquifer.apex,Aquifer Olm
+tree.six_fountains.name,Six Fountains
+tree.six_fountains.apex,Xolotl Wellspring
+book.book_springs.name,Skill Book: Almanac of Springs
+mskill.fountain_spout.name,Fountain Spout
+mskill.fountain_spout.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.riptide.name,Riptide
+mskill.riptide.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.gill_jet.name,Gill Jet
+mskill.gill_jet.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.gill_spray.name,Gill Spray
+mskill.gill_spray.desc,Chase trait. On crit: {element} damage for {power:pct} {scales}.
+mskill.wellspring_rain.name,Wellspring Rain
+mskill.wellspring_rain.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+rule.clear_spring.name,Clear Spring
+rule.clear_spring.desc,"Its element has no weakness: its hits of its own element deal full damage to the element that beats it (not {ELEMENT_WEAK_MULT:pct}), and hits of that element deal it full damage (not {ELEMENT_STRONG_MULT:pct}). Its strong matchups still count."
+rule.clear_spring.log,element matchup x{amount} cancelled
+rule.seep.name,Water Finds a Way
+rule.seep.desc,"Each of its hits is mitigated by the lower of the target's DEF and WIS, physical or magical. {MON_SEEP_SHIELD:pct} of each hit passes through shields straight to HP."
+rule.seep.log,seeps past: only {amount} defence
+rule.fountain_jets.name,Fountain Jets
+rule.fountain_jets.desc,"Each single-target hit of its skills and basic attacks splits into {MON_JETS} jets of {MON_JET_POWER:pct} power. Each jet rolls evade, graze and crit on its own and counts as a hit for on-hit and on-crit effects. Area skills, heals, shields and triggered hits do not split."
+rule.fountain_jets.log,{amount} of {MON_JETS} jets land
+achievement.deep_spring.name,Deep Spring
 species.candlemane.name,Candlemane
 tree.sanctum_grace.name,Sanctum Grace
 tree.unburnt_psalter.name,Psalter of the Unburnt

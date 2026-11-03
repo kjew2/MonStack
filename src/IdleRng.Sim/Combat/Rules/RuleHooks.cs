@@ -331,6 +331,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_C(r, ref ok);
             ValidateRules_D(r, ref ok);
             ValidateRules_E(r, ref ok);
+            ValidateRules_FountainAxolotl(r, ref ok);
             ValidateRules_Candlemane(r, ref ok);
         }
 
@@ -400,6 +401,7 @@ namespace IdleRng.Sim.Combat
             Load_C(r, c);
             Load_D(r, c);
             Load_E(r, c);
+            Load_FountainAxolotl(r, c);
             Load_Candlemane(r, c);
         }
 
