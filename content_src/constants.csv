@@ -181,3 +181,7 @@ MON_SHROUD_FRAC,double,0.25,ash_shroud rule: at fight start this fraction of cur
 MON_MERCY_MULT,double,2.5,"pyre_mercy rule: a heal it would receive burns an enemy for this multiple of the heal, as fire damage (element edge, WIS mitigation). Placeholder"
 MON_EMBER_DMG,double,0.025,"ember_eternal rule: damage bonus for each 1% of its starting max HP burned instead of dying. Placeholder"
 MON_EMBER_FLOOR,double,0.3,"ember_eternal rule: the unit dies once a blow would burn its max HP below this fraction of its starting max HP. Placeholder"
+MON_MOAT_DEF,double,0.8,"tide_moat rule: against magical hits the unit mitigates with the higher of its WIS and this x its DEF. Placeholder"
+MON_WALL_DEF,double,0.25,"unbreached rule: a hit on the unit that would deal at most this x its DEF (its wall, after mitigation and crit, before shields) deals 0. Placeholder"
+MON_WALL_ERODE,double,0.05,"unbreached rule: each blocked hit lowers the wall by this fraction of its starting value, so the walls always fall. Placeholder"
+MON_CRACK_DEF,double,0.8,"shellcrack rule: the unit's physical hits ignore the target's DEF and add this x the target's DEF to the raw damage. Placeholder"

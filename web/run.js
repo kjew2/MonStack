@@ -679,6 +679,10 @@
     // Candlemane (#141): heals burned into light damage, and stored Radiance released on a hit
     'rule:martyr_flame': (n) => 'burns ' + Math.round(n) + ' light dmg',
     'rule:hollow_sun': (n) => 'releases ' + Math.round(n) + ' light dmg',
+    // species Keepshell Crab (#152): the defence the moat used, the wall left after a block, the DEF cracked into damage
+    'rule:tide_moat': (n) => 'moat defends with ' + Math.round(n),
+    'rule:unbreached': (n) => 'blocked, wall ' + Math.round(n) + ' left',
+    'rule:shellcrack': (n) => '+' + Math.round(n) + ' damage from its DEF',
   };
 
   function actionResult(x) {

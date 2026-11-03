@@ -494,9 +494,9 @@
     {
       "id": "fortress_fist",
       "name_key": "tree.fortress_fist.name",
-      "kind": "generic",
-      "offer_stat": "def",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -908,6 +908,46 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.undying_pyre.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "tide_moat",
+      "name_key": "tree.tide_moat.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "siege_manual",
+      "name_key": "tree.siege_manual.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "unbreached_keep",
+      "name_key": "tree.unbreached_keep.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.unbreached_keep.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "siege_pincers",
+      "name_key": "tree.siege_pincers.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.siege_pincers.apex",
       "fuse_a": null,
       "fuse_b": null
     }

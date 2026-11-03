@@ -200,6 +200,31 @@
       "grow_def": 0.5,
       "grow_spd": 1.0,
       "grow_luk": 0.8
+    },
+    {
+      "id": "keepshell_crab",
+      "name_key": "species.keepshell_crab.name",
+      "element": "water",
+      "native_tree_1": "fortress_fist",
+      "native_tree_2": "tide_moat",
+      "chase_tree_run": "unbreached_keep",
+      "chase_tree_book": "siege_pincers",
+      "base_hp": 160.0,
+      "base_str": 70.0,
+      "base_int": 50.0,
+      "base_wis": 100.0,
+      "base_dex": 70.0,
+      "base_def": 170.0,
+      "base_spd": 80.0,
+      "base_luk": 140.0,
+      "grow_hp": 1.2,
+      "grow_str": 0.7,
+      "grow_int": 0.7,
+      "grow_wis": 0.9,
+      "grow_dex": 0.8,
+      "grow_def": 1.4,
+      "grow_spd": 0.8,
+      "grow_luk": 1.1
     }
   ]
 }

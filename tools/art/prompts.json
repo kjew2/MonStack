@@ -44,6 +44,10 @@
   "pyre_stag": {
    "name": "Pyre Stag",
    "prompt": "A gaunt, ash-grey stag creature that is slowly burning itself alive. Its antlers are a living funeral pyre: stacked charred branches wreathed in roaring orange-gold flame. Its hide is cracked like cooling charcoal, with molten ember light glowing through the cracks along its ribs, spine and legs; flakes of ash and sparks peel off its body and drift upward. Rusted iron penitent chains hang from its neck, with small blackened bells. Lean, long-legged and solemn, head held high; eyes are white-hot embers. Grimdark and mythic, a sacred beast that pays for its power with its own body."
+  },
+  "keepshell_crab": {
+   "name": "Keepshell Crab",
+   "prompt": "A stubby rust-orange hermit crab that wears a whole stone castle keep as its shell: crenellated towers, a portcullis gate over its face, coral and seaweed growing in the mortar. Its claws are wrapped in riveted gate-plates and raised to punch. Cute, glaring little castle."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -128,6 +132,16 @@
    "species": "pyre_stag",
    "name": "Everpyre Hart",
    "prompt": "a colossal hart of living flame with no hide left, its antler pyre risen into a crown-shaped bonfire, black bells ringing in the smoke."
+  },
+  "unbreached_keep": {
+   "species": "keepshell_crab",
+   "name": "Citadel Kingcrab",
+   "prompt": "the keep grows into a walled citadel of towers and banners with a seawater moat; the claws become gatehouses, portcullises down."
+  },
+  "siege_pincers": {
+   "species": "keepshell_crab",
+   "name": "Siegebreaker Crab",
+   "prompt": "the castle shell has been rebuilt as a dark iron-and-timber siege tower on wheels, its claws replaced by heavy black iron battering rams with crab-claw heads, cracked enemy shields hung on its walls as trophies. Colour palette shifts from grey stone to black iron, dark wood and rust red."
   }
  }
 }

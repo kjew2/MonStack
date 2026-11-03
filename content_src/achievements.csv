@@ -7,3 +7,4 @@ spire_20,achievement.spire_20.name,endless_floor,,20,,"endless_floor: the best E
 deep_spring,achievement.deep_spring.name,stat_reached,int,650,fountain_axolotl,Placeholder (#150)
 hp_700,achievement.hp_700.name,stat_reached,hp,700,candlemane,"stat_reached HP at least 700 (#141). Placeholder"
 kindled,achievement.kindled.name,rank_reached,b,,pyre_stag,"Placeholder (#142)"
+castle_walls,achievement.castle_walls.name,stat_reached,def,650,keepshell_crab,"stat_reached DEF at least 650 (#152). Placeholder"

@@ -117,6 +117,8 @@ REQUIRED_CONSTANTS = {
     # species pyre_stag (#142): Immolate's cost and its four rules (specs/16 section 6.2)
     "MON_IMMOLATE_SELF": "double", "MON_TITHE_COST": "double", "MON_SHROUD_FRAC": "double", "MON_MERCY_MULT": "double", "MON_EMBER_DMG": "double",
     "MON_EMBER_FLOOR": "double",
+    # species Keepshell Crab (#152), tide_moat, unbreached and shellcrack (specs/16 section 6.2)
+    "MON_MOAT_DEF": "double", "MON_WALL_DEF": "double", "MON_WALL_ERODE": "double", "MON_CRACK_DEF": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -144,7 +146,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species Candlemane (#141)
             "martyr_flame", "hollow_sun",
             # species pyre_stag (#142), coded in Combat/Rules/PyreStag.cs
-            "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal"]
+            "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal",
+            # species Keepshell Crab (#152)
+            "tide_moat", "unbreached", "shellcrack"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -245,6 +249,9 @@ MON_RANGES = {
     "MON_SHROUD_FRAC": ("[0, 1)", lambda v: 0 <= v < 1), "MON_MERCY_MULT": (">= 0", lambda v: v >= 0),
     "MON_EMBER_DMG": (">= 0", lambda v: v >= 0),
     "MON_EMBER_FLOOR": ("(0, 1]", lambda v: 0 < v <= 1),
+    # species Keepshell Crab (#152): the walls must always fall, so the erosion is never 0
+    "MON_MOAT_DEF": (">= 0", lambda v: v >= 0), "MON_WALL_DEF": (">= 0", lambda v: v >= 0),
+    "MON_WALL_ERODE": ("(0, 1]", lambda v: 0 < v <= 1), "MON_CRACK_DEF": (">= 0", lambda v: v >= 0),
 }
 
 

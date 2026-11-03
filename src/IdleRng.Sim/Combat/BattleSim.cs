@@ -774,6 +774,7 @@ namespace IdleRng.Sim.Combat
                 after *= 1 + CorruptionLevel(r, s.Ticks) * r.Tower.CorruptDmgPerLevel;
                 if (tgt.Guard > 0 && GuardActive(s, tgt)) after *= Math.Max(0.0, 1 - tgt.Guard);
             }
+            HookHitMitigated(ctx, h, ref after);   // the species rules' hook before the shield (unbreached's wall)
             double shieldBefore = tgt.Shield, seepPass = seepDefence >= 0 ? SeepPass(r, after) : 0;
             double dealt = Absorb(ctx, src, tgt, after, element, seepPass);
             h.Dealt = dealt; h.Mitigated = mitigated;

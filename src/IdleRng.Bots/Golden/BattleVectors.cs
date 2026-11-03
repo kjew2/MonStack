@@ -250,6 +250,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("4v4 pyre stag capstones", 13,
                 new[] { Pyre("a_pyre"), Mercy("a_mercy"), Ember("a_ember"), Healer("a_healer") },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Tank("b_tank", "fire"), Healer("b_healer", "dark") });
+            // Species Keepshell Crab (#152): its chase capstones on its own kit (fortress_fist, tide_moat, Moat Surge) against a
+            // tank, a caster and a team that spreads small hits.
+            yield return new Vector("2v3 unbreached and shellcrack", 14,
+                new[] { KeepshellCrab("a_keep", RuleModifiers.Unbreached), KeepshellCrab("a_siege", RuleModifiers.Shellcrack) },
+                new[] { Tank("b_tank", "fire"), Mage("b_mage", "nature"), Brawler("b_brawler", "dark") });
         }
 
         // Species Fountain Axolotl (#150).
@@ -310,6 +315,14 @@ namespace IdleRng.Bots.Golden
             Id = id, Element = "fire", Stats = S(360, 200, 360, 200, 120, 90, 190, 140),
             Skills = { Dmg("ember_hymn", StatIds.Int, 1.6, 2, SkillTarget.Enemy, "fire") },
             Rules = { RuleModifiers.EmberEternal, RuleModifiers.PyreTithe },
+        };
+
+        // Species Keepshell Crab (#152): the native kit (Fortress Fist and Tide Moat) plus one chase capstone.
+        static Fighter KeepshellCrab(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(420, 70, 50, 160, 120, 600, 140, 240),
+            Skills = { Dmg("iron_press", StatIds.Def, 1.2, 2), Dmg("moat_surge", StatIds.Def, 1.3, 2, SkillTarget.Enemy, "water") },
+            Rules = { RuleModifiers.FortressFist, RuleModifiers.TideMoat, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.
