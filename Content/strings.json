@@ -628,7 +628,7 @@
     },
     {
       "key": "tree.tome_of_echoes.name",
-      "text": "Tome of Echoes"
+      "text": "Echo Song"
     },
     {
       "key": "tree.unbreakable_will.name",
@@ -640,11 +640,11 @@
     },
     {
       "key": "tree.tidal_codex.name",
-      "text": "Codex of Tides"
+      "text": "Riptide"
     },
     {
       "key": "tree.ember_codex.name",
-      "text": "Ember Codex"
+      "text": "Ember Heart"
     },
     {
       "key": "tree.living_ocean.name",
@@ -688,15 +688,15 @@
     },
     {
       "key": "book.book_echoes.name",
-      "text": "Skill Book: Tome of Echoes"
+      "text": "Skill Book: Echo Song"
     },
     {
       "key": "book.book_tides.name",
-      "text": "Skill Book: Codex of Tides"
+      "text": "Skill Book: Riptide"
     },
     {
       "key": "book.book_embers.name",
-      "text": "Skill Book: Ember Codex"
+      "text": "Skill Book: Ember Heart"
     },
     {
       "key": "rule.counter_mitigated.name",
@@ -1596,11 +1596,11 @@
     },
     {
       "key": "tree.verdant_herbarium.name",
-      "text": "Verdant Herbarium"
+      "text": "Sporebloom"
     },
     {
       "key": "tree.umbral_grimoire.name",
-      "text": "Umbral Grimoire"
+      "text": "Bloodhunt"
     },
     {
       "key": "tree.world_root.name",
@@ -1636,11 +1636,11 @@
     },
     {
       "key": "book.book_roots.name",
-      "text": "Skill Book: Verdant Herbarium"
+      "text": "Skill Book: Sporebloom"
     },
     {
       "key": "book.book_shadows.name",
-      "text": "Skill Book: Umbral Grimoire"
+      "text": "Skill Book: Bloodhunt"
     },
     {
       "key": "mskill.sap_mend.name",

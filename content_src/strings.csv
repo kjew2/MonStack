@@ -155,11 +155,11 @@ tree.duelist.name,Duelist
 tree.stonewall.name,Stonewall
 tree.quickstep.name,Quickstep
 tree.lucky_star.name,Lucky Star
-tree.tome_of_echoes.name,Tome of Echoes
+tree.tome_of_echoes.name,Echo Song
 tree.unbreakable_will.name,Unbreakable Will
 tree.arcane_overflow.name,Arcane Overflow
-tree.tidal_codex.name,Codex of Tides
-tree.ember_codex.name,Ember Codex
+tree.tidal_codex.name,Riptide
+tree.ember_codex.name,Ember Heart
 tree.living_ocean.name,Living Ocean
 tree.abyssal_bloom.name,Abyssal Bloom
 tree.inferno_sovereign.name,Inferno Sovereign
@@ -170,9 +170,9 @@ tree.living_ocean.apex,Solaris Tide
 tree.abyssal_bloom.apex,Abyssal Siphonophore
 tree.starlit_ascension.apex,Comet Moth
 tree.arcane_overflow.apex,Gemini Moth
-book.book_echoes.name,Skill Book: Tome of Echoes
-book.book_tides.name,Skill Book: Codex of Tides
-book.book_embers.name,Skill Book: Ember Codex
+book.book_echoes.name,Skill Book: Echo Song
+book.book_tides.name,Skill Book: Riptide
+book.book_embers.name,Skill Book: Ember Heart
 rule.counter_mitigated.name,Mitigation Counter
 rule.counter_mitigated.desc,"When it survives a single-target physical hit, it strikes back for {MON_COUNTER_MULT:pct} of the damage its DEF blocked (true damage)."
 rule.echo_cast.name,Echo Cast
@@ -397,8 +397,8 @@ tree.rootbound.name,Rootbound
 tree.mandrake_wail.name,Mandrake Wail
 tree.umbral_step.name,Umbral Step
 tree.shadow_harvest.name,Shadow Harvest
-tree.verdant_herbarium.name,Verdant Herbarium
-tree.umbral_grimoire.name,Umbral Grimoire
+tree.verdant_herbarium.name,Sporebloom
+tree.umbral_grimoire.name,Bloodhunt
 tree.world_root.name,World Root
 tree.mandragora_scream.name,Mandragora Scream
 tree.umbral_veil.name,Umbral Veil
@@ -407,8 +407,8 @@ tree.world_root.apex,Worldroot Colossus
 tree.mandragora_scream.apex,Mandragora Queen
 tree.umbral_veil.apex,Grave Shuck
 tree.night_feast.apex,Eclipse Hound
-book.book_roots.name,Skill Book: Verdant Herbarium
-book.book_shadows.name,Skill Book: Umbral Grimoire
+book.book_roots.name,Skill Book: Sporebloom
+book.book_shadows.name,Skill Book: Bloodhunt
 mskill.sap_mend.name,Sap Mend
 mskill.sap_mend.desc,Heal self for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.bramble.name,Bramble

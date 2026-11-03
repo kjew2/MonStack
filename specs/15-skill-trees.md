@@ -114,7 +114,7 @@ After every command the run reconciles chase trees, in this order:
 
 Taking a chase tree into the slot of one of its own prerequisites makes it lock at once. The offer screen flags that slot ("Locks it!"), and a slot holding a prerequisite of a slotted chase tree ("Chase needs it"); it still allows the take.
 
-A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a book tree (*Arcane Overflow* needs a Tome of Echoes node, a Mind Warp node and 2 crits). Since content `4.10` (issue #111) every book-gated chase tree needs only the **first node** of its book tree (it was node 5), so bringing the book and starting its tree opens the chase.
+A book-gated chase tree's conditions include `node_owned` (or `tree_maxed`) on a book tree (*Arcane Overflow* needs an Echo Song node, a Mind Warp node and 2 crits). Since content `4.10` (issue #111) every book-gated chase tree needs only the **first node** of its book tree (it was node 5), so bringing the book and starting its tree opens the chase.
 
 ### 5.3 Apex forms (kj, 2026-10-31, `specs/24` section 6)
 
@@ -158,7 +158,7 @@ Only four pairs fuse (kj chose them from `specs/24` section 5.2), and the UI nam
 
 | Fusion tree (`kind` `fusion`) | Parents (`fuse_a`, `fuse_b`) | Fused look | Duo capstone |
 |---|---|---|---|
-| *Geyser Heart* | *Pyromancy* + *Codex of Tides* | Geyser Wyrm | *Steam Burst*: when hit, fire damage to all enemies |
+| *Geyser Heart* | *Pyromancy* + *Riptide* | Geyser Wyrm | *Steam Burst*: when hit, fire damage to all enemies |
 | *Living Fortress* | *Heavy Armor* + *Bulwark* | Fortress Drake | *Siege Return*: when hit, strike back off DEF |
 | *Hall of Mirrors* | *Mind Warp* + *Nimble Feet* | Mirrorwing | *Shatter*: when hit, the mirror strikes back off INT |
 | *Arcana Deck* | *Fortune* + *Spellcraft* | Tarot Mimic | *The Star*: when hit, heal 1% of max HP |
@@ -182,17 +182,17 @@ The run adds up the monster's battle tallies (`specs/16` section 6.3) across its
 |---|---|
 | Native | slime: *Slime Fundamentals*, *Gel Armor*; drake: *Pyromancy*, *Heavy Armor*; sprite: *Aether Striker*, *Mind Warp*; mandrake: *Rootbound*, *Mandrake Wail*; shade_hound: *Umbral Step*, *Shadow Harvest* (content `4.2`) |
 | Generic | all at 400, the single milestone (content 6.0, kj 2026-11-01; until then the stat trees were at 300 and the any-stat trees at 500): two per stat (content 5.4 added the second: HP *Vital Core*, *Lifeblood*; STR *Brute Force*, *Berserker*; INT *Spellcraft*, *Runeweaver*; WIS *Sage Mind*, *Hermit*; DEX *Nimble Feet*, *Duelist*; DEF *Bulwark*, *Stonewall*; SPD *Overclock*, *Quickstep*; LUK *Fortune*, *Lucky Star*), two for any stat (*Battle Instinct*, *Survivor*). Any milestone may offer any of them (its own stat's tree first), with rolled amounts (section 4.1); the content amounts are only a legacy run's. Four stat trees put a damage skill scaled by their own stat at index 1, so an all-in build gets it soon after its Awakening (content 4.7, `specs/25` section 10): *Bulwark* *Iron Press* (DEF), *Sage Mind* *Smite* (WIS, magical), *Fortune* *Gamble* (LUK), *Spellcraft* *Arcane Blast* (INT) | Every content 5.4 tree has the same shape: own-stat growth, a damage skill scaled by its own stat at index 1, a second stat for the other filler nodes, and a new capstone (*Bloodwell*, *Berserk*, *Arcane Spark*, *Inner Peace*, *Precision*, *Granite Skin*, *Momentum*, *Windfall*); the second stat differs from the stat's first tree.
-| Book | *Codex of Tides* (book `book_tides`, slime), *Ember Codex* (`book_embers`, drake), *Tome of Echoes* (`book_echoes`, sprite), *Verdant Herbarium* (`book_roots`, mandrake), *Umbral Grimoire* (`book_shadows`, shade_hound) |
+| Book | *Riptide* (book `book_tides`, slime), *Ember Heart* (`book_embers`, drake), *Echo Song* (`book_echoes`, sprite), *Sporebloom* (`book_roots`, mandrake), *Bloodhunt* (`book_shadows`, shade_hound) |
 
 Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
 
 | Species | In-run | Book-gated |
 |---|---|---|
-| slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `tidal_overflow` | *Abyssal Bloom*: Codex of Tides node 0, Slime Fundamentals node 4, 2000 water damage; `abyssal_drain` |
-| drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Codex node 0, Pyromancy node 4, 2000 fire damage; `fire_pierce` |
-| sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `double_turn_start` | *Arcane Overflow*: Tome of Echoes node 0, Mind Warp node 4, 2 crits; `echo_cast` |
-| mandrake | *World Root*: Rootbound maxed, HP >= 500, 2 wins; `root_rebirth` | *Mandragora Scream*: Verdant Herbarium node 0, Mandrake Wail node 4, 2000 nature damage; `wail_stagger` |
-| shade_hound | *Umbral Veil*: Umbral Step maxed, DEX >= 500, 2 wins; `umbral_veil` | *Night Feast*: Umbral Grimoire node 0, Shadow Harvest node 4, 7000 dark damage; `night_feast` |
+| slime | *Living Ocean*: Gel Armor maxed, HP >= 500, 2 wins; `tidal_overflow` | *Abyssal Bloom*: Riptide node 0, Slime Fundamentals node 4, 2000 water damage; `abyssal_drain` |
+| drake | *Unbreakable Will*: Heavy Armor maxed, DEF >= 500, 2 wins; `counter_mitigated` | *Inferno Sovereign*: Ember Heart node 0, Pyromancy node 4, 2000 fire damage; `fire_pierce` |
+| sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `double_turn_start` | *Arcane Overflow*: Echo Song node 0, Mind Warp node 4, 2 crits; `echo_cast` |
+| mandrake | *World Root*: Rootbound maxed, HP >= 500, 2 wins; `root_rebirth` | *Mandragora Scream*: Sporebloom node 0, Mandrake Wail node 4, 2000 nature damage; `wail_stagger` |
+| shade_hound | *Umbral Veil*: Umbral Step maxed, DEX >= 500, 2 wins; `umbral_veil` | *Night Feast*: Bloodhunt node 0, Shadow Harvest node 4, 7000 dark damage; `night_feast` |
 
 The two original chase trees were shared by every species until issue #78 assigned them: *Unbreakable Will* to drake, *Arcane Overflow* to sprite. Every tree and threshold is a placeholder. Content `4.10` (issue #111) retuned the book-gated conditions and the chase tree costs toward the reachability targets of section 10; *Arcane Overflow* named the generic *Spellcraft* until then, which a sprite run slotted in under 6% of runs.
 
