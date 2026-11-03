@@ -50,7 +50,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 | Term | Meaning |
 |---|---|
-| **Species** | A kind of monster: element, base stats, growth multipliers, two native trees |
+| **Species** | A kind of monster: element, base stats, growth multipliers, two native trees (native-only: never offered by Awakenings), two chase trees |
 | **Stats** | HP, STR, INT, WIS, DEX, DEF, SPD, LUK on a 0 to `STAT_MAX` scale |
 | **Run** | One monster trained for `RUN_CYCLES` cycles |
 | **Cycle** | `RUN_AP` taps of Drill or Rest, then a rank fight |

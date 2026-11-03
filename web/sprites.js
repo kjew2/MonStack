@@ -152,8 +152,9 @@ function speciesSprite(id, apex) {
   return (SPR[key] = paint(g, x ? Object.assign({}, a.pal, x.pal) : a.pal));
 }
 // Generated creature art (specs/26 section 8): web/art/sprite/<key>.webp (battle sprite) and web/art/portrait/<key>.webp,
-// key = the apex form's chase tree id when it has art, else the species id. Made by tools/art/export.py; null without art.
-const ART_KEYS = new Set(["abyssal_bloom", "arcane_overflow", "drake", "inferno_sovereign", "living_ocean", "mandragora_scream", "mandrake", "night_feast", "shade_hound", "slime", "sprite", "starlit_ascension", "umbral_veil", "unbreakable_will", "world_root"]);
+// key = the apex form's chase tree id when it has art, else the species id. Made by tools/art/export.py, which also writes the
+// keys it made to web/art/keys.js (loaded before this file), so a new species needs no edit here; null without art.
+const ART_KEYS = new Set(root.MONSTACK_ART_KEYS || []);
 function speciesArt(id, apex) {
   const key = apex && ART_KEYS.has(apex) ? apex : id;
   return ART_KEYS.has(key) ? { sprite: "art/sprite/" + key + ".webp", portrait: "art/portrait/" + key + ".webp" } : null;

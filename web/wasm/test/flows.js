@@ -312,8 +312,11 @@ const H = require('./harness.js');
   await t.layout('tree draft with a reroll');
   await clickDom('[data-act="reroll"]');
   const redrawn = await page.evaluate(() => [...document.querySelectorAll('[data-id^="offer-"]')].map((e) => e.getAttribute('data-id')).filter((x) => x !== 'offer-title'));
-  // One of the crossing stat's own trees (HP: Vital Core, Lifeblood, Blood Magic, Resentment or Last Rite) is always the first card and a reroll keeps it (issue #121).
-  check(!!draft && ['offer-vital_core', 'offer-lifeblood', 'offer-blood_magic', 'offer-resentment', 'offer-last_rite'].includes(draft[0]), 'the HP Awakening offers one of HP\'s own trees first: ' + JSON.stringify(draft));
+  // One of the crossing stat's own trees (HP's generic trees, read from content: a tree a species lane turns native-only leaves
+  // the list, #160) is always the first card and a reroll keeps it (issue #121).
+  const hpTrees = JSON.parse(require('fs').readFileSync(require('path').resolve(__dirname, '..', '..', '..', 'Content', 'trees.json'), 'utf8')).rows
+    .filter((r) => r.kind === 'generic' && r.offer_stat === 'hp').map((r) => 'offer-' + r.id);
+  check(hpTrees.length > 0 && !!draft && hpTrees.includes(draft[0]), 'the HP Awakening offers one of HP\'s own trees first: ' + JSON.stringify(draft) + ' of ' + JSON.stringify(hpTrees));
   check(!!draft && redrawn[0] === draft[0] && redrawn.length > 1 && redrawn.slice(1).every((x) => draft.indexOf(x) < 0),
     'the reroll keeps HP\'s tree and draws other trees: ' + JSON.stringify(redrawn));
   check((await page.locator('[data-act="reroll"]').count()) === 0, 'and only once per run');

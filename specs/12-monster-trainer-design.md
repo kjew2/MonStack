@@ -160,7 +160,7 @@ Some unlocks need in-run actions, e.g. "deal X fire damage" or "execute Y perfec
 - **Uber rare and uber strong (kj, 2026-10-31, #112):** a book is a rare event, and the book-gated chase tree it opens must be among the strongest things a run can get. Drop rates: `specs/21` section 5.
 - Earned in the Dungeon (section 8.2), kept in the account inventory. **The main premium gate (kj, T9):** books are target-farmed as RNG drops from the Dungeon (T10). How books are sold, if at all, is open (#49, #77).
 - Consuming a book at the start of (or during) a run opens its **Book Tree** for that run.
-- A book-gated chase tree unlocks when all of these hold: points in named Book Tree nodes, points in named nodes of other trees, and a playstyle condition.
+- A book-gated chase tree unlocks when all of these hold: points in named Book Tree nodes, points in named nodes of other trees, and a playstyle condition. Some species have no book chase: their second chase tree is a harder in-run one instead (both native trees maxed, a higher stat, a bigger tally; kj, 2026-11-03, #160; `specs/15` section 5.1).
 
 ### 5.7 Genetic aptitude (dropped)
 

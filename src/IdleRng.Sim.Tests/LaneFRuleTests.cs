@@ -81,12 +81,13 @@ namespace IdleRng.Sim.Tests
         // ------------------------------------------------------------------ content
 
         [Test]
-        public void Content_TheFourTreesAreGenericAt400WithTheirRuleCapstones()
+        public void Content_TheFourTreesAreGenericAt400OrNative_WithTheirRuleCapstones()
         {
             foreach (var id in LaneTrees)
             {
                 var t = Db.Trees[id];
-                Assert.That((t.Kind, t.OfferThreshold, t.Nodes.Count), Is.EqualTo((TreeKind.Generic, 400, 8)), id);
+                IdeaPool.AssertOfferedOrNative(Db, t, id == "mastery" ? StatIds.Wis : null);
+                Assert.That(t.Nodes.Count, Is.EqualTo(8), id);
                 Assert.That((t.Nodes[7].Kind, t.Nodes[7].RuleId, t.Nodes[7].Cost), Is.EqualTo((NodeKind.Rule, id, 3)), id);
                 Assert.That(t.Nodes[4].Kind, Is.EqualTo(NodeKind.Skill), id);
                 Assert.That(RuleModifiers.IsKnown(id), Is.True, id);

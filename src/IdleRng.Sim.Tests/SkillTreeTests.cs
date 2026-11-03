@@ -48,7 +48,7 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
-        public void Content_EachSpeciesOwnsAnInRunAndABookGatedChaseTree()
+        public void Content_EachSpeciesOwnsAnInRunAndASecondChaseTree()
         {
             var owned = Db.SpeciesList.SelectMany(sp => new[] { sp.ChaseTreeRun, sp.ChaseTreeBook }).ToList();
             Assert.That(owned, Is.Unique, "no chase tree is shared between species (kj, issue #78)");
@@ -57,11 +57,12 @@ namespace IdleRng.Sim.Tests
             {
                 var run = Db.Trees[sp.ChaseTreeRun];
                 var book = Db.Trees[sp.ChaseTreeBook];
-                Assert.That((run.Species, run.BookGated, book.Species, book.BookGated), Is.EqualTo((sp.Id, false, sp.Id, true)), sp.Id);
+                Assert.That((run.Species, run.BookGated, book.Species), Is.EqualTo((sp.Id, false, sp.Id)), sp.Id);
                 Assert.That(Db.BookTreesNeeded(run), Is.Empty, sp.Id + ": the in-run tree needs no book");
+                // The second chase tree is book-gated, or a harder in-run one with no book (kj, 2026-11-03; SpeciesGroundworkTests).
                 var needs = Db.BookTreesNeeded(book).ToList();
-                Assert.That(needs, Is.Not.Empty, sp.Id + ": the book-gated tree needs a book tree");
-                Assert.That(needs.All(tree => Db.SkillBooks.Values.Any(b => b.TreeId == tree)), Is.True, sp.Id + ": and a skill book opens it");
+                Assert.That(book.BookGated, Is.EqualTo(needs.Count > 0), sp.Id);
+                Assert.That(needs.All(tree => Db.SkillBooks.Values.Any(b => b.TreeId == tree)), Is.True, sp.Id + ": a skill book opens each book tree it needs");
                 var natives = new[] { sp.NativeTree1, sp.NativeTree2 };
                 Assert.That(run.Conditions.Any(cd => cd.Type == ConditionType.TreeMaxed && natives.Contains(cd.Ref)), Is.True,
                     sp.Id + ": the in-run tree builds on a native tree (kj)");

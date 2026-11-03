@@ -120,6 +120,12 @@ namespace IdleRng.Bots.Tests
             foreach (var sp in db.SpeciesList)
             {
                 var own = books.Where(b => ChaseTarget.IsOwnBook(db, sp.Id, b)).ToList();
+                if (!db.Trees[sp.ChaseTreeBook].BookGated)   // a harder in-run second chase (kj, 2026-11-03): no book of its own
+                {
+                    Assert.That(own, Is.Empty, sp.Id);
+                    Assert.That(RunBot.Play(db, RunPolicies.Create("chaser"), sp.Id, 3, null, books).Books, Is.EquivalentTo(books), $"{sp.Id}: every book stays unused");
+                    continue;
+                }
                 Assert.That(own, Has.Count.EqualTo(1), $"{sp.Id}: one book tree among its chase prerequisites");
                 Assert.That(db.Trees[sp.ChaseTreeBook].Conditions.Any(cd => cd.Type == ConditionType.NodeOwned
                     && db.TreeNodes[cd.Ref].TreeId == db.SkillBooks[own[0]].TreeId), Is.True, "the book gates the species' book chase tree");

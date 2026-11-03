@@ -6,6 +6,7 @@ using IdleRng.Bots.Training;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
 using IdleRng.Sim.Training;
+using IdleRng.TestFixtures;
 using NUnit.Framework;
 
 namespace IdleRng.Bots.Tests
@@ -500,5 +501,26 @@ namespace IdleRng.Bots.Tests
             StringAssert.Contains("## Rank fights by opponent", BalanceWriter.Text(r));
             StringAssert.Contains("opponent,slime,focus,,", BalanceWriter.Csv(r));
         }
-    }
+    
+        [Test]
+        public void SpeciesGroundwork_NativeOnlyTreesLeaveTreePower_AndASecondChaseWithoutABookIsMeasured()
+        {
+            // #160: a tree a species lane turns native-only is no longer measured as a generic tree.
+            var native = ContentFixtures.WithNativeTrees(ContentFixtures.SpeciesTrees);
+            Assert.That(TreePower.Trees(native).Select(t => t.Id), Has.None.AnyOf(ContentFixtures.SpeciesTrees));
+            Assert.That(TreePower.Trees(native), Is.Not.Empty, "the other generic rule trees stay");
+
+            // A second chase tree with no book (a harder in-run chase): chase power, the chase table and the ladder check read it.
+            var db = ContentFixtures.WithDrakeSecondChaseWithoutBook();
+            Assert.That(db.SkillBooks.Keys.Where(b => ChaseTarget.IsOwnBook(db, "drake", b)), Is.Empty, "drake has no own book now");
+            var r = BalanceHarness.Run(db, new BalanceOptions { Seeds = 4, Tower = false, Endless = false, BookCanary = false, Species = new[] { "drake" },
+                                                              Policies = new[] { "focus", "chaser" }, OwnBooks = true });
+            foreach (var cell in r.Cells)
+            {
+                Assert.That(cell.CapstoneGainBook.N, Is.EqualTo(4), cell.Policy);
+                Assert.That(cell.Chase.Select(x => x.TreeId), Is.EquivalentTo(new[] { "unbreakable_will", "inferno_sovereign" }), cell.Policy);
+            }
+            Assert.That(r.Checks.Single(x => x.Id == "capstone-ladder").Status, Is.Not.EqualTo(CheckStatus.Skip));
+        }
+}
 }

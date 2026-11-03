@@ -75,7 +75,8 @@ namespace IdleRng.Sim.Tests
             {
                 Assert.That(RuleModifiers.IsKnown(id), id);
                 var t = db.Trees[id];
-                Assert.That((t.Kind, t.OfferStat, t.OfferThreshold, t.Nodes.Count), Is.EqualTo((TreeKind.Generic, stats[id], 400, 8)), id);
+                IdeaPool.AssertOfferedOrNative(db, t, stats[id]);
+                Assert.That(t.Nodes.Count, Is.EqualTo(8), id);
                 var cap = t.Nodes[7];
                 Assert.That((cap.Kind, cap.RuleId, cap.Cost), Is.EqualTo((NodeKind.Rule, id, 3)), id);
                 Assert.That(t.Nodes[4].Kind, Is.EqualTo(NodeKind.Skill), id);

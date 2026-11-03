@@ -557,13 +557,13 @@
     });
 
     main.append(h('h3', { text: 'Chase trees' }));
-    main.append(h('p', { class: 'small muted', text: 'Each species has two chase trees of its own: one unlocks from its own trees and stats, the other also needs a skill book tree. A chase tree unlocks when every condition holds, then it is offered. It locks again if a condition stops holding.' }));
+    main.append(h('p', { class: 'small muted', text: 'Each species has two chase trees of its own: one unlocks from its own trees and stats; the other also needs a skill book tree, or, for some species, more trees, stats and wins. A chase tree unlocks when every condition holds, then it is offered. It locks again if a condition stops holding.' }));
     s.chase.forEach((c) => {
       const t = C.trees[c.tree];
       const slotted = s.slots.some((x) => x && x.tree === c.tree);
       main.append(h('div', { class: 'card', 'data-id': 'chasecard-' + c.tree }, [
         h('div', { class: 'row between' }, [h('b', { text: t.name }), h('span', null, [
-          h('span', { class: 'tag', text: t.bookGated ? 'book-gated' : 'in-run' }), ' ',
+          h('span', { class: 'tag', text: t.bookGated ? 'book-gated' : t.second ? 'harder in-run' : 'in-run' }), ' ',
           h('span', { class: 'tag', text: !c.open ? 'dormant' : slotted ? 'slotted' : c.unlocked ? 'unlocked' : 'locked' })])]),
         ...(c.open ? [] : [h('small', { class: 'muted', text: 'This run was started under the old attunement rule and was not attuned, so this tree cannot unlock in it. New runs always can.' })]),
         ...t.conditions.map((txt, i) => h('div', { class: 'cond' + (c.met[i] ? ' met' : '') }, [h('span', { text: c.met[i] ? '✓' : '○' }), h('span', { text: txt })])),
