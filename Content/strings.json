@@ -3436,7 +3436,7 @@
     },
     {
       "key": "rule.anvil_rhythm.desc",
-      "text": "It counts the hits it lands: every {MON_RHYTHM_HITS}th is a crit. Evaded hits do not count; a graze cannot crit, so the next hit that lands takes the crit."
+      "text": "Of every {MON_RHYTHM_HITS} hits it lands, the last is a sure crit. Evaded hits do not count; a graze cannot crit, so the next hit that lands takes the crit."
     },
     {
       "key": "rule.anvil_rhythm.log",

@@ -14,7 +14,8 @@ namespace IdleRng.Sim.Combat
     //                  on the side. A broken enemy still acts once before its pips refill (lane C), so it gets every other action
     //   shatterpoint   its hit on a broken enemy (guard at 0, before it has acted again; the breaking hit counts) that leaves it at
     //                  or below MON_SHATTER_FRAC of max HP shatters it: its HP goes at once (past any shield), the kill is the
-    //                  unit's, and every other living enemy loses MON_SHATTER_SHARDS guard pips (a shard break is not a shatter, so
+    //                  unit's, and every other living enemy loses MON_SHATTER_SHARDS guard pips (a shard break is not a shatter, and
+    //                  the rest of the same action, such as Anvilfall's later hits, cannot shatter a unit its shards broke, so
     //                  nothing chains). A boss (a unit with boss phases) never shatters: once per break it takes MON_SHATTER_BOSS
     //                  of its max HP (through its shield, unmitigated) instead
     // None of them draws. State is hashed only for carriers: the rhythm count for anvil_rhythm units, an enemy's refill for units
@@ -65,6 +66,7 @@ namespace IdleRng.Sim.Combat
         {
             FightUnit src = h.Src, tgt = h.Tgt;
             if (!Has(src, RuleModifiers.Shatterpoint) || !tgt.Alive || tgt.Side == src.Side || tgt.BreakState == BreakNone) return;
+            if (tgt.ShardFrom == src.Id && tgt.ShardAction == src.Tally.Actions && tgt.ShardTick == c.State.Ticks) return;   // its shards broke it in this action: no chain
             var r = c.Rules;
             if (tgt.Source.Phases.Count > 0)   // a boss: once per break, a chunk instead
             {
@@ -82,7 +84,14 @@ namespace IdleRng.Sim.Combat
             Reborn(tgt, c.Log);
             if (tgt.Alive) return;   // a death save held it: no shards
             foreach (var e in c.State.Units)
-                if (e != tgt && e.Side == tgt.Side && e.Alive) StripPips(c, src, e, r.ShatterShards);
+            {
+                if (e == tgt || e.Side != tgt.Side || !e.Alive || e.BreakState != BreakNone) continue;
+                StripPips(c, src, e, r.ShatterShards);
+                if (e.BreakState == BreakNone) continue;
+                e.ShardFrom = src.Id;   // a shard break: the rest of this action (Anvilfall's later hits, its triggers) cannot shatter it
+                e.ShardAction = src.Tally.Actions;
+                e.ShardTick = c.State.Ticks;
+            }
         }
 
         /// <summary>Whether a unit on the other side of <paramref name="u"/> carries the rule (alive or not).</summary>
@@ -150,5 +159,13 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>shatterpoint: a boss took its chunk in the current break.</summary>
         public bool ShatterChunked { get; set; }
+
+        /// <summary>
+        /// shatterpoint: who broke this unit with shards, at which of its actions and tick; that same action cannot shatter it (no chain).
+        /// Not hashed: stale once the tick is over.
+        /// </summary>
+        internal string ShardFrom { get; set; }
+        internal int ShardAction { get; set; }
+        internal int ShardTick { get; set; }
     }
 }

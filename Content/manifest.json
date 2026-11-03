@@ -77,7 +77,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "f2c879f84902ca70298247f2b516d4eca26291ef08d49950b5503ed692105f57"
+      "sha256": "43b3c810d4a6f00e286bc7c1501dd9a52dd6b1c7e4b2f5fb3006ee695761b12f"
     },
     "talents": {
       "file": "talents.json",
@@ -100,5 +100,5 @@
       "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "245158a8341378db6ce5c9d20fd1775715c63a59710d1016f5e8a273aecfa6d2"
+  "content_hash": "fcbd92e8ac739b25aa4168c405f545438c95de02235b30295ad78887d8dc21cf"
 }

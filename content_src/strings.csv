@@ -857,7 +857,7 @@ tree.brittle_quench.apex,Slagglass Titan
 tree.shatterpoint.apex,Worldsmith Silverback
 achievement.heavy_hands.name,Heavy Hands
 rule.anvil_rhythm.name,Smith's Rhythm
-rule.anvil_rhythm.desc,"It counts the hits it lands: every {MON_RHYTHM_HITS}th is a crit. Evaded hits do not count; a graze cannot crit, so the next hit that lands takes the crit."
+rule.anvil_rhythm.desc,"Of every {MON_RHYTHM_HITS} hits it lands, the last is a sure crit. Evaded hits do not count; a graze cannot crit, so the next hit that lands takes the crit."
 rule.anvil_rhythm.log,hit {amount} rings true: a sure crit
 rule.brittle_guard.name,Brittle Quench
 rule.brittle_guard.desc,"Each time an enemy's guard breaks, its pips refill {MON_BRITTLE_STEP} fewer than last time, down to {MON_BRITTLE_MIN}. Does nothing without Guard Break."

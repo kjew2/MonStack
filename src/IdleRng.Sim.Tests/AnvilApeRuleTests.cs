@@ -148,12 +148,14 @@ namespace IdleRng.Sim.Tests
         }
 
         /// <summary>
-        /// The third attempt of four is avoided (a physical hit is evaded, a magical one grazes); the fourth lands. An evade does not
-        /// count, and a graze cannot crit and leaves the count one short: either way the fourth attempt takes the rhythm crit.
+        /// One attempt is avoided (a physical hit is evaded, a magical one grazes). An evade does not count. A graze counts, but it
+        /// cannot crit: a graze that would be the rhythm hit leaves the count one short and the next landed hit takes the crit.
         /// </summary>
-        [TestCase(false)]
-        [TestCase(true)]
-        public void Rhythm_EvadesDoNotCount_AndAGrazeWaits(bool magical)
+        [TestCase(false, 1, new[] { 3, 6 })]   // evaded second attempt: crits on the third and sixth landed hits
+        [TestCase(true, 1, new[] { 2, 5 })]    // grazed second attempt: it counts
+        [TestCase(false, 2, new[] { 3, 6 })]
+        [TestCase(true, 2, new[] { 3, 6 })]    // grazed third attempt: it waits, the fourth crits
+        public void Rhythm_EvadesDoNotCount_AndAGrazeWaits(bool magical, int avoided, int[] critAt)
         {
             var r = Rules;
             foreach (bool on in new[] { true, false })
@@ -164,15 +166,14 @@ namespace IdleRng.Sim.Tests
                 var rng = new Dial(0.99);
                 for (int t = 0; t < 60 && Hits(log, "a").Count < 7; t++)
                 {
-                    rng.V = Hits(log, "a").Count == 2 ? 0 : 0.99;   // the third attempt is avoided
+                    rng.V = Hits(log, "a").Count == avoided ? 0 : 0.99;   // that attempt is avoided, the rest land without a rolled crit
                     BattleSim.Step(r, s, rng, log.Add);
                 }
                 var hits = Hits(log, "a");
                 Assert.That(hits.Count, Is.GreaterThanOrEqualTo(7));
-                Assert.That(magical ? hits[2].Graze : hits[2].Evaded, Is.True, "the third attempt is avoided");
-                Assert.That(hits[2].Crit, Is.False);
-                var crits = hits.Take(7).Select(x => x.Crit).ToList();
-                Assert.That(crits, Is.EqualTo(on ? new[] { false, false, false, true, false, false, true } : new bool[7]));
+                Assert.That(magical ? hits[avoided].Graze : hits[avoided].Evaded, Is.True, "that attempt is avoided");
+                var crits = hits.Take(7).Select((x, i) => x.Crit ? i : -1).Where(i => i >= 0).ToArray();
+                Assert.That(crits, Is.EqualTo(on ? critAt : new int[0]));
             }
         }
 
@@ -329,6 +330,29 @@ namespace IdleRng.Sim.Tests
             Assert.That(s.Units[3].BreakState, Is.Not.EqualTo(0), "d broke from the shards");
             Assert.That(s.Units[3].Alive, Is.True, "a shard break is not a shatter: nothing chains");
             Assert.That(log.Count(x => x.Event == BattleSim.ShatterEvent), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Shatter_AnAreaHitCannotShatterWhatItsOwnShardsBroke()
+        {
+            var r = Rules;
+            var a = Mon("a", x => x.Spd = 999, RuleModifiers.GuardBreak, RuleModifiers.Shatterpoint);
+            a.Skills.Add(new CombatSkill { Id = "anvilfall", Kind = SkillKind.Damage, Target = SkillTarget.AllEnemies, Scales = StatIds.Str, Power = 0.01, Element = "fire" });
+            var s = BattleSim.Start(r, new[] { a }, new[] { Dummy("b"), Dummy("c") });
+            s.Units[1].BreakStripped = r.BreakPips - 1;
+            s.Units[1].Hp = r.ShatterFrac * s.Units[1].MaxHp;
+            s.Units[2].BreakStripped = r.BreakPips - r.ShatterShards;   // the shards break c
+            s.Units[2].Hp = 0.05 * s.Units[2].MaxHp;                    // and the same area hit then lands on it, low and broken
+            var (_, log) = FirstHit(r, s);
+            Assert.That(log.Any(x => x.Actor == "a" && x.Skill?.Id == "anvilfall" && x.Target == "c"), Is.True, "the area hit reached c");
+            Assert.That(s.Units[1].Alive, Is.False, "b shattered");
+            Assert.That((s.Units[2].Alive, s.Units[2].BreakState != 0), Is.EqualTo((true, true)), "c broke from the shards, and the same action does not shatter it");
+            Assert.That(log.Count(x => x.Event == BattleSim.ShatterEvent), Is.EqualTo(1));
+            // a's next hit may: c is still broken (a is far faster, so c has not acted) and low.
+            var more = new List<FightAction>();
+            for (int t = 0; t < 50 && Hits(more, "a").Count == 0; t++) BattleSim.Step(r, s, new Dial(0), more.Add);
+            Assert.That(more.Any(x => x.Event == BattleSim.ShatterEvent && x.Target == "c"), Is.True);
+            Assert.That(s.Units[2].Alive, Is.False);
         }
 
         [Test]
