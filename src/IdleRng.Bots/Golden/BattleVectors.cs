@@ -264,7 +264,22 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 usurper cuckoo and clutch empress", 13,
                 new[] { Cuckling("a_usurp", RuleModifiers.Usurp), Cuckling("a_empress", RuleModifiers.FoundlingEgg) },
                 new[] { Brawler("b_brawler", "light"), Healer("b_healer", "water"), Mage("b_mage", "nature") });
+            // Species Aegis Ram (#147): Brave Heart and the fleece on both; one borrows turns (brave_debt), one throws its target
+            // back (ram_shock), against a brawler, a mage and a tank.
+            yield return new Vector("2v3 aries vanguard and chrysomallos", 1,
+                new[] { AegisRam("a_oath", RuleModifiers.BraveDebt), AegisRam("a_hoof", RuleModifiers.RamShock) },
+                new[] { Brawler("b_brawler", "dark"), Mage("b_mage", "water"), Tank("b_tank", "fire") });
         }
+
+        // Species Aegis Ram (#147): the native kit (brave_heart, Fleece Ward, fleece_aegis), Shofar Call from its book, plus one
+        // chase capstone.
+        static Fighter AegisRam(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(380, 480, 60, 200, 120, 560, 360, 160),
+            Skills = { Fx("fleece_ward", SkillKind.Shield, SkillTarget.Self, null, StatIds.Def, 1.2, 3, 3) },
+            Triggers = { new TriggeredSkill(FightTrigger.OnBasicAttack, Dmg("shofar_call", StatIds.Str, 0.3, 0, SkillTarget.Enemy, "light")) },
+            Rules = { RuleModifiers.BraveHeart, RuleModifiers.FleeceAegis, chase },
+        };
 
         // Species Iaido Mantis (#159): the native kit (vantage, Draw Cut, iai_draw), Blade Echo from its book, plus one chase capstone.
         static Fighter Mantis(string id, string chase) => new Fighter

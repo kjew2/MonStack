@@ -564,9 +564,9 @@
     {
       "id": "brave_heart",
       "name_key": "tree.brave_heart.name",
-      "kind": "generic",
-      "offer_stat": "spd",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -1028,6 +1028,46 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.clutch_empress.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "gilded_fleece",
+      "name_key": "tree.gilded_fleece.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "ramshorn_hymnal",
+      "name_key": "tree.ramshorn_hymnal.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "headlong_oath",
+      "name_key": "tree.headlong_oath.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.headlong_oath.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "thunderhoof",
+      "name_key": "tree.thunderhoof.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.thunderhoof.apex",
       "fuse_a": null,
       "fuse_b": null
     }

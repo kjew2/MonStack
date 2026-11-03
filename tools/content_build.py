@@ -124,6 +124,8 @@ REQUIRED_CONSTANTS = {
     "MON_SEVER_FRAC": "double", "MON_SEVER_DMG": "double", "MON_SEVER_MAX": "int",
     # species Cuckling (#143): stolen_turn, foundling_egg
     "MON_STEAL_GAUGE": "double", "MON_STEALS_PER_FOE": "int", "MON_USURP_STEALS": "int", "MON_EGG_HP": "double", "MON_HATCH_ACTIONS": "int", "MON_HATCH_STATS": "double",
+    # species Aegis Ram (#147): fleece_aegis, brave_debt, ram_shock
+    "MON_FLEECE_SHIELD": "double", "MON_FLEECE_CAP": "double", "MON_DEBT_MAX": "int", "MON_RAM_KNOCK": "double", "MON_RAM_RAMP": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -157,7 +159,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species Iaido Mantis (#159)
             "iai_draw", "still_hunt", "sever_art",
             # species Cuckling (#143)
-            "stolen_turn", "usurp", "foundling_egg"]
+            "stolen_turn", "usurp", "foundling_egg",
+            # species Aegis Ram (#147)
+            "fleece_aegis", "brave_debt", "ram_shock"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -271,6 +275,10 @@ MON_RANGES = {
     "MON_USURP_STEALS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
     "MON_EGG_HP": ("(0, 1]", lambda v: 0 < v <= 1), "MON_HATCH_ACTIONS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
     "MON_HATCH_STATS": ("(0, 1]", lambda v: 0 < v <= 1),
+    # species Aegis Ram (#147)
+    "MON_FLEECE_SHIELD": (">= 0", lambda v: v >= 0), "MON_FLEECE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_DEBT_MAX": ("a whole number >= 0", lambda v: v == int(v) and v >= 0), "MON_RAM_KNOCK": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_RAM_RAMP": (">= 0", lambda v: v >= 0),
 }
 
 

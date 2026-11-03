@@ -56,6 +56,10 @@
   "cuckling": {
    "name": "Cuckling",
    "prompt": "A plump, fluffy cuckoo chick, round as a ball and oddly large for its nest, with soot-black and deep violet down, a pale lavender belly, tiny stubby wings and oversized clawed orange feet gripping a nest of black thorny twigs. It wears the cracked top half of a white speckled eggshell like a little helmet tilted over one eye: the shell of an egg that was not its own. Its huge beak gapes wide open, begging, and the inside of its mouth glows bright magenta-violet. Large glossy round eyes with violet glints, adorable but greedy. On the ground beside the nest lies a small pale blue egg that has been pushed out. Cute, with something quietly wrong about it."
+  },
+  "aegis_ram": {
+   "name": "Aegis Ram",
+   "prompt": "A white-and-gold bighorn ram braced inside a golden shield of light, hooves planted, three glowing pips charging on its curled horns. Noble, steadfast and mythic, a light-element monster."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -170,6 +174,16 @@
    "species": "cuckling",
    "name": "Clutch Empress",
    "prompt": "the chick has grown into a tall, elegant, regal brood-mother cuckoo empress: sleek glossy plumage in deep violet and black with a soft lavender chest, a long flowing train of tail feathers like a royal gown, and a small cracked-eggshell tiara. She sits on a grand throne-like nest of woven thorny branches, gently sheltering just three large pale-blue speckled eggs under one wing. Calm, proud, motherly expression. Smooth feathers with no clusters, no bumps, no holes, no eggs attached to her body. Colour palette adds soft lavender and warm gold accents to the violet."
+  },
+  "headlong_oath": {
+   "species": "aegis_ram",
+   "name": "Aries Vanguard",
+   "prompt": "the ram rears up on its hind legs mid-charge, pushing the golden shield ahead of it like a battering wall, its horns sheathed in heavy gold plate, five pips burning along them, three gold and two cracked glowing crimson; crimson light bleeds through cracks in the shield. Colour palette shifts to gold and deep crimson."
+  },
+  "thunderhoof": {
+   "species": "aegis_ram",
+   "name": "Chrysomallos",
+   "prompt": "the winged ram of myth: fleece of beaten gold, sun-disc horns, the shield become wide golden wings, three pips orbiting like small suns."
   }
  }
 }

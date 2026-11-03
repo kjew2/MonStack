@@ -476,6 +476,48 @@
       "type": "tally_at_least",
       "ref": "damage_dark",
       "amount": 2000.0
+    },
+    {
+      "id": "headlong_oath_c0",
+      "tree_id": "headlong_oath",
+      "type": "tree_maxed",
+      "ref": "brave_heart",
+      "amount": null
+    },
+    {
+      "id": "headlong_oath_c1",
+      "tree_id": "headlong_oath",
+      "type": "stat_at_least",
+      "ref": "str",
+      "amount": 500.0
+    },
+    {
+      "id": "headlong_oath_c2",
+      "tree_id": "headlong_oath",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "thunderhoof_c0",
+      "tree_id": "thunderhoof",
+      "type": "node_owned",
+      "ref": "ramshorn_hymnal_n0",
+      "amount": null
+    },
+    {
+      "id": "thunderhoof_c1",
+      "tree_id": "thunderhoof",
+      "type": "node_owned",
+      "ref": "gilded_fleece_n4",
+      "amount": null
+    },
+    {
+      "id": "thunderhoof_c2",
+      "tree_id": "thunderhoof",
+      "type": "tally_at_least",
+      "ref": "damage_light",
+      "amount": 2000.0
     }
   ]
 }

@@ -239,7 +239,7 @@ namespace IdleRng.Sim.Combat
                 int extras = 0;
                 do
                 {
-                    if (extra != null) onAction?.Invoke(new FightAction(actor.Id, extra, actor.Id, 0));
+                    if (extra != null) onAction?.Invoke(new FightAction(actor.Id, extra, actor.Id, extra == DebtEvent ? actor.BravePips : 0));   // brave_debt logs the pips after borrowing
                     actor.TurnAction = extras;
                     int counted = actor.Tally.Actions;
                     Act(rules, s, actor, rng, onAction);
@@ -252,6 +252,7 @@ namespace IdleRng.Sim.Combat
                     extra = acted && extras < rules.ExtraActionsCap ? ExtraAction(ctx, actor) : null;
                     extras++;
                 } while (extra != null);
+                HookTurnEnd(ctx, actor);
             }
 
             int strikeSide = AgeAll(rules, s, rng, onAction);

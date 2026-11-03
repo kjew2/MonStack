@@ -55,6 +55,11 @@
       "id": "book_ledger",
       "name_key": "book.book_ledger.name",
       "tree_id": "foundling_ledger"
+    },
+    {
+      "id": "book_ramshorn",
+      "name_key": "book.book_ramshorn.name",
+      "tree_id": "ramshorn_hymnal"
     }
   ]
 }
