@@ -150,3 +150,7 @@ All 36 apex forms of the 18 planned species, drawn from kj's picked portraits ab
 | gravecap | 2 | Cordyceps Monarch | `cordyceps_crown` | apex/gravecap_apex2.webp |
 | lodge_beaver | 1 | Logjam Warden | `tail_slap` | apex/lodge_beaver_apex1.webp |
 | lodge_beaver | 2 | Floodgate Colossus | `great_dam` | apex/lodge_beaver_apex2.webp |
+
+## Battle sprites (2026-11-03)
+
+`sprite/<species>.webp` (base form) and `sprite/<species>_apex<tier>.webp` for all 18 planned species: 54 masters on a transparent background, made with `generate.py sprite` from kj's picked portraits and the apex files above. **For a species lane:** copy `sprite/<species>.webp` to `tools/art/final/sprite/<species>.webp` and each `sprite/<species>_apex<tier>.webp` to `tools/art/final/sprite/<chase_tree>.webp` (names in the apex table), then run `export.py`. No sprite generation needed.
