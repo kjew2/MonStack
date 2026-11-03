@@ -656,7 +656,7 @@
     'rule:elemental_avatar': (n) => 'all hits take its element, +' + Math.round(n * 100) + '% damage',
     'rule:fortress_fist': (n) => '+' + Math.round(n) + ' damage per hit from DEF',
     'rule:blood_magic': (n) => 'pays ' + Math.round(n) + ' HP',
-    // idea-pool lane D: the bleed burst's damage, the target's debuffs, the element bonus, locks so far, the drawn skill's slot
+    // idea-pool lane D: the bleed burst's damage, the target's debuffs, the element bonus and the locks so far (a drawn skill shows when used)
     'rule:hemorrhage': (n) => 'bleed bursts for ' + Math.round(n) + ' dmg',
     'rule:privileged_status': (n) => Math.round(n) + ' debuffs, bonus damage',
     'rule:equilibrium': (n) => 'element shift, +' + Math.round(n * 100) + '% damage',
