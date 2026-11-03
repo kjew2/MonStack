@@ -96,6 +96,9 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane A, conversion rules (specs/16 section 6.2, #134)
     "MON_IRON_DEX": "double", "MON_AVATAR_BONUS": "double", "MON_FORTRESS_DEF": "double", "MON_BLOOD_COST": "double",
     "MON_BLOOD_FLOOR": "double",
+    # idea-pool lane C, turn-gauge rules (specs/16 section 6.2, #136)
+    "MON_BRAVE_MAX": "int", "MON_BRAVE_GUARD": "double", "MON_ONE_MORE": "double", "MON_BREAK_PIPS": "int",
+    "MON_BREAK_BONUS": "double", "MON_LATENT_ACTIONS": "int", "MON_LATENT_BONUS": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -107,7 +110,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane A (#134)
             "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic",
             # idea-pool lane B (#135)
-            "resentment", "vantage", "deaths_door", "barricade", "mana_ward"]
+            "resentment", "vantage", "deaths_door", "barricade", "mana_ward",
+            # idea-pool lane C (#136)
+            "brave_heart", "one_more", "guard_break", "latent_power"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -176,6 +181,11 @@ MON_RANGES = {
     "MON_IRON_DEX": (">= 0", lambda v: v >= 0), "MON_AVATAR_BONUS": (">= 0", lambda v: v >= 0),
     "MON_FORTRESS_DEF": (">= 0", lambda v: v >= 0), "MON_BLOOD_COST": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_BLOOD_FLOOR": ("[0, 1]", lambda v: 0 <= v <= 1),
+    # idea-pool lane C (#136)
+    "MON_BRAVE_MAX": (">= 1", lambda v: v >= 1), "MON_BRAVE_GUARD": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_ONE_MORE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_BREAK_PIPS": (">= 1", lambda v: v >= 1),
+    "MON_BREAK_BONUS": (">= 0", lambda v: v >= 0), "MON_LATENT_ACTIONS": (">= 1", lambda v: v >= 1),
+    "MON_LATENT_BONUS": (">= 0", lambda v: v >= 0),
 }
 
 

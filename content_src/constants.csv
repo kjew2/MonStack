@@ -139,3 +139,10 @@ MON_BARRICADE_CAP,double,0.6,barricade rule: shields never expire and stack up t
 MON_WARD_WIS,double,1.5,mana_ward rule: the ward at fight start as a multiple of WIS. Placeholder
 MON_WARD_SHARE,double,0.3,mana_ward rule: share of each blow's HP damage (after shields) the ward takes first. Placeholder
 MON_WARD_CDR,double,0.5,mana_ward rule: extra cooldown ticks per own action while the ward holds. Placeholder
+MON_BRAVE_MAX,int,3,brave_heart rule: the unit Defaults (skips its turn for a pip) only while it holds fewer than this many pips. Placeholder
+MON_BRAVE_GUARD,double,0.3,brave_heart rule: hit damage the unit takes is reduced by this from a Default until its next turn. Placeholder
+MON_ONE_MORE,double,0.4,one_more rule: a crit or strong-element hit by the unit refunds this fraction of a full ATB gauge (once per action; never past full). Placeholder
+MON_BREAK_PIPS,int,4,guard_break rule: guard pips each enemy of a carrier has; a carrier's crit or strong-element hit strips one. Placeholder
+MON_BREAK_BONUS,double,0.5,guard_break rule: a broken enemy loses its next action and takes x(1 + this) hit damage until it acts again. Placeholder
+MON_LATENT_ACTIONS,int,8,latent_power rule: after this many of the unit's actions its stats rise for the rest of the fight. Placeholder
+MON_LATENT_BONUS,double,0.3,"latent_power rule: the rise of each of the unit's stats except HP, a fraction of base. Placeholder"

@@ -1,4 +1,4 @@
-# training-run vectors, hash v9 content=6.6/88456f5b
+# training-run vectors, hash v9 content=6.7/eeb93f0f
 
 slime balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -61,10 +61,10 @@ drake hoarder seed=7
   hash b83f44324f2466590259b3304d8167b4a76806712635733539df0dc2f6fcf293
 
 drake chaser seed=7
-  end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
-  stats hp 165 str 388 int 95 wis 80 dex 90 def 539 spd 90 luk 70
-  trees pyromancy:8/8 heavy_armor:8/8 stonewall:3/8 -
-  hash c37b21be41c89ef2708160fb17a2c96739125935cbedc8d170b95203f585ce11
+  end=Completed cycle=12 rank=d fights=1/12 drills=44 rests=16 energy=20 milestones=2 sp=0 injuries=0
+  stats hp 165 str 437 int 95 wis 80 dex 90 def 539 spd 90 luk 70
+  trees pyromancy:8/8 heavy_armor:8/8 guard_break:4/8 brute_force:0/8
+  hash 6f1977537a2d0ffa8685e51674d290a94d20fe3debb182493668354b7ba6a71c
 
 drake focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
@@ -98,9 +98,9 @@ sprite hoarder seed=7
 
 sprite chaser seed=7
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=2 sp=0 injuries=0
-  stats hp 90 str 60 int 445 wis 155 dex 171 def 70 spd 626 luk 110
-  trees aether_striker:8/8 mind_warp:7/8 overclock:4/8 starlit_ascension:8/8
-  hash 024b26d07473a4ae7f5a9ee1affcd89d396b0818ceedd3b645a725015a8d2fa1
+  stats hp 90 str 60 int 445 wis 155 dex 155 def 70 spd 602 luk 110
+  trees aether_striker:8/8 mind_warp:8/8 quickstep:1/8 starlit_ascension:8/8
+  hash b8c557756a3dfcf51f9f94cff06ae016c8bcb42c63dde478de111cab8ab38336
 
 sprite focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0

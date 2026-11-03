@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.6/88456f5b
+# battle-sim vectors, hash v2 content=6.7/eeb93f0f
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -88,3 +88,12 @@
   B2 b_support hp      0.00/  2600.00 act  14 dealt    1217.55 taken    2810.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
   B3 b_healer hp      0.00/  3000.00 act  17 dealt     907.19 taken    4932.00 heal   5712.00 crit  3 evade  0 kill 0 counter  0
   hash a18a9c5fc3f2a697d3c31090fd098548843004f5dd167e836d9e1aa984dfce8b
+
+4v2 turn gauge capstones vs boss seed=12 outcome=SideAWon ticks=35
+  A0 a_brave  hp   3293.92/  3400.00 act  10 dealt    2676.98 taken     106.08 heal      0.00 crit  3 evade  0 kill 0 counter  0
+  A1 a_gambler hp   1411.00/  2800.00 act  11 dealt    4342.46 taken    1389.00 heal      0.00 crit  6 evade  0 kill 1 counter  0
+  A2 a_breaker hp   2195.25/  4000.00 act   9 dealt    3485.07 taken    1804.75 heal      0.00 crit  6 evade  1 kill 1 counter  0
+  A3 a_latent hp   1318.68/  3000.00 act  12 dealt    2685.49 taken    1681.32 heal      0.00 crit  3 evade  0 kill 0 counter  0
+  B0 b_boss   hp      0.00/  9990.00 act   7 dealt    3203.83 taken    9990.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B1 b_brawler hp      0.00/  3200.00 act   6 dealt    1777.32 taken    3200.00 heal      0.00 crit  0 evade  1 kill 0 counter  0
+  hash 31a7c240425ef9d1d1678c88927224a9ce94729fa544372ba224c2e558c90f04

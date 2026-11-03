@@ -102,10 +102,12 @@ namespace IdleRng.Sim.Tests
         {
             var own = Generic.Where(t => t.OfferStat == StatIds.Str).Select(t => t.Id).ToList();
             var s = TrainingRun.Start(Db, "drake", 4);
+            Assert.That(own.Count, Is.LessThanOrEqualTo(K.TreeSlots));
             for (int i = 0; i < own.Count; i++)
             {
+                // From the last slot down: past two STR trees (idea-pool lanes add more) the native trees are overwritten too.
                 s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { own[i] } });
-                TrainingRun.TakeTree(Db, s, 0, 2 + i);
+                TrainingRun.TakeTree(Db, s, 0, K.TreeSlots - 1 - i);
             }
             var o = StrAwakening(s);
             Assert.That(o.Trees.Intersect(own), Is.Empty);
