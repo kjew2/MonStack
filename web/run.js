@@ -43,7 +43,8 @@
     endlessTeam: [],         // Endless Tower team: exactly teamSize Vault indices in slot order (specs/28 section 2)
     endlessTab: 'team',      // the Endless screen's section: 'team', 'floors' or 'board' (issue #130: one phone screen each)
     endlessPickOpen: false,  // the Vault list under a full Endless team, unfolded to swap a monster
-    endlessResult: null,     // the last climb's result from the engine (run.runEndless) plus its season and team, shown on the Endless screen
+    endlessResult: null,
+    chart: null,             // the damage chart open over the Dungeon or Endless result: { floor } (0 = every floor fought), or null     // the last climb's result from the engine (run.runEndless) plus its season and team, shown on the Endless screen
     endlessFight: null,      // the Endless floor fight shown in the playback modal, or null
     nameEdit: null,          // the season board's name field while it is open: {draft, error}, else null
   };
@@ -1389,7 +1390,7 @@
       h('div', { class: 'row between' }, [
         h('span', { class: 'small num', 'data-id': 'tower-tickets', text: ticketStatus(ti) + ' · best today ' + ti.clearedToday + ' floors' }),
         h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'tower', text: 'Enter',
-          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); $('main').scrollTop = 0; } }),
+          onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.chart = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); $('main').scrollTop = 0; } }),
       ]),
     ]));
     // The Endless Tower (specs/28): free, unlimited, a new lineup every week.
@@ -1433,7 +1434,7 @@
         const r = run.runTower(day, ui.towerTeam.slice());
         if (!r.ok) { toast(r.reason); render(); return; }
         r.day = day; r.team = ui.towerTeam.slice();   // what towerFloor needs to replay this attempt's other floors
-        ui.towerResult = r;
+        ui.towerResult = r; ui.chart = null;
         stopPlayback();
         ui.towerFight = ui.speed === 'skip' ? null : r.final;   // the deciding floor plays at once, unless the speed is Skip
         if (ui.towerFight) startPlayback(r.final);
@@ -1454,6 +1455,7 @@
     main.append(actionBar(climb));
 
     if (ui.towerFight) { modal.hidden = false; towerPlayModal(modal, ui.towerFight); }
+    else if (ui.chart && ui.towerResult) { modal.hidden = false; damageChart(modal, ui.towerResult, 'tower'); }
   }
 
   // The team (issue #98): the slots in order, each movable up or down (slot order breaks ATB ties and sets default targets,
@@ -1524,7 +1526,7 @@
       ]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-watch-' + f.floor, text: 'Watch', onclick: () => watchFloor(f.floor) }),
     ])));
-    card.append(rows);
+    card.append(rows, chartButton('tower-chart'));
     // The last floor's fight, as a log: ordinary actions plus the tower's events (phases, entropy vents, channels).
     const f = r.final, v = towerView(f);
     const list = h('ul', { class: 'alog', 'data-id': 'tower-log' });
@@ -1652,13 +1654,67 @@
     return who + ': ' + x.event;
   }
 
+  // ---- Damage chart (specs/21 section 8, specs/28 section 5): an optional view over a Dungeon or Endless Tower result. For each
+  // team monster, bars for the damage it dealt, the damage it took (HP lost, after shields) and the healing it did, over every
+  // floor fought or one floor. The numbers come with the result (floors[].team, in slot order); the names are the deciding
+  // fight's team units, which are the same monsters in the same order.
+  function chartButton(act) {
+    return h('button', { class: 'btn small', type: 'button', 'data-act': act, text: '📊 Damage chart',
+      onclick: () => { ui.chart = { floor: 0 }; render(); } });
+  }
+
+  function chartTotals(r, floor) {
+    const shown = floor ? r.floors.filter((f) => f.floor === floor) : r.floors;
+    const names = r.final.units.filter((u) => u.side === 0 && !u.add).map((u) => u.name);
+    const rows = names.map((name) => ({ name: name, dealt: 0, taken: 0, healed: 0 }));
+    shown.forEach((f) => (f.team || []).forEach((t, i) => {
+      if (!rows[i]) return;
+      rows[i].dealt += t.dealt; rows[i].taken += t.taken; rows[i].healed += t.healed;
+    }));
+    return rows;
+  }
+
+  function damageChart(modal, r, kind) {
+    const floor = r.floors.some((f) => f.floor === ui.chart.floor) ? ui.chart.floor : 0;
+    const rows = chartTotals(r, floor);
+    const sum = (k) => rows.reduce((a, x) => a + x[k], 0);
+    const total = { dealt: sum('dealt'), taken: sum('taken'), healed: sum('healed') };
+    const heals = total.healed > 0;
+    const max = Math.max(1, ...rows.flatMap((x) => [x.dealt, x.taken, heals ? x.healed : 0]));
+    const whole = (v) => Math.round(v).toLocaleString('en-US');
+    const pick = h('select', { class: 'cpick', 'data-act': 'chart-floor', 'aria-label': 'Floor', onchange: (ev) => { ui.chart = { floor: Number(ev.target.value) }; render(); } }, [
+      h('option', { value: '0', selected: floor === 0, text: 'All ' + plural(r.floors.length, 'floor', 'floors') + ' (total)' }),
+      ...r.floors.map((f) => h('option', { value: String(f.floor), selected: floor === f.floor,
+        text: 'Floor ' + f.floor + ' ' + (f.won ? '✓' : '✗') + ' ' + (kind === 'tower' ? f.name : (f.shapeName || f.shape)) })),
+    ]);
+    const bar = (cls, label, v, of) => h('div', { class: 'crow ' + cls }, [
+      h('span', { class: 'clabel small muted', text: label }),
+      h('div', { class: 'cbar' }, [h('div', { class: 'cfill', style: 'width:' + (100 * v / max).toFixed(1) + '%' })]),
+      h('span', { class: 'cval small num', text: whole(v) + (of > 0 ? ' · ' + Math.round(100 * v / of) + '%' : '') }),
+    ]);
+    const list = h('div', { class: 'dchart', 'data-id': 'chart-' + kind, 'data-floor': String(floor) }, rows.map((x, i) => h('div', { class: 'cunit', 'data-id': 'chart-unit-' + i }, [
+      h('b', { class: 'small', text: x.name }),
+      bar('dealt', 'Dealt', x.dealt, total.dealt),
+      bar('taken', 'Taken', x.taken, total.taken),
+      heals ? bar('healed', 'Healed', x.healed, total.healed) : null,
+    ])));
+    const close = () => { ui.chart = null; render(); };
+    modal.append(
+      h('h2', { text: 'Team damage' }),
+      h('p', { class: 'small muted', text: 'What each monster dealt' + (heals ? ', took (HP lost after shields) and healed' : ' and took (HP lost after shields)') + '; the % is its share of the team\'s.' }),
+      h('label', { class: 'vfield' }, [h('span', { class: 'small muted', text: 'Show (every floor added up, or pick one floor)' }), pick]),
+      h('p', { class: 'small num', 'data-id': 'chart-total', text: 'Team: dealt ' + whole(total.dealt) + ' · took ' + whole(total.taken) + (heals ? ' · healed ' + whole(total.healed) : '') }),
+      list,
+      actionBar(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'chart-close', text: 'Close', onclick: close })));
+  }
+
   // ---- Endless Tower (specs/28 sections 2, 3, 5 and 6): this week's season, its mutators and the next floors, a team of exactly
   // teamSize Vault monsters (each fights by its own rulebook) and free, unlimited climbs. The engine runs the climb and pays the
   // floors new this season (run.runEndless); this screen only lays out what it returns. The deciding floor plays back at once
   // (unless the speed is Skip), any floor fought from its Watch button (run.endlessFloor replays it, read only).
   function openEndless() {
     stopPlayback();
-    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null; ui.nameEdit = null; ui.endlessTab = 'team'; ui.endlessPickOpen = false;
+    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null; ui.chart = null; ui.nameEdit = null; ui.endlessTab = 'team'; ui.endlessPickOpen = false;
     ui.endlessTeam = ui.endlessTeam.filter((i) => i < run.account.vault.length);
     render();
     $('main').scrollTop = 0;
@@ -1761,6 +1817,7 @@
     main.append(actionBar(climb));
 
     if (ui.endlessFight) { modal.hidden = false; endlessPlayModal(modal, ui.endlessFight); }
+    else if (ui.chart && r) { modal.hidden = false; damageChart(modal, r, 'endless'); }
   }
 
   // The season board (specs/28 section 6): the best floors cleared this season, ties to whoever got there first, the player's
@@ -1831,7 +1888,7 @@
     const r = run.runEndless(season, team);
     if (!r.ok) { toast(r.reason); render(); return; }
     r.team = team; r.books = teamBooks(team);   // what endlessFloor needs to replay this climb's other floors, and the rulebooks it used
-    ui.endlessResult = r;
+    ui.endlessResult = r; ui.chart = null;
     (r.achievements || []).forEach((a) => toast('Achievement: ' + a.name + (a.species ? '. ' + a.speciesName + ' unlocked!' : '')));
     stopPlayback();
     ui.endlessFight = ui.speed === 'skip' ? null : r.final;   // the deciding floor plays at once, unless the speed is Skip
@@ -1875,7 +1932,7 @@
       ]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-watch-' + f.floor, text: 'Watch', onclick: () => endlessWatch(f.floor) }),
     ])));
-    card.append(rows);
+    card.append(rows, chartButton('endless-chart'));
     const f = r.final, v = endlessView(f);
     const list = h('ul', { class: 'alog', 'data-id': 'endless-log' });
     f.actions.forEach((x) => { const l = v.line(x); list.append(h('li', { class: l.cls, text: l.text })); });

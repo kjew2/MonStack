@@ -141,6 +141,19 @@ const H = require('./harness.js');
   const rows = await page.$$eval('[data-id^=endless-fought-]', (rs) => rs.map((r) => ({ id: r.dataset.id, hash: r.dataset.hash })));
   check(rows.length >= 1 && rows[rows.length - 1].hash === decidingHash, 'the floors fought are listed, the deciding one last with the played fight\'s hash');
   check(/best this season \d+/.test(await status.innerText()) && /1 climb this season/.test(await status.innerText()), 'the season line counts the climb');
+  // the damage chart: four monsters, the team totals are the bars' sum, one floor at a time on request
+  await act('endless-chart').click();
+  await page.locator('#modal [data-id=chart-endless]').waitFor();
+  const parse = (v) => +v.split(' ')[0].replace(/,/g, '');
+  const dealt = (await page.$$eval('#modal .crow.dealt .cval', (vs) => vs.map((v) => v.textContent))).map(parse);
+  const teamDealt = +((/dealt ([\d,]+)/.exec(await text('[data-id=chart-total]')) || [])[1] || '-1').replace(/,/g, '');
+  check(dealt.length === 4 && Math.abs(dealt.reduce((a, b) => a + b, 0) - teamDealt) <= 4,
+    'the damage chart has a bar per monster and the team total is their sum: ' + dealt.join(' + ') + ' = ' + teamDealt);
+  await page.selectOption('[data-act=chart-floor]', rows[rows.length - 1].id.slice('endless-fought-'.length));
+  check((await page.locator('#modal [data-id=chart-endless]').getAttribute('data-floor')) === rows[rows.length - 1].id.slice('endless-fought-'.length), 'the floor picker shows the deciding floor alone');
+  await t.layout('endless damage chart');
+  await act('chart-close').click();
+  check((await count('#modal [data-id=chart-endless]')) === 0 && (await count('[data-id=endless-result]')) === 1, 'Close leaves the result card');
   const best1 = a1.Endless.ClearedSeason || 0;
   await act('endless-tab-board').click();
   if (best1 > 0) {

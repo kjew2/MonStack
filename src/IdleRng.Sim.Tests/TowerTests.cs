@@ -151,6 +151,18 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Run_KeepsEachFloorsTeamTallies_ForTheDamageChart()
+        {
+            var r = TowerSim.Run(Db, new[] { Monster("drake", 4), Monster("drake", 5) }, 11);
+            foreach (var f in r.Floors)
+            {
+                Assert.That(f.Team.Count, Is.EqualTo(2), "one entry per team slot, adds excluded");
+                Assert.That(f.Team.All(t => t.Dealt >= 0 && t.Taken >= 0 && t.Healed >= 0), Is.True);
+                if (f.Won) Assert.That(f.Team.Sum(t => t.Dealt), Is.GreaterThan(0), "a won floor took damage to win");
+            }
+        }
+
+        [Test]
         public void BookDrop_IsFixedByDayAndFloor_AndOnlyDropsEligibleBooks()
         {
             // enough days for about 400 expected drops, whatever the (uber rare) rate is

@@ -39,6 +39,9 @@ namespace IdleRng.Sim.Tower
         public int Vents { get; set; }
         public int PeakCorruption { get; set; }
         public string FightHash { get; set; }
+
+        /// <summary>What each team monster did on this floor, in slot order (the damage chart). Not hashed.</summary>
+        public List<TeamTally> Team { get; set; } = new List<TeamTally>();
     }
 
     /// <summary>
@@ -273,6 +276,7 @@ namespace IdleRng.Sim.Tower
                     floor.Ticks = fight.Ticks;
                     floor.PeakCorruption = fight.Final.PeakCorruption;
                     floor.FightHash = fight.Hash;
+                    floor.Team = TeamTally.Of(fight.Final);
                     result.Floors.Add(floor);
                     if (!floor.Won) { result.FloorReached = plan.Floor; break; }
                 }
