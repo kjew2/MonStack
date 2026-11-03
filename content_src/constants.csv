@@ -125,3 +125,8 @@ ENDLESS_SHARDS_BASE,int,2,Endless Tower rewards (specs/28 section 6): a floor cl
 ENDLESS_SHARDS_PER_FLOOR,double,0.5,Endless Tower: shards added per floor number. Placeholder
 ENDLESS_ELITE_SHARD_MULT,int,2,Endless Tower: an elite floor pays this many times its shards. Placeholder
 GAMBIT_SLOTS,int,6,most rules in one monster's rulebook (specs/28 section 4.4). Placeholder
+MON_IRON_DEX,double,0.6,iron_reflexes rule: the unit mitigates physical hits with DEF + this x DEX (its evade and graze chance are 0). Placeholder
+MON_AVATAR_BONUS,double,0.25,elemental_avatar rule: all the unit's hit damage takes its own element and is multiplied by 1 + this. Placeholder
+MON_FORTRESS_DEF,double,0.5,fortress_fist rule: each hit the unit lands adds this x its DEF to the raw damage (its STR and INT count as 0 for damage). Placeholder
+MON_BLOOD_COST,double,0.06,blood_magic rule: each active skill cast costs this fraction of max HP (never below 1 HP); no cooldowns. Placeholder
+MON_BLOOD_FLOOR,double,0.25,blood_magic rule: the unit does not cast when the cost would leave it under this fraction of max HP. Placeholder

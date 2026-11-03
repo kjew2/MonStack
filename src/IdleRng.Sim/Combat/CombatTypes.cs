@@ -601,8 +601,35 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string EntropyConvert = "entropy_convert";
 
+        // Idea-pool lane A (#134): conversion rules, coded in Combat/Rules/LaneA.cs.
+
+        /// <summary>
+        /// The unit's evade and graze chance are 0 (this wins over umbral_veil); it mitigates physical hits with DEF +
+        /// MON_IRON_DEX x DEX. The Iron Reflexes generic capstone.
+        /// </summary>
+        public const string IronReflexes = "iron_reflexes";
+
+        /// <summary>
+        /// Every hit the unit deals (skills, basic attacks, triggered hits) takes the unit's own element and deals x(1 +
+        /// MON_AVATAR_BONUS); a unit without an element is unaffected. The Elemental Avatar generic capstone.
+        /// </summary>
+        public const string ElementalAvatar = "elemental_avatar";
+
+        /// <summary>
+        /// Each hit the unit deals adds MON_FORTRESS_DEF x its DEF to the raw damage; its STR and INT count as 0 for damage (heals
+        /// and shields keep them). The Fortress Fist generic capstone.
+        /// </summary>
+        public const string FortressFist = "fortress_fist";
+
+        /// <summary>
+        /// The unit's active skills have no cooldown; each cast costs MON_BLOOD_COST of max HP (never below 1 HP, not damage), and
+        /// it does not cast when that would leave it under MON_BLOOD_FLOOR of max HP. The Blood Magic generic capstone.
+        /// </summary>
+        public const string BloodMagic = "blood_magic";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
-            RootRebirth, WailStagger, UmbralVeil, NightFeast };
+            RootRebirth, WailStagger, UmbralVeil, NightFeast,
+            IronReflexes, ElementalAvatar, FortressFist, BloodMagic };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

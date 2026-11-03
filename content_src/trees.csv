@@ -46,3 +46,7 @@ geyser_heart,tree.geyser_heart.name,fusion,,,tree.geyser_heart.apex,pyromancy,ti
 living_fortress,tree.living_fortress.name,fusion,,,tree.living_fortress.apex,heavy_armor,bulwark,fusion tree (specs/15 section 5.6)
 hall_of_mirrors,tree.hall_of_mirrors.name,fusion,,,tree.hall_of_mirrors.apex,mind_warp,nimble_feet,fusion tree (specs/15 section 5.6)
 arcana_deck,tree.arcana_deck.name,fusion,,,tree.arcana_deck.apex,fortune,spellcraft,fusion tree (specs/15 section 5.6)
+iron_reflexes,tree.iron_reflexes.name,generic,dex,400,,,,idea-pool lane A (#134): PoE Iron Reflexes
+elemental_avatar,tree.elemental_avatar.name,generic,int,400,,,,idea-pool lane A (#134): PoE Avatar of Fire
+fortress_fist,tree.fortress_fist.name,generic,def,400,,,,idea-pool lane A (#134): Bofuri all-VIT Maple
+blood_magic,tree.blood_magic.name,generic,hp,400,,,,idea-pool lane A (#134): PoE Blood Magic

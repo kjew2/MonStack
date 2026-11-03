@@ -649,9 +649,19 @@
     return { text: a + ' · ' + actionName(x) + ' → ' + t + ': ' + actionResult(x), you: x.actor === 'monster', skillId: x.skillId };
   }
   const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
+  // Rule events whose amount is not HP restored (specs/16 section 6.2): idea-pool lane A logs its conversions at fight start
+  // and blood_magic's HP cost at each cast.
+  const RULE_RESULT = {
+    'rule:iron_reflexes': (n) => 'never evades, +' + Math.round(n) + ' DEF from DEX',
+    'rule:elemental_avatar': (n) => 'all hits take its element, +' + Math.round(n * 100) + '% damage',
+    'rule:fortress_fist': (n) => '+' + Math.round(n) + ' damage per hit from DEF',
+    'rule:blood_magic': (n) => 'pays ' + Math.round(n) + ' HP',
+  };
+
   function actionResult(x) {
     let body;
-    if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
+    if (x.event && RULE_RESULT[x.event]) body = RULE_RESULT[x.event](x.amount);
+    else if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
     else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
     else if (x.kind === 'shield') body = 'shields ' + Math.round(x.amount);
