@@ -87,6 +87,7 @@ namespace IdleRng.Sim.Tests
 
             var r = Rules;
             var k = db.ConstantValues;
+            Assert.That((double)r.UsurpSteals, Is.EqualTo(k["MON_USURP_STEALS"]));
             Assert.That((r.StealGauge, (double)r.StealsPerFoe, r.EggHp, (double)r.HatchActions, r.HatchStats),
                         Is.EqualTo((k["MON_STEAL_GAUGE"], k["MON_STEALS_PER_FOE"], k["MON_EGG_HP"], k["MON_HATCH_ACTIONS"], k["MON_HATCH_STATS"])));
             foreach (var id in SpeciesRules)
@@ -105,7 +106,7 @@ namespace IdleRng.Sim.Tests
             var b = new[] { Mon("b") };
             foreach (var bad in new Action<FightRules>[]
                      {
-                         r => r.StealGauge = -0.1, r => r.StealGauge = 1.1, r => r.StealGauge = double.NaN, r => r.StealsPerFoe = 0,
+                         r => r.StealGauge = -0.1, r => r.StealGauge = 1.1, r => r.StealGauge = double.NaN, r => r.StealsPerFoe = 0, r => r.UsurpSteals = 0,
                          r => r.EggHp = 0, r => r.EggHp = 1.5, r => r.HatchActions = 0, r => r.HatchStats = 0, r => r.HatchStats = 2,
                      })
             {
@@ -218,6 +219,13 @@ namespace IdleRng.Sim.Tests
             BattleSim.Step(r, s, new Fixed(0.99), log.Add);
             Assert.That(log.Single(x => x.Event == BattleSim.UsurpEvent).Amount, Is.EqualTo(0));
             Assert.That(log.Any(x => x.Actor == "a" && x.Event == null && x.Skill == null), Is.True, "a basic attack");
+
+            // A usurp carrier steals MON_USURP_STEALS turns per enemy (2 here), a plain thief MON_STEALS_PER_FOE (1).
+            r.UsurpSteals = 2;
+            (s, log) = Ticks(r, new[] { Thief("a", RuleModifiers.StolenTurn, RuleModifiers.Usurp) }, new[] { Quick("b") }, 2);
+            Assert.That(log.Count(x => x.Event == BattleSim.StealEvent), Is.EqualTo(2));
+            (s, log) = Ticks(r, new[] { Thief("a", RuleModifiers.StolenTurn) }, new[] { Quick("b") }, 2);
+            Assert.That(log.Count(x => x.Event == BattleSim.StealEvent), Is.EqualTo(1));
 
             // usurp without a stolen turn does nothing: the unit uses its own AI.
             var d = Quick("b");

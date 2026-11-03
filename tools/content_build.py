@@ -115,7 +115,7 @@ REQUIRED_CONSTANTS = {
     # species Candlemane (#141): martyr_flame, hollow_sun
     "MON_PYRE_CONV": "double", "MON_SUN_RELEASE": "double", "MON_SUN_HEAL": "double",
     # species Cuckling (#143): stolen_turn, foundling_egg
-    "MON_STEAL_GAUGE": "double", "MON_STEALS_PER_FOE": "int", "MON_EGG_HP": "double", "MON_HATCH_ACTIONS": "int", "MON_HATCH_STATS": "double",
+    "MON_STEAL_GAUGE": "double", "MON_STEALS_PER_FOE": "int", "MON_USURP_STEALS": "int", "MON_EGG_HP": "double", "MON_HATCH_ACTIONS": "int", "MON_HATCH_STATS": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -241,6 +241,7 @@ MON_RANGES = {
     "MON_SUN_HEAL": (">= 0", lambda v: v >= 0),
     # species Cuckling (#143)
     "MON_STEAL_GAUGE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_STEALS_PER_FOE": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
+    "MON_USURP_STEALS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
     "MON_EGG_HP": ("(0, 1]", lambda v: 0 < v <= 1), "MON_HATCH_ACTIONS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
     "MON_HATCH_STATS": ("(0, 1]", lambda v: 0 < v <= 1),
 }

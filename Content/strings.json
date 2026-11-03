@@ -2900,7 +2900,7 @@
     },
     {
       "key": "rule.usurp.desc",
-      "text": "Each turn it steals is spent on the victim's own skill: it casts the victim's first ready skill with its own stats, and that skill goes on cooldown for the victim. With none ready, a basic attack."
+      "text": "Each turn it steals is spent on the victim's own skill: it casts the victim's first ready skill with its own stats, and that skill goes on cooldown for the victim. With none ready, a basic attack. It may steal {MON_USURP_STEALS} turns from each enemy per fight."
     },
     {
       "key": "rule.foundling_egg.name",

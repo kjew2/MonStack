@@ -892,6 +892,11 @@
       "value": 1
     },
     {
+      "key": "MON_USURP_STEALS",
+      "type": "int",
+      "value": 2
+    },
+    {
       "key": "MON_EGG_HP",
       "type": "double",
       "value": 0.3

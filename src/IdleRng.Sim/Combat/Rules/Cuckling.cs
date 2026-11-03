@@ -10,7 +10,8 @@ namespace IdleRng.Sim.Combat
     //                  unit acts in its place: the enemy loses the turn, the unit's gauge drops to 0. MON_STEALS_PER_FOE per
     //                  enemy per fight. Step calls StealTurn before each turn.
     //   usurp          a stolen turn is spent on the victim's own first ready skill (rescue pass first, as the default AI), cast
-    //                  with the unit's stats; the victim's copy goes on cooldown. None ready: a basic attack.
+    //                  with the unit's stats; the victim's copy goes on cooldown. None ready: a basic attack. The carrier may
+    //                  steal MON_USURP_STEALS turns per enemy (the issue's "raise steals per foe" lever for the chase).
     //   foundling_egg  at fight start the unit lays an egg on its side, even a full one: an add (never keeps the side alive)
     //                  with MON_EGG_HP of its max HP that never acts; after MON_HATCH_ACTIONS of the unit's actions it hatches
     //                  into a Foundling with MON_HATCH_STATS of the unit's stats and its active skills, no triggers or rules.
@@ -45,13 +46,13 @@ namespace IdleRng.Sim.Combat
             FightUnit thief = null;
             foreach (var u in s.Units)
                 if (u.Side != victim.Side && u.Alive && u.Gauge >= r.StealGauge * r.GaugeSize && Has(u, RuleModifiers.StolenTurn)
-                    && Steals(u, victim.Id) < r.StealsPerFoe && (thief == null || u.Gauge > thief.Gauge))
+                    && Steals(u, victim.Id) < StealLimit(r, u) && (thief == null || u.Gauge > thief.Gauge))
                     thief = u;
             if (thief == null) return false;
             thief.StolenFrom ??= new List<string>(4);
             thief.StolenFrom.Add(victim.Id);
             thief.Gauge = 0;
-            c.Log?.Invoke(new FightAction(thief.Id, StealEvent, victim.Id, r.StealsPerFoe - Steals(thief, victim.Id)));
+            c.Log?.Invoke(new FightAction(thief.Id, StealEvent, victim.Id, StealLimit(r, thief) - Steals(thief, victim.Id)));
             thief.TurnAction = 0;
             thief.Stealing = true;
             thief.UsurpVictim = Has(thief, RuleModifiers.Usurp) ? victim : null;
@@ -63,6 +64,9 @@ namespace IdleRng.Sim.Combat
             outcome = Decide(s, thief.Side);
             return true;
         }
+
+        /// <summary>Turns the unit may steal from each enemy: MON_STEALS_PER_FOE, or MON_USURP_STEALS for a usurp carrier if that is more.</summary>
+        static int StealLimit(FightRules r, FightUnit u) => Has(u, RuleModifiers.Usurp) ? Math.Max(r.StealsPerFoe, r.UsurpSteals) : r.StealsPerFoe;
 
         static int Steals(FightUnit thief, string victim)
         {
@@ -167,7 +171,7 @@ namespace IdleRng.Sim.Combat
 
         static partial void ValidateRules_Cuckling(FightRules r, ref bool ok)
         {
-            if (!(In01(r.StealGauge) && r.StealsPerFoe >= 1 && r.EggHp > 0 && r.EggHp <= 1 && r.HatchActions >= 1 && r.HatchStats > 0 && r.HatchStats <= 1))
+            if (!(In01(r.StealGauge) && r.StealsPerFoe >= 1 && r.UsurpSteals >= 1 && r.EggHp > 0 && r.EggHp <= 1 && r.HatchActions >= 1 && r.HatchStats > 0 && r.HatchStats <= 1))
                 ok = false;
         }
     }
@@ -179,6 +183,9 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>stolen_turn: turns it may steal from each enemy per fight (MON_STEALS_PER_FOE).</summary>
         public int StealsPerFoe { get; set; } = 1;
+
+        /// <summary>usurp: turns a usurp carrier may steal from each enemy per fight, if more than MON_STEALS_PER_FOE (MON_USURP_STEALS).</summary>
+        public int UsurpSteals { get; set; } = 1;
 
         /// <summary>foundling_egg: the egg's HP, a share of the carrier's max HP (MON_EGG_HP).</summary>
         public double EggHp { get; set; } = 1;
@@ -194,6 +201,7 @@ namespace IdleRng.Sim.Combat
             var k = c.ConstantValues;
             r.StealGauge = k["MON_STEAL_GAUGE"];
             r.StealsPerFoe = (int)k["MON_STEALS_PER_FOE"];
+            r.UsurpSteals = (int)k["MON_USURP_STEALS"];
             r.EggHp = k["MON_EGG_HP"];
             r.HatchActions = (int)k["MON_HATCH_ACTIONS"];
             r.HatchStats = k["MON_HATCH_STATS"];
