@@ -630,6 +630,31 @@
       "key": "GAMBIT_SLOTS",
       "type": "int",
       "value": 6
+    },
+    {
+      "key": "MON_IRON_DEX",
+      "type": "double",
+      "value": 0.6
+    },
+    {
+      "key": "MON_AVATAR_BONUS",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_FORTRESS_DEF",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "MON_BLOOD_COST",
+      "type": "double",
+      "value": 0.06
+    },
+    {
+      "key": "MON_BLOOD_FLOOR",
+      "type": "double",
+      "value": 0.25
     }
   ]
 }
