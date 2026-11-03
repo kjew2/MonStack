@@ -13,7 +13,7 @@ namespace IdleRng.Sim.Tests
         public void ShippedContent_Loads_AndHasEveryTable()
         {
             var db = TestContent.Db;
-            Assert.That(db.Version, Is.EqualTo("6.5"));
+            Assert.That(db.Version, Is.EqualTo("6.10"));
             Assert.That(db.ContentHash, Has.Length.EqualTo(64));
             Assert.That(db.ElementList, Has.Count.EqualTo(5));
             Assert.That(db.SpeciesList, Is.Not.Empty);

@@ -28,7 +28,7 @@ SCHEMA_VERSION = 1
 ENUMS = {
     "ConstantType": ["int", "double", "bool"],
     "TreeKind": ["native", "generic", "chase", "book", "fusion"],
-    "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
+    "NodeKind": ["growth", "stat", "skill", "trigger", "rule", "growth_use"],
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
     "TalentEffect": ["drill_cost", "stat_floor", "start_sp", "rest_energy", "fail_chance", "super_chance",
@@ -72,6 +72,9 @@ REQUIRED_CONSTANTS = {
     "MON_FEAST_STR": "double", "MON_COUNTER_MULT": "double", "MON_FIRE_BONUS": "double", "MON_VEIL_EVADE_BONUS": "double",
     "MON_FEAST_DMG": "double", "MON_FEAST_START": "double", "MON_ECHO_DECOYS": "int", "MON_DRAIN_SHIELD_CAP": "double",
     "MON_TRIGGER_DEPTH": "int", "MON_EXTRA_ACTIONS_CAP": "int",
+    # idea-pool lane B (#135): survival rules
+    "MON_RESENT_FRAC": "double", "MON_RESENT_DECAY": "double", "MON_VANTAGE_HP": "double", "MON_DOOR_START": "double",
+    "MON_DOOR_STEP": "double", "MON_BARRICADE_CAP": "double", "MON_WARD_WIS": "double", "MON_WARD_SHARE": "double", "MON_WARD_CDR": "double",
     # account and meta-progression (specs/18)
     "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int", "REROLL_BASE": "int", "REROLL_STEP": "int", "LEGENDARY_SLOTS": "int",
     # end-of-run gauntlet (specs/19)
@@ -93,6 +96,14 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane A, conversion rules (specs/16 section 6.2, #134)
     "MON_IRON_DEX": "double", "MON_AVATAR_BONUS": "double", "MON_FORTRESS_DEF": "double", "MON_BLOOD_COST": "double",
     "MON_BLOOD_FLOOR": "double",
+    # idea-pool lane C, turn-gauge rules (specs/16 section 6.2, #136)
+    "MON_BRAVE_MAX": "int", "MON_BRAVE_GUARD": "double", "MON_ONE_MORE": "double", "MON_BREAK_PIPS": "int",
+    "MON_BREAK_BONUS": "double", "MON_LATENT_ACTIONS": "int", "MON_LATENT_BONUS": "double",
+    # idea-pool lane E, team and mode rules (specs/16 section 6.2, #138)
+    "MON_LONE_BONUS": "double", "MON_LONE_MALUS": "double", "MON_ARISE_STATS": "double", "MON_RITE_SHARE": "double",
+    # idea-pool lane F, tree and kit run rules (specs/15 section 11, #139)
+    "KEEPSAKE_STEP": "double", "KEEPSAKE_DRILLS": "int", "KEEPSAKE_MAX": "double", "MASTERY_WINS": "int",
+    "LIMIT_BREAK_MAX": "double",
     # idea-pool lane D, debuff and stacking rules (specs/16 section 6.2, #137)
     "MON_BLEED_PER_HIT": "double", "MON_BLEED_DEX_REF": "double", "MON_BLEED_BURST": "double", "MON_PRIV_BONUS": "double",
     "MON_PRIV_DEBUFFS": "int", "MON_EQ_BONUS": "double",
@@ -106,6 +117,14 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast",
             # idea-pool lane A (#134)
             "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic",
+            # idea-pool lane B (#135)
+            "resentment", "vantage", "deaths_door", "barricade", "mana_ward",
+            # idea-pool lane C (#136)
+            "brave_heart", "one_more", "guard_break", "latent_power",
+            # idea-pool lane E (#138)
+            "lone_wolf", "arise", "last_rite",
+            # idea-pool lane F (#139): run rules (tree and kit build)
+            "mimic_core", "heirloom", "mastery", "limit_break",
             # idea-pool lane D (#137)
             "hemorrhage", "privileged_status", "equilibrium", "corruption", "dead_branch"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
@@ -144,6 +163,11 @@ MON_RANGES = {
     "MON_FEAST_DMG": (">= 0", lambda v: v >= 0), "MON_FEAST_START": (">= 0", lambda v: v >= 0), "MON_ECHO_DECOYS": (">= 0", lambda v: v >= 0),
     "MON_DRAIN_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_TRIGGER_DEPTH": (">= 1", lambda v: v >= 1), "MON_EXTRA_ACTIONS_CAP": (">= 0", lambda v: v >= 0),
+    # idea-pool lane B (#135)
+    "MON_RESENT_FRAC": (">= 0", lambda v: v >= 0), "MON_RESENT_DECAY": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_VANTAGE_HP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_DOOR_START": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_DOOR_STEP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_BARRICADE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_WARD_WIS": (">= 0", lambda v: v >= 0), "MON_WARD_SHARE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_WARD_CDR": (">= 0", lambda v: v >= 0),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
     "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
     "REROLL_BASE": (">= 0", lambda v: v >= 0), "REROLL_STEP": (">= 0", lambda v: v >= 0), "LEGENDARY_SLOTS": (">= 0", lambda v: v >= 0),
@@ -171,6 +195,18 @@ MON_RANGES = {
     "MON_IRON_DEX": (">= 0", lambda v: v >= 0), "MON_AVATAR_BONUS": (">= 0", lambda v: v >= 0),
     "MON_FORTRESS_DEF": (">= 0", lambda v: v >= 0), "MON_BLOOD_COST": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_BLOOD_FLOOR": ("[0, 1]", lambda v: 0 <= v <= 1),
+    # idea-pool lane C (#136)
+    "MON_BRAVE_MAX": (">= 1", lambda v: v >= 1), "MON_BRAVE_GUARD": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_ONE_MORE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_BREAK_PIPS": (">= 1", lambda v: v >= 1),
+    "MON_BREAK_BONUS": (">= 0", lambda v: v >= 0), "MON_LATENT_ACTIONS": (">= 1", lambda v: v >= 1),
+    "MON_LATENT_BONUS": (">= 0", lambda v: v >= 0),
+    # idea-pool lane E (#138)
+    "MON_LONE_BONUS": (">= 0", lambda v: v >= 0), "MON_LONE_MALUS": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_ARISE_STATS": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_RITE_SHARE": (">= 0", lambda v: v >= 0),
+    # idea-pool lane F (#139)
+    "KEEPSAKE_STEP": (">= 0", lambda v: v >= 0), "KEEPSAKE_DRILLS": (">= 1", lambda v: v >= 1),
+    "KEEPSAKE_MAX": (">= 0", lambda v: v >= 0), "MASTERY_WINS": (">= 1", lambda v: v >= 1),
+    "LIMIT_BREAK_MAX": (">= 0", lambda v: v >= 0),   # and >= STAT_MAX, checked in validate
     # idea-pool lane D (#137)
     "MON_BLEED_PER_HIT": (">= 0", lambda v: v >= 0), "MON_BLEED_DEX_REF": ("> 0", lambda v: v > 0),
     "MON_BLEED_BURST": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_PRIV_BONUS": (">= 0", lambda v: v >= 0),
@@ -385,7 +421,7 @@ def validate_trees(t, errs):
         if n["cost"] < 1:
             errs.add("E043", loc, "cost must be >= 1")
         k = n["kind"]
-        if k in ("growth", "stat"):
+        if k in ("growth", "stat", "growth_use"):
             if n["stat"] not in STATS:
                 errs.add("E023", loc, f"stat '{n['stat']}' is not a trained stat")
             if n["amount"] is None or not n["amount"] > 0:
@@ -848,6 +884,8 @@ def validate(t, errs):
     for k, (rule, ok) in MON_RANGES.items():
         if k in keys and not ok(keys[k]["value"]):
             errs.add("E043", f"constants[{k}]", f"value out of range ({rule})")
+    if "LIMIT_BREAK_MAX" in keys and "STAT_MAX" in keys and not keys["LIMIT_BREAK_MAX"]["value"] >= keys["STAT_MAX"]["value"]:
+        errs.add("E043", "constants[LIMIT_BREAK_MAX]", "value out of range (>= STAT_MAX)")
     validate_training(t, keys, errs)
     # elements
     orders = sorted(r["sort_order"] for r in t["elements"])

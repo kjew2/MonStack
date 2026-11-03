@@ -50,6 +50,22 @@ iron_reflexes,tree.iron_reflexes.name,generic,dex,400,,,,idea-pool lane A (#134)
 elemental_avatar,tree.elemental_avatar.name,generic,int,400,,,,idea-pool lane A (#134): PoE Avatar of Fire
 fortress_fist,tree.fortress_fist.name,generic,def,400,,,,idea-pool lane A (#134): Bofuri all-VIT Maple
 blood_magic,tree.blood_magic.name,generic,hp,400,,,,idea-pool lane A (#134): PoE Blood Magic
+resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monster Hunter Resentment
+vantage,tree.vantage.name,generic,spd,400,,,,idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage
+deaths_door,tree.deaths_door.name,generic,luk,400,,,,idea-pool lane B (#135): Darkest Dungeon Death's Door
+barricade,tree.barricade.name,generic,def,400,,,,idea-pool lane B (#135): Slay the Spire Barricade
+mana_ward,tree.mana_ward.name,generic,wis,400,,,,idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery
+brave_heart,tree.brave_heart.name,generic,spd,400,,,,idea-pool lane C (#136): Bravely Default Brave/Default
+one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
+guard_break,tree.guard_break.name,generic,str,400,,,,idea-pool lane C (#136): Octopath Break
+latent_power,tree.latent_power.name,generic,spd,400,,,,idea-pool lane C (#136): MH Latent Power
+lone_wolf,tree.lone_wolf.name,generic,str,400,,,,idea-pool lane E (#138): Divinity Original Sin 2 Lone Wolf
+arise,tree.arise.name,generic,int,400,,,,idea-pool lane E (#138): Solo Leveling Shadow Extraction
+last_rite,tree.last_rite.name,generic,hp,400,,,,idea-pool lane E (#138): Super Auto Pets faint triggers
+mimic_core,tree.mimic_core.name,generic,,400,,,,idea-pool lane F (#139): Balatro Blueprint
+heirloom,tree.heirloom.name,generic,,400,,,,idea-pool lane F (#139): Hades keepsakes
+mastery,tree.mastery.name,generic,wis,400,,,,idea-pool lane F (#139): Final Fantasy IX learned abilities
+limit_break,tree.limit_break.name,generic,,400,,,,idea-pool lane F (#139): Power Pro super abilities
 hemorrhage,tree.hemorrhage.name,generic,dex,400,,,,idea-pool lane D (#137): Elden Ring bleed
 privileged_status,tree.privileged_status.name,generic,wis,400,,,,idea-pool lane D (#137): Hades Privileged Status
 equilibrium,tree.equilibrium.name,generic,int,400,,,,idea-pool lane D (#137): PoE Elemental Equilibrium

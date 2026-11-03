@@ -140,6 +140,12 @@ namespace IdleRng.Sim.Combat
         /// <summary>The unit's death hook has run (BattleSim.ProcessDeaths). Not hashed: it is "dead" once the action is over.</summary>
         internal bool DeathSeen { get; set; }
 
+        /// <summary>
+        /// Which action of its turn the unit is taking (specs/16 section 6.4): 0 for the action its gauge paid for, k for its k-th extra
+        /// action. Set by Step before each action, so the hooks can tell a new turn from an extra action. Not hashed: always set before it is read.
+        /// </summary>
+        internal int TurnAction { get; set; }
+
         public FightUnit Clone()
         {
             var c = (FightUnit)MemberwiseClone();

@@ -315,7 +315,7 @@ namespace IdleRng.Sim.Content
     }
 
     public enum TreeKind { Native, Generic, Chase, Book, Fusion }
-    public enum NodeKind { Growth, Stat, Skill, Trigger, Rule }
+    public enum NodeKind { Growth, Stat, Skill, Trigger, Rule, GrowthUse }
     public enum ConditionType { TreeMaxed, NodeOwned, StatAtLeast, TallyAtLeast }
 
     /// <summary>A skill tree (specs/15 section 2). Nodes are bought in index order; the last node is the chase trait.</summary>

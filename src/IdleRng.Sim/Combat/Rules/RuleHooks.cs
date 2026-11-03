@@ -201,7 +201,7 @@ namespace IdleRng.Sim.Combat
         static partial void ModifyHpDamage_D(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
         static partial void ModifyHpDamage_E(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount);
 
-        /// <summary>OnWouldDie: a blow brought tgt to 0 HP and root_rebirth did not save it; set saved (and its HP) to keep it alive; leave it if already set.</summary>
+        /// <summary>OnWouldDie: a blow brought tgt to 0 HP and root_rebirth did not save it (or its own entropy recoil did: src is tgt then); set saved (and its HP) to keep it alive; leave it if already set.</summary>
         static void HookWouldDie(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved)
         {
             OnWouldDie_A(c, src, tgt, ref saved);
@@ -312,6 +312,54 @@ namespace IdleRng.Sim.Combat
         static partial void ValidateRules_C(FightRules r, ref bool ok);
         static partial void ValidateRules_D(FightRules r, ref bool ok);
         static partial void ValidateRules_E(FightRules r, ref bool ok);
+
+        /// <summary>StatFlat: a flat amount added to a trained stat's current value (after its effect multiplier and floor; not HP). Hot path: keep it cheap.</summary>
+        static void HookStatFlat(FightRules r, FightUnit u, string stat, ref double flat)
+        {
+            StatFlat_A(r, u, stat, ref flat);
+            StatFlat_B(r, u, stat, ref flat);
+            StatFlat_C(r, u, stat, ref flat);
+            StatFlat_D(r, u, stat, ref flat);
+            StatFlat_E(r, u, stat, ref flat);
+        }
+
+        static partial void StatFlat_A(FightRules r, FightUnit u, string stat, ref double flat);
+        static partial void StatFlat_B(FightRules r, FightUnit u, string stat, ref double flat);
+        static partial void StatFlat_C(FightRules r, FightUnit u, string stat, ref double flat);
+        static partial void StatFlat_D(FightRules r, FightUnit u, string stat, ref double flat);
+        static partial void StatFlat_E(FightRules r, FightUnit u, string stat, ref double flat);
+
+        /// <summary>ShieldGain: a skill or entropy_convert gives tgt a timed shield of amount; shield starts as the bigger of the old and new, ticks as the new timer (0 = no expiry).</summary>
+        static void HookShieldGain(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks)
+        {
+            ShieldGain_A(c, tgt, amount, ref shield, ref ticks);
+            ShieldGain_B(c, tgt, amount, ref shield, ref ticks);
+            ShieldGain_C(c, tgt, amount, ref shield, ref ticks);
+            ShieldGain_D(c, tgt, amount, ref shield, ref ticks);
+            ShieldGain_E(c, tgt, amount, ref shield, ref ticks);
+        }
+
+        static partial void ShieldGain_A(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks);
+        static partial void ShieldGain_B(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks);
+        static partial void ShieldGain_C(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks);
+        static partial void ShieldGain_D(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks);
+        static partial void ShieldGain_E(RuleCtx c, FightUnit tgt, double amount, ref double shield, ref int ticks);
+
+        /// <summary>ShieldCap: the cap (fraction of max HP) up to which overhealing becomes shield (tidal_overflow, abyssal_drain); only asked when some cap applies.</summary>
+        static void HookShieldCap(FightRules r, FightUnit t, ref double capFrac)
+        {
+            ShieldCap_A(r, t, ref capFrac);
+            ShieldCap_B(r, t, ref capFrac);
+            ShieldCap_C(r, t, ref capFrac);
+            ShieldCap_D(r, t, ref capFrac);
+            ShieldCap_E(r, t, ref capFrac);
+        }
+
+        static partial void ShieldCap_A(FightRules r, FightUnit t, ref double capFrac);
+        static partial void ShieldCap_B(FightRules r, FightUnit t, ref double capFrac);
+        static partial void ShieldCap_C(FightRules r, FightUnit t, ref double capFrac);
+        static partial void ShieldCap_D(FightRules r, FightUnit t, ref double capFrac);
+        static partial void ShieldCap_E(FightRules r, FightUnit t, ref double capFrac);
     }
 
     public sealed partial class FightRules

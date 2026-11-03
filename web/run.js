@@ -138,7 +138,7 @@
     h('button', { class: 'btn small', type: 'button', 'data-act': act, 'aria-label': 'Back', text: '‹ Back', onclick: onBack }), h('h2', { text: title }), right]);
   // The eight stats as two columns of compact bars (grade screen, Vault detail).
   const statGrid = (stats) => h('div', { class: 'statgrid' }, C.stats.map((st) => h('div', { class: 'stat' }, [
-    h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(stats[st], C.consts.statMax, num(stats[st]))])));
+    h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(stats[st], Math.max(C.consts.statMax, stats[st]), num(stats[st]))])));   // a Limit Break stat can pass STAT_MAX
   const speciesDef = (id) => C.species.find((s) => s.id === id);
   const rank = (i) => C.ranks[i];
   const elementTag = (e) => h('span', { class: 'tag', text: (C.elements[e] || { name: e }).name, style: C.elements[e] && C.elements[e].color ? 'border-color:' + C.elements[e].color : '' });
@@ -423,7 +423,7 @@
   // A stat as a gauge in its colour (issue #115): the value against the stat cap (the tile shows the number above it), and a tick at
   // each milestone this run crosses (RunState milestoneAt, lowered by Early Bloom), lit once the stat has reached it.
   function statGauge(s, st) {
-    const max = C.consts.statMax, v = s.stats[st];
+    const max = (s.statCaps && s.statCaps[st]) || C.consts.statMax, v = s.stats[st];   // a Limit Break raises its stat's cap
     const g = h('div', { class: 'bar gauge', title: num(v) + ' / ' + max }, [h('div', { class: 'fill', style: 'width:' + Math.max(0, Math.min(100, (v / max) * 100)) + '%' })]);
     s.milestoneAt.forEach((m) => g.append(h('i', { class: 'tick' + (v >= m ? ' hit' : ''), 'data-at': num(m), title: 'Milestone ' + num(m) + (v >= m ? ' (reached)' : ''),
       style: 'left:' + Math.max(0, Math.min(100, (m / max) * 100)) + '%' })));
@@ -666,7 +666,10 @@
 
   function actionResult(x) {
     let body;
-    if (x.event && RULE_RESULT[x.event]) body = RULE_RESULT[x.event](x.amount);
+    const turnGauge = x.event ? laneCResult(x) : null;   // idea-pool lane C (#136): pips and gauge, not healing
+    if (x.note) body = x.note;   // a rule's own log line, from strings (rule.<id>.log)
+    else if (x.event && RULE_RESULT[x.event]) body = RULE_RESULT[x.event](x.amount);
+    else if (turnGauge) body = turnGauge;
     else if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
     else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
@@ -677,7 +680,19 @@
     return body + (x.graze ? ' (grazed)' : '') + (x.crit ? ' CRIT' : '') + (x.lucky ? ' · lucky!' : '');
   }
 
-  const FIGHT_LOG_LINES = 6;   // lines shown before "Show all", so Continue fits on a phone screen without scrolling
+  // Lane C's rule events (specs/16 section 6.2): what each amount means, or null for another event.
+  function laneCResult(x) {
+    const n = Math.round(x.amount);
+    switch (x.event) {
+      case 'rule:brave_heart': return n > 0 ? 'Defaults · ' + n + (n === 1 ? ' pip' : ' pips') : 'spends a pip: extra action';
+      case 'rule:one_more': return 'gauge +' + Math.round(x.amount * 100) + '%';
+      case 'rule:guard_break': return x.actor === x.target ? 'broken: loses its action' : n > 0 ? 'guard ' + n + ' left' : 'BREAK!';
+      case 'rule:latent_power': return 'awakens: stats +' + Math.round(x.amount * 100) + '%';
+      default: return null;
+    }
+  }
+
+  const FIGHT_LOG_LINES = 6;  // lines shown before "Show all", so Continue fits on a phone screen without scrolling
   function fightModal(modal, f, s) {
     const you = speciesDef(s.species).name, foe = f.opponent.name;
     modal.append(
@@ -834,12 +849,14 @@
   // also its entropy and next vent, and whether it is in the fight yet (a split phase's adds join later, BRIDGE.md).
   function unitsAt(f, upto) {
     return f.units.map((u, k) => {
-      if (upto === null) return { hp: u.hp, sh: u.shield || 0, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
+      if (upto === null) return { hp: u.hp, sh: u.shield || 0, wd: u.ward || 0, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
       let cd = [];                                 // no action yet: every skill starts ready
       for (let j = upto - 1; j >= 0; j--) if (f.actions[j].actor === u.id) { cd = f.actions[j].cd; break; }
       const x = upto ? f.actions[upto - 1] : null;
       const here = x ? k < x.hp.length : !u.add;
-      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, sh: x && here && x.sh ? x.sh[k] : 0, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
+      // mana_ward's ward before the first logged action is its first entry's (the ward is set at fight start)
+      const wd = x ? (here && x.wd ? x.wd[k] : 0) : (f.actions[0] && f.actions[0].wd ? f.actions[0].wd[k] || 0 : 0);
+      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, sh: x && here && x.sh ? x.sh[k] : 0, wd: wd, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
     });
   }
   const corruptionAt = (f, upto) => (upto === null ? f.corruption : upto ? f.actions[upto - 1].corruption : 0);
@@ -903,7 +920,7 @@
   }
   function paintUnits(refs, now, x, cap) {
     refs.forEach((r, k) => {
-      const hp = now[k].hp, sh = now[k].sh || 0, max = r.u.maxHp;
+      const hp = now[k].hp, sh = now[k].sh || 0, wd = now[k].wd || 0, max = r.u.maxHp;
       r.el.hidden = !now[k].here;
       if (r.float) {   // the stage: the actor lunges, the one hit recoils, and the number floats up (a new node restarts its animation)
         const fl = x && x.target === r.u.id ? floatOf(x) : null;
@@ -916,8 +933,11 @@
       const shEl = r.hpBar.querySelector('.shield'), shown = Math.round(sh) > 0;
       shEl.style.width = (shown ? Math.min(100, (sh / max) * 100) : 0) + '%';
       r.hpBar.classList.toggle('shielded', shown);
-      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max) + (shown ? '  🛡' + Math.round(sh) : '');
-      r.hpBar.title = shown ? 'Shield ' + Math.round(sh) + ': absorbs damage before HP' : '';
+      const warded = Math.round(wd) > 0;   // mana_ward's ward: a pool apart from the shield (specs/16 section 6.2)
+      r.hpBar.classList.toggle('warded', warded);
+      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max) + (shown ? '  🛡' + Math.round(sh) : '') + (warded ? '  ◈' + Math.round(wd) : '');
+      r.hpBar.title = [shown ? 'Shield ' + Math.round(sh) + ': absorbs damage before HP' : '', warded ? 'Ward ' + Math.round(wd) + ': takes a share of each blow after the shield' : '']
+        .filter(Boolean).join('. ');
       if (r.entropy) {
         const en = now[k].en || 0, vent = now[k].vent;
         r.entropy.bar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (en / cap) * 100)) + '%';
@@ -1079,7 +1099,7 @@
       b.growth ? h('span', { class: 'num', text: '▲' + signed(b.growth) }) : null,
       b.flat ? h('span', { class: 'num', text: signed(b.flat) }) : null,
     ]))));
-    const perks = t.nodes.filter((n) => n.last || (n.kind !== 'growth' && n.kind !== 'stat'));
+    const perks = t.nodes.filter((n) => n.last || !isFiller(n));
     card.append(h('div', { class: 'perks' }, perks.map((n) => h('div', { class: 'perk' + (n.last ? ' cap' : '') }, [
       h('span', { class: 'pg', 'aria-hidden': 'true', text: n.last ? '★' : n.kind === 'trigger' ? '⚡' : n.kind === 'rule' ? '◆' : '✦' }),
       h('span', null, [h('b', { text: n.name, ...TIP.attrs('node:' + n.id) }), ' ', h('span', { class: 'muted', text: n.desc.replace(/^Chase trait\.\s*/, '') })]),
@@ -1125,18 +1145,21 @@
     return card;
   }
 
+  // A filler node: growth, flat stat, or keepsake growth (growth_use, specs/15 section 2).
+  const isFiller = (n) => n.kind === 'growth' || n.kind === 'stat' || n.kind === 'growth_use';
+
   // A tree's nodes as a strip of tiles in buy order: stat nodes show their stat (▲ growth, + flat), skills their initials, the
   // capstone a star. Each tile opens its node's tooltip. With `bought` (a slotted tree on the Trees tab, issue #115) the bought
   // tiles are lit, the next one is outlined and the rest dimmed; without it (an offer card) every tile shows plain.
   function nodePath(t, bought) {
     const prog = typeof bought === 'number';
     return h('div', { class: 'npath' + (prog ? ' prog' : ''), 'data-id': 'npath', 'aria-label': t.nodes.length + ' nodes' + (prog ? ', ' + bought + ' bought' : '') }, t.nodes.map((n, j) => {
-      const filler = n.kind === 'growth' || n.kind === 'stat';
+      const filler = isFiller(n);
       const cls = 'nt ' + (n.last ? 'cap' : filler ? 'fill st-' + n.stat : 'sk k-' + n.kind) + (prog ? (j < bought ? ' got' : j === bought ? ' next' : '') : '');
       const face = n.last ? '★' : filler ? up(n.stat) : skillAbbr(n.name);
       return h('span', { class: cls, ...TIP.attrs('node:' + n.id), style: !filler && !n.last ? '--hue:' + (hash(n.name) % 360) : null }, [
         h('span', { class: 'f', text: face }),
-        filler ? h('span', { class: 'm', text: n.kind === 'growth' ? '▲' : '+' }) : null,
+        filler ? h('span', { class: 'm', text: n.kind === 'growth' ? '▲' : n.kind === 'growth_use' ? '⇑' : '+' }) : null,   // ⇑ keepsake growth (grows with use)
       ]);
     }));
   }

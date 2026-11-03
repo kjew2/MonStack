@@ -512,6 +512,166 @@
       "fuse_b": null
     },
     {
+      "id": "resentment",
+      "name_key": "tree.resentment.name",
+      "kind": "generic",
+      "offer_stat": "hp",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "vantage",
+      "name_key": "tree.vantage.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "deaths_door",
+      "name_key": "tree.deaths_door.name",
+      "kind": "generic",
+      "offer_stat": "luk",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "barricade",
+      "name_key": "tree.barricade.name",
+      "kind": "generic",
+      "offer_stat": "def",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "mana_ward",
+      "name_key": "tree.mana_ward.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "brave_heart",
+      "name_key": "tree.brave_heart.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "one_more",
+      "name_key": "tree.one_more.name",
+      "kind": "generic",
+      "offer_stat": "luk",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "guard_break",
+      "name_key": "tree.guard_break.name",
+      "kind": "generic",
+      "offer_stat": "str",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "latent_power",
+      "name_key": "tree.latent_power.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "lone_wolf",
+      "name_key": "tree.lone_wolf.name",
+      "kind": "generic",
+      "offer_stat": "str",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "arise",
+      "name_key": "tree.arise.name",
+      "kind": "generic",
+      "offer_stat": "int",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "last_rite",
+      "name_key": "tree.last_rite.name",
+      "kind": "generic",
+      "offer_stat": "hp",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "mimic_core",
+      "name_key": "tree.mimic_core.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "heirloom",
+      "name_key": "tree.heirloom.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "mastery",
+      "name_key": "tree.mastery.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "limit_break",
+      "name_key": "tree.limit_break.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
       "id": "hemorrhage",
       "name_key": "tree.hemorrhage.name",
       "kind": "generic",

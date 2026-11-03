@@ -156,6 +156,35 @@ namespace IdleRng.Bots.Golden
             Rules = { RuleModifiers.UmbralVeil, RuleModifiers.NightFeast },
         };
 
+        // Idea-pool lane C (#136): the turn-gauge generic capstones, one per carrier.
+        static Fighter Braveheart(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(340, 300, 80, 200, 240, 260, 300, 160),
+            Skills = { Dmg("blitz", StatIds.Spd, 1.5, 2) },
+            Rules = { RuleModifiers.BraveHeart },
+        };
+
+        static Fighter Gambler(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(280, 160, 300, 200, 260, 180, 260, 520),
+            Skills = { Dmg("coin_toss", StatIds.Luk, 2.0, 3, SkillTarget.Enemy, "water") },
+            Rules = { RuleModifiers.OneMore },
+        };
+
+        static Fighter Breaker(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(400, 300, 60, 160, 220, 260, 260, 600),
+            Skills = { Dmg("smash", StatIds.Str, 2.2, 3, SkillTarget.Enemy, "light") },
+            Rules = { RuleModifiers.GuardBreak },
+        };
+
+        static Fighter Latent(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(300, 280, 200, 200, 240, 220, 340, 160),
+            Skills = { Dmg("rush", StatIds.Spd, 1.0, 1, SkillTarget.Enemy, "dark") },
+            Rules = { RuleModifiers.LatentPower },
+        };
+
         public static IEnumerable<Vector> Vectors()
         {
             yield return new Vector("1v1 brawler vs mage", 1, new[] { Brawler("brawler") }, new[] { Mage("mage") });
@@ -190,6 +219,18 @@ namespace IdleRng.Bots.Golden
             // Idea-pool lane A (#134): the conversion capstones against a mixed team.
             yield return new Vector("4v4 conversion capstones", 10,
                 new[] { IronReflexes("a_iron"), Avatar("a_avatar"), FortressFist("a_fortress"), BloodMagic("a_blood") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
+            // Idea-pool lane B (#135): the survival capstones (vantage and deaths_door share a carrier) against a mixed team.
+            yield return new Vector("4v4 survival capstones", 11,
+                new[] { Spiteful("a_spite"), Vantage("a_vantage"), Barricade("a_barricade"), Warded("a_ward") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
+            yield return new Vector("4v2 turn gauge capstones vs boss", 12,
+                new[] { Braveheart("a_brave"), Gambler("a_gambler"), Breaker("a_breaker"), Latent("a_latent") },
+                new[] { Boss("b_boss"), Brawler("b_brawler", "fire") });
+            // Idea-pool lane E (#138): the team and mode capstones; lone_wolf with allies takes its malus, arise raises a fallen
+            // enemy mid-fight, last_rite's carrier falls and feeds its allies.
+            yield return new Vector("4v4 team and mode capstones", 12,
+                new[] { LoneWolf("a_lone"), Arise("a_arise"), LastRite("a_rite"), Brawler("a_brawler", "light") },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
             // Idea-pool lane D (#137): the debuff and lock capstones (Corruption and Dead Branch on one unit) against a mixed team.
             yield return new Vector("4v4 debuff and lock capstones", 11,
@@ -258,6 +299,57 @@ namespace IdleRng.Bots.Golden
             Id = id, Element = "dark", Stats = S(520, 280, 100, 160, 160, 200, 210, 120),
             Skills = { Dmg("body_slam", StatIds.Hp, 0.12, 3) },
             Rules = { RuleModifiers.BloodMagic },
+        };
+
+        // Idea-pool lane B (#135): the survival capstones.
+        static Fighter Spiteful(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(480, 320, 80, 160, 160, 240, 200, 260),
+            Skills = { Dmg("maul", StatIds.Str, 1.6, 2) },
+            Rules = { RuleModifiers.Resentment },
+        };
+
+        static Fighter Vantage(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(280, 340, 80, 140, 260, 180, 340, 160),
+            Skills = { Dmg("rush", StatIds.Spd, 1.2, 2) },
+            Rules = { RuleModifiers.Vantage, RuleModifiers.DeathsDoor },
+        };
+
+        static Fighter Barricade(string id) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(500, 180, 60, 240, 120, 440, 150, 100),
+            Skills = { Fx("bulwark", SkillKind.Shield, SkillTarget.AllAllies, null, StatIds.Def, 0.5, 3, 2), Dmg("bash", StatIds.Def, 0.8, 2) },
+            Rules = { RuleModifiers.Barricade },
+        };
+
+        static Fighter Warded(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(260, 60, 200, 460, 180, 160, 220, 160),
+            Skills = { Dmg("spirit_lash", StatIds.Wis, 1.3, 2), Dmg("mind_storm", StatIds.Wis, 0.7, 4, SkillTarget.AllEnemies) },
+            Rules = { RuleModifiers.ManaWard },
+        };
+
+        // Idea-pool lane E (#138): the team and mode capstones.
+        static Fighter LoneWolf(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(360, 420, 80, 160, 220, 220, 250, 180),
+            Skills = { Dmg("rend", StatIds.Str, 1.4, 2) },
+            Rules = { RuleModifiers.LoneWolf },
+        };
+
+        static Fighter Arise(string id) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(340, 60, 700, 260, 180, 180, 330, 160),
+            Skills = { Dmg("echo_bolt", StatIds.Int, 1.4, 2), Dmg("grave_wave", StatIds.Int, 0.8, 4, SkillTarget.AllEnemies) },
+            Rules = { RuleModifiers.Arise },
+        };
+
+        static Fighter LastRite(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(60, 300, 80, 60, 100, 60, 200, 120),
+            Skills = { Fx("second_wind", SkillKind.Heal, SkillTarget.Self, null, StatIds.Hp, 0.25, 5, 0), Dmg("maul", StatIds.Str, 1.5, 2) },
+            Rules = { RuleModifiers.LastRite },
         };
 
         /// <summary>The fighter with a gambit rulebook (specs/28 section 4).</summary>

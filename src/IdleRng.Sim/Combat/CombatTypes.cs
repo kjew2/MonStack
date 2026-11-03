@@ -627,6 +627,81 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string BloodMagic = "blood_magic";
 
+        // ---- idea-pool lane B: hits taken and survival (#135, specs/16 section 6.2)
+
+        /// <summary>MON_RESENT_FRAC of the HP damage enemies deal the unit goes into a red pool, a flat STR bonus; each own action removes MON_RESENT_DECAY of it.</summary>
+        public const string Resentment = "resentment";
+
+        /// <summary>Below MON_VANTAGE_HP of max HP, the unit basic-attacks an enemy that aims a single-target damaging action at it, first (cancelling the action if that kills).</summary>
+        public const string Vantage = "vantage";
+
+        /// <summary>Once per fight a killing blow leaves the unit at 1 HP on Death's Door; later killing blows are survived with a falling chance.</summary>
+        public const string DeathsDoor = "deaths_door";
+
+        /// <summary>The unit's shields never expire and stack up to MON_BARRICADE_CAP of max HP.</summary>
+        public const string Barricade = "barricade";
+
+        /// <summary>A ward of MON_WARD_WIS x WIS takes MON_WARD_SHARE of each blow's HP damage; while it holds, cooldowns tick MON_WARD_CDR faster.</summary>
+        public const string ManaWard = "mana_ward";
+
+        // Idea-pool lane C (#136): turn-gauge rules, coded in Combat/Rules/LaneC.cs.
+
+        /// <summary>
+        /// When the unit's turn comes at full HP or with a shield and it holds fewer than MON_BRAVE_MAX pips, it Defaults: no action,
+        /// +1 pip, MON_BRAVE_GUARD less hit damage until its next turn. Otherwise it acts, then spends its pips as extra actions in a
+        /// row (under MON_EXTRA_ACTIONS_CAP; the rest wait). The Brave Heart generic capstone.
+        /// </summary>
+        public const string BraveHeart = "brave_heart";
+
+        /// <summary>
+        /// A crit or a strong-element hit by the unit refunds MON_ONE_MORE of a full gauge, once per action, never past a full gauge.
+        /// The One More generic capstone.
+        /// </summary>
+        public const string OneMore = "one_more";
+
+        /// <summary>
+        /// Each enemy of the unit has MON_BREAK_PIPS guard pips; the unit's crits and strong-element hits strip one. At 0 the enemy
+        /// loses its next action and takes x(1 + MON_BREAK_BONUS) hit damage until it acts again; then its pips refill. The Guard
+        /// Break generic capstone.
+        /// </summary>
+        public const string GuardBreak = "guard_break";
+
+        /// <summary>
+        /// After the unit's MON_LATENT_ACTIONS-th action, its stats but HP rise by MON_LATENT_BONUS (of base) for the rest of the
+        /// fight. The Latent Power generic capstone.
+        /// </summary>
+        public const string LatentPower = "latent_power";
+        // ---- idea-pool lane E: team size and mode (#138, specs/16 section 6.2)
+
+        /// <summary>Decided at fight start: alone on its side, all the unit's stats rise by MON_LONE_BONUS; with allies they fall by MON_LONE_MALUS.</summary>
+        public const string LoneWolf = "lone_wolf";
+
+        /// <summary>Once per fight, the first enemy the unit kills (not the last) rises on its side at MON_ARISE_STATS of its stats, with its skills and no rules.</summary>
+        public const string Arise = "arise";
+
+        /// <summary>When the unit dies, its living allies split MON_RITE_SHARE of its base stats for the rest of the fight.</summary>
+        public const string LastRite = "last_rite";
+
+        // Idea-pool lane F (#139): run rules. They change how the monster is built in a training run (TrainingRun, Rules/LaneF.cs),
+        // not the fight: in the fight kit they do nothing.
+
+        /// <summary>
+        /// The monster's kit also gets the capstone node of the tree in the slot just before this tree's, bought or not, while it
+        /// stays there (none in slot 0; chase and fusion capstones are never copied). The Mimic Core generic capstone.
+        /// </summary>
+        public const string MimicCore = "mimic_core";
+
+        /// <summary>Doubles KEEPSAKE_STEP for the run's growth_use nodes. The Heirloom generic capstone.</summary>
+        public const string Heirloom = "heirloom";
+
+        /// <summary>
+        /// A slotted tree with its capstone bought that wins MASTERY_WINS rank fights while this is held becomes mastered: when it
+        /// is overwritten its capstone node stays in the kit, last. The Mastery generic capstone.
+        /// </summary>
+        public const string Mastery = "mastery";
+
+        /// <summary>The tree's own stat may rise past STAT_MAX up to LIMIT_BREAK_MAX. The Limit Break generic capstone.</summary>
+        public const string LimitBreak = "limit_break";
         // Idea-pool lane D (#137): debuffs, stacking and skill locks, coded in Combat/Rules/LaneD.cs.
 
         /// <summary>
@@ -662,6 +737,10 @@ namespace IdleRng.Sim.Combat
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
+            Resentment, Vantage, DeathsDoor, Barricade, ManaWard,
+            BraveHeart, OneMore, GuardBreak, LatentPower,
+            LoneWolf, Arise, LastRite,
+            MimicCore, Heirloom, Mastery, LimitBreak,
             Hemorrhage, PrivilegedStatus, Equilibrium, Corruption, DeadBranch };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
