@@ -128,3 +128,6 @@ knell,mskill.knell.name,damage,all_enemies,,wis,0.8,3,0,dark
 hour_hand,mskill.hour_hand.name,damage,enemy,,wis,1.6,4,0,dark
 second_hand,mskill.second_hand.name,damage,enemy,,wis,0.3,0,0,dark
 chime_cascade,mskill.chime_cascade.name,damage,all_enemies,,wis,1.0,4,0,dark
+hammer_tap,mskill.hammer_tap.name,damage,enemy,,str,1.0,1,0,fire
+slag_hammer,mskill.slag_hammer.name,damage,enemy,,str,1.8,3,0,fire
+anvilfall,mskill.anvilfall.name,damage,all_enemies,,str,1.0,4,0,fire

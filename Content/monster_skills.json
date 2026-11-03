@@ -1548,6 +1548,42 @@
       "cooldown": 4,
       "duration": 0,
       "element": "dark"
+    },
+    {
+      "id": "hammer_tap",
+      "name_key": "mskill.hammer_tap.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "str",
+      "power": 1.0,
+      "cooldown": 1,
+      "duration": 0,
+      "element": "fire"
+    },
+    {
+      "id": "slag_hammer",
+      "name_key": "mskill.slag_hammer.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "str",
+      "power": 1.8,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "fire"
+    },
+    {
+      "id": "anvilfall",
+      "name_key": "mskill.anvilfall.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "str",
+      "power": 1.0,
+      "cooldown": 4,
+      "duration": 0,
+      "element": "fire"
     }
   ]
 }

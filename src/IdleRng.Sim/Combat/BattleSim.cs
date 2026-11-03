@@ -781,6 +781,13 @@ namespace IdleRng.Sim.Combat
                 if (crit) raw *= CritMult(r, Eff(r, src, StatIds.Dex), Bonus(src, StatIds.CritDmg));
             }
             h.Graze = graze; h.Crit = crit;
+            HookCritRolled(ctx, h);   // anvil_rhythm: a counted hit may become a sure crit (never a graze; no draw)
+            if (h.Crit && !crit && !graze)
+            {
+                crit = true;
+                raw *= CritMult(r, Eff(r, src, StatIds.Dex), Bonus(src, StatIds.CritDmg));
+            }
+            h.Crit = crit;
             landed = true;
             bool pierce = element == RuleModifiers.FireElement && Has(src, RuleModifiers.FirePierce);
             double elementMult = ClearSpringMult(ctx, src, tgt, element, r.ElementMult(element, tgt.Source.Element));

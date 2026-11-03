@@ -3401,6 +3401,94 @@
     {
       "key": "mskill.chime_cascade.desc",
       "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "species.anvil_ape.name",
+      "text": "Anvil Ape"
+    },
+    {
+      "key": "tree.ringing_anvil.name",
+      "text": "Ringing Anvil"
+    },
+    {
+      "key": "tree.brittle_quench.name",
+      "text": "Brittle Quench"
+    },
+    {
+      "key": "tree.shatterpoint.name",
+      "text": "Shatterpoint"
+    },
+    {
+      "key": "tree.brittle_quench.apex",
+      "text": "Slagglass Titan"
+    },
+    {
+      "key": "tree.shatterpoint.apex",
+      "text": "Worldsmith Silverback"
+    },
+    {
+      "key": "achievement.heavy_hands.name",
+      "text": "Heavy Hands"
+    },
+    {
+      "key": "rule.anvil_rhythm.name",
+      "text": "Smith's Rhythm"
+    },
+    {
+      "key": "rule.anvil_rhythm.desc",
+      "text": "It counts the hits it lands: every {MON_RHYTHM_HITS}th is a crit. Evaded hits do not count; a graze cannot crit, so the next hit that lands takes the crit."
+    },
+    {
+      "key": "rule.anvil_rhythm.log",
+      "text": "hit {amount} rings true: a sure crit"
+    },
+    {
+      "key": "rule.brittle_guard.name",
+      "text": "Brittle Quench"
+    },
+    {
+      "key": "rule.brittle_guard.desc",
+      "text": "Each time an enemy's guard breaks, its pips refill {MON_BRITTLE_STEP} fewer than last time, down to {MON_BRITTLE_MIN}. Does nothing without Guard Break."
+    },
+    {
+      "key": "rule.brittle_guard.log",
+      "text": "the guard turns brittle: {amount} pips next time"
+    },
+    {
+      "key": "rule.shatterpoint.name",
+      "text": "Shatterpoint"
+    },
+    {
+      "key": "rule.shatterpoint.desc",
+      "text": "Its hit on a broken enemy that leaves it at or below {MON_SHATTER_FRAC:pct} HP shatters it: it dies at once, and every other enemy loses {MON_SHATTER_SHARDS} guard pips. A boss never shatters: it takes {MON_SHATTER_BOSS:pct} of its max HP as damage instead, once per break."
+    },
+    {
+      "key": "rule.shatterpoint.log",
+      "text": "{amount} HP shattered off"
+    },
+    {
+      "key": "mskill.hammer_tap.name",
+      "text": "Hammer Tap"
+    },
+    {
+      "key": "mskill.hammer_tap.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.slag_hammer.name",
+      "text": "Slag Hammer"
+    },
+    {
+      "key": "mskill.slag_hammer.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.anvilfall.name",
+      "text": "Anvilfall"
+    },
+    {
+      "key": "mskill.anvilfall.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
     }
   ]
 }

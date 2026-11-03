@@ -849,3 +849,25 @@ mskill.second_hand.name,Second Hand
 mskill.second_hand.desc,Book trait. On evade: strike back for {power:pct} {scales}.
 mskill.chime_cascade.name,Chime Cascade
 mskill.chime_cascade.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+species.anvil_ape.name,Anvil Ape
+tree.ringing_anvil.name,Ringing Anvil
+tree.brittle_quench.name,Brittle Quench
+tree.shatterpoint.name,Shatterpoint
+tree.brittle_quench.apex,Slagglass Titan
+tree.shatterpoint.apex,Worldsmith Silverback
+achievement.heavy_hands.name,Heavy Hands
+rule.anvil_rhythm.name,Smith's Rhythm
+rule.anvil_rhythm.desc,"It counts the hits it lands: every {MON_RHYTHM_HITS}th is a crit. Evaded hits do not count; a graze cannot crit, so the next hit that lands takes the crit."
+rule.anvil_rhythm.log,hit {amount} rings true: a sure crit
+rule.brittle_guard.name,Brittle Quench
+rule.brittle_guard.desc,"Each time an enemy's guard breaks, its pips refill {MON_BRITTLE_STEP} fewer than last time, down to {MON_BRITTLE_MIN}. Does nothing without Guard Break."
+rule.brittle_guard.log,the guard turns brittle: {amount} pips next time
+rule.shatterpoint.name,Shatterpoint
+rule.shatterpoint.desc,"Its hit on a broken enemy that leaves it at or below {MON_SHATTER_FRAC:pct} HP shatters it: it dies at once, and every other enemy loses {MON_SHATTER_SHARDS} guard pips. A boss never shatters: it takes {MON_SHATTER_BOSS:pct} of its max HP as damage instead, once per break."
+rule.shatterpoint.log,{amount} HP shattered off
+mskill.hammer_tap.name,Hammer Tap
+mskill.hammer_tap.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.slag_hammer.name,Slag Hammer
+mskill.slag_hammer.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.anvilfall.name,Anvilfall
+mskill.anvilfall.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.

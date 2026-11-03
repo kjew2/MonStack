@@ -5,7 +5,7 @@
   "tables": {
     "achievements": {
       "file": "achievements.json",
-      "sha256": "dd118baaba16066bb40bd936de44a7c33a82eda56fe360f83ab58329432d57f9"
+      "sha256": "fae394617c33bdf2622418446b3c95c5329037bb8b3ac4af40c082b48988df11"
     },
     "book_drops": {
       "file": "book_drops.json",
@@ -17,11 +17,11 @@
     },
     "chase_conditions": {
       "file": "chase_conditions.json",
-      "sha256": "773934db9246e94e13c690f6e04e4f1249055f8e3561aa90003a598a3040a60f"
+      "sha256": "21e0351d788730c57561a0f451e248e3c0efb1532e2a9d84dbc86d275e57b679"
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "51bf1958604cb2c8fa2e429b6bdea02516ba96610cffb64cb3831701dd7273fc"
+      "sha256": "5f97d12cb2a6be9087c46a65d55a07f738517ad0ee5371d852d67642ce694538"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -53,7 +53,7 @@
     },
     "monster_skills": {
       "file": "monster_skills.json",
-      "sha256": "3b2b78c7f58cb814f996a9411b18384f5c5b877c7abba0b4d632474cc36aa038"
+      "sha256": "8859d4ede8377273964b97f34b50e7baa2ca2c67909c89857f155f6ccec4a500"
     },
     "mutators": {
       "file": "mutators.json",
@@ -69,7 +69,7 @@
     },
     "species": {
       "file": "species.json",
-      "sha256": "fc71b58a50cb12c4c6c732e78d45c126a8a509047a6434866f54ea64f425fcc1"
+      "sha256": "d662f222b193766cb112d79b6f90e6711849faf277d45c473f66d74561d748a3"
     },
     "stat_milestones": {
       "file": "stat_milestones.json",
@@ -77,7 +77,7 @@
     },
     "strings": {
       "file": "strings.json",
-      "sha256": "965216c6e64216a9d0baeb79660a4e3f32dc2f9558fc2bcee59fd73feeb3b656"
+      "sha256": "f2c879f84902ca70298247f2b516d4eca26291ef08d49950b5503ed692105f57"
     },
     "talents": {
       "file": "talents.json",
@@ -89,16 +89,16 @@
     },
     "tree_nodes": {
       "file": "tree_nodes.json",
-      "sha256": "806037dc4b661d6996ac6f8e9da79f9bc9f1ab18a177a6871ef3d5939044e3c8"
+      "sha256": "bc51408e074598403eaaa6954e7af4aaababc1a3d1066b69c4c9fcb7e0533d87"
     },
     "trees": {
       "file": "trees.json",
-      "sha256": "ed9b4fe0c8eb236f8dc7e0b73c07b425a133a9c593ec9bc46cc50db4e0bb600c"
+      "sha256": "5315cb5f489def1f494051d398a14c44f0364680f12d1190fc42035f97f36f77"
     },
     "vendor_rarities": {
       "file": "vendor_rarities.json",
       "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "588f8358bb71f0c6e805a783b4c69b9b44b7969d2052856c462a44394e9a833f"
+  "content_hash": "245158a8341378db6ce5c9d20fd1775715c63a59710d1016f5e8a273aecfa6d2"
 }

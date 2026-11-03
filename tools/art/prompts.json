@@ -60,6 +60,10 @@
   "gearbell_jelly": {
    "name": "Gearbell Jelly",
    "prompt": "A small floating moon jellyfish creature in deep indigo and violet. Its translucent bell is a glowing mana barrier, and tiny luminous rune gears turn slowly inside it like clockwork. Soft trailing tentacles drift beneath it, tipped with faint violet light. Big gentle glowing eyes inside the bell. Cute, calm and a little mysterious, a dark-element monster."
+  },
+  "anvil_ape": {
+   "name": "Anvil Ape",
+   "prompt": "A hulking silverback gorilla monster with molten orange cracks glowing through its dark hide and heavy iron hammer fists. It brings one fist down on a round shield, smashing it into glowing cracked shards that fly apart. A smith whose blows shatter any defence: powerful, heavy and fierce, a fire-element monster."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -184,6 +188,16 @@
    "species": "gearbell_jelly",
    "name": "Orrery Moonbell",
    "prompt": "the jelly has become a vast moon-like bell of pale silver glass, holding a slowly turning orrery of brass rune gears and tiny glowing planets inside, a glowing clock face showing through the crown, tentacles frozen mid-drift as if time stopped. Colour palette shifts from violet to pale silver, moonlight white and brass."
+  },
+  "brittle_quench": {
+   "species": "anvil_ape",
+   "name": "Slagglass Titan",
+   "prompt": "a hulking silverback whose molten cracks have cooled into black volcanic glass plates, steam pouring off its quenched hammer fists."
+  },
+  "shatterpoint": {
+   "species": "anvil_ape",
+   "name": "Worldsmith Silverback",
+   "prompt": "a colossal ape of white-hot iron and cooling slag, its back a smoking forge with a chimney spine, one fist a sledgehammer and the other gripping an anvil, ringed by broken-shield shards."
   }
  }
 }

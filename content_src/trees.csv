@@ -57,7 +57,7 @@ barricade,tree.barricade.name,generic,def,400,,,,idea-pool lane B (#135): Slay t
 mana_ward,tree.mana_ward.name,native,,,,,,"idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery; Gearbell Jelly's native tree 1 (#158, kj 2026-11-03)"
 brave_heart,tree.brave_heart.name,generic,spd,400,,,,idea-pool lane C (#136): Bravely Default Brave/Default
 one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
-guard_break,tree.guard_break.name,generic,str,400,,,,idea-pool lane C (#136): Octopath Break
+guard_break,tree.guard_break.name,native,,,,,,"idea-pool lane C (#136): Octopath Break; native-only, Anvil Ape's native tree 1 (#153, kj 2026-11-03)"
 latent_power,tree.latent_power.name,generic,spd,400,,,,idea-pool lane C (#136): MH Latent Power
 lone_wolf,tree.lone_wolf.name,generic,str,400,,,,idea-pool lane E (#138): Divinity Original Sin 2 Lone Wolf
 arise,tree.arise.name,generic,int,400,,,,idea-pool lane E (#138): Solo Leveling Shadow Extraction
@@ -106,3 +106,6 @@ rune_gearwork,tree.rune_gearwork.name,native,,,,,,gearbell jelly native tree 2 (
 still_hours_codex,tree.still_hours_codex.name,book,,,,,,gearbell jelly's book tree (Perpetual Escapement)
 carillon,tree.carillon.name,chase,,,tree.carillon.apex,,,gearbell jelly in-run chase tree
 perpetual_escapement,tree.perpetual_escapement.name,chase,,,tree.perpetual_escapement.apex,,,gearbell jelly book-gated chase tree
+ringing_anvil,tree.ringing_anvil.name,native,,,,,,anvil ape native tree 2 (#153): the trigger supplier of Guard Break
+brittle_quench,tree.brittle_quench.name,chase,,,tree.brittle_quench.apex,,,anvil ape in-run chase tree
+shatterpoint,tree.shatterpoint.name,chase,,,tree.shatterpoint.apex,,,anvil ape harder in-run second chase tree (no book)

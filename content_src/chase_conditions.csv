@@ -73,3 +73,10 @@ carillon_c2,carillon,tally_at_least,wins,2
 perpetual_escapement_c0,perpetual_escapement,node_owned,still_hours_codex_n0,
 perpetual_escapement_c1,perpetual_escapement,node_owned,rune_gearwork_n4,
 perpetual_escapement_c2,perpetual_escapement,tally_at_least,evades,2
+brittle_quench_c0,brittle_quench,tree_maxed,guard_break,
+brittle_quench_c1,brittle_quench,stat_at_least,str,500
+brittle_quench_c2,brittle_quench,tally_at_least,crits,4
+shatterpoint_c0,shatterpoint,tree_maxed,guard_break,
+shatterpoint_c1,shatterpoint,tree_maxed,ringing_anvil,
+shatterpoint_c2,shatterpoint,stat_at_least,str,650
+shatterpoint_c3,shatterpoint,tally_at_least,crits,4

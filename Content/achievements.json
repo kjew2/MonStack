@@ -96,6 +96,14 @@
       "ref": "wis",
       "amount": 600.0,
       "unlocks_species": "gearbell_jelly"
+    },
+    {
+      "id": "heavy_hands",
+      "name_key": "achievement.heavy_hands.name",
+      "kind": "stat_reached",
+      "ref": "str",
+      "amount": 650.0,
+      "unlocks_species": "anvil_ape"
     }
   ]
 }

@@ -117,13 +117,25 @@ namespace IdleRng.Sim.Combat
                     c.Log?.Invoke(new FightAction(src.Id, OneMoreEvent, src.Id, refund / r.GaugeSize));
                 }
             }
-            if (guardBreak && tgt.Alive && tgt.Side != src.Side && tgt.BreakState == BreakNone)
-            {
-                tgt.BreakStripped++;
-                int left = Math.Max(0, r.BreakPips - tgt.BreakStripped);
-                if (left == 0) tgt.BreakState = BreakBroken;
-                c.Log?.Invoke(new FightAction(src.Id, BreakEvent, tgt.Id, left));
-            }
+            if (guardBreak && tgt.Alive && tgt.Side != src.Side) StripPips(c, src, tgt, 1);
+        }
+
+        /// <summary>guard_break: the pips this unit's guard has when full (MON_BREAK_PIPS, fewer after brittle_guard breaks).</summary>
+        static int PipsOf(FightRules r, FightUnit u) => u.BreakCap > 0 ? u.BreakCap : r.BreakPips;
+
+        /// <summary>
+        /// guard_break: <paramref name="n"/> pips stripped from a living, unbroken enemy by src (a hit, or shatterpoint's shards); at 0 it
+        /// breaks and the GuardBroke hook runs. Logged once with the pips left.
+        /// </summary>
+        static void StripPips(RuleCtx c, FightUnit src, FightUnit tgt, int n)
+        {
+            if (n <= 0 || !tgt.Alive || tgt.BreakState != BreakNone) return;
+            tgt.BreakStripped += n;
+            int left = Math.Max(0, PipsOf(c.Rules, tgt) - tgt.BreakStripped);
+            c.Log?.Invoke(new FightAction(src.Id, BreakEvent, tgt.Id, left));
+            if (left > 0) return;
+            tgt.BreakState = BreakBroken;
+            HookGuardBroke(c, src, tgt);
         }
 
         static partial void HashUnit_C(CanonicalWriter w, FightState s, FightUnit u)

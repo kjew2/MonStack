@@ -883,6 +883,27 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string FoundlingEgg = "foundling_egg";
 
+        // Species Anvil Ape (#153): coded in Combat/Rules/AnvilApe.cs; its native tree 1 carries lane C's guard_break.
+
+        /// <summary>
+        /// Every MON_RHYTHM_HITS-th hit the unit lands is a crit (evaded hits do not count; a graze cannot crit, so it waits for the
+        /// next landed hit). No draw. The Ringing Anvil native capstone (Anvil Ape).
+        /// </summary>
+        public const string AnvilRhythm = "anvil_rhythm";
+
+        /// <summary>
+        /// Each time an enemy's guard_break guard breaks, its pips refill MON_BRITTLE_STEP fewer than last time, down to MON_BRITTLE_MIN
+        /// (shared by every carrier on the side). The Brittle Quench in-run chase capstone (Anvil Ape).
+        /// </summary>
+        public const string BrittleGuard = "brittle_guard";
+
+        /// <summary>
+        /// The unit's hit on a broken enemy that leaves it at or below MON_SHATTER_FRAC of max HP kills it at once, and every other
+        /// living enemy loses MON_SHATTER_SHARDS guard pips (a shard break is not a shatter). A boss takes MON_SHATTER_BOSS of its max
+        /// HP instead, once per break. The Shatterpoint harder in-run chase capstone (Anvil Ape).
+        /// </summary>
+        public const string Shatterpoint = "shatterpoint";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
@@ -898,7 +919,8 @@ namespace IdleRng.Sim.Combat
             TideMoat, Unbreached, Shellcrack,
             IaiDraw, StillHunt, SeverArt,
             StolenTurn, Usurp, FoundlingEgg,
-            WardRewind, WardToll, Escapement };
+            WardRewind, WardToll, Escapement,
+            AnvilRhythm, BrittleGuard, Shatterpoint };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }
