@@ -185,6 +185,19 @@ MON_MOAT_DEF,double,0.8,"tide_moat rule: against magical hits the unit mitigates
 MON_WALL_DEF,double,0.25,"unbreached rule: a hit on the unit that would deal at most this x its DEF (its wall, after mitigation and crit, before shields) deals 0. Placeholder"
 MON_WALL_ERODE,double,0.05,"unbreached rule: each blocked hit lowers the wall by this fraction of its starting value, so the walls always fall. Placeholder"
 MON_CRACK_DEF,double,0.8,"shellcrack rule: the unit's physical hits ignore the target's DEF and add this x the target's DEF to the raw damage. Placeholder"
+MON_IAI_BONUS,double,0.5,iai_draw rule: every hit the unit makes outside its own action (Vantage counters; on_hit_taken and on_evade effects) deals x(1 + this). Placeholder
+MON_IAI_CRIT,double,0.2,iai_draw rule: crit rate added to those out-of-turn hits. Placeholder
+MON_HUNT_WAITS,int,2,"still_hunt rule: the unit waits on up to this many turns in a row, then acts (whole number, at least 1). Placeholder"
+MON_HUNT_KEEP,double,0.75,"still_hunt rule: the share of BATTLE_GAUGE a wait gives back (a wait pays the rest). Placeholder"
+MON_SEVER_FRAC,double,0.08,sever_art rule: a Vantage counter dealing at least this fraction of the enemy's max HP cuts off the action it answers. Placeholder
+MON_SEVER_DMG,double,0.1,sever_art rule: damage bonus against an enemy per action of it cut off. Placeholder
+MON_SEVER_MAX,int,4,"sever_art rule: cut-off actions that add damage, per enemy (whole number, at least 0). Placeholder"
+MON_STEAL_GAUGE,double,0.5,"stolen_turn rule: when an enemy's turn comes and the unit's gauge is at least this fraction of full, the unit acts in its place (the enemy loses the turn, the unit's gauge drops to 0). Placeholder"
+MON_STEALS_PER_FOE,int,1,stolen_turn rule: turns the unit may steal from each enemy per fight (whole number >= 1). Placeholder
+MON_USURP_STEALS,int,2,"usurp rule: turns a usurp carrier may steal from each enemy per fight, when more than MON_STEALS_PER_FOE (whole number >= 1). Placeholder"
+MON_EGG_HP,double,0.3,foundling_egg rule: the egg laid at fight start has this fraction of the unit's max HP. Placeholder
+MON_HATCH_ACTIONS,int,3,foundling_egg rule: the egg hatches after this many of the unit's own actions (whole number >= 1). Placeholder
+MON_HATCH_STATS,double,0.5,"foundling_egg rule: the Foundling hatches with this fraction of the unit's trained stats (max HP too). Placeholder"
 MON_REWIND_WIS,double,0.2,"ward_rewind rule: each active skill with a cooldown of 2 or more it casts restores this x WIS of its mana_ward ward, up to the ward's full size (a broken ward re-forms). Placeholder"
 MON_TOLL_DMG,double,1.0,"ward_toll rule: when its ward breaks it deals this x the ward's full size as dark magical damage to every living enemy (WIS mitigates, can graze, never crits). Placeholder"
 MON_TOLL_SHARE,double,0.6,"ward_toll rule: its ward takes the larger of MON_WARD_SHARE and this share of each blow's HP damage, so the bell breaks and tolls (#158). Placeholder"

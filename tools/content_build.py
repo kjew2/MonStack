@@ -119,6 +119,11 @@ REQUIRED_CONSTANTS = {
     "MON_EMBER_FLOOR": "double",
     # species Keepshell Crab (#152), tide_moat, unbreached and shellcrack (specs/16 section 6.2)
     "MON_MOAT_DEF": "double", "MON_WALL_DEF": "double", "MON_WALL_ERODE": "double", "MON_CRACK_DEF": "double",
+    # species Iaido Mantis (#159): iai_draw, still_hunt, sever_art
+    "MON_IAI_BONUS": "double", "MON_IAI_CRIT": "double", "MON_HUNT_WAITS": "int", "MON_HUNT_KEEP": "double",
+    "MON_SEVER_FRAC": "double", "MON_SEVER_DMG": "double", "MON_SEVER_MAX": "int",
+    # species Cuckling (#143): stolen_turn, foundling_egg
+    "MON_STEAL_GAUGE": "double", "MON_STEALS_PER_FOE": "int", "MON_USURP_STEALS": "int", "MON_EGG_HP": "double", "MON_HATCH_ACTIONS": "int", "MON_HATCH_STATS": "double",
     # species Gearbell Jelly (#158), ward_rewind, ward_toll and escapement (specs/16 section 6.2)
     "MON_REWIND_WIS": "double", "MON_TOLL_DMG": "double", "MON_TOLL_SHARE": "double", "MON_TOLL_REFORM": "double", "MON_TOLL_DELAY": "int", "MON_TOLL_MAX": "int",
     "MON_ESCAPE_POWER": "double",
@@ -152,6 +157,10 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal",
             # species Keepshell Crab (#152)
             "tide_moat", "unbreached", "shellcrack",
+            # species Iaido Mantis (#159)
+            "iai_draw", "still_hunt", "sever_art",
+            # species Cuckling (#143)
+            "stolen_turn", "usurp", "foundling_egg",
             # species Gearbell Jelly (#158), coded in Combat/Rules/GearbellJelly.cs
             "ward_rewind", "ward_toll", "escapement"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
@@ -257,6 +266,16 @@ MON_RANGES = {
     # species Keepshell Crab (#152): the walls must always fall, so the erosion is never 0
     "MON_MOAT_DEF": (">= 0", lambda v: v >= 0), "MON_WALL_DEF": (">= 0", lambda v: v >= 0),
     "MON_WALL_ERODE": ("(0, 1]", lambda v: 0 < v <= 1), "MON_CRACK_DEF": (">= 0", lambda v: v >= 0),
+    # species Iaido Mantis (#159)
+    "MON_IAI_BONUS": (">= 0", lambda v: v >= 0), "MON_IAI_CRIT": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_HUNT_WAITS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1), "MON_HUNT_KEEP": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_SEVER_FRAC": ("(0, 1]", lambda v: 0 < v <= 1), "MON_SEVER_DMG": (">= 0", lambda v: v >= 0),
+    "MON_SEVER_MAX": ("a whole number >= 0", lambda v: v == int(v) and v >= 0),
+    # species Cuckling (#143)
+    "MON_STEAL_GAUGE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_STEALS_PER_FOE": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
+    "MON_USURP_STEALS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
+    "MON_EGG_HP": ("(0, 1]", lambda v: 0 < v <= 1), "MON_HATCH_ACTIONS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
+    "MON_HATCH_STATS": ("(0, 1]", lambda v: 0 < v <= 1),
     # species Gearbell Jelly (#158)
     "MON_REWIND_WIS": (">= 0", lambda v: v >= 0), "MON_TOLL_DMG": (">= 0", lambda v: v >= 0),
     "MON_TOLL_REFORM": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_SHARE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_DELAY": (">= 0", lambda v: v >= 0),

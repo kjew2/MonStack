@@ -2440,7 +2440,7 @@
     },
     {
       "key": "tree.mimic_core.name",
-      "text": "Mimic Core"
+      "text": "Brood Nest"
     },
     {
       "key": "tree.heirloom.name",
@@ -3069,6 +3069,226 @@
     {
       "key": "mskill.trophy_wall.desc",
       "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "species.iaido_mantis.name",
+      "text": "Iaido Mantis"
+    },
+    {
+      "key": "tree.leaf_scabbard.name",
+      "text": "Leaf Scabbard"
+    },
+    {
+      "key": "tree.unseen_blade.name",
+      "text": "Scroll of the Unseen Blade"
+    },
+    {
+      "key": "tree.still_hunt.name",
+      "text": "Still Hunt"
+    },
+    {
+      "key": "tree.severed_arts.name",
+      "text": "Severed Arts"
+    },
+    {
+      "key": "tree.still_hunt.apex",
+      "text": "Ghost Orchid Reaper"
+    },
+    {
+      "key": "tree.severed_arts.apex",
+      "text": "Thousand-Petal Kensei"
+    },
+    {
+      "key": "book.book_unseen.name",
+      "text": "Skill Book: Scroll of the Unseen Blade"
+    },
+    {
+      "key": "achievement.quickdraw.name",
+      "text": "Quickdraw"
+    },
+    {
+      "key": "rule.iai_draw.name",
+      "text": "Iai"
+    },
+    {
+      "key": "rule.iai_draw.desc",
+      "text": "Every hit it makes outside its own turn (Vantage counters, when-hit and when-evading effects) deals +{MON_IAI_BONUS:pct} damage with +{MON_IAI_CRIT:pct} crit rate."
+    },
+    {
+      "key": "rule.iai_draw.log",
+      "text": "draws: +{amount} damage"
+    },
+    {
+      "key": "rule.still_hunt.name",
+      "text": "Still Hunt"
+    },
+    {
+      "key": "rule.still_hunt.desc",
+      "text": "When its turn comes it waits instead, up to {MON_HUNT_WAITS} turns in a row; each wait gives back {MON_HUNT_KEEP:pct} of a turn's gauge. Until its next turn Vantage answers at any HP and also answers area attacks. Waiting does not ready skills."
+    },
+    {
+      "key": "rule.still_hunt.log",
+      "text": "waits motionless ({amount} in a row)"
+    },
+    {
+      "key": "rule.sever_art.name",
+      "text": "Severed Arts"
+    },
+    {
+      "key": "rule.sever_art.desc",
+      "text": "A Vantage counter that deals at least {MON_SEVER_FRAC:pct} of the enemy's max HP cuts off the move it answers: it deals and applies nothing, and the skill still goes on cooldown. Each move cut off adds +{MON_SEVER_DMG:pct} damage against that enemy, up to {MON_SEVER_MAX} cuts."
+    },
+    {
+      "key": "rule.sever_art.log",
+      "text": "cuts the move off ({amount} cut)"
+    },
+    {
+      "key": "mskill.draw_cut.name",
+      "text": "Draw Cut"
+    },
+    {
+      "key": "mskill.draw_cut.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.crescent_draw.name",
+      "text": "Crescent Draw"
+    },
+    {
+      "key": "mskill.crescent_draw.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.blade_echo.name",
+      "text": "Blade Echo"
+    },
+    {
+      "key": "mskill.blade_echo.desc",
+      "text": "Chase trait. When hit: strike back for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.petal_veil.name",
+      "text": "Petal Veil"
+    },
+    {
+      "key": "mskill.petal_veil.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.iai_parry.name",
+      "text": "Iai Parry"
+    },
+    {
+      "key": "mskill.iai_parry.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "species.cuckling.name",
+      "text": "Cuckling"
+    },
+    {
+      "key": "tree.nest_thief.name",
+      "text": "Nest Thief"
+    },
+    {
+      "key": "tree.foundling_ledger.name",
+      "text": "The Foundling's Ledger"
+    },
+    {
+      "key": "tree.usurper_cuckoo.name",
+      "text": "Usurped Nest"
+    },
+    {
+      "key": "tree.clutch_empress.name",
+      "text": "Clutch Throne"
+    },
+    {
+      "key": "tree.usurper_cuckoo.apex",
+      "text": "Usurper Cuckoo"
+    },
+    {
+      "key": "tree.clutch_empress.apex",
+      "text": "Clutch Empress"
+    },
+    {
+      "key": "book.book_ledger.name",
+      "text": "Skill Book: The Foundling's Ledger"
+    },
+    {
+      "key": "achievement.luk_650.name",
+      "text": "Stolen Fortune"
+    },
+    {
+      "key": "rule.stolen_turn.name",
+      "text": "Stolen Turn"
+    },
+    {
+      "key": "rule.stolen_turn.desc",
+      "text": "When an enemy's turn comes and its gauge is at least {MON_STEAL_GAUGE:pct} full, it acts first in the enemy's place: the enemy loses that turn and its gauge empties. {MON_STEALS_PER_FOE} steal per enemy per fight; a stolen turn has no extra actions."
+    },
+    {
+      "key": "rule.usurp.name",
+      "text": "Usurp"
+    },
+    {
+      "key": "rule.usurp.desc",
+      "text": "Each turn it steals is spent on the victim's own skill: it casts the victim's first ready skill with its own stats, and that skill goes on cooldown for the victim. With none ready, a basic attack. It may steal {MON_USURP_STEALS} turns from each enemy per fight."
+    },
+    {
+      "key": "rule.foundling_egg.name",
+      "text": "Foundling Egg"
+    },
+    {
+      "key": "rule.foundling_egg.desc",
+      "text": "At the start of a fight it lays an egg on its side, even on a full side. The egg has {MON_EGG_HP:pct} of its max HP and does not act; after {MON_HATCH_ACTIONS} of its actions it hatches into a Foundling with {MON_HATCH_STATS:pct} of its stats and its skills, but no rules. Egg and Foundling never keep the side alive or count for kills."
+    },
+    {
+      "key": "mskill.begging_cry.name",
+      "text": "Begging Cry"
+    },
+    {
+      "key": "mskill.begging_cry.desc",
+      "text": "An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.nest_down.name",
+      "text": "Nest Down"
+    },
+    {
+      "key": "mskill.nest_down.desc",
+      "text": "Chase trait. When hit: +{power:pct} {stat} for {duration} turns."
+    },
+    {
+      "key": "mskill.crown_peck.name",
+      "text": "Crown Peck"
+    },
+    {
+      "key": "mskill.crown_peck.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.clutch_call.name",
+      "text": "Clutch Call"
+    },
+    {
+      "key": "mskill.clutch_call.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "rule.stolen_turn.log",
+      "text": "steals the turn ({amount} more on this foe)"
+    },
+    {
+      "key": "rule.usurp.log",
+      "text": "turns the stolen turn on its owner"
+    },
+    {
+      "key": "rule.foundling_egg.log",
+      "text": "{amount} HP"
+    },
+    {
+      "key": "rule.foundling_egg.unit",
+      "text": "{name}'s Foundling"
     },
     {
       "key": "species.gearbell_jelly.name",

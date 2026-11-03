@@ -98,7 +98,7 @@ namespace IdleRng.Sim.Combat
         static void Arise(RuleCtx c, FightUnit victim)
         {
             var r = c.Rules;
-            if (victim.Risen || !(r.AriseStats > 0)) return;
+            if (victim.Risen || victim.Brood || !(r.AriseStats > 0)) return;   // never a risen unit, nor foundling_egg's egg or Foundling
             FightUnit killer = null;
             foreach (var k in c.State.Units) if (k.Id == victim.KilledBy) { killer = k; break; }
             if (killer == null || !killer.Alive || killer.AriseUsed || killer.Side == victim.Side || !Has(killer, RuleModifiers.Arise)) return;

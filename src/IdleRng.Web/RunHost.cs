@@ -701,10 +701,17 @@ namespace IdleRng.Web
 
         /// <summary>
         /// A display name that knows arise's risen allies (specs/16 section 6.2): "&lt;id&gt;#risen" is the fallen unit's name in
-        /// rule.arise.unit ("Goblin (risen)"); any other id is named by <paramref name="name"/>.
+        /// rule.arise.unit ("Goblin (risen)"), and foundling_egg's "&lt;id&gt;#egg" the carrier's in rule.foundling_egg.unit
+        /// ("Cuckling's Foundling"); any other id is named by <paramref name="name"/>.
         /// </summary>
         private string RisenName(string id, Func<string, string> name)
         {
+            int egg = id.IndexOf(BattleSim.EggSuffix, StringComparison.Ordinal);
+            if (egg >= 0)
+            {
+                string parent = name(id.Substring(0, egg));
+                return TextTemplate.Fill(_db, _db.Text("rule.foundling_egg.unit"), (n, fmt) => n == "name" ? parent : null);
+            }
             int at = id.IndexOf(BattleSim.RisenSuffix, StringComparison.Ordinal);
             if (at < 0) return name(id);
             string fallen = name(id.Substring(0, at));
@@ -1036,7 +1043,7 @@ namespace IdleRng.Web
                         w.Key("opponent"); LadderStep(w, s, r.RankBefore); w.EndObj();   // who was fought (the ladder does not change)
                         w.P("outcome", r.Fight.Outcome.ToString()).P("ticks", r.Fight.Ticks);
                         w.Key("units").Arr();
-                        foreach (var u in r.Fight.Final.Units) FightUnitOut(w, u);
+                        foreach (var u in r.Fight.Final.Units) FightUnitOut(w, u, u.IsAdd ? o => o.P("add", true) : null);   // an add: foundling_egg's egg (#143)
                         w.EndArr();
                         w.P("actionCount", log.Count);
                         w.Key("actions").Arr();

@@ -47,6 +47,16 @@
       "tree_id": "siege_manual"
     },
     {
+      "id": "book_unseen",
+      "name_key": "book.book_unseen.name",
+      "tree_id": "unseen_blade"
+    },
+    {
+      "id": "book_ledger",
+      "name_key": "book.book_ledger.name",
+      "tree_id": "foundling_ledger"
+    },
+    {
       "id": "book_hours",
       "name_key": "book.book_hours.name",
       "tree_id": "still_hours_codex"

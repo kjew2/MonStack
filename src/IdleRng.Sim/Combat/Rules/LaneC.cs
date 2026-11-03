@@ -107,7 +107,7 @@ namespace IdleRng.Sim.Combat
             bool oneMore = Has(src, RuleModifiers.OneMore), guardBreak = Has(src, RuleModifiers.GuardBreak);
             if (!oneMore && !guardBreak) return;
             if (!h.Crit && !(r.ElementMult(h.Element, tgt.Source.Element) > 1)) return;
-            if (oneMore && src.Alive && !src.OneMoreUsed)
+            if (oneMore && src.Alive && !src.OneMoreUsed && !src.Stealing)   // no refund inside a stolen turn (stolen_turn's loop guard)
             {
                 src.OneMoreUsed = true;
                 double refund = Math.Min(r.OneMore * r.GaugeSize, Math.Max(0.0, r.GaugeSize - src.Gauge));
