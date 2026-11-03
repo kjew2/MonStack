@@ -271,7 +271,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('slot-nodes-0').click();
   check((await page.locator('[data-id=slot-0] .node').count()) === 1, 'and folds them away again');
   const fuses = await page.$$eval('[data-id=fuses-with]', (els) => els.map((e) => e.textContent));
-  check(fuses.length === 2 && fuses.some((t) => /Codex of Tides.*Geyser Heart/.test(t)) && fuses.some((t) => /Bulwark.*Living Fortress/.test(t)),
+  check(fuses.length === 2 && fuses.some((t) => /Riptide.*Geyser Heart/.test(t)) && fuses.some((t) => /Bulwark.*Living Fortress/.test(t)),
     'each fusable native tree names its fusing partner and the fused tree (specs/15 section 5.6): ' + fuses.join(' | '));
   await shot('03-trees');
   await page.locator('[data-tip="node:pyromancy_n4"]').click();
@@ -986,9 +986,9 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
     await act('start').waitFor();
   }
 
-  // ---- the book option and drafts (the test book is the picked species' own: drake's Ember Codex)
+  // ---- the book option and drafts (the test book is the picked species' own: drake's Ember Heart)
   await act('species-drake').click();
-  check(/Ember Codex/.test(await text('[data-id=chase-drake]')), 'the species card names its chase trees and the book one needs');
+  check(/Ember Heart/.test(await text('[data-id=chase-drake]')), 'the species card names its chase trees and the book one needs');
   check((await act('grant-book').count()) === 0, 'the "Test: add a book" button is debug only (specs/21 section 7)');
   for (let k = 0; k < 5; k++) await page.locator('#build').click();     // five taps on the build stamp turn the debug controls on
   await act('grant-book').waitFor();
@@ -1006,7 +1006,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check((await page.locator('[data-id^="slot-"]').count()) === 3, 'the book tree now fills slot 3');
   check((await page.locator('[data-act^="book-"]:not([data-act="book-toggle"])').count()) === 0, 'the used book is gone');
   check((await page.locator('[data-id^="chasecard-"]').count()) === 2, 'the Trees tab lists the drake\'s own two chase trees');
-  check(/Ember Codex/.test(await text('[data-id=chasecard-inferno_sovereign]')), 'the book-gated chase tree says which skill book it needs');
+  check(/Ember Heart/.test(await text('[data-id=chasecard-inferno_sovereign]')), 'the book-gated chase tree says which skill book it needs');
 
   // ---- the evolution (debug preview of a chase tree's apex form): plays over the page, a tap skips to the end, the next closes it
   const evoName = await page.evaluate(() => document.querySelector('[data-id=monster-name]').textContent);

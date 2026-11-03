@@ -6,8 +6,9 @@ section 10 (the vendor and the spike).
 
 | Path | What |
 |---|---|
-| `MonStackAccount/` | **The account server** (`specs/27` section 10 step 4): a thin shell over `src/IdleRng.Server` with Cloud Save stores. Endpoints `Open`, `Commit`, `EndlessBoard`, `Profile` and `Warm`. |
+| `MonStackAccount/` | **The account server** (`specs/27` section 10 step 4): a thin shell over `src/IdleRng.Server` with Cloud Save stores. Endpoints `Open`, `Commit`, `EndlessBoard`, `GauntletBoard`, `Profile` and `Warm`. |
 | `MonStackAccount.Tests/` | Its handlers in process over an in-memory Cloud Save with Cloud Save's write-lock rules (issue #28). In `check.sh`. |
+| `keep_warm.py` | Creates or removes the keep-warm schedule and trigger (below). `test_keep_warm.py` tests it in `check.sh`. |
 | `deploy.sh` | Publishes a module for linux-x64, zips `<Module>.ccm` and creates or updates it through the Cloud Code Admin API. `--check` only builds and packages. |
 | `IdleRngBattle/`, `SpikeClient/` | The spike of issue #17 (`specs/08` section 10.1): `ResolveFight` and its test script. Kept for re-measuring; not deployed by CI. |
 
@@ -17,7 +18,8 @@ section 10 (the vendor and the spike).
 |---|---|---|
 | `Open` | `request: { deviceId, claim }` | `{ code, accepted, account, notice, seq, hash, created, contentVersion, serverSec, day }`; `account` is the `AccountSave` text, gzip then base64 |
 | `Commit` | `request: { deviceId, fromSeq, fromHash, commands: [{ k, a }], toHash, contentVersion }` | `{ code, accepted, index, reason, seq, hash, serverSec, day }` |
-| `EndlessBoard` | `season` (negative: the server's current one), `top` (0: 20; at most 100) | `{ season, total, top: [{ rank, name, floor, you }], you }` |
+| `EndlessBoard` | `season` (negative: the server's current one), `top` (0: 20; at most 100) | `{ season, total, top: [{ rank, name, floor, you }], you, fallbackName }` |
+| `GauntletBoard` | `species` (a species id; empty for the overall board; another id is refused), `top` (0: 20; at most 100) | `{ species, total, top: [{ rank, name, species, speciesName, floor, cleared, label, you }], you, fallbackName }` (`specs/19` section 9; `species` left out for the overall board) |
 | `Profile` | `of`: whose profile (a UGS player id; empty for the caller's own) | `{ found, profile }`, the profile as its lean JSON (`specs/27` section 3.3.2) |
 | `Warm` | none | `{ contentVersion, serverSec }`: the keep-warm target, needs no player |
 
@@ -50,7 +52,8 @@ module not deployed") and the site deploys anyway.
 **One-time setup (kj):**
 1. Unity Cloud dashboard, project `e83a4b44-27a7-4f76-8769-08380b340736` (the one `web/auth.js` signs into): Administration >
    Service Accounts > New. Give it the project roles **Cloud Code Editor** and **Unity Environments Viewer** (deploy.sh lists
-   the environments to find the id of `production`). Add a key; note the key id and secret.
+   the environments to find the id of `production`), and for the keep-warm schedule **Scheduler Configuration Editor** and
+   **Triggers Configuration Editor** (LiveOps). Add a key; note the key id and secret.
 2. GitHub, repository Settings > Secrets and variables > Actions > **Secrets**: `UGS_SERVICE_KEY_ID` (the key id) and
    `UGS_SERVICE_SECRET_KEY` (the secret).
 3. Optional, same page > **Variables**: `MONSTACK_DEBUG_PLAYERS` (kj's UGS player ids, separated by spaces or commas; the
@@ -86,28 +89,18 @@ network must allow `services.api.unity.com` (admin API), `player-auth.services.a
 The spike: `server/ugs/deploy.sh IdleRngBattle`, then `cd server/ugs/SpikeClient && dotnet run -c Release -- local` (or
 `remote`). The first call after a deploy, or after 15 minutes without traffic, is the cold start.
 
-## Keep-warm (issue #109): documented, not enabled
+## Keep-warm (issue #109): on
 
-A cold worker takes 12 to 15 s to answer (`specs/08` section 10.1). Once there are players, a UGS schedule can call `Warm`
-every 10 minutes (about 4.3 k calls a month, inside the free tier). Not deployed: kj turns it on. With the UGS CLI
-(`ugs deploy`), two config files; check the formats against Unity's Scheduler and Triggers docs before use:
+A cold worker takes 12 to 15 s to answer (`specs/08` section 10.1). A UGS schedule, `monstack-keep-warm`, emits an event every 10
+minutes (`*/10 * * * *`, UTC) and a trigger of the same name runs `MonStackAccount/Warm` on it, so a worker stays up. About
+4.3 k calls and 1 to 2 minutes of compute a month, inside Cloud Code's free tier (1 M calls, 20 hours); check the Scheduler and
+Triggers prices on the UGS pricing page. It keeps one worker warm: a burst of traffic that starts more can still meet a cold one,
+and so does the first call after each deploy.
 
-`keep-warm.sched`:
-```json
-{
-  "$schema": "https://ugs-config-schemas.unity3d.com/v1/schedules.schema.json",
-  "Configs": {
-    "monstack-keep-warm": { "EventName": "monstack-keep-warm", "Type": "recurring", "Schedule": "*/10 * * * *", "PayloadVersion": 1, "Payload": "{}" }
-  }
-}
-```
+`keep_warm.py` creates both through the Scheduler and Triggers admin APIs, or fixes them (a schedule cannot be edited, so a wrong
+one is deleted and made again); a run with both right changes nothing. `--off` removes both. `pages.yml` runs it after it
+deploys the module, unless the repo variable `MONSTACK_KEEP_WARM` is `off` (then it removes them). It needs the service account
+roles **Scheduler Configuration Editor** and **Triggers Configuration Editor** (setup step 1); without them the step warns
+("Keep-warm not set") and the site still deploys. `test_keep_warm.py` runs it against a fake admin API in `check.sh`.
 
-`keep-warm.tr`:
-```json
-{
-  "$schema": "https://ugs-config-schemas.unity3d.com/v1/triggers.schema.json",
-  "Configs": [
-    { "Name": "monstack-keep-warm", "EventType": "com.unity.services.scheduler.monstack-keep-warm.v1", "ActionType": "cloud-code", "ActionUrn": "urn:ugs:cloud-code:MonStackAccount/Warm" }
-  ]
-}
-```
+By hand, with the deploy variables above: `python3 server/ugs/keep_warm.py` (or `--off`).

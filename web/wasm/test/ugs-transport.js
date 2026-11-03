@@ -79,6 +79,15 @@ async function rejects(p, check) {
   await t.endlessBoard(7, 5);
   assert.deepStrictEqual(f.calls[1].body, { params: { season: 7, top: 5 } });
 
+  // gauntletBoard: the overall board unless a species is named.
+  f = fake(reply(200, { output: { total: 0, top: [] } }), reply(200, { output: { species: 'drake', total: 0, top: [] } }));
+  t = T.create({ auth, fetch: f });
+  assert.strictEqual((await t.gauntletBoard(null)).total, 0);
+  assert.ok(f.calls[0].url.endsWith('/modules/MonStackAccount/GauntletBoard'));
+  assert.deepStrictEqual(f.calls[0].body, { params: { species: '', top: 0 } });
+  assert.strictEqual((await t.gauntletBoard('drake', 5)).species, 'drake');
+  assert.deepStrictEqual(f.calls[1].body, { params: { species: 'drake', top: 5 } });
+
   // profile: the caller's own unless a player is named.
   f = fake(reply(200, { output: { found: false } }), reply(200, { output: { found: true, profile: { Name: 'Misty' } } }));
   t = T.create({ auth, fetch: f });

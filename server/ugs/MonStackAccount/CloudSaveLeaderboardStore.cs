@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IdleRng.Server;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MonStackAccount
 {
@@ -16,7 +17,9 @@ namespace MonStackAccount
     /// leaderboard created ahead of every week, and taking a debug account off a board needs the Leaderboards admin API with a
     /// service account key inside the module; the shown name would also have to live outside the score. Here a board is a custom
     /// entity named by its board id, holding <see cref="Shards"/> items (<c>rows-0</c> to <c>rows-f</c>, a player's shard by the
-    /// first hex digit of the SHA-256 of their id), each a map of player id to <c>[score, atMs]</c>. Names live the same way on
+    /// first hex digit of the SHA-256 of their id), each a map of row id to <c>[score, atMs]</c> for a player's one row (the row id
+    /// is the player id) or <c>[score, atMs, playerId, tag]</c> for a row the player names (<see cref="SubmitRowsAsync"/>; a row
+    /// sits in its owner's shard, so all of a player's rows are written and removed together). Names live the same way on
     /// the custom entity <c>board-names</c> (<c>names-0</c> to <c>names-f</c>). A submit, remove or rename rewrites one shard
     /// under its write lock (re-read and retried on a conflict); a read loads the board's shards in one Cloud Save call and the
     /// names it shows in one more. Fine for thousands of players a week; past that, keep the rows ranked or move to UGS
@@ -50,18 +53,58 @@ namespace MonStackAccount
         public Task SubmitAsync(string board, string playerId, int score, long atMs)
         {
             if (playerId == null) throw new ArgumentNullException(nameof(playerId));
-            return UpdateAsync<long[]>(CloudSaveOwner.Entity(Check(board)), RowsKey(ShardOf(playerId)), rows =>
+            return UpdateAsync<JArray>(CloudSaveOwner.Entity(Check(board)), RowsKey(ShardOf(playerId)), rows => Keep(rows, playerId, playerId, score, null, atMs));
+        }
+
+        public Task SubmitRowsAsync(string board, string playerId, IReadOnlyList<LeaderboardRow> rows, long atMs)
+        {
+            if (playerId == null) throw new ArgumentNullException(nameof(playerId));
+            if (rows == null) throw new ArgumentNullException(nameof(rows));
+            if (rows.Any(r => r?.RowId == null)) throw new ArgumentException("every row needs an id", nameof(rows));
+            if (rows.Count == 0) return Task.CompletedTask;
+            return UpdateAsync<JArray>(CloudSaveOwner.Entity(Check(board)), RowsKey(ShardOf(playerId)), map =>
             {
-                if (rows.TryGetValue(playerId, out var r) && r.Length == 2 && score <= r[0]) return false;
-                rows[playerId] = new long[] { score, atMs };
-                return true;
+                bool changed = false;
+                foreach (var r in rows)
+                {
+                    if (map.TryGetValue(r.RowId, out var had) && Read(r.RowId, had)?.Player != playerId)
+                        throw new ArgumentException("row " + r.RowId + " belongs to another player", nameof(rows));
+                    changed |= Keep(map, r.RowId, playerId, r.Score, r.Tag, atMs);
+                }
+                return changed;
             });
         }
 
         public Task RemoveAsync(string board, string playerId)
         {
             if (playerId == null) throw new ArgumentNullException(nameof(playerId));
-            return UpdateAsync<long[]>(CloudSaveOwner.Entity(Check(board)), RowsKey(ShardOf(playerId)), rows => rows.Remove(playerId));
+            return UpdateAsync<JArray>(CloudSaveOwner.Entity(Check(board)), RowsKey(ShardOf(playerId)), map =>
+            {
+                var mine = map.Where(kv => Read(kv.Key, kv.Value)?.Player == playerId).Select(kv => kv.Key).ToList();
+                foreach (var k in mine) map.Remove(k);
+                return mine.Count > 0;
+            });
+        }
+
+        /// <summary>Keep the better of the stored row and this one; true when the map changed.</summary>
+        static bool Keep(SortedDictionary<string, JArray> map, string key, string player, int score, string tag, long atMs)
+        {
+            if (map.TryGetValue(key, out var had) && Read(key, had) is Row r && score <= r.Score) return false;
+            map[key] = key == player && tag == null ? new JArray(score, atMs) : new JArray(score, atMs, player, tag);
+            return true;
+        }
+
+        /// <summary>A stored row, or null for one in neither shape (skipped).</summary>
+        static Row Read(string key, JArray v)
+        {
+            try
+            {
+                if (v.Count == 2) return new Row { Key = key, Player = key, Score = (int)v[0], AtMs = (long)v[1] };
+                if (v.Count == 4 && v[2].Type == JTokenType.String)
+                    return new Row { Key = key, Player = (string)v[2], Score = (int)v[0], AtMs = (long)v[1], Tag = v[3].Type == JTokenType.String ? (string)v[3] : null };
+            }
+            catch (Exception e) when (e is ArgumentException || e is InvalidCastException || e is FormatException || e is OverflowException) { }
+            return null;
         }
 
         public Task SetNameAsync(string playerId, string name)
@@ -101,17 +144,17 @@ namespace MonStackAccount
 
         // ------------------------------------------------------------------ reads
 
-        sealed class Row { public string Player; public int Score; public long AtMs; }
+        sealed class Row { public string Key; public string Player; public int Score; public long AtMs; public string Tag; }
 
-        /// <summary>Every row of the board, ranked: highest score first, then the earlier time, then the player id.</summary>
+        /// <summary>Every row of the board, ranked: highest score first, then the earlier time, then the row id.</summary>
         async Task<List<Row>> RankedAsync(string board)
         {
             var items = await _save.GetManyAsync(CloudSaveOwner.Entity(Check(board)), AllShards(RowsKey)).ConfigureAwait(false);
             var rows = new List<Row>();
             foreach (var it in items.Values)
-                foreach (var kv in Parse<long[]>(it.Value))
-                    if (kv.Value.Length == 2) rows.Add(new Row { Player = kv.Key, Score = (int)kv.Value[0], AtMs = kv.Value[1] });
-            return rows.OrderByDescending(r => r.Score).ThenBy(r => r.AtMs).ThenBy(r => r.Player, StringComparer.Ordinal).ToList();
+                foreach (var kv in Parse<JArray>(it.Value))
+                    if (Read(kv.Key, kv.Value) is Row r) rows.Add(r);
+            return rows.OrderByDescending(r => r.Score).ThenBy(r => r.AtMs).ThenBy(r => r.Key, StringComparer.Ordinal).ToList();
         }
 
         async Task<Dictionary<string, string>> NamesAsync(IEnumerable<string> players)
@@ -127,14 +170,16 @@ namespace MonStackAccount
             return ps.Where(names.ContainsKey).ToDictionary(p => p, p => names[p], StringComparer.Ordinal);
         }
 
-        static LeaderboardEntry Entry(Row r, int rank, Dictionary<string, string> names) =>
-            new LeaderboardEntry { PlayerId = r.Player, Name = names.TryGetValue(r.Player, out var n) ? n : null, Score = r.Score, AtMs = r.AtMs, Rank = rank };
+        static LeaderboardEntry Entry(Row r, int rank, Dictionary<string, string> names) => new LeaderboardEntry
+        {
+            RowId = r.Key, PlayerId = r.Player, Tag = r.Tag, Name = names.TryGetValue(r.Player, out var n) ? n : null, Score = r.Score, AtMs = r.AtMs, Rank = rank,
+        };
 
         public async Task<(IReadOnlyList<LeaderboardEntry> Top, int Total)> TopAsync(string board, int count)
         {
             var ranked = await RankedAsync(board).ConfigureAwait(false);
             var top = ranked.Take(Math.Max(0, count)).ToList();
-            var names = await NamesAsync(top.Select(r => r.Player)).ConfigureAwait(false);
+            var names = await NamesAsync(top.Select(r => r.Player).Distinct()).ConfigureAwait(false);
             return (top.Select((r, i) => Entry(r, i + 1, names)).ToList(), ranked.Count);
         }
 
@@ -147,7 +192,7 @@ namespace MonStackAccount
             return Entry(ranked[i], i + 1, names);
         }
 
-        /// <summary>A board id is a custom entity id: letters, digits, '-' and '_' (EndlessBoard.BoardId gives <c>endless-&lt;n&gt;</c>).</summary>
+        /// <summary>A board id is a custom entity id: letters, digits, '-' and '_' (EndlessBoard.BoardId gives <c>endless-&lt;n&gt;</c>, GauntletBoard.BoardId <c>gauntlet</c> or <c>gauntlet-&lt;species&gt;</c>).</summary>
         static string Check(string board)
         {
             if (string.IsNullOrEmpty(board) || board.Length > 50 || board == NamesEntity

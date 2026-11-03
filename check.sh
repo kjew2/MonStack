@@ -121,6 +121,9 @@ else
     step "Web: Endless Tower screen (team, climb, playback) in headless Chromium"
     node web/wasm/test/endless.js
 
+    step "Web: Rankings tab (Endless and gauntlet boards, species chips, display name, failed reads) in headless Chromium"
+    node web/wasm/test/rankings.js
+
     step "Web: rulebook editor (rules, pickers, save, test preview) in headless Chromium"
     node web/wasm/test/rulebook.js
 
@@ -143,6 +146,10 @@ fi
 # The page's UGS transport (web/ugs-transport.js, specs/27 section 10 step 4): plain Node, a fake Cloud Code endpoint.
 step "Web: the UGS transport sends the module's calls and sorts verdicts from retryable failures"
 node web/wasm/test/ugs-transport.js
+
+# The keep-warm schedule and trigger (server/ugs/keep_warm.py, issue #109): plain Python, a fake UGS admin API.
+step "UGS keep-warm: creates, fixes and removes the schedule and trigger"
+python3 -I server/ugs/test_keep_warm.py
 
 # The Cloud Code module (server/ugs/MonStackAccount, specs/27 section 10 step 4) is .NET 10, and a .NET 10 SDK as the default
 # `dotnet` breaks the .NET 8 WebAssembly steps (CLAUDE.md lessons). So it runs with a .NET 10 SDK kept apart: MONSTACK_DOTNET10

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Browser check of the Endless Tower screen (specs/28 section 9 step 5), at phone width 390x844: plays and seals one run, then
 // seeds a Vault of five copies of the sealed monster (ids 0..4, entry id 1 with a rulebook) through the save and checks the
-// Dungeon tab's Endless card, the screen (Team / Floors / Board sections, issue #130; season, mutators, next floors with their
+// Dungeon tab's Endless card, the screen (Team / Floors sections, issue #130; season, mutators, next floors with their
 // squads), the team picker (exactly four, reorder, the rule count and Rules button per slot), a climb on the reel (opened landed) with its result, save
 // record and deciding-floor playback (a rule firing reads "follows rule 1"), a second climb paying nothing new, the season
-// board and display name (a refused name, a saved one, the player's row after the climb), watching another floor (same fight
-// hash as the climb's list), the layout and Back.
+// board and display name on the home Rankings tab through the screen's "See the rankings" link (a refused name, a saved one,
+// the player's row after the climb), watching another floor (same fight hash as the climb's list), the layout and Back.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/endless.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
@@ -58,10 +58,11 @@ const H = require('./harness.js');
   const season = Math.floor((Math.floor(Date.now() / 86400000) + 3) / 7);   // run.endlessSeason(): the UTC week from Monday
   check((await status.getAttribute('data-season')) === String(season) && new RegExp('^Season ' + season + ' · \\d+[dh] \\d+[hm] left · best this season 0').test(await status.innerText()),
     'the season line shows this UTC week, the time left and the bests: ' + (await status.innerText()));
-  // Issue #130: the screen opens on its Team section, with the next floor in one line; Floors and Board are one tap each
+  // Issue #130: the screen opens on its Team section, with the next floor in one line; Floors is one tap, the board is on the
+  // home Rankings tab
   check((await act('endless-tab-team').getAttribute('aria-selected')) === 'true' && /^Next\s+F1 /.test(await text('[data-id=endless-next]'))
-    && (await count('[data-id=endless-mutators]')) === 0 && (await count('[data-id=endless-board]')) === 0,
-    'the screen opens on Team with the next floor in one line, floors and board on their own tabs: ' + (await text('[data-id=endless-next]')).replace(/\s+/g, ' '));
+    && (await count('[data-id=endless-mutators]')) === 0 && (await count('[data-act^=endless-tab-]')) === 2 && (await count('[data-act=endless-rankings]')) === 1,
+    'the screen opens on Team with the next floor in one line, floors on their own tab, a link to the rankings: ' + (await text('[data-id=endless-next]')).replace(/\s+/g, ' '));
   await act('endless-see-floors').click();
   check((await act('endless-tab-floors').getAttribute('aria-selected')) === 'true', 'the next floor line leads to the Floors tab');
   const muts = await page.$$eval('[data-id^=endless-mutator-]', (es) => es.map((e) => ({ on: e.dataset.on === '1', text: e.innerText })));
@@ -73,24 +74,33 @@ const H = require('./harness.js');
   check(await act('endless-climb').isDisabled(), 'Climb is off with no team');
   await t.layout('endless floors');
 
-  // ---- the season board (specs/28 section 6): empty before a climb, this device's only, a generated name until one is picked
-  await act('endless-tab-board').click();
-  check((await count('[data-id=endless-board-empty]')) === 1 && (await count('[data-id=endless-board-local]')) === 1
-    && /^Your name: Trainer [0-9A-F]{4} \(until you pick one\)$/.test(await text('[data-id=endless-name]')),
-    'the board is empty, says it is local, and shows a generated name: ' + (await text('[data-id=endless-name]')));
-  await act('endless-name').click();
-  const nameIn = page.locator('[data-id=endless-name-input]');
+  // ---- the season board (specs/28 section 6), on the home Rankings tab: empty before a climb, this device's only, a generated
+  // name until one is picked
+  const boardKey = 'endless:' + season;
+  const boardRead = () => page.locator('[data-id=rank-board][data-key="' + boardKey + '"]:not([data-loading])').waitFor();
+  await act('endless-rankings').click();
+  await boardRead();
+  check((await act('hometab-rankings').getAttribute('aria-selected')) === 'true' && (await act('rank-kind-endless').getAttribute('aria-selected')) === 'true',
+    'See the rankings opens the home Rankings tab on the Endless season board');
+  check((await count('[data-id=rank-board-empty]')) === 1 && (await count('[data-id=rank-board-local]')) === 1
+    && /^Your name: Trainer [0-9A-F]{4} \(until you pick one\)$/.test(await text('[data-id=rank-name]')),
+    'the board is empty, says it is local, and shows a generated name: ' + (await text('[data-id=rank-name]')));
+  await act('rank-name').click();
+  const nameIn = page.locator('[data-id=rank-name-input]');
   await nameIn.fill('Ash!');
-  await act('endless-name-save').click();
-  check(/only letters/.test(await text('[data-id=endless-name-error]')) && (await nameIn.inputValue()) === 'Ash!' && !(await acct()).Name,
+  await act('rank-name-save').click();
+  check(/only letters/.test(await text('[data-id=rank-name-error]')) && (await nameIn.inputValue()) === 'Ash!' && !(await acct()).Name,
     'a name the rules refuse shows why, keeps the field as typed and saves nothing');
   await nameIn.fill('  Ash   Ketchum ');
   await nameIn.press('Enter');
-  await page.locator('[data-id=endless-name]').waitFor();
-  check((await text('[data-id=endless-name]')) === 'Your name: Ash Ketchum' && (await acct()).Name === 'Ash Ketchum',
+  await page.locator('[data-id=rank-name]').waitFor();
+  check((await text('[data-id=rank-name]')) === 'Your name: Ash Ketchum' && (await acct()).Name === 'Ash Ketchum',
     'Enter saves the name, trimmed and with its spaces folded, to the account');
-  await t.layout('endless board (empty)');
-  await act('endless-tab-team').click();
+  await boardRead();
+  await t.layout('rankings endless board (empty)');
+  await act('hometab-dungeon').click();
+  await act('endless').click();
+  await page.locator('[data-id=endless-status]').waitFor();
   await t.layout('endless screen');
 
   // ---- the team: exactly four
@@ -165,15 +175,21 @@ const H = require('./harness.js');
   await act('chart-close').click();
   check((await count('#modal [data-id=chart-endless]')) === 0 && (await count('[data-id=endless-result]')) === 1, 'Close leaves the result card');
   const best1 = a1.Endless.ClearedSeason || 0;
-  await act('endless-tab-board').click();
-  if (best1 > 0) {
-    const me = page.locator('[data-id=endless-board-row-1]'), meText = (await me.innerText()).replace(/\s+/g, ' ').trim();
-    check((await me.getAttribute('data-you')) === '1' && meText === '#1 Ash Ketchum (you) ' + best1 + (best1 === 1 ? ' floor' : ' floors')
-      && /^1 trainer on the board/.test(await text('[data-id=endless-board-total]')),
-      'the board shows the player first with the season best and their name: ' + meText);
-  } else check((await count('[data-id=endless-board-empty]')) === 1, 'no floor cleared: the board stays empty');
-  await t.layout('endless board');
   await t.layout('endless result');
+  await act('endless-rankings').click();
+  await boardRead();
+  if (best1 > 0) {
+    const me = page.locator('[data-id=rank-row-1]'), meText = (await me.innerText()).replace(/\s+/g, ' ').trim();
+    check((await me.getAttribute('data-you')) === '1' && meText === '#1 Ash Ketchum (you) ' + best1 + (best1 === 1 ? ' floor' : ' floors')
+      && /^1 trainer on the board/.test(await text('[data-id=rank-board-total]')),
+      'the board shows the player first with the season best and their name: ' + meText);
+  } else check((await count('[data-id=rank-board-empty]')) === 1, 'no floor cleared: the board stays empty');
+  await t.layout('rankings endless board');
+  // back to the Endless screen with the same team for a second climb (the link left the climb's result behind)
+  await act('hometab-dungeon').click();
+  await act('endless').click();
+  await page.locator('[data-id=endless-status]').waitFor();
+  check((await act('endless-climb').isEnabled()), 'back on the Endless screen the team of four is still picked');
 
   // ---- a second climb pays nothing new (the reel again; its Damage button opens the chart, every floor added up; Close goes on
   // to the card, its banner slamming in then)
