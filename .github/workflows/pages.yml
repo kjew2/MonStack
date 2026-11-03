@@ -74,6 +74,20 @@ jobs:
         name: Deploy the module to Cloud Code
         run: bash server/ugs/deploy.sh MonStackAccount
 
+      # The keep-warm schedule (issue #109, server/ugs/README.md): Warm every 10 minutes. The repo variable MONSTACK_KEEP_WARM=off
+      # removes it. Needs two more roles on the service account; a failure here warns and the site still deploys.
+      - if: steps.gate.outputs.deploy == 'true'
+        name: Keep the module warm
+        continue-on-error: true
+        env:
+          KEEP_WARM: ${{ vars.MONSTACK_KEEP_WARM }}
+        run: |
+          if [ "$KEEP_WARM" = off ]; then set -- --off; fi
+          python3 -I server/ugs/keep_warm.py "$@" || {
+            echo "::warning title=Keep-warm not set::server/ugs/keep_warm.py failed (see the log). The service account needs the roles Scheduler Configuration Editor and Triggers Configuration Editor (server/ugs/README.md)."
+            exit 1
+          }
+
   deploy:
     needs: module
     if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
