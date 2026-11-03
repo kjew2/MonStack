@@ -305,6 +305,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_C(r, ref ok);
             ValidateRules_D(r, ref ok);
             ValidateRules_E(r, ref ok);
+            ValidateRules_FountainAxolotl(r, ref ok);
         }
 
         static partial void ValidateRules_A(FightRules r, ref bool ok);
@@ -372,6 +373,7 @@ namespace IdleRng.Sim.Combat
             Load_C(r, c);
             Load_D(r, c);
             Load_E(r, c);
+            Load_FountainAxolotl(r, c);
         }
 
         static partial void Load_A(FightRules r, ContentDb c);

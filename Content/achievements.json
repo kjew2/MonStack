@@ -40,6 +40,14 @@
       "ref": null,
       "amount": 20.0,
       "unlocks_species": null
+    },
+    {
+      "id": "deep_spring",
+      "name_key": "achievement.deep_spring.name",
+      "kind": "stat_reached",
+      "ref": "int",
+      "amount": 650.0,
+      "unlocks_species": "fountain_axolotl"
     }
   ]
 }

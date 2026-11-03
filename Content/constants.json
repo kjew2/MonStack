@@ -850,6 +850,21 @@
       "key": "HUNGRY_ENERGY",
       "type": "double",
       "value": 10.0
+    },
+    {
+      "key": "MON_SEEP_SHIELD",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "MON_JETS",
+      "type": "int",
+      "value": 4
+    },
+    {
+      "key": "MON_JET_POWER",
+      "type": "double",
+      "value": 0.45
     }
   ]
 }

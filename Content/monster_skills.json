@@ -1128,6 +1128,66 @@
       "cooldown": 4,
       "duration": 3,
       "element": null
+    },
+    {
+      "id": "fountain_spout",
+      "name_key": "mskill.fountain_spout.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "int",
+      "power": 0.6,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "water"
+    },
+    {
+      "id": "riptide",
+      "name_key": "mskill.riptide.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "int",
+      "power": 2.0,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "water"
+    },
+    {
+      "id": "gill_jet",
+      "name_key": "mskill.gill_jet.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "int",
+      "power": 1.5,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "water"
+    },
+    {
+      "id": "gill_spray",
+      "name_key": "mskill.gill_spray.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "int",
+      "power": 0.35,
+      "cooldown": 0,
+      "duration": 0,
+      "element": "water"
+    },
+    {
+      "id": "wellspring_rain",
+      "name_key": "mskill.wellspring_rain.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "int",
+      "power": 0.9,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "water"
     }
   ]
 }

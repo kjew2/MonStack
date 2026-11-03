@@ -58,7 +58,7 @@ namespace IdleRng.Sim.Combat
                     }
                 }
                 else if (h.Skill.Scales == StatIds.Str || h.Skill.Scales == StatIds.Int) h.Raw = 0;
-                h.Raw += r.FortressDef * Eff(r, h.Src, StatIds.Def);
+                h.Raw += r.FortressDef * Eff(r, h.Src, StatIds.Def) * h.FlatShare;   // a fountain_jets jet takes its share
             }
             if (Avatar(h.Src)) h.Element = h.Src.Source.Element;
             if (Has(h.Tgt, RuleModifiers.IronReflexes))

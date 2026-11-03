@@ -25,6 +25,11 @@
       "id": "book_shadows",
       "name_key": "book.book_shadows.name",
       "tree_id": "umbral_grimoire"
+    },
+    {
+      "id": "book_springs",
+      "name_key": "book.book_springs.name",
+      "tree_id": "springs_almanac"
     }
   ]
 }
