@@ -1214,7 +1214,7 @@ namespace IdleRng.Web
             foreach (int t in _db.StatMilestones) w.Num(TrainingRun.MilestoneAt(s, t));
             w.EndArr();
             w.Key("odds").Obj().P("fail", fail).P("super", super).P("success", Math.Max(0, 1 - fail - super))
-                .P("injury", TrainingRun.InjuryChance(k, e)).EndObj();
+                .P("injury", TrainingRun.RunInjuryChance(_db, s, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);
             var opp = TrainingRun.OpponentFighter(_db, s, s.Rank);
             var oppEnemy = TrainingRun.LadderEnemy(_db, s, s.Rank);

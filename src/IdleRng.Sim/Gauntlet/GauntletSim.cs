@@ -4,6 +4,7 @@ using System.Text;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
 using IdleRng.Sim.Rng;
+using IdleRng.Sim.Training;
 
 namespace IdleRng.Sim.Gauntlet
 {
@@ -136,6 +137,7 @@ namespace IdleRng.Sim.Gauntlet
             for (int f = 1; f <= levels.Length; f++)
             {
                 var enemy = Enemy(c, f, levels[f - 1]);
+                TrainingRun.HookGauntletFloor(c, monster, enemy);   // run rules that reach the gauntlet (lane G's cursed_mark)
                 var fight = BattleSim.Resolve(rules, new[] { monster }, new[] { enemy }, FloorSeed(seed, f));
                 bool won = fight.Outcome == FightOutcome.SideAWon;
                 var d = EnemyDef(c, f);
