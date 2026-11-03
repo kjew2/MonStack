@@ -274,12 +274,27 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 tail slap and holdback", 15,
                 new[] { LodgeBeaver("a_slap", RuleModifiers.TailSlap), LodgeBeaver("a_dam", RuleModifiers.Holdback) },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "fire"), Healer("b_healer", "dark") });
+            // Species Aegis Ram (#147): Brave Heart and the fleece on both; one borrows turns (brave_debt), one throws its target
+            // back (ram_shock), against a brawler, a mage and a tank.
+            yield return new Vector("2v3 aries vanguard and chrysomallos", 1,
+                new[] { AegisRam("a_oath", RuleModifiers.BraveDebt), AegisRam("a_hoof", RuleModifiers.RamShock) },
+                new[] { Brawler("b_brawler", "dark"), Mage("b_mage", "water"), Tank("b_tank", "fire") });
             // Species Anvil Ape (#153): Guard Break with Smith's Rhythm on both, one making the guards brittle and one shattering
             // broken foes, against a nature mage (fire strips a pip on every hit), a brawler and a healer.
             yield return new Vector("2v3 anvil ape brittle and shatter", 20,
                 new[] { AnvilApe("a_brittle", RuleModifiers.BrittleGuard), AnvilApe("a_shatter", RuleModifiers.Shatterpoint) },
                 new[] { Mage("b_mage", "nature"), Brawler("b_brawler", "water"), Healer("b_healer", "light") });
         }
+
+        // Species Aegis Ram (#147): the native kit (brave_heart, Fleece Ward, fleece_aegis), Shofar Call from its book, plus one
+        // chase capstone.
+        static Fighter AegisRam(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(380, 480, 60, 200, 120, 560, 360, 160),
+            Skills = { Fx("fleece_ward", SkillKind.Shield, SkillTarget.Self, null, StatIds.Def, 1.2, 3, 3) },
+            Triggers = { new TriggeredSkill(FightTrigger.OnBasicAttack, Dmg("shofar_call", StatIds.Str, 0.3, 0, SkillTarget.Enemy, "light")) },
+            Rules = { RuleModifiers.BraveHeart, RuleModifiers.FleeceAegis, chase },
+        };
 
         // Species Iaido Mantis (#159): the native kit (vantage, Draw Cut, iai_draw), Blade Echo from its book, plus one chase capstone.
         static Fighter Mantis(string id, string chase) => new Fighter

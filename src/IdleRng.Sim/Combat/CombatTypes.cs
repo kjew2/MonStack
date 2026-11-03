@@ -649,7 +649,7 @@ namespace IdleRng.Sim.Combat
         /// <summary>
         /// When the unit's turn comes at full HP or with a shield and it holds fewer than MON_BRAVE_MAX pips, it Defaults: no action,
         /// +1 pip, MON_BRAVE_GUARD less hit damage until its next turn. Otherwise it acts, then spends its pips as extra actions in a
-        /// row (under MON_EXTRA_ACTIONS_CAP; the rest wait). The Brave Heart generic capstone.
+        /// row (under MON_EXTRA_ACTIONS_CAP; the rest wait). The Brave Heart capstone, the Aegis Ram's native tree 1 (#147).
         /// </summary>
         public const string BraveHeart = "brave_heart";
 
@@ -903,6 +903,27 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string FoundlingEgg = "foundling_egg";
 
+        // Species Aegis Ram (#147): coded in Combat/Rules/AegisRam.cs; its native tree 1 carries lane C's brave_heart.
+
+        /// <summary>
+        /// At the end of each turn in which the unit dealt no damage, the living ally with the least shield (itself in 1v1) gains a
+        /// shield of MON_FLEECE_SHIELD x the unit's DEF, filling its shield pool up to MON_FLEECE_CAP of its max HP. The Gilded
+        /// Fleece native capstone (Aegis Ram).
+        /// </summary>
+        public const string FleeceAegis = "fleece_aegis";
+
+        /// <summary>
+        /// After spending its pips, while its target lives, the unit borrows up to MON_DEBT_MAX more extra actions (pips below 0,
+        /// under MON_EXTRA_ACTIONS_CAP); below 0 pips each of its turns is skipped, unguarded, for +1 pip. The Headlong Oath chase
+        /// capstone (Aegis Ram).
+        /// </summary>
+        public const string BraveDebt = "brave_debt";
+
+        /// <summary>
+        /// Each pip or debt extra action that hits an enemy pushes its gauge back by MON_RAM_KNOCK x BATTLE_GAUGE x its place in the
+        /// chain (never below 0) and deals +MON_RAM_RAMP per earlier one. The Thunderhoof book chase capstone (Aegis Ram).
+        /// </summary>
+        public const string RamShock = "ram_shock";
         // Species Anvil Ape (#153): coded in Combat/Rules/AnvilApe.cs; its native tree 1 carries lane C's guard_break.
 
         /// <summary>
@@ -941,6 +962,7 @@ namespace IdleRng.Sim.Combat
             StolenTurn, Usurp, FoundlingEgg,
             WardRewind, WardToll, Escapement,
             Mudwork, TailSlap, Holdback,
+            FleeceAegis, BraveDebt, RamShock,
             AnvilRhythm, BrittleGuard, Shatterpoint };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;

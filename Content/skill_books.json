@@ -60,6 +60,11 @@
       "id": "book_hours",
       "name_key": "book.book_hours.name",
       "tree_id": "still_hours_codex"
+    },
+    {
+      "id": "book_ramshorn",
+      "name_key": "book.book_ramshorn.name",
+      "tree_id": "ramshorn_hymnal"
     }
   ]
 }

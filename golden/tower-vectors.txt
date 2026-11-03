@@ -1,4 +1,4 @@
-# tower vectors, hash v1 content=6.18/588f8358
+# tower vectors, hash v1 content=6.21/376569a7
 
 day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_king tide_warden tide_warden gloom_stalker apex_chimera* bramble_king mire_brute sun_idol cinder_wyrm storm_titan* tide_warden sun_idol gloom_stalker cinder_wyrm storm_titan*
   slime focus seed=7: floor=17 cleared=False vents=5 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
@@ -20,11 +20,17 @@ day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_k
   keepshell_crab focus seed=7: floor=13 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split
     hash 0f068f8bc7e881e7549beeff7e64cbcde150d8f92b8f7d68cd6c1c29a587ec33
   iaido_mantis focus seed=7: floor=21 cleared=True vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
-    hash 13abd3930a5fc1f5a81ad23c8df5282b74c81ec9eb792b5ea9c054e9db64aa7e
+    hash c42727a1bd02c617415022b3a54b6b4062c2dd5f1839c161647fe9fc63826032
   cuckling focus seed=7: floor=17 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
     hash 1f965130046955aeef42a6b2c42441673b77e2b7478a3f546d213ef5c7caa2ef
   gearbell_jelly focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split
     hash 9c0d8e192d7991364ff220b2e313fedc2101c9488fcc93c6ef54d671fbec27ed
+  lodge_beaver focus seed=7: floor=13 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage
+    hash 2ecf30c45216c490dc362491eb5166b0b1f89497d4124f3a738d93001fdd21a7
+  aegis_ram focus seed=7: floor=21 cleared=True vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
+    hash 1899e26482ec4418aa84e178984b4f8a282a3c91b820f966094604043031d957
+  anvil_ape focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check
+    hash 544038efee3fc62027d05340ac6999fb79c6c6d34c2141999e0dac51072e43e8
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=2 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
     hash 6d346f21af11d5e3bae558c2741bebb86f0305bc0286efd01f10bd235bf7c600
 
@@ -48,10 +54,16 @@ day 20391 lineup sun_idol cinder_wyrm bramble_king tide_warden apex_chimera* glo
   keepshell_crab focus seed=7: floor=14 cleared=False vents=0 phases=5:shield_check,5:split,10:split,10:channel
     hash ce4068254cce6ac85af759e7895a68930ad85dc36aca03855ec41e6a00f68ab5
   iaido_mantis focus seed=7: floor=20 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check
-    hash 2d96a699144a7e4804108a8acce2b37538befc7a054234962fff0bd92ace3db0
+    hash 93534b1972ba3f7aaae08ee53a203ce469a8f687100ac53a84a8c603e8fd7fe8
   cuckling focus seed=7: floor=17 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage
     hash 8c47d600a77bd68eab2d118e3d3387467e3e74eafe52b08b05a23dda28330570
   gearbell_jelly focus seed=7: floor=11 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel
     hash 9a6d1edc5ce69598f1cb371f3e46c90949c2cc618f88f515082b6add7d2fff65
+  lodge_beaver focus seed=7: floor=14 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel
+    hash d5ec2b1aedb400b08ba7f8fc7e3204aefd5f0ea7c3038b225f21ff86d0155575
+  aegis_ram focus seed=7: floor=21 cleared=True vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
+    hash 05b08b82773afb7387a7ec6f0360bffab7e277e4b4e52479d0ede1418383504e
+  anvil_ape focus seed=7: floor=10 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split
+    hash 5500620f806af1a95adb02b552c2ff460ae35d2a8e79edd4d83b1ad7ea51282c
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
     hash c28aa190d9d58a3d5fab7b16bbb54e8fd2f3a5a461617520c53015830720bc55

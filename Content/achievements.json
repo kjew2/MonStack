@@ -106,6 +106,14 @@
       "unlocks_species": "lodge_beaver"
     },
     {
+      "id": "steadfast",
+      "name_key": "achievement.steadfast.name",
+      "kind": "endless_floor",
+      "ref": null,
+      "amount": 30.0,
+      "unlocks_species": "aegis_ram"
+    },
+    {
       "id": "heavy_hands",
       "name_key": "achievement.heavy_hands.name",
       "kind": "stat_reached",

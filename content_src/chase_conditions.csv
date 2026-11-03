@@ -80,6 +80,12 @@ great_dam_c0,great_dam,tree_maxed,barricade,
 great_dam_c1,great_dam,tree_maxed,mudwork,
 great_dam_c2,great_dam,stat_at_least,def,700
 great_dam_c3,great_dam,tally_at_least,wins,3
+headlong_oath_c0,headlong_oath,tree_maxed,brave_heart,
+headlong_oath_c1,headlong_oath,stat_at_least,str,500
+headlong_oath_c2,headlong_oath,tally_at_least,wins,2
+thunderhoof_c0,thunderhoof,node_owned,ramshorn_hymnal_n0,
+thunderhoof_c1,thunderhoof,node_owned,gilded_fleece_n4,
+thunderhoof_c2,thunderhoof,tally_at_least,damage_light,12000
 brittle_quench_c0,brittle_quench,tree_maxed,guard_break,
 brittle_quench_c1,brittle_quench,stat_at_least,str,500
 brittle_quench_c2,brittle_quench,tally_at_least,crits,4

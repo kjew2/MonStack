@@ -65,6 +65,10 @@
    "name": "Lodge Beaver",
    "prompt": "A stout beaver wearing a wall of stacked logs and mud so thick it can barely waddle, hugging one more log for the pile."
   },
+  "aegis_ram": {
+   "name": "Aegis Ram",
+   "prompt": "A white-and-gold bighorn ram braced inside a golden shield of light, hooves planted, three glowing pips charging on its curled horns. Noble, steadfast and mythic, a light-element monster."
+  },
   "anvil_ape": {
    "name": "Anvil Ape",
    "prompt": "A hulking silverback gorilla monster with molten orange cracks glowing through its dark hide and heavy iron hammer fists. It brings one fist down on a round shield, smashing it into glowing cracked shards that fly apart. A smith whose blows shatter any defence: powerful, heavy and fierce, a fire-element monster."
@@ -202,6 +206,16 @@
    "species": "lodge_beaver",
    "name": "Floodgate Colossus",
    "prompt": "a colossal beaver grown into its own dam: logs and river stone across its chest with sluice gates pouring white water, a pond and a little lodge on its back."
+  },
+  "headlong_oath": {
+   "species": "aegis_ram",
+   "name": "Aries Vanguard",
+   "prompt": "the ram rears up on its hind legs mid-charge, pushing the golden shield ahead of it like a battering wall, its horns sheathed in heavy gold plate, five pips burning along them, three gold and two cracked glowing crimson; crimson light bleeds through cracks in the shield. Colour palette shifts to gold and deep crimson."
+  },
+  "thunderhoof": {
+   "species": "aegis_ram",
+   "name": "Chrysomallos",
+   "prompt": "the winged ram of myth: fleece of beaten gold, sun-disc horns, the shield become wide golden wings, three pips orbiting like small suns."
   },
   "brittle_quench": {
    "species": "anvil_ape",

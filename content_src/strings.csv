@@ -871,6 +871,34 @@ mskill.tail_thump.name,Tail Thump
 mskill.tail_thump.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.sluice_gate.name,Sluice Gate
 mskill.sluice_gate.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+species.aegis_ram.name,Aegis Ram
+tree.gilded_fleece.name,Gilded Fleece
+tree.ramshorn_hymnal.name,Hymnal of the Ram's Horn
+tree.headlong_oath.name,Headlong Oath
+tree.thunderhoof.name,Thunderhoof
+tree.headlong_oath.apex,Aries Vanguard
+tree.thunderhoof.apex,Chrysomallos
+book.book_ramshorn.name,Skill Book: Hymnal of the Ram's Horn
+achievement.steadfast.name,Steadfast
+rule.fleece_aegis.name,Shepherd's Fleece
+rule.fleece_aegis.desc,"At the end of each turn in which it deals no damage (a Default, a debt skip, a shield, heal or other support move), the living ally with the least shield (itself when alone) gains a shield of {MON_FLEECE_SHIELD:pct} of its DEF, up to {MON_FLEECE_CAP:pct} of that ally's max HP. It never lowers a bigger shield."
+rule.fleece_aegis.log,shields {amount}
+rule.brave_debt.name,Headlong Oath
+rule.brave_debt.desc,"After spending its pips, if its target still stands it keeps going: up to {MON_DEBT_MAX} more extra actions in a row, taking its pips below 0 (within {MON_EXTRA_ACTIONS_CAP} extra actions per turn). While below 0 pips it skips each turn, unguarded, for +1 pip until it is back at 0."
+rule.brave_debt.log,pips now {amount}
+rule.ram_shock.name,Thunderhoof
+rule.ram_shock.desc,"Each pip or debt action that hits an enemy pushes the enemy's turn gauge back by {MON_RAM_KNOCK:pct} of a turn times its place in the chain (never below empty), and deals +{MON_RAM_RAMP:pct} damage for each earlier one in the chain."
+rule.ram_shock.log,thrown back {amount:pct} of a turn
+mskill.fleece_ward.name,Fleece Ward
+mskill.fleece_ward.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.horn_charge.name,Horn Charge
+mskill.horn_charge.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.shofar_call.name,Shofar Call
+mskill.shofar_call.desc,Chase trait. Every basic attack: {element} hit for {power:pct} {scales}.
+mskill.oath_bulwark.name,Oath Bulwark
+mskill.oath_bulwark.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+mskill.stampede.name,Stampede
+mskill.stampede.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
 species.anvil_ape.name,Anvil Ape
 tree.ringing_anvil.name,Ringing Anvil
 tree.brittle_quench.name,Brittle Quench
