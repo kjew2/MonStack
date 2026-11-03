@@ -70,7 +70,7 @@ namespace IdleRng.Sim.Tests
             var sp = db.SpeciesList.Single(x => x.Id == "fountain_axolotl");
             Assert.That((sp.Element, sp.NativeTree1, sp.NativeTree2, sp.ChaseTreeRun, sp.ChaseTreeBook),
                 Is.EqualTo(("water", "elemental_avatar", "clear_spring", "aquifer", "six_fountains")));
-            Assert.That(db.SpeciesList.Last().Id, Is.EqualTo("fountain_axolotl"), "appended: content order is picker order");
+            Assert.That(db.SpeciesList[0].Id, Is.Not.EqualTo("fountain_axolotl"), "appended, never the starter");
 
             // The idea-pool tree is native-only now: never offered by an Awakening, owned by this species alone.
             var avatar = db.Trees["elemental_avatar"];
@@ -354,6 +354,29 @@ namespace IdleRng.Sim.Tests
             var plain = Hits(Play(r, Fast("a"), Wall("b"), 4, 0.99)).Sum(x => x.Amount);
             var jets = Hits(Play(r, Fast("a", null, null, RuleModifiers.FountainJets), Wall("b"), 4, 0.99)).Sum(x => x.Amount);
             Assert.That(jets / plain, Is.EqualTo(r.Jets * r.JetPower).Within(1e-9));
+        }
+
+        [Test]
+        public void Jets_Hemorrhage_EachJetFillsTheBleedGauge()
+        {
+            var r = Rules;
+            double perHit = r.BleedPerHit * 300 / r.BleedDexRef;
+            Assume.That(r.Jets * perHit, Is.LessThan(BattleSim.BleedGauge), "no burst in one action");
+            FightState one = null, split = null;
+            Play(r, Fast("a", null, null, RuleModifiers.Hemorrhage), Wall("b"), 1, 0.99, s => one = s);
+            Play(r, Fast("a", null, null, RuleModifiers.Hemorrhage, RuleModifiers.FountainJets), Wall("b"), 1, 0.99, s => split = s);
+            Assert.That(one.Units[1].Bleed, Is.EqualTo(perHit).Within(1e-9));
+            Assert.That(split.Units[1].Bleed, Is.EqualTo(r.Jets * perHit).Within(1e-9), "a gauge multiplies with the jets");
+        }
+
+        [Test]
+        public void Jets_GuardBreak_EachCritJetStripsAPip()
+        {
+            var r = Rules;
+            Func<Fighter, List<FightAction>> breaks = a => Play(r, a, Wall("b", x => x.Dex = 0), 1, 0).Where(x => x.Event == BattleSim.BreakEvent).ToList();
+            Assert.That(breaks(Fast("a", x => x.Dex = 900, null, RuleModifiers.GuardBreak)).Count, Is.EqualTo(1));
+            var split = breaks(Fast("a", x => x.Dex = 900, null, RuleModifiers.GuardBreak, RuleModifiers.FountainJets));
+            Assert.That(split.Count, Is.EqualTo(Math.Min(r.Jets, r.BreakPips)), "one pip per crit jet, until the guard breaks");
         }
 
         // ------------------------------------------------------------------ the species kit

@@ -223,7 +223,7 @@
       "tree_id": "aquifer",
       "type": "stat_at_least",
       "ref": "int",
-      "amount": 500.0
+      "amount": 600.0
     },
     {
       "id": "aquifer_c2",

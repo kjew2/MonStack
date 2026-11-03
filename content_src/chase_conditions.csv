@@ -30,7 +30,7 @@ night_feast_c0,night_feast,node_owned,umbral_grimoire_n0,
 night_feast_c1,night_feast,node_owned,shadow_harvest_n4,
 night_feast_c2,night_feast,tally_at_least,damage_dark,7000
 aquifer_c0,aquifer,tree_maxed,elemental_avatar,
-aquifer_c1,aquifer,stat_at_least,int,500
+aquifer_c1,aquifer,stat_at_least,int,600
 aquifer_c2,aquifer,tally_at_least,wins,2
 six_fountains_c0,six_fountains,node_owned,springs_almanac_n0,
 six_fountains_c1,six_fountains,node_owned,clear_spring_n4,
