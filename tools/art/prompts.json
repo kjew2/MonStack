@@ -48,6 +48,10 @@
   "keepshell_crab": {
    "name": "Keepshell Crab",
    "prompt": "A stubby rust-orange hermit crab that wears a whole stone castle keep as its shell: crenellated towers, a portcullis gate over its face, coral and seaweed growing in the mortar. Its claws are wrapped in riveted gate-plates and raised to punch. Cute, glaring little castle."
+  },
+  "gearbell_jelly": {
+   "name": "Gearbell Jelly",
+   "prompt": "A small floating moon jellyfish creature in deep indigo and violet. Its translucent bell is a glowing mana barrier, and tiny luminous rune gears turn slowly inside it like clockwork. Soft trailing tentacles drift beneath it, tipped with faint violet light. Big gentle glowing eyes inside the bell. Cute, calm and a little mysterious, a dark-element monster."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -142,6 +146,16 @@
    "species": "keepshell_crab",
    "name": "Siegebreaker Crab",
    "prompt": "the castle shell has been rebuilt as a dark iron-and-timber siege tower on wheels, its claws replaced by heavy black iron battering rams with crab-claw heads, cracked enemy shields hung on its walls as trophies. Colour palette shifts from grey stone to black iron, dark wood and rust red."
+  },
+  "carillon": {
+   "species": "gearbell_jelly",
+   "name": "Carillon Medusa",
+   "prompt": "the bell grows into a tower of nested rune bells, tentacles hanging like bell ropes, a violet shockwave pulsing from the rim."
+  },
+  "perpetual_escapement": {
+   "species": "gearbell_jelly",
+   "name": "Orrery Moonbell",
+   "prompt": "the jelly has become a vast moon-like bell of pale silver glass, holding a slowly turning orrery of brass rune gears and tiny glowing planets inside, a glowing clock face showing through the crown, tentacles frozen mid-drift as if time stopped. Colour palette shifts from violet to pale silver, moonlight white and brass."
   }
  }
 }

@@ -54,7 +54,7 @@ resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monst
 vantage,tree.vantage.name,generic,spd,400,,,,idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage
 deaths_door,tree.deaths_door.name,generic,luk,400,,,,idea-pool lane B (#135): Darkest Dungeon Death's Door
 barricade,tree.barricade.name,generic,def,400,,,,idea-pool lane B (#135): Slay the Spire Barricade
-mana_ward,tree.mana_ward.name,generic,wis,400,,,,idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery
+mana_ward,tree.mana_ward.name,native,,,,,,"idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery; Gearbell Jelly's native tree 1 (#158, kj 2026-11-03)"
 brave_heart,tree.brave_heart.name,generic,spd,400,,,,idea-pool lane C (#136): Bravely Default Brave/Default
 one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
 guard_break,tree.guard_break.name,generic,str,400,,,,idea-pool lane C (#136): Octopath Break
@@ -94,3 +94,7 @@ tide_moat,tree.tide_moat.name,native,,,,,,keepshell crab native tree 2 (#152)
 siege_manual,tree.siege_manual.name,book,,,,,,keepshell crab's book tree (Siege Pincers)
 unbreached_keep,tree.unbreached_keep.name,chase,,,tree.unbreached_keep.apex,,,keepshell crab in-run chase tree
 siege_pincers,tree.siege_pincers.name,chase,,,tree.siege_pincers.apex,,,keepshell crab book-gated chase tree
+rune_gearwork,tree.rune_gearwork.name,native,,,,,,gearbell jelly native tree 2 (#158): the refill engine of Mana Ward
+still_hours_codex,tree.still_hours_codex.name,book,,,,,,gearbell jelly's book tree (Perpetual Escapement)
+carillon,tree.carillon.name,chase,,,tree.carillon.apex,,,gearbell jelly in-run chase tree
+perpetual_escapement,tree.perpetual_escapement.name,chase,,,tree.perpetual_escapement.apex,,,gearbell jelly book-gated chase tree

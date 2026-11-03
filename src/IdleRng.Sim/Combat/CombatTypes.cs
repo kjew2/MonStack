@@ -823,6 +823,27 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>The unit's physical hits ignore the target's DEF and add MON_CRACK_DEF x that DEF to the raw damage. The Siege Pincers book chase capstone (Keepshell Crab).</summary>
         public const string Shellcrack = "shellcrack";
+        // Species Gearbell Jelly (#158), coded in Combat/Rules/GearbellJelly.cs.
+
+        /// <summary>
+        /// Each active skill with a cooldown of 2 or more the unit casts restores MON_REWIND_WIS x WIS of its mana_ward ward, up to the
+        /// ward's full size (a broken ward re-forms); nothing without mana_ward. The Rune Gearwork native capstone (Gearbell Jelly).
+        /// </summary>
+        public const string WardRewind = "ward_rewind";
+
+        /// <summary>
+        /// When the unit's ward breaks it tolls: MON_TOLL_DMG x the ward's full size as dark magical damage to every living enemy; the
+        /// ward re-forms at MON_TOLL_REFORM after MON_TOLL_DELAY own actions; at most MON_TOLL_MAX per fight. The Carillon in-run chase
+        /// capstone (Gearbell Jelly).
+        /// </summary>
+        public const string WardToll = "ward_toll";
+
+        /// <summary>
+        /// The unit's skill cooldowns tick on the fight clock (one per turn of time), not on its actions; a cooldown skill that comes
+        /// ready is cast at once, out of turn (MON_ESCAPE_POWER, counted toward MON_EXTRA_ACTIONS_CAP). The Perpetual Escapement book
+        /// chase capstone (Gearbell Jelly).
+        /// </summary>
+        public const string Escapement = "escapement";
 
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
@@ -836,7 +857,8 @@ namespace IdleRng.Sim.Combat
             ClearSpring, Seep, FountainJets,
             MartyrFlame, HollowSun,
             PyreTithe, AshShroud, PyreMercy, EmberEternal,
-            TideMoat, Unbreached, Shellcrack };
+            TideMoat, Unbreached, Shellcrack,
+            WardRewind, WardToll, Escapement };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

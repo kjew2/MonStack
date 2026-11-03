@@ -119,6 +119,9 @@ REQUIRED_CONSTANTS = {
     "MON_EMBER_FLOOR": "double",
     # species Keepshell Crab (#152), tide_moat, unbreached and shellcrack (specs/16 section 6.2)
     "MON_MOAT_DEF": "double", "MON_WALL_DEF": "double", "MON_WALL_ERODE": "double", "MON_CRACK_DEF": "double",
+    # species Gearbell Jelly (#158), ward_rewind, ward_toll and escapement (specs/16 section 6.2)
+    "MON_REWIND_WIS": "double", "MON_TOLL_DMG": "double", "MON_TOLL_SHARE": "double", "MON_TOLL_REFORM": "double", "MON_TOLL_DELAY": "int", "MON_TOLL_MAX": "int",
+    "MON_ESCAPE_POWER": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -148,7 +151,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species pyre_stag (#142), coded in Combat/Rules/PyreStag.cs
             "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal",
             # species Keepshell Crab (#152)
-            "tide_moat", "unbreached", "shellcrack"]
+            "tide_moat", "unbreached", "shellcrack",
+            # species Gearbell Jelly (#158), coded in Combat/Rules/GearbellJelly.cs
+            "ward_rewind", "ward_toll", "escapement"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -252,6 +257,10 @@ MON_RANGES = {
     # species Keepshell Crab (#152): the walls must always fall, so the erosion is never 0
     "MON_MOAT_DEF": (">= 0", lambda v: v >= 0), "MON_WALL_DEF": (">= 0", lambda v: v >= 0),
     "MON_WALL_ERODE": ("(0, 1]", lambda v: 0 < v <= 1), "MON_CRACK_DEF": (">= 0", lambda v: v >= 0),
+    # species Gearbell Jelly (#158)
+    "MON_REWIND_WIS": (">= 0", lambda v: v >= 0), "MON_TOLL_DMG": (">= 0", lambda v: v >= 0),
+    "MON_TOLL_REFORM": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_SHARE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TOLL_DELAY": (">= 0", lambda v: v >= 0),
+    "MON_TOLL_MAX": (">= 0", lambda v: v >= 0), "MON_ESCAPE_POWER": (">= 0", lambda v: v >= 0),
 }
 
 

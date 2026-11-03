@@ -72,6 +72,14 @@
       "ref": "def",
       "amount": 650.0,
       "unlocks_species": "keepshell_crab"
+    },
+    {
+      "id": "still_waters",
+      "name_key": "achievement.still_waters.name",
+      "kind": "stat_reached",
+      "ref": "wis",
+      "amount": 600.0,
+      "unlocks_species": "gearbell_jelly"
     }
   ]
 }

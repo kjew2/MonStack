@@ -255,6 +255,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 unbreached and shellcrack", 14,
                 new[] { KeepshellCrab("a_keep", RuleModifiers.Unbreached), KeepshellCrab("a_siege", RuleModifiers.Shellcrack) },
                 new[] { Tank("b_tank", "fire"), Mage("b_mage", "nature"), Brawler("b_brawler", "dark") });
+            // Species Gearbell Jelly (#158): Mana Ward with Rewind on both, one tolling jelly and one on the clock, against a team
+            // of hitters (the brawler breaks the bell) and a healer.
+            yield return new Vector("2v3 gearbell jelly toll and escapement", 15,
+                new[] { GearbellJelly("a_toll", RuleModifiers.WardToll), GearbellJelly("a_clock", RuleModifiers.Escapement) },
+                new[] { Brawler("b_brawler", "light"), Mage("b_mage", "nature"), Healer("b_healer", "water") });
         }
 
         // Species Fountain Axolotl (#150).
@@ -323,6 +328,14 @@ namespace IdleRng.Bots.Golden
             Id = id, Element = "water", Stats = S(420, 70, 50, 160, 120, 600, 140, 240),
             Skills = { Dmg("iron_press", StatIds.Def, 1.2, 2), Dmg("moat_surge", StatIds.Def, 1.3, 2, SkillTarget.Enemy, "water") },
             Rules = { RuleModifiers.FortressFist, RuleModifiers.TideMoat, chase },
+        };
+
+        // Species Gearbell Jelly (#158): the native kit (Mana Ward, Rune Gearwork's Rewind and Bell Sting) plus one chase capstone.
+        static Fighter GearbellJelly(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(260, 60, 140, 520, 360, 140, 180, 300),
+            Skills = { Dmg("bell_sting", StatIds.Wis, 1.3, 3, SkillTarget.Enemy, "dark"), Dmg("knell", StatIds.Wis, 0.8, 3, SkillTarget.AllEnemies, "dark") },
+            Rules = { RuleModifiers.ManaWard, RuleModifiers.WardRewind, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.

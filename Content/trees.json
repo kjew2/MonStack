@@ -554,9 +554,9 @@
     {
       "id": "mana_ward",
       "name_key": "tree.mana_ward.name",
-      "kind": "generic",
-      "offer_stat": "wis",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -948,6 +948,46 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.siege_pincers.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "rune_gearwork",
+      "name_key": "tree.rune_gearwork.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "still_hours_codex",
+      "name_key": "tree.still_hours_codex.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "carillon",
+      "name_key": "tree.carillon.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.carillon.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "perpetual_escapement",
+      "name_key": "tree.perpetual_escapement.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.perpetual_escapement.apex",
       "fuse_a": null,
       "fuse_b": null
     }

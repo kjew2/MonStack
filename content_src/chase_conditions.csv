@@ -55,3 +55,9 @@ unbreached_keep_c2,unbreached_keep,tally_at_least,wins,2
 siege_pincers_c0,siege_pincers,node_owned,siege_manual_n0,
 siege_pincers_c1,siege_pincers,node_owned,tide_moat_n4,
 siege_pincers_c2,siege_pincers,tally_at_least,damage_water,5000
+carillon_c0,carillon,tree_maxed,mana_ward,
+carillon_c1,carillon,stat_at_least,wis,700
+carillon_c2,carillon,tally_at_least,wins,2
+perpetual_escapement_c0,perpetual_escapement,node_owned,still_hours_codex_n0,
+perpetual_escapement_c1,perpetual_escapement,node_owned,rune_gearwork_n4,
+perpetual_escapement_c2,perpetual_escapement,tally_at_least,evades,2
