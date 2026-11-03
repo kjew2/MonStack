@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.17/80fcab38
+# battle-sim vectors, hash v2 content=6.18/588f8358
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -110,16 +110,16 @@
   A4 b_brawler#risen hp    960.00/   960.00 act   0 dealt       0.00 taken       0.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   hash 7098ad73aa729744303aaf6a79bcc4f1a4e92f98ab83cae8b9318ccd5db85cfc
 
-4v4 debuff and lock capstones seed=11 outcome=SideBWon ticks=137
+4v4 debuff and lock capstones seed=11 outcome=SideBWon ticks=82
   A0 a_bleed  hp      0.00/  5200.00 act   9 dealt    3022.82 taken    5200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
-  A1 a_priv   hp      0.00/  4800.00 act  20 dealt    3727.05 taken    4800.00 heal      0.00 crit  0 evade  0 kill 2 counter  0
-  A2 a_eq     hp      0.00/  4600.00 act  11 dealt    4692.43 taken    4600.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  A3 a_corrupt hp      0.00/  5000.00 act  32 dealt    9972.43 taken    9372.00 heal   4372.00 crit 14 evade  0 kill 0 counter  0
-  B0 b_tank   hp      0.00/  5200.00 act   4 dealt    6455.67 taken    5684.85 heal      0.00 crit  0 evade  0 kill 1 counter  9
-  B1 b_brawler hp    493.82/  3200.00 act  30 dealt   10085.94 taken    8187.18 heal      0.00 crit  4 evade  1 kill 3 counter  0
-  B2 b_mage   hp      0.00/  2400.00 act  15 dealt    5892.16 taken    4059.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
-  B3 b_healer hp    965.30/  3000.00 act  30 dealt    1538.23 taken    3483.70 heal   9073.85 crit  1 evade  1 kill 0 counter  0
-  hash 05444708f44de59f6357169fdce6525aaf62196a6d1427a3123e4e0152d31b0e
+  A1 a_priv   hp      0.00/  4800.00 act  18 dealt    2599.75 taken    4800.00 heal      0.00 crit  0 evade  1 kill 0 counter  0
+  A2 a_eq     hp      0.00/  4600.00 act  14 dealt    4803.47 taken    4600.00 heal      0.00 crit  0 evade  0 kill 1 counter  0
+  A3 a_corrupt hp      0.00/  5000.00 act   8 dealt    3206.21 taken    5000.00 heal      0.00 crit  6 evade  0 kill 0 counter  0
+  B0 b_tank   hp      0.00/  5200.00 act   4 dealt    7089.35 taken    5684.85 heal      0.00 crit  0 evade  0 kill 1 counter  9
+  B1 b_brawler hp   2412.67/  3200.00 act  17 dealt    5757.72 taken    2120.83 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  B2 b_mage   hp   1468.58/  2400.00 act  18 dealt    5906.48 taken    3398.92 heal      0.00 crit  2 evade  0 kill 3 counter  0
+  B3 b_healer hp   2157.86/  3000.00 act  18 dealt     846.45 taken    2427.64 heal   5871.35 crit  2 evade  1 kill 0 counter  0
+  hash bbb4f6e00eace4eedc99676f5dbd39d262a94c92b601f604e789bdfda17c7fd5
 
 3v3 fountain axolotl vs walls seed=13 outcome=SideAWon ticks=34
   A0 a_axolotl hp   1700.11/  3200.00 act   7 dealt    5312.58 taken    1499.89 heal      0.00 crit  6 evade  0 kill 2 counter  0
@@ -172,3 +172,11 @@
   B2 b_mage   hp      0.00/  2400.00 act   2 dealt    1317.56 taken    2904.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   A2 a_empress#egg hp   1010.00/  2100.00 act   4 dealt     553.64 taken    1489.74 heal      0.00 crit  1 evade  0 kill 0 counter  0
   hash 6b4ff7e5874a65e70d1d25fc7d5df324defba95bf1c69ee3182430d1c9267092
+
+2v3 gearbell jelly toll and escapement seed=15 outcome=SideAWon ticks=80
+  A0 a_toll   hp    795.62/  2600.00 act  14 dealt    8586.64 taken    1804.38 heal      0.00 crit  3 evade  2 kill 2 counter  0
+  A1 a_clock  hp   1427.06/  2600.00 act  14 dealt    5809.36 taken    1172.94 heal      0.00 crit  5 evade  0 kill 1 counter  0
+  B0 b_brawler hp      0.00/  3200.00 act   9 dealt    1906.13 taken    5132.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B1 b_mage   hp      0.00/  2400.00 act   6 dealt     671.67 taken    3114.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B2 b_healer hp      0.00/  3000.00 act  18 dealt     399.51 taken    6150.00 heal   5796.00 crit  0 evade  0 kill 0 counter  0
+  hash 83d2f7604da3bd4b3f0d8af39d1dc19b8562127f44abf91e196a4c4efd5ba6d6

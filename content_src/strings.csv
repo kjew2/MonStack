@@ -821,6 +821,34 @@ rule.stolen_turn.log,"steals the turn ({amount} more on this foe)"
 rule.usurp.log,turns the stolen turn on its owner
 rule.foundling_egg.log,{amount} HP
 rule.foundling_egg.unit,{name}'s Foundling
+species.gearbell_jelly.name,Gearbell Jelly
+tree.rune_gearwork.name,Rune Gearwork
+tree.still_hours_codex.name,Codex of Still Hours
+tree.carillon.name,Carillon
+tree.perpetual_escapement.name,Perpetual Escapement
+tree.carillon.apex,Carillon Medusa
+tree.perpetual_escapement.apex,Orrery Moonbell
+book.book_hours.name,Skill Book: Codex of Still Hours
+achievement.still_waters.name,Still Waters
+rule.ward_rewind.name,Rewind
+rule.ward_rewind.desc,"Each skill with a cooldown of 2 or more it casts restores {MON_REWIND_WIS} times its WIS of its Mana Ward ward, up to the ward's full size. A broken ward re-forms. Does nothing without Mana Ward."
+rule.ward_rewind.log,ward restored by {amount}
+rule.ward_toll.name,Carillon
+rule.ward_toll.desc,"Its ward takes {MON_TOLL_SHARE:pct} of each blow (if more than usual). When the ward breaks, it tolls: {MON_TOLL_DMG:pct} of the ward's full size as dark damage to every enemy (WIS defends; can graze, never crits). The ward re-forms at {MON_TOLL_REFORM:pct} after {MON_TOLL_DELAY} of its actions. At most {MON_TOLL_MAX} tolls per fight."
+rule.ward_toll.log,tolls for {amount}
+rule.escapement.name,Perpetual Escapement
+rule.escapement.desc,"Its skill cooldowns run on the fight clock, one per turn of time, not on its actions. A skill that comes ready is cast at once, out of turn, at {MON_ESCAPE_POWER:pct} power. Its own turns use skills with no cooldown or basic attacks."
+rule.escapement.log,casts a skill out of turn on the clock
+mskill.bell_sting.name,Bell Sting
+mskill.bell_sting.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.knell.name,Knell
+mskill.knell.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.hour_hand.name,Hour Hand
+mskill.hour_hand.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.second_hand.name,Second Hand
+mskill.second_hand.desc,Book trait. On evade: strike back for {power:pct} {scales}.
+mskill.chime_cascade.name,Chime Cascade
+mskill.chime_cascade.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
 species.aegis_ram.name,Aegis Ram
 tree.gilded_fleece.name,Gilded Fleece
 tree.ramshorn_hymnal.name,Hymnal of the Ram's Horn
