@@ -677,6 +677,21 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(await page.locator('#modal').isHidden(), 'Close returns to the tower result');
   check(await page.locator('[data-id=tower-loot].anim').count() === 0, 'the loot banner plays once, not again after a playback');
   check((await page.locator('[data-id=tower-cards] .lcard.up').count()) === lootCards, 'flipped loot cards stay face up after a re-render');
+  // ---- the damage chart (optional, behind a button): each team monster's damage dealt and taken, every floor or one
+  await act('tower-chart').click();
+  await page.locator('#modal [data-id=chart-tower]').waitFor();
+  const towerVals = await page.$$eval('#modal [data-id^=chart-unit-] .cval', (vs) => vs.map((v) => v.textContent));
+  check((await page.locator('#modal [data-id^=chart-unit-]').count()) === 1 && towerVals.length >= 2 && towerVals.every((v) => /^[\d,]+( · \d+%)?$/.test(v)),
+    'the damage chart shows the one team monster with its dealt and taken bars: ' + towerVals.join(' / '));
+  check(/^Team: dealt [\d,]+ · took [\d,]+/.test(await text('[data-id=chart-total]')), 'and the team totals: ' + (await text('[data-id=chart-total]')));
+  check((await page.locator('#modal [data-id=chart-tower]').getAttribute('data-floor')) === '0', 'the chart opens on every floor fought, added up');
+  await page.selectOption('[data-act=chart-floor]', String(lastFloor.floor));
+  check((await page.locator('#modal [data-id=chart-tower]').getAttribute('data-floor')) === String(lastFloor.floor), 'the floor picker narrows it to one floor');
+  const cw = await page.evaluate(() => document.documentElement.scrollWidth);
+  check(cw <= 390, 'the damage chart fits the phone width (' + cw + 'px)');
+  await shot('06f-tower-chart');
+  await act('chart-close').click();
+  check(await page.locator('#modal').isHidden(), 'Close returns to the tower result');
   const tower = await readAccount();
   check(tower.Account.Tower.AttemptsUsed === 1 && tower.Account.Tower.Day >= 0 && tower.Account.Tower.GrantDay === tower.Account.Tower.Day,
     'the attempt is counted and saved (day ' + tower.Account.Tower.Day + ')');

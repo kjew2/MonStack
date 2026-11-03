@@ -32,6 +32,29 @@ namespace IdleRng.Sim.Tower
         public int Vents { get; set; }
         public int PeakCorruption { get; set; }
         public string FightHash { get; set; }
+
+        /// <summary>What each team monster did on this floor, in slot order (the damage chart). Not hashed: it is read off the fight.</summary>
+        public List<TeamTally> Team { get; set; } = new List<TeamTally>();
+    }
+
+    /// <summary>
+    /// One team monster's totals on one floor, from its fight tallies (specs/16 section 6.3): damage dealt and taken (HP lost,
+    /// after shields) and healing done. The Dungeon and Endless Tower result cards chart them (specs/21 section 8).
+    /// </summary>
+    public sealed class TeamTally
+    {
+        public double Dealt { get; set; }
+        public double Taken { get; set; }
+        public double Healed { get; set; }
+
+        /// <summary>Side A's monsters at the end of a fight, in slot order (adds excluded).</summary>
+        public static List<TeamTally> Of(FightState s)
+        {
+            var list = new List<TeamTally>();
+            foreach (var u in s.Units)
+                if (u.Side == 0 && !u.IsAdd) list.Add(new TeamTally { Dealt = u.Tally.DamageDealt, Taken = u.Tally.DamageTaken, Healed = u.Tally.HealingDone });
+            return list;
+        }
     }
 
     /// <summary>
@@ -185,6 +208,7 @@ namespace IdleRng.Sim.Tower
                 floor.Ticks = fight.Ticks;
                 floor.PeakCorruption = fight.Final.PeakCorruption;
                 floor.FightHash = fight.Hash;
+                floor.Team = TeamTally.Of(fight.Final);
                 result.Floors.Add(floor);
                 if (!floor.Won) { result.FloorReached = plan.Floor; break; }
             }

@@ -573,7 +573,9 @@ namespace IdleRng.Web
                     .P("vents", f.Vents).P("corruption", f.PeakCorruption).P("hash", f.FightHash);
                 w.Key("phases").Arr();
                 foreach (var ph in f.Phases) w.Str(_db.Text("phase." + ph + ".name"));
-                w.EndArr().EndObj();
+                w.EndArr();
+                TeamTallies(w, f.Team);
+                w.EndObj();
             }
             w.EndArr();
             // The deciding floor's fight for playback (the last floor fought); any other comes from endlessFloor.
@@ -727,7 +729,9 @@ namespace IdleRng.Web
                     .P("won", f.Won).P("ticks", f.Ticks).P("vents", f.Vents).P("corruption", f.PeakCorruption).P("hash", f.FightHash);
                 w.Key("phases").Arr();
                 foreach (var p in f.Phases) w.Str(_db.Text("phase." + p + ".name"));
-                w.EndArr().EndObj();
+                w.EndArr();
+                TeamTallies(w, f.Team);
+                w.EndObj();
             }
             w.EndArr();
             w.Key("final").Obj();
@@ -748,6 +752,14 @@ namespace IdleRng.Web
             var f = res.Floors.FirstOrDefault(x => x.Floor == floor) ?? throw new ArgumentException("the team does not reach floor " + floor);
             w.P("ok", true);
             TowerFight(w, f, idx, log, final);
+        }
+
+        /// <summary>A floor's "team": each team monster's damage dealt, taken and healing done there, in slot order (the damage chart).</summary>
+        private static void TeamTallies(JsonOut w, List<TeamTally> team)
+        {
+            w.Key("team").Arr();
+            foreach (var t in team) w.Obj().P("dealt", t.Dealt).P("taken", t.Taken).P("healed", t.Healed).EndObj();
+            w.EndArr();
         }
 
         private List<int> Indices(JsonElement indices)
