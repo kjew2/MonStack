@@ -44,6 +44,7 @@
     endlessTeam: [],         // Endless Tower team: exactly teamSize Vault indices in slot order (specs/28 section 2)
     endlessTab: 'team',      // the Endless screen's section: 'team', 'floors' or 'board' (issue #130: one phone screen each)
     endlessPickOpen: false,  // the Vault list under a full Endless team, unfolded to swap a monster
+    onlineBoard: null,       // the server's season board on a remote server: { season, seq, data, loading, error } (onlineBoard)
     endlessResult: null,     // the last climb's result from the engine (run.runEndless) plus its season and team, shown on the Endless screen
     chart: null,             // the damage chart open over the Dungeon or Endless result: { floor } (0 = every floor fought, the default), or null
     endlessFight: null,      // the Endless floor fight shown in the playback modal, or null
@@ -1831,35 +1832,49 @@
 
   // The season board (specs/28 section 6): the best floors cleared this season, ties to whoever got there first, the player's
   // own row marked (and shown under the top when it is below it), and the display name the board shows, edited in place. The
-  // engine ranks, names and checks names; this only lays it out. While the page has no server the board is this device's only.
+  // engine (or the server) ranks, names and checks names; this only lays it out. On a remote server (GitHub Pages) the rows are
+  // the server's board, read when the tab opens and again after each commit lands; on the local test build they are this
+  // account's only (the engine's board).
   function endlessBoard(main, season) {
-    const b = run.endlessBoard(season);
+    const b = run.endlessBoard(season), ob = onlineBoard(season);
+    const d = ob ? ob.data : b;   // the rows shown: the server's (null until the first read lands) or the engine's
     main.append(h('h3', { text: 'Season board' }));
-    const card = h('div', { class: 'card eboard', 'data-id': 'endless-board' });
-    if (b.local) card.append(h('p', { class: 'small muted', 'data-id': 'endless-board-local', text: 'Only your own results show here until online accounts are live.' }));
+    const card = h('div', { class: 'card eboard', 'data-id': 'endless-board', 'data-online': ob ? '1' : null });
+    if (!ob) card.append(h('p', { class: 'small muted', 'data-id': 'endless-board-local', text: 'Only your own results show here until online accounts are live.' }));
     const row = (r) => h('li', { class: 'brow' + (r.you ? ' you' : ''), 'data-id': 'endless-board-row-' + r.rank, 'data-you': r.you ? '1' : null }, [
       h('span', { class: 'num muted', text: '#' + r.rank }),
       h('b', { class: 'bname', text: r.name + (r.you ? ' (you)' : '') }),
       h('span', { class: 'num', text: plural(r.floor, 'floor', 'floors') }),
     ]);
-    if (!b.top.length) card.append(h('p', { class: 'small', 'data-id': 'endless-board-empty', text: 'Nobody has cleared a floor this season yet. Climb to get on the board.' }));
+    const retry = () => h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-board-retry', text: 'Try again',
+      onclick: () => { ob.seq = null; ob.error = null; render(); } });
+    if (ob && ob.error) card.append(h('div', { class: 'row between small' }, [
+      h('span', { class: 'bad', 'data-id': 'endless-board-error', role: 'alert', text: 'Could not load the online board: ' + ob.error }), retry()]));
+    if (!d) { if (!ob.error) card.append(h('p', { class: 'small muted', 'data-id': 'endless-board-loading', text: 'Loading the online board…' })); }
+    else if (!d.top.length) card.append(h('p', { class: 'small', 'data-id': 'endless-board-empty', text: 'Nobody has cleared a floor this season yet. Climb to get on the board.' }));
     else {
-      const list = h('ol', { class: 'blist' }, b.top.map(row));
-      if (b.you && !b.top.some((r) => r.you)) list.append(h('li', { class: 'brow gap muted', text: '…' }), row(b.you));
+      const list = h('ol', { class: 'blist' }, d.top.map(row));
+      if (d.you && !d.top.some((r) => r.you)) list.append(h('li', { class: 'brow gap muted', text: '…' }), row(d.you));
       card.append(list);
-      card.append(h('p', { class: 'small muted num', 'data-id': 'endless-board-total', text: plural(b.total, 'trainer', 'trainers') + ' on the board · ties go to whoever got there first' }));
+      card.append(h('p', { class: 'small muted num', 'data-id': 'endless-board-total', text: plural(d.total, 'trainer', 'trainers') + ' on the board · ties go to whoever got there first' }));
     }
+    // A climb the server has not accepted yet is not on its board: say so rather than look lost. Only while commands wait to be
+    // saved: an account the server leaves off its board (debug commands) is never behind for that reason.
+    const mine = b.you ? b.you.floor : 0, theirs = d && d.you ? d.you.floor : 0;
+    if (ob && d && mine > theirs && window.MonStackSync.state().pending > 0) card.append(h('p', { class: 'small muted', 'data-id': 'endless-board-unsaved', text: 'Your best this season (' + plural(mine, 'floor', 'floors') + ') shows here once it is saved to the server.' }));
+    // Without a name the server shows "Trainer XXXX" from the player id, which only its own row tells the page.
+    const fallback = ob ? (d && d.you && !b.name ? d.you.name : 'a generated name') : b.fallbackName;
 
     const ed = ui.nameEdit;
     if (!ed) card.append(h('div', { class: 'row between small' }, [
       h('span', { 'data-id': 'endless-name' }, b.name ? ['Your name: ', h('b', { text: b.name })]
-        : ['Your name: ', h('span', { class: 'muted', text: b.fallbackName + ' (until you pick one)' })]),
+        : ['Your name: ', h('span', { class: 'muted', text: fallback + ' (until you pick one)' })]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-name', text: b.name ? 'Change' : 'Pick a name',
         onclick: () => { ui.nameEdit = { draft: b.name || '', error: null }; render(); const i = document.querySelector('[data-id=endless-name-input]'); if (i) i.focus(); } }),
     ]));
     else {
       const input = h('input', { type: 'text', 'data-id': 'endless-name-input', maxlength: String(b.nameMax + 8), autocomplete: 'off', spellcheck: 'false',
-        placeholder: b.fallbackName, 'aria-label': 'Display name', value: ed.draft });
+        placeholder: ob ? 'Your name' : b.fallbackName, 'aria-label': 'Display name', value: ed.draft });
       input.oninput = () => { ed.draft = input.value; };
       const save = () => {
         const r = run.setName(input.value);
@@ -1879,6 +1894,27 @@
     }
     main.append(card);
   }
+
+  // The server's season board on a remote transport (web/sync.js `endlessBoard`), or null on the local test build. Read once per
+  // season and commit: `seq` is the server commit the last read started at, so the board is read again once a commit lands (a
+  // climb or a new name). A failed read waits for Try again or the next commit. A read landing while the player types a name
+  // waits for the next render, so the field keeps its focus.
+  function onlineBoard(season) {
+    const Y = window.MonStackSync;
+    if (!Y || !Y.onlineBoard || !Y.onlineBoard()) return null;
+    let ob = ui.onlineBoard;
+    if (!ob || ob.season !== season) ob = ui.onlineBoard = { season: season, seq: null, data: null, loading: false, error: null };
+    const seq = Y.state().seq;
+    if (!ob.loading && ob.seq !== seq) {
+      ob.loading = true; ob.seq = seq;
+      let p;
+      try { p = Y.endlessBoard(season); } catch (e) { p = Promise.reject(e); }
+      Promise.resolve(p).then((d) => { ob.data = d; ob.error = null; }, (e) => { ob.error = (e && e.message) || String(e); })
+        .then(() => { ob.loading = false; if (ui.onlineBoard === ob && boardShown() && !ui.nameEdit) render(); });
+    }
+    return ob;
+  }
+  const boardShown = () => ui.view === 'endless' && ui.endlessTab === 'board';
 
   // The rulebook editor (web/rulebook.js, specs/28 section 4.5) draws its own overlay and calls onChange after a save. Its Test
   // button replays `floor` with the edited rulebooks: the floor that stopped the shown climb, else the next floor not yet cleared;
@@ -2476,6 +2512,11 @@
       watchDebugTaps();
       if (run.state) ui.view = 'run';
       if (run.loadNotice) toast(run.loadNotice);
+      // A commit landing while the season board shows reads the server's board again (onlineBoard).
+      if (window.MonStackSync) window.MonStackSync.onChange((st) => {
+        const ob = ui.onlineBoard;
+        if (ob && !ob.loading && ob.seq !== st.seq && boardShown() && !ui.nameEdit) render();
+      });
       render();
     } catch (e) {
       $('main').replaceChildren(h('h2', { text: 'The game did not load' }), h('p', { class: 'err', text: e && e.message ? e.message : String(e) }));

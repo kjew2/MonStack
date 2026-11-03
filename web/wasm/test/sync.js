@@ -12,6 +12,8 @@
 // - stale content: the server runs other content; the device says a new version is out, keeps its moves and plays them again
 //   after the reload;
 // - one tab plays: a second tab says the game is open elsewhere and can take over;
+// - the season board on a remote server: the Board tab reads the server's board (a failure says so with Try again) and reads it
+//   again after a commit lands;
 // - without a transport the page runs the local test server and says "Local test build"; on the GitHub Pages address it uses
 //   the Cloud Code module and, with that unreachable, waits on "Connecting..." instead of falling back.
 // Usage: node web/wasm/test/sync.js [--shots dir]   (screenshots are debug output, never compared)
@@ -236,6 +238,54 @@ function deviceTransport() {
   check(/opened in another tab/.test(await pb.locator('#sync-wait').innerText()), '"Play here" moves play to the new tab; the first one stops');
   await pb2.close();
   await bctx.close();
+
+  // ---- the season board on a remote server (specs/28 section 6.1): the Board tab reads the server's board, not this device's;
+  // a failed read shows why with Try again; a commit landing (here a new name) reads it again
+  const board = { fail: false, reads: [], name: null };
+  const bctx2 = await browser.newContext({ viewport: H.PHONE });
+  await bctx2.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  const pe = await bctx2.newPage();
+  pe.on('pageerror', (e) => t.errors.push('pageerror (board): ' + e.message));
+  await device(bctx2, pe);
+  await bctx2.exposeBinding('__board', async (src, season) => {
+    board.reads.push(season);
+    if (board.fail) throw new Error('the network is down');
+    const you = { rank: 2, name: board.name || 'Trainer 0B0B', floor: 0, you: true };
+    return JSON.stringify({ season, total: 3, you, top: [{ rank: 1, name: 'Misty', floor: 31, you: false }, you, { rank: 3, name: 'Brock', floor: 0, you: false }] });
+  });
+  await bctx2.addInitScript(() => {
+    if (!localStorage.getItem('test-player')) localStorage.setItem('test-player', 'board-player');
+    window.MonStackSyncTransport.endlessBoard = (season) => window.__board(season).then((x) => JSON.parse(x));
+  });
+  await pe.goto(t.url);
+  await home(pe);
+  board.fail = true;
+  await pe.locator('[data-act="hometab-dungeon"]').click();
+  await pe.locator('[data-act="endless"]').click();
+  await pe.locator('[data-act="endless-tab-board"]').click();
+  await pe.locator('[data-id=endless-board-error]').waitFor({ timeout: 30000 });
+  check((await pe.locator('[data-id=endless-board-local]').count()) === 0 && (await pe.locator('[data-act="endless-board-retry"]').count()) === 1
+    && /Could not load the online board/.test(await pe.locator('[data-id=endless-board-error]').innerText()),
+    'a board read that fails says so with Try again, and the board is not called local');
+  board.fail = false;
+  const readsBefore = board.reads.length;
+  await pe.locator('[data-act="endless-board-retry"]').click();
+  await pe.locator('[data-id=endless-board-row-3]').waitFor({ timeout: 30000 });
+  const rows = await pe.$$eval('[data-id^=endless-board-row-]', (es) => es.map((e) => e.innerText.replace(/\s+/g, ' ').trim()));
+  const season = await pe.evaluate(() => Math.floor((MonStackSync.day() + 3) / 7));
+  check(board.reads.length === readsBefore + 1 && board.reads[board.reads.length - 1] === season && rows.length === 3 && /Misty/.test(rows[0]) && /\(you\)/.test(rows[1])
+    && /^3 trainers on the board/.test(await pe.locator('[data-id=endless-board-total]').innerText())
+    && /Trainer 0B0B \(until you pick one\)/.test(await pe.locator('[data-id=endless-name]').innerText()),
+    'Try again reads the server\'s board for the server\'s season: its rows, total and the generated name it shows: ' + JSON.stringify(rows));
+  await pe.locator('[data-act="endless-name"]').click();
+  await pe.locator('[data-id=endless-name-input]').fill('Ash');
+  board.name = 'Ash';
+  const named = board.reads.length;
+  await pe.locator('[data-act="endless-name-save"]').click();
+  await pe.locator('[data-id=endless-board-row-2]', { hasText: 'Ash' }).waitFor({ timeout: 30000 });
+  check(board.reads.length === named + 1 && (await sync(pe)).status === 'saved',
+    'a new name is committed, then the board is read again once and shows it (' + (board.reads.length - named) + ' read)');
+  await bctx2.close();
 
   // ---- without a transport the page runs the local test server and says so
   const lctx = await browser.newContext({ viewport: H.PHONE });
