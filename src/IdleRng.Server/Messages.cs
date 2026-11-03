@@ -13,7 +13,10 @@ namespace IdleRng.Server
         NotHolder,
         /// <summary>The server is past the client's base (a second tab, an old copy), or no account exists yet.</summary>
         Stale,
-        /// <summary>The client runs other content than the server.</summary>
+        /// <summary>
+        /// The client runs other content than the server, or the account is stored in a newer save schema than the server reads
+        /// (a newer module wrote it: the client reloads and tries again once the deploy settles, specs/27 section 7).
+        /// </summary>
         ContentStale,
         /// <summary>The commands applied, but the result differs from the client's hash.</summary>
         Mismatch,

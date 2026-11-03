@@ -97,13 +97,30 @@ namespace IdleRng.Runtime.Save
         }
 
         /// <summary>
-        /// The account from its items. Every part must be present, and every entry the vault part lists, matching its hash.
-        /// Loads through AccountSave.Decode, so <paramref name="notice"/> is that of a load (a run in progress dropped under
-        /// new rules, a content version change). Throws SaveInvalidException for a missing or damaged item.
+        /// The oldest save schema items can be stored in: v10 gave the parts their shape (a sealed monster as its result with an
+        /// <c>Id</c>, the run in progress as its state), and the migrations before it rebuild fields the items no longer hold.
         /// </summary>
-        public static AccountState Join(ContentDb c, IReadOnlyDictionary<string, string> items, out string notice)
+        public const int FirstSchema = 10;
+
+        /// <summary>
+        /// The account from its items, written in the current save schema. Every part must be present, and every entry the vault
+        /// part lists, matching its hash. Loads through AccountSave.Decode, so <paramref name="notice"/> is that of a load (a run
+        /// in progress dropped under new rules, a content version change). Throws SaveInvalidException for a missing or damaged item.
+        /// </summary>
+        public static AccountState Join(ContentDb c, IReadOnlyDictionary<string, string> items, out string notice) =>
+            Join(c, items, AccountState.CurrentSchemaVersion, out notice);
+
+        /// <summary>
+        /// The account from items written in save schema <paramref name="schema"/> (the server's <c>head.Schema</c>, specs/27
+        /// section 7): the items are joined into a save body of that schema, which AccountSave.Decode migrates forward exactly as
+        /// it migrates a device's save (specs/06 section 5), so <see cref="Split"/> of the result gives the items in the current
+        /// schema. Throws SaveInvalidException for a schema before <see cref="FirstSchema"/> or newer than the current one.
+        /// </summary>
+        public static AccountState Join(ContentDb c, IReadOnlyDictionary<string, string> items, int schema, out string notice)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
+            if (schema < FirstSchema || schema > AccountState.CurrentSchemaVersion)
+                throw new SaveInvalidException("account parts in schema v" + schema + " are not supported (v" + FirstSchema + " to v" + AccountState.CurrentSchemaVersion + ")");
             JObject Part(string key)
             {
                 if (!items.TryGetValue(key, out var t) || t == null) throw new SaveInvalidException("account part missing: " + key);
@@ -138,13 +155,13 @@ namespace IdleRng.Runtime.Save
                 entries.Add(e);
             }
             acct[nameof(AccountState.Vault)] = entries;
-            acct[nameof(AccountState.SchemaVersion)] = AccountState.CurrentSchemaVersion;
+            acct[nameof(AccountState.SchemaVersion)] = schema;
             acct[nameof(AccountState.ContentVersion)] = c.Version;
 
             var body = new JObject
             {
                 ["Kind"] = AccountSave.Kind,
-                ["SchemaVersion"] = AccountState.CurrentSchemaVersion,
+                ["SchemaVersion"] = schema,
                 ["Account"] = acct,
             };
             if (run is JObject) body["Run"] = run;
