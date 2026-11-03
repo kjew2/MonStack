@@ -42,6 +42,24 @@ namespace IdleRng.Bots.Tests
         }
 
         [Test]
+        public void Join_FromAnOlderSchema_MigratesThroughTheSaveMigrations_AndSplitsInTheCurrentOne()
+        {
+            var a = Busy(63);
+            var items = AccountParts.Split(a);
+            for (int v = AccountParts.FirstSchema; v < AccountState.CurrentSchemaVersion; v++)
+            {
+                // Every step since v10 only moves the version (the fields it adds start empty), so parts stored under an older
+                // schema read back as the same account.
+                var b = AccountParts.Join(Db, items, v, out var notice);
+                Assert.That(notice, Is.Null, "v" + v);
+                Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion), "v" + v);
+                Assert.That(AccountParts.Split(b), Is.EqualTo(items), "v" + v + ": split in the current schema");
+            }
+            Assert.Throws<SaveInvalidException>(() => AccountParts.Join(Db, items, AccountParts.FirstSchema - 1, out _), "before the parts had their shape");
+            Assert.Throws<SaveInvalidException>(() => AccountParts.Join(Db, items, AccountState.CurrentSchemaVersion + 1, out _), "a newer schema");
+        }
+
+        [Test]
         public void Join_RefusesAMissingPart_OrAnEntryThatDoesNotMatchItsHash()
         {
             var items = AccountParts.Split(Busy(62));
