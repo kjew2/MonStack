@@ -1,0 +1,293 @@
+{
+ "_doc": "Apex-form drafts for the 18 planned species (epic #160), 2026-11-03. One take each: tools/art/generate.py edit() with gpt-image-2, medium, 1024, hunter style; prompt = prompts.json apex_base + the apex look from the species issue + the hunter style. tier 1 = in-run chase apex, tier 2 = book or harder in-run chase apex. Not reviewed by kj yet; not used by the game.",
+ "apex": [
+  {
+   "species": "candlemane",
+   "tier": 1,
+   "name": "Martyr Pyrelion",
+   "prompt": "the candles burn white and the wax mane flares into a pyre.",
+   "file": "candlemane_apex1.webp",
+   "ref": "tools/art/drafts/c1_candlemane_1.webp"
+  },
+  {
+   "species": "candlemane",
+   "tier": 2,
+   "name": "Hollow Sun Lion",
+   "prompt": "the halo becomes a black-cored sun ringed in white fire; its chest is an open furnace.",
+   "file": "candlemane_apex2.webp",
+   "ref": "tools/art/drafts/c1_candlemane_1.webp"
+  },
+  {
+   "species": "pyre_stag",
+   "tier": 1,
+   "name": "Cinder Saint",
+   "prompt": "the body burnt to a hollow ribcage full of fire under a burning antler halo, chains glowing white-hot.",
+   "file": "pyre_stag_apex1.webp",
+   "ref": "tools/art/drafts/c2_pyre_stag_1.webp"
+  },
+  {
+   "species": "pyre_stag",
+   "tier": 2,
+   "name": "Everpyre Hart",
+   "prompt": "a colossal hart of living flame with no hide left, its antler pyre risen into a crown-shaped bonfire, black bells ringing in the smoke.",
+   "file": "pyre_stag_apex2.webp",
+   "ref": "tools/art/drafts/c2_pyre_stag_1.webp"
+  },
+  {
+   "species": "cuckling",
+   "tier": 1,
+   "name": "Usurper Cuckoo",
+   "prompt": "a grown cuckoo, larger than any host, wearing a crown of broken eggshell.",
+   "file": "cuckling_apex1.webp",
+   "ref": "tools/art/drafts/c3_cuckling_1.webp"
+  },
+  {
+   "species": "cuckling",
+   "tier": 2,
+   "name": "Clutch Empress",
+   "prompt": "a towering brood-mother cuckoo whose plumage hangs with stolen speckled eggs.",
+   "file": "cuckling_apex2.webp",
+   "ref": "tools/art/drafts/c3_cuckling_1.webp"
+  },
+  {
+   "species": "fountain_axolotl",
+   "tier": 1,
+   "name": "Aquifer Olm",
+   "prompt": "a long, pale, translucent cave salamander (the 'baby dragon' of old tales), glowing aqua and coiled through cracked bedrock with water seeping from every crack.",
+   "file": "fountain_axolotl_apex1.webp",
+   "ref": "tools/art/drafts/tree_elemental_avatar_2.webp"
+  },
+  {
+   "species": "fountain_axolotl",
+   "tier": 2,
+   "name": "Xolotl Wellspring",
+   "prompt": "a mythic river-dragon axolotl, huge and serene; its gills are towering geysers, a stone fountain basin floats behind it like a halo, and rain falls upward.",
+   "file": "fountain_axolotl_apex2.webp",
+   "ref": "tools/art/drafts/tree_elemental_avatar_2.webp"
+  },
+  {
+   "species": "keepshell_crab",
+   "tier": 1,
+   "name": "Citadel Kingcrab",
+   "prompt": "the keep grows into a walled citadel of towers and banners with a seawater moat; the claws become gatehouses, portcullises down.",
+   "file": "keepshell_crab_apex1.webp",
+   "ref": "tools/art/drafts/tree_fortress_fist_1.webp"
+  },
+  {
+   "species": "keepshell_crab",
+   "tier": 2,
+   "name": "Siegebreaker Crab",
+   "prompt": "the keep rebuilt as a rolling siege tower, claws turned into iron battering rams, cracked enemy shields hung as trophies.",
+   "file": "keepshell_crab_apex2.webp",
+   "ref": "tools/art/drafts/tree_fortress_fist_1.webp"
+  },
+  {
+   "species": "lamprey_wyrm",
+   "tier": 1,
+   "name": "Latchmaw Wyrm",
+   "prompt": "a huge lamprey coiled around the ribs of a far bigger beast, tooth-ring sunk into its flank, bladder glowing through the wounds.",
+   "file": "lamprey_wyrm_apex1.webp",
+   "ref": "tools/art/drafts/tree_hemorrhage_1.webp"
+  },
+  {
+   "species": "lamprey_wyrm",
+   "tier": 2,
+   "name": "Sanguine Leviathan",
+   "prompt": "a bloated crimson sea serpent, its throat-bladder grown into a translucent belly sloshing with stolen blood, tooth-rings along its body, pale husks drifting around it.",
+   "file": "lamprey_wyrm_apex2.webp",
+   "ref": "tools/art/drafts/tree_hemorrhage_1.webp"
+  },
+  {
+   "species": "sunmoon_koi",
+   "tier": 1,
+   "name": "Syzygy Koi",
+   "prompt": "the orbs merge into one ringed disc behind it, a black eclipse with a gold corona; its two tails sweep a circle of water and light.",
+   "file": "sunmoon_koi_apex1.webp",
+   "ref": "tools/art/drafts/tree_equilibrium_1.webp"
+  },
+  {
+   "species": "sunmoon_koi",
+   "tier": 2,
+   "name": "Longmen Dragon",
+   "prompt": "the koi has leapt the Dragon Gate: a coiling dragon, gold on one flank and ink-blue on the other, a pearl in each claw, a waterfall behind it and balance scales drawn in light.",
+   "file": "sunmoon_koi_apex2.webp",
+   "ref": "tools/art/drafts/tree_equilibrium_1.webp"
+  },
+  {
+   "species": "gearbell_jelly",
+   "tier": 1,
+   "name": "Carillon Medusa",
+   "prompt": "the bell grows into a tower of nested rune bells, tentacles hanging like bell ropes, a violet shockwave pulsing from the rim.",
+   "file": "gearbell_jelly_apex1.webp",
+   "ref": "tools/art/drafts/tree_mana_ward_2.webp"
+  },
+  {
+   "species": "gearbell_jelly",
+   "tier": 2,
+   "name": "Orrery Moonbell",
+   "prompt": "a moon-sized glass bell holding a turning orrery of rune gears and tiny planets, a clock face glowing through the crown, tentacles frozen as if time stopped.",
+   "file": "gearbell_jelly_apex2.webp",
+   "ref": "tools/art/drafts/tree_mana_ward_2.webp"
+  },
+  {
+   "species": "blight_amphisbaena",
+   "tier": 1,
+   "name": "Plaguechain Basilisk",
+   "prompt": "longer and gaunter, its chains run off into the air and end padlocked around ghostly violet copies of its foes' spells.",
+   "file": "blight_amphisbaena_apex1.webp",
+   "ref": "tools/art/drafts/tree_corruption_2.webp"
+  },
+  {
+   "species": "blight_amphisbaena",
+   "tier": 2,
+   "name": "Sealbound Ouroboros",
+   "prompt": "rolled into a hoop, each head biting the other's tail: a burning violet ring hung with chains, every padlock glowing with the spell sealed inside.",
+   "file": "blight_amphisbaena_apex2.webp",
+   "ref": "tools/art/drafts/tree_corruption_2.webp"
+  },
+  {
+   "species": "aegis_ram",
+   "tier": 1,
+   "name": "Aries Vanguard",
+   "prompt": "rearing forward behind the golden shield like a battering wall, horns sheathed in gold, five pips burning along them: three gold, two cracked crimson.",
+   "file": "aegis_ram_apex1.webp",
+   "ref": "tools/art/drafts/tree_brave_heart_1.webp"
+  },
+  {
+   "species": "aegis_ram",
+   "tier": 2,
+   "name": "Chrysomallos",
+   "prompt": "the winged ram of myth: fleece of beaten gold, sun-disc horns, the shield become wide golden wings, three pips orbiting like small suns.",
+   "file": "aegis_ram_apex2.webp",
+   "ref": "tools/art/drafts/tree_brave_heart_1.webp"
+  },
+  {
+   "species": "daybreak_chick",
+   "tier": 1,
+   "name": "Dawnherald Rooster",
+   "prompt": "a proud white-and-gold rooster on a hilltop at sunrise, its comb a blazing sunburst, eight tail feathers fanned like dawn rays, mid-crow.",
+   "file": "daybreak_chick_apex1.webp",
+   "ref": "tools/art/drafts/tree_latent_power_3.webp"
+  },
+  {
+   "species": "daybreak_chick",
+   "tier": 2,
+   "name": "Solstice Sunbird",
+   "prompt": "a great white-gold sunbird in a starry midnight sky while the low sun never sets; its body a small sun, eight ray feathers fanned in a full solar crown.",
+   "file": "daybreak_chick_apex2.webp",
+   "ref": "tools/art/drafts/tree_latent_power_3.webp"
+  },
+  {
+   "species": "brimful_hamster",
+   "tier": 1,
+   "name": "Cornucopia Hamster",
+   "prompt": "grown large and golden, curled inside an overflowing horn of plenty pouring glowing grain and light over a shattered measuring cup, cheeks stuffed round.",
+   "file": "brimful_hamster_apex1.webp",
+   "ref": "tools/art/drafts/tree_limit_break_3.webp"
+  },
+  {
+   "species": "brimful_hamster",
+   "tier": 2,
+   "name": "Measureless Behemoth",
+   "prompt": "a colossal golden hamster rising over a valley, arms like pillars of light, a snapped ruler held up as a trophy, measuring-cup shards orbiting like a broken halo.",
+   "file": "brimful_hamster_apex2.webp",
+   "ref": "tools/art/drafts/tree_limit_break_3.webp"
+  },
+  {
+   "species": "anvil_ape",
+   "tier": 1,
+   "name": "Slagglass Titan",
+   "prompt": "a hulking silverback whose molten cracks have cooled into black volcanic glass plates, steam pouring off its quenched hammer fists.",
+   "file": "anvil_ape_apex1.webp",
+   "ref": "tools/art/drafts/tree_guard_break_2.webp"
+  },
+  {
+   "species": "anvil_ape",
+   "tier": 2,
+   "name": "Worldsmith Silverback",
+   "prompt": "a colossal ape of white-hot iron and cooling slag, its back a smoking forge with a chimney spine, one fist a sledgehammer and the other gripping an anvil, ringed by broken-shield shards.",
+   "file": "anvil_ape_apex2.webp",
+   "ref": "tools/art/drafts/tree_guard_break_2.webp"
+  },
+  {
+   "species": "ronin_tiger",
+   "tier": 1,
+   "name": "Peerless Tiger",
+   "prompt": "lean and huge with a duellist's calm; stripes burn white-gold, the snapped tether tied as a red sash, a scar over one eye glowing like a coal.",
+   "file": "ronin_tiger_apex1.webp",
+   "ref": "tools/art/drafts/tree_lone_wolf_1.webp"
+  },
+  {
+   "species": "ronin_tiger",
+   "tier": 2,
+   "name": "Hundred-Scar Tyrant",
+   "prompt": "a colossal tiger whose hide is a map of glowing scars burning like fuse lines, broken blades lodged in its shoulders, an ember mane flaring.",
+   "file": "ronin_tiger_apex2.webp",
+   "ref": "tools/art/drafts/tree_lone_wolf_1.webp"
+  },
+  {
+   "species": "taotie_boar",
+   "tier": 1,
+   "name": "Bronze Cauldron Taotie",
+   "prompt": "hide set into green-gold ritual bronze cast with cloud-and-thunder patterns, the taotie mask across its flank, its belly a three-legged cauldron full of fire.",
+   "file": "taotie_boar_apex1.webp",
+   "ref": "tools/art/drafts/tree_devourer_1.webp"
+  },
+  {
+   "species": "taotie_boar",
+   "tier": 2,
+   "name": "All-Devouring Taotie",
+   "prompt": "the Taotie that ate its own body: a colossal boar head with nothing below the jaw but furnace smoke, crowned with every trophy horn, its maw a furnace.",
+   "file": "taotie_boar_apex2.webp",
+   "ref": "tools/art/drafts/tree_devourer_1.webp"
+  },
+  {
+   "species": "iaido_mantis",
+   "tier": 1,
+   "name": "Ghost Orchid Reaper",
+   "prompt": "the jade fades to translucent white-and-violet like a ghost orchid, the torn wing a fan of petals; perfectly still, both scythes sheathed, petals frozen in the air.",
+   "file": "iaido_mantis_apex1.webp",
+   "ref": "tools/art/drafts/tree_vantage_1.webp"
+  },
+  {
+   "species": "iaido_mantis",
+   "tier": 2,
+   "name": "Thousand-Petal Kensei",
+   "prompt": "a tall mantis sword saint with both scythes drawn, the wing regrown as a cloak of orchid petals, cut paper talismans pinned along its scabbard.",
+   "file": "iaido_mantis_apex2.webp",
+   "ref": "tools/art/drafts/tree_vantage_1.webp"
+  },
+  {
+   "species": "gravecap",
+   "tier": 1,
+   "name": "Ringcap Puppeteer",
+   "prompt": "a taller toadstool in a ring of small mushrooms, spore threads hanging from its arms like puppet strings, the run's beaten foes dancing in the ring.",
+   "file": "gravecap_apex1.webp",
+   "ref": "tools/art/drafts/tree_arise_1.webp"
+  },
+  {
+   "species": "gravecap",
+   "tier": 2,
+   "name": "Cordyceps Monarch",
+   "prompt": "the cap split into a branching crown of orange cordyceps stalks pouring spore light, a kneeling court of husked beasts on its strings.",
+   "file": "gravecap_apex2.webp",
+   "ref": "tools/art/drafts/tree_arise_1.webp"
+  },
+  {
+   "species": "lodge_beaver",
+   "tier": 1,
+   "name": "Logjam Warden",
+   "prompt": "grown huge, its log wall now an iron-banded rampart bolted to its back, its flat tail a timber paddle studded with river stones, raised to slap.",
+   "file": "lodge_beaver_apex1.webp",
+   "ref": "tools/art/drafts/tree_barricade_2.webp"
+  },
+  {
+   "species": "lodge_beaver",
+   "tier": 2,
+   "name": "Floodgate Colossus",
+   "prompt": "a colossal beaver grown into its own dam: logs and river stone across its chest with sluice gates pouring white water, a pond and a little lodge on its back.",
+   "file": "lodge_beaver_apex2.webp",
+   "ref": "tools/art/drafts/tree_barricade_2.webp"
+  }
+ ]
+}
