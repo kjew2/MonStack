@@ -56,6 +56,14 @@
       "ref": "hp",
       "amount": 700.0,
       "unlocks_species": "candlemane"
+    },
+    {
+      "id": "quickdraw",
+      "name_key": "achievement.quickdraw.name",
+      "kind": "stat_reached",
+      "ref": "spd",
+      "amount": 650.0,
+      "unlocks_species": "iaido_mantis"
     }
   ]
 }

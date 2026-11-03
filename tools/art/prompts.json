@@ -40,6 +40,10 @@
   "candlemane": {
    "name": "Candlemane",
    "prompt": "A majestic lion-like beast of living light and candle wax, ivory-white and pale gold. Its mane is a full ring of tall burning candle flames in white-gold and amber, and soft wax drips and pools down its shoulders and flanks where the flames touch, as if it is slowly burning itself to shine. A thin golden halo-wheel floats behind its head. Its eyes glow bright gold, and molten gold light seeps through cracks in its chest like a lantern. Proud, sacred and solemn, powerful, a light-element monster."
+  },
+  "iaido_mantis": {
+   "name": "Iaido Mantis",
+   "prompt": "A cracked jade-and-orchid mantis with a torn wing, crouched in a quick-draw stance with one scythe in a leaf scabbard."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -114,6 +118,16 @@
    "species": "candlemane",
    "name": "Hollow Sun Lion",
    "prompt": "the same lion, darkened: its body is now charcoal-black wax with molten cracks, its halo is a huge black-cored sun ringed in white fire behind its head, and its chest is an open furnace glowing crimson-orange. Colour palette shifts from gold to black, crimson and white."
+  },
+  "still_hunt": {
+   "species": "iaido_mantis",
+   "name": "Ghost Orchid Reaper",
+   "prompt": "the jade fades to translucent white-and-violet like a ghost orchid, the torn wing a fan of petals; perfectly still, both scythes sheathed, petals frozen in the air."
+  },
+  "severed_arts": {
+   "species": "iaido_mantis",
+   "name": "Thousand-Petal Kensei",
+   "prompt": "a tall mantis sword saint with both scythes drawn, the wing regrown as a cloak of orchid petals, cut paper talismans pinned along its scabbard."
   }
  }
 }

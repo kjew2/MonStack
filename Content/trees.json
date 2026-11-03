@@ -524,9 +524,9 @@
     {
       "id": "vantage",
       "name_key": "tree.vantage.name",
-      "kind": "generic",
-      "offer_stat": "spd",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -858,6 +858,46 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.hollow_sun.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "leaf_scabbard",
+      "name_key": "tree.leaf_scabbard.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "unseen_blade",
+      "name_key": "tree.unseen_blade.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "still_hunt",
+      "name_key": "tree.still_hunt.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.still_hunt.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "severed_arts",
+      "name_key": "tree.severed_arts.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.severed_arts.apex",
       "fuse_a": null,
       "fuse_b": null
     }

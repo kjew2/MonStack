@@ -105,3 +105,8 @@ pyre_hymn,mskill.pyre_hymn.name,heal,self,,hp,0.12,2,0,
 sunfall,mskill.sunfall.name,damage,enemy,,hp,0.16,3,0,light
 wax_psalm,mskill.wax_psalm.name,damage,enemy,,wis,1.4,2,0,light
 vesper_glow,mskill.vesper_glow.name,buff,self,wis,,0.1,0,2,
+draw_cut,mskill.draw_cut.name,damage,enemy,,str,1.7,3,0,nature
+crescent_draw,mskill.crescent_draw.name,damage,all_enemies,,spd,0.8,3,0,nature
+blade_echo,mskill.blade_echo.name,damage,enemy,,spd,0.4,0,0,
+petal_veil,mskill.petal_veil.name,shield,self,,spd,0.4,4,2,
+iai_parry,mskill.iai_parry.name,shield,self,,spd,0.5,4,2,

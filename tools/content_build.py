@@ -114,6 +114,9 @@ REQUIRED_CONSTANTS = {
     "MON_SEEP_SHIELD": "double", "MON_JETS": "int", "MON_JET_POWER": "double",
     # species Candlemane (#141): martyr_flame, hollow_sun
     "MON_PYRE_CONV": "double", "MON_SUN_RELEASE": "double", "MON_SUN_HEAL": "double",
+    # species Iaido Mantis (#159): iai_draw, still_hunt, sever_art
+    "MON_IAI_BONUS": "double", "MON_IAI_CRIT": "double", "MON_HUNT_WAITS": "int", "MON_HUNT_KEEP": "double",
+    "MON_SEVER_FRAC": "double", "MON_SEVER_DMG": "double", "MON_SEVER_MAX": "int",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -139,7 +142,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species Fountain Axolotl (#150)
             "clear_spring", "seep", "fountain_jets",
             # species Candlemane (#141)
-            "martyr_flame", "hollow_sun"]
+            "martyr_flame", "hollow_sun",
+            # species Iaido Mantis (#159)
+            "iai_draw", "still_hunt", "sever_art"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -235,6 +240,11 @@ MON_RANGES = {
     # species Candlemane (#141)
     "MON_PYRE_CONV": (">= 0", lambda v: v >= 0), "MON_SUN_RELEASE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_SUN_HEAL": (">= 0", lambda v: v >= 0),
+    # species Iaido Mantis (#159)
+    "MON_IAI_BONUS": (">= 0", lambda v: v >= 0), "MON_IAI_CRIT": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_HUNT_WAITS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1), "MON_HUNT_KEEP": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_SEVER_FRAC": ("(0, 1]", lambda v: 0 < v <= 1), "MON_SEVER_DMG": (">= 0", lambda v: v >= 0),
+    "MON_SEVER_MAX": ("a whole number >= 0", lambda v: v == int(v) and v >= 0),
 }
 
 

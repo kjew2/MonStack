@@ -175,6 +175,31 @@
       "grow_def": 0.6,
       "grow_spd": 0.9,
       "grow_luk": 1.0
+    },
+    {
+      "id": "iaido_mantis",
+      "name_key": "species.iaido_mantis.name",
+      "element": "nature",
+      "native_tree_1": "vantage",
+      "native_tree_2": "leaf_scabbard",
+      "chase_tree_run": "still_hunt",
+      "chase_tree_book": "severed_arts",
+      "base_hp": 100.0,
+      "base_str": 140.0,
+      "base_int": 60.0,
+      "base_wis": 120.0,
+      "base_dex": 110.0,
+      "base_def": 60.0,
+      "base_spd": 150.0,
+      "base_luk": 100.0,
+      "grow_hp": 0.8,
+      "grow_str": 1.2,
+      "grow_int": 0.6,
+      "grow_wis": 1.1,
+      "grow_dex": 1.0,
+      "grow_def": 0.6,
+      "grow_spd": 1.3,
+      "grow_luk": 1.0
     }
   ]
 }
