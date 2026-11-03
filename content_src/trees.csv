@@ -59,6 +59,9 @@ brave_heart,tree.brave_heart.name,generic,spd,400,,,,idea-pool lane C (#136): Br
 one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
 guard_break,tree.guard_break.name,generic,str,400,,,,idea-pool lane C (#136): Octopath Break
 latent_power,tree.latent_power.name,generic,spd,400,,,,idea-pool lane C (#136): MH Latent Power
+lone_wolf,tree.lone_wolf.name,generic,str,400,,,,idea-pool lane E (#138): Divinity Original Sin 2 Lone Wolf
+arise,tree.arise.name,generic,int,400,,,,idea-pool lane E (#138): Solo Leveling Shadow Extraction
+last_rite,tree.last_rite.name,generic,hp,400,,,,idea-pool lane E (#138): Super Auto Pets faint triggers
 mimic_core,tree.mimic_core.name,generic,,400,,,,idea-pool lane F (#139): Balatro Blueprint
 heirloom,tree.heirloom.name,generic,,400,,,,idea-pool lane F (#139): Hades keepsakes
 mastery,tree.mastery.name,generic,wis,400,,,,idea-pool lane F (#139): Final Fantasy IX learned abilities

@@ -671,6 +671,16 @@ namespace IdleRng.Sim.Combat
         /// fight. The Latent Power generic capstone.
         /// </summary>
         public const string LatentPower = "latent_power";
+        // ---- idea-pool lane E: team size and mode (#138, specs/16 section 6.2)
+
+        /// <summary>Decided at fight start: alone on its side, all the unit's stats rise by MON_LONE_BONUS; with allies they fall by MON_LONE_MALUS.</summary>
+        public const string LoneWolf = "lone_wolf";
+
+        /// <summary>Once per fight, the first enemy the unit kills (not the last) rises on its side at MON_ARISE_STATS of its stats, with its skills and no rules.</summary>
+        public const string Arise = "arise";
+
+        /// <summary>When the unit dies, its living allies split MON_RITE_SHARE of its base stats for the rest of the fight.</summary>
+        public const string LastRite = "last_rite";
 
         // Idea-pool lane F (#139): run rules. They change how the monster is built in a training run (TrainingRun, Rules/LaneF.cs),
         // not the fight: in the fight kit they do nothing.
@@ -698,6 +708,7 @@ namespace IdleRng.Sim.Combat
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
             Resentment, Vantage, DeathsDoor, Barricade, ManaWard,
             BraveHeart, OneMore, GuardBreak, LatentPower,
+            LoneWolf, Arise, LastRite,
             MimicCore, Heirloom, Mastery, LimitBreak };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
