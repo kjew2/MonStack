@@ -240,5 +240,24 @@ namespace IdleRng.Sim.Tests
                                         "self_hp_below:1.5>x", "first_actions:0>x", "enemies_at_least:2.5>x", "always:3>x", "ally_hp_below:nan>x" })
                 Assert.Throws<FormatException>(() => GambitText.Parse(bad), bad);
         }
+
+        [Test]
+        public void FightFloor_IsTheFightTheClimbFought()
+        {
+            var team = Team(400);
+            var climb = EndlessSim.Run(Db, team, 2913);
+            foreach (var f in climb.Floors)
+            {
+                var (plan, mutators, fight) = EndlessSim.FightFloor(Db, team, 2913, f.Floor);
+                Assert.That(fight.Hash, Is.EqualTo(f.FightHash), "floor " + f.Floor);
+                Assert.That(plan.ShapeId, Is.EqualTo(f.ShapeId));
+                Assert.That(mutators.Count, Is.EqualTo(f.Floor / Db.Constants.EndlessBand));
+            }
+            var beyond = EndlessSim.FightFloor(Db, team, 2913, climb.FloorReached + 3);   // floors past the fall can be fought too
+            Assert.That(beyond.plan.Floor, Is.EqualTo(climb.FloorReached + 3));
+            Assert.Throws<ArgumentOutOfRangeException>(() => EndlessSim.FightFloor(Db, team, 2913, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => EndlessSim.FightFloor(Db, team, 2913, Db.Constants.EndlessMaxFloors + 1));
+            Assert.That(climb.Floors.Count, Is.GreaterThan(Db.Constants.EndlessBand), "the check covers a floor with a mutator");
+        }
     }
 }

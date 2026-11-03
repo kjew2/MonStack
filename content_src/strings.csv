@@ -531,3 +531,23 @@ mutator.haste.name,Haste
 mutator.keen_edge.name,Keen Edge
 mutator.early_rot.name,Early Rot
 mutator.bulwarks.name,Bulwarks
+gambit.when.always.name,Always
+gambit.when.always.desc,Every time this monster acts.
+gambit.when.self_hp_below.name,My HP below
+gambit.when.self_hp_below.desc,This monster's HP is below this share of its max HP.
+gambit.when.ally_hp_below.name,An ally's HP below
+gambit.when.ally_hp_below.desc,Some ally on its team, this monster included, is below this share of its max HP.
+gambit.when.enemy_hp_below.name,An enemy's HP below
+gambit.when.enemy_hp_below.desc,Some enemy still standing is below this share of its max HP.
+gambit.when.enemies_at_least.name,Enemies at least
+gambit.when.enemies_at_least.desc,At least this many enemies are still standing.
+gambit.when.first_actions.name,First actions
+gambit.when.first_actions.desc,During this monster's first actions of the fight, up to this many.
+gambit.target.auto.name,Usual target
+gambit.target.auto.desc,The usual pick: a random enemy. A taunt still forces the target.
+gambit.target.lowest_hp.name,Weakest enemy
+gambit.target.lowest_hp.desc,The enemy with the lowest share of its HP left. A taunt still forces the target.
+gambit.target.highest_hp.name,Healthiest enemy
+gambit.target.highest_hp.desc,The enemy with the highest share of its HP left. A taunt still forces the target.
+gambit.basic.name,Basic attack
+gambit.basic.desc,A plain attack, always ready.

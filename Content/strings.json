@@ -2129,6 +2129,86 @@
     {
       "key": "mutator.bulwarks.name",
       "text": "Bulwarks"
+    },
+    {
+      "key": "gambit.when.always.name",
+      "text": "Always"
+    },
+    {
+      "key": "gambit.when.always.desc",
+      "text": "Every time this monster acts."
+    },
+    {
+      "key": "gambit.when.self_hp_below.name",
+      "text": "My HP below"
+    },
+    {
+      "key": "gambit.when.self_hp_below.desc",
+      "text": "This monster's HP is below this share of its max HP."
+    },
+    {
+      "key": "gambit.when.ally_hp_below.name",
+      "text": "An ally's HP below"
+    },
+    {
+      "key": "gambit.when.ally_hp_below.desc",
+      "text": "Some ally on its team"
+    },
+    {
+      "key": "gambit.when.enemy_hp_below.name",
+      "text": "An enemy's HP below"
+    },
+    {
+      "key": "gambit.when.enemy_hp_below.desc",
+      "text": "Some enemy still standing is below this share of its max HP."
+    },
+    {
+      "key": "gambit.when.enemies_at_least.name",
+      "text": "Enemies at least"
+    },
+    {
+      "key": "gambit.when.enemies_at_least.desc",
+      "text": "At least this many enemies are still standing."
+    },
+    {
+      "key": "gambit.when.first_actions.name",
+      "text": "First actions"
+    },
+    {
+      "key": "gambit.when.first_actions.desc",
+      "text": "During this monster's first actions of the fight"
+    },
+    {
+      "key": "gambit.target.auto.name",
+      "text": "Usual target"
+    },
+    {
+      "key": "gambit.target.auto.desc",
+      "text": "The usual pick: a random enemy. A taunt still forces the target."
+    },
+    {
+      "key": "gambit.target.lowest_hp.name",
+      "text": "Weakest enemy"
+    },
+    {
+      "key": "gambit.target.lowest_hp.desc",
+      "text": "The enemy with the lowest share of its HP left. A taunt still forces the target."
+    },
+    {
+      "key": "gambit.target.highest_hp.name",
+      "text": "Healthiest enemy"
+    },
+    {
+      "key": "gambit.target.highest_hp.desc",
+      "text": "The enemy with the highest share of its HP left. A taunt still forces the target."
+    },
+    {
+      "key": "gambit.basic.name",
+      "text": "Basic attack"
+    },
+    {
+      "key": "gambit.basic.desc",
+      "text": "A plain attack"
     }
   ]
 }

@@ -115,6 +115,18 @@ namespace IdleRng.Web
             foreach (var g in _db.GauntletEnemies.Concat(_db.GauntletBosses))
                 w.Key(g.Id).Obj().P("name", _db.Text(g.NameKey)).P("element", g.Element).P("boss", g.Boss).EndObj();
             w.EndObj().EndObj();
+            w.Key("gambits").Obj().P("slots", k.GambitSlots);   // the rulebook editor's vocabulary (specs/28 sections 4.1, 4.2 and 4.5)
+            w.Key("conditions").Arr();
+            foreach (var id in GambitConditions.Known)
+                w.Obj().P("id", id).P("name", _db.Text("gambit.when." + id + ".name")).P("desc", _db.Text("gambit.when." + id + ".desc"))
+                    .P("value", GambitConditions.TakesFraction(id) ? "fraction" : GambitConditions.TakesCount(id) ? "count" : null).EndObj();
+            w.EndArr();
+            w.Key("targets").Arr();
+            foreach (var id in GambitTargets.Known)
+                w.Obj().P("id", id).P("name", _db.Text("gambit.target." + id + ".name")).P("desc", _db.Text("gambit.target." + id + ".desc")).EndObj();
+            w.EndArr();
+            w.Key("basic").Obj().P("id", GambitRule.Basic).P("name", _db.Text("gambit.basic.name")).P("desc", _db.Text("gambit.basic.desc")).EndObj();
+            w.EndObj();
             TipJson.StatInfo(w, _db);
             TipJson.NodeTips(w, _db, NodeText);
             TipJson.SkillTips(w, _db);
@@ -358,6 +370,8 @@ namespace IdleRng.Web
                     case "towerInfo": TowerInfo(w, a.Int(0)); return w.EndObj().ToString();
                     case "towerFloor": TowerFloorFight(w, a.Int(0), a.El(1), a.Int(2)); return w.EndObj().ToString();
                     case "endlessInfo": EndlessInfo(w, a.Int(0)); return w.EndObj().ToString();
+                    case "endlessFloor": EndlessFloorRead(w, a.Int(0), a.El(1), a.Int(2), null); return w.EndObj().ToString();
+                    case "endlessPreview": EndlessFloorRead(w, a.Int(0), a.El(1), a.Int(2), a.El(3)); return w.EndObj().ToString();
                 }
                 if (!AccountCommand.IsCommand(name)) return Fail("unknown command");
                 var cmd = AccountCommand.Parse(name, a);
@@ -387,7 +401,7 @@ namespace IdleRng.Web
                         break;
                     }
                     case CommandKind.RunTower: RunTower(w, cmd, (TowerRunResult)res); break;
-                    case CommandKind.RunEndless: RunEndless(w, (EndlessRunResult)res); break;
+                    case CommandKind.RunEndless: RunEndless(w, cmd, (EndlessRunResult)res); break;
                     case CommandKind.BuyOffer:
                     {
                         var r = (OfferBought)res;
@@ -465,7 +479,7 @@ namespace IdleRng.Web
             w.Key("mutators").Arr();   // in the order they join: mutator i is in force from floor (i + 1) x ENDLESS_BAND
             for (int i = 0; i < mutators.Count; i++)
                 w.Obj().P("id", mutators[i].Id).P("name", _db.Text(mutators[i].NameKey)).P("kind", mutators[i].Kind)
-                    .P("value", mutators[i].Value).P("element", mutators[i].Element).P("fromFloor", (i + 1) * band).EndObj();
+                    .P("value", mutators[i].Value).P("element", mutators[i].Element).P("desc", MutatorText(mutators[i])).P("fromFloor", (i + 1) * band).EndObj();
             w.EndArr();
             w.Key("floors").Arr();
             foreach (var plan in EndlessSim.Lineup(_db, season, shown))
@@ -494,7 +508,7 @@ namespace IdleRng.Web
         /// One Endless Tower climb (AccountOps.RunEndless): the rewards, the records after it, and each floor fought with its fight
         /// hash. Floor playback comes with the climb screen (specs/28 section 9, step 5).
         /// </summary>
-        private void RunEndless(JsonOut w, EndlessRunResult r)
+        private void RunEndless(JsonOut w, AccountCommand cmd, EndlessRunResult r)
         {
             var res = r.Result;
             var p = _acct.Endless;
@@ -527,6 +541,126 @@ namespace IdleRng.Web
                 w.EndArr().EndObj();
             }
             w.EndArr();
+            // The deciding floor's fight for playback (the last floor fought); any other comes from endlessFloor.
+            var last = res.Floors[res.Floors.Count - 1];
+            var team = cmd.Team.Select(i => AccountOps.TeamFighter(_db, _acct, i)).ToList();
+            w.Key("final").Obj();
+            if (EndlessFight(w, res.Season, cmd.Team, team, last.Floor) != last.FightHash) throw new InvalidOperationException("the floor replay differs from the climb");
+            w.EndObj();
+        }
+
+        /// <summary>
+        /// endlessFloor(season, team, floor) and endlessPreview(season, team, floor, rulebooks), read only (specs/28 sections 4.5
+        /// and 9): one floor's fight in the endless fight shape. A floor is fought on its own (EndlessSim.FightFloor, the same fight
+        /// the climb fought there), so any floor can be watched or tested, reached or not. The preview fights it with the given
+        /// rulebook text per team slot (null or absent = the monster's saved rulebook), checked as setRulebook checks it; it pays,
+        /// counts and saves nothing.
+        /// </summary>
+        private void EndlessFloorRead(JsonOut w, int season, JsonElement indices, int floor, JsonElement? books)
+        {
+            if (season < 0) throw new ArgumentException("the season must not be negative");
+            var idx = Indices(indices);
+            if (idx.Count != _db.Constants.MonSideSize) throw new ArgumentException("an Endless Tower team needs exactly " + _db.Constants.MonSideSize + " monsters");
+            if (idx.Distinct().Count() != idx.Count) throw new ArgumentException("a monster is on the team twice");
+            if (floor < 1 || floor > _db.Constants.EndlessMaxFloors) throw new ArgumentException("no floor " + floor);
+            var team = new List<Fighter>(idx.Count);
+            var texts = books.HasValue && books.Value.ValueKind == JsonValueKind.Array ? books.Value.EnumerateArray().ToList() : new List<JsonElement>();
+            for (int k = 0; k < idx.Count; k++)
+            {
+                if (k < texts.Count && texts[k].ValueKind == JsonValueKind.String)
+                {
+                    var f = _acct.Vault[idx[k]].Fighter(_db);
+                    f.Gambits.AddRange(GambitText.Parse(AccountOps.CheckRulebook(_db, _acct.Vault[idx[k]], texts[k].GetString())));
+                    team.Add(f);
+                }
+                else team.Add(AccountOps.TeamFighter(_db, _acct, idx[k]));
+            }
+            w.P("ok", true);
+            EndlessFight(w, season, idx, team, floor);
+        }
+
+        /// <summary>
+        /// One Endless floor's fight (EndlessSim.FightFloor) in the tower fight's shape (TowerFight): the floor, its shape and check,
+        /// elite, the mutators in force (name, desc), won, ticks, hash, the entropy cap and corruption levels, the units with their
+        /// names (and for the team, its slot's Vault index as <c>vault</c>), and the actions with their snapshots; a rule firing is
+        /// an action with event "gambit" and amount the rule's index from 0. Returns the fight hash.
+        /// </summary>
+        private string EndlessFight(JsonOut w, int season, List<int> idx, List<Fighter> team, int floor)
+        {
+            // The floor's rules as FightFloor builds them (the season's first floor / ENDLESS_BAND mutators), for the log's tower snapshots.
+            var rules = EndlessSim.Rules(_db, EndlessSim.SeasonMutators(_db, season, floor / _db.Constants.EndlessBand));
+            var log = new FightLog(rules);
+            FightState final = null;
+            var (plan, mutators, fight) = EndlessSim.FightFloor(_db, team, season, floor, x => log.Record(x), st => { final = st; log.Watch(st); });
+            var shape = EndlessSim.Shape(_db, plan.ShapeId);
+            w.P("season", season).P("floor", plan.Floor).P("shape", plan.ShapeId).P("shapeName", _db.Text(shape.NameKey)).P("check", shape.Check)
+                .P("elite", plan.Elite).P("eliteName", plan.Elite ? TowerSim.BossName(_db, plan.EliteId) : null)
+                .P("name", plan.Elite ? TowerSim.BossName(_db, plan.EliteId) : _db.Text(shape.NameKey))
+                .P("won", fight.Outcome == FightOutcome.SideAWon).P("ticks", fight.Ticks).P("hash", fight.Hash).P("entropyCap", rules.Tower.EntropyCap)
+                .P("corruptMax", BattleSim.CorruptionLevel(rules, rules.TimeLimitTicks)).P("corruption", BattleSim.CorruptionLevel(rules, final.Ticks));
+            w.Key("mutators").Arr();
+            foreach (var m in mutators) w.Obj().P("id", m.Id).P("name", _db.Text(m.NameKey)).P("desc", MutatorText(m)).EndObj();
+            w.EndArr();
+            w.Key("units").Arr();
+            foreach (var u in final.Units)
+                FightUnitOut(w, u, o =>
+                {
+                    o.P("name", EndlessUnitName(u.Id, idx)).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u));
+                    int slot = TeamSlot(u.Id);
+                    if (slot >= 0 && slot < idx.Count && !u.IsAdd) o.P("vault", idx[slot]);
+                });
+            w.EndArr();
+            w.P("actionCount", log.Count);
+            w.Key("actions").Arr();
+            foreach (var x in log.Entries) Action(w, x);
+            w.EndArr();
+            return fight.Hash;
+        }
+
+        /// <summary>The team slot of a unit id "t&lt;slot&gt;_...", else -1.</summary>
+        private static int TeamSlot(string id) =>
+            id != null && id.Length > 2 && id[0] == 't' && char.IsDigit(id[1]) && id[2] == '_' ? id[1] - '0' : -1;
+
+        /// <summary>
+        /// An Endless fighter's display name: the team's as in the Dungeon (TowerUnitName); "e&lt;slot&gt;_&lt;id&gt;" an enemy's or the elite's
+        /// name, and "e0_&lt;boss&gt;#2" the elite's second add, named after the add row of its split phase.
+        /// </summary>
+        private string EndlessUnitName(string id, List<int> idx)
+        {
+            if (TeamSlot(id) >= 0) return TowerUnitName(id, idx);
+            if (id.Length > 3 && id[0] == 'e' && char.IsDigit(id[1]) && id[2] == '_')
+            {
+                string row = id.Substring(3);
+                int hash = row.IndexOf('#');
+                string bare = hash < 0 ? row : row.Substring(0, hash);
+                if (_db.TowerBosses.TryGetValue(bare, out var d))
+                {
+                    if (hash < 0) return TowerSim.BossName(_db, bare);
+                    string add = d.Phases.FirstOrDefault(p => p.Kind == PhaseKinds.Split && !string.IsNullOrEmpty(p.Adds))?.Adds;
+                    return TowerSim.BossName(_db, add ?? bare) + " " + row.Substring(hash);
+                }
+                foreach (var e in _db.EndlessEnemies) if (e.Id == bare) return _db.Text(e.NameKey) + (hash < 0 ? "" : " " + row.Substring(hash));
+            }
+            return id;
+        }
+
+        /// <summary>A mutator's effect in words (specs/28 section 3.2), from its kind and value.</summary>
+        private string MutatorText(MutatorDef m)
+        {
+            string pct(double v) => Math.Round(v * 100).ToString(CultureInfo.InvariantCulture) + "%";
+            string times(double v) => "x" + Math.Round(v, 2).ToString(CultureInfo.InvariantCulture);
+            switch (m.Kind)
+            {
+                case "heal_mult": return "Heals and shields " + times(m.Value);
+                case "aoe_mult": return "Hits on all enemies " + times(m.Value);
+                case "single_mult": return "Single-target hits " + times(m.Value);
+                case "element_mult": return (_db.Elements.TryGetValue(m.Element ?? "", out var el) ? _db.Text(el.NameKey) : m.Element) + " hits " + times(m.Value);
+                case "speed_mult": return "Every unit's speed " + times(m.Value);
+                case "crit_bonus": return "Crit chance " + (m.Value >= 0 ? "+" : "") + pct(m.Value);
+                case "corruption_early": return "Corruption starts " + Math.Round(m.Value).ToString(CultureInfo.InvariantCulture) + " ticks earlier";
+                case "start_shield": return "Every unit starts with a shield of " + pct(m.Value) + " of its max HP";
+                default: return m.Kind + " " + m.Value.ToString(CultureInfo.InvariantCulture);
+            }
         }
 
         /// <summary>
@@ -724,6 +858,9 @@ namespace IdleRng.Web
                 .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
                 .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("sealedUtcMs", e.SealedUtcMs)
                 .P("locked", e.Locked).P("refund", AccountOps.DismantleRefund(_db, e)).P("rulebook", _acct?.Rulebook(e.Id) ?? "");
+            w.Key("skills").Arr();   // the active skills a rulebook may name, in the fighter's order (mskill ids; tooltips under skillTips)
+            foreach (var sk in e.Fighter(_db).Skills) if (sk.Kind != SkillKind.Passive) w.Str(sk.Id);
+            w.EndArr();
             string apex = ApexForm.TreeOf(_db, e);
             w.P("apex", apex).P("name", ApexForm.Name(_db, e.SpeciesId, apex));
             w.Key("stats"); Stats(w, e.Stats);

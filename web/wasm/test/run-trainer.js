@@ -1034,8 +1034,14 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       const climb = r.runEndless(season, [0, 1, 2, 3]);
       const again = r.runEndless(season, [0, 1, 2, 3]);
       const three = r.runEndless(season, [0, 1, 2]);
+      const fell = climb.capped ? climb.floorReached - 1 : climb.floorReached;
+      const watch = r.endlessFloor(season, [0, 1, 2, 3], fell);
+      const preview = r.endlessPreview(season, [0, 1, 2, 3], fell, [null, 'always>basic@lowest_hp', null, null]);
+      const badPreview = r.endlessPreview(season, [0, 1, 2, 3], fell, [null, 'always>no_such_skill', null, null]);
+      const shardsBefore = r.account.shards;
       const saved = JSON.parse(localStorage.getItem('idle-rng-account-v1').split('\n').slice(1).join('\n'));
-      return { season, info, set, bad, refusedNoId, climb, again, three, entry: r.account.vault[idx], after: r.endlessInfo(season), saved: saved.Account };
+      return { season, info, set, bad, refusedNoId, climb, again, three, fell, watch, preview, badPreview, idx, shardsSame: r.account.shards === shardsBefore,
+        gambits: r.content.gambits, skills: r.account.vault[idx].skills, entry: r.account.vault[idx], after: r.endlessInfo(season), saved: saved.Account };
     });
     check(e.season === 2966 && e.info.ok && e.info.teamSize === 4 && e.info.gambitSlots > 0 && e.info.floors.length === e.info.band
       && e.info.floors[0].floor === 1 && e.info.floors[e.info.band - 1].elite && e.info.floors.every((f) => f.enemies.length === 4 && f.shards > 0),
@@ -1046,6 +1052,14 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
       && e.climb.clearedSeason === e.climb.floorsCleared && e.climb.climbs === 1, 'runEndless climbs and pays each floor cleared');
     check(e.again.ok && e.again.hash === e.climb.hash && e.again.shards === 0 && e.again.climbs === 2, 'a retry replays the same climb and pays nothing new');
     check(e.three.ok === false, 'a team of three is refused');
+    check(e.climb.final && e.climb.final.floor === e.fell && e.climb.final.hash === e.climb.floors[e.climb.floors.length - 1].hash
+      && e.watch.ok && e.watch.hash === e.climb.final.hash && e.watch.units.length >= 8 && e.watch.units.filter((u) => u.vault !== undefined).length === 4
+      && e.watch.units.every((u) => u.name && !/^[te]\d_/.test(u.name)) && e.watch.actions.length > 0,
+      'endlessFloor replays the deciding floor (same hash as the climb\'s final), with named units and the team\'s Vault slots');
+    check(e.preview.ok && e.preview.floor === e.fell && e.preview.actions.some((x) => x.event === 'gambit' && x.actor.indexOf('t1_') === 0)
+      && e.badPreview.ok === false && e.shardsSame, 'endlessPreview fights the floor with an edited rulebook (its rule fires), refuses a bad one, pays nothing');
+    check(e.gambits && e.gambits.slots > 0 && e.gambits.conditions.length === 6 && e.gambits.targets.length === 3 && e.gambits.basic.name
+      && e.gambits.conditions.every((c) => c.name && c.desc) && Array.isArray(e.skills), 'the content carries the rulebook vocabulary, each entry its active skills');
     check(e.after.clearedSeason === e.climb.floorsCleared && e.after.floors.length > 0 && e.after.floors[0].floor === e.climb.floorsCleared + 1, 'endlessInfo moves past the season best');
     check(e.saved.Endless && e.saved.Endless.Season === e.season && (e.saved.Endless.Climbs || 0) === 2
       && Object.values(e.saved.Rulebooks || {}).length === 1, 'the climbs and the rulebook are saved');

@@ -91,6 +91,10 @@
       endlessSeason(day) { const d = day == null ? Math.floor(Date.now() / 86400000) : day; return Math.floor((d + 3) / 7); },
       endlessInfo(season) { return parse(host.AccountCmd('endlessInfo', JSON.stringify([season]))); },   // read only
       runEndless(season, vaultIndices) { return run.acct('runEndless', season, vaultIndices); },
+      // Read only: one floor's fight for that team (the same fight the climb fought there), and the same floor with edited
+      // rulebooks (one text per team slot, null = the saved one), the editor's test. Neither pays nor saves anything.
+      endlessFloor(season, vaultIndices, floor) { return parse(host.AccountCmd('endlessFloor', JSON.stringify([season, vaultIndices, floor]))); },
+      endlessPreview(season, vaultIndices, floor, rulebooks) { return parse(host.AccountCmd('endlessPreview', JSON.stringify([season, vaultIndices, floor, rulebooks]))); },
       setRulebook(vaultIndex, text) { return run.acct('setRulebook', vaultIndex, text); },
       startRun(speciesId, books, talentsOff) { return talentsOff ? run.acct('startRun', speciesId, books || [], talentsOff) : run.acct('startRun', speciesId, books || []); },
       finishRun() { return run.acct('finishRun', Date.now()); },
