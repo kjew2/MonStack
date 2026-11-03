@@ -611,11 +611,13 @@ namespace IdleRng.Sim.Combat
                 case SkillKind.Heal:
                 {
                     double amt = Scaled(r, u, sk) * HealScale(r, s);
+                    // mudwork turns the carrier's heal on itself into shield: judged like a shield, not by missing HP
+                    if (sk.Target == SkillTarget.Self && Has(u, RuleModifiers.Mudwork)) return AnyEnemy(s, u) && ShieldWanted(r, u, MudShield(r, u, amt));
                     if (sk.Target != SkillTarget.LowestAlly && sk.Target != SkillTarget.AllAllies) return WantsHeal(r, u, amt);
                     foreach (var a in s.Units) if (a.Side == u.Side && WantsHeal(r, a, amt)) return true;
                     return false;
                 }
-                case SkillKind.Shield: return AnyEnemy(s, u) && WantsShield(s, u, sk, Scaled(r, u, sk) * HealScale(r, s));
+                case SkillKind.Shield: return AnyEnemy(s, u) && WantsShield(r, s, u, sk, Scaled(r, u, sk) * HealScale(r, s));
                 case SkillKind.Taunt: return u.TauntTicks == 0 && AnyOtherAlly(s, u);   // nobody to protect: a wasted action
                 case SkillKind.Buff:
                 {
@@ -849,8 +851,9 @@ namespace IdleRng.Sim.Combat
         /// tidal_overflow the overflow becomes shield, up to TideShieldCap of max HP (added to <paramref name="shield"/>). It joins the
         /// unit's one shield pool, so a timed shield's expiry clears it too.
         /// </summary>
-        static double Heal(FightRules r, FightUnit t, double amount, ref double shield, double overflowCap = 0)
+        static double Heal(RuleCtx c, FightUnit t, double amount, ref double shield, double overflowCap = 0)
         {
+            var r = c.Rules;
             double before = t.Hp, sum = t.Hp + amount;
             t.Hp = Math.Min(t.MaxHp, sum);
             double over = sum - t.MaxHp;
@@ -858,8 +861,9 @@ namespace IdleRng.Sim.Combat
             if (over > 0 && capFrac > 0)
             {
                 HookShieldCap(r, t, ref capFrac);
+                HookShieldIn(c, t, ref over);   // holdback: the overflow washes stored damage out first
                 double cap = capFrac * t.MaxHp;
-                if (t.Shield < cap)
+                if (over > 0 && t.Shield < cap)
                 {
                     double add = Math.Min(cap - t.Shield, over);
                     t.Shield += add;
@@ -880,7 +884,7 @@ namespace IdleRng.Sim.Combat
             HookHealIn(c, t, amount, ref taken);   // pyre_mercy: the heal burns an enemy instead
             if (taken) return 0;
             double before = shield;
-            double healed = Heal(c.Rules, t, amount, ref shield, overflowCap);
+            double healed = Heal(c, t, amount, ref shield, overflowCap);
             HookHealed(c, t, healed, Math.Max(0.0, amount - healed - (shield - before)));
             return healed;
         }
@@ -895,10 +899,13 @@ namespace IdleRng.Sim.Combat
             tgt.Shield -= absorbed;
             double hpDamage = amount - absorbed;
             HookHpDamage(c, src, tgt, ref hpDamage);
-            double dealt = Math.Min(tgt.Hp, hpDamage);
             bool wasAlive = tgt.Alive;
+            double held = 0;
+            HookHpHeld(c, src, tgt, ref hpDamage, ref held);   // holdback: the HP loss waits in the Reservoir (counted now), or the dam breaks
+            double dealt = Math.Min(tgt.Hp, hpDamage);
             tgt.Hp -= dealt;
             if (tgt.Hp < 0) tgt.Hp = 0;
+            dealt += held;
             src.Tally.DamageDealt += dealt;
             tgt.Tally.DamageTaken += dealt;
             if (element != null)
@@ -929,14 +936,20 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>
         /// A timed shield of <paramref name="amount"/> for <paramref name="ticks"/> (0 = no expiry): the unit keeps the bigger of its
-        /// shield and this one, and the longer timer; the shield-gain hook may change both (specs/16 section 6.4).
+        /// shield and this one, and the longer timer; the shield-gain hook may change both (specs/16 section 6.4). The shield-in hook
+        /// may take part of the amount first (holdback); what is left, up to <paramref name="cap"/>, is the new shield. Returns false
+        /// when nothing was left (no shield change, no timer).
         /// </summary>
-        static void GainShield(RuleCtx c, FightUnit t, double amount, int ticks)
+        static bool GainShield(RuleCtx c, FightUnit t, double amount, int ticks, double cap = double.PositiveInfinity)
         {
+            HookShieldIn(c, t, ref amount);
+            if (!(amount > 0)) return false;
+            amount = Math.Min(amount, cap);
             double shield = Math.Max(t.Shield, amount);
             HookShieldGain(c, t, amount, ref shield, ref ticks);
             t.Shield = shield;
             t.ShieldTicks = Math.Max(t.ShieldTicks, ticks);
+            return true;
         }
 
         /// <summary>Sends root_rebirth's event after the action that triggered it.</summary>
@@ -1058,13 +1071,14 @@ namespace IdleRng.Sim.Combat
         /// <summary>
         /// Whether a shield of <paramref name="amount"/> would raise one of the skill's targets' shield (specs/16 section 5.2). A
         /// shield guards HP it has not lost yet, so unlike a heal it does not wait for damage: it only waits while the target's
-        /// shield is already at least this big (casting then would change nothing but the timer).
+        /// shield is already at least this big (casting then would change nothing but the timer). A barricade target stacks
+        /// shields, so it wants one while under its cap; a holdback target, while its Reservoir holds damage (ShieldWanted).
         /// </summary>
-        static bool WantsShield(FightState s, FightUnit u, CombatSkill sk, double amount)
+        static bool WantsShield(FightRules r, FightState s, FightUnit u, CombatSkill sk, double amount)
         {
-            if (sk.Target == SkillTarget.Self) return u.Shield < amount;
-            if (sk.Target == SkillTarget.LowestAlly) { var t = LowestAlly(s, u); return t != null && t.Shield < amount; }
-            foreach (var a in s.Units) if (a.Side == u.Side && a.Alive && a.Shield < amount) return true;
+            if (sk.Target == SkillTarget.Self) return ShieldWanted(r, u, amount);
+            if (sk.Target == SkillTarget.LowestAlly) { var t = LowestAlly(s, u); return t != null && ShieldWanted(r, t, amount); }
+            foreach (var a in s.Units) if (a.Side == u.Side && ShieldWanted(r, a, amount)) return true;
             return false;
         }
 

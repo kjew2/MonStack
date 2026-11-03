@@ -225,6 +225,7 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 | Quickdraw | Finish a run with SPD at 650 or more (`stat_reached`, ref `spd`) | iaido_mantis (Iaido Mantis, #159, placeholder) |
 | Stolen Fortune | Finish a run with LUK at 650 or more (`stat_reached`, ref `luk`) | cuckling (Cuckling, #143) |
 | Still Waters | Finish a run with WIS at 600 or more (`stat_reached`, ref `wis`) | gearbell_jelly (Gearbell Jelly, #158, placeholder) |
+| Dam Builder | Finish 15 runs (`runs_finished`) | lodge_beaver (Lodge Beaver, #146, placeholder: one log at a time) |
 | Steadfast | Clear 30 Endless Tower floors in one climb (`endless_floor`) | aegis_ram (Aegis Ram, #147, placeholder; the issue's `runs_finished` 10 fell back to its named alternative because Lodge Beaver's lane took `runs_finished`) |
 | Spire Breaker | Clear 20 Endless Tower floors in one climb | none **(agent: a goal, not an unlock, until a species is meant for it)** |
 

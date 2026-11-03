@@ -203,6 +203,13 @@ namespace IdleRng.Sim.Tests
             Assert.That(FirstFleece(s3), Is.Null);
             Assert.That(s3.Units[0].Shield, Is.EqualTo(cap + 100));
 
+            // A barricade carrier's pool fills up to the barricade's higher cap (the ShieldCap hook), as an overheal shield does.
+            var s5 = BattleSim.Start(r, new[] { Mon("a", null, RuleModifiers.BraveHeart, RuleModifiers.FleeceAegis, RuleModifiers.Barricade) },
+                                     new[] { Dummy("b", x => x.Spd = 1) });
+            s5.Units[0].Shield = cap;
+            Assume.That(r.BarricadeCap, Is.GreaterThan(r.FleeceCap));
+            Assert.That(FirstFleece(s5)?.Amount, Is.EqualTo(Math.Min(amount, (r.BarricadeCap - r.FleeceCap) * s5.Units[0].MaxHp)).Within(1e-9));
+
             // Off: no rule, no fleece.
             var s4 = BattleSim.Start(r, new[] { Mon("a", null, RuleModifiers.BraveHeart) }, new[] { Dummy("b") });
             Assert.That(Run(r, s4, 200).Any(x => x.Event == BattleSim.FleeceEvent), Is.False);

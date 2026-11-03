@@ -115,9 +115,10 @@ namespace IdleRng.Sim.Combat
             if (t == null) return;
             double capFrac = r.FleeceCap;
             HookShieldCap(r, t, ref capFrac);   // barricade's higher cap applies, as for an overheal shield
-            double cap = capFrac * t.MaxHp;
-            double add = Math.Min(Math.Max(0.0, cap - t.Shield), r.FleeceShield * Eff(r, u, StatIds.Def));
-            if (add <= 0) return;
+            double amount = r.FleeceShield * Eff(r, u, StatIds.Def);
+            HookShieldIn(c, t, ref amount);   // holdback: the shield washes stored damage out first, as an overheal shield does
+            double add = Math.Min(Math.Max(0.0, capFrac * t.MaxHp - t.Shield), amount);
+            if (!(add > 0)) return;
             t.Shield += add;
             c.Log?.Invoke(new FightAction(u.Id, FleeceEvent, t.Id, add));
         }

@@ -88,6 +88,9 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>tide_moat: the defence the moat used where it beat WIS, logged once the hit lands; 0 = none.</summary>
         public double Moat;
+
+        /// <summary>tail_slap: the damage the attacker's shield added to the hit, logged once the hit lands; 0 = none.</summary>
+        public double Slapped;
     }
 
     public static partial class BattleSim

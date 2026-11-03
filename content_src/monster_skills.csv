@@ -128,6 +128,9 @@ knell,mskill.knell.name,damage,all_enemies,,wis,0.8,3,0,dark
 hour_hand,mskill.hour_hand.name,damage,enemy,,wis,1.6,4,0,dark
 second_hand,mskill.second_hand.name,damage,enemy,,wis,0.3,0,0,dark
 chime_cascade,mskill.chime_cascade.name,damage,all_enemies,,wis,1.0,4,0,dark
+mud_patch,mskill.mud_patch.name,heal,self,,wis,1.0,3,0,nature
+tail_thump,mskill.tail_thump.name,damage,enemy,,str,1.2,2,0,nature
+sluice_gate,mskill.sluice_gate.name,shield,self,,wis,1.2,4,3,nature
 fleece_ward,mskill.fleece_ward.name,shield,self,,def,1.2,3,3,light
 horn_charge,mskill.horn_charge.name,damage,enemy,,str,1.4,2,0,light
 shofar_call,mskill.shofar_call.name,damage,enemy,,str,0.3,0,0,light

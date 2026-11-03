@@ -61,6 +61,10 @@
    "name": "Gearbell Jelly",
    "prompt": "A small floating moon jellyfish creature in deep indigo and violet. Its translucent bell is a glowing mana barrier, and tiny luminous rune gears turn slowly inside it like clockwork. Soft trailing tentacles drift beneath it, tipped with faint violet light. Big gentle glowing eyes inside the bell. Cute, calm and a little mysterious, a dark-element monster."
   },
+  "lodge_beaver": {
+   "name": "Lodge Beaver",
+   "prompt": "A stout beaver wearing a wall of stacked logs and mud so thick it can barely waddle, hugging one more log for the pile."
+  },
   "aegis_ram": {
    "name": "Aegis Ram",
    "prompt": "A white-and-gold bighorn ram braced inside a golden shield of light, hooves planted, three glowing pips charging on its curled horns. Noble, steadfast and mythic, a light-element monster."
@@ -188,6 +192,16 @@
    "species": "gearbell_jelly",
    "name": "Orrery Moonbell",
    "prompt": "the jelly has become a vast moon-like bell of pale silver glass, holding a slowly turning orrery of brass rune gears and tiny glowing planets inside, a glowing clock face showing through the crown, tentacles frozen mid-drift as if time stopped. Colour palette shifts from violet to pale silver, moonlight white and brass."
+  },
+  "tail_slap": {
+   "species": "lodge_beaver",
+   "name": "Logjam Warden",
+   "prompt": "the beaver has grown huge, and its log wall is now a massive rampart of dark timber bound with heavy polished steel bands and bolts, bolted to its back; its flat tail is a great timber paddle studded with river stones, raised high to slap. Colour palette shifts to dark wood, steel grey and cold blue highlights."
+  },
+  "great_dam": {
+   "species": "lodge_beaver",
+   "name": "Floodgate Colossus",
+   "prompt": "a colossal beaver grown into its own dam: logs and river stone across its chest with sluice gates pouring white water, a pond and a little lodge on its back."
   },
   "headlong_oath": {
    "species": "aegis_ram",
