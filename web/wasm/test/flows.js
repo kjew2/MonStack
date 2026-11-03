@@ -3,9 +3,9 @@
 // - issue #87: each main screen (pick, run, fight playback, tree draft, end, gauntlet wheel, grade, vendor, Vault) has no horizontal scroll
 //   and no page/console error; a tree draft overwrites an occupied slot (specs/12 section 5.1: half its spent points come back).
 // - issue #88: save, reload and resume. A run reloaded mid-way (also with a draft waiting) comes back with the same state hash and
-//   is then finished; a save whose run in progress no longer replays drops only that run, with a notice, its books returned and
-//   the original kept aside (specs/06 section 5); a damaged save is kept aside next to it and the player gets a fresh, working
-//   account. Issue #93: kept-aside saves are capped, the oldest (or a legacy single backup) is never evicted.
+//   is then finished; an account on the server whose run in progress no longer loads drops only that run, with a notice and its
+//   books returned (specs/06 section 5, specs/27 section 7); a damaged copy on the device does not matter, since every load opens
+//   the server's account (specs/27 section 5.3).
 // - issue #89: an injury loses the rest of its cycle, its fight and the next cycle, says when the monster is back, and survives a reload.
 // - issue #105: every talent at max rank shows its bonus on the home screen and in the run; Second Look rerolls a draft once.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
@@ -189,26 +189,24 @@ const H = require('./harness.js');
   check(live.Run && live.Run.Books.length === 1, 'a second run is in progress with a book');
   const stale = JSON.parse(JSON.stringify(live));
   stale.Run.SpeciesId = 'species_removed_from_content';   // as if a content update removed it
-  const staleText = H.encodeSave(stale);
-  await t.writeSaveText(staleText);
+  await t.writeSaveText(H.encodeSave(stale));             // the server's copy (its local test server)
   await page.reload();
   await act('start').waitFor({ timeout: 90000 });
   const toasts = await page.locator('#toasts').innerText();
   check(/no longer in the game/.test(toasts) && /books returned/.test(toasts), 'the player is told the stale run was dropped: ' + toasts.replace(/\s+/g, ' ').slice(0, 90));
-  const bad1 = await t.readBadTexts();
-  check(bad1.length === 1 && bad1[0] === staleText, 'the original save is kept aside under a backup key (' + bad1.length + ' kept)');
   const fixed = await t.readAccount();
-  check(fixed.Run === undefined, 'the stale run is gone from the saved account');
+  check(fixed.Run === undefined, 'the stale run is gone from the loaded account');
   check(fixed.Account.Shards === live.Account.Shards && fixed.Account.Vault.length === 1 && fixed.Account.Vault[0].Id === entry.Id,
     'shards and Vault are kept (' + fixed.Account.Shards + ' shards, ' + fixed.Account.Vault.length + ' monster)');
   const bookId = live.Run.Books[0];
   check((fixed.Account.Books[bookId] || 0) === (live.Account.Books[bookId] || 0) + 1, 'the run\'s book is back in the inventory (' + bookId + ')');
   check(JSON.stringify(fixed.Account.Talents) === JSON.stringify(live.Account.Talents), 'talents are kept');
   await t.layout('home after a stale save');
-  await t.reload();
-  check(!/no longer in the game/.test(await page.locator('#toasts').innerText()), 'the notice does not repeat on the next load');
+  // The next commit stores the account as this load made it (specs/27 section 7), so the notice does not come back.
   await act('start').click();
   await act('drill-str').waitFor();
+  await t.reload();
+  check(!/no longer in the game/.test(await page.locator('#toasts').innerText()), 'the notice does not repeat once the account was committed');
   check((await t.readAccount()).Run !== undefined, 'the account still starts a run');
 
   // ---- an injury (specs/14 section 4.1, issue #89): drilling without rest injures the monster; it loses the rest of the cycle
@@ -239,45 +237,17 @@ const H = require('./harness.js');
   await act('drill-str').click();
   check((await t.readAccount()).Run.Drills > 0, 'and it trains again');
 
-  // ---- a damaged save: kept aside, and a fresh account that works
-  const damaged = (await t.readSaveText()).slice(0, -20);             // cut short: the length and CRC no longer match
-  await t.writeSaveText(damaged);
-  await page.reload();
-  await act('start').waitFor({ timeout: 90000 });
-  const toasts2 = await page.locator('#toasts').innerText();
-  check(/could not be loaded and was kept aside/.test(toasts2), 'the player is told the save was kept aside: ' + toasts2.replace(/\s+/g, ' ').slice(0, 90));
-  const bad2 = await t.readBadTexts();
-  check(bad2.length === 2 && bad2[0] === staleText && bad2[1] === damaged, 'the damaged save is kept aside, unchanged, next to the stale save kept before (issue #93)');
-  const fresh = await t.readAccount();
-  check(fresh && fresh.Kind === 'monster_account' && fresh.Run === undefined && fresh.Account.Vault.length === 0 && !fresh.Account.Shards, 'a fresh account replaces it');
-  await t.layout('home after a damaged save');
-  await act('hometab-vault').click();
-  check((await page.locator('[data-id=vault-entry]').count()) === 0 && (await text('[data-id=shards]')).startsWith('0 '), 'the home screen shows the fresh account');
-  await act('hometab-raise').click();
-  await act('start').click();
-  await act('drill-str').waitFor();
-  await act('drill-str').click();
+  // ---- a damaged copy on the device: every load opens the server's account (specs/27 section 5.3), so it does not matter
+  const good = await t.readAccount();
+  await page.evaluate((k) => localStorage.setItem(k, 'IDLERNG-SAVE damaged'), H.SAVE_KEY);
   await t.reload();
-  check((await page.locator('[data-act="drill-str"]').count()) === 1 && (await t.readAccount()).Run.Drills === 1, 'the fresh account saves and resumes a run');
-  const bad3 = await t.readBadTexts();
-  check(bad3.length === 2 && bad3[0] === staleText && bad3[1] === damaged, 'and both kept-aside saves are still there');
-
-  // ---- the backup cap (issue #93): a legacy single backup counts as the oldest and is never evicted; a new backup past the cap
-  // evicts the second oldest
-  const legacy = 'legacy backup written before issue #93';
-  await page.evaluate(([k, v]) => localStorage.setItem(k, v), [H.BAD_KEY, legacy]);
-  const keep = await page.evaluate(() => RunEngine.BAD_KEEP);
-  const extra = [];
-  for (let i = 0; i < 2; i++) {
-    const d = (await t.readSaveText()).slice(0, -(21 + i));           // damaged differently each time
-    extra.push(d);
-    await t.writeSaveText(d);
-    await t.reload();
-  }
-  const bad4 = await t.readBadTexts();
-  check(keep === 3 && bad4.length === keep && bad4[0] === legacy && bad4[1] === extra[0] && bad4[2] === extra[1],
-    'past the cap of ' + keep + ' the legacy backup and the newest saves are kept (' + bad4.length + ' kept)');
-  check((await page.evaluate((k) => localStorage.getItem(k), H.BAD_KEY)) === legacy, 'the legacy backup key is untouched');
+  const back = await t.readAccount();
+  check(back && back.Run && back.Run.Drills === good.Run.Drills && back.Account.Vault.length === good.Account.Vault.length,
+    'a damaged device copy is replaced by the server\'s account, run in progress included (' + back.Run.Drills + ' drills)');
+  await clickDom('[data-act="tab-log"]');               // the run's Log tab holds Abandon
+  await act('abandon').click();
+  await act('abandon-yes').click();
+  await act('start').waitFor();
 
   // ---- talent catalog v2 (issue #105, specs/18 section 3): an account with every talent at max rank. The home screen sums the
   // bonuses, the run shows a fifth tree slot and the bigger rest, and a milestone draft can be rerolled once (Second Look)

@@ -11,6 +11,10 @@
 # (GitHub Actions sets CI=true), a missing wasm-tools workload is an error instead of a skip, so CI
 # cannot pass without the web steps. --no-wasm still skips them on purpose.
 #
+# The UGS Cloud Code module's tests need .NET 10, which must not be the default dotnet: set MONSTACK_DOTNET10 to a separate
+# .NET 10 SDK's dotnet (or install one at ~/.dotnet10, see server/ugs/README.md). Without one they are skipped locally; CI
+# installs one and fails if it is missing.
+#
 # Exits non-zero on the first failure.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -23,7 +27,7 @@ for arg in "$@"; do
     --fast) FAST=1 ;;
     --no-dotnet) DOTNET=0 ;;
     --no-wasm) WASM=0 ;;
-    -h|--help) sed -n 2,13p "$0"; exit 0 ;;
+    -h|--help) sed -n 2,17p "$0"; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -117,20 +121,55 @@ else
     step "Web: Endless Tower screen (team, climb, playback) in headless Chromium"
     node web/wasm/test/endless.js
 
+    step "Web: Rankings tab (Endless and gauntlet boards, species chips, display name, failed reads) in headless Chromium"
+    node web/wasm/test/rankings.js
+
     step "Web: rulebook editor (rules, pickers, save, test preview) in headless Chromium"
     node web/wasm/test/rulebook.js
 
     step "Web: player accounts (guest, Google link, second device, sign out, offline) in headless Chromium"
     node web/wasm/test/auth.js
 
+    step "Web: sync with the account server (checkpoints, lost connection, takeover, rejection, stale content, one tab) in headless Chromium"
+    node web/wasm/test/sync.js
+
     step "Web: the GitHub Pages site lays out"
     SITE_TMP=$(mktemp -d)
     bash web/wasm/site.sh "$SITE_TMP/site" > /dev/null
-    [ -f "$SITE_TMP/site/index.html" ] && [ -f "$SITE_TMP/site/auth.js" ] && [ -f "$SITE_TMP/site/wasm/dist/_framework/dotnet.js" ] || { echo "site.sh left out files" >&2; exit 1; }
+    [ -f "$SITE_TMP/site/index.html" ] && [ -f "$SITE_TMP/site/auth.js" ] && [ -f "$SITE_TMP/site/sync.js" ] && [ -f "$SITE_TMP/site/wasm/dist/_framework/dotnet.js" ] || { echo "site.sh left out files" >&2; exit 1; }
     rm -rf "$SITE_TMP"
   else
     printf '\nSkipped WebAssembly checks (--no-wasm or wasm-tools workload not installed). Not a full pass.\n'
   fi
+fi
+
+# The page's UGS transport (web/ugs-transport.js, specs/27 section 10 step 4): plain Node, a fake Cloud Code endpoint.
+step "Web: the UGS transport sends the module's calls and sorts verdicts from retryable failures"
+node web/wasm/test/ugs-transport.js
+
+# The Cloud Code module (server/ugs/MonStackAccount, specs/27 section 10 step 4) is .NET 10, and a .NET 10 SDK as the default
+# `dotnet` breaks the .NET 8 WebAssembly steps (CLAUDE.md lessons). So it runs with a .NET 10 SDK kept apart: MONSTACK_DOTNET10
+# (the path of its dotnet), else ~/.dotnet10/dotnet. Its build goes to build/obj-net10 and build/bin-net10. CI installs one
+# (check.yml) and may not skip this; locally a missing one is a skip, and not a full pass.
+DOTNET10="${MONSTACK_DOTNET10:-$HOME/.dotnet10/dotnet}"
+if [ -x "$DOTNET10" ]; then
+  DOTNET10_ROOT="$(cd "$(dirname "$DOTNET10")" && pwd -P)"
+  dotnet10() { DOTNET_ROOT="$DOTNET10_ROOT" DOTNET_MULTILEVEL_LOOKUP=0 "$DOTNET10" "$@"; }
+  DOTNET10_SDKS="$(dotnet10 --list-sdks)"
+  grep -q '^10\.' <<<"$DOTNET10_SDKS" || { echo "$DOTNET10 has no .NET 10 SDK:" >&2; echo "$DOTNET10_SDKS" >&2; exit 1; }
+
+  step "UGS module: handlers in process over a fake Cloud Save (.NET 10, issue #28)"
+  dotnet10 test server/ugs/MonStackAccount.Tests -c Release -p:MonStackBuildSuffix=-net10 -nologo
+
+  if [ "$FAST" -eq 0 ]; then
+    step "UGS module: packages for Cloud Code (deploy.sh --check, no upload)"
+    DOTNET="$DOTNET10" DOTNET_ROOT="$DOTNET10_ROOT" bash server/ugs/deploy.sh --check
+  fi
+elif [ -n "${CI:-}" ] && [ "${CI:-}" != "false" ]; then
+  echo "CI is set but no .NET 10 SDK was found at MONSTACK_DOTNET10 or ~/.dotnet10/dotnet: CI may not skip the Cloud Code module tests." >&2
+  exit 1
+else
+  printf '\nSkipped the Cloud Code module tests: no .NET 10 SDK at MONSTACK_DOTNET10 or ~/.dotnet10/dotnet (see server/ugs/README.md). Not a full pass.\n'
 fi
 
 printf '\nAll checks passed.\n'

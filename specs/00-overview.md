@@ -44,7 +44,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7) and `fight_ranks.ticket_pieces` (`specs/21` section 7), `VENDOR_OFFERS`, `REROLL_BASE`, `REROLL_STEP`, `LEGENDARY_SLOTS` and the `vendor_rarities` table (section 4), the `achievements` table (section 8) | `18` |
 | Gauntlet | `GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` | `19` section 4 |
 | Dungeon | `TOWER_*`, `ENTROPY_*`, `CORRUPT_*` | `21` section 5 |
-| Profile and boards (not balance, so in code) | `NAME_MIN` 3 and `NAME_MAX` 16 (`DisplayName`), `ENDLESS_BOARD_TOP` 20 (`EndlessBoard.DefaultTop`, at most 100 a read); the server's limits `COMMIT_MAX_COMMANDS`, `COMMIT_MAX_CLIMBS` and `CLOCK_SLACK_SEC` are `ServerConfig` settings | `28` section 6, `27` sections 4 and 6 |
+| Profile and boards (not balance, so in code) | `NAME_MIN` 3 and `NAME_MAX` 16 (`DisplayName`), `ENDLESS_BOARD_TOP` 20 (`EndlessBoard.DefaultTop`, at most 100 a read), `GAUNTLET_BOARD_TOP` 20 (`GauntletBoard.DefaultTop`, at most 100 a read); the server's limits `COMMIT_MAX_COMMANDS`, `COMMIT_MAX_CLIMBS` and `CLOCK_SLACK_SEC` are `ServerConfig` settings | `28` section 6, `27` sections 4 and 6 |
 
 ## 3. Vocabulary
 
@@ -87,9 +87,12 @@ tools/test_content_build.py  tests for the converter: previous-build rules (E090
 src/IdleRng.Sim/             pure sim: Combat, Training, Account, Gauntlet, Content, Rng, Replay (hashing)
 src/IdleRng.Runtime/         save format, stores, account save
 src/IdleRng.Bots/            run bots, golden files, the `train` and `golden` verbs
+src/IdleRng.Server/          the account server core: open and commit over a store (specs/27)
 src/IdleRng.Web/             .NET 8 WebAssembly host: the bridge to the browser UI
+server/ugs/                  UGS Cloud Code modules (.NET 10): MonStackAccount, the account server; deploy.sh (specs/27 step 4)
 web/                         the monster trainer UI (index.html) and the wasm build
 .github/workflows/check.yml  CI: the full ./check.sh on every PR and push to main (specs/09 section 6)
+.github/workflows/pages.yml  deploys the Cloud Code module, then the site to GitHub Pages, after a green check on main
 ```
 
 ## 6. Decisions log

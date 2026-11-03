@@ -353,6 +353,10 @@ namespace IdleRng.Web
         /// <summary>Saved form (AccountSave text: a header line, then JSON). The active run is its replay recipe.</summary>
         public string SaveAccount() => _acct == null ? "null" : Encoding.UTF8.GetString(AccountSave.Encode(_acct));
 
+        /// <summary>{hash}: the account hash (AccountParts.AccountHash of its parts), as the server computes it after re-applying a commit.</summary>
+        public string AccountHash() => _acct == null ? JsonOut.Error("no account")
+            : new JsonOut().Obj().P("hash", AccountParts.AccountHash(AccountParts.Split(_acct))).EndObj().ToString();
+
         /// <summary>
         /// Rebuild the account from its save. Throws (returned as {"error"}) when the save is damaged or from a newer schema.
         /// A run in progress that no longer replays is dropped instead; the view then carries a <c>notice</c> sentence (specs/06 section 5).
@@ -380,6 +384,7 @@ namespace IdleRng.Web
                     case "endlessFloor": EndlessFloorRead(w, a.Int(0), a.El(1), a.Int(2), null); return w.EndObj().ToString();
                     case "endlessPreview": EndlessFloorRead(w, a.Int(0), a.El(1), a.Int(2), a.El(3)); return w.EndObj().ToString();
                     case "endlessBoard": EndlessBoardRead(w, a.Int(0), a.Has(1) ? a.Int(1) : EndlessBoard.DefaultTop); return w.EndObj().ToString();
+                    case "gauntletBoard": GauntletBoardRead(w, a.Has(0) ? a.Str(0) : null, a.Has(1) ? a.Int(1) : GauntletBoard.DefaultTop); return w.EndObj().ToString();
                 }
                 if (!AccountCommand.IsCommand(name)) return Fail("unknown command");
                 var cmd = AccountCommand.Parse(name, a);
@@ -526,7 +531,7 @@ namespace IdleRng.Web
             board.SetNameAsync(LocalPlayer, _acct.Name).GetAwaiter().GetResult();
             board.RecordAsync(LocalPlayer, _acct.Endless, 0).GetAwaiter().GetResult();
             var v = board.ReadAsync(LocalPlayer, season, top).GetAwaiter().GetResult();
-            w.P("ok", true).P("season", v.Season).P("total", v.Total).P("local", true).P("name", _acct.Name)
+            w.P("ok", true).P("kind", "endless").P("season", v.Season).P("total", v.Total).P("local", true).P("name", _acct.Name)
                 .P("fallbackName", EndlessBoard.FallbackName(LocalPlayer)).P("nameMin", DisplayName.Min).P("nameMax", DisplayName.Max);
             w.Key("top").Arr();
             foreach (var r in v.Top) BoardRowJson(w, r);
@@ -535,6 +540,34 @@ namespace IdleRng.Web
             if (v.You == null) w.Null();
             else BoardRowJson(w, v.You);
         }
+
+        /// <summary>
+        /// gauntletBoard(species|null, top?), read only (specs/19 section 9): a gauntlet board (null: overall) as the server's
+        /// GauntletBoard.ReadAsync gives it, from a local board holding this account's Vault only (its monsters put on it in seal
+        /// order, as the server does at a commit that seals; a dismantled monster is gone here, the server keeps its row). `local`
+        /// as endlessBoard.
+        /// </summary>
+        private void GauntletBoardRead(JsonOut w, string species, int top)
+        {
+            var store = new MemoryLeaderboardStore();
+            var board = new GauntletBoard(_db, store);
+            store.SetNameAsync(LocalPlayer, _acct.Name).GetAwaiter().GetResult();
+            long t = 0;
+            foreach (var e in _acct.Vault) board.RecordAsync(LocalPlayer, new[] { e }, t++).GetAwaiter().GetResult();   // ties to the earlier seal
+            var v = board.ReadAsync(LocalPlayer, species, top).GetAwaiter().GetResult();
+            w.P("ok", true).P("kind", "gauntlet").P("species", v.Species).P("total", v.Total).P("local", true).P("name", _acct.Name)
+                .P("fallbackName", EndlessBoard.FallbackName(LocalPlayer)).P("nameMin", DisplayName.Min).P("nameMax", DisplayName.Max);
+            w.Key("top").Arr();
+            foreach (var r in v.Top) GauntletRowJson(w, r);
+            w.EndArr();
+            w.Key("you");
+            if (v.You == null) w.Null();
+            else GauntletRowJson(w, v.You);
+        }
+
+        private static void GauntletRowJson(JsonOut w, GauntletRow r) =>
+            w.Obj().P("rank", r.Rank).P("name", r.Name).P("species", r.Species).P("speciesName", r.SpeciesName).P("floor", r.Floor)
+                .P("cleared", r.Cleared).P("label", r.Label).P("you", r.You).EndObj();
 
         private static void BoardRowJson(JsonOut w, BoardRow r) =>
             w.Obj().P("rank", r.Rank).P("name", r.Name).P("floor", r.Floor).P("you", r.You).EndObj();
@@ -926,7 +959,7 @@ namespace IdleRng.Web
                 string title = GauntletSim.TitleText(_db, e.LegacyTitle, e.GauntletKiller);
                 // "Floor 42: Professional Punching Bag" (specs/12 section 6); a cleared tower has no losing floor to name.
                 bool cleared = e.ClearedGauntlet();
-                string label = (cleared ? "All " + (e.GauntletFloor - 1) + " floors" : "Floor " + e.GauntletFloor) + ": " + title;
+                string label = GauntletBoard.Label(_db, e.GauntletFloor, e.LegacyTitle, e.GauntletKiller);
                 w.Obj().P("floor", e.GauntletFloor).P("cleared", cleared).P("killer", e.GauntletKiller)
                     .P("killerName", e.GauntletKiller == null ? null : GauntletSim.EnemyName(_db, e.GauntletKiller))
                     .P("title", title).P("label", label).EndObj();

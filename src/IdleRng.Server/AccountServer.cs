@@ -8,6 +8,7 @@ using IdleRng.Runtime.Save;
 using IdleRng.Sim.Tower;
 using IdleRng.Sim.Account;
 using IdleRng.Sim.Content;
+using IdleRng.Sim.Training;
 
 namespace IdleRng.Server
 {
@@ -35,6 +36,7 @@ namespace IdleRng.Server
         readonly IAccountStore _store;
         readonly ServerConfig _cfg;
         readonly EndlessBoard _board;
+        readonly GauntletBoard _gauntlet;
         readonly Profiles _profiles;
 
         /// <summary>
@@ -54,6 +56,7 @@ namespace IdleRng.Server
             _cfg = config ?? new ServerConfig();
             _standIn = AccountParts.Split(AccountOps.New(_c, 0));
             _board = leaderboards == null ? null : new EndlessBoard(leaderboards);
+            _gauntlet = leaderboards == null ? null : new GauntletBoard(_c, leaderboards);
             _profiles = profiles == null ? null : new Profiles(profiles);
         }
 
@@ -61,6 +64,9 @@ namespace IdleRng.Server
 
         /// <summary>The Endless Tower season board (specs/28 section 6), or null when the server keeps no boards.</summary>
         public EndlessBoard Board => _board;
+
+        /// <summary>The gauntlet boards (specs/19 section 9), or null when the server keeps no boards.</summary>
+        public GauntletBoard Gauntlet => _gauntlet;
 
         /// <summary>The profiles other players read (specs/27 section 3.3), or null when the server keeps none.</summary>
         public Profiles Profiles => _profiles;
@@ -233,12 +239,13 @@ namespace IdleRng.Server
 
             var (account, _) = await TryLoadAsync(playerId, head, touched, stored.Json).ConfigureAwait(false);
             if (account == null) return CommitResult.Reject(Rejection.Stale, -1, "another commit landed first");
+            var sealedNow = new List<VaultEntry>();   // the gauntlet boards rank these even if a later command dismantles one
             for (int i = 0; i < n; i++)
             {
                 try
                 {
                     CheckInputs(commands[i], now);
-                    AccountCommands.Apply(_c, account, commands[i]);
+                    if (AccountCommands.Apply(_c, account, commands[i]) is FinishResult f && f.Entry != null) sealedNow.Add(f.Entry);
                 }
                 catch (Exception e)   // the commands are the client's: any failure is a refusal, never a server error
                 {
@@ -310,7 +317,7 @@ namespace IdleRng.Server
                 return CommitResult.Reject(Rejection.Stale, -1, "another commit landed first");
             }
             await TryDeleteAsync(playerId, superseded).ConfigureAwait(false);
-            await ProjectAsync(playerId, commands, account, head.DebugUsed, next.DebugUsed, now).ConfigureAwait(false);
+            await ProjectAsync(playerId, commands, account, sealedNow, head.DebugUsed, next.DebugUsed, now).ConfigureAwait(false);
             if (profile)
             {
                 try { await _profiles.WriteAsync(playerId, Profiles.Of(_c, account, now)).ConfigureAwait(false); }
@@ -320,28 +327,37 @@ namespace IdleRng.Server
         }
 
         /// <summary>
-        /// The boards after an accepted commit (specs/27 section 3.3, specs/28 section 6): a climb puts the season best on its
-        /// board and a climb or a setName refreshes the name shown; an account that just used a debug command leaves the boards
-        /// of this season, the last one and its last climb's. Both commands load the progress part (the name) and a climb the
-        /// endless part, so no stand-in is read. Best effort: the commit has landed, so a failed write leaves the board behind
-        /// until the next climb, and a retry of a commit writes nothing.
+        /// The boards after an accepted commit (specs/27 section 3.3, specs/28 section 6, specs/19 section 9): a climb puts the
+        /// season best on its board, a seal puts the Vault's monsters on the gauntlet boards (new ones join; those already there
+        /// change nothing), and a climb, a seal or a setName refreshes the name shown; an account that just used a debug command
+        /// leaves the Endless boards of this season, the last one and its last climb's, and every gauntlet board. These commands
+        /// load the progress part (the name), a climb the endless part and a seal the Vault and its entries, so no stand-in is
+        /// read. Best effort: the commit has landed, so a failed write leaves a board behind until the next climb or seal, and a
+        /// retry of a commit writes nothing.
         /// </summary>
-        async Task ProjectAsync(string playerId, List<AccountCommand> commands, AccountState account, bool wasDebug, bool debug, long now)
+        async Task ProjectAsync(string playerId, List<AccountCommand> commands, AccountState account, List<VaultEntry> sealedNow, bool wasDebug,
+            bool debug, long now)
         {
             if (_board == null) return;
             bool climbed = commands.Any(c => c.Kind == CommandKind.RunEndless), named = commands.Any(c => c.Kind == CommandKind.SetName);
-            try
+            bool sealed_ = sealedNow.Count > 0;
+            if (debug && !wasDebug)
             {
-                if (debug && !wasDebug)
-                {
-                    int season = EndlessSim.SeasonOf(DayOf(now));
-                    var seasons = new SortedSet<int> { season, Math.Max(0, season - 1) };
-                    if (account.Endless != null && account.Endless.Season >= 0) seasons.Add(account.Endless.Season);
-                    await _board.RemoveAsync(playerId, seasons).ConfigureAwait(false);
-                }
-                if (climbed || named) await _board.SetNameAsync(playerId, account.Name).ConfigureAwait(false);
-                if (climbed && !debug) await _board.RecordAsync(playerId, account.Endless, now).ConfigureAwait(false);
+                int season = EndlessSim.SeasonOf(DayOf(now));
+                var seasons = new SortedSet<int> { season, Math.Max(0, season - 1) };
+                if (account.Endless != null && account.Endless.Season >= 0) seasons.Add(account.Endless.Season);
+                await BestEffort(() => _board.RemoveAsync(playerId, seasons)).ConfigureAwait(false);
+                await BestEffort(() => _gauntlet.RemoveAsync(playerId)).ConfigureAwait(false);
             }
+            if (climbed || sealed_ || named) await BestEffort(() => _board.SetNameAsync(playerId, account.Name)).ConfigureAwait(false);
+            if (climbed && !debug) await BestEffort(() => _board.RecordAsync(playerId, account.Endless, now)).ConfigureAwait(false);
+            if (sealed_ && !debug) await BestEffort(() => _gauntlet.RecordAsync(playerId, account.Vault.Concat(sealedNow.Where(e => !account.Vault.Contains(e))), now)).ConfigureAwait(false);
+        }
+
+        /// <summary>A board write that may fail without failing the commit (each board on its own, so one failing leaves the others written).</summary>
+        static async Task BestEffort(Func<Task> write)
+        {
+            try { await write().ConfigureAwait(false); }
             catch (Exception) { }
         }
 

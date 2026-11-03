@@ -2,6 +2,10 @@
 # passes on main, so only a commit that passed ./check.sh goes live. Google sign-in (issue #19) needs this real address:
 # the claude.ai phone artifact cannot load Google's sign-in script.
 # One-time setup by the repo owner: Settings > Pages > Source: GitHub Actions.
+# Before the site, the `module` job deploys the account server (the MonStackAccount Cloud Code module, specs/27 section 7) built
+# from the same commit, so the site never runs ahead of the server's content. It needs a UGS service account in the repo
+# secrets UGS_SERVICE_KEY_ID and UGS_SERVICE_SECRET_KEY (one-time setup: server/ugs/README.md); without them it logs that it
+# skipped and the site deploys as before.
 name: pages
 
 on:
@@ -26,7 +30,52 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
 
 jobs:
+  module:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      UGS_CLI_SERVICE_KEY_ID: ${{ secrets.UGS_SERVICE_KEY_ID }}
+      UGS_CLI_SERVICE_SECRET_KEY: ${{ secrets.UGS_SERVICE_SECRET_KEY }}
+      # Public identifiers, as in web/auth.js; repo variables override them (e.g. a dev environment).
+      UGS_CLI_PROJECT_ID: ${{ vars.UGS_PROJECT_ID || 'e83a4b44-27a7-4f76-8769-08380b340736' }}
+      UGS_CLI_ENVIRONMENT_NAME: ${{ vars.UGS_ENVIRONMENT || 'production' }}
+      # kj's UGS player ids for debug commands (specs/27 section 6.3), built into the module; empty: nobody.
+      MONSTACK_DEBUG_PLAYERS: ${{ vars.MONSTACK_DEBUG_PLAYERS }}
+    steps:
+      - id: gate
+        name: Check for the UGS service account
+        run: |
+          if [ -z "$UGS_CLI_SERVICE_KEY_ID" ] || [ -z "$UGS_CLI_SERVICE_SECRET_KEY" ]; then
+            echo "::notice title=Cloud Code module not deployed::The secrets UGS_SERVICE_KEY_ID and UGS_SERVICE_SECRET_KEY are not set, so the MonStackAccount module was skipped (setup: server/ugs/README.md). The site deploys anyway."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.gate.outputs.deploy == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # .NET 10 only in this job (Cloud Code modules target net10.0); the site job keeps .NET 8 for wasm-tools.
+      - if: steps.gate.outputs.deploy == 'true'
+        uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet10
+        with:
+          dotnet-version: "10.0.x"
+
+      - if: steps.gate.outputs.deploy == 'true'
+        name: Test the module in process
+        run: dotnet test server/ugs/MonStackAccount.Tests -c Release -p:MonStackBuildSuffix=-net10 -nologo
+
+      - if: steps.gate.outputs.deploy == 'true'
+        name: Deploy the module to Cloud Code
+        run: bash server/ugs/deploy.sh MonStackAccount
+
   deploy:
+    needs: module
     if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 30

@@ -12,7 +12,7 @@
   const ui = {
     view: 'home',            // home | run | climb | grade | vendor | tower | endless
     tab: 'train',            // train | trees | ladder | log
-    homeTab: 'raise',        // the home screen's tab: raise | vault | talents | dungeon | goals
+    homeTab: 'raise',        // the home screen's tab: raise | vault | talents | dungeon | goals | rankings
     pick: null,              // species chosen on the home screen
     showLocked: false,       // the Raise tab's locked species list is open
     howto: false,            // the Raise tab's "How a run works" is open
@@ -42,13 +42,16 @@
     towerReel: null,         // the reel of the attempt just made, in the modal (specs/21 section 8): { t0, done, raf }, or null once closed
     reveal: null,            // the merchant's card reveal on the vendor screen (issue #108): {i, phase: 'hint'|'flip', timer}, or null
     endlessTeam: [],         // Endless Tower team: exactly teamSize Vault indices in slot order (specs/28 section 2)
-    endlessTab: 'team',      // the Endless screen's section: 'team', 'floors' or 'board' (issue #130: one phone screen each)
+    endlessTab: 'team',      // the Endless screen's section: 'team' or 'floors' (issue #130: one phone screen each; the board is on the home Rankings tab)
     endlessPickOpen: false,  // the Vault list under a full Endless team, unfolded to swap a monster
     endlessResult: null,     // the last climb's result from the engine (run.runEndless) plus its season and team, shown on the Endless screen
     chart: null,             // the damage chart open over the Dungeon or Endless result: { floor } (0 = every floor fought, the default), or null
     endlessFight: null,      // the Endless floor fight shown in the playback modal, or null
     endlessReel: null,       // the reel of the climb just made, in the modal (specs/28 section 9 step 5): { t0, done, raf }, or null once closed
-    nameEdit: null,          // the season board's name field while it is open: {draft, error}, else null
+    nameEdit: null,          // the Rankings tab's display name field while it is open: {draft, error}, else null
+    rank: { kind: 'endless', last: false, species: null },   // the board the Rankings tab shows: Endless (this or last season) or gauntlet (null = all species)
+    rankCache: {},           // the boards read so far by key (rankKey): { board, error, loading, seq }, so a re-render does not read again
+    rankShown: null,         // the board key the Rankings tab last read; opening the tab clears it, so the board is read afresh
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -625,7 +628,10 @@
         h('p', { text: 'Abandon this run? Nothing is sealed and no shards are paid. Unused books come back.' }),
         h('div', { class: 'row' }, [
           h('button', { class: 'btn small warn', type: 'button', 'data-act': 'abandon-yes', text: 'Yes, abandon', onclick: () => {
-            ui.confirmAbandon = false; run.acct('abandon'); resetRunUi(); ui.view = 'home'; render();
+            ui.confirmAbandon = false;
+            const r = run.acct('abandon');
+            if (!r.ok) { toast(r.reason); render(); return; }
+            resetRunUi(); ui.view = 'home'; render();
           } }),
           h('button', { class: 'btn small', type: 'button', 'data-act': 'abandon-no', text: 'Keep playing', onclick: () => { ui.confirmAbandon = false; render(); } }),
         ]),
@@ -1159,9 +1165,10 @@
 
   // ---- home and grade
   // The home screen is split into tabs on the bottom bar (the run screen's bar): Raise (species, start),
-  // Vault, Talents, Dungeon and Goals (achievements). Each tab opens at its top; the header keeps the shards in view.
-  const HOME_TABS = [['raise', 'Raise'], ['vault', 'Vault'], ['talents', 'Talents'], ['dungeon', 'Dungeon'], ['goals', 'Goals']];
-  function goHomeTab(id) { ui.homeTab = id; render(); }
+  // Vault, Talents, Dungeon, Goals (achievements) and Ranks (the leaderboards). Each tab opens at its top; the header keeps the
+  // shards in view.
+  const HOME_TABS = [['raise', 'Raise'], ['vault', 'Vault'], ['talents', 'Talents'], ['dungeon', 'Dungeon'], ['goals', 'Goals'], ['rankings', 'Ranks']];
+  function goHomeTab(id) { if (id === 'rankings') ui.rankShown = null; ui.homeTab = id; render(); }
   function renderHomeTabs(tabs) {
     tabs.replaceChildren();
     const acct = run.account, ti = run.towerInfo(run.towerDay());
@@ -1195,6 +1202,7 @@
     if (ui.homeTab === 'talents') return homeTalents(main);
     if (ui.homeTab === 'dungeon') return homeDungeon(main);
     if (ui.homeTab === 'goals') return homeGoals(main);
+    if (ui.homeTab === 'rankings') return homeRankings(main);
     homeRaise(main);
   }
   function homeRaise(main) {
@@ -1529,7 +1537,7 @@
       ]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-watch-' + f.floor, text: 'Watch', onclick: () => watchFloor(f.floor) }),
     ])));
-    card.append(rows, chartButton('tower-chart'));
+    card.append(chartButton('tower-chart'), rows);
     // The last floor's fight, as a log: ordinary actions plus the tower's events (phases, entropy vents, channels).
     const f = r.final, v = towerView(f);
     const list = h('ul', { class: 'alog', 'data-id': 'tower-log' });
@@ -1543,7 +1551,7 @@
   // rarity colour (blue shards, purple Skill Books, gold first clears) that the player flips with a tap, or all at once with Reveal
   // all; a book wobbles first and bursts. Which cards are face up is kept on the result, so a re-render keeps them.
   function towerLoot(r, last) {
-    const reveal = !r.lootSeen && !ui.towerFight && !ui.towerReel;
+    const reveal = !r.lootSeen && !ui.towerFight && !ui.towerReel && !ui.chart;
     if (reveal) r.lootSeen = true;
     const n = r.floorsCleared;
     const big = r.cleared ? 'Full clear!' : n ? n + (n === 1 ? ' floor cleared' : ' floors cleared') : 'Defeated';
@@ -1663,9 +1671,10 @@
   // floor fought or one floor. The numbers come with the result (floors[].team, in slot order); the names are the deciding
   // fight's team units, which are the same monsters in the same order.
   function chartButton(act) {
-    return h('button', { class: 'btn small', type: 'button', 'data-act': act, text: '📊 Damage chart',
-      onclick: () => { ui.chart = { floor: 0 }; render(); } });
+    return h('button', { class: 'btn small', type: 'button', 'data-act': act, text: '📊 Damage chart', onclick: openChart });
   }
+
+  function openChart() { ui.chart = { floor: 0 }; render(); }
 
   function chartTotals(r, floor) {
     const shown = floor ? r.floors.filter((f) => f.floor === floor) : r.floors;
@@ -1718,7 +1727,7 @@
   // (endlessReelModal); any floor fought plays back from a Watch button (run.endlessFloor replays it, read only).
   function openEndless() {
     stopPlayback();
-    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null; ui.endlessReel = null; ui.chart = null; ui.nameEdit = null; ui.endlessTab = 'team'; ui.endlessPickOpen = false;
+    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null; ui.endlessReel = null; ui.chart = null; ui.endlessTab = 'team'; ui.endlessPickOpen = false;
     ui.endlessTeam = ui.endlessTeam.filter((i) => i < run.account.vault.length);
     render();
     $('main').scrollTop = 0;
@@ -1730,9 +1739,9 @@
     const inRow = fs.every((f, k) => !k || f === fs[k - 1] + 1);
     return fs.length === 1 ? 'floor ' + fs[0] : 'floors ' + (inRow ? fs[0] + '⁠–⁠' + fs[fs.length - 1] : fs.join(', '));
   }
-  // Time left in season s by this device's clock: it ends at the next Monday 00:00 UTC, day 7(s + 1) - 3 (run.endlessSeason).
+  // Time left in season s by the server's clock (run.now, issue #21): it ends at the next Monday 00:00 UTC, day 7(s + 1) - 3 (run.endlessSeason).
   function seasonLeft(season) {
-    const ms = ((season + 1) * 7 - 3) * 86400000 - Date.now();
+    const ms = ((season + 1) * 7 - 3) * 86400000 - run.now();
     if (ms <= 0) return 'ending now';
     const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), hh = Math.floor((m % 1440) / 60);
     return (d ? d + 'd ' + hh + 'h' : hh + 'h ' + (m % 60) + 'm') + ' left';
@@ -1749,11 +1758,14 @@
       h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })),
       h('p', { class: 'small muted', 'data-id': 'endless-status', 'data-season': String(season), text: 'Season ' + season + ' · ' + seasonLeft(season) +
         ' · best this season ' + ei.clearedSeason + ' · best ever ' + ei.clearedEver + ' · ' + plural(ei.climbs, 'climb', 'climbs') + ' this season' }));
+    // The season board lives on the home Rankings tab with the other boards; this opens it there.
+    main.append(h('button', { class: 'link-btn', type: 'button', style: 'align-self:flex-start', 'data-act': 'endless-rankings', text: 'See the rankings ›',
+      onclick: () => { stopPlayback(); stopReel(ui.endlessReel); ui.endlessResult = null; ui.endlessFight = null; ui.endlessReel = null; openRankings({ kind: 'endless', last: false, species: null }); } }));
     if (r) endlessResult(main, r, season);
 
-    // Three sections, one phone screen each (issue #130): the team, the floors and mutators ahead, the season board. Climb stays
-    // in the action bar on all three.
-    const TABS = [['team', 'Team'], ['floors', 'Floors'], ['board', 'Board']];
+    // Two sections, one phone screen each (issue #130): the team, the floors and mutators ahead. Climb stays in the action bar on
+    // both. The season board is on the home Rankings tab (the link above).
+    const TABS = [['team', 'Team'], ['floors', 'Floors']];
     if (!TABS.some(([id]) => id === ui.endlessTab)) ui.endlessTab = 'team';
     const goTab = (id) => { ui.endlessTab = id; render(); $('main').scrollTop = 0; };
     main.append(h('div', { class: 'seg', role: 'tablist', 'data-id': 'endless-tabs' }, TABS.map(([id, label]) => h('button', { type: 'button', role: 'tab',
@@ -1817,7 +1829,7 @@
         ]));
       });
       main.append(mc);
-    } else endlessBoard(main, season);
+    }
     main.append(actionBar(climb));
 
     if (ui.endlessFight) { modal.hidden = false; endlessPlayModal(modal, ui.endlessFight); }
@@ -1825,51 +1837,156 @@
     else if (ui.chart && r) { modal.hidden = false; damageChart(modal, r, 'endless'); }
   }
 
-  // The season board (specs/28 section 6): the best floors cleared this season, ties to whoever got there first, the player's
-  // own row marked (and shown under the top when it is below it), and the display name the board shows, edited in place. The
-  // engine ranks, names and checks names; this only lays it out. While the page has no server the board is this device's only.
-  function endlessBoard(main, season) {
-    const b = run.endlessBoard(season);
-    main.append(h('h3', { text: 'Season board' }));
-    const card = h('div', { class: 'card eboard', 'data-id': 'endless-board' });
-    if (b.local) card.append(h('p', { class: 'small muted', 'data-id': 'endless-board-local', text: 'Only your own results show here until online accounts are live.' }));
-    const row = (r) => h('li', { class: 'brow' + (r.you ? ' you' : ''), 'data-id': 'endless-board-row-' + r.rank, 'data-you': r.you ? '1' : null }, [
+  // ---- Rankings (home tab): every leaderboard in one place. The Endless Tower season board (specs/28 section 6: best floors
+  // cleared this season or last, one row per trainer, ties to whoever got there first) and the gauntlet boards (each sealed
+  // monster's result floor, all time, one row per monster, overall or one species, ties to whoever sealed first). The engine or
+  // the server ranks (run.readBoard, a promise); this only lays the board out. Each board read is kept by its key, so a re-render
+  // draws it again without a read; opening the tab, picking a board, Refresh and a name change read it afresh. A read that settles
+  // after the player picked another board is kept for that board but redraws nothing.
+  let rankSeq = 0;
+  const rankArg = (sel) => (sel.kind === 'endless' ? run.endlessSeason() - (sel.last ? 1 : 0) : sel.species);
+  const rankKey = (sel) => (sel.kind === 'endless' ? 'endless:' + rankArg(sel) : 'gauntlet:' + (sel.species || 'all'));
+  function loadBoard(sel) {
+    const kind = sel.kind, arg = rankArg(sel), key = rankKey(sel), seq = ++rankSeq, old = ui.rankCache[key], at = serverSeq();
+    ui.rankCache[key] = { board: old && old.board, error: null, loading: true, seq, at };
+    ui.rankShown = key;
+    Promise.resolve().then(() => run.readBoard(kind, arg)).then((b) => {
+      if (!b || b.ok === false) throw new Error((b && b.reason) || 'The board could not be read.');
+      return { board: b, error: null };
+    }).catch((e) => ({ board: null, error: (e && e.message) || String(e) })).then((res) => {
+      const e = ui.rankCache[key];
+      if (!e || e.seq !== seq) return;   // a newer read of this board (or a name change) replaced it
+      ui.rankCache[key] = { board: res.board, error: res.error, loading: false, seq, at };
+      if (ui.view === 'home' && ui.homeTab === 'rankings' && rankKey(ui.rank) === key) rerenderKeepingFocus();
+    });
+  }
+  // The server commit the account is at (web/sync.js), or null without sync.
+  function serverSeq() { const Y = window.MonStackSync; return Y && Y.state ? Y.state().seq : null; }
+  // A board that lands while the name field is open would take its focus away: put it back where it was.
+  function rerenderKeepingFocus() {
+    const a = document.activeElement, id = a && a.dataset ? a.dataset.id : null;
+    const sel = id && typeof a.selectionStart === 'number' ? [a.selectionStart, a.selectionEnd] : null;
+    render();
+    const b = id && document.querySelector('[data-id="' + id + '"]');
+    if (b) { b.focus(); if (sel && b.setSelectionRange) b.setSelectionRange(sel[0], sel[1]); }
+  }
+  // Opens the Rankings tab on that board (the Endless screen's link).
+  function openRankings(sel) {
+    ui.view = 'home'; ui.homeTab = 'rankings'; ui.rank = Object.assign({}, ui.rank, sel); ui.rankShown = null;
+    render();
+  }
+  function pickBoard(change) { ui.rank = Object.assign({}, ui.rank, change); render(); }
+
+  function homeRankings(main) {
+    homeHeader(main, 'Rankings');
+    const sel = ui.rank, season = run.endlessSeason();
+    if (sel.kind === 'endless' && sel.last && season < 1) sel.last = false;   // season 0 has no last season
+    const ranked = C.species.filter((sp) => sp.starter || sp.unlock || owned(sp.id));   // a species nobody can raise has no board
+    if (sel.species && !ranked.some((sp) => sp.id === sel.species)) sel.species = null;
+    const key = rankKey(sel);
+    let ent = ui.rankCache[key];
+    // Read on opening the tab or picking a board; a server board again once a commit lands (a climb, a seal or a new name).
+    if (ui.rankShown !== key || (ent && ent.board && !ent.board.local && !ent.loading && !ent.error && ent.at !== serverSeq())) loadBoard(sel);
+    ent = ui.rankCache[key];
+
+    const seg = (id, opts, cur, pick) => h('div', { class: 'seg', role: 'tablist', 'data-id': id }, opts.map(([v, label, act]) => h('button', { type: 'button', role: 'tab',
+      'aria-selected': String(cur === v), 'data-act': act, text: label, onclick: () => { if (cur !== v) pick(v); } })));
+    main.append(seg('rank-kinds', [['endless', 'Endless Tower', 'rank-kind-endless'], ['gauntlet', 'Gauntlet', 'rank-kind-gauntlet']], sel.kind, (v) => pickBoard({ kind: v })));
+    if (sel.kind === 'endless') {
+      if (season >= 1) main.append(seg('rank-seasons', [[false, 'This season', 'rank-season-this'], [true, 'Last season', 'rank-season-last']], sel.last, (v) => pickBoard({ last: v })));
+      main.append(h('p', { class: 'small muted', 'data-id': 'rank-season', text: sel.last ? 'Season ' + (season - 1) + ' · ended'
+        : 'Season ' + season + ' · ' + seasonLeft(season) + ' · the best floor each trainer cleared this week' }));
+    } else {
+      const chip = (id, label, act) => h('button', { class: 'rchip', type: 'button', 'aria-pressed': String(sel.species === id), 'data-act': act, text: label,
+        onclick: () => { if (sel.species !== id) pickBoard({ species: id }); } });
+      main.append(h('div', { class: 'chips', 'data-id': 'rank-species', role: 'group', 'aria-label': 'Species' },
+        [chip(null, 'All', 'rank-species-all')].concat(ranked.map((sp) => chip(sp.id, sp.name, 'rank-species-' + sp.id)))));
+      main.append(h('p', { class: 'small muted', 'data-id': 'rank-season', text: 'All time: each sealed monster\'s floor in the end-of-run gauntlet' +
+        (sel.species ? ', ' + speciesDef(sel.species).name + ' only' : '') + '.' }));
+    }
+
+    const card = h('div', { class: 'card eboard', 'data-id': 'rank-board', 'data-key': key, 'data-loading': ent && ent.loading ? '1' : null });
+    const b = ent && ent.board;
+    card.append(h('div', { class: 'row between' }, [
+      h('h3', { text: sel.kind === 'endless' ? (sel.last ? 'Last season' : 'This season') : sel.species ? speciesDef(sel.species).name : 'All species' }),
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'rank-refresh', disabled: !!(ent && ent.loading), text: ent && ent.loading ? 'Loading…' : 'Refresh',
+        onclick: () => { loadBoard(ui.rank); render(); } }),
+    ]));
+    if (ent && ent.error) card.append(h('div', { class: 'row between' }, [
+      h('p', { class: 'small bad', 'data-id': 'rank-board-error', role: 'alert', text: 'Could not load the board: ' + ent.error }),
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'rank-retry', text: 'Retry', onclick: () => { loadBoard(ui.rank); render(); } }),
+    ]));
+    else if (!b) card.append(h('p', { class: 'small muted', 'data-id': 'rank-board-loading', text: 'Loading the board…' }));
+    else boardRows(card, b, sel);
+    main.append(card);
+    nameCard(main);
+  }
+  function boardRows(card, b, sel) {
+    const gauntlet = sel.kind === 'gauntlet';
+    if (b.local) card.append(h('p', { class: 'small muted', 'data-id': 'rank-board-local', text: 'Only your own results show here until online accounts are live.' }));
+    const row = (r) => h('li', { class: 'brow' + (gauntlet ? ' g' : '') + (r.you ? ' you' : ''), 'data-id': 'rank-row-' + r.rank, 'data-you': r.you ? '1' : null }, gauntlet ? [
+      h('span', { class: 'num muted', text: '#' + r.rank }),
+      h('div', { class: 'bmain' }, [
+        h('b', { class: 'bname', text: r.name + (r.you ? ' (you)' : '') }),
+        h('div', { class: 'small bsub' }, [sel.species ? null : h('span', { class: 'muted', 'data-id': 'rank-row-species', text: r.speciesName + ' · ' }),
+          h('span', { class: 'gold', 'data-id': 'rank-row-label', text: r.label })]),
+      ]),
+    ] : [
       h('span', { class: 'num muted', text: '#' + r.rank }),
       h('b', { class: 'bname', text: r.name + (r.you ? ' (you)' : '') }),
       h('span', { class: 'num', text: plural(r.floor, 'floor', 'floors') }),
     ]);
-    if (!b.top.length) card.append(h('p', { class: 'small', 'data-id': 'endless-board-empty', text: 'Nobody has cleared a floor this season yet. Climb to get on the board.' }));
-    else {
-      const list = h('ol', { class: 'blist' }, b.top.map(row));
-      if (b.you && !b.top.some((r) => r.you)) list.append(h('li', { class: 'brow gap muted', text: '…' }), row(b.you));
-      card.append(list);
-      card.append(h('p', { class: 'small muted num', 'data-id': 'endless-board-total', text: plural(b.total, 'trainer', 'trainers') + ' on the board · ties go to whoever got there first' }));
+    // A climb the server has not accepted yet is not on its board: say so rather than look lost. Only while commands wait to be
+    // saved: an account the server leaves off its boards (debug commands) is never behind for that reason.
+    if (!b.local && !gauntlet && !sel.last && b.mine > (b.you ? b.you.floor : 0) && window.MonStackSync && window.MonStackSync.state().pending > 0)
+      card.append(h('p', { class: 'small muted', 'data-id': 'rank-board-unsaved', text: 'Your best this season (' + plural(b.mine, 'floor', 'floors') + ') shows here once it is saved to the server.' }));
+    if (!b.top.length) {
+      const sp = sel.species && speciesDef(sel.species);
+      card.append(h('p', { class: 'small', 'data-id': 'rank-board-empty', text: !gauntlet
+        ? (sel.last ? 'Nobody cleared a floor last season.' : 'Nobody has cleared a floor this season yet. Climb to get on the board.')
+        : sp ? 'No ' + sp.name + ' has climbed the gauntlet yet. Seal one to get on the board.' : 'No monster has climbed the gauntlet yet. Finish and seal a run to get on the board.' }));
+      return;
     }
-
+    const list = h('ol', { class: 'blist' }, b.top.map(row));
+    if (b.you && !b.top.some((r) => r.rank === b.you.rank)) list.append(h('li', { class: 'brow gap muted', text: '…' }), row(b.you));
+    card.append(list);
+    card.append(h('p', { class: 'small muted num', 'data-id': 'rank-board-total', text: gauntlet
+      ? plural(b.total, 'monster', 'monsters') + ' on the board · ties go to whoever sealed first'
+      : plural(b.total, 'trainer', 'trainers') + ' on the board · ties go to whoever got there first' }));
+  }
+  // The display name every board shows, edited in place (the engine checks it: run.setName). The name and its rules come from the
+  // account's own season board, read at once, so the field does not wait for a board read.
+  function nameCard(main) {
+    const b = run.endlessBoard(run.endlessSeason());
+    // Without a name the server shows "Trainer XXXX" from the player id, which only a server board tells the page.
+    const shown = ui.rankCache[rankKey(ui.rank)], fallback = shown && shown.board && !shown.board.local ? shown.board.fallbackName : b.fallbackName;
+    const card = h('div', { class: 'card', 'data-id': 'rank-name-card' });
+    const focusInput = () => { const i = document.querySelector('[data-id=rank-name-input]'); if (i) i.focus(); };
     const ed = ui.nameEdit;
     if (!ed) card.append(h('div', { class: 'row between small' }, [
-      h('span', { 'data-id': 'endless-name' }, b.name ? ['Your name: ', h('b', { text: b.name })]
-        : ['Your name: ', h('span', { class: 'muted', text: b.fallbackName + ' (until you pick one)' })]),
-      h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-name', text: b.name ? 'Change' : 'Pick a name',
-        onclick: () => { ui.nameEdit = { draft: b.name || '', error: null }; render(); const i = document.querySelector('[data-id=endless-name-input]'); if (i) i.focus(); } }),
+      h('span', { 'data-id': 'rank-name' }, b.name ? ['Your name: ', h('b', { text: b.name })]
+        : ['Your name: ', h('span', { class: 'muted', text: fallback + ' (until you pick one)' })]),
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'rank-name', text: b.name ? 'Change' : 'Pick a name',
+        onclick: () => { ui.nameEdit = { draft: b.name || '', error: null }; render(); focusInput(); } }),
     ]));
     else {
-      const input = h('input', { type: 'text', 'data-id': 'endless-name-input', maxlength: String(b.nameMax + 8), autocomplete: 'off', spellcheck: 'false',
-        placeholder: b.fallbackName, 'aria-label': 'Display name', value: ed.draft });
+      const input = h('input', { type: 'text', 'data-id': 'rank-name-input', maxlength: String(b.nameMax + 8), autocomplete: 'off', spellcheck: 'false',
+        placeholder: fallback, 'aria-label': 'Display name', value: ed.draft });
       input.oninput = () => { ed.draft = input.value; };
       const save = () => {
         const r = run.setName(input.value);
-        if (!r.ok) { ed.draft = input.value; ed.error = r.reason; render(); const i = document.querySelector('[data-id=endless-name-input]'); if (i) i.focus(); return; }
-        ui.nameEdit = null; toast(r.name ? 'Name saved: ' + r.name : 'Name cleared'); render();
+        if (!r.ok) { ed.draft = input.value; ed.error = r.reason; render(); focusInput(); return; }
+        ui.nameEdit = null; ui.rankCache = {}; ui.rankShown = null;   // every board shows the name: read them again
+        toast(r.name ? 'Name saved: ' + r.name : 'Name cleared'); render();
       };
       input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } else if (e.key === 'Escape') { ui.nameEdit = null; render(); } };
       card.append(h('div', { class: 'bname-edit' }, [
-        h('label', { class: 'small', text: 'Display name: ' + b.nameMin + ' to ' + b.nameMax + ' letters, digits, spaces, - or _. Leave it empty to clear it.' }),
+        h('label', { class: 'small', text: 'Display name on every board: ' + b.nameMin + ' to ' + b.nameMax + ' letters, digits, spaces, - or _. Leave it empty to clear it.' }),
         input,
-        ed.error ? h('p', { class: 'small bad', 'data-id': 'endless-name-error', role: 'alert', text: ed.error }) : null,
+        ed.error ? h('p', { class: 'small bad', 'data-id': 'rank-name-error', role: 'alert', text: ed.error }) : null,
         h('div', { class: 'row' }, [
-          h('button', { class: 'btn small primary', type: 'button', 'data-act': 'endless-name-save', text: 'Save', onclick: save }),
-          h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-name-cancel', text: 'Cancel', onclick: () => { ui.nameEdit = null; render(); } }),
+          h('button', { class: 'btn small primary', type: 'button', 'data-act': 'rank-name-save', text: 'Save', onclick: save }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': 'rank-name-cancel', text: 'Cancel', onclick: () => { ui.nameEdit = null; render(); } }),
         ]),
       ]));
     }
@@ -1906,7 +2023,7 @@
   // is closed), what it paid, then every floor fought with a Watch button and the deciding floor's log.
   const FOUGHT_SHOWN = 3;   // a long climb lists its last floors, the rest one tap away (issue #130: the result card fits a phone)
   function endlessResult(main, r, season) {
-    const reveal = !r.seen && !ui.endlessFight && !ui.endlessReel;
+    const reveal = !r.seen && !ui.endlessFight && !ui.endlessReel && !ui.chart;
     if (reveal) r.seen = true;
     const n = r.floorsCleared;
     const big = r.capped ? 'Reached the top!' : n ? plural(n, 'floor cleared', 'floors cleared') : 'Defeated';
@@ -1937,7 +2054,7 @@
       ]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-watch-' + f.floor, text: 'Watch', onclick: () => endlessWatch(f.floor) }),
     ])));
-    card.append(rows, chartButton('endless-chart'));
+    card.append(chartButton('endless-chart'), rows);
     const f = r.final, v = endlessView(f);
     const list = h('ul', { class: 'alog', 'data-id': 'endless-log' });
     f.actions.forEach((x) => { const l = v.line(x); list.append(h('li', { class: l.cls, text: l.text })); });
@@ -2122,6 +2239,7 @@
   function closeVendor() {
     stopReveal();
     const r = run.acct('closeVendor');
+    if (!r.ok && r.waiting) return;   // play waits for the server (web/sync.js): stay on the vendor until it has the last moves
     if (!r.ok) toast('The vendor did not close: ' + r.reason);
     resetRunUi();
     ui.view = 'home';
@@ -2267,7 +2385,8 @@
 
   // ---- the Dungeon and Endless Tower reels (specs/21 section 8, specs/28 section 9 step 5): right after a climb, its floors spin on the
   // reel in the modal over the screen and land on the floor that stopped the team (or the top), then the comic defeat. Close goes
-  // to the result card under it (whose banner slams in then); Watch plays the deciding floor's fight.
+  // to the result card under it (whose banner slams in then); Watch plays the deciding floor's fight; Damage closes the reel onto
+  // the team's damage chart (every floor added up).
   function climbReelModal(modal, o) {
     const st = o.st, { rows, end } = reelRows(o.fought, o.floorReached, o.max, o.summit);
     modal.append(h('h2', { class: 'center', text: o.title }), h('div', { class: 'center small muted', text: o.blurb }),
@@ -2277,6 +2396,7 @@
       h('div', { class: 'card alert center', 'data-id': o.id + '-landed' }, [h('div', { class: 'legacy', text: o.big }), h('div', { class: 'small muted', text: o.sub })]),
       actionBar([
         h('button', { class: 'btn', type: 'button', 'data-act': o.id + '-reel-watch', text: 'Watch floor ' + o.lastFloor, onclick: o.watch }),
+        h('button', { class: 'btn', type: 'button', 'data-act': o.id + '-reel-chart', text: '📊 Damage', onclick: () => { ui.chart = { floor: 0 }; o.close(); } }),   // chart first, so the card under it keeps its banner for later
         h('button', { class: 'btn primary', type: 'button', 'data-act': o.id + '-reel-done', text: o.done, onclick: o.close }),
       ]));
   }
@@ -2304,7 +2424,7 @@
       killer: r.capped ? null : { art: foeSprite('endless-' + f.shape, !!f.elite, 'sprite'), name: f.name, boss: !!f.elite },
       big: r.capped ? 'Reached the top!' : r.floorsCleared ? plural(r.floorsCleared, 'floor cleared', 'floors cleared') : 'Defeated',
       sub: r.capped ? 'All ' + r.floorsCleared + ' floors cleared: nothing stopped this team' : 'Fell on floor ' + r.floorReached + ' to ' + f.name,
-      lastFloor: last.floor, watch: () => endlessWatch(last.floor), done: 'See the result',
+      lastFloor: last.floor, watch: () => endlessWatch(last.floor), done: 'Continue',
       close: () => { stopReel(st); ui.endlessReel = null; render(); },
     });
   }
@@ -2461,7 +2581,7 @@
   // ------------------------------------------------------------ boot
   async function boot() {
     try {
-      run = await RE.create({});
+      run = await RE.create({ sync: window.MonStackSync });   // the account comes from the server (web/sync.js, specs/27)
       C = run.content;
       TIP.init(() => C, () => run.state);
       ui.pick = C.species[0].id;
@@ -2469,7 +2589,10 @@
       watchDebugTaps();
       if (run.state) ui.view = 'run';
       if (run.loadNotice) toast(run.loadNotice);
-      if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
+      // A commit landing while a server board shows reads it again (homeRankings compares the commit each read started at).
+      if (window.MonStackSync) window.MonStackSync.onChange(() => {
+        if (ui.view === 'home' && ui.homeTab === 'rankings' && !ui.nameEdit) render();
+      });
       render();
     } catch (e) {
       $('main').replaceChildren(h('h2', { text: 'The game did not load' }), h('p', { class: 'err', text: e && e.message ? e.message : String(e) }));
