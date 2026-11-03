@@ -828,7 +828,7 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>
         /// <see cref="Heal"/>, then the Healed hook (specs/16 section 6.4) with the HP restored and the overheal that went into
-        /// neither HP nor a shield. Every heal in a fight comes through here.
+        /// neither HP nor a shield. Every skill, trigger and rule heal comes through here (not a boss phase's failed-check heal).
         /// </summary>
         static double HealHooked(RuleCtx c, FightUnit t, double amount, ref double shield, double overflowCap = 0)
         {

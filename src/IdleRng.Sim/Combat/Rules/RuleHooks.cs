@@ -191,8 +191,8 @@ namespace IdleRng.Sim.Combat
         static partial void OnHitTaken_Candlemane(RuleCtx c, HitInfo h);
 
         /// <summary>
-        /// Healed (species rules): a heal reached t (any source: skills, triggers, rules); healed is the HP it restored, lost the
-        /// overheal that went nowhere (not into HP, not into a shield). Called once per healed unit, after its HP changed.
+        /// Healed (species rules): a heal reached t (skills, triggers, rules; not a boss phase's failed check); healed is the HP it
+        /// restored, lost the overheal that went nowhere (not into HP, not into a shield). Once per healed unit, after its HP changed.
         /// </summary>
         static void HookHealed(RuleCtx c, FightUnit t, double healed, double lost)
         {
