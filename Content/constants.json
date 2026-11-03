@@ -655,6 +655,36 @@
       "key": "MON_BLOOD_FLOOR",
       "type": "double",
       "value": 0.25
+    },
+    {
+      "key": "MON_BLEED_PER_HIT",
+      "type": "double",
+      "value": 10.0
+    },
+    {
+      "key": "MON_BLEED_DEX_REF",
+      "type": "double",
+      "value": 300.0
+    },
+    {
+      "key": "MON_BLEED_BURST",
+      "type": "double",
+      "value": 0.15
+    },
+    {
+      "key": "MON_PRIV_BONUS",
+      "type": "double",
+      "value": 0.4
+    },
+    {
+      "key": "MON_PRIV_DEBUFFS",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "MON_EQ_BONUS",
+      "type": "double",
+      "value": 0.35
     }
   ]
 }

@@ -93,6 +93,9 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane A, conversion rules (specs/16 section 6.2, #134)
     "MON_IRON_DEX": "double", "MON_AVATAR_BONUS": "double", "MON_FORTRESS_DEF": "double", "MON_BLOOD_COST": "double",
     "MON_BLOOD_FLOOR": "double",
+    # idea-pool lane D, debuff and stacking rules (specs/16 section 6.2, #137)
+    "MON_BLEED_PER_HIT": "double", "MON_BLEED_DEX_REF": "double", "MON_BLEED_BURST": "double", "MON_PRIV_BONUS": "double",
+    "MON_PRIV_DEBUFFS": "int", "MON_EQ_BONUS": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -102,7 +105,9 @@ EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
             "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast",
             # idea-pool lane A (#134)
-            "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic"]
+            "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic",
+            # idea-pool lane D (#137)
+            "hemorrhage", "privileged_status", "equilibrium", "corruption", "dead_branch"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -166,6 +171,10 @@ MON_RANGES = {
     "MON_IRON_DEX": (">= 0", lambda v: v >= 0), "MON_AVATAR_BONUS": (">= 0", lambda v: v >= 0),
     "MON_FORTRESS_DEF": (">= 0", lambda v: v >= 0), "MON_BLOOD_COST": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_BLOOD_FLOOR": ("[0, 1]", lambda v: 0 <= v <= 1),
+    # idea-pool lane D (#137)
+    "MON_BLEED_PER_HIT": (">= 0", lambda v: v >= 0), "MON_BLEED_DEX_REF": ("> 0", lambda v: v > 0),
+    "MON_BLEED_BURST": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_PRIV_BONUS": (">= 0", lambda v: v >= 0),
+    "MON_PRIV_DEBUFFS": (">= 1", lambda v: v >= 1), "MON_EQ_BONUS": (">= 0", lambda v: v >= 0),
 }
 
 

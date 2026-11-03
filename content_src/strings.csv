@@ -563,3 +563,20 @@ rule.fortress_fist.name,Fortress Fist
 rule.fortress_fist.desc,"Each hit it lands adds {MON_FORTRESS_DEF:pct} of its DEF as damage. Drawback: its STR and INT count as 0 for damage (not for heals or shields)."
 rule.blood_magic.name,Blood Magic
 rule.blood_magic.desc,"Its active skills have no cooldown, but each cast costs {MON_BLOOD_COST:pct} of max HP (never below 1 HP). It does not cast if that would leave it under {MON_BLOOD_FLOOR:pct} HP."
+tree.hemorrhage.name,Hemorrhage
+tree.privileged_status.name,Privileged Status
+tree.equilibrium.name,Equilibrium
+tree.corruption.name,Corruption
+tree.dead_branch.name,Dead Branch
+rule.hemorrhage.name,Hemorrhage
+rule.hemorrhage.desc,"Each hit it lands fills the target's bleed gauge by {MON_BLEED_PER_HIT} per {MON_BLEED_DEX_REF} DEX. A full gauge (100) bursts for {MON_BLEED_BURST:pct} of the target's max HP as true damage, then empties. Answers high-HP bosses."
+rule.privileged_status.name,Privileged Status
+rule.privileged_status.desc,"Its hits deal +{MON_PRIV_BONUS:pct} damage to a target with at least {MON_PRIV_DEBUFFS} active debuffs from any source (stacked copies count). Corruption casts a debuff twice."
+rule.equilibrium.name,Equilibrium
+rule.equilibrium.desc,"Each hit marks the target with the hit's element. Its next hit on that target of a different element deals +{MON_EQ_BONUS:pct} damage and clears the mark. Elemental Avatar makes every hit one element."
+rule.corruption.name,Corruption
+rule.corruption.desc,"Each active skill it uses is cast twice at once (the second at full power), then is locked for the rest of the fight. Pairs with Dead Branch: each lock draws a new skill."
+rule.dead_branch.name,Dead Branch
+rule.dead_branch.desc,"Whenever one of its skills is locked for the fight, it gains a random active skill it lacks for the rest of the fight. Corruption locks every skill it uses."
+mskill.hex.name,Hex
+mskill.hex.desc,An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}.

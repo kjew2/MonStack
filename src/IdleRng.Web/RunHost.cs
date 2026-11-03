@@ -1107,7 +1107,7 @@ namespace IdleRng.Web
                 if (actor != null && x.Skill != null)
                     for (int i = 0; i < actor.Source.Skills.Count && e.Si < 0; i++)
                         if (actor.Source.Skills[i].Id == x.Skill.Id && actor.Source.Skills[i].Kind != SkillKind.Passive) e.Si = i;
-                e.Cd = actor == null ? new int[0] : (int[])actor.Cooldowns.Clone();
+                e.Cd = actor == null ? new int[0] : Cds(actor);
                 if (_tower != null)
                 {
                     e.Entropy = new double[n];
@@ -1123,6 +1123,14 @@ namespace IdleRng.Web
             }
         }
 
+        /// <summary>The unit's cooldowns left, with -1 for a skill locked for the rest of the fight (lane D's corruption).</summary>
+        private static int[] Cds(FightUnit u)
+        {
+            var cd = (int[])u.Cooldowns.Clone();
+            for (int i = 0; i < cd.Length; i++) if (u.SkillLocked(i)) cd[i] = -1;
+            return cd;
+        }
+
         private void FightUnitOut(JsonOut w, FightUnit u, Action<JsonOut> extra = null)
         {
             w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp).P("shield", Math.Max(0, u.Shield))
@@ -1131,8 +1139,8 @@ namespace IdleRng.Web
             foreach (var sk in u.Source.Skills)
                 w.Obj().P("name", _db.Text("mskill." + sk.Id + ".name")).P("kind", sk.Kind.ToString().ToLowerInvariant()).P("cooldown", sk.Cooldown).EndObj();
             w.EndArr();
-            w.Key("cd").Arr();       // cooldowns left when the fight ended
-            foreach (var c in u.Cooldowns) w.Int(c);
+            w.Key("cd").Arr();       // cooldowns left when the fight ended (-1: locked for the fight)
+            foreach (var c in Cds(u)) w.Int(c);
             w.EndArr();
             extra?.Invoke(w);
             w.EndObj();

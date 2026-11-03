@@ -50,3 +50,8 @@ iron_reflexes,tree.iron_reflexes.name,generic,dex,400,,,,idea-pool lane A (#134)
 elemental_avatar,tree.elemental_avatar.name,generic,int,400,,,,idea-pool lane A (#134): PoE Avatar of Fire
 fortress_fist,tree.fortress_fist.name,generic,def,400,,,,idea-pool lane A (#134): Bofuri all-VIT Maple
 blood_magic,tree.blood_magic.name,generic,hp,400,,,,idea-pool lane A (#134): PoE Blood Magic
+hemorrhage,tree.hemorrhage.name,generic,dex,400,,,,idea-pool lane D (#137): Elden Ring bleed
+privileged_status,tree.privileged_status.name,generic,wis,400,,,,idea-pool lane D (#137): Hades Privileged Status
+equilibrium,tree.equilibrium.name,generic,int,400,,,,idea-pool lane D (#137): PoE Elemental Equilibrium
+corruption,tree.corruption.name,generic,wis,400,,,,idea-pool lane D (#137): Slay the Spire Corruption
+dead_branch,tree.dead_branch.name,generic,luk,400,,,,idea-pool lane D (#137): Slay the Spire Dead Branch

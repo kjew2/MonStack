@@ -510,6 +510,56 @@
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
+    },
+    {
+      "id": "hemorrhage",
+      "name_key": "tree.hemorrhage.name",
+      "kind": "generic",
+      "offer_stat": "dex",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "privileged_status",
+      "name_key": "tree.privileged_status.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "equilibrium",
+      "name_key": "tree.equilibrium.name",
+      "kind": "generic",
+      "offer_stat": "int",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "corruption",
+      "name_key": "tree.corruption.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "dead_branch",
+      "name_key": "tree.dead_branch.name",
+      "kind": "generic",
+      "offer_stat": "luk",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     }
   ]
 }

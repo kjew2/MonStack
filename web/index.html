@@ -408,6 +408,8 @@ small, .small { font-size: 12px; }
 .skill:not(.ready) .ab { align-self: start; margin-top: 2px; font-size: 10px; color: var(--muted); }
 .skill .nm { max-width: 100%; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .skill.ready .tile { border-color: var(--ok); }
+.skill.locked .tile { border-style: dashed; }   /* locked for the rest of the fight (corruption) */
+.skill.locked .st { font-size: 16px; }
 .skill.used .tile { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); animation: used .45s ease-out; }
 @keyframes used { from { background: var(--gold-bg-2); } }
 .now { min-height: 72px; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; }
