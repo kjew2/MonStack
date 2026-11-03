@@ -296,6 +296,146 @@
       "amount": 2000.0
     },
     {
+      "id": "inverted_mercy_c0",
+      "tree_id": "inverted_mercy",
+      "type": "tree_maxed",
+      "ref": "funeral_pyre",
+      "amount": null
+    },
+    {
+      "id": "inverted_mercy_c1",
+      "tree_id": "inverted_mercy",
+      "type": "node_owned",
+      "ref": "ashen_vigil_n4",
+      "amount": null
+    },
+    {
+      "id": "inverted_mercy_c2",
+      "tree_id": "inverted_mercy",
+      "type": "stat_at_least",
+      "ref": "str",
+      "amount": 450.0
+    },
+    {
+      "id": "inverted_mercy_c3",
+      "tree_id": "inverted_mercy",
+      "type": "tally_at_least",
+      "ref": "damage_fire",
+      "amount": 3000.0
+    },
+    {
+      "id": "undying_pyre_c0",
+      "tree_id": "undying_pyre",
+      "type": "node_owned",
+      "ref": "litany_of_embers_n0",
+      "amount": null
+    },
+    {
+      "id": "undying_pyre_c1",
+      "tree_id": "undying_pyre",
+      "type": "node_owned",
+      "ref": "funeral_pyre_n7",
+      "amount": null
+    },
+    {
+      "id": "undying_pyre_c2",
+      "tree_id": "undying_pyre",
+      "type": "node_owned",
+      "ref": "ashen_vigil_n4",
+      "amount": null
+    },
+    {
+      "id": "undying_pyre_c3",
+      "tree_id": "undying_pyre",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "unbreached_keep_c0",
+      "tree_id": "unbreached_keep",
+      "type": "tree_maxed",
+      "ref": "fortress_fist",
+      "amount": null
+    },
+    {
+      "id": "unbreached_keep_c1",
+      "tree_id": "unbreached_keep",
+      "type": "stat_at_least",
+      "ref": "def",
+      "amount": 750.0
+    },
+    {
+      "id": "unbreached_keep_c2",
+      "tree_id": "unbreached_keep",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "siege_pincers_c0",
+      "tree_id": "siege_pincers",
+      "type": "node_owned",
+      "ref": "siege_manual_n0",
+      "amount": null
+    },
+    {
+      "id": "siege_pincers_c1",
+      "tree_id": "siege_pincers",
+      "type": "node_owned",
+      "ref": "tide_moat_n4",
+      "amount": null
+    },
+    {
+      "id": "siege_pincers_c2",
+      "tree_id": "siege_pincers",
+      "type": "tally_at_least",
+      "ref": "damage_water",
+      "amount": 5000.0
+    },
+    {
+      "id": "still_hunt_c0",
+      "tree_id": "still_hunt",
+      "type": "tree_maxed",
+      "ref": "vantage",
+      "amount": null
+    },
+    {
+      "id": "still_hunt_c1",
+      "tree_id": "still_hunt",
+      "type": "stat_at_least",
+      "ref": "spd",
+      "amount": 600.0
+    },
+    {
+      "id": "still_hunt_c2",
+      "tree_id": "still_hunt",
+      "type": "tally_at_least",
+      "ref": "wins",
+      "amount": 2.0
+    },
+    {
+      "id": "severed_arts_c0",
+      "tree_id": "severed_arts",
+      "type": "node_owned",
+      "ref": "unseen_blade_n0",
+      "amount": null
+    },
+    {
+      "id": "severed_arts_c1",
+      "tree_id": "severed_arts",
+      "type": "node_owned",
+      "ref": "leaf_scabbard_n4",
+      "amount": null
+    },
+    {
+      "id": "severed_arts_c2",
+      "tree_id": "severed_arts",
+      "type": "tally_at_least",
+      "ref": "crits",
+      "amount": 3.0
+    },
+    {
       "id": "usurper_cuckoo_c0",
       "tree_id": "usurper_cuckoo",
       "type": "tree_maxed",

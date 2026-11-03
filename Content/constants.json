@@ -882,6 +882,91 @@
       "value": 0.5
     },
     {
+      "key": "MON_IMMOLATE_SELF",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_TITHE_COST",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_SHROUD_FRAC",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_MERCY_MULT",
+      "type": "double",
+      "value": 2.5
+    },
+    {
+      "key": "MON_EMBER_DMG",
+      "type": "double",
+      "value": 0.025
+    },
+    {
+      "key": "MON_EMBER_FLOOR",
+      "type": "double",
+      "value": 0.3
+    },
+    {
+      "key": "MON_MOAT_DEF",
+      "type": "double",
+      "value": 0.8
+    },
+    {
+      "key": "MON_WALL_DEF",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_WALL_ERODE",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_CRACK_DEF",
+      "type": "double",
+      "value": 0.8
+    },
+    {
+      "key": "MON_IAI_BONUS",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "MON_IAI_CRIT",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "MON_HUNT_WAITS",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "MON_HUNT_KEEP",
+      "type": "double",
+      "value": 0.75
+    },
+    {
+      "key": "MON_SEVER_FRAC",
+      "type": "double",
+      "value": 0.08
+    },
+    {
+      "key": "MON_SEVER_DMG",
+      "type": "double",
+      "value": 0.1
+    },
+    {
+      "key": "MON_SEVER_MAX",
+      "type": "int",
+      "value": 4
+    },
+    {
       "key": "MON_STEAL_GAUGE",
       "type": "double",
       "value": 0.5

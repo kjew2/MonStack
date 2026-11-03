@@ -114,6 +114,14 @@ REQUIRED_CONSTANTS = {
     "MON_SEEP_SHIELD": "double", "MON_JETS": "int", "MON_JET_POWER": "double",
     # species Candlemane (#141): martyr_flame, hollow_sun
     "MON_PYRE_CONV": "double", "MON_SUN_RELEASE": "double", "MON_SUN_HEAL": "double",
+    # species pyre_stag (#142): Immolate's cost and its four rules (specs/16 section 6.2)
+    "MON_IMMOLATE_SELF": "double", "MON_TITHE_COST": "double", "MON_SHROUD_FRAC": "double", "MON_MERCY_MULT": "double", "MON_EMBER_DMG": "double",
+    "MON_EMBER_FLOOR": "double",
+    # species Keepshell Crab (#152), tide_moat, unbreached and shellcrack (specs/16 section 6.2)
+    "MON_MOAT_DEF": "double", "MON_WALL_DEF": "double", "MON_WALL_ERODE": "double", "MON_CRACK_DEF": "double",
+    # species Iaido Mantis (#159): iai_draw, still_hunt, sever_art
+    "MON_IAI_BONUS": "double", "MON_IAI_CRIT": "double", "MON_HUNT_WAITS": "int", "MON_HUNT_KEEP": "double",
+    "MON_SEVER_FRAC": "double", "MON_SEVER_DMG": "double", "MON_SEVER_MAX": "int",
     # species Cuckling (#143): stolen_turn, foundling_egg
     "MON_STEAL_GAUGE": "double", "MON_STEALS_PER_FOE": "int", "MON_USURP_STEALS": "int", "MON_EGG_HP": "double", "MON_HATCH_ACTIONS": "int", "MON_HATCH_STATS": "double",
 }
@@ -142,6 +150,12 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             "clear_spring", "seep", "fountain_jets",
             # species Candlemane (#141)
             "martyr_flame", "hollow_sun",
+            # species pyre_stag (#142), coded in Combat/Rules/PyreStag.cs
+            "pyre_tithe", "ash_shroud", "pyre_mercy", "ember_eternal",
+            # species Keepshell Crab (#152)
+            "tide_moat", "unbreached", "shellcrack",
+            # species Iaido Mantis (#159)
+            "iai_draw", "still_hunt", "sever_art",
             # species Cuckling (#143)
             "stolen_turn", "usurp", "foundling_egg"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
@@ -239,6 +253,19 @@ MON_RANGES = {
     # species Candlemane (#141)
     "MON_PYRE_CONV": (">= 0", lambda v: v >= 0), "MON_SUN_RELEASE": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_SUN_HEAL": (">= 0", lambda v: v >= 0),
+    # species pyre_stag (#142)
+    "MON_IMMOLATE_SELF": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_TITHE_COST": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_SHROUD_FRAC": ("[0, 1)", lambda v: 0 <= v < 1), "MON_MERCY_MULT": (">= 0", lambda v: v >= 0),
+    "MON_EMBER_DMG": (">= 0", lambda v: v >= 0),
+    "MON_EMBER_FLOOR": ("(0, 1]", lambda v: 0 < v <= 1),
+    # species Keepshell Crab (#152): the walls must always fall, so the erosion is never 0
+    "MON_MOAT_DEF": (">= 0", lambda v: v >= 0), "MON_WALL_DEF": (">= 0", lambda v: v >= 0),
+    "MON_WALL_ERODE": ("(0, 1]", lambda v: 0 < v <= 1), "MON_CRACK_DEF": (">= 0", lambda v: v >= 0),
+    # species Iaido Mantis (#159)
+    "MON_IAI_BONUS": (">= 0", lambda v: v >= 0), "MON_IAI_CRIT": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_HUNT_WAITS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1), "MON_HUNT_KEEP": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_SEVER_FRAC": ("(0, 1]", lambda v: 0 < v <= 1), "MON_SEVER_DMG": (">= 0", lambda v: v >= 0),
+    "MON_SEVER_MAX": ("a whole number >= 0", lambda v: v == int(v) and v >= 0),
     # species Cuckling (#143)
     "MON_STEAL_GAUGE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_STEALS_PER_FOE": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
     "MON_USURP_STEALS": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),

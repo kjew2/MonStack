@@ -48,10 +48,10 @@ hall_of_mirrors,tree.hall_of_mirrors.name,fusion,,,tree.hall_of_mirrors.apex,min
 arcana_deck,tree.arcana_deck.name,fusion,,,tree.arcana_deck.apex,fortune,spellcraft,fusion tree (specs/15 section 5.6)
 iron_reflexes,tree.iron_reflexes.name,generic,dex,400,,,,idea-pool lane A (#134): PoE Iron Reflexes
 elemental_avatar,tree.elemental_avatar.name,native,,,,,,"idea-pool lane A (#134): PoE Avatar of Fire; native-only, Fountain Axolotl native tree 1 (#150)"
-fortress_fist,tree.fortress_fist.name,generic,def,400,,,,idea-pool lane A (#134): Bofuri all-VIT Maple
+fortress_fist,tree.fortress_fist.name,native,,,,,,"idea-pool lane A (#134): Bofuri all-VIT Maple; Keepshell Crab's native tree 1 (#152, kj 2026-11-03)"
 blood_magic,tree.blood_magic.name,native,,,,,,"idea-pool lane A (#134): PoE Blood Magic; Candlemane's native tree 1 (#141, kj 2026-11-03)"
 resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monster Hunter Resentment
-vantage,tree.vantage.name,generic,spd,400,,,,idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage
+vantage,tree.vantage.name,native,,,,,,"idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage; native-only, Iaido Mantis native tree 1 (#159)"
 deaths_door,tree.deaths_door.name,generic,luk,400,,,,idea-pool lane B (#135): Darkest Dungeon Death's Door
 barricade,tree.barricade.name,generic,def,400,,,,idea-pool lane B (#135): Slay the Spire Barricade
 mana_ward,tree.mana_ward.name,generic,wis,400,,,,idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery
@@ -85,6 +85,19 @@ sanctum_grace,tree.sanctum_grace.name,native,,,,,,candlemane native tree 2 (#141
 unburnt_psalter,tree.unburnt_psalter.name,book,,,,,,candlemane's book tree (Hollow Sun)
 martyrs_pyre,tree.martyrs_pyre.name,chase,,,tree.martyrs_pyre.apex,,,candlemane in-run chase tree
 hollow_sun,tree.hollow_sun.name,chase,,,tree.hollow_sun.apex,,,candlemane book-gated chase tree
+funeral_pyre,tree.funeral_pyre.name,native,,,,,,"pyre stag native tree (#142): Tithe of Ash, burns its own HP for damage"
+ashen_vigil,tree.ashen_vigil.name,native,,,,,,pyre stag native tree (#142): Ash Shroud turns HP into a shield
+litany_of_embers,tree.litany_of_embers.name,book,,,,,,pyre stag's book tree (Undying Pyre)
+inverted_mercy,tree.inverted_mercy.name,chase,,,tree.inverted_mercy.apex,,,pyre stag in-run chase tree
+undying_pyre,tree.undying_pyre.name,chase,,,tree.undying_pyre.apex,,,pyre stag book-gated chase tree
+tide_moat,tree.tide_moat.name,native,,,,,,keepshell crab native tree 2 (#152)
+siege_manual,tree.siege_manual.name,book,,,,,,keepshell crab's book tree (Siege Pincers)
+unbreached_keep,tree.unbreached_keep.name,chase,,,tree.unbreached_keep.apex,,,keepshell crab in-run chase tree
+siege_pincers,tree.siege_pincers.name,chase,,,tree.siege_pincers.apex,,,keepshell crab book-gated chase tree
+leaf_scabbard,tree.leaf_scabbard.name,native,,,,,,Iaido Mantis native tree 2 (#159): out-of-turn hits hit harder
+unseen_blade,tree.unseen_blade.name,book,,,,,,Iaido Mantis book tree (Severed Arts)
+still_hunt,tree.still_hunt.name,chase,,,tree.still_hunt.apex,,,Iaido Mantis in-run chase tree
+severed_arts,tree.severed_arts.name,chase,,,tree.severed_arts.apex,,,Iaido Mantis book-gated chase tree
 nest_thief,tree.nest_thief.name,native,,,,,,Cuckling native tree 1 (#143)
 foundling_ledger,tree.foundling_ledger.name,book,,,,,,Cuckling book tree (Clutch Throne)
 usurper_cuckoo,tree.usurper_cuckoo.name,chase,,,tree.usurper_cuckoo.apex,,,Cuckling in-run chase tree

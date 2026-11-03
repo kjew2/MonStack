@@ -400,6 +400,8 @@ namespace IdleRng.Sim.Combat
             var list = shared.ToArray();
             // Loop guards (specs/16 section 6.4): never inside an effect of the same trigger, never past MON_TRIGGER_DEPTH.
             if (!EnterGuard(r, s, (GuardKind)trigger, true, out var saved)) return;
+            bool reacting = trigger == FightTrigger.OnHitTaken || trigger == FightTrigger.OnEvade;   // iai_draw's out-of-turn hits
+            if (reacting) u.Reacting++;
             try
             {
                 foreach (var sk in list)
@@ -409,7 +411,11 @@ namespace IdleRng.Sim.Combat
                         if (trigger != FightTrigger.BattleStart) GainEntropy(r, s, u, r.Tower?.EntropyPerTrigger ?? 0, rng, onAction);
                     }
             }
-            finally { ExitGuard(s, saved); }
+            finally
+            {
+                ExitGuard(s, saved);
+                if (reacting) u.Reacting--;
+            }
         }
 
         // ------------------------------------------------------------------ actions
@@ -627,8 +633,11 @@ namespace IdleRng.Sim.Combat
                     string element = sk.Element ?? src.Source.Element;
                     if (sk.Target == SkillTarget.AllEnemies)
                     {
-                        foreach (var t in Enemies(s, src))
-                            if (src.Alive && t.Alive) Hit(r, s, src, t, raw, sk.Magical, element, sk, true, rng, onAction);
+                        bool cancelled = false;
+                        if (s.TriggerDepth == 0) HookBeforeAoe(new RuleCtx(r, s, rng, onAction), src, ref cancelled);
+                        if (!cancelled)
+                            foreach (var t in Enemies(s, src))
+                                if (src.Alive && t.Alive) Hit(r, s, src, t, raw, sk.Magical, element, sk, true, rng, onAction);
                     }
                     else
                     {
@@ -749,7 +758,7 @@ namespace IdleRng.Sim.Combat
             if (graze) { raw *= r.GrazeMult; tgt.Tally.Grazes++; }
             else
             {
-                double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate) + (r.Mutators?.CritBonus ?? 0));
+                double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate) + (r.Mutators?.CritBonus ?? 0) + h.CritBonus);
                 bool critLucky = false, deniedLucky = false;
                 crit = Roll(rng, rate, Fortune(r, Eff(r, src, StatIds.Luk)), ref critLucky);
                 if (crit && tgtFortune > 0 && Draw(rng) < tgtFortune)   // the target's fortune makes a landed crit roll again
@@ -781,6 +790,7 @@ namespace IdleRng.Sim.Combat
                 after *= 1 + CorruptionLevel(r, s.Ticks) * r.Tower.CorruptDmgPerLevel;
                 if (tgt.Guard > 0 && GuardActive(s, tgt)) after *= Math.Max(0.0, 1 - tgt.Guard);
             }
+            HookHitMitigated(ctx, h, ref after);   // the species rules' hook before the shield (unbreached's wall)
             double shieldBefore = tgt.Shield, seepPass = seepDefence >= 0 ? SeepPass(r, after) : 0;
             double dealt = Absorb(ctx, src, tgt, after, element, seepPass);
             h.Dealt = dealt; h.Mitigated = mitigated;
@@ -849,10 +859,14 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>
         /// <see cref="Heal"/>, then the Healed hook (specs/16 section 6.4) with the HP restored and the overheal that went into
-        /// neither HP nor a shield. Every skill, trigger and rule heal comes through here (not a boss phase's failed-check heal).
+        /// neither HP nor a shield. Every skill, trigger and rule heal comes through here (not a boss phase's failed-check heal). The
+        /// heal-in hook may take the heal first: nothing lands and the Healed hook does not run.
         /// </summary>
         static double HealHooked(RuleCtx c, FightUnit t, double amount, ref double shield, double overflowCap = 0)
         {
+            bool taken = false;
+            HookHealIn(c, t, amount, ref taken);   // pyre_mercy: the heal burns an enemy instead
+            if (taken) return 0;
             double before = shield;
             double healed = Heal(c.Rules, t, amount, ref shield, overflowCap);
             HookHealed(c, t, healed, Math.Max(0.0, amount - healed - (shield - before)));

@@ -58,6 +58,30 @@
       "unlocks_species": "candlemane"
     },
     {
+      "id": "kindled",
+      "name_key": "achievement.kindled.name",
+      "kind": "rank_reached",
+      "ref": "b",
+      "amount": null,
+      "unlocks_species": "pyre_stag"
+    },
+    {
+      "id": "castle_walls",
+      "name_key": "achievement.castle_walls.name",
+      "kind": "stat_reached",
+      "ref": "def",
+      "amount": 650.0,
+      "unlocks_species": "keepshell_crab"
+    },
+    {
+      "id": "quickdraw",
+      "name_key": "achievement.quickdraw.name",
+      "kind": "stat_reached",
+      "ref": "spd",
+      "amount": 650.0,
+      "unlocks_species": "iaido_mantis"
+    },
+    {
       "id": "luk_650",
       "name_key": "achievement.luk_650.name",
       "kind": "stat_reached",

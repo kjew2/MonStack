@@ -150,8 +150,13 @@ namespace IdleRng.Bots.Tests
                                .Select(cd => (cd.Ref, cd.Amount));
                 Assert.That(t.StatGoals, Is.EqualTo(stats));
                 Assert.That(t.Needed, Does.Contain(run.Id));
-                int sp0 = run.Nodes.Sum(n => n.Cost) + run.Conditions.Where(cd => cd.Type == ConditionType.TreeMaxed)
-                    .Sum(cd => db.Trees[cd.Ref].Nodes.Sum(n => n.Cost));
+                // each prerequisite tree up to the deepest node a condition names (tree_maxed: all of it; node_owned: up to that node)
+                int sp0 = run.Nodes.Sum(n => n.Cost) + run.Conditions
+                    .Where(cd => cd.Type == ConditionType.TreeMaxed || cd.Type == ConditionType.NodeOwned)
+                    .Select(cd => cd.Type == ConditionType.TreeMaxed ? (tree: cd.Ref, need: db.Trees[cd.Ref].Nodes.Count)
+                                                                      : (tree: db.TreeNodes[cd.Ref].TreeId, need: db.TreeNodes[cd.Ref].Index + 1))
+                    .GroupBy(x => x.tree)
+                    .Sum(g => db.Trees[g.Key].Nodes.Take(g.Max(x => x.need)).Sum(n => n.Cost));
                 Assert.That(t.RemainingSp, Is.EqualTo(sp0), "nothing bought yet: the prerequisite trees and the chase tree in full");
 
                 // With its own book the book chase tree becomes reachable too.

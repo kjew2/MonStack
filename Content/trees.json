@@ -494,9 +494,9 @@
     {
       "id": "fortress_fist",
       "name_key": "tree.fortress_fist.name",
-      "kind": "generic",
-      "offer_stat": "def",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -524,9 +524,9 @@
     {
       "id": "vantage",
       "name_key": "tree.vantage.name",
-      "kind": "generic",
-      "offer_stat": "spd",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -858,6 +858,136 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.hollow_sun.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "funeral_pyre",
+      "name_key": "tree.funeral_pyre.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "ashen_vigil",
+      "name_key": "tree.ashen_vigil.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "litany_of_embers",
+      "name_key": "tree.litany_of_embers.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "inverted_mercy",
+      "name_key": "tree.inverted_mercy.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.inverted_mercy.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "undying_pyre",
+      "name_key": "tree.undying_pyre.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.undying_pyre.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "tide_moat",
+      "name_key": "tree.tide_moat.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "siege_manual",
+      "name_key": "tree.siege_manual.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "unbreached_keep",
+      "name_key": "tree.unbreached_keep.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.unbreached_keep.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "siege_pincers",
+      "name_key": "tree.siege_pincers.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.siege_pincers.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "leaf_scabbard",
+      "name_key": "tree.leaf_scabbard.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "unseen_blade",
+      "name_key": "tree.unseen_blade.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "still_hunt",
+      "name_key": "tree.still_hunt.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.still_hunt.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "severed_arts",
+      "name_key": "tree.severed_arts.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.severed_arts.apex",
       "fuse_a": null,
       "fuse_b": null
     },

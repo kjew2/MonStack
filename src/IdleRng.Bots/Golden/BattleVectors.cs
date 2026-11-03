@@ -245,12 +245,35 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v2 martyr flame and hollow sun", 13,
                 new[] { Candlemane("a_pyre", RuleModifiers.MartyrFlame), Candlemane("a_sun", RuleModifiers.HollowSun) },
                 new[] { Brawler("b_brawler", "dark"), Healer("b_healer", "water") });
+            // Species lane, Pyre Stag (#142): the tithe with its shroud and Immolate, pyre_mercy (its own heal and the healer
+            // ally's turn into fire) and ember_eternal against a mixed team.
+            yield return new Vector("4v4 pyre stag capstones", 13,
+                new[] { Pyre("a_pyre"), Mercy("a_mercy"), Ember("a_ember"), Healer("a_healer") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Tank("b_tank", "fire"), Healer("b_healer", "dark") });
+            // Species Keepshell Crab (#152): its chase capstones on its own kit (fortress_fist, tide_moat, Moat Surge) against a
+            // tank, a caster and a team that spreads small hits.
+            yield return new Vector("2v3 unbreached and shellcrack", 14,
+                new[] { KeepshellCrab("a_keep", RuleModifiers.Unbreached), KeepshellCrab("a_siege", RuleModifiers.Shellcrack) },
+                new[] { Tank("b_tank", "fire"), Mage("b_mage", "nature"), Brawler("b_brawler", "dark") });
+            // Species Iaido Mantis (#159): vantage and iai_draw on both; one waits (still_hunt), one cuts actions off (sever_art).
+            yield return new Vector("2v3 iai, still hunt and severed arts", 1,
+                new[] { Mantis("a_hunt", RuleModifiers.StillHunt), Mantis("a_sever", RuleModifiers.SeverArt) },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "fire"), Tank("b_tank", "light") });
             // Species Cuckling (#143): Nest Thief's stolen_turn on both, one with the Usurped Nest capstone, one with the Clutch
             // Throne's egg (a third unit on side A), against a skill user, a healer and a mage to steal from.
             yield return new Vector("2v3 usurper cuckoo and clutch empress", 13,
                 new[] { Cuckling("a_usurp", RuleModifiers.Usurp), Cuckling("a_empress", RuleModifiers.FoundlingEgg) },
                 new[] { Brawler("b_brawler", "light"), Healer("b_healer", "water"), Mage("b_mage", "nature") });
         }
+
+        // Species Iaido Mantis (#159): the native kit (vantage, Draw Cut, iai_draw), Blade Echo from its book, plus one chase capstone.
+        static Fighter Mantis(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(260, 520, 80, 380, 220, 120, 380, 180),
+            Skills = { Dmg("draw_cut", StatIds.Str, 1.7, 3, SkillTarget.Enemy, "nature") },
+            Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Dmg("blade_echo", StatIds.Spd, 0.4, 0)) },
+            Rules = { RuleModifiers.Vantage, RuleModifiers.IaiDraw, chase },
+        };
 
         // Species Fountain Axolotl (#150).
         static Fighter Axolotl(string id) => new Fighter
@@ -288,6 +311,36 @@ namespace IdleRng.Bots.Golden
             },
             Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Fx("kindled_grace", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.5, 0, 0)) },
             Rules = { RuleModifiers.BloodMagic, chase },
+        };
+
+        // Species lane, Pyre Stag (#142): its four rules on three units.
+        static Fighter Pyre(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(400, 360, 300, 180, 120, 90, 200, 140),
+            Skills = { Dmg(BattleSim.ImmolateSkill, StatIds.Str, 1.8, 2, SkillTarget.Enemy, "fire") },
+            Rules = { RuleModifiers.PyreTithe, RuleModifiers.AshShroud },
+        };
+
+        static Fighter Mercy(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(380, 320, 200, 300, 120, 90, 210, 140),
+            Skills = { Fx("regenerate", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.8, 3, 0) },
+            Rules = { RuleModifiers.PyreMercy, RuleModifiers.PyreTithe },
+        };
+
+        static Fighter Ember(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(360, 200, 360, 200, 120, 90, 190, 140),
+            Skills = { Dmg("ember_hymn", StatIds.Int, 1.6, 2, SkillTarget.Enemy, "fire") },
+            Rules = { RuleModifiers.EmberEternal, RuleModifiers.PyreTithe },
+        };
+
+        // Species Keepshell Crab (#152): the native kit (Fortress Fist and Tide Moat) plus one chase capstone.
+        static Fighter KeepshellCrab(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(420, 70, 50, 160, 120, 600, 140, 240),
+            Skills = { Dmg("iron_press", StatIds.Def, 1.2, 2), Dmg("moat_surge", StatIds.Def, 1.3, 2, SkillTarget.Enemy, "water") },
+            Rules = { RuleModifiers.FortressFist, RuleModifiers.TideMoat, chase },
         };
 
         // Species Cuckling (#143): its native kit (Coin Toss, Windfall, stolen_turn) plus one chase capstone.
