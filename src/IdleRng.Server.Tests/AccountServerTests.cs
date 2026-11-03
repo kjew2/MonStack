@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using IdleRng.Runtime.Save;
 using IdleRng.Sim.Account;
+using IdleRng.Sim.Tower;
 using NUnit.Framework;
 
 namespace IdleRng.Server.Tests
@@ -30,8 +31,8 @@ namespace IdleRng.Server.Tests
             Assert.That(a.Acct.Seed, Is.Not.EqualTo(0UL), "the server drew the seed");
             Assert.That(a.Acct.OwnedSpecies, Is.EqualTo(new[] { Db.StarterSpecies.Id }));
             Assert.That(rig.Store.Head(P).Holder.DeviceId, Is.EqualTo("a"));
-            Assert.That(rig.Store.Keys(P), Is.EqualTo(rig.Store.Referenced(P)), "head plus the six parts");
-            Assert.That(rig.Store.Keys(P).Count, Is.EqualTo(7));
+            Assert.That(rig.Store.Keys(P), Is.EqualTo(rig.Store.Referenced(P)), "head plus the eight parts");
+            Assert.That(rig.Store.Keys(P).Count, Is.EqualTo(9));
 
             var again = a.Open();
             Assert.That(again.Created, Is.False);
@@ -332,6 +333,55 @@ namespace IdleRng.Server.Tests
         }
 
         [Test]
+        public void EndlessSeason_MustBeTheServersWeek_OrTheWeekBeforeOverMondayMidnight()
+        {
+            var rig = new Rig();
+            var a = rig.Device("a");
+            a.Open();
+            for (int i = 0; i < 4; i++) a.SealOne(rig.Now);
+            var team = new List<int> { 0, 1, 2, 3 };
+            int day = AccountServer.DayOf(rig.Now);
+            int season = EndlessSim.SeasonOf(day);
+            Assert.That(EndlessSim.SeasonOf(day - 1), Is.EqualTo(season), "day 20391 is a Thursday: yesterday is the same week");
+
+            foreach (var s in new[] { season + 1, season - 1, 0 })
+            {
+                a.Open();
+                a.Send("runEndless", s, team);
+                var r = a.Commit();
+                Assert.That(r.Code, Is.EqualTo(Rejection.Refused), "season " + s);
+                Assert.That(r.Reason, Does.Contain("season"));
+            }
+            a.Open();
+            a.Do("runEndless", season, team);
+            Assert.That(a.Commit().Accepted, Is.True);
+            Assert.That(rig.Store.Head(P).Entries.Count, Is.EqualTo(4), "a climb stores no entry");
+
+            // Monday 00:30 UTC of the next week: last week's season is still accepted, and the new one.
+            int monday = day;
+            while (EndlessSim.SeasonOf(monday) == season) monday++;
+            rig.Now = monday * 86_400_000L + 30 * 60_000L;
+            a.Open();
+            a.Do("runEndless", season, team);
+            Assert.That(a.Commit().Accepted, Is.True, "a climb sent just before Monday 00:00 UTC");
+            a.Do("runEndless", season + 1, team);
+            Assert.That(a.Commit().Accepted, Is.True);
+            Assert.That(a.Acct.Endless.Season, Is.EqualTo(season + 1));
+
+            // A scripted commit packing more climbs than COMMIT_MAX_CLIMBS is refused at the first one over, changing nothing.
+            var keys = rig.Store.Keys(P);
+            a.Open();
+            for (int i = 0; i <= rig.Config.CommitMaxClimbs; i++) a.Send("runEndless", season + 1, team);
+            var over = a.Commit();
+            Assert.That((over.Code, over.Index), Is.EqualTo((Rejection.Refused, rig.Config.CommitMaxClimbs)));
+            Assert.That(over.Reason, Does.Contain("climbs"));
+            Assert.That(rig.Store.Keys(P), Is.EqualTo(keys));
+            var b = rig.Device("a");
+            b.Open();
+            Assert.That(AccountParts.Split(b.Acct), Is.EqualTo(AccountParts.Split(a.Acct)), "the server holds the client's climbs");
+        }
+
+        [Test]
         public void DungeonDay_MustBeTheServersDayOrTheDayBefore()
         {
             var rig = new Rig();
@@ -499,7 +549,7 @@ namespace IdleRng.Server.Tests
             rig.Store.ClearLog();
             a.Do("setLoadout", new List<string>());
             Assert.That(a.Commit().Accepted, Is.True);
-            Assert.That(rig.Store.Read.Count, Is.EqualTo(7), "every part and the entry are loaded");
+            Assert.That(rig.Store.Read.Count, Is.EqualTo(9), "every part and the entry are loaded");
             Assert.That(rig.Store.Head(P).Content, Is.EqualTo(Db.Version));
         }
 
@@ -531,12 +581,15 @@ namespace IdleRng.Server.Tests
             One("setLoadout", new List<string>());
             One("lock", 0, true);
             One("runTower", AccountServer.DayOf(rig.Now), new List<int> { 0 });
+            for (int i = 0; i < 3; i++) a.SealOne(rig.Now);
+            One("setRulebook", 1, "always>basic@lowest_hp");
+            One("runEndless", EndlessSim.SeasonOf(AccountServer.DayOf(rig.Now)), new List<int> { 0, 1, 2, 3 });
             One("lock", 0, false);
             One("startRun", Db.StarterSpecies.Id);
             One("abandon");
             One("dismantle", 0);
 
-            Assert.That(seen, Is.SupersetOf(new[] { "debugGrantBook", "startRun", "finishRun", "buyOffer", "rerollVendor", "closeVendor", "setLoadout", "lock", "runTower", "abandon", "dismantle" }));
+            Assert.That(seen, Is.SupersetOf(new[] { "debugGrantBook", "startRun", "finishRun", "buyOffer", "rerollVendor", "closeVendor", "setLoadout", "lock", "runTower", "setRulebook", "runEndless", "abandon", "dismantle" }));
             var b = rig.Device("a");
             b.Open();
             Assert.That(AccountParts.Split(b.Acct), Is.EqualTo(AccountParts.Split(a.Acct)), "the server holds the client's account, item by item");

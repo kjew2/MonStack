@@ -32,6 +32,14 @@
       "ref": null,
       "amount": 10.0,
       "unlocks_species": "shade_hound"
+    },
+    {
+      "id": "spire_20",
+      "name_key": "achievement.spire_20.name",
+      "kind": "endless_floor",
+      "ref": null,
+      "amount": 20.0,
+      "unlocks_species": null
     }
   ]
 }

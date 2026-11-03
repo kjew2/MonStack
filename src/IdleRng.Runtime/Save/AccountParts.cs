@@ -20,7 +20,7 @@ namespace IdleRng.Runtime.Save
     public static class AccountParts
     {
         public const string Training = "training", Wallet = "wallet", Collection = "collection", Progress = "progress",
-            Dungeon = "dungeon", Vault = "vault", EntryPrefix = "mon.";
+            Dungeon = "dungeon", Endless = "endless", Rulebooks = "rulebooks", Vault = "vault", EntryPrefix = "mon.";
 
         /// <summary>The fields of AccountState each part holds (SchemaVersion and ContentVersion belong to the server's head).</summary>
         public static readonly IReadOnlyDictionary<string, string[]> Fields = new Dictionary<string, string[]>
@@ -30,6 +30,8 @@ namespace IdleRng.Runtime.Save
             [Collection] = new[] { nameof(AccountState.OwnedSpecies), nameof(AccountState.Talents) },
             [Progress] = new[] { nameof(AccountState.Achievements), nameof(AccountState.Records) },
             [Dungeon] = new[] { nameof(AccountState.Tower) },
+            [Endless] = new[] { nameof(AccountState.Endless) },
+            [Rulebooks] = new[] { nameof(AccountState.Rulebooks) },
         };
 
         /// <summary>AccountState fields that are not in a part's field list: the head's metadata, and the two kept in their own shape.</summary>
@@ -49,6 +51,8 @@ namespace IdleRng.Runtime.Save
                 case Collection: return AccountPart.Collection;
                 case Progress: return AccountPart.Progress;
                 case Dungeon: return AccountPart.Dungeon;
+                case Endless: return AccountPart.Endless;
+                case Rulebooks: return AccountPart.Rulebooks;
                 case Vault: return AccountPart.Vault;
             }
             if (key != null && key.StartsWith(EntryPrefix, StringComparison.Ordinal)) return AccountPart.Entries;

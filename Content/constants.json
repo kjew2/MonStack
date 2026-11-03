@@ -600,6 +600,26 @@
       "key": "ENDLESS_MAX_FLOORS",
       "type": "int",
       "value": 500
+    },
+    {
+      "key": "ENDLESS_SHARDS_BASE",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "ENDLESS_SHARDS_PER_FLOOR",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "ENDLESS_ELITE_SHARD_MULT",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "GAMBIT_SLOTS",
+      "type": "int",
+      "value": 6
     }
   ]
 }

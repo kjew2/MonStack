@@ -143,6 +143,10 @@ namespace IdleRng.Sim.Content
         public int EndlessBand { get; internal set; }            // ENDLESS_BAND
         public double EndlessEliteHpMult { get; internal set; }  // ENDLESS_ELITE_HP_MULT
         public int EndlessMaxFloors { get; internal set; }       // ENDLESS_MAX_FLOORS
+        public int EndlessShardsBase { get; internal set; }      // ENDLESS_SHARDS_BASE
+        public double EndlessShardsPerFloor { get; internal set; } // ENDLESS_SHARDS_PER_FLOOR
+        public int EndlessEliteShardMult { get; internal set; }  // ENDLESS_ELITE_SHARD_MULT
+        public int GambitSlots { get; internal set; }            // GAMBIT_SLOTS: most rules in one monster's rulebook (specs/28 section 4.4)
 
         /// <summary>Ticks in one "turn" at reference speed: BATTLE_GAUGE / SPD_REF (skill durations are in turns).</summary>
         public int TurnTicks => Math.Max(1, (int)Math.Round(BattleGauge / SpdRef));
@@ -414,7 +418,7 @@ namespace IdleRng.Sim.Content
         public int CostStep { get; internal set; }
     }
 
-    public enum AchievementKind { RunsFinished, RankReached, StatReached, GauntletFloors }
+    public enum AchievementKind { RunsFinished, RankReached, StatReached, GauntletFloors, EndlessFloor }
 
     /// <summary>
     /// An account achievement (specs/18 section 8): checked when a run is sealed; earning it may unlock a species.

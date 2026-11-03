@@ -279,6 +279,8 @@ namespace IdleRng.Sim.Content
                 CorruptDmgPerLevel = D("CORRUPT_DMG_PER_LEVEL"),
                 EndlessSeed = I("ENDLESS_SEED"), EndlessBase = D("ENDLESS_BASE"), EndlessGrowth = D("ENDLESS_GROWTH"),
                 EndlessBand = I("ENDLESS_BAND"), EndlessEliteHpMult = D("ENDLESS_ELITE_HP_MULT"), EndlessMaxFloors = I("ENDLESS_MAX_FLOORS"),
+                EndlessShardsBase = I("ENDLESS_SHARDS_BASE"), EndlessShardsPerFloor = D("ENDLESS_SHARDS_PER_FLOOR"),
+                EndlessEliteShardMult = I("ENDLESS_ELITE_SHARD_MULT"), GambitSlots = I("GAMBIT_SLOTS"),
             };
             if (errors.Count > 0) return;
             var values = new Dictionary<string, double>(StringComparer.Ordinal);
@@ -722,6 +724,7 @@ namespace IdleRng.Sim.Content
                 case "rank_reached": return AchievementKind.RankReached;
                 case "stat_reached": return AchievementKind.StatReached;
                 case "gauntlet_floors": return AchievementKind.GauntletFloors;
+                case "endless_floor": return AchievementKind.EndlessFloor;
                 default: throw new FormatException($"unknown achievement kind '{s}'");
             }
         }
@@ -898,7 +901,8 @@ namespace IdleRng.Sim.Content
         void BuildEndless(Dictionary<string, List<Row>> t, List<ContentError> errors)
         {
             var k = Constants;
-            if (!(k.EndlessBase > 0 && k.EndlessGrowth >= 1 && k.EndlessBand >= 3 && k.EndlessEliteHpMult > 0 && k.EndlessMaxFloors > 0))
+            if (!(k.EndlessBase > 0 && k.EndlessGrowth >= 1 && k.EndlessBand >= 3 && k.EndlessEliteHpMult > 0 && k.EndlessMaxFloors > 0
+                  && k.EndlessShardsBase >= 0 && k.EndlessShardsPerFloor >= 0 && k.EndlessEliteShardMult >= 1 && k.GambitSlots > 0))
                 errors.Add(new ContentError("E043", "constants", "Endless Tower constants out of range (specs/28 section 7)"));
 
             var enemies = new List<EndlessEnemyDef>();

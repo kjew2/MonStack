@@ -302,6 +302,7 @@ namespace IdleRng.Web
                 case AchievementKind.RunsFinished: return "Finish " + Num(d.Amount) + (d.Amount == 1 ? " run" : " runs");
                 case AchievementKind.RankReached: return "Reach rank " + (d.Ref ?? "?").ToUpperInvariant() + " in a run";
                 case AchievementKind.StatReached: return "Finish a run with " + (d.Ref == null ? "any stat" : d.Ref.ToUpperInvariant()) + " at " + Num(d.Amount) + " or more";
+                case AchievementKind.EndlessFloor: return "Clear " + Num(d.Amount) + " Endless Tower floors in one climb";
                 default: return "Clear " + Num(d.Amount) + " gauntlet floors";
             }
         }
@@ -356,6 +357,7 @@ namespace IdleRng.Web
                     // Reads: they change nothing, so they are not commands (specs/27 section 4).
                     case "towerInfo": TowerInfo(w, a.Int(0)); return w.EndObj().ToString();
                     case "towerFloor": TowerFloorFight(w, a.Int(0), a.El(1), a.Int(2)); return w.EndObj().ToString();
+                    case "endlessInfo": EndlessInfo(w, a.Int(0)); return w.EndObj().ToString();
                 }
                 if (!AccountCommand.IsCommand(name)) return Fail("unknown command");
                 var cmd = AccountCommand.Parse(name, a);
@@ -385,6 +387,7 @@ namespace IdleRng.Web
                         break;
                     }
                     case CommandKind.RunTower: RunTower(w, cmd, (TowerRunResult)res); break;
+                    case CommandKind.RunEndless: RunEndless(w, (EndlessRunResult)res); break;
                     case CommandKind.BuyOffer:
                     {
                         var r = (OfferBought)res;
@@ -393,7 +396,7 @@ namespace IdleRng.Web
                     }
                     case CommandKind.RerollVendor: w.P("ok", true).P("cost", (long)res); break;
                     case CommandKind.Dismantle: w.P("ok", true).P("refund", (long)res); break;
-                    default: w.P("ok", true); break;   // startRun, abandon, setLoadout, closeVendor, lock, debugGrantBook
+                    default: w.P("ok", true); break;   // startRun, abandon, setLoadout, closeVendor, lock, debugGrantBook, setRulebook
                 }
             }
             catch (Exception e) when (e is InvalidOperationException || e is ArgumentException)
@@ -437,6 +440,90 @@ namespace IdleRng.Web
                 foreach (var ph in d.Phases)
                     w.Obj().P("kind", ph.Kind).P("name", _db.Text("phase." + ph.Kind + ".name")).P("desc", _db.Text("phase." + ph.Kind + ".desc"))
                         .P("enterHp", ph.EnterHp).EndObj();
+                w.EndArr().EndObj();
+            }
+            w.EndArr();
+        }
+
+        /// <summary>
+        /// The Endless Tower in a season (specs/28 sections 3 and 5), read only: the season records (zero for a season with no
+        /// climb yet), the team size and rulebook size, the mutators the season has drawn up to the shown floors, and the next
+        /// ENDLESS_BAND floors after the season's best with their squads, mutator count and the shards each pays.
+        /// </summary>
+        private void EndlessInfo(JsonOut w, int season)
+        {
+            if (season < 0) throw new ArgumentException("the season must not be negative");
+            var p = _acct.Endless ?? new EndlessProgress();
+            bool same = season == p.Season;
+            int best = same ? p.ClearedSeason : 0;
+            int band = _db.Constants.EndlessBand;
+            int shown = Math.Min(_db.Constants.EndlessMaxFloors, best + band);
+            w.P("ok", true).P("season", season).P("lastSeason", p.Season).P("climbs", same ? p.Climbs : 0)
+                .P("clearedSeason", best).P("clearedEver", p.ClearedEver).P("teamSize", _db.Constants.MonSideSize)
+                .P("gambitSlots", _db.Constants.GambitSlots).P("band", band).P("maxFloors", _db.Constants.EndlessMaxFloors);
+            var mutators = EndlessSim.SeasonMutators(_db, season, shown / band);
+            w.Key("mutators").Arr();   // in the order they join: mutator i is in force from floor (i + 1) x ENDLESS_BAND
+            for (int i = 0; i < mutators.Count; i++)
+                w.Obj().P("id", mutators[i].Id).P("name", _db.Text(mutators[i].NameKey)).P("kind", mutators[i].Kind)
+                    .P("value", mutators[i].Value).P("element", mutators[i].Element).P("fromFloor", (i + 1) * band).EndObj();
+            w.EndArr();
+            w.Key("floors").Arr();
+            foreach (var plan in EndlessSim.Lineup(_db, season, shown))
+            {
+                if (plan.Floor <= best) continue;   // already cleared (and paid) this season
+                var shape = EndlessSim.Shape(_db, plan.ShapeId);
+                w.Obj().P("floor", plan.Floor).P("shape", plan.ShapeId).P("shapeName", _db.Text(shape.NameKey)).P("check", shape.Check)
+                    .P("elite", plan.Elite).P("level", Math.Round(plan.Level)).P("mutators", plan.Mutators)
+                    .P("shards", AccountOps.EndlessFloorShards(_db, plan.Floor));
+                w.Key("enemies").Arr();
+                for (int slot = 0; slot < plan.EnemyIds.Count; slot++)
+                {
+                    string id = plan.EnemyIds[slot];
+                    bool boss = plan.Elite && slot == 0;
+                    string name = boss ? TowerSim.BossName(_db, id) : _db.Text(EndlessSim.Enemy(_db, id).NameKey);
+                    string element = boss ? _db.TowerBosses[id].Element : EndlessSim.Enemy(_db, id).Element;
+                    string role = boss ? "elite" : EndlessSim.Enemy(_db, id).Role;
+                    w.Obj().P("id", id).P("name", name).P("element", element).P("role", role).EndObj();
+                }
+                w.EndArr().EndObj();
+            }
+            w.EndArr();
+        }
+
+        /// <summary>
+        /// One Endless Tower climb (AccountOps.RunEndless): the rewards, the records after it, and each floor fought with its fight
+        /// hash. Floor playback comes with the climb screen (specs/28 section 9, step 5).
+        /// </summary>
+        private void RunEndless(JsonOut w, EndlessRunResult r)
+        {
+            var res = r.Result;
+            var p = _acct.Endless;
+            w.P("ok", true).P("season", res.Season).P("shards", r.Shards).P("floorReached", res.FloorReached).P("capped", res.Capped)
+                .P("floorsCleared", res.FloorsCleared).P("clearedSeason", p.ClearedSeason).P("clearedEver", p.ClearedEver)
+                .P("climbs", p.Climbs).P("hash", res.Hash);
+            w.Key("newFloors").Arr();
+            foreach (var f in r.NewFloors) w.Int(f);
+            w.EndArr();
+            w.Key("firstClears").Arr();
+            foreach (var f in r.FirstClears) w.Int(f);
+            w.EndArr();
+            w.Key("achievements").Arr();
+            foreach (var id in r.Achievements)
+            {
+                var d = _db.Achievements[id];
+                bool unlocked = d.UnlocksSpecies != null && r.SpeciesUnlocked.Contains(d.UnlocksSpecies);
+                w.Obj().P("id", id).P("name", _db.Text(d.NameKey)).P("text", AchievementText(d))
+                    .P("species", unlocked ? d.UnlocksSpecies : null)
+                    .P("speciesName", unlocked ? _db.Text(_db.Species[d.UnlocksSpecies].NameKey) : null).EndObj();
+            }
+            w.EndArr();
+            w.Key("floors").Arr();
+            foreach (var f in res.Floors)
+            {
+                w.Obj().P("floor", f.Floor).P("shape", f.ShapeId).P("elite", f.Elite).P("won", f.Won).P("ticks", f.Ticks)
+                    .P("vents", f.Vents).P("corruption", f.PeakCorruption).P("hash", f.FightHash);
+                w.Key("phases").Arr();
+                foreach (var ph in f.Phases) w.Str(_db.Text("phase." + ph + ".name"));
                 w.EndArr().EndObj();
             }
             w.EndArr();
@@ -509,7 +596,7 @@ namespace IdleRng.Web
             FightLog log = null, cur = null;
             FightState final = null;
             var rules = FightRules.FromContent(_db, tower: true);
-            var team = idx.Select(i => _acct.Vault[i].Fighter(_db)).ToList();
+            var team = idx.Select(i => AccountOps.TeamFighter(_db, _acct, i)).ToList();
             var res = TowerSim.Run(_db, team, day, x => cur?.Record(x), (plan, s) =>
             {
                 cur = null;
@@ -636,7 +723,7 @@ namespace IdleRng.Web
             w.Obj().P("id", e.Id).P("species", e.SpeciesId)
                 .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
                 .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("sealedUtcMs", e.SealedUtcMs)
-                .P("locked", e.Locked).P("refund", AccountOps.DismantleRefund(_db, e));
+                .P("locked", e.Locked).P("refund", AccountOps.DismantleRefund(_db, e)).P("rulebook", _acct?.Rulebook(e.Id) ?? "");
             string apex = ApexForm.TreeOf(_db, e);
             w.P("apex", apex).P("name", ApexForm.Name(_db, e.SpeciesId, apex));
             w.Key("stats"); Stats(w, e.Stats);

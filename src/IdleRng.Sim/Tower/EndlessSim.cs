@@ -74,6 +74,16 @@ namespace IdleRng.Sim.Tower
             return SplitMix64.Derive(StreamNames.StreamSeed((ulong)c.Constants.EndlessSeed, LineupStream), (ulong)season);
         }
 
+        /// <summary>
+        /// The season of a UTC day number (days since 1970-01-01, the Dungeon's day): the UTC week, starting Monday 00:00 UTC.
+        /// Day 0 was a Thursday, so days 0 to 3 are season 0 and day 4 (Monday 1970-01-05) starts season 1.
+        /// </summary>
+        public static int SeasonOf(int day)
+        {
+            if (day < 0) throw new ArgumentOutOfRangeException(nameof(day), "day must be >= 0");
+            return (int)(((long)day + 3) / 7);
+        }
+
         public static bool IsElite(ContentDb c, int floor) => floor % c.Constants.EndlessBand == 0;
 
         /// <summary>The floor's level: ENDLESS_BASE x ENDLESS_GROWTH^(floor-1), by repeated multiplication.</summary>

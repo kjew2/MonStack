@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IdleRng.Runtime.Save;
+using IdleRng.Sim.Tower;
 using IdleRng.Sim.Account;
 using IdleRng.Sim.Content;
 
@@ -20,11 +21,12 @@ namespace IdleRng.Server
     {
         static readonly string[] PartNames =
         {
-            AccountParts.Training, AccountParts.Wallet, AccountParts.Collection, AccountParts.Progress, AccountParts.Dungeon, AccountParts.Vault,
+            AccountParts.Training, AccountParts.Wallet, AccountParts.Collection, AccountParts.Progress, AccountParts.Dungeon,
+            AccountParts.Endless, AccountParts.Rulebooks, AccountParts.Vault,
         };
 
         const AccountPart AllParts = AccountPart.Training | AccountPart.Wallet | AccountPart.Collection | AccountPart.Progress
-                                     | AccountPart.Dungeon | AccountPart.Vault | AccountPart.Entries;
+                                     | AccountPart.Dungeon | AccountPart.Endless | AccountPart.Rulebooks | AccountPart.Vault | AccountPart.Entries;
 
         const int MaxAttempts = 5;
         const long DayMs = 86_400_000L;
@@ -176,6 +178,7 @@ namespace IdleRng.Server
             if (n > _cfg.CommitMaxCommands) return CommitResult.Reject(Rejection.Refused, _cfg.CommitMaxCommands, "a commit carries at most " + _cfg.CommitMaxCommands + " commands");
             var commands = new List<AccountCommand>(n);
             bool debug = false, finished = false;
+            int climbs = 0;
             var touched = AccountPart.None;
             for (int i = 0; i < n; i++)
             {
@@ -192,6 +195,8 @@ namespace IdleRng.Server
                     if (finished) return CommitResult.Reject(Rejection.Refused, i, "a commit carries at most one finishRun");
                     finished = true;
                 }
+                if (cmd.Kind == CommandKind.RunEndless && ++climbs > _cfg.CommitMaxClimbs)
+                    return CommitResult.Reject(Rejection.Refused, i, "a commit carries at most " + _cfg.CommitMaxClimbs + " Endless Tower climbs");
                 if (cmd.Kind == CommandKind.DebugGrantBook)
                 {
                     if (!_cfg.DebugPlayers.Contains(playerId)) return CommitResult.Reject(Rejection.Refused, i, "debug commands are not enabled for this player");
@@ -298,6 +303,12 @@ namespace IdleRng.Server
                 case CommandKind.RunTower:
                     int today = DayOf(now);
                     if (cmd.A != today && cmd.A != today - 1) throw new InvalidOperationException("day " + cmd.A + " is not the server's day (" + today + ") or the day before");
+                    break;
+                case CommandKind.RunEndless:
+                    // The season from server time (#21), with the same one-day slack as the Dungeon: a climb sent just before
+                    // Monday 00:00 UTC may land just after it.
+                    int season = EndlessSim.SeasonOf(DayOf(now)), lastSeason = EndlessSim.SeasonOf(Math.Max(0, DayOf(now) - 1));
+                    if (cmd.A != season && cmd.A != lastSeason) throw new InvalidOperationException("season " + cmd.A + " is not the server's season (" + season + ")");
                     break;
             }
         }

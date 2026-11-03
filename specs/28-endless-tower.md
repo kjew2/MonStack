@@ -1,6 +1,6 @@
 # 28 - Endless Tower and gambits
 
-Status: **steps 1 to 3 built** (T11 of `specs/13`, issue #75). The gambit rulebook (section 4), the mutators (section 3.2) and the climb with its content (`EndlessSim`, sections 3 and 7) are live in the sim, with goldens and a balance report. The account, rewards and the web screens (steps 4 and 5) are not built yet. kj answered every question on 2026-11-02 (section 10).
+Status: **steps 1 to 4 built** (T11 of `specs/13`, issue #75). The gambit rulebook (section 4), the mutators (section 3.2) and the climb with its content (`EndlessSim`, sections 3 and 7) are live in the sim, with goldens and a balance report; the account side (section 5: rulebooks per Vault monster, season records, rewards, save v11, the `setRulebook` and `runEndless` commands on the server) is built and on the browser bridge. The web screens (step 5) are not built yet. kj answered every question on 2026-11-02 (section 10).
 
 Source: `specs/12` sections 8.1 and 8.2 ("4v4, escalating, with mutators"; "teams act on an IF/THEN rulebook (gambits), e.g. If enemy HP < 30% -> priority: high-damage burst skill"; the defender sets it for PvP defense), `specs/22` section 3 (FF12 gambits as agency in an auto-battler), `specs/13` section 7 (gambit evaluation is pure and ordered, inside the battle engine).
 
@@ -107,25 +107,29 @@ On its action, after its `OnAction` triggers and the cooldown tick (`specs/16` s
 
 One rulebook per Vault monster, at most `GAMBIT_SLOTS` (placeholder 6) rules, used wherever that monster fights in a team (Endless Tower, the Dungeon, and as the PvP defense). Rank fights and the gauntlet stay on the default AI (the run is about training, not tactics). Editing a rulebook is free and does not change the sealed monster's result or hash (the Vault entry stays frozen; the rulebook is account data beside it).
 
+**Built (step 4):** `AccountState.Rulebooks`, rulebook text (section 7) by Vault entry id. `AccountOps.SetRulebook(index, text)` (command `setRulebook`) stores the canonical text (`GambitText.Format`; empty text clears it) after `CheckRulebook`: it parses, holds at most `GAMBIT_SLOTS` rules, and every action is `basic` or one of the monster's active skills. Allowed at any time, also during a run. `AccountOps.TeamFighter(index)` is the entry's fighter with its rulebook; the Dungeon (`RunTower` and its playback) and the Endless Tower build their teams through it, so a rulebook changes a Dungeon attempt too. Dismantling a monster removes its rulebook. An entry with no `Id` (only an old local save could have one) cannot hold a rulebook.
+
 ### 4.5 The editor on a phone (step 5)
 
 Each monster's rulebook is a list of rule cards, one line each: **IF** [condition chip] [value] **THEN** [skill chip] **AT** [target chip]. Tapping a chip opens a picker sheet; the skill picker lists the monster's own skills with their tooltips (`specs/16` section 9). Rules reorder with up and down buttons (no drag, so it works with one thumb). A "test" button replays the floor that stopped the team with the edited rulebooks, as a preview with no reward. During playback the acting rule's card lights up.
 
-## 5. Account and server (step 4)
+## 5. Account and server (step 4, built)
 
-- `AccountState.Endless`: the season id, best floor this season and ever, floors already paid this season. Rulebooks per Vault entry id (`specs/27`: entries have stable `Id`s). A new account save version.
-- `AccountOps.RunEndless(team, season)`: plays the climb, pays new floors, records the bests. Under `specs/27` (option E) this is a checkpoint command: the server re-runs the climb from the team's Vault entries, their rulebooks and the season, so nothing the client reports is trusted. A climb is many fights, so its cost on the server is measured before it ships (`specs/27` section 9, issue #109).
-- The season is the UTC week number from server time (#21), like the Dungeon's day.
+- `AccountState.Endless` (`EndlessProgress`): `Season` of the last climb (-1 before the first), `Climbs` this season, `ClearedSeason` (most floors one climb cleared this season) and `ClearedEver`. Floors are cleared from floor 1 up and pay once a season, so the floors already paid this season are 1 to `ClearedSeason` **(agent: no separate paid list)**. Rulebooks per Vault entry id (section 4.4). Save schema v11 (`specs/06` section 5); on the server they are the `endless` and `rulebooks` parts (`specs/27` section 3.1).
+- `AccountOps.RunEndless(team, season)` (command `runEndless(season, vaultIndices[])`): exactly `MON_SIDE_SIZE` distinct Vault positions, each with its rulebook; free and unlimited. Plays `EndlessSim.Run`, pays each floor above the season's best (section 6), records the bests, counts the climb and checks the achievements. A later season resets the season fields; an earlier one than the last climb's is refused (the clock went back). A run in progress does not block it. Under `specs/27` (option E) it is a checkpoint command: the server re-runs the climb from the team's Vault entries, their rulebooks and the season, so nothing the client reports is trusted.
+- **Cost on the server** (`specs/27` section 4, issue #109): measured 2026-11-03 on .NET 8 Release, bot teams (`focus` and `balanced`, one of each of the first four species) climbing 24 to 32 floors take 7 to 25 ms a climb (0.2 to 0.8 ms a floor), so a climb to `ENDLESS_MAX_FLOORS` stays under 0.5 s, far inside Cloud Code's 15 s limit. A commit carries at most `COMMIT_MAX_CLIMBS` (placeholder 10) climbs **(agent)**.
+- The season is `EndlessSim.SeasonOf(day)`: the UTC week, starting Monday 00:00 UTC (day 0, 1970-01-01, was a Thursday: season = (day + 3) / 7) **(agent: weeks start on Monday)**. The server accepts the season of its own day or of the day before (#21), like the Dungeon's day (`specs/27` section 6.2).
+- Bridge (`web/wasm/BRIDGE.md`): the commands `setRulebook` and `runEndless`, the read `endlessInfo(season)` (season records, the season's mutators and the next `ENDLESS_BAND` floors' squads and shards), and each Vault entry's `rulebook`.
 
 ## 6. Rewards (kj, 2026-11-02: question 7)
 
-- Training Shards for each floor cleared for the first time this season: `ENDLESS_SHARDS_BASE + floor x ENDLESS_SHARDS_PER_FLOOR` (placeholders), more on elite floors.
+- Training Shards for each floor cleared for the first time this season: floor(`ENDLESS_SHARDS_BASE` + floor x `ENDLESS_SHARDS_PER_FLOOR`), times `ENDLESS_ELITE_SHARD_MULT` on an elite floor (`AccountOps.EndlessFloorShards`; placeholders 2, 0.5 and 2: floors 1 to 30 pay about 330 shards a season, two or three runs' worth). `EndlessRunResult` lists the floors paid (`NewFloors`) and the first clears ever (`FirstClears`, for the gems below).
 - Star-Gems on milestone floors **once gems exist** (`specs/12` section 10.2; #49, #77), as the Dungeon.
 - **No Skill Books**: they stay the Dungeon's (kj).
-- Achievements on best floor ever (a species unlock condition can use it, `specs/18` section 8).
+- Achievements on best floor ever: achievement kind `endless_floor` (`specs/18` section 8) reads `Endless.ClearedEver`; placeholder `spire_20` (Spire Breaker, 20 floors in one climb, unlocks no species). Checked after each climb and when an account loads.
 - A season leaderboard needs the server (T12) and comes with PvP.
 
-## 7. Content (content 6.1, MINOR; step 3)
+## 7. Content (content 6.1, MINOR; step 3; 6.2 added the rewards and `GAMBIT_SLOTS`, step 4)
 
 | Table | Columns |
 |---|---|
@@ -145,8 +149,12 @@ Placeholders: 12 enemies (two per role, kits from existing `monster_skills`), 5 
 | `ENDLESS_BAND` | 10 | `>= 3` (room for an aoe, a focus and an elite floor) |
 | `ENDLESS_ELITE_HP_MULT` | 2 | `> 0` |
 | `ENDLESS_MAX_FLOORS` | 500 | `> 0` |
+| `ENDLESS_SHARDS_BASE` | 2 | `>= 0` (content 6.2) |
+| `ENDLESS_SHARDS_PER_FLOOR` | 0.5 | `>= 0` |
+| `ENDLESS_ELITE_SHARD_MULT` | 2 | `>= 1`, whole number |
+| `GAMBIT_SLOTS` | 6 | `> 0`, whole number |
 
-Validation, in both `tools/content_build.py` (`validate_endless`) and `ContentDb.BuildEndless`, reusing existing codes: element and skill references, and a gambit action that is not one of the enemy's active skills (`E023`); a rulebook that does not parse, negative weights, a shape without exactly `MON_SIDE_SIZE` slots, `anchor_hp <= 0`, a mutator value out of its kind's range or an element on the wrong kind, the constants above (`E043`); an unknown slot role (`E021`); a role no enemy fills, no `aoe` or no `focus` shape, no mutators (`E044`). The rewards' constants and `GAMBIT_SLOTS` come with step 4.
+Validation, in both `tools/content_build.py` (`validate_endless`) and `ContentDb.BuildEndless`, reusing existing codes: element and skill references, and a gambit action that is not one of the enemy's active skills (`E023`); a rulebook that does not parse, negative weights, a shape without exactly `MON_SIDE_SIZE` slots, `anchor_hp <= 0`, a mutator value out of its kind's range or an element on the wrong kind, the constants above (`E043`); an unknown slot role (`E021`); a role no enemy fills, no `aoe` or no `focus` shape, no mutators (`E044`). The rewards' constants and `GAMBIT_SLOTS` out of range are `E043` too (content 6.2).
 
 ## 8. Determinism and tests
 
@@ -156,6 +164,7 @@ Validation, in both `tools/content_build.py` (`validate_endless`) and `ContentDb
 - `GambitTests` (step 1, built): an unused rulebook leaves the fight unchanged; a named skill waits for its rule; rules go in order and skip a skill on cooldown; `first_actions`; `lowest_hp` and `highest_hp` picks with no draw and `auto` keeping it; a taunt still forces; a heal rule fires before the full-amount wait; bad rulebooks are rejected; a cloned fight with gambits continues identically; tower teams keep their rulebooks.
 - `golden/battle-sim-vectors.txt` has a ninth fight, "4v4 gambits vs default AI", covering every condition and target pick (step 1).
 - `EndlessTests` (step 3, built): content loads and is validated; levels; every band has an aoe and a focus floor and ends on an elite, every slot's enemy has the slot's role, and floors carry floor / band mutators; the lineup is fixed for a season, differs across seasons and is prefix-stable; season mutators do not repeat until the table is used up; squads scale, carry rulebooks and boost the anchor and the elite; a climb is deterministic, stops at the first loss, needs exactly four, changes with rulebooks, stops at the safety cap and gets its first mutator at the first full band; rulebook text parses, formats and rejects bad rules. `tools/test_content_build.py` mirrors the validation.
+- `EndlessAccountTests` (step 4, built): the season is the UTC week from Monday; floor shards follow the formula and elite floors pay more; a climb matches the sim, pays each floor once a season, pays again in a later season with no first clears below the best ever, and keeps the season best; bad teams and an earlier season are refused and change nothing; the `endless_floor` achievement; rulebooks stored as canonical text by entry id without touching the entry, refused when too long, naming a skill the monster lacks, or not parsing; rulebooks change the Endless climb and the Dungeon attempt and leave with a dismantled monster; the commands parse and apply like `AccountOps`. Also `AccountPartsTests` (both commands change and read only what they declare), `AccountSaveTests` (round trip, v10 to v11) and `AccountServerTests` (both commands in their own commits, the season rule over Monday midnight, `COMMIT_MAX_CLIMBS`).
 - `golden/endless-vectors.txt` (`EndlessVectors`): the first four species after a `focus` run at seed 7, in seasons 0 and 2913, on the default AI and with a simple rulebook each (listed in `specs/09` section 3).
 - The balance report (`specs/09` section 7) climbs with each policy's one-of-each-species team and reports floors, the capped rate and what stopped the climb (shape check, elite or capped). First measurement (content 6.1, 8 seeds): bot teams reach floors 22 to 36; `focus` and elite floors stop most climbs and `swarm` (aoe) floors none, so the aoe question is too easy for now. Targets are agreed with kj before any retune.
 
@@ -166,7 +175,7 @@ Each step merges on its own with `./check.sh` green.
 1. **Gambit engine** in `BattleSim`: conditions, actions, target picks, validation, tests, a golden fight. **Done.**
 2. **Mutator engine**: `FightRules.Mutators`, off by default so no golden moved; `MutatorTests`. **Done.**
 3. **Endless sim and content**: enemies, shapes, scaling, season lineup, mutators, `EndlessSim.Run`, goldens, balance report. **Done** (content 6.1, `EndlessTests`, `golden/endless-vectors.txt`).
-4. **Account**: rulebooks per Vault entry, season records, rewards, save version, server command.
+4. **Account**: rulebooks per Vault entry, season records, rewards, save version, server command. **Done** (content 6.2, save v11, `EndlessAccountTests`).
 5. **Web**: team setup (the Dungeon's picker), the rulebook editor, the climb with playback and the mutator list.
 
 ## 10. Questions for kj
