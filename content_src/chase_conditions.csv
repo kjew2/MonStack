@@ -61,3 +61,9 @@ still_hunt_c2,still_hunt,tally_at_least,wins,2
 severed_arts_c0,severed_arts,node_owned,unseen_blade_n0,
 severed_arts_c1,severed_arts,node_owned,leaf_scabbard_n4,
 severed_arts_c2,severed_arts,tally_at_least,crits,3
+usurper_cuckoo_c0,usurper_cuckoo,tree_maxed,nest_thief,
+usurper_cuckoo_c1,usurper_cuckoo,stat_at_least,spd,500
+usurper_cuckoo_c2,usurper_cuckoo,tally_at_least,kills,3
+clutch_empress_c0,clutch_empress,node_owned,foundling_ledger_n0,
+clutch_empress_c1,clutch_empress,node_owned,mimic_core_n4,
+clutch_empress_c2,clutch_empress,tally_at_least,damage_dark,2000

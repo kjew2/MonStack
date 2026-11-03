@@ -62,7 +62,7 @@ latent_power,tree.latent_power.name,generic,spd,400,,,,idea-pool lane C (#136): 
 lone_wolf,tree.lone_wolf.name,generic,str,400,,,,idea-pool lane E (#138): Divinity Original Sin 2 Lone Wolf
 arise,tree.arise.name,generic,int,400,,,,idea-pool lane E (#138): Solo Leveling Shadow Extraction
 last_rite,tree.last_rite.name,generic,hp,400,,,,idea-pool lane E (#138): Super Auto Pets faint triggers
-mimic_core,tree.mimic_core.name,generic,,400,,,,idea-pool lane F (#139): Balatro Blueprint
+mimic_core,tree.mimic_core.name,native,,,,,,"idea-pool lane F (#139): Balatro Blueprint; native-only, Cuckling's native tree 2 Brood Nest (#143, kj 2026-11-03)"
 heirloom,tree.heirloom.name,generic,,400,,,,idea-pool lane F (#139): Hades keepsakes
 mastery,tree.mastery.name,generic,wis,400,,,,idea-pool lane F (#139): Final Fantasy IX learned abilities
 limit_break,tree.limit_break.name,generic,,400,,,,idea-pool lane F (#139): Power Pro super abilities
@@ -98,3 +98,7 @@ leaf_scabbard,tree.leaf_scabbard.name,native,,,,,,Iaido Mantis native tree 2 (#1
 unseen_blade,tree.unseen_blade.name,book,,,,,,Iaido Mantis book tree (Severed Arts)
 still_hunt,tree.still_hunt.name,chase,,,tree.still_hunt.apex,,,Iaido Mantis in-run chase tree
 severed_arts,tree.severed_arts.name,chase,,,tree.severed_arts.apex,,,Iaido Mantis book-gated chase tree
+nest_thief,tree.nest_thief.name,native,,,,,,Cuckling native tree 1 (#143)
+foundling_ledger,tree.foundling_ledger.name,book,,,,,,Cuckling book tree (Clutch Throne)
+usurper_cuckoo,tree.usurper_cuckoo.name,chase,,,tree.usurper_cuckoo.apex,,,Cuckling in-run chase tree
+clutch_empress,tree.clutch_empress.name,chase,,,tree.clutch_empress.apex,,,Cuckling book-gated chase tree

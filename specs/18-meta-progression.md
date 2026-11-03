@@ -223,6 +223,7 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 | Kindled | Reach rank B in a run | pyre_stag (Pyre Stag, #142) |
 | Castle Walls | Finish a run with DEF at 650 or more (`stat_reached`, ref `def`) | keepshell_crab (Keepshell Crab, #152, placeholder) |
 | Quickdraw | Finish a run with SPD at 650 or more (`stat_reached`, ref `spd`) | iaido_mantis (Iaido Mantis, #159, placeholder) |
+| Stolen Fortune | Finish a run with LUK at 650 or more (`stat_reached`, ref `luk`) | cuckling (Cuckling, #143) |
 | Spire Breaker | Clear 20 Endless Tower floors in one climb | none **(agent: a goal, not an unlock, until a species is meant for it)** |
 
 Rules (both `tools/content_build.py` and `ContentDb`): `ref` and `amount` as in the table (`E023` for a bad reference, `E043` otherwise); `unlocks_species` is a species id (`E023`) and not the starter (`E043`); every species but the starter is unlocked by at least one achievement (`E044`), so none is unobtainable.

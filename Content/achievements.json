@@ -80,6 +80,14 @@
       "ref": "spd",
       "amount": 650.0,
       "unlocks_species": "iaido_mantis"
+    },
+    {
+      "id": "luk_650",
+      "name_key": "achievement.luk_650.name",
+      "kind": "stat_reached",
+      "ref": "luk",
+      "amount": 650.0,
+      "unlocks_species": "cuckling"
     }
   ]
 }

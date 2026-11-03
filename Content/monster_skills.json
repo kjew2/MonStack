@@ -1440,6 +1440,54 @@
       "cooldown": 4,
       "duration": 2,
       "element": null
+    },
+    {
+      "id": "begging_cry",
+      "name_key": "mskill.begging_cry.name",
+      "kind": "debuff",
+      "target": "enemy",
+      "stat": "spd",
+      "scales": null,
+      "power": 0.15,
+      "cooldown": 3,
+      "duration": 2,
+      "element": null
+    },
+    {
+      "id": "nest_down",
+      "name_key": "mskill.nest_down.name",
+      "kind": "buff",
+      "target": "self",
+      "stat": "def",
+      "scales": null,
+      "power": 0.1,
+      "cooldown": 0,
+      "duration": 2,
+      "element": null
+    },
+    {
+      "id": "crown_peck",
+      "name_key": "mskill.crown_peck.name",
+      "kind": "damage",
+      "target": "enemy",
+      "stat": null,
+      "scales": "luk",
+      "power": 1.6,
+      "cooldown": 2,
+      "duration": 0,
+      "element": "dark"
+    },
+    {
+      "id": "clutch_call",
+      "name_key": "mskill.clutch_call.name",
+      "kind": "damage",
+      "target": "all_enemies",
+      "stat": null,
+      "scales": "luk",
+      "power": 0.8,
+      "cooldown": 3,
+      "duration": 0,
+      "element": "dark"
     }
   ]
 }

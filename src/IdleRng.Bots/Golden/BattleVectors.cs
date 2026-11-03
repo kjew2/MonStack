@@ -259,6 +259,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 iai, still hunt and severed arts", 1,
                 new[] { Mantis("a_hunt", RuleModifiers.StillHunt), Mantis("a_sever", RuleModifiers.SeverArt) },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "fire"), Tank("b_tank", "light") });
+            // Species Cuckling (#143): Nest Thief's stolen_turn on both, one with the Usurped Nest capstone, one with the Clutch
+            // Throne's egg (a third unit on side A), against a skill user, a healer and a mage to steal from.
+            yield return new Vector("2v3 usurper cuckoo and clutch empress", 13,
+                new[] { Cuckling("a_usurp", RuleModifiers.Usurp), Cuckling("a_empress", RuleModifiers.FoundlingEgg) },
+                new[] { Brawler("b_brawler", "light"), Healer("b_healer", "water"), Mage("b_mage", "nature") });
         }
 
         // Species Iaido Mantis (#159): the native kit (vantage, Draw Cut, iai_draw), Blade Echo from its book, plus one chase capstone.
@@ -336,6 +341,18 @@ namespace IdleRng.Bots.Golden
             Id = id, Element = "water", Stats = S(420, 70, 50, 160, 120, 600, 140, 240),
             Skills = { Dmg("iron_press", StatIds.Def, 1.2, 2), Dmg("moat_surge", StatIds.Def, 1.3, 2, SkillTarget.Enemy, "water") },
             Rules = { RuleModifiers.FortressFist, RuleModifiers.TideMoat, chase },
+        };
+
+        // Species Cuckling (#143): its native kit (Coin Toss, Windfall, stolen_turn) plus one chase capstone.
+        static Fighter Cuckling(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(420, 300, 60, 160, 200, 240, 420, 520),
+            Skills =
+            {
+                Dmg("coin_toss", StatIds.Luk, 2.0, 3),
+                Fx("windfall", SkillKind.Buff, SkillTarget.Self, StatIds.CritRate, null, 0.15, 0, 2),
+            },
+            Rules = { RuleModifiers.StolenTurn, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.

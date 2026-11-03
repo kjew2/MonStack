@@ -50,6 +50,11 @@
       "book_id": "book_unseen",
       "min_floor": 10,
       "weight": 1.0
+    },
+    {
+      "book_id": "book_ledger",
+      "min_floor": 10,
+      "weight": 1.0
     }
   ]
 }

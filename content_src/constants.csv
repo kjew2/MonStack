@@ -192,3 +192,9 @@ MON_HUNT_KEEP,double,0.75,"still_hunt rule: the share of BATTLE_GAUGE a wait giv
 MON_SEVER_FRAC,double,0.08,sever_art rule: a Vantage counter dealing at least this fraction of the enemy's max HP cuts off the action it answers. Placeholder
 MON_SEVER_DMG,double,0.1,sever_art rule: damage bonus against an enemy per action of it cut off. Placeholder
 MON_SEVER_MAX,int,4,"sever_art rule: cut-off actions that add damage, per enemy (whole number, at least 0). Placeholder"
+MON_STEAL_GAUGE,double,0.5,"stolen_turn rule: when an enemy's turn comes and the unit's gauge is at least this fraction of full, the unit acts in its place (the enemy loses the turn, the unit's gauge drops to 0). Placeholder"
+MON_STEALS_PER_FOE,int,1,stolen_turn rule: turns the unit may steal from each enemy per fight (whole number >= 1). Placeholder
+MON_USURP_STEALS,int,2,"usurp rule: turns a usurp carrier may steal from each enemy per fight, when more than MON_STEALS_PER_FOE (whole number >= 1). Placeholder"
+MON_EGG_HP,double,0.3,foundling_egg rule: the egg laid at fight start has this fraction of the unit's max HP. Placeholder
+MON_HATCH_ACTIONS,int,3,foundling_egg rule: the egg hatches after this many of the unit's own actions (whole number >= 1). Placeholder
+MON_HATCH_STATS,double,0.5,"foundling_egg rule: the Foundling hatches with this fraction of the unit's trained stats (max HP too). Placeholder"

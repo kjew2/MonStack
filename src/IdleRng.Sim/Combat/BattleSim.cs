@@ -228,6 +228,12 @@ namespace IdleRng.Sim.Combat
                 var actor = NextActor(s, rules.GaugeSize);
                 if (actor == null) break;
                 actor.Gauge -= rules.GaugeSize;
+                // stolen_turn (Rules/Cuckling.cs): an enemy carrier may take this turn; the actor loses it, as if it had acted.
+                if (StealTurn(ctx, actor, out var stolen))
+                {
+                    if (stolen != FightOutcome.Ongoing) return s.Outcome = stolen;
+                    continue;
+                }
                 // One turn: the action the gauge paid for, then at most MON_EXTRA_ACTIONS_CAP extra actions (specs/16 section 6.4).
                 string extra = null;
                 int extras = 0;
@@ -442,6 +448,7 @@ namespace IdleRng.Sim.Combat
             Fire(r, s, u, FightTrigger.OnAction, rng, onAction);
             if (!u.Alive) return;
             for (int i = 0; i < u.Cooldowns.Length; i++) if (u.Cooldowns[i] > 0) u.Cooldowns[i]--;
+            if (u.UsurpVictim != null && Usurp(r, s, u, rng, onAction)) return;   // usurp: a stolen turn casts the victim's skill
             var skills = u.Source.Skills;
             var book = u.Source.Gambits;
             if (book.Count > 0 && ActGambit(r, s, u, rng, onAction)) return;
@@ -901,7 +908,7 @@ namespace IdleRng.Sim.Combat
                 else HookWouldDie(c, src, tgt, ref saved);
                 if (!saved && !tgt.Alive)
                 {
-                    src.Tally.Kills++;
+                    if (!tgt.Brood) src.Tally.Kills++;   // foundling_egg's egg and Foundling never count for kills
                     tgt.KilledBy = src.Id;
                 }
             }

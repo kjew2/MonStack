@@ -434,6 +434,48 @@
       "type": "tally_at_least",
       "ref": "crits",
       "amount": 3.0
+    },
+    {
+      "id": "usurper_cuckoo_c0",
+      "tree_id": "usurper_cuckoo",
+      "type": "tree_maxed",
+      "ref": "nest_thief",
+      "amount": null
+    },
+    {
+      "id": "usurper_cuckoo_c1",
+      "tree_id": "usurper_cuckoo",
+      "type": "stat_at_least",
+      "ref": "spd",
+      "amount": 500.0
+    },
+    {
+      "id": "usurper_cuckoo_c2",
+      "tree_id": "usurper_cuckoo",
+      "type": "tally_at_least",
+      "ref": "kills",
+      "amount": 3.0
+    },
+    {
+      "id": "clutch_empress_c0",
+      "tree_id": "clutch_empress",
+      "type": "node_owned",
+      "ref": "foundling_ledger_n0",
+      "amount": null
+    },
+    {
+      "id": "clutch_empress_c1",
+      "tree_id": "clutch_empress",
+      "type": "node_owned",
+      "ref": "mimic_core_n4",
+      "amount": null
+    },
+    {
+      "id": "clutch_empress_c2",
+      "tree_id": "clutch_empress",
+      "type": "tally_at_least",
+      "ref": "damage_dark",
+      "amount": 2000.0
     }
   ]
 }

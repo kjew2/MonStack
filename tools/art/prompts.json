@@ -52,6 +52,10 @@
   "iaido_mantis": {
    "name": "Iaido Mantis",
    "prompt": "A cracked jade-and-orchid mantis with a torn wing, crouched in a quick-draw stance with one scythe in a leaf scabbard."
+  },
+  "cuckling": {
+   "name": "Cuckling",
+   "prompt": "A plump, fluffy cuckoo chick, round as a ball and oddly large for its nest, with soot-black and deep violet down, a pale lavender belly, tiny stubby wings and oversized clawed orange feet gripping a nest of black thorny twigs. It wears the cracked top half of a white speckled eggshell like a little helmet tilted over one eye: the shell of an egg that was not its own. Its huge beak gapes wide open, begging, and the inside of its mouth glows bright magenta-violet. Large glossy round eyes with violet glints, adorable but greedy. On the ground beside the nest lies a small pale blue egg that has been pushed out. Cute, with something quietly wrong about it."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -156,6 +160,16 @@
    "species": "iaido_mantis",
    "name": "Thousand-Petal Kensei",
    "prompt": "a tall mantis sword saint with both scythes drawn, the wing regrown as a cloak of orchid petals, cut paper talismans pinned along its scabbard."
+  },
+  "usurper_cuckoo": {
+   "species": "cuckling",
+   "name": "Usurper Cuckoo",
+   "prompt": "a grown cuckoo, larger than any host, wearing a crown of broken eggshell."
+  },
+  "clutch_empress": {
+   "species": "cuckling",
+   "name": "Clutch Empress",
+   "prompt": "the chick has grown into a tall, elegant, regal brood-mother cuckoo empress: sleek glossy plumage in deep violet and black with a soft lavender chest, a long flowing train of tail feathers like a royal gown, and a small cracked-eggshell tiara. She sits on a grand throne-like nest of woven thorny branches, gently sheltering just three large pale-blue speckled eggs under one wing. Calm, proud, motherly expression. Smooth feathers with no clusters, no bumps, no holes, no eggs attached to her body. Colour palette adds soft lavender and warm gold accents to the violet."
   }
  }
 }

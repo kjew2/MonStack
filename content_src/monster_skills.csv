@@ -119,3 +119,7 @@ crescent_draw,mskill.crescent_draw.name,damage,all_enemies,,spd,0.8,3,0,nature
 blade_echo,mskill.blade_echo.name,damage,enemy,,spd,0.4,0,0,
 petal_veil,mskill.petal_veil.name,shield,self,,spd,0.4,4,2,
 iai_parry,mskill.iai_parry.name,shield,self,,spd,0.5,4,2,
+begging_cry,mskill.begging_cry.name,debuff,enemy,spd,,0.15,3,2,
+nest_down,mskill.nest_down.name,buff,self,def,,0.1,0,2,
+crown_peck,mskill.crown_peck.name,damage,enemy,,luk,1.6,2,0,dark
+clutch_call,mskill.clutch_call.name,damage,all_enemies,,luk,0.8,3,0,dark

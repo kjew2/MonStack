@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.16/6a664939
+# battle-sim vectors, hash v2 content=6.17/80fcab38
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -110,16 +110,16 @@
   A4 b_brawler#risen hp    960.00/   960.00 act   0 dealt       0.00 taken       0.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   hash 7098ad73aa729744303aaf6a79bcc4f1a4e92f98ab83cae8b9318ccd5db85cfc
 
-4v4 debuff and lock capstones seed=11 outcome=SideBWon ticks=69
-  A0 a_bleed  hp      0.00/  5200.00 act  12 dealt    4133.53 taken    5200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
-  A1 a_priv   hp      0.00/  4800.00 act  13 dealt    1926.93 taken    4800.00 heal      0.00 crit  0 evade  1 kill 0 counter  0
-  A2 a_eq     hp      0.00/  4600.00 act  15 dealt    5647.83 taken    4600.00 heal      0.00 crit  1 evade  1 kill 1 counter  0
-  A3 a_corrupt hp      0.00/  5000.00 act   6 dealt    2926.42 taken    5000.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
-  B0 b_tank   hp      0.00/  5200.00 act   4 dealt    8325.80 taken    5306.85 heal      0.00 crit  0 evade  0 kill 1 counter 11
-  B1 b_brawler hp   1034.79/  3200.00 act  16 dealt    4533.72 taken    4328.21 heal      0.00 crit  2 evade  0 kill 0 counter  0
-  B2 b_mage   hp   1145.23/  2400.00 act  15 dealt    6286.26 taken    2157.77 heal      0.00 crit  1 evade  0 kill 3 counter  0
-  B3 b_healer hp   1785.62/  3000.00 act  15 dealt     454.22 taken    2841.88 heal   4800.35 crit  1 evade  0 kill 0 counter  0
-  hash 27aa0287700195a243647a43ab8817ad10068a878f83cd4c662d4147ecaee9f6
+4v4 debuff and lock capstones seed=11 outcome=SideBWon ticks=137
+  A0 a_bleed  hp      0.00/  5200.00 act   9 dealt    3022.82 taken    5200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  A1 a_priv   hp      0.00/  4800.00 act  20 dealt    3727.05 taken    4800.00 heal      0.00 crit  0 evade  0 kill 2 counter  0
+  A2 a_eq     hp      0.00/  4600.00 act  11 dealt    4692.43 taken    4600.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A3 a_corrupt hp      0.00/  5000.00 act  32 dealt    9972.43 taken    9372.00 heal   4372.00 crit 14 evade  0 kill 0 counter  0
+  B0 b_tank   hp      0.00/  5200.00 act   4 dealt    6455.67 taken    5684.85 heal      0.00 crit  0 evade  0 kill 1 counter  9
+  B1 b_brawler hp    493.82/  3200.00 act  30 dealt   10085.94 taken    8187.18 heal      0.00 crit  4 evade  1 kill 3 counter  0
+  B2 b_mage   hp      0.00/  2400.00 act  15 dealt    5892.16 taken    4059.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B3 b_healer hp    965.30/  3000.00 act  30 dealt    1538.23 taken    3483.70 heal   9073.85 crit  1 evade  1 kill 0 counter  0
+  hash 05444708f44de59f6357169fdce6525aaf62196a6d1427a3123e4e0152d31b0e
 
 3v3 fountain axolotl vs walls seed=13 outcome=SideAWon ticks=34
   A0 a_axolotl hp   1700.11/  3200.00 act   7 dealt    5312.58 taken    1499.89 heal      0.00 crit  6 evade  0 kill 2 counter  0
@@ -163,3 +163,12 @@
   B1 b_mage   hp    600.61/  2400.00 act   3 dealt    1135.59 taken    1799.39 heal      0.00 crit  0 evade  1 kill 0 counter  0
   B2 b_tank   hp   4527.79/  5200.00 act   2 dealt    3344.41 taken     672.21 heal      0.00 crit  0 evade  0 kill 2 counter  6
   hash bbc96623faf4e8fefd24c839411c8ce6f843538460dee2471d470eab597d27b2
+
+2v3 usurper cuckoo and clutch empress seed=13 outcome=SideAWon ticks=28
+  A0 a_usurp  hp   4015.87/  4200.00 act  12 dealt    4865.59 taken     264.13 heal    240.00 crit  4 evade  0 kill 2 counter  0
+  A1 a_empress hp   3242.97/  4200.00 act  11 dealt    3684.77 taken    1037.03 heal      0.00 crit  4 evade  0 kill 1 counter  0
+  B0 b_brawler hp      0.00/  3200.00 act   3 dealt    1473.33 taken    3200.00 heal      0.00 crit  0 evade  3 kill 0 counter  0
+  B1 b_healer hp      0.00/  3000.00 act   1 dealt       0.00 taken    3000.00 heal    504.00 crit  0 evade  0 kill 0 counter  0
+  B2 b_mage   hp      0.00/  2400.00 act   2 dealt    1317.56 taken    2904.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  A2 a_empress#egg hp   1010.00/  2100.00 act   4 dealt     553.64 taken    1489.74 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  hash 6b4ff7e5874a65e70d1d25fc7d5df324defba95bf1c69ee3182430d1c9267092

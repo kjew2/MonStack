@@ -4,6 +4,8 @@ self.MONSTACK_ART_KEYS = [
   "aquifer",
   "arcane_overflow",
   "candlemane",
+  "clutch_empress",
+  "cuckling",
   "drake",
   "fountain_axolotl",
   "hollow_sun",
@@ -29,5 +31,6 @@ self.MONSTACK_ART_KEYS = [
   "unbreached_keep",
   "unbreakable_will",
   "undying_pyre",
+  "usurper_cuckoo",
   "world_root",
 ];

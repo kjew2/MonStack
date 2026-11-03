@@ -1,4 +1,4 @@
-# gauntlet vectors, hash v1 content=6.16/6a664939
+# gauntlet vectors, hash v1 content=6.17/80fcab38
 
 slime focus seed=7 rank=a
   floor=53 cleared=False killer=golem title=title.professional_punching_bag
@@ -39,3 +39,7 @@ keepshell_crab focus seed=7 rank=a
 iaido_mantis focus seed=7 rank=a
   floor=52 cleared=False killer=imp title=title.professional_punching_bag
   hash f90b64f35f93a5c63fded1a7c3fc1a055f68a44d42d000976b83310f075bad88
+
+cuckling focus seed=7 rank=a
+  floor=42 cleared=False killer=imp title=title.professional_punching_bag
+  hash 69b9208752aac1c790f58ab3e4ab38055bae978514cc09739e228cc044cf1faf

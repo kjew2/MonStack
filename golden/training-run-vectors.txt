@@ -1,4 +1,4 @@
-# training-run vectors, hash v9 content=6.16/6a664939
+# training-run vectors, hash v9 content=6.17/80fcab38
 
 slime balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -30,7 +30,7 @@ slime chaser seed=7
   trees slime_fundamentals:7/8 gel_armor:8/8 lifeblood:0/8 living_ocean:8/8
   hash 5b86b3fcee49587497dc63367c23bbc45d2a4318d8c98ea96cf4b6bc01fb1d5c
 
-slime focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+slime focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=1 injuries=0
   stats hp 832 str 90 int 115 wis 160 dex 90 def 140 spd 100 luk 155
   trees slime_fundamentals:8/8 gel_armor:8/8 tome_of_echoes:4/8 living_ocean:4/8
@@ -66,7 +66,7 @@ drake chaser seed=7
   trees pyromancy:8/8 heavy_armor:8/8 stonewall:3/8 -
   hash c37b21be41c89ef2708160fb17a2c96739125935cbedc8d170b95203f585ce11
 
-drake focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+drake focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 165 str 861 int 110 wis 80 dex 90 def 155 spd 90 luk 70
   trees pyromancy:8/8 heavy_armor:7/8 inferno_sovereign:6/8 ember_codex:1/8
@@ -102,7 +102,7 @@ sprite chaser seed=7
   trees aether_striker:8/8 mind_warp:8/8 quickstep:1/8 starlit_ascension:8/8
   hash b8c557756a3dfcf51f9f94cff06ae016c8bcb42c63dde478de111cab8ab38336
 
-sprite focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+sprite focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 90 str 60 int 917 wis 205 dex 155 def 70 spd 175 luk 110
   trees aether_striker:8/8 mind_warp:7/8 tome_of_echoes:4/8 arcane_overflow:8/8
@@ -138,7 +138,7 @@ mandrake chaser seed=7
   trees rootbound:8/8 mandrake_wail:4/8 lifeblood:1/8 world_root:8/8
   hash badc02572139a5d83cf305546116a5860761c9aeb7962c2fbaa142379be0b300
 
-mandrake focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+mandrake focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 852 str 90 int 150 wis 160 dex 70 def 155 spd 70 luk 100
   trees rootbound:8/8 mandrake_wail:7/8 tome_of_echoes:5/8 world_root:3/8
@@ -174,7 +174,7 @@ shade_hound chaser seed=7
   trees umbral_step:8/8 shadow_harvest:7/8 duelist:1/8 umbral_veil:8/8
   hash fb200661988a7779dc49e53b21dd0a4566493d85a9214a2c10b820a0f99a6e2d
 
-shade_hound focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+shade_hound focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 100 str 145 int 75 wis 70 dex 865 def 70 spd 210 luk 155
   trees umbral_step:8/8 shadow_harvest:7/8 tome_of_echoes:2/8 umbral_veil:8/8
@@ -210,7 +210,7 @@ fountain_axolotl chaser seed=7
   trees elemental_avatar:8/8 clear_spring:6/8 runeweaver:1/8 aquifer:8/8
   hash cc9321068fa9e6dba2a7b42619a2db3550bc6ca131bab19d9cf445d2b68ff3d6
 
-fountain_axolotl focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+fountain_axolotl focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 175 str 60 int 975 wis 135 dex 80 def 70 spd 90 luk 165
   trees elemental_avatar:8/8 clear_spring:7/8 tome_of_echoes:3/8 aquifer:7/8
@@ -246,7 +246,7 @@ candlemane chaser seed=7
   trees blood_magic:8/8 sanctum_grace:4/8 lifeblood:0/8 martyrs_pyre:7/8
   hash f698ad8fea731dad9f4ec0e8a07574ec4522f773349e791fb6bb50ec1dcdae55
 
-candlemane focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+candlemane focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=1 injuries=0
   stats hp 922 str 120 int 95 wis 210 dex 80 def 60 spd 100 luk 100
   trees blood_magic:8/8 sanctum_grace:7/8 tome_of_echoes:7/8 martyrs_pyre:1/8
@@ -282,7 +282,7 @@ pyre_stag chaser seed=7
   trees funeral_pyre:8/8 ashen_vigil:7/8 berserker:0/8 inverted_mercy:7/8
   hash 74479396e59b29e29fad99a4be64d0684eb07fa3fe9583a07ee9d0016642c81f
 
-pyre_stag focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+pyre_stag focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 448 str 230 int 379 wis 150 dex 80 def 95 spd 110 luk 100
   trees funeral_pyre:8/8 ashen_vigil:7/8 tome_of_echoes:7/8 ember_codex:1/8
@@ -318,7 +318,7 @@ keepshell_crab chaser seed=7
   trees fortress_fist:8/8 tide_moat:8/8 stonewall:1/8 unbreached_keep:8/8
   hash 29b87c5d3d5c2d1268b74edc57b7d39c6d8cf5d33a917aa201a59923fe2816db
 
-keepshell_crab focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+keepshell_crab focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 232 str 70 int 65 wis 115 dex 70 def 999 spd 80 luk 140
   trees fortress_fist:8/8 tide_moat:8/8 tome_of_echoes:2/8 unbreached_keep:7/8
@@ -354,19 +354,55 @@ iaido_mantis chaser seed=7
   trees vantage:8/8 leaf_scabbard:3/8 quickstep:0/8 still_hunt:8/8
   hash 8c7c05595e0eb3fa7bad90f1d56c4c252434adf61d60857fb46f1ab28109c90e
 
-iaido_mantis focus seed=7 books=book_echoes,book_embers,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+iaido_mantis focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 100 str 155 int 75 wis 190 dex 110 def 60 spd 914 luk 100
   trees vantage:8/8 leaf_scabbard:7/8 tome_of_echoes:7/8 still_hunt:3/8
   hash 4ad594348347a9fc202e560cfbe0041a3496a0f7fa3afc8cd942423fc9253ce8
 
+cuckling balanced seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
+  stats hp 175 str 145 int 144 wis 138 dex 138 def 151 spd 145 luk 220
+  trees nest_thief:8/8 mimic_core:8/8 - -
+  hash 028ff4b01e6842559408a79d7633ba25413825738055e020208ab018b32fd5ed
+
+cuckling focus seed=7
+  end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=2 injuries=0
+  stats hp 207 str 110 int 60 wis 60 dex 80 def 90 spd 257 luk 853
+  trees nest_thief:8/8 mimic_core:8/8 lucky_star:7/8 -
+  hash aaa3b7e53d698a34b2a45fcc4b8e4125dfad0a6452e8fe702b1c2f7a81d48175
+
+cuckling reckless seed=7
+  end=Completed cycle=12 rank=b fights=3/5 drills=30 rests=0 energy=0 milestones=1 sp=1 injuries=c2,c5,c9,c12
+  stats hp 175 str 110 int 60 wis 60 dex 80 def 90 spd 273 luk 536
+  trees nest_thief:8/8 mimic_core:8/8 lucky_star:1/8 -
+  hash 5f9e6d95abbde0210ffcbc66b7256480170618ca57935ce58b339d14b0a9e48b
+
+cuckling hoarder seed=7
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
+  stats hp 207 str 110 int 60 wis 60 dex 80 def 90 spd 145 luk 907
+  trees nest_thief:8/8 mimic_core:8/8 lucky_star:7/8 -
+  hash c1ee77985158b7b41b6cd219373f40ec065585aee7654fbb7c80765a4f2258be
+
+cuckling chaser seed=7
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
+  stats hp 140 str 110 int 60 wis 60 dex 80 def 90 spd 782 luk 240
+  trees nest_thief:8/8 mimic_core:1/8 quickstep:0/8 usurper_cuckoo:8/8
+  hash 39a70799265885739e446e4a167498f9a7013c89c61bc788fb8309db140bc45e
+
+cuckling focus seed=7 books=book_echoes,book_embers,book_ledger,book_litany,book_psalter,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
+  stats hp 175 str 125 int 75 wis 95 dex 80 def 90 spd 257 luk 772
+  trees nest_thief:8/8 mimic_core:7/8 tome_of_echoes:7/8 ember_codex:3/8
+  hash 21d6cf889c326f36b0ff0024e5197037786d2642f45e48ea9056eed4bcd03387
+
 drake focus seed=7 lane-f slots=pyromancy,heavy_armor,mimic_core,mastery,heirloom,limit_break
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=26 injuries=0
-  stats hp 215 str 1005 int 95 wis 130 dex 140 def 155 spd 90 luk 70
+  stats hp 250 str 1005 int 95 wis 130 dex 90 def 155 spd 90 luk 85
   trees pyromancy:8/8 heavy_armor:8/8 mimic_core:8/8 mastery:8/8 heirloom:8/8 limit_break:8/8
-  end: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,2,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra heavy_armor_n7 | skills flame_breath,iron_hide,plate_mastery,mirror_feint,enlightened,second_wind,rally_cry,plate_mastery
-  fortune over heavy_armor: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,0,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra fortune_n7,heavy_armor_n7 | skills flame_breath,mirror_feint,enlightened,second_wind,rally_cry,jackpot,plate_mastery
-  hash 09b6748bf2d42d110d0fa01d5870af85adab1b21a0ff31ce1470f9e4784bd877
+  end: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,2,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra heavy_armor_n7 | skills flame_breath,iron_hide,plate_mastery,windfall,enlightened,second_wind,rally_cry,plate_mastery
+  fortune over heavy_armor: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,0,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra fortune_n7,heavy_armor_n7 | skills flame_breath,windfall,enlightened,second_wind,rally_cry,jackpot,plate_mastery
+  hash 4fd425cf132cd1f09ee1a644fd5378fb48ed99e68b63ccfbe7fcd1014660ed5b
 
 drake focus seed=7 held=iron_vow,cursed_mark start_sp=+22
   end=Completed cycle=12 rank=c fights=2/5 drills=30 rests=0 energy=0 milestones=1 sp=0 injuries=c2,c5,c9,c12

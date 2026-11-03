@@ -965,6 +965,36 @@
       "key": "MON_SEVER_MAX",
       "type": "int",
       "value": 4
+    },
+    {
+      "key": "MON_STEAL_GAUGE",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "MON_STEALS_PER_FOE",
+      "type": "int",
+      "value": 1
+    },
+    {
+      "key": "MON_USURP_STEALS",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "MON_EGG_HP",
+      "type": "double",
+      "value": 0.3
+    },
+    {
+      "key": "MON_HATCH_ACTIONS",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "MON_HATCH_STATS",
+      "type": "double",
+      "value": 0.5
     }
   ]
 }

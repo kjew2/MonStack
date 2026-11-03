@@ -608,7 +608,7 @@ rule.arise.unit,{name} (risen)
 rule.last_rite.name,Last Rite
 rule.last_rite.desc,"When it is knocked out, its living allies split {MON_RITE_SHARE:pct} of its base stats among them for the rest of the fight. A save from Rebirth or Death's Door is not a knockout. Does nothing in a one-on-one fight."
 rule.last_rite.log,each ally gains {amount:pct} of its stats
-tree.mimic_core.name,Mimic Core
+tree.mimic_core.name,Brood Nest
 tree.heirloom.name,Heirloom
 tree.mastery.name,Mastery
 tree.limit_break.name,Limit Break
@@ -794,3 +794,30 @@ mskill.petal_veil.name,Petal Veil
 mskill.petal_veil.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
 mskill.iai_parry.name,Iai Parry
 mskill.iai_parry.desc,Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}.
+species.cuckling.name,Cuckling
+tree.nest_thief.name,Nest Thief
+tree.foundling_ledger.name,The Foundling's Ledger
+tree.usurper_cuckoo.name,Usurped Nest
+tree.clutch_empress.name,Clutch Throne
+tree.usurper_cuckoo.apex,Usurper Cuckoo
+tree.clutch_empress.apex,Clutch Empress
+book.book_ledger.name,Skill Book: The Foundling's Ledger
+achievement.luk_650.name,Stolen Fortune
+rule.stolen_turn.name,Stolen Turn
+rule.stolen_turn.desc,"When an enemy's turn comes and its gauge is at least {MON_STEAL_GAUGE:pct} full, it acts first in the enemy's place: the enemy loses that turn and its gauge empties. {MON_STEALS_PER_FOE} steal per enemy per fight; a stolen turn has no extra actions."
+rule.usurp.name,Usurp
+rule.usurp.desc,"Each turn it steals is spent on the victim's own skill: it casts the victim's first ready skill with its own stats, and that skill goes on cooldown for the victim. With none ready, a basic attack. It may steal {MON_USURP_STEALS} turns from each enemy per fight."
+rule.foundling_egg.name,Foundling Egg
+rule.foundling_egg.desc,"At the start of a fight it lays an egg on its side, even on a full side. The egg has {MON_EGG_HP:pct} of its max HP and does not act; after {MON_HATCH_ACTIONS} of its actions it hatches into a Foundling with {MON_HATCH_STATS:pct} of its stats and its skills, but no rules. Egg and Foundling never keep the side alive or count for kills."
+mskill.begging_cry.name,Begging Cry
+mskill.begging_cry.desc,An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}.
+mskill.nest_down.name,Nest Down
+mskill.nest_down.desc,Chase trait. When hit: +{power:pct} {stat} for {duration} turns.
+mskill.crown_peck.name,Crown Peck
+mskill.crown_peck.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
+mskill.clutch_call.name,Clutch Call
+mskill.clutch_call.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+rule.stolen_turn.log,"steals the turn ({amount} more on this foe)"
+rule.usurp.log,turns the stolen turn on its owner
+rule.foundling_egg.log,{amount} HP
+rule.foundling_egg.unit,{name}'s Foundling

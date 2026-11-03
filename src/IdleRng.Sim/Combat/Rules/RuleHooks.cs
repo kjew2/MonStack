@@ -6,7 +6,8 @@ namespace IdleRng.Sim.Combat
     // point; it calls the same hook of lanes A to E in that order. Each lane's hooks are partial methods that the lane
     // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
     // until its lane fills it. Species chase rules (specs/14 section 3.1) fill partials named after the species
-    // (Rules/<Species>.cs), called after lane E; the Healed, HpPaid, HitMitigated, BeforeAoe and VantageCounter hooks exist for them. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
+    // (Rules/<Species>.cs), called after lane E; the Healed, HpPaid, HitMitigated, BeforeAoe and VantageCounter hooks exist for them. Cuckling's stolen_turn and usurp sit in Step and Act
+    // themselves (BattleSim.StealTurn, BattleSim.Usurp): no hook runs before a turn is taken. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
     // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
     public static partial class BattleSim
     {
@@ -19,6 +20,7 @@ namespace IdleRng.Sim.Combat
             OnFightStart_D(c);
             OnFightStart_E(c);
             OnFightStart_PyreStag(c);
+            OnFightStart_Cuckling(c);
         }
 
         static partial void OnFightStart_A(RuleCtx c);
@@ -27,6 +29,7 @@ namespace IdleRng.Sim.Combat
         static partial void OnFightStart_D(RuleCtx c);
         static partial void OnFightStart_E(RuleCtx c);
         static partial void OnFightStart_PyreStag(RuleCtx c);
+        static partial void OnFightStart_Cuckling(RuleCtx c);
 
         /// <summary>BeforeAction: the start of the unit's action, before it is counted; set skip to lose the action (nothing else of it happens).</summary>
         static void HookBeforeAction(RuleCtx c, FightUnit u, ref bool skip)
@@ -58,6 +61,7 @@ namespace IdleRng.Sim.Combat
             AfterAction_E(c, u);
             AfterAction_PyreStag(c, u);
             AfterAction_IaidoMantis(c, u);
+            AfterAction_Cuckling(c, u);
         }
 
         static partial void AfterAction_A(RuleCtx c, FightUnit u);
@@ -67,6 +71,7 @@ namespace IdleRng.Sim.Combat
         static partial void AfterAction_E(RuleCtx c, FightUnit u);
         static partial void AfterAction_PyreStag(RuleCtx c, FightUnit u);
         static partial void AfterAction_IaidoMantis(RuleCtx c, FightUnit u);
+        static partial void AfterAction_Cuckling(RuleCtx c, FightUnit u);
 
         /// <summary>ExtraAction: after an action: set evt (the log event, rule:&lt;id&gt;) to grant an extra action now; leave it if already set. MON_EXTRA_ACTIONS_CAP applies.</summary>
         static void HookExtraAction(RuleCtx c, FightUnit u, ref string evt)
@@ -92,6 +97,7 @@ namespace IdleRng.Sim.Combat
             OnGaugeTick_C(c, u, ref fill);
             OnGaugeTick_D(c, u, ref fill);
             OnGaugeTick_E(c, u, ref fill);
+            OnGaugeTick_Cuckling(c, u, ref fill);
         }
 
         static partial void OnGaugeTick_A(RuleCtx c, FightUnit u, ref double fill);
@@ -99,6 +105,7 @@ namespace IdleRng.Sim.Combat
         static partial void OnGaugeTick_C(RuleCtx c, FightUnit u, ref double fill);
         static partial void OnGaugeTick_D(RuleCtx c, FightUnit u, ref double fill);
         static partial void OnGaugeTick_E(RuleCtx c, FightUnit u, ref double fill);
+        static partial void OnGaugeTick_Cuckling(RuleCtx c, FightUnit u, ref double fill);
 
         /// <summary>BeforeHitResolves: the start of a hit, before the decoy and every roll; set h.Cancelled to stop it.</summary>
         static void HookBeforeHit(RuleCtx c, HitInfo h)
@@ -360,6 +367,7 @@ namespace IdleRng.Sim.Combat
             HashUnit_PyreStag(w, s, u);
             HashUnit_KeepshellCrab(w, s, u);
             HashUnit_IaidoMantis(w, s, u);
+            HashUnit_Cuckling(w, s, u);
         }
 
         static partial void HashUnit_A(CanonicalWriter w, FightState s, FightUnit u);
@@ -371,6 +379,7 @@ namespace IdleRng.Sim.Combat
         static partial void HashUnit_PyreStag(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_KeepshellCrab(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_IaidoMantis(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_Cuckling(CanonicalWriter w, FightState s, FightUnit u);
 
         /// <summary>HashFight: StateHash, at the end: fight-wide lane state, only when some unit carries the rule.</summary>
         static void HookHashFight(CanonicalWriter w, FightState s)
@@ -401,6 +410,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_PyreStag(r, ref ok);
             ValidateRules_KeepshellCrab(r, ref ok);
             ValidateRules_IaidoMantis(r, ref ok);
+            ValidateRules_Cuckling(r, ref ok);
         }
 
         static partial void ValidateRules_A(FightRules r, ref bool ok);
@@ -412,6 +422,7 @@ namespace IdleRng.Sim.Combat
         static partial void ValidateRules_PyreStag(FightRules r, ref bool ok);
         static partial void ValidateRules_KeepshellCrab(FightRules r, ref bool ok);
         static partial void ValidateRules_IaidoMantis(FightRules r, ref bool ok);
+        static partial void ValidateRules_Cuckling(FightRules r, ref bool ok);
 
         /// <summary>StatFlat: a flat amount added to a trained stat's current value (after its effect multiplier and floor; not HP). Hot path: keep it cheap.</summary>
         static void HookStatFlat(FightRules r, FightUnit u, string stat, ref double flat)
@@ -485,6 +496,7 @@ namespace IdleRng.Sim.Combat
             Load_PyreStag(r, c);
             Load_KeepshellCrab(r, c);
             Load_IaidoMantis(r, c);
+            Load_Cuckling(r, c);
         }
 
         static partial void Load_A(FightRules r, ContentDb c);
@@ -496,6 +508,7 @@ namespace IdleRng.Sim.Combat
         static partial void Load_PyreStag(FightRules r, ContentDb c);
         static partial void Load_KeepshellCrab(FightRules r, ContentDb c);
         static partial void Load_IaidoMantis(FightRules r, ContentDb c);
+        static partial void Load_Cuckling(FightRules r, ContentDb c);
     }
 
     public sealed partial class FightUnit
@@ -509,6 +522,7 @@ namespace IdleRng.Sim.Combat
             Clone_D(copy);
             Clone_E(copy);
             Clone_IaidoMantis(copy);
+            Clone_Cuckling(copy);
         }
 
         partial void Clone_A(FightUnit copy);
@@ -517,5 +531,6 @@ namespace IdleRng.Sim.Combat
         partial void Clone_D(FightUnit copy);
         partial void Clone_E(FightUnit copy);
         partial void Clone_IaidoMantis(FightUnit copy);
+        partial void Clone_Cuckling(FightUnit copy);
     }
 }
