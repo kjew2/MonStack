@@ -660,7 +660,8 @@
 
   function actionResult(x) {
     let body;
-    if (x.event && RULE_RESULT[x.event]) body = RULE_RESULT[x.event](x.amount);
+    if (x.note) body = x.note;   // a rule's own log line, from strings (rule.<id>.log)
+    else if (x.event && RULE_RESULT[x.event]) body = RULE_RESULT[x.event](x.amount);
     else if (x.event) body = x.amount > 0 ? 'restores ' + Math.round(x.amount) : 'activates';   // a rule modifier's event (BRIDGE.md, fight)
     else if (x.evaded) body = 'dodged';
     else if (x.kind === 'heal') body = 'heals ' + Math.round(x.amount);
@@ -828,12 +829,14 @@
   // also its entropy and next vent, and whether it is in the fight yet (a split phase's adds join later, BRIDGE.md).
   function unitsAt(f, upto) {
     return f.units.map((u, k) => {
-      if (upto === null) return { hp: u.hp, sh: u.shield || 0, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
+      if (upto === null) return { hp: u.hp, sh: u.shield || 0, wd: u.ward || 0, cd: u.cd, en: u.entropy, vent: u.vent, here: true };
       let cd = [];                                 // no action yet: every skill starts ready
       for (let j = upto - 1; j >= 0; j--) if (f.actions[j].actor === u.id) { cd = f.actions[j].cd; break; }
       const x = upto ? f.actions[upto - 1] : null;
       const here = x ? k < x.hp.length : !u.add;
-      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, sh: x && here && x.sh ? x.sh[k] : 0, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
+      // mana_ward's ward before the first logged action is its first entry's (the ward is set at fight start)
+      const wd = x ? (here && x.wd ? x.wd[k] : 0) : (f.actions[0] && f.actions[0].wd ? f.actions[0].wd[k] || 0 : 0);
+      return { hp: x ? (here ? x.hp[k] : u.maxHp) : u.maxHp, sh: x && here && x.sh ? x.sh[k] : 0, wd: wd, cd: cd, en: x && x.en ? x.en[k] : 0, vent: x && x.vent ? x.vent[k] : null, here: here };
     });
   }
   const corruptionAt = (f, upto) => (upto === null ? f.corruption : upto ? f.actions[upto - 1].corruption : 0);
@@ -897,7 +900,7 @@
   }
   function paintUnits(refs, now, x, cap) {
     refs.forEach((r, k) => {
-      const hp = now[k].hp, sh = now[k].sh || 0, max = r.u.maxHp;
+      const hp = now[k].hp, sh = now[k].sh || 0, wd = now[k].wd || 0, max = r.u.maxHp;
       r.el.hidden = !now[k].here;
       if (r.float) {   // the stage: the actor lunges, the one hit recoils, and the number floats up (a new node restarts its animation)
         const fl = x && x.target === r.u.id ? floatOf(x) : null;
@@ -910,8 +913,11 @@
       const shEl = r.hpBar.querySelector('.shield'), shown = Math.round(sh) > 0;
       shEl.style.width = (shown ? Math.min(100, (sh / max) * 100) : 0) + '%';
       r.hpBar.classList.toggle('shielded', shown);
-      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max) + (shown ? '  🛡' + Math.round(sh) : '');
-      r.hpBar.title = shown ? 'Shield ' + Math.round(sh) + ': absorbs damage before HP' : '';
+      const warded = Math.round(wd) > 0;   // mana_ward's ward: a pool apart from the shield (specs/16 section 6.2)
+      r.hpBar.classList.toggle('warded', warded);
+      r.hpBar.querySelector('span').textContent = Math.round(hp) + '/' + Math.round(max) + (shown ? '  🛡' + Math.round(sh) : '') + (warded ? '  ◈' + Math.round(wd) : '');
+      r.hpBar.title = [shown ? 'Shield ' + Math.round(sh) + ': absorbs damage before HP' : '', warded ? 'Ward ' + Math.round(wd) + ': takes a share of each blow after the shield' : '']
+        .filter(Boolean).join('. ');
       if (r.entropy) {
         const en = now[k].en || 0, vent = now[k].vent;
         r.entropy.bar.querySelector('.fill').style.width = Math.max(0, Math.min(100, (en / cap) * 100)) + '%';

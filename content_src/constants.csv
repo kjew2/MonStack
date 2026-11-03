@@ -130,3 +130,12 @@ MON_AVATAR_BONUS,double,0.25,elemental_avatar rule: all the unit's hit damage ta
 MON_FORTRESS_DEF,double,0.5,fortress_fist rule: each hit the unit lands adds this x its DEF to the raw damage (its STR and INT count as 0 for damage). Placeholder
 MON_BLOOD_COST,double,0.06,blood_magic rule: each active skill cast costs this fraction of max HP (never below 1 HP); no cooldowns. Placeholder
 MON_BLOOD_FLOOR,double,0.25,blood_magic rule: the unit does not cast when the cost would leave it under this fraction of max HP. Placeholder
+MON_RESENT_FRAC,double,0.5,resentment rule: share of the HP damage enemies deal the unit that goes into its red pool (a flat STR bonus). Placeholder
+MON_RESENT_DECAY,double,0.25,resentment rule: share of the red pool each of the unit's own actions removes. Placeholder
+MON_VANTAGE_HP,double,0.5,vantage rule: below this fraction of max HP the unit strikes first against single-target damaging actions. Placeholder
+MON_DOOR_START,double,0.7,deaths_door rule: chance to survive the first killing blow on Death's Door. Placeholder
+MON_DOOR_STEP,double,0.1,deaths_door rule: survival chance lost per killing blow already survived on Death's Door. Placeholder
+MON_BARRICADE_CAP,double,0.6,barricade rule: shields never expire and stack up to this fraction of max HP (also the overheal-to-shield cap). Placeholder
+MON_WARD_WIS,double,1.5,mana_ward rule: the ward at fight start as a multiple of WIS. Placeholder
+MON_WARD_SHARE,double,0.3,mana_ward rule: share of each blow's HP damage (after shields) the ward takes first. Placeholder
+MON_WARD_CDR,double,0.5,mana_ward rule: extra cooldown ticks per own action while the ward holds. Placeholder

@@ -72,6 +72,9 @@ REQUIRED_CONSTANTS = {
     "MON_FEAST_STR": "double", "MON_COUNTER_MULT": "double", "MON_FIRE_BONUS": "double", "MON_VEIL_EVADE_BONUS": "double",
     "MON_FEAST_DMG": "double", "MON_FEAST_START": "double", "MON_ECHO_DECOYS": "int", "MON_DRAIN_SHIELD_CAP": "double",
     "MON_TRIGGER_DEPTH": "int", "MON_EXTRA_ACTIONS_CAP": "int",
+    # idea-pool lane B (#135): survival rules
+    "MON_RESENT_FRAC": "double", "MON_RESENT_DECAY": "double", "MON_VANTAGE_HP": "double", "MON_DOOR_START": "double",
+    "MON_DOOR_STEP": "double", "MON_BARRICADE_CAP": "double", "MON_WARD_WIS": "double", "MON_WARD_SHARE": "double", "MON_WARD_CDR": "double",
     # account and meta-progression (specs/18)
     "SHARDS_PER_CYCLE": "int", "SHARDS_PER_RANK": "int", "VAULT_CAP": "int", "VENDOR_OFFERS": "int", "REROLL_BASE": "int", "REROLL_STEP": "int", "LEGENDARY_SLOTS": "int",
     # end-of-run gauntlet (specs/19)
@@ -102,7 +105,9 @@ EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
             "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast",
             # idea-pool lane A (#134)
-            "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic"]
+            "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic",
+            # idea-pool lane B (#135)
+            "resentment", "vantage", "deaths_door", "barricade", "mana_ward"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -139,6 +144,11 @@ MON_RANGES = {
     "MON_FEAST_DMG": (">= 0", lambda v: v >= 0), "MON_FEAST_START": (">= 0", lambda v: v >= 0), "MON_ECHO_DECOYS": (">= 0", lambda v: v >= 0),
     "MON_DRAIN_SHIELD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_TRIGGER_DEPTH": (">= 1", lambda v: v >= 1), "MON_EXTRA_ACTIONS_CAP": (">= 0", lambda v: v >= 0),
+    # idea-pool lane B (#135)
+    "MON_RESENT_FRAC": (">= 0", lambda v: v >= 0), "MON_RESENT_DECAY": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_VANTAGE_HP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_DOOR_START": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_DOOR_STEP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_BARRICADE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_WARD_WIS": (">= 0", lambda v: v >= 0), "MON_WARD_SHARE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_WARD_CDR": (">= 0", lambda v: v >= 0),
     "SHARDS_PER_CYCLE": (">= 0", lambda v: v >= 0), "SHARDS_PER_RANK": (">= 0", lambda v: v >= 0),
     "VAULT_CAP": ("> 0", lambda v: v > 0), "VENDOR_OFFERS": ("> 0", lambda v: v > 0),
     "REROLL_BASE": (">= 0", lambda v: v >= 0), "REROLL_STEP": (">= 0", lambda v: v >= 0), "LEGENDARY_SLOTS": (">= 0", lambda v: v >= 0),

@@ -1,4 +1,4 @@
-# endless vectors, hash v1 content=6.5/1682667d
+# endless vectors, hash v1 content=6.6/88456f5b
 
 season 0
   floor  1 swarm    mire_sprite,ember_imp,ember_imp,ember_imp
@@ -22,10 +22,10 @@ season 0
   floor 19 skirmish blaze_hound,blaze_hound,hex_weaver,mire_sprite
   floor 20 elite    void_hydra,dawn_priest,blaze_hound,storm_adept
   mutators keen_edge,shockwave,withering,blazing,haste
-  slime+drake+sprite+mandrake (default AI) focus seed=7: floor=35 capped=False stopped=fortress elites=3 vents=3
-    hash bb9a875495de57127a236c141253ab479b9493939da341bd5588d55c7f55a02c
+  slime+drake+sprite+mandrake (default AI) focus seed=7: floor=26 capped=False stopped=bulwark elites=2 vents=0
+    hash a4aa53b60be1a907c9dccea335b234b3a033ccd8b5e9602d110bfb1e3373e353
   slime+drake+sprite+mandrake (rulebooks) focus seed=7: floor=29 capped=False stopped=bulwark elites=2 vents=1
-    hash 68185f8c7ee51858b36bdc4b0e34851e05d72a4b04ad22802b172bc33635f2df
+    hash e4e3897fac69e84ebdc9ab8b6b57a5f10dbbf9ddc21bee4bd8dcd66661ef4c30
 
 season 2913
   floor  1 fortress bastion_golem,mire_sprite,mire_sprite,ember_imp
@@ -50,6 +50,6 @@ season 2913
   floor 20 elite    void_hydra,mire_sprite,ember_imp,ember_imp
   mutators tidal,shockwave,duelist,keen_edge,withering
   slime+drake+sprite+mandrake (default AI) focus seed=7: floor=33 capped=False stopped=fortress elites=3 vents=1
-    hash 014cd38517afd9eb2648ebb5214b6e5f3cad0ebfddd01d0c58957019ce03c67c
+    hash 05929b97d4c95f2e0777c262e5699e794c3dd4a0e3e5f2b35d549149c01d5b42
   slime+drake+sprite+mandrake (rulebooks) focus seed=7: floor=32 capped=False stopped=bulwark elites=3 vents=0
-    hash cd7ce283d0e4ef5fb45481a038a01265f1eb98fbf4c1bf21b836f02ed9353ada
+    hash d582e6070974b777f5ffcbe6e45436dd8744abba59001c437728cc79eb528b25
