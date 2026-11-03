@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The Cloud Code module's handlers run in process against an in-memory Cloud Save with Cloud Save's write-lock rules (issue #28).
+    .NET 10 like the module, so it is not in IdleRng.sln (.NET 8); check.sh runs it with a .NET 10 SDK kept apart from the default
+    one (MONSTACK_DOTNET10), and CI installs one for it.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../MonStackAccount/MonStackAccount.csproj" />
+    <ProjectReference Include="../../../src/IdleRng.Bots/IdleRng.Bots.csproj" />
+  </ItemGroup>
+</Project>

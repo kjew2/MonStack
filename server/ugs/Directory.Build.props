@@ -1,7 +1,7 @@
 <Project>
-  <!-- Same layout as src/: build output goes to <repo>/build/, which is git-ignored. -->
+  <!-- Same layout as src/: build output goes to <repo>/build/, which is git-ignored (MonStackBuildSuffix: see src/Directory.Build.props). -->
   <PropertyGroup>
-    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)../../build/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
-    <BaseOutputPath>$(MSBuildThisFileDirectory)../../build/bin/$(MSBuildProjectName)/</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)../../build/obj$(MonStackBuildSuffix)/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)../../build/bin$(MonStackBuildSuffix)/$(MSBuildProjectName)/</BaseOutputPath>
   </PropertyGroup>
 </Project>

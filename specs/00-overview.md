@@ -87,9 +87,12 @@ tools/test_content_build.py  tests for the converter: previous-build rules (E090
 src/IdleRng.Sim/             pure sim: Combat, Training, Account, Gauntlet, Content, Rng, Replay (hashing)
 src/IdleRng.Runtime/         save format, stores, account save
 src/IdleRng.Bots/            run bots, golden files, the `train` and `golden` verbs
+src/IdleRng.Server/          the account server core: open and commit over a store (specs/27)
 src/IdleRng.Web/             .NET 8 WebAssembly host: the bridge to the browser UI
+server/ugs/                  UGS Cloud Code modules (.NET 10): MonStackAccount, the account server; deploy.sh (specs/27 step 4)
 web/                         the monster trainer UI (index.html) and the wasm build
 .github/workflows/check.yml  CI: the full ./check.sh on every PR and push to main (specs/09 section 6)
+.github/workflows/pages.yml  deploys the Cloud Code module, then the site to GitHub Pages, after a green check on main
 ```
 
 ## 6. Decisions log
