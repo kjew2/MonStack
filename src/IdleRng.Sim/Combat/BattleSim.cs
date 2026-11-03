@@ -821,8 +821,9 @@ namespace IdleRng.Sim.Combat
         /// tidal_overflow the overflow becomes shield, up to TideShieldCap of max HP (added to <paramref name="shield"/>). It joins the
         /// unit's one shield pool, so a timed shield's expiry clears it too.
         /// </summary>
-        static double Heal(FightRules r, FightUnit t, double amount, ref double shield, double overflowCap = 0)
+        static double Heal(RuleCtx c, FightUnit t, double amount, ref double shield, double overflowCap = 0)
         {
+            var r = c.Rules;
             double before = t.Hp, sum = t.Hp + amount;
             t.Hp = Math.Min(t.MaxHp, sum);
             double over = sum - t.MaxHp;
@@ -830,8 +831,9 @@ namespace IdleRng.Sim.Combat
             if (over > 0 && capFrac > 0)
             {
                 HookShieldCap(r, t, ref capFrac);
+                HookShieldIn(c, t, ref over);   // holdback: the overflow washes stored damage out first
                 double cap = capFrac * t.MaxHp;
-                if (t.Shield < cap)
+                if (over > 0 && t.Shield < cap)
                 {
                     double add = Math.Min(cap - t.Shield, over);
                     t.Shield += add;
@@ -852,7 +854,7 @@ namespace IdleRng.Sim.Combat
             HookHealIn(c, t, amount, ref taken);   // pyre_mercy: the heal burns an enemy instead
             if (taken) return 0;
             double before = shield;
-            double healed = Heal(c.Rules, t, amount, ref shield, overflowCap);
+            double healed = Heal(c, t, amount, ref shield, overflowCap);
             HookHealed(c, t, healed, Math.Max(0.0, amount - healed - (shield - before)));
             return healed;
         }
@@ -867,10 +869,13 @@ namespace IdleRng.Sim.Combat
             tgt.Shield -= absorbed;
             double hpDamage = amount - absorbed;
             HookHpDamage(c, src, tgt, ref hpDamage);
-            double dealt = Math.Min(tgt.Hp, hpDamage);
             bool wasAlive = tgt.Alive;
+            double held = 0;
+            HookHpHeld(c, src, tgt, ref hpDamage, ref held);   // holdback: the HP loss waits in the Reservoir (counted now), or the dam breaks
+            double dealt = Math.Min(tgt.Hp, hpDamage);
             tgt.Hp -= dealt;
             if (tgt.Hp < 0) tgt.Hp = 0;
+            dealt += held;
             src.Tally.DamageDealt += dealt;
             tgt.Tally.DamageTaken += dealt;
             if (element != null)
@@ -901,14 +906,20 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>
         /// A timed shield of <paramref name="amount"/> for <paramref name="ticks"/> (0 = no expiry): the unit keeps the bigger of its
-        /// shield and this one, and the longer timer; the shield-gain hook may change both (specs/16 section 6.4).
+        /// shield and this one, and the longer timer; the shield-gain hook may change both (specs/16 section 6.4). The shield-in hook
+        /// may take part of the amount first (holdback); what is left, up to <paramref name="cap"/>, is the new shield. Returns false
+        /// when nothing was left (no shield change, no timer).
         /// </summary>
-        static void GainShield(RuleCtx c, FightUnit t, double amount, int ticks)
+        static bool GainShield(RuleCtx c, FightUnit t, double amount, int ticks, double cap = double.PositiveInfinity)
         {
+            HookShieldIn(c, t, ref amount);
+            if (!(amount > 0)) return false;
+            amount = Math.Min(amount, cap);
             double shield = Math.Max(t.Shield, amount);
             HookShieldGain(c, t, amount, ref shield, ref ticks);
             t.Shield = shield;
             t.ShieldTicks = Math.Max(t.ShieldTicks, ticks);
+            return true;
         }
 
         /// <summary>Sends root_rebirth's event after the action that triggered it.</summary>
