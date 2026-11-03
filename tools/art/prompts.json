@@ -33,6 +33,14 @@
    "name": "Shade Hound",
    "prompt": "A dog made purely of shadow, deep purple-black with soft violet edges, in a real canine pose with a lean body and four jointed legs, its tail dissolving into drifting smoke. Bright acid-green eyes and small white fangs. Unsettling detail: a short row of tiny extra acid-green eyes along its cheek."
   },
+  "fountain_axolotl": {
+   "name": "Fountain Axolotl",
+   "prompt": "A pink-aqua axolotl whose six feathery gills are glowing little fountains, with a ring of water orbiting it; its claws and tail are water jets."
+  },
+  "candlemane": {
+   "name": "Candlemane",
+   "prompt": "A majestic lion-like beast of living light and candle wax, ivory-white and pale gold. Its mane is a full ring of tall burning candle flames in white-gold and amber, and soft wax drips and pools down its shoulders and flanks where the flames touch, as if it is slowly burning itself to shine. A thin golden halo-wheel floats behind its head. Its eyes glow bright gold, and molten gold light seeps through cracks in its chest like a lantern. Proud, sacred and solemn, powerful, a light-element monster."
+  },
   "keepshell_crab": {
    "name": "Keepshell Crab",
    "prompt": "A stubby rust-orange hermit crab that wears a whole stone castle keep as its shell: crenellated towers, a portcullis gate over its face, coral and seaweed growing in the mortar. Its claws are wrapped in riveted gate-plates and raised to punch. Cute, glaring little castle."
@@ -90,6 +98,26 @@
    "species": "shade_hound",
    "name": "Eclipse Hound",
    "prompt": "the shadow dog is crimson and black, a golden eclipse ring burns like a halo behind its head, and all its eyes glow gold."
+  },
+  "aquifer": {
+   "species": "fountain_axolotl",
+   "name": "Aquifer Olm",
+   "prompt": "the axolotl has transformed into an olm: a long, slender, serpent-like cave salamander, pale white and translucent like frosted glass with no pink at all, glowing aqua from inside, coiled in an S-curve through cracked dark bedrock with water seeping from every crack. Tiny legs, long body. Colour palette: white, pale cyan and aqua only."
+  },
+  "six_fountains": {
+   "species": "fountain_axolotl",
+   "name": "Xolotl Wellspring",
+   "prompt": "the axolotl has become a huge mythic river-dragon: a long, powerful dragon body with the axolotl's face, deep teal and turquoise scales with gold accents, its six gills now towering geysers shooting high, a carved stone fountain basin floating behind it like a halo, rain falling upward. Much larger and more majestic. Colour palette: deep teal, turquoise and gold."
+  },
+  "martyrs_pyre": {
+   "species": "candlemane",
+   "name": "Martyr Pyrelion",
+   "prompt": "the same lion, but its fire has turned white-hot: the whole wax mane is now a tall roaring pyre of white and pale ice-blue flame, the candles burn white, the body is pale ivory wax streaked with blue-white light. Colour palette shifts from warm gold to white and pale blue."
+  },
+  "hollow_sun": {
+   "species": "candlemane",
+   "name": "Hollow Sun Lion",
+   "prompt": "the same lion, darkened: its body is now charcoal-black wax with molten cracks, its halo is a huge black-cored sun ringed in white fire behind its head, and its chest is an open furnace glowing crimson-orange. Colour palette shifts from gold to black, crimson and white."
   },
   "unbreached_keep": {
    "species": "keepshell_crab",

@@ -2224,7 +2224,7 @@
     },
     {
       "key": "tree.blood_magic.name",
-      "text": "Blood Magic"
+      "text": "Votive Flame"
     },
     {
       "key": "rule.iron_reflexes.name",
@@ -2629,6 +2629,226 @@
     {
       "key": "rule.hungry_core.desc",
       "text": "Each new cycle the core eats {HUNGRY_ENERGY} energy. While fed, every trained stat is +{HUNGRY_STAT} in that cycle's rank fight. With too little energy it goes dormant for the cycle: no bonus, nothing eaten."
+    },
+    {
+      "key": "species.fountain_axolotl.name",
+      "text": "Fountain Axolotl"
+    },
+    {
+      "key": "tree.clear_spring.name",
+      "text": "Clear Spring"
+    },
+    {
+      "key": "tree.springs_almanac.name",
+      "text": "Almanac of Springs"
+    },
+    {
+      "key": "tree.aquifer.name",
+      "text": "Aquifer"
+    },
+    {
+      "key": "tree.aquifer.apex",
+      "text": "Aquifer Olm"
+    },
+    {
+      "key": "tree.six_fountains.name",
+      "text": "Six Fountains"
+    },
+    {
+      "key": "tree.six_fountains.apex",
+      "text": "Xolotl Wellspring"
+    },
+    {
+      "key": "book.book_springs.name",
+      "text": "Skill Book: Almanac of Springs"
+    },
+    {
+      "key": "mskill.fountain_spout.name",
+      "text": "Fountain Spout"
+    },
+    {
+      "key": "mskill.fountain_spout.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.riptide.name",
+      "text": "Riptide"
+    },
+    {
+      "key": "mskill.riptide.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.gill_jet.name",
+      "text": "Gill Jet"
+    },
+    {
+      "key": "mskill.gill_jet.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.gill_spray.name",
+      "text": "Gill Spray"
+    },
+    {
+      "key": "mskill.gill_spray.desc",
+      "text": "Chase trait. On crit: {element} damage for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.wellspring_rain.name",
+      "text": "Wellspring Rain"
+    },
+    {
+      "key": "mskill.wellspring_rain.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "rule.clear_spring.name",
+      "text": "Clear Spring"
+    },
+    {
+      "key": "rule.clear_spring.desc",
+      "text": "Its element has no weakness: its hits of its own element deal full damage to the element that beats it (not {ELEMENT_WEAK_MULT:pct}), and hits of that element deal it full damage (not {ELEMENT_STRONG_MULT:pct}). Its strong matchups still count."
+    },
+    {
+      "key": "rule.clear_spring.log",
+      "text": "element matchup x{amount} cancelled"
+    },
+    {
+      "key": "rule.seep.name",
+      "text": "Water Finds a Way"
+    },
+    {
+      "key": "rule.seep.desc",
+      "text": "Each of its hits is mitigated by the lower of the target's DEF and WIS, physical or magical. {MON_SEEP_SHIELD:pct} of each hit passes through shields straight to HP."
+    },
+    {
+      "key": "rule.seep.log",
+      "text": "seeps past: only {amount} defence"
+    },
+    {
+      "key": "rule.fountain_jets.name",
+      "text": "Fountain Jets"
+    },
+    {
+      "key": "rule.fountain_jets.desc",
+      "text": "Each single-target hit of its skills and basic attacks splits into {MON_JETS} jets of {MON_JET_POWER:pct} power. Each jet rolls evade, graze and crit on its own and counts as a hit for on-hit and on-crit effects. Area skills, heals, shields and triggered hits do not split."
+    },
+    {
+      "key": "rule.fountain_jets.log",
+      "text": "{amount} of {MON_JETS} jets land"
+    },
+    {
+      "key": "achievement.deep_spring.name",
+      "text": "Deep Spring"
+    },
+    {
+      "key": "species.candlemane.name",
+      "text": "Candlemane"
+    },
+    {
+      "key": "tree.sanctum_grace.name",
+      "text": "Sanctum Grace"
+    },
+    {
+      "key": "tree.unburnt_psalter.name",
+      "text": "Psalter of the Unburnt"
+    },
+    {
+      "key": "tree.martyrs_pyre.name",
+      "text": "Martyr's Pyre"
+    },
+    {
+      "key": "tree.hollow_sun.name",
+      "text": "Hollow Sun"
+    },
+    {
+      "key": "tree.martyrs_pyre.apex",
+      "text": "Martyr Pyrelion"
+    },
+    {
+      "key": "tree.hollow_sun.apex",
+      "text": "Hollow Sun Lion"
+    },
+    {
+      "key": "book.book_psalter.name",
+      "text": "Skill Book: Psalter of the Unburnt"
+    },
+    {
+      "key": "achievement.hp_700.name",
+      "text": "Living Candle"
+    },
+    {
+      "key": "rule.martyr_flame.name",
+      "text": "Martyr Flame"
+    },
+    {
+      "key": "rule.martyr_flame.desc",
+      "text": "Every heal it gets also deals {MON_PYRE_CONV:pct} of the HP healed as light true damage to its current target. Healing past max HP converts in full instead of being lost."
+    },
+    {
+      "key": "rule.hollow_sun.name",
+      "text": "Hollow Sun"
+    },
+    {
+      "key": "rule.hollow_sun.desc",
+      "text": "HP it pays or loses to hits is stored as Radiance, up to its max HP. Each hit it lands releases {MON_SUN_RELEASE:pct} of the Radiance as extra light damage that ignores defenses, and heals it for {MON_SUN_HEAL:pct} of what it released."
+    },
+    {
+      "key": "mskill.votive_strike.name",
+      "text": "Votive Strike"
+    },
+    {
+      "key": "mskill.votive_strike.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.halo_mend.name",
+      "text": "Halo Mend"
+    },
+    {
+      "key": "mskill.halo_mend.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.kindled_grace.name",
+      "text": "Kindled Grace"
+    },
+    {
+      "key": "mskill.kindled_grace.desc",
+      "text": "Chase trait. When hit: heal self for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.pyre_hymn.name",
+      "text": "Pyre Hymn"
+    },
+    {
+      "key": "mskill.pyre_hymn.desc",
+      "text": "Heal self for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.sunfall.name",
+      "text": "Sunfall"
+    },
+    {
+      "key": "mskill.sunfall.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.wax_psalm.name",
+      "text": "Wax Psalm"
+    },
+    {
+      "key": "mskill.wax_psalm.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.vesper_glow.name",
+      "text": "Vesper Glow"
+    },
+    {
+      "key": "mskill.vesper_glow.desc",
+      "text": "Chase trait. When hit: +{power:pct} {stat} for {duration} turns."
     },
     {
       "key": "species.keepshell_crab.name",

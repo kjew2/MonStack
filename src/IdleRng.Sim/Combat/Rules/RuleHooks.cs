@@ -5,8 +5,8 @@ namespace IdleRng.Sim.Combat
     // The rule hooks of the idea-pool lanes (specs/16 section 6.4, epic #132). The fight calls each Hook* method at a fixed
     // point; it calls the same hook of lanes A to E in that order. Each lane's hooks are partial methods that the lane
     // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
-    // until its lane fills it. Species rules (specs/14 section 3.1) fill partials named after the species (Rules/<Species>.cs),
-    // called after lane E; the HitMitigated hook exists for them. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
+    // until its lane fills it. Species chase rules (specs/14 section 3.1) fill partials named after the species
+    // (Rules/<Species>.cs), called after lane E; the Healed, HpPaid and HitMitigated hooks exist for them. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
     // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
     public static partial class BattleSim
     {
@@ -175,6 +175,7 @@ namespace IdleRng.Sim.Combat
             OnHitLanded_C(c, h);
             OnHitLanded_D(c, h);
             OnHitLanded_E(c, h);
+            OnHitLanded_Candlemane(c, h);
         }
 
         static partial void OnHitLanded_A(RuleCtx c, HitInfo h);
@@ -182,6 +183,7 @@ namespace IdleRng.Sim.Combat
         static partial void OnHitLanded_C(RuleCtx c, HitInfo h);
         static partial void OnHitLanded_D(RuleCtx c, HitInfo h);
         static partial void OnHitLanded_E(RuleCtx c, HitInfo h);
+        static partial void OnHitLanded_Candlemane(RuleCtx c, HitInfo h);
 
         /// <summary>OnHitTaken: the same point, for the target's rules.</summary>
         static void HookHitTaken(RuleCtx c, HitInfo h)
@@ -191,6 +193,7 @@ namespace IdleRng.Sim.Combat
             OnHitTaken_C(c, h);
             OnHitTaken_D(c, h);
             OnHitTaken_E(c, h);
+            OnHitTaken_Candlemane(c, h);
         }
 
         static partial void OnHitTaken_A(RuleCtx c, HitInfo h);
@@ -198,6 +201,26 @@ namespace IdleRng.Sim.Combat
         static partial void OnHitTaken_C(RuleCtx c, HitInfo h);
         static partial void OnHitTaken_D(RuleCtx c, HitInfo h);
         static partial void OnHitTaken_E(RuleCtx c, HitInfo h);
+        static partial void OnHitTaken_Candlemane(RuleCtx c, HitInfo h);
+
+        /// <summary>
+        /// Healed (species rules): a heal reached t (skills, triggers, rules; not a boss phase's failed check); healed is the HP it
+        /// restored, lost the overheal that went nowhere (not into HP, not into a shield). Once per healed unit, after its HP changed.
+        /// </summary>
+        static void HookHealed(RuleCtx c, FightUnit t, double healed, double lost)
+        {
+            OnHealed_Candlemane(c, t, healed, lost);
+        }
+
+        static partial void OnHealed_Candlemane(RuleCtx c, FightUnit t, double healed, double lost);
+
+        /// <summary>HpPaid (species rules): the unit paid HP as a cost (lane A's blood_magic); not damage, after its HP fell.</summary>
+        static void HookHpPaid(RuleCtx c, FightUnit u, double paid)
+        {
+            OnHpPaid_Candlemane(c, u, paid);
+        }
+
+        static partial void OnHpPaid_Candlemane(RuleCtx c, FightUnit u, double paid);
 
         /// <summary>ModifyHpDamage: any damage (hits, counters, wail, channel strikes) after the shield took its part, before HP.</summary>
         static void HookHpDamage(RuleCtx c, FightUnit src, FightUnit tgt, ref double amount)
@@ -287,6 +310,7 @@ namespace IdleRng.Sim.Combat
             HashUnit_C(w, s, u);
             HashUnit_D(w, s, u);
             HashUnit_E(w, s, u);
+            HashUnit_Candlemane(w, s, u);
             HashUnit_KeepshellCrab(w, s, u);
         }
 
@@ -295,6 +319,7 @@ namespace IdleRng.Sim.Combat
         static partial void HashUnit_C(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_D(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_E(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_Candlemane(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_KeepshellCrab(CanonicalWriter w, FightState s, FightUnit u);
 
         /// <summary>HashFight: StateHash, at the end: fight-wide lane state, only when some unit carries the rule.</summary>
@@ -321,6 +346,8 @@ namespace IdleRng.Sim.Combat
             ValidateRules_C(r, ref ok);
             ValidateRules_D(r, ref ok);
             ValidateRules_E(r, ref ok);
+            ValidateRules_FountainAxolotl(r, ref ok);
+            ValidateRules_Candlemane(r, ref ok);
             ValidateRules_KeepshellCrab(r, ref ok);
         }
 
@@ -329,6 +356,7 @@ namespace IdleRng.Sim.Combat
         static partial void ValidateRules_C(FightRules r, ref bool ok);
         static partial void ValidateRules_D(FightRules r, ref bool ok);
         static partial void ValidateRules_E(FightRules r, ref bool ok);
+        static partial void ValidateRules_Candlemane(FightRules r, ref bool ok);
         static partial void ValidateRules_KeepshellCrab(FightRules r, ref bool ok);
 
         /// <summary>StatFlat: a flat amount added to a trained stat's current value (after its effect multiplier and floor; not HP). Hot path: keep it cheap.</summary>
@@ -390,6 +418,8 @@ namespace IdleRng.Sim.Combat
             Load_C(r, c);
             Load_D(r, c);
             Load_E(r, c);
+            Load_FountainAxolotl(r, c);
+            Load_Candlemane(r, c);
             Load_KeepshellCrab(r, c);
         }
 
@@ -398,6 +428,7 @@ namespace IdleRng.Sim.Combat
         static partial void Load_C(FightRules r, ContentDb c);
         static partial void Load_D(FightRules r, ContentDb c);
         static partial void Load_E(FightRules r, ContentDb c);
+        static partial void Load_Candlemane(FightRules r, ContentDb c);
         static partial void Load_KeepshellCrab(FightRules r, ContentDb c);
     }
 

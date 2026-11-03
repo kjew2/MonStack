@@ -110,6 +110,10 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane G, run rules (specs/14 section 4.3, #140)
     "VOW_GAIN": "double", "CURSE_FOE": "double", "DEVOUR_FRAC": "double", "DEVOUR_ENERGY": "double", "BREATH_SAFE": "double",
     "ASCETIC_AP": "int", "HUNGRY_STAT": "double", "HUNGRY_ENERGY": "double",
+    # species Fountain Axolotl (#150), seep and fountain_jets (specs/16 section 6.2)
+    "MON_SEEP_SHIELD": "double", "MON_JETS": "int", "MON_JET_POWER": "double",
+    # species Candlemane (#141): martyr_flame, hollow_sun
+    "MON_PYRE_CONV": "double", "MON_SUN_RELEASE": "double", "MON_SUN_HEAL": "double",
     # species Keepshell Crab (#152), tide_moat, unbreached and shellcrack (specs/16 section 6.2)
     "MON_MOAT_DEF": "double", "MON_WALL_DEF": "double", "MON_WALL_ERODE": "double", "MON_CRACK_DEF": "double",
 }
@@ -134,6 +138,10 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             "hemorrhage", "privileged_status", "equilibrium", "corruption", "dead_branch",
             # idea-pool lane G (#140): run rules, coded in TrainingRun (Training/Rules/LaneG.cs)
             "iron_vow", "cursed_mark", "devourer", "second_breath", "ascetic", "hungry_core",
+            # species Fountain Axolotl (#150)
+            "clear_spring", "seep", "fountain_jets",
+            # species Candlemane (#141)
+            "martyr_flame", "hollow_sun",
             # species Keepshell Crab (#152)
             "tide_moat", "unbreached", "shellcrack"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
@@ -225,6 +233,12 @@ MON_RANGES = {
     "DEVOUR_FRAC": ("[0, 1]", lambda v: 0 <= v <= 1), "DEVOUR_ENERGY": (">= 0", lambda v: v >= 0),
     "BREATH_SAFE": (">= 0", lambda v: v >= 0), "ASCETIC_AP": (">= 0", lambda v: v >= 0),
     "HUNGRY_STAT": (">= 0", lambda v: v >= 0), "HUNGRY_ENERGY": (">= 0", lambda v: v >= 0),
+    # species Fountain Axolotl (#150)
+    "MON_SEEP_SHIELD": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_JETS": ("a whole number in [2, 6]", lambda v: v == int(v) and 2 <= v <= 6),
+    "MON_JET_POWER": ("[0, 1]", lambda v: 0 <= v <= 1),
+    # species Candlemane (#141)
+    "MON_PYRE_CONV": (">= 0", lambda v: v >= 0), "MON_SUN_RELEASE": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_SUN_HEAL": (">= 0", lambda v: v >= 0),
     # species Keepshell Crab (#152): the walls must always fall, so the erosion is never 0
     "MON_MOAT_DEF": (">= 0", lambda v: v >= 0), "MON_WALL_DEF": (">= 0", lambda v: v >= 0),
     "MON_WALL_ERODE": ("(0, 1]", lambda v: 0 < v <= 1), "MON_CRACK_DEF": (">= 0", lambda v: v >= 0),

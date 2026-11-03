@@ -218,6 +218,8 @@ Placeholder achievements (thresholds checked against the bots: balanced runs rea
 | Prodigy | Finish a run with any stat at 500 or more | sprite (Mirage Moth) |
 | Veteran | Finish 5 runs | mandrake (Mandrake; kj, 2026-10-31, `specs/24` section 6) |
 | Climber | Clear 10 gauntlet floors | shade_hound (Shade Hound; kj, 2026-10-31) |
+| Deep Spring | Finish a run with INT at 650 or more | fountain_axolotl (Fountain Axolotl; #150, placeholder) |
+| Living Candle | Finish a run with HP at 700 or more (`stat_reached`, ref `hp`) | candlemane (Candlemane, #141) |
 | Spire Breaker | Clear 20 Endless Tower floors in one climb | none **(agent: a goal, not an unlock, until a species is meant for it)** |
 
 Rules (both `tools/content_build.py` and `ContentDb`): `ref` and `amount` as in the table (`E023` for a bad reference, `E043` otherwise); `unlocks_species` is a species id (`E023`) and not the starter (`E043`); every species but the starter is unlocked by at least one achievement (`E044`), so none is unobtainable.

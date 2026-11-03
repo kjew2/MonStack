@@ -755,6 +755,41 @@ namespace IdleRng.Sim.Combat
         /// <summary>Each cycle start eats HUNGRY_ENERGY; while fed, +HUNGRY_STAT to every trained stat in the cycle's rank fight. The Hungry Core generic capstone.</summary>
         public const string HungryCore = "hungry_core";
 
+        // Species Fountain Axolotl (#150), coded in Combat/Rules/FountainAxolotl.cs.
+
+        /// <summary>
+        /// Removes the weakness of the unit's element both ways: its hits of its own element take no ELEMENT_WEAK_MULT, and hits of
+        /// the element that beats its own take no ELEMENT_STRONG_MULT against it (both use 1). Its strong matchups still count. The
+        /// Clear Spring native capstone (Fountain Axolotl).
+        /// </summary>
+        public const string ClearSpring = "clear_spring";
+
+        /// <summary>
+        /// Each hit the unit lands is mitigated by the lower of the target's DEF and WIS, physical or magical; MON_SEEP_SHIELD of it
+        /// passes through shields straight to HP. The Aquifer in-run chase capstone (Fountain Axolotl).
+        /// </summary>
+        public const string Seep = "seep";
+
+        /// <summary>
+        /// Each single-target hit of the unit's active skills and basic attacks splits into MON_JETS jets of MON_JET_POWER of its
+        /// power, each a separate hit (own rolls, procs and tallies). Area skills, heals, shields and triggered hits are not split.
+        /// The Six Fountains book chase capstone (Fountain Axolotl).
+        /// </summary>
+        public const string FountainJets = "fountain_jets";
+
+        // Species Candlemane (#141): chase rules, coded in Combat/Rules/Candlemane.cs.
+
+        /// <summary>
+        /// Every heal on the unit also deals MON_PYRE_CONV of the HP healed, plus all the overheal it would lose, as light true
+        /// damage to its current target. The Martyr's Pyre chase capstone.
+        /// </summary>
+        public const string MartyrFlame = "martyr_flame";
+
+        /// <summary>
+        /// HP the unit pays or loses to hits is stored as Radiance (up to max HP); each hit it lands releases MON_SUN_RELEASE of it
+        /// as extra light true damage and heals MON_SUN_HEAL of the release. The Hollow Sun chase capstone.
+        /// </summary>
+        public const string HollowSun = "hollow_sun";
         // Species Keepshell Crab (#152), coded in Combat/Rules/KeepshellCrab.cs.
 
         /// <summary>Against magical hits the unit mitigates with the higher of its WIS and MON_MOAT_DEF x its DEF. The Tide Moat native capstone (Keepshell Crab).</summary>
@@ -779,6 +814,8 @@ namespace IdleRng.Sim.Combat
             MimicCore, Heirloom, Mastery, LimitBreak,
             Hemorrhage, PrivilegedStatus, Equilibrium, Corruption, DeadBranch,
             IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore,
+            ClearSpring, Seep, FountainJets,
+            MartyrFlame, HollowSun,
             TideMoat, Unbreached, Shellcrack };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;

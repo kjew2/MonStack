@@ -67,6 +67,15 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>Set by the before-hit hook: the hit does not happen (no decoy, no roll, no draw).</summary>
         public bool Cancelled;
+
+        /// <summary>
+        /// The share of a flat per-hit addition (fortress_fist's DEF) this hit gets: 1, or 1/MON_JETS for each jet of a fountain_jets
+        /// split, so the original hit's flat addition is split across its jets rather than repeated.
+        /// </summary>
+        public double FlatShare = 1;
+
+        /// <summary>seep lowered the hit's mitigation to the lower of the target's DEF and WIS (for its log line).</summary>
+        public bool SeepLowered;
     }
 
     public static partial class BattleSim

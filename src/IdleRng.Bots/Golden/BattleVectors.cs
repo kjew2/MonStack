@@ -236,12 +236,59 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("4v4 debuff and lock capstones", 11,
                 new[] { Hemorrhage("a_bleed"), Privileged("a_priv"), Equilibrium("a_eq"), CorruptBranch("a_corrupt") },
                 new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
+            // Species Fountain Axolotl (#150): the full kit (elemental_avatar, clear_spring, seep, fountain_jets and the Gill Spray
+            // trigger) on one unit, a seep-only and a jets-only carrier, against the wall rules it breaks (barricade, mana_ward).
+            yield return new Vector("3v3 fountain axolotl vs walls", 13,
+                new[] { Axolotl("a_axolotl"), Seeper("a_seep"), Jetter("a_jets") },
+                new[] { Barricade("b_barricade"), Warded("b_ward"), Mage("b_mage", "nature") });
+            // Species Candlemane (#141): its chase capstones on its own kit (blood_magic, Votive Strike, Halo Mend, Kindled Grace).
+            yield return new Vector("2v2 martyr flame and hollow sun", 13,
+                new[] { Candlemane("a_pyre", RuleModifiers.MartyrFlame), Candlemane("a_sun", RuleModifiers.HollowSun) },
+                new[] { Brawler("b_brawler", "dark"), Healer("b_healer", "water") });
             // Species Keepshell Crab (#152): its chase capstones on its own kit (fortress_fist, tide_moat, Moat Surge) against a
             // tank, a caster and a team that spreads small hits.
             yield return new Vector("2v3 unbreached and shellcrack", 14,
                 new[] { KeepshellCrab("a_keep", RuleModifiers.Unbreached), KeepshellCrab("a_siege", RuleModifiers.Shellcrack) },
                 new[] { Tank("b_tank", "fire"), Mage("b_mage", "nature"), Brawler("b_brawler", "dark") });
         }
+
+        // Species Fountain Axolotl (#150).
+        static Fighter Axolotl(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(320, 60, 520, 300, 160, 160, 210, 420),
+            Skills = { Dmg("riptide", StatIds.Int, 1.3, 2, SkillTarget.Enemy, "water"), Dmg("fountain_spout", StatIds.Int, 0.6, 3, SkillTarget.AllEnemies, "water") },
+            Triggers = { new TriggeredSkill(FightTrigger.OnCrit, Dmg("gill_spray", StatIds.Int, 0.35, 0, SkillTarget.Enemy, "water")) },
+            Rules = { RuleModifiers.ElementalAvatar, RuleModifiers.ClearSpring, RuleModifiers.Seep, RuleModifiers.FountainJets },
+        };
+
+        static Fighter Seeper(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(300, 340, 80, 200, 200, 200, 230, 160),
+            Skills = { Dmg("maul", StatIds.Str, 1.5, 2) },
+            Rules = { RuleModifiers.Seep },
+        };
+
+        static Fighter Jetter(string id) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(300, 300, 80, 200, 260, 200, 240, 300),
+            Skills = { Dmg("lunge", StatIds.Dex, 1.4, 2) },
+            Triggers = { new TriggeredSkill(FightTrigger.OnCrit, Fx("lucky_break", SkillKind.Buff, SkillTarget.Self, StatIds.CritRate, null, 0.1, 0, 2)) },
+            Rules = { RuleModifiers.FountainJets, RuleModifiers.ClearSpring },
+        };
+
+
+        // Species Candlemane (#141): the native kit plus one chase capstone.
+        static Fighter Candlemane(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(560, 300, 80, 700, 160, 120, 200, 200),
+            Skills =
+            {
+                Dmg("votive_strike", StatIds.Hp, 0.12, 2, SkillTarget.Enemy, "light"),
+                Fx("halo_mend", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 1.0, 3, 0),
+            },
+            Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Fx("kindled_grace", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.5, 0, 0)) },
+            Rules = { RuleModifiers.BloodMagic, chase },
+        };
 
         // Species Keepshell Crab (#152): the native kit (Fortress Fist and Tide Moat) plus one chase capstone.
         static Fighter KeepshellCrab(string id, string chase) => new Fighter

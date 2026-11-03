@@ -147,7 +147,8 @@ class EndToEnd(unittest.TestCase):
 
     def test_a_generic_tree_turned_native_only_passes(self):
         # A species lane's flip (#160): same id, nodes and rule capstone; no offer stat or threshold; no MAJOR bump needed.
-        go = self.edit("trees", "blood_magic,tree.blood_magic.name,generic,hp,400,", "blood_magic,tree.blood_magic.name,native,,,")
+        # last_rite stays generic (#160), so the flip is still a change against shipped content.
+        go = self.edit("trees", "last_rite,tree.last_rite.name,generic,hp,400,", "last_rite,tree.last_rite.name,native,,,")
         self.assertEqual(0, self.build(go, ["--baseline", os.path.join(ROOT, "Content")]))
 
     def test_a_second_chase_tree_without_a_book_passes(self):

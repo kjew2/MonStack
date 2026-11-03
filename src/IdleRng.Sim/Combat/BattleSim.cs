@@ -418,7 +418,7 @@ namespace IdleRng.Sim.Combat
             if (r.Tower != null) u.Entropy = Math.Max(0, u.Entropy - r.Tower.EntropyDecay);
             if (r.TideRegen > 0 && Has(u, RuleModifiers.TidalOverflow))
             {
-                double shield = 0, healed = Heal(r, u, r.TideRegen * u.MaxHp * HealScale(r, s), ref shield);
+                double shield = 0, healed = HealHooked(ctx, u, r.TideRegen * u.MaxHp * HealScale(r, s), ref shield);
                 u.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(u.Id, FightAction.TideEvent, u.Id, healed + shield));
             }
@@ -570,7 +570,7 @@ namespace IdleRng.Sim.Combat
             var target = PickEnemy(s, u, rng);
             if (target == null) return;
             double str = Eff(r, u, StatIds.Str), intel = Eff(r, u, StatIds.Int);
-            Hit(r, s, u, target, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), u.Source.Element, null, false, rng, onAction);
+            Strike(r, s, u, target, BasicAttackRaw(r, str, intel), BasicAttackMagical(str, intel), u.Source.Element, null, false, rng, onAction);
         }
 
         /// <summary>
@@ -626,7 +626,7 @@ namespace IdleRng.Sim.Combat
                     else
                     {
                         var t = PickEnemy(s, src, rng);
-                        if (t != null) Hit(r, s, src, t, raw, sk.Magical, element, sk, false, rng, onAction);
+                        if (t != null) Strike(r, s, src, t, raw, sk.Magical, element, sk, triggered, rng, onAction);
                     }
                     break;
                 }
@@ -635,7 +635,8 @@ namespace IdleRng.Sim.Combat
                     double amt = Scaled(r, src, sk) * HealScale(r, s), total = 0;
                     var targets = sk.Target == SkillTarget.LowestAlly ? HealTarget(r, s, src, amt) : Allies(s, src, sk.Target);
                     double shield = 0;
-                    foreach (var t in targets) total += Heal(r, t, amt, ref shield);
+                    var ctx = new RuleCtx(r, s, rng, onAction);
+                    foreach (var t in targets) total += HealHooked(ctx, t, amt, ref shield);
                     src.Tally.HealingDone += total;
                     onAction?.Invoke(new FightAction(src.Id, sk, targets.Count == 1 ? targets[0].Id : null, total, false, false, aoe, false));
                     break;
@@ -687,12 +688,22 @@ namespace IdleRng.Sim.Combat
         /// owner, and a crit landed against its owner. Draw order: see <see cref="Roll"/>. Returns the damage dealt.
         /// </summary>
         static double Hit(FightRules r, FightState s, FightUnit src, FightUnit tgt, double raw, bool magical, string element, CombatSkill sk,
-                          bool aoe, IRandomSource rng, Action<FightAction> onAction)
+                          bool aoe, IRandomSource rng, Action<FightAction> onAction) =>
+            Hit(r, s, src, tgt, raw, magical, element, sk, aoe, rng, onAction, 1.0, out _);
+
+        /// <summary>
+        /// The hit itself. <paramref name="flatShare"/> is the share of the flat per-hit additions this hit gets (1, or 1/MON_JETS for a
+        /// fountain_jets jet); <paramref name="landed"/> says the hit was not cancelled, taken by a decoy or evaded.
+        /// </summary>
+        static double Hit(FightRules r, FightState s, FightUnit src, FightUnit tgt, double raw, bool magical, string element, CombatSkill sk,
+                          bool aoe, IRandomSource rng, Action<FightAction> onAction, double flatShare, out bool landed)
         {
+            landed = false;
             var ctx = new RuleCtx(r, s, rng, onAction);
             var h = new HitInfo
             {
                 Src = src, Tgt = tgt, Raw = raw, Magical = magical, Element = element, Skill = sk, Aoe = aoe, Triggered = s.TriggerDepth > 0,
+                FlatShare = flatShare,
             };
             HookBeforeHit(ctx, h);
             if (h.Cancelled) return 0;
@@ -710,6 +721,7 @@ namespace IdleRng.Sim.Combat
                            : EvadeChance(r, Eff(r, tgt, StatIds.Dex), Eff(r, src, StatIds.Dex));
             h.Mitigation = Eff(r, tgt, magical ? StatIds.Wis : StatIds.Def);
             HookConvert(ctx, h);
+            double seepDefence = SeepConvert(ctx, h);   // fountain_axolotl's seep: after every conversion; -1 when it does nothing
             magical = h.Magical; element = h.Element; raw = h.Raw;
 
             double tgtFortune = Fortune(r, Eff(r, tgt, StatIds.Luk));
@@ -742,8 +754,9 @@ namespace IdleRng.Sim.Combat
                 if (crit) raw *= CritMult(r, Eff(r, src, StatIds.Dex), Bonus(src, StatIds.CritDmg));
             }
             h.Graze = graze; h.Crit = crit;
+            landed = true;
             bool pierce = element == RuleModifiers.FireElement && Has(src, RuleModifiers.FirePierce);
-            double elementMult = r.ElementMult(element, tgt.Source.Element);
+            double elementMult = ClearSpringMult(ctx, src, tgt, element, r.ElementMult(element, tgt.Source.Element));
             raw *= pierce ? Math.Max(1.0, elementMult) * (1 + r.FireBonus) : elementMult;
             double dmgBonus = Bonus(src, StatIds.DmgDealt);
             if (dmgBonus != 0) raw *= Math.Max(0.0, 1 + dmgBonus);
@@ -762,14 +775,16 @@ namespace IdleRng.Sim.Combat
                 if (tgt.Guard > 0 && GuardActive(s, tgt)) after *= Math.Max(0.0, 1 - tgt.Guard);
             }
             HookHitMitigated(ctx, h, ref after);   // the species rules' hook before the shield (unbreached's wall)
-            double dealt = Absorb(ctx, src, tgt, after, element);
+            double shieldBefore = tgt.Shield, seepPass = seepDefence >= 0 ? SeepPass(r, after) : 0;
+            double dealt = Absorb(ctx, src, tgt, after, element, seepPass);
             h.Dealt = dealt; h.Mitigated = mitigated;
+            if (seepDefence >= 0) LogSeep(ctx, h, seepDefence, shieldBefore, after);
 
             if (crit) src.Tally.Crits++;
             onAction?.Invoke(new FightAction(src.Id, sk, tgt.Id, dealt, crit, false, aoe, false, graze, lucky));
             if (dealt > 0 && r.DrainFrac > 0 && src.Alive && Has(src, RuleModifiers.AbyssalDrain))
             {
-                double shield = 0, healed = Heal(r, src, r.DrainFrac * dealt * HealScale(r, s), ref shield, r.DrainShieldCap);
+                double shield = 0, healed = HealHooked(ctx, src, r.DrainFrac * dealt * HealScale(r, s), ref shield, r.DrainShieldCap);
                 src.Tally.HealingDone += healed;
                 if (healed + shield > 0) onAction?.Invoke(new FightAction(src.Id, FightAction.DrainEvent, src.Id, healed + shield));
             }
@@ -827,12 +842,24 @@ namespace IdleRng.Sim.Combat
         }
 
         /// <summary>
+        /// <see cref="Heal"/>, then the Healed hook (specs/16 section 6.4) with the HP restored and the overheal that went into
+        /// neither HP nor a shield. Every skill, trigger and rule heal comes through here (not a boss phase's failed-check heal).
+        /// </summary>
+        static double HealHooked(RuleCtx c, FightUnit t, double amount, ref double shield, double overflowCap = 0)
+        {
+            double before = shield;
+            double healed = Heal(c.Rules, t, amount, ref shield, overflowCap);
+            HookHealed(c, t, healed, Math.Max(0.0, amount - healed - (shield - before)));
+            return healed;
+        }
+
+        /// <summary>
         /// Shield first, then HP (the lanes' HP-damage hook sits between them). Records damage and kills; a blow that would kill
         /// meets root_rebirth first, then the would-die hook. Element null = no per-element tally.
         /// </summary>
-        static double Absorb(RuleCtx c, FightUnit src, FightUnit tgt, double amount, string element)
+        static double Absorb(RuleCtx c, FightUnit src, FightUnit tgt, double amount, string element, double pastShield = 0)
         {
-            double absorbed = Math.Min(tgt.Shield, amount);
+            double absorbed = Math.Min(tgt.Shield, amount - pastShield);   // pastShield: seep's share goes straight to HP
             tgt.Shield -= absorbed;
             double hpDamage = amount - absorbed;
             HookHpDamage(c, src, tgt, ref hpDamage);
