@@ -159,6 +159,29 @@ namespace IdleRng.Sim.Tests
             }
         }
 
+        [Test]
+        public void BraveHeart_ADefaultIsNeverFollowedByAnExtraAction()
+        {
+            // Cap 2: act (1 action), double_turn_start (2), a pip (3): the next turn starts on an odd count, where double_turn_start
+            // would grant an extra action after any action. A Default is no action, so nothing follows it (specs/16 section 6.4).
+            var r = Rules;
+            Assert.That(r.ExtraActionsCap, Is.EqualTo(2));
+            var s = BattleSim.Start(r, new[] { Harmless("a", null) }, new[] { Dummy("b") });
+            s.Units[0].Source.Rules.AddRange(new[] { RuleModifiers.BraveHeart, RuleModifiers.DoubleTurnStart });
+            var mine = Run(r, s, 0.99, 200).Where(x => x.Actor == "a").ToList();
+            int defaults = 0;
+            for (int i = 0; i + 1 < mine.Count; i++)
+            {
+                if (mine[i].Event != BattleSim.BraveEvent || mine[i].Amount == 0) continue;
+                defaults++;
+                Assert.That(mine[i + 1].Event, Is.Not.EqualTo(FightAction.DoubleTurnEvent), "no extra action after a Default");
+                Assert.That(mine[i + 1].Event == BattleSim.BraveEvent && mine[i + 1].Amount == 0, Is.False, "no pip spent after a Default");
+            }
+            Assert.That(defaults, Is.GreaterThan(r.BraveMax), "it Defaults again after spending pips");
+            Assert.That(mine.Count(x => x.Event == FightAction.DoubleTurnEvent), Is.EqualTo(1),
+                "the second doubled turn would have come after a Default; it is not granted");
+        }
+
         // ------------------------------------------------------------------ one_more
 
         [Test]
