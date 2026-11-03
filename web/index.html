@@ -393,6 +393,34 @@ small, .small { font-size: 12px; }
 .now.event { border-color: var(--gold); } .now.event b { color: var(--gold); }
 .tipword { text-decoration: underline dotted; text-underline-offset: 2px; }
 .tslot { min-height: 34px; } .tslot.empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 0 10px; }
+/* ---- Endless Tower screen (specs/28 section 9 step 5): a team slot with its rulebook line, the mutator list, the next floors with
+   their squads, the climb's result, and the 4v4 playback (no unit spans the row) with its mutators and rule-firing lines. */
+.tslot2 { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; border-bottom: 1px solid var(--line-faint); }
+.tslot2:last-child { border-bottom: 0; }
+.trules { padding-left: 30px; min-height: 32px; }
+.emuts { display: flex; flex-direction: column; gap: 8px; }
+.emut { padding: 6px 10px; border-left: 3px solid var(--line); border-radius: var(--r-xs); }
+.emut.on { border-left-color: var(--epic); background: var(--epic-deep); }
+.emut.on .tag { border-color: var(--epic); color: var(--epic-stroke); }
+.efloors { display: flex; flex-direction: column; gap: 10px; }
+.efloor { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--line-faint); }
+.efloor:last-child, .efloors details > .efloor:last-child { border-bottom: 0; padding-bottom: 0; }
+.efloors details { display: flex; flex-direction: column; gap: 10px; }
+.efloors details > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.efloors details[open] > summary { margin-bottom: 6px; }
+.efloor.elite { border-left: 3px solid var(--gold); padding-left: 8px; }
+.tag.elite { border-color: var(--gold); color: var(--gold); background: var(--gold-deep); }
+.tag.hint { border-style: dashed; color: var(--muted); background: transparent; }
+.efoes { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
+.efoe { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.efoe b { font-weight: 700; }
+.eresult { display: flex; flex-direction: column; gap: 10px; }
+.epay { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+.epay [data-id=endless-shards] { font: 700 18px var(--font-title); }
+.epay .muted[data-id=endless-shards] { font: 600 13px var(--font-display); }
+.units.endless .unit.foe { grid-column: auto; }
+.alog .gambit { color: var(--epic); font-style: italic; }
+.now.gambit { border-color: var(--epic); background: var(--epic-deep); } .now.gambit b { color: var(--epic); }
 .speed { display: flex; align-items: center; gap: 6px; }
 .speed > span { flex: 1; }
 .speed button { min-height: 44px; min-width: 56px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel-2); font: 600 13px var(--font-display); color: var(--muted); }
