@@ -562,6 +562,46 @@
       "fuse_b": null
     },
     {
+      "id": "brave_heart",
+      "name_key": "tree.brave_heart.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "one_more",
+      "name_key": "tree.one_more.name",
+      "kind": "generic",
+      "offer_stat": "luk",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "guard_break",
+      "name_key": "tree.guard_break.name",
+      "kind": "generic",
+      "offer_stat": "str",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "latent_power",
+      "name_key": "tree.latent_power.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
       "id": "lone_wolf",
       "name_key": "tree.lone_wolf.name",
       "kind": "generic",

@@ -644,6 +644,33 @@ namespace IdleRng.Sim.Combat
         /// <summary>A ward of MON_WARD_WIS x WIS takes MON_WARD_SHARE of each blow's HP damage; while it holds, cooldowns tick MON_WARD_CDR faster.</summary>
         public const string ManaWard = "mana_ward";
 
+        // Idea-pool lane C (#136): turn-gauge rules, coded in Combat/Rules/LaneC.cs.
+
+        /// <summary>
+        /// When the unit's turn comes at full HP or with a shield and it holds fewer than MON_BRAVE_MAX pips, it Defaults: no action,
+        /// +1 pip, MON_BRAVE_GUARD less hit damage until its next turn. Otherwise it acts, then spends its pips as extra actions in a
+        /// row (under MON_EXTRA_ACTIONS_CAP; the rest wait). The Brave Heart generic capstone.
+        /// </summary>
+        public const string BraveHeart = "brave_heart";
+
+        /// <summary>
+        /// A crit or a strong-element hit by the unit refunds MON_ONE_MORE of a full gauge, once per action, never past a full gauge.
+        /// The One More generic capstone.
+        /// </summary>
+        public const string OneMore = "one_more";
+
+        /// <summary>
+        /// Each enemy of the unit has MON_BREAK_PIPS guard pips; the unit's crits and strong-element hits strip one. At 0 the enemy
+        /// loses its next action and takes x(1 + MON_BREAK_BONUS) hit damage until it acts again; then its pips refill. The Guard
+        /// Break generic capstone.
+        /// </summary>
+        public const string GuardBreak = "guard_break";
+
+        /// <summary>
+        /// After the unit's MON_LATENT_ACTIONS-th action, its stats but HP rise by MON_LATENT_BONUS (of base) for the rest of the
+        /// fight. The Latent Power generic capstone.
+        /// </summary>
+        public const string LatentPower = "latent_power";
         // ---- idea-pool lane E: team size and mode (#138, specs/16 section 6.2)
 
         /// <summary>Decided at fight start: alone on its side, all the unit's stats rise by MON_LONE_BONUS; with allies they fall by MON_LONE_MALUS.</summary>
@@ -659,6 +686,7 @@ namespace IdleRng.Sim.Combat
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
             Resentment, Vantage, DeathsDoor, Barricade, ManaWard,
+            BraveHeart, OneMore, GuardBreak, LatentPower,
             LoneWolf, Arise, LastRite };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;

@@ -234,13 +234,16 @@ namespace IdleRng.Sim.Combat
                 do
                 {
                     if (extra != null) onAction?.Invoke(new FightAction(actor.Id, extra, actor.Id, 0));
+                    actor.TurnAction = extras;
+                    int counted = actor.Tally.Actions;
                     Act(rules, s, actor, rng, onAction);
+                    bool acted = actor.Tally.Actions > counted;   // a rule hook may skip the action (BeforeAction): no extra action follows it
                     HookAfterAction(ctx, actor);
                     ProcessDeaths(ctx);
                     CheckPhases(rules, s, rng, onAction);
                     var o = Decide(s, actor.Side);
                     if (o != FightOutcome.Ongoing) return s.Outcome = o;
-                    extra = extras < rules.ExtraActionsCap ? ExtraAction(ctx, actor) : null;
+                    extra = acted && extras < rules.ExtraActionsCap ? ExtraAction(ctx, actor) : null;
                     extras++;
                 } while (extra != null);
             }

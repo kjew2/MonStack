@@ -702,6 +702,41 @@
       "value": 0.5
     },
     {
+      "key": "MON_BRAVE_MAX",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "MON_BRAVE_GUARD",
+      "type": "double",
+      "value": 0.3
+    },
+    {
+      "key": "MON_ONE_MORE",
+      "type": "double",
+      "value": 0.4
+    },
+    {
+      "key": "MON_BREAK_PIPS",
+      "type": "int",
+      "value": 4
+    },
+    {
+      "key": "MON_BREAK_BONUS",
+      "type": "double",
+      "value": 0.5
+    },
+    {
+      "key": "MON_LATENT_ACTIONS",
+      "type": "int",
+      "value": 8
+    },
+    {
+      "key": "MON_LATENT_BONUS",
+      "type": "double",
+      "value": 0.3
+    },
+    {
       "key": "MON_LONE_BONUS",
       "type": "double",
       "value": 0.4
