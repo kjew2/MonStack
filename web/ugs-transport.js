@@ -8,6 +8,7 @@
 //   await t.commit({ deviceId, fromSeq, fromHash, commands: [{ k, a }], toHash, contentVersion })
 //                                                       -> { code, accepted, index, reason, seq, hash, serverSec, day }
 //   await t.endlessBoard(season, top)                  -> { season, total, top: [{ rank, name, floor, you }], you }
+//   await t.profile(of)                                -> { found, profile }  (of: whose, a UGS player id; empty: the caller's)
 //
 // `code` is "None" for an accepted call, else the rejection (NotHolder, Stale, ContentStale, Mismatch, Refused): a verdict.
 // Anything else (no network, a timeout, 401, 429, 5xx, an answer that is not the module's) throws MonStackUgsTransport.Error
@@ -102,6 +103,9 @@
       },
       async endlessBoard(season, top) {
         return call('EndlessBoard', { season: season == null ? -1 : season, top: top || 0 });
+      },
+      async profile(of) {
+        return call('Profile', { of: of || '' });
       },
     };
   }

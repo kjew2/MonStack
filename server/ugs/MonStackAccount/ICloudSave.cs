@@ -4,26 +4,38 @@ using System.Threading.Tasks;
 
 namespace MonStackAccount
 {
-    /// <summary>Whose items: a player's (the account, specs/27 section 3.1) or a custom entity's (game-wide data such as a board).</summary>
+    /// <summary>
+    /// Whose items, in which access class (specs/27 section 3.3.1): a player's private items (the account, section 3.1), a
+    /// player's protected items (what others see: the profile), or a custom entity's private items (game-wide data: the boards).
+    /// </summary>
     public readonly struct CloudSaveOwner : IEquatable<CloudSaveOwner>
     {
-        CloudSaveOwner(string id, bool custom) { Id = id; Custom = custom; }
+        CloudSaveOwner(string id, bool custom, bool shown) { Id = id; Custom = custom; Protected = shown; }
 
         public string Id { get; }
 
         /// <summary>True for a custom entity (a custom id), false for a player.</summary>
         public bool Custom { get; }
 
+        /// <summary>
+        /// True for a player's protected items: only the server writes them, the player can read them, and their values are JSON
+        /// objects (so they can be indexed), not JSON text.
+        /// </summary>
+        public bool Protected { get; }
+
         public static CloudSaveOwner Player(string playerId) =>
-            new CloudSaveOwner(string.IsNullOrEmpty(playerId) ? throw new ArgumentException("a player id is required") : playerId, false);
+            new CloudSaveOwner(string.IsNullOrEmpty(playerId) ? throw new ArgumentException("a player id is required") : playerId, false, false);
+
+        public static CloudSaveOwner PlayerProtected(string playerId) =>
+            new CloudSaveOwner(string.IsNullOrEmpty(playerId) ? throw new ArgumentException("a player id is required") : playerId, false, true);
 
         public static CloudSaveOwner Entity(string customId) =>
-            new CloudSaveOwner(string.IsNullOrEmpty(customId) ? throw new ArgumentException("a custom id is required") : customId, true);
+            new CloudSaveOwner(string.IsNullOrEmpty(customId) ? throw new ArgumentException("a custom id is required") : customId, true, false);
 
-        public bool Equals(CloudSaveOwner o) => Id == o.Id && Custom == o.Custom;
+        public bool Equals(CloudSaveOwner o) => Id == o.Id && Custom == o.Custom && Protected == o.Protected;
         public override bool Equals(object obj) => obj is CloudSaveOwner o && Equals(o);
-        public override int GetHashCode() => (Id ?? "").GetHashCode() * 2 + (Custom ? 1 : 0);
-        public override string ToString() => (Custom ? "custom:" : "player:") + Id;
+        public override int GetHashCode() => (Id ?? "").GetHashCode() * 4 + (Custom ? 1 : 0) + (Protected ? 2 : 0);
+        public override string ToString() => (Custom ? "custom:" : Protected ? "protected:" : "player:") + Id;
     }
 
     /// <summary>One stored item: its text and its write lock.</summary>
@@ -48,9 +60,10 @@ namespace MonStackAccount
     }
 
     /// <summary>
-    /// The slice of UGS Cloud Save the module uses: <b>private</b> items only (the access class only the server reads and writes,
-    /// specs/27 section 3.3.1), of a player or of a custom entity. Values are JSON text stored as a JSON string, so a stored part
-    /// reads back byte for byte and its hash holds. Write-lock semantics are Cloud Save's: a write that names a lock replaces the
+    /// The slice of UGS Cloud Save the module uses (specs/27 section 3.3.1): <b>private</b> items of a player or of a custom entity
+    /// (only the server reads and writes them), whose values are JSON text stored as a JSON string, so a stored part reads back byte
+    /// for byte and its hash holds; and a player's <b>protected</b> items (only the server writes them), whose values are JSON
+    /// objects and read back as compact JSON text. Write-lock semantics are Cloud Save's: a write that names a lock replaces the
     /// item only while the lock is current, and one that names none replaces it unconditionally (or creates it). Implemented by
     /// <see cref="UgsCloudSave"/> on Cloud Code and by an in-memory fake in the tests.
     /// </summary>

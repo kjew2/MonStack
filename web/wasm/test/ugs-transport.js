@@ -79,6 +79,15 @@ async function rejects(p, check) {
   await t.endlessBoard(7, 5);
   assert.deepStrictEqual(f.calls[1].body, { params: { season: 7, top: 5 } });
 
+  // profile: the caller's own unless a player is named.
+  f = fake(reply(200, { output: { found: false } }), reply(200, { output: { found: true, profile: { Name: 'Misty' } } }));
+  t = T.create({ auth, fetch: f });
+  assert.strictEqual((await t.profile()).found, false);
+  assert.deepStrictEqual(f.calls[0].body, { params: { of: '' } });
+  assert.strictEqual((await t.profile('P2')).profile.Name, 'Misty');
+  assert.ok(f.calls[1].url.endsWith('/modules/MonStackAccount/Profile'));
+  assert.deepStrictEqual(f.calls[1].body, { params: { of: 'P2' } });
+
   // Failures that are not verdicts: retryable.
   const retryable = (status) => (e) => { assert.ok(e instanceof T.Error, e); assert.strictEqual(e.retryable, true, e.message); assert.strictEqual(e.status, status); };
   for (const s of [401, 408, 429, 500, 503]) {

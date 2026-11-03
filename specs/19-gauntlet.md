@@ -61,6 +61,7 @@ After `finishRun` seals the monster, `web/run.js` shows the wheel before the gra
 
 - A slowing reel of the floors fought, highest on top: it starts on floor 1 and eases out (about 1.6 to 5 s, longer for higher climbs) onto the floor that beat the monster, with the enemy's name under the pointer. Floors won are ticked; up to two unfought floors above show "?". A cleared tower lands on a "Tower cleared" row.
 - Then the comic defeat: the killer lunges and the monster is launched off screen or turned to ash (picked from the result hash, cosmetic only); a cleared tower gets a victory hop. The Legacy Title shows as "Floor N: <title>", and a button goes on to the grade screen.
+- The reel is shared: Dungeon attempts and Endless Tower climbs play out on it too (`specs/21` section 8).
 - Tapping the wheel or the Skip button lands it at once. With `prefers-reduced-motion` the wheel opens already landed and the defeat is a still pose.
 - The grade screen and every Vault card show "Floor N: <title>"; there is no replay of the wheel. The rank stays the grade (kj, 2026-10-30). Entries sealed before the gauntlet existed have no title and show none.
 

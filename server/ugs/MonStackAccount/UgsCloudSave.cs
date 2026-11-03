@@ -14,7 +14,8 @@ namespace MonStackAccount
 {
     /// <summary>
     /// <see cref="ICloudSave"/> on UGS Cloud Save through the Cloud Code C# SDK (Com.Unity.Services.CloudCode.Apis): private items
-    /// with the module's service token, so only the module reads or writes them (specs/27 section 3.3.1). Not covered by the
+    /// with the module's service token, so only the module reads or writes them, and a player's protected items, which only the
+    /// module writes (specs/27 section 3.3.1). Not covered by the
     /// in-process tests (they use a fake with the same semantics); the remote run in server/ugs/README.md covers it.
     /// </summary>
     public sealed class UgsCloudSave : ICloudSave
@@ -38,8 +39,8 @@ namespace MonStackAccount
             string after = null;
             for (int guard = 0; guard < 1000; guard++)
             {
-                var r = owner.Custom
-                    ? await _api.GetPrivateCustomItemsAsync(_ctx, Token, Project, owner.Id, list, after).ConfigureAwait(false)
+                var r = owner.Custom ? await _api.GetPrivateCustomItemsAsync(_ctx, Token, Project, owner.Id, list, after).ConfigureAwait(false)
+                    : owner.Protected ? await _api.GetProtectedItemsAsync(_ctx, Token, Project, owner.Id, list, after).ConfigureAwait(false)
                     : await _api.GetPrivateItemsAsync(_ctx, Token, Project, owner.Id, list, after).ConfigureAwait(false);
                 var page = r.Data?.Results ?? new List<Item>();
                 foreach (var it in page) found.Add(new SavedItem(it.Key, Text(it.Value), it.WriteLock));
@@ -51,19 +52,19 @@ namespace MonStackAccount
 
         public async Task<IReadOnlyList<string>> KeysAsync(CloudSaveOwner owner, string after)
         {
-            var r = owner.Custom
-                ? await _api.GetPrivateCustomKeysAsync(_ctx, Token, Project, owner.Id, after).ConfigureAwait(false)
+            var r = owner.Custom ? await _api.GetPrivateCustomKeysAsync(_ctx, Token, Project, owner.Id, after).ConfigureAwait(false)
+                : owner.Protected ? await _api.GetProtectedKeysAsync(_ctx, Token, Project, owner.Id, after).ConfigureAwait(false)
                 : await _api.GetPrivateKeysAsync(_ctx, Token, Project, owner.Id, after).ConfigureAwait(false);
             return (r.Data?.Results ?? new List<KeyMetadata>()).Select(k => k.Key).ToList();
         }
 
         public async Task<string> SetAsync(CloudSaveOwner owner, string key, string value, string writeLock)
         {
-            var body = new SetItemBody(key, value, writeLock);
+            var body = new SetItemBody(key, Value(owner, value), writeLock);
             try
             {
-                var r = owner.Custom
-                    ? await _api.SetPrivateCustomItemAsync(_ctx, Token, Project, owner.Id, body).ConfigureAwait(false)
+                var r = owner.Custom ? await _api.SetPrivateCustomItemAsync(_ctx, Token, Project, owner.Id, body).ConfigureAwait(false)
+                    : owner.Protected ? await _api.SetProtectedItemAsync(_ctx, Token, Project, owner.Id, body).ConfigureAwait(false)
                     : await _api.SetPrivateItemAsync(_ctx, Token, Project, owner.Id, body).ConfigureAwait(false);
                 return r.Data?.WriteLock;
             }
@@ -76,8 +77,9 @@ namespace MonStackAccount
         public async Task SetManyAsync(CloudSaveOwner owner, IReadOnlyDictionary<string, string> items)
         {
             if (items.Count == 0) return;
-            var body = new SetItemBatchBody(items.Select(kv => new SetItemBody(kv.Key, kv.Value)).ToList());
+            var body = new SetItemBatchBody(items.Select(kv => new SetItemBody(kv.Key, Value(owner, kv.Value))).ToList());
             if (owner.Custom) await _api.SetPrivateCustomItemBatchAsync(_ctx, Token, Project, owner.Id, body).ConfigureAwait(false);
+            else if (owner.Protected) await _api.SetProtectedItemBatchAsync(_ctx, Token, Project, owner.Id, body).ConfigureAwait(false);
             else await _api.SetPrivateItemBatchAsync(_ctx, Token, Project, owner.Id, body).ConfigureAwait(false);
         }
 
@@ -86,12 +88,16 @@ namespace MonStackAccount
             try
             {
                 if (owner.Custom) await _api.DeletePrivateCustomItemAsync(_ctx, Token, Project, owner.Id, key).ConfigureAwait(false);
+                else if (owner.Protected) await _api.DeleteProtectedItemAsync(_ctx, Token, Project, owner.Id, key).ConfigureAwait(false);
                 else await _api.DeletePrivateItemAsync(_ctx, Token, Project, owner.Id, key).ConfigureAwait(false);
             }
             catch (ApiException e) when (e.Response?.StatusCode == HttpStatusCode.NotFound) { }
         }
 
-        /// <summary>Items are stored as JSON strings; the SDK hands the value back as a string or a JSON token.</summary>
+        /// <summary>Private items are stored as JSON strings (byte for byte); protected ones as the JSON object they hold.</summary>
+        static object Value(CloudSaveOwner owner, string text) => owner.Protected ? JToken.Parse(text) : (object)text;
+
+        /// <summary>The SDK hands a value back as a string or a JSON token.</summary>
         static string Text(object value)
         {
             switch (value)

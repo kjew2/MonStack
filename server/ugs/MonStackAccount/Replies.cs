@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using IdleRng.Server;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MonStackAccount
 {
@@ -99,6 +100,16 @@ namespace MonStackAccount
             Top = v.Top.Select(BoardRowReply.From).ToList(),
             You = BoardRowReply.From(v.You),
         };
+    }
+
+    /// <summary>Profile's answer: the profile as its lean JSON (the save's field names), or no profile before its first commit.</summary>
+    public sealed class ProfileReply
+    {
+        [JsonProperty("found")] public bool Found { get; set; }
+        [JsonProperty("profile", NullValueHandling = NullValueHandling.Ignore)] public JObject Profile { get; set; }
+
+        public static ProfileReply From(PlayerProfile p) =>
+            p == null ? new ProfileReply() : new ProfileReply { Found = true, Profile = JObject.Parse(p.ToJson()) };
     }
 
     /// <summary>Warm's answer: proof the worker is up, for the keep-warm schedule (issue #109).</summary>

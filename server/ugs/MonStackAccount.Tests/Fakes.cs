@@ -44,6 +44,10 @@ namespace MonStackAccount.Tests
                 throw new ArgumentException("Cloud Save rejects the key '" + key + "'");
         }
 
+        /// <summary>A protected item holds a JSON object (UgsCloudSave writes it parsed), so it reads back as compact JSON.</summary>
+        static string Stores(CloudSaveOwner owner, string value) =>
+            owner.Protected ? Newtonsoft.Json.Linq.JObject.Parse(value).ToString(Newtonsoft.Json.Formatting.None) : value;
+
         async Task Hook(string op, string key)
         {
             Func<Task> h = null;
@@ -90,7 +94,7 @@ namespace MonStackAccount.Tests
                 var d = Items(owner);
                 if (writeLock != null && (!d.TryGetValue(key, out var cur) || cur.Lock != writeLock)) throw new WriteConflictException(key);
                 string l = "lock" + (++_locks).ToString(CultureInfo.InvariantCulture);
-                d[key] = new Stored { Value = value, Lock = l };
+                d[key] = new Stored { Value = Stores(owner, value), Lock = l };
                 return l;
             }
         }
@@ -105,7 +109,7 @@ namespace MonStackAccount.Tests
                 Calls.Add("setMany " + owner + " " + string.Join(",", items.Keys));
                 if (FailWrite != null && items.Keys.Any(FailWrite)) throw new InvalidOperationException("Cloud Save unreachable");
                 var d = Items(owner);
-                foreach (var kv in items) d[kv.Key] = new Stored { Value = kv.Value ?? throw new ArgumentNullException(kv.Key), Lock = "lock" + (++_locks).ToString(CultureInfo.InvariantCulture) };
+                foreach (var kv in items) d[kv.Key] = new Stored { Value = Stores(owner, kv.Value ?? throw new ArgumentNullException(kv.Key)), Lock = "lock" + (++_locks).ToString(CultureInfo.InvariantCulture) };
             }
         }
 

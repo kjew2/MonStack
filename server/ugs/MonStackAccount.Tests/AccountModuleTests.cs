@@ -72,7 +72,7 @@ namespace MonStackAccount.Tests
                         Assert.That(p.ParameterType.GetProperties().Select(x => x.Name), Has.None.Contains("Player"), m.Name + "." + p.Name);
                 }
             var functions = typeof(AccountModule).GetMethods().Select(m => m.GetCustomAttribute<CloudCodeFunctionAttribute>()?.Name).Where(n => n != null);
-            Assert.That(functions, Is.EquivalentTo(new[] { "Open", "Commit", "EndlessBoard", "Warm" }));
+            Assert.That(functions, Is.EquivalentTo(new[] { "Open", "Commit", "EndlessBoard", "Profile", "Warm" }));
         }
 
         [Test]
@@ -212,6 +212,33 @@ namespace MonStackAccount.Tests
             Assert.That((req.DeviceId, req.FromSeq, req.Commands[0].ToString(), req.ToHash, req.ContentVersion), Is.EqualTo(("phone", 3, "drill[2]", "t", "v")));
             var openReq = JsonConvert.DeserializeObject<OpenRequest>("{\"deviceId\":\"phone\",\"claim\":true}");
             Assert.That((openReq.DeviceId, openReq.Claim), Is.EqualTo(("phone", true)));
+        }
+
+        [Test]
+        public void TheProfile_IsAProtectedItem_ReadByItsOwnerOrAnyone()
+        {
+            var rig = new Rig();
+            var a = rig.Device(P, "phone");
+            a.Open();
+            var none = rig.Module.Profile(new FakeContext(P), "").GetAwaiter().GetResult();
+            Assert.That((none.Found, none.Profile), Is.EqualTo((false, (JObject)null)), "no profile before a commit that writes one");
+
+            a.SealOne(rig.Now);
+            var mine = rig.Module.Profile(new FakeContext(P), null).GetAwaiter().GetResult();
+            Assert.That(mine.Found, Is.True);
+            Assert.That((string)mine.Profile["Name"], Is.EqualTo(EndlessBoard.FallbackName(P)), "no name yet: the generated one");
+            Assert.That(mine.Profile["Showcase"], Is.Not.Null, "the one sealed monster");
+            Assert.That((string)mine.Profile["BestGrade"], Is.EqualTo(Rig.Db.FightRanks[a.Acct.Records.BestRank].Id));
+
+            a.Do("setName", "Misty");
+            Assert.That(a.Commit().Accepted, Is.True);
+            var seen = rig.Module.Profile(new FakeContext("someone-else"), P).GetAwaiter().GetResult();
+            Assert.That((seen.Found, (string)seen.Profile["Name"]), Is.EqualTo((true, "Misty")), "another player reads it by id");
+
+            Assert.That(rig.Save.Keys(CloudSaveOwner.PlayerProtected(P)), Is.EqualTo(new[] { CloudSaveProfileStore.Key }), "a protected item");
+            Assert.That(rig.Save.Keys(Owner), Has.No.Member(CloudSaveProfileStore.Key), "not among the private account items");
+            Assert.That(rig.Save.Keys(CloudSaveOwner.PlayerProtected("someone-else")), Is.Empty, "a read writes nothing");
+            Assert.That(rig.Module.Profile(new FakeContext("someone-else"), "nobody").GetAwaiter().GetResult().Found, Is.False);
         }
 
         [Test]

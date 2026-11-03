@@ -47,7 +47,8 @@ namespace MonStackAccount
             playerId = context.PlayerId;
             if (string.IsNullOrEmpty(playerId)) throw new InvalidOperationException("this call needs a signed-in player");
             var save = _save(context);
-            return new AccountServer(ModuleContent.Db, new CloudSaveAccountStore(save), _settings.ServerConfig(), new CloudSaveLeaderboardStore(save));
+            return new AccountServer(ModuleContent.Db, new CloudSaveAccountStore(save), _settings.ServerConfig(),
+                new CloudSaveLeaderboardStore(save), new CloudSaveProfileStore(save));
         }
 
         /// <summary>
@@ -81,6 +82,19 @@ namespace MonStackAccount
             if (season < 0) season = EndlessSim.SeasonOf(AccountServer.DayOf(_settings.ServerConfig().NowMs()));
             if (top <= 0) top = IdleRng.Server.EndlessBoard.DefaultTop;
             return BoardReply.From(await server.Board.ReadAsync(player, season, top).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// A player's profile as other players see it (specs/27 section 3.3.2): <paramref name="of"/> names whose (a UGS player id;
+        /// empty for the caller's own). The caller must be signed in; the id only says whose profile to read, never who calls.
+        /// </summary>
+        [CloudCodeFunction("Profile")]
+        public async Task<ProfileReply> Profile(IExecutionContext context, string of)
+        {
+            var server = Server(context, out var player);
+            string whose = string.IsNullOrEmpty(of) ? player : of;
+            if (whose.Length > 128) throw new ArgumentException("not a player id");
+            return ProfileReply.From(await server.Profiles.ReadAsync(whose).ConfigureAwait(false));
         }
 
         /// <summary>

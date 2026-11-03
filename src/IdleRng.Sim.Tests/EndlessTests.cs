@@ -187,6 +187,24 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void Run_KeepsEachFloorsTeamTallies_TheSameAsTheFloorsOwnFight()
+        {
+            var r = EndlessSim.Run(Db, Team(400), 1);
+            foreach (var f in r.Floors)
+            {
+                var fight = EndlessSim.FightFloor(Db, Team(400), 1, f.Floor).fight;
+                var team = fight.Final.Units.Where(u => u.Side == 0 && !u.IsAdd).ToList();
+                Assert.That(f.Team.Count, Is.EqualTo(team.Count));
+                for (int i = 0; i < team.Count; i++)
+                {
+                    Assert.That(f.Team[i].Dealt, Is.EqualTo(team[i].Tally.DamageDealt), "floor " + f.Floor + " slot " + i);
+                    Assert.That(f.Team[i].Taken, Is.EqualTo(team[i].Tally.DamageTaken));
+                    Assert.That(f.Team[i].Healed, Is.EqualTo(team[i].Tally.HealingDone));
+                }
+            }
+        }
+
+        [Test]
         public void Run_NeedsExactlyAFullTeam()
         {
             Assert.Throws<ArgumentException>(() => EndlessSim.Run(Db, Team(400).Take(3).ToArray(), 0));

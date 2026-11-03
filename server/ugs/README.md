@@ -6,7 +6,7 @@ section 10 (the vendor and the spike).
 
 | Path | What |
 |---|---|
-| `MonStackAccount/` | **The account server** (`specs/27` section 10 step 4): a thin shell over `src/IdleRng.Server` with Cloud Save stores. Endpoints `Open`, `Commit`, `EndlessBoard` and `Warm`. |
+| `MonStackAccount/` | **The account server** (`specs/27` section 10 step 4): a thin shell over `src/IdleRng.Server` with Cloud Save stores. Endpoints `Open`, `Commit`, `EndlessBoard`, `Profile` and `Warm`. |
 | `MonStackAccount.Tests/` | Its handlers in process over an in-memory Cloud Save with Cloud Save's write-lock rules (issue #28). In `check.sh`. |
 | `deploy.sh` | Publishes a module for linux-x64, zips `<Module>.ccm` and creates or updates it through the Cloud Code Admin API. `--check` only builds and packages. |
 | `IdleRngBattle/`, `SpikeClient/` | The spike of issue #17 (`specs/08` section 10.1): `ResolveFight` and its test script. Kept for re-measuring; not deployed by CI. |
@@ -18,13 +18,16 @@ section 10 (the vendor and the spike).
 | `Open` | `request: { deviceId, claim }` | `{ code, accepted, account, notice, seq, hash, created, contentVersion, serverSec, day }`; `account` is the `AccountSave` text, gzip then base64 |
 | `Commit` | `request: { deviceId, fromSeq, fromHash, commands: [{ k, a }], toHash, contentVersion }` | `{ code, accepted, index, reason, seq, hash, serverSec, day }` |
 | `EndlessBoard` | `season` (negative: the server's current one), `top` (0: 20; at most 100) | `{ season, total, top: [{ rank, name, floor, you }], you }` |
+| `Profile` | `of`: whose profile (a UGS player id; empty for the caller's own) | `{ found, profile }`, the profile as its lean JSON (`specs/27` section 3.3.2) |
 | `Warm` | none | `{ contentVersion, serverSec }`: the keep-warm target, needs no player |
 
 `code` is `None` for an accepted call, else `NotHolder`, `Stale`, `ContentStale`, `Mismatch` or `Refused` (`specs/27` section 4).
 The player is always the one the Cloud Code context names (the caller's token): no endpoint takes a player id. The page calls
 the module with `web/ugs-transport.js`.
 
-Storage (all Cloud Save **private** items, which only the module's service token reads or writes):
+Storage (Cloud Save **private** items, which only the module's service token reads or writes, except the profile):
+- The profile: the player's **protected** item `profile` (only the module writes it; the player may read it), stored as a JSON
+  object so it can be indexed when profiles are queried across players.
 - The account: the calling player's items under the keys `IdleRng.Server` picks (`head`, `<part>_<seq>_<tag>`,
   `mon-<id>_<seq>_<tag>`, `specs/27` section 4). `head` is replaced only under its Cloud Save write lock; a lost swap is `Stale`.
   Cloud Save has no create-if-absent write, so creating `head` checks it is absent, writes, and reads it back (see
