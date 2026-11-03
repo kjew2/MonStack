@@ -191,8 +191,6 @@
     renderTabs(tabs, s);
     renderModal(modal, s);
     main.scrollTop = prevScroll;
-    const due = modal.hidden && main.querySelector('[data-focus="1"]');
-    if (due) due.scrollIntoView({ block: 'nearest' });   // before the drill pop, which is placed by where the stage ends up
     if (ui.tab !== 'train') $('floats').querySelectorAll('.dpop').forEach((e) => e.remove());   // a drill's pop belongs to the stage, not the other tabs
     if (modal.hidden) { showSpGains(); showDrillPop(); } else $('floats').replaceChildren();
   }
@@ -225,7 +223,7 @@
     if (p.sad) mon.classList.add('sad');
     else if (p.gain) mon.classList.add('hop');
     const layer = $('floats'), app = $('app').getBoundingClientRect(), r = mon.getBoundingClientRect();
-    const pane = $('main').getBoundingClientRect();   // a fight card drawn above can push the stage down: keep the pop on screen
+    const pane = $('main').getBoundingClientRect();   // a card drawn above can push the stage down: keep the pop on screen
     const y = Math.min(Math.max(r.top + r.height * 0.4, pane.top + 40), pane.bottom - 30);
     layer.querySelectorAll('.dpop').forEach((e) => e.remove());   // one at a time: a fast second drill replaces the first
     const el = h('div', { class: 'dpop ' + p.tier, 'data-id': 'drill-pop',
@@ -355,8 +353,6 @@
         s.sp > 0 ? h('div', { class: 'small gems', text: s.sp + ' unspent skill points are lost when you seal. Spend them on the Trees tab first.' }) : null,
         h('button', { class: 'btn primary block', type: 'button', 'data-act': 'seal', text: 'Seal in the Vault', onclick: seal }),
       ]));
-    } else if (s.phase === 'awaitfight') {
-      main.append(fightCard(s));
     }
     const hurt = s.injuries.length ? s.injuries[s.injuries.length - 1] : null;
     if (hurt && hurt.back === s.cycle && s.phase === 'training') main.append(h('div', { class: 'card injury', 'data-id': 'injury' }, [
@@ -456,30 +452,8 @@
     return 'the rest of the cycle and its fight' + (n ? ', then ' + (n === 1 ? 'the next cycle' : 'the next ' + n + ' cycles') : '');
   }
 
-  // The fight card. The first time it shows for a fight (the cycle's actions are spent and no tree offer covers it) it pulses and
-  // scrolls into view, so the player sees the cycle is over (issue #126).
-  let fightCardSeen = null;
-  function fightCard(s) {
-    const opp = s.opponent;
-    const cmp = h('div', { class: 'mini' });
-    C.stats.forEach((st) => {
-      const diff = s.stats[st] - opp.stats[st];
-      cmp.append(h('span', TIP.attrs('stat:' + st + ':vs'), [up(st) + ' ', h('b', { class: diff >= 0 ? 'ok' : 'bad', text: (diff >= 0 ? '+' : '') + num(diff) })]));
-    });
-    const key = s.seed + ':' + s.fightsFought + ':' + s.cycle, fresh = fightCardSeen !== key && !s.offers.length;
-    if (fresh) fightCardSeen = key;
-    return h('div', { class: 'card alert fightcard' + (fresh && !reducedMotion() ? ' due' : ''), 'data-id': 'fight-card', 'data-focus': fresh ? '1' : null }, [
-      h('div', { class: 'row' }, [oppSprite(opp), h('div', { class: 'grow' }, [
-        h('h2', { text: 'Rank ' + opp.letter + ' fight: ' + opp.name, 'data-id': 'fight-opp' }), elementTag(opp.element), oppSkills(opp.skills)])]),
-      h('div', { class: 'small muted', text: 'Your stats against theirs:' }), cmp,
-      ...((m) => [m.element ? h('div', { class: 'vsel ' + m.element.cls, 'data-id': 'fight-element', text: m.element.text }) : null, stakesLine(m)])(matchup(s)),
-      speedToggle(),
-      h('button', { class: 'btn warn block', type: 'button', 'data-act': 'fight', disabled: s.offers.length > 0, text: 'Fight', onclick: fight }),
-    ]);
-  }
-
-  // ---- the matchup of the coming rank fight (issue #126), read from the run state before the fight: both sides (the intro), the
-  // element edge (the engine's multipliers, BRIDGE.md opponent.elementDealt/elementTaken) and the stakes (the fight card).
+  // ---- the matchup of the coming rank fight (issue #126), read from the run state before the fight: both sides, the element edge
+  // (the engine's multipliers, BRIDGE.md opponent.elementDealt/elementTaken) and the stakes, all on the hype screen.
   function matchup(s) {
     const k = C.consts, opp = s.opponent, sp = speciesDef(s.species);
     const elName = (e) => (C.elements[e] || { name: e }).name;
@@ -642,11 +616,13 @@
   // ---- modal: fight result and tree offers
   function renderModal(modal, s) {
     modal.replaceChildren();
-    modal.classList.toggle('bleed', !!(ui.fight && ui.play && ui.play.intro));   // the intro fills the screen edge to edge
-    if (ui.fight && ui.play && ui.play.intro) { modal.hidden = false; fightIntro(modal, ui.play.intro.m); return; }
+    const hype = !ui.fight && !s.offers.length && s.phase === 'awaitfight';   // the fight is due: the hype screen waits for a tap
+    modal.classList.toggle('bleed', hype || !!(ui.fight && ui.play && ui.play.intro));   // the hype screen fills the screen edge to edge
+    if (ui.fight && ui.play && ui.play.intro) { modal.hidden = false; fightIntro(modal, ui.play.intro.m, false); return; }
     if (ui.fight && ui.play) { modal.hidden = false; fightPlayView(modal, ui.fight, rankView(ui.fight, s)); return; }
     if (ui.fight) { modal.hidden = false; fightModal(modal, ui.fight, s); return; }
     if (s.offers.length) { modal.hidden = false; offerModal(modal, s); return; }
+    if (hype) { modal.hidden = false; ui.drillPop = null; fightIntro(modal, matchup(s), true, s.seed + ':' + s.fightsFought + ':' + s.cycle); return; }
     modal.hidden = true;
   }
 
@@ -739,12 +715,12 @@
   }
 
   // Plays fight f (a rank fight by default) unless the speed is Skip. `force` plays it even at Skip, at 1x (the tower's Watch
-  // button); tapping Skip then stops it. `intro` (a rank fight's matchup, issue #126) opens with the versus intro.
+  // button); tapping Skip then stops it. `intro` (a rank fight's matchup, issue #126) opens with the hype screen's "Fight!" beat.
   function startPlayback(f, force, intro) {
     stopPlayback();
     f = f || ui.fight;
     if ((force || ui.speed !== 'skip') && f && f.actions.length) {
-      ui.play = { f: f, i: 0, timer: null, dom: null, intro: intro ? { m: intro, phase: 'vs' } : null };
+      ui.play = { f: f, i: 0, timer: null, dom: null, intro: intro ? { m: intro } : null };
       schedulePlayback();
     }
   }
@@ -754,7 +730,7 @@
   }
   function schedulePlayback() {
     const p = ui.play, speed = Number(ui.speed) || 1;
-    if (p.intro) p.timer = setTimeout(stepIntro, INTRO_MS[p.intro.phase] / speed);
+    if (p.intro) p.timer = setTimeout(stepIntro, INTRO_MS.go / speed);
     else p.timer = setTimeout(stepPlayback, FIGHT_STEP_MS / speed);
   }
   function stepPlayback() {
@@ -766,21 +742,16 @@
     schedulePlayback();
   }
 
-  // ---- the rank fight intro (issue #126; kj, 2026-11-01: about 2 seconds, snappy, skippable; kj, 2026-11-02: pure hype, no
-  // matchup, which the fight card shows before the fight): the screen splits on a diagonal, both monsters slam in with their names,
-  // ranks and elements, "VS" lands, then "Fight!" and the playback. 2x halves it, the Skip speed skips it with the playback, and a
-  // tap (or Enter, Space, Escape) anywhere but the speed buttons ends it at once. Reduced motion keeps the intro but drops its
-  // movement. INTRO_MS are placeholders (presentation only, not a game rule).
-  const INTRO_MS = { vs: 1500, go: 500 };
-  function stepIntro() {
-    const p = ui.play;
-    if (!p || !p.intro) return;
-    if (p.intro.phase === 'vs') {
-      p.intro.phase = 'go';
-      if (p.dom && p.dom.intro && p.dom.intro.isConnected) paintIntroPhase(p.dom.intro, 'go'); else render();
-      schedulePlayback();
-    } else endIntro();
-  }
+  // ---- the hype screen (issue #126; kj, 2026-11-03: it replaced the fight card). When the cycle's actions run out (and no tree
+  // offer is open) the screen splits on a diagonal, both monsters slam in with their names, ranks and elements and "VS" lands; one
+  // line under them gives the element edge and the stakes. It waits for a tap (anywhere but the speed buttons, or Enter or Space)
+  // to fight. Then "Fight!" lands for a beat and the playback starts; a tap (or Escape) cuts the beat short, 2x halves it and the
+  // Skip speed goes straight to the result. The entrance blocks taps for its first moments (.guard), so a fast double tap on the
+  // last drill does not start the fight unseen. Reduced motion keeps the screen but drops its movement. INTRO_MS is a
+  // placeholder (presentation only, not a game rule).
+  const INTRO_MS = { go: 500 };
+  let hypeDrawn = null;   // the fight whose entrance has played, so a re-render (a speed change) does not replay it
+  function stepIntro() { endIntro(); }
   function endIntro() {
     const p = ui.play;
     if (!p || !p.intro) return;
@@ -790,36 +761,39 @@
     render();
     schedulePlayback();
   }
-  function paintIntroPhase(root, phase) {
-    root.classList.toggle('go', phase === 'go');
-    root.querySelector('[data-id=intro-vs]').textContent = phase === 'go' ? 'Fight!' : 'VS';
-  }
-  function fightIntro(modal, m) {
-    const p = ui.play, speed = Number(ui.speed) || 1;
+  // pre: the fight is due and waits for the tap (key names it); else its "Fight!" beat (ui.play.intro), the fight resolved.
+  function fightIntro(modal, m, pre, key) {
+    const speed = Number(ui.speed) || 1;
     const elName = (e) => (C.elements[e] || { name: e }).name;
     const side = (cls, art, name, tag) => h('div', { class: 'hyside ' + cls }, [
       h('div', { class: 'hyart' }, [art]),
       h('div', { class: 'hyplate' }, [h('b', { class: 'hyname', text: name }), h('span', { class: 'hytag', text: tag })]),
     ]);
-    const anim = !p.intro.drawn && !reducedMotion();   // the entrance plays once, not again on a re-render (a speed change)
-    p.intro.drawn = true;
-    const root = h('div', { class: 'hype' + (anim ? ' anim' : ''), 'data-id': 'fight-intro', 'data-ms': String((INTRO_MS.vs + INTRO_MS.go) / speed),
+    const fresh = pre && hypeDrawn !== key;
+    if (pre) hypeDrawn = key;
+    const anim = fresh && !reducedMotion();
+    const go = pre ? h('button', { class: 'btn warn block hygo', type: 'button', 'data-act': 'fight', text: 'Tap to fight' })
+      : h('button', { class: 'linkish', type: 'button', 'data-act': 'intro-skip', text: 'Tap to skip ▸' });
+    const root = h('div', { class: 'hype' + (anim ? ' anim' : '') + (fresh ? ' guard' : '') + (pre ? '' : ' go'), 'data-id': pre ? 'fight-hype' : 'fight-intro',
+      'data-ms': pre ? null : String(INTRO_MS.go / speed),
       role: 'group', 'aria-label': 'Rank ' + m.opp.letter + ' fight: ' + m.you.name + ' versus ' + m.opp.name, tabindex: '-1' }, [
       h('div', { class: 'hyhalf you', 'aria-hidden': 'true' }), h('div', { class: 'hyhalf foe', 'aria-hidden': 'true' }), h('div', { class: 'hyslash', 'aria-hidden': 'true' }),
       h('div', { class: 'hybanner', text: 'Rank ' + m.opp.letter + ' fight' }),
       side('you', sprite(m.you.species, m.you.apex), m.you.name, m.you.rank + ' · ' + elName(m.you.element)),
-      h('div', { class: 'hymark' }, [h('span', { 'data-id': 'intro-vs', 'aria-live': 'polite', text: 'VS' })]),
+      h('div', { class: 'hymark' }, [h('span', { 'data-id': 'intro-vs', 'aria-live': 'polite', text: pre ? 'VS' : 'Fight!' })]),
       side('foe', oppSprite(m.opp), m.opp.name, 'Rank ' + m.opp.letter + ' · ' + elName(m.opp.element)),
-      h('div', { class: 'hyfoot' }, [h('button', { class: 'linkish', type: 'button', 'data-act': 'intro-skip', text: 'Tap to skip ▸' }), speedToggle()]),
+      h('div', { class: 'hyfoot' }, [
+        h('div', { class: 'hystakes' }, [m.element ? h('div', { class: 'vsel ' + m.element.cls, 'data-id': 'fight-element', text: m.element.text }) : null, stakesLine(m)]),
+        go, speedToggle()]),
     ]);
-    // a tap anywhere ends it, except on the speed buttons (they set the speed: 2x reschedules the intro, Skip ends the fight)
-    root.addEventListener('click', (e) => { if (!e.target.closest('.speed')) endIntro(); });
-    root.addEventListener('keydown', (e) => {   // Escape anywhere; Enter or Space on the intro itself (a focused button keeps its own)
-      if (e.key === 'Escape' || (e.target === root && (e.key === 'Enter' || e.key === ' '))) { e.preventDefault(); endIntro(); }
+    const tap = pre ? fight : endIntro;
+    // a tap anywhere fights (or ends the beat), except on the speed buttons (they set the speed: 2x reschedules the beat, Skip ends it)
+    root.addEventListener('click', (e) => { if (!e.target.closest('.speed')) tap(); });
+    root.addEventListener('keydown', (e) => {   // Enter or Space on the screen itself (a focused button keeps its own); Escape ends the beat
+      if ((e.target === root && (e.key === 'Enter' || e.key === ' ')) || (!pre && e.key === 'Escape')) { e.preventDefault(); tap(); }
     });
     modal.append(root);
-    paintIntroPhase(root, p.intro.phase);
-    p.dom = { intro: root };
+    if (!pre) ui.play.dom = { intro: root };
     root.focus({ preventScroll: true });
   }
 
@@ -2441,7 +2415,8 @@
     after(r);
   }
   function fight() {
-    const sp0 = run.state.sp, cycle0 = run.state.cycle, before = matchup(run.state);   // the intro shows the matchup as it was fought
+    if (!run.state || run.state.phase !== 'awaitfight' || ui.fight) return;   // a second tap while the first resolves
+    const sp0 = run.state.sp, cycle0 = run.state.cycle, before = matchup(run.state);   // the "Fight!" beat shows the matchup as it was fought
     const r = run.cmd('fight');
     if (r.ok) {
       ui.fight = r; ui.last = null; ui.showAll = false;

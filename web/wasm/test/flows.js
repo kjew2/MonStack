@@ -80,10 +80,10 @@ const H = require('./harness.js');
   check(await act('fight').isEnabled(), 'a rank fight is due after ' + played.steps + ' steps');
   const clipped = await page.$$eval('#main [data-id=stage], #main [data-id=pad]', (cs) => cs.map((c) => ({ card: Math.round(c.getBoundingClientRect().height), rows: c.scrollHeight })));
   check(clipped.length === 2 && clipped.every((c) => c.card >= c.rows - 1), 'issue #113: the stage and the drill tiles are not squeezed while a fight is due: ' + JSON.stringify(clipped));
+  await page.waitForTimeout(500);                                         // the hype screen's entrance lands
+  await t.layout('fight hype');
   await act('fight').click();
-  await page.locator('[data-id=fight-intro]').waitFor();
-  await t.layout('fight intro');
-  await act('intro-skip').click();
+  if (await page.locator('[data-id=fight-intro]').count()) await act('intro-skip').click();   // the "Fight!" beat, if still up
   await page.locator('[data-id=fight-play]').waitFor();
   await page.waitForTimeout(600);
   await t.layout('fight playback');

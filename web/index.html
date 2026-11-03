@@ -470,9 +470,10 @@ small, .small { font-size: 12px; }
 .speed > span { flex: 1; }
 .speed button { min-height: 44px; min-width: 56px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel-2); font: 600 13px var(--font-display); color: var(--muted); }
 .speed button[aria-pressed="true"] { border-color: var(--gems); background: var(--gems-bg); color: var(--text); }
-/* Rank fight intro (issue #126; 2026-11-02: pure hype): the screen splits on a diagonal (the monster's side blue, the opponent's
-   red), both slam in with their names, ranks and elements, a gold burst carries "VS" (it turns to "Fight!" for the last beat).
-   .anim plays the entrance once; the intro clips everything sliding in, so it never widens the screen. */
+/* Rank fight hype screen (issue #126; 2026-11-03: it replaced the fight card and waits for a tap): the screen splits on a diagonal
+   (the monster's side blue, the opponent's red), both slam in with their names, ranks and elements, a gold burst carries "VS" (it
+   turns to "Fight!" for the beat after the tap). .anim plays the entrance once; .guard ignores taps while it lands (also with
+   reduced motion); the screen clips everything sliding in, so it never widens the screen. */
 #modal.bleed { padding: 0; gap: 0; }
 .hype { position: relative; flex: 1 0 auto; min-height: 100%; overflow: hidden; outline: none; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between;
   gap: 8px; padding: 18px var(--gutter-r) 12px var(--gutter-l); background: var(--hype-bg); color: var(--hype-ink); }
@@ -501,6 +502,9 @@ small, .small { font-size: 12px; }
 .hype.go .hymark span { font-size: 76px; color: var(--gold-pop); -webkit-text-stroke-color: var(--gold-stroke); transform: rotate(-6deg); animation: vs-go .35s cubic-bezier(.2, .8, .3, 1.3) both; }
 .hype.go .hyside.you { transform: translateX(10px); } .hype.go .hyside.foe { transform: translateX(-10px); }
 .hyfoot { display: flex; flex-direction: column; gap: 4px; }
+.hystakes { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: var(--r-sm); background: var(--panel); color: var(--text); }
+.hype.guard { animation: hy-guard .4s steps(1, end); }
+@keyframes hy-guard { from { pointer-events: none; } to { pointer-events: auto; } }
 .hyfoot .linkish { align-self: center; min-height: 44px; color: var(--hype-ink); font-weight: 800; letter-spacing: .04em; }
 .hyfoot .speed > span { color: var(--hype-ink); }
 .hype.anim .hyhalf.you { animation: vs-in-l .35s cubic-bezier(.2, .8, .3, 1.1) both; }
@@ -556,10 +560,8 @@ small, .small { font-size: 12px; }
 .vsel.mixed { color: var(--gold); border-color: var(--gold); background: var(--gold-bg); }
 .stakes { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 /* the fight card, the first time it shows for a fight: a pulse so the player sees the cycle is over (issue #126) */
-.fightcard.due { animation: due-pulse .9s ease-out 2; }
-@keyframes due-pulse { 40% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--gems) 35%, transparent), var(--shadow-card); } }
 @media (prefers-reduced-motion: reduce) {
-  .hype *, .hype::after, .fightcard.due, .dmgfloat span, .fstage .stamp { animation: none !important; }
+  .hype *, .hype::after, .dmgfloat span, .fstage .stamp { animation: none !important; }
   .hype::after { display: none; } .hyside, .uart { transition: none; }
 }
 .alog { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; }
