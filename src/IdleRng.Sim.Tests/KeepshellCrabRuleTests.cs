@@ -101,8 +101,8 @@ namespace IdleRng.Sim.Tests
             Assert.That(db.Text("tree.unbreached_keep.apex"), Is.EqualTo("Citadel Kingcrab"));
             Assert.That(db.Text("tree.siege_pincers.apex"), Is.EqualTo("Siegebreaker Crab"));
 
-            // Every damage skill of the kit reads DEF, so none goes dead under Fortress Fist.
-            foreach (var id in new[] { "moat_surge", "battering_claw", "rubble_rain", "shell_breaker" })
+            // Every skill of the kit reads DEF, so none goes dead under Fortress Fist.
+            foreach (var id in new[] { "moat_surge", "battering_claw", "rubble_rain", "keep_gate", "trophy_wall" })
                 Assert.That(db.MonsterSkills[id].Scales, Is.EqualTo(StatIds.Def), id);
         }
 
@@ -129,6 +129,52 @@ namespace IdleRng.Sim.Tests
             var log = new List<FightAction>();
             BattleSim.Resolve(Rules, new[] { Mon("a", null, "water") }, new[] { Mon("b", null, "nature") }, 1, log.Add);
             Assert.That(log.Any(x => x.Event != null && SpeciesRules.Any(id => x.Event == FightAction.RulePrefix + id)), Is.False);
+        }
+
+        [Test]
+        public void EveryRule_In1v1_4v1_And4v4_IsDeterministic_AndCloneContinuesIdentically()
+        {
+            var r = Rules;
+            Fighter Crab(string id, string rule) => With(Mon(id, x => { x.Hp = 600; x.Str = 0; x.Int = 0; x.Def = 700; x.Luk = 200; }, "water",
+                RuleModifiers.FortressFist, rule), Dmg("moat_surge", 1.3, StatIds.Def));
+            Fighter Caster(string id) => Mon(id, x => { x.Str = 0; x.Int = 400; x.Wis = 200; x.Def = 200; }, "fire");
+            foreach (var rule in SpeciesRules)
+            {
+                var shapes = new (Fighter[] A, Fighter[] B)[]
+                {
+                    (new[] { Crab("c", rule) }, new[] { Caster("foe") }),
+                    (new[] { Crab("c1", rule), Crab("c2", rule), Mon("m3"), Caster("m4") },
+                     new[] { Mon("boss", x => { x.Hp = 2500; x.Str = 0; x.Int = 150; x.Def = 500; x.Spd = 250; }) }),
+                    (new[] { Crab("c1", rule), Crab("c2", rule), Mon("m3"), Mon("m4") },
+                     new[] { Crab("d1", rule), Caster("e2"), Mon("e3", x => x.Str = 120), Caster("e4") }),
+                };
+                foreach (var (A, B) in shapes)
+                {
+                    var once = BattleSim.Resolve(r, A, B, 11);
+                    Assert.That(BattleSim.Resolve(r, A, B, 11).Hash, Is.EqualTo(once.Hash), rule);
+                    Assert.That(once.Outcome, Is.Not.EqualTo(FightOutcome.TimedOut), rule + " " + A.Length + "v" + B.Length);
+
+                    var s = BattleSim.Start(r, A, B);
+                    var rng = new RngStream(BattleSim.StreamName, 11);
+                    var log = new List<FightAction>();
+                    for (int i = 0; i < 60 && s.Outcome == FightOutcome.Ongoing; i++) BattleSim.Step(r, s, rng, log.Add);
+                    Assert.That(log.Any(x => x.Event == FightAction.RulePrefix + rule), Is.True, rule + " fired in " + A.Length + "v" + B.Length);
+                    var copy = s.Clone();
+                    var rngCopy = rng.Clone();
+                    while (BattleSim.Step(r, copy, rngCopy) == FightOutcome.Ongoing) { }
+                    Assert.That(BattleSim.StateHash(copy), Is.EqualTo(once.Hash), rule);
+                }
+            }
+        }
+
+        [Test]
+        public void EvadedHits_LogNoConversion()
+        {
+            // Every roll succeeds: each physical hit is evaded, so shellcrack never logs.
+            var r = Rules;
+            var log = Play(r, Fast("a", x => x.Int = 0, RuleModifiers.Shellcrack), Wall("b", x => { x.Def = 800; x.Dex = 900; }), 3, 0);
+            Assert.That(Hits(log).All(x => x.Evaded), Is.True);
+            Assert.That(log.Any(x => x.Event == BattleSim.CrackEvent), Is.False);
         }
 
         // ------------------------------------------------------------------ tide_moat

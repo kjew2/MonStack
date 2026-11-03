@@ -715,7 +715,7 @@ siege_pincers_n0,siege_pincers,0,1,growth,def,0.1,,,
 siege_pincers_n1,siege_pincers,1,1,stat,def,15,,,
 siege_pincers_n2,siege_pincers,2,1,growth,hp,0.1,,,
 siege_pincers_n3,siege_pincers,3,1,stat,hp,15,,,
-siege_pincers_n4,siege_pincers,4,1,skill,,,trophy_wall,,
+siege_pincers_n4,siege_pincers,4,2,skill,,,trophy_wall,,
 siege_pincers_n5,siege_pincers,5,1,growth,def,0.1,,,
 siege_pincers_n6,siege_pincers,6,1,stat,def,20,,,
-siege_pincers_n7,siege_pincers,7,2,rule,,,,,shellcrack
+siege_pincers_n7,siege_pincers,7,3,rule,,,,,shellcrack

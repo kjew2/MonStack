@@ -307,7 +307,7 @@
       "tree_id": "unbreached_keep",
       "type": "stat_at_least",
       "ref": "def",
-      "amount": 500.0
+      "amount": 750.0
     },
     {
       "id": "unbreached_keep_c2",
@@ -335,7 +335,7 @@
       "tree_id": "siege_pincers",
       "type": "tally_at_least",
       "ref": "damage_water",
-      "amount": 2000.0
+      "amount": 5000.0
     }
   ]
 }

@@ -76,6 +76,12 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>seep lowered the hit's mitigation to the lower of the target's DEF and WIS (for its log line).</summary>
         public bool SeepLowered;
+
+        /// <summary>shellcrack: the target's DEF the hit turned into damage, logged once the hit lands; 0 = none.</summary>
+        public double Cracked;
+
+        /// <summary>tide_moat: the defence the moat used where it beat WIS, logged once the hit lands; 0 = none.</summary>
+        public double Moat;
     }
 
     public static partial class BattleSim

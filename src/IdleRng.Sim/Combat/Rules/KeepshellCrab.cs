@@ -32,10 +32,10 @@ namespace IdleRng.Sim.Combat
             {
                 // The target's DEF stops nothing (this also drops the DEX iron_reflexes adds, and fire_pierce has nothing left to
                 // pierce): it feeds the hit instead.
-                double add = r.CrackDef * Eff(r, h.Tgt, StatIds.Def);
+                double add = r.CrackDef * Eff(r, h.Tgt, StatIds.Def) * h.FlatShare;   // a fountain_jets jet takes its share
                 h.Mitigation = 0;
                 h.Raw += add;
-                if (add > 0) c.Log?.Invoke(new FightAction(h.Src.Id, CrackEvent, h.Tgt.Id, add));
+                h.Cracked = add;
             }
             if (h.Magical && Has(h.Tgt, RuleModifiers.TideMoat))
             {
@@ -43,18 +43,24 @@ namespace IdleRng.Sim.Combat
                 if (moat > h.Mitigation)
                 {
                     h.Mitigation = moat;
-                    c.Log?.Invoke(new FightAction(h.Tgt.Id, MoatEvent, h.Src.Id, moat));
+                    h.Moat = moat;
                 }
             }
         }
 
         /// <summary>
-        /// unbreached, on a hit's damage after mitigation, crit and the tower's multipliers, before the shield: a hit of at most the
-        /// wall deals 0 (it still counts as a hit taken, so OnHitTaken triggers fire with 0 damage) and wears the wall down. Hits
-        /// that get through do not erode it. Only hits come here: true damage and max-HP damage never meet the wall.
+        /// A landed hit's damage after mitigation, crit and the tower's multipliers, before the shield. First the log lines of the
+        /// conversions above (here, so an evaded hit logs nothing), then unbreached: a hit of at most the wall deals 0 (it still
+        /// counts as a hit taken, so OnHitTaken triggers fire with 0 damage) and wears the wall down. Hits that get through do not
+        /// erode it. Only hits come here: true damage and max-HP damage never meet the wall.
         /// </summary>
         static partial void OnHitMitigated_KeepshellCrab(RuleCtx c, HitInfo h, ref double damage)
         {
+            if (c.Log != null)
+            {
+                if (h.Cracked > 0) c.Log(new FightAction(h.Src.Id, CrackEvent, h.Tgt.Id, h.Cracked));
+                if (h.Moat > 0) c.Log(new FightAction(h.Tgt.Id, MoatEvent, h.Src.Id, h.Moat));
+            }
             var t = h.Tgt;
             if (!Has(t, RuleModifiers.Unbreached)) return;
             var r = c.Rules;
