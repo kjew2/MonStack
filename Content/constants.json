@@ -367,6 +367,16 @@
       "value": 1.0
     },
     {
+      "key": "MON_TRIGGER_DEPTH",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "MON_EXTRA_ACTIONS_CAP",
+      "type": "int",
+      "value": 2
+    },
+    {
       "key": "SHARDS_PER_CYCLE",
       "type": "int",
       "value": 5

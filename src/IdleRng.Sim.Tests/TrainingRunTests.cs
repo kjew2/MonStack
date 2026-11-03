@@ -330,5 +330,16 @@ namespace IdleRng.Sim.Tests
                 case StatIds.Luk: s.Luk = v; break;
             }
         }
+
+        [Test]
+        public void RunRuleHooks_AreNoOpsUntilALaneFillsThem()
+        {
+            // Wave 0 (#133): the lane F and G hooks change nothing yet.
+            var s = NewRun();
+            Assert.That(TrainingRun.CanRest(Db, s), Is.True);
+            foreach (var id in StatIds.Trained) Assert.That(TrainingRun.StatCap(Db, s, id), Is.EqualTo(K.StatMax), id);
+            Assert.That(TrainingRun.DrillCost(Db, s), Is.EqualTo(K.DrillEnergyCost * s.Mods.DrillCostMult));
+            Assert.That(TrainingRun.RestEnergy(Db, s), Is.EqualTo((K.RestEnergy + s.Mods.RestEnergyBonus) * s.Mods.RestEnergyMult));
+        }
     }
 }

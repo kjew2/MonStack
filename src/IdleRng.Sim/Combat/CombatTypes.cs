@@ -382,7 +382,7 @@ namespace IdleRng.Sim.Combat
     /// The numbers a fight runs on (specs/16 section 7). Plain data so a server can resolve PvP with the same rules; build it
     /// from content with FromContent.
     /// </summary>
-    public sealed class FightRules
+    public sealed partial class FightRules
     {
         public double GaugeSize { get; set; }
         public int TurnTicks { get; set; }
@@ -477,6 +477,12 @@ namespace IdleRng.Sim.Combat
         /// <summary>abyssal_drain: draining beyond max HP becomes shield up to this fraction of max HP.</summary>
         public double DrainShieldCap { get; set; }
 
+        /// <summary>Loop guard: most trigger levels running at once, MON_TRIGGER_DEPTH (specs/16 section 6.4).</summary>
+        public int TriggerDepth { get; set; } = 2;
+
+        /// <summary>Loop guard: most extra actions a unit takes after one gauge-paid action, MON_EXTRA_ACTIONS_CAP (specs/16 section 6.4).</summary>
+        public int ExtraActionsCap { get; set; } = 2;
+
         /// <summary>The Dungeon's entropy gauge, boss phases and environmental clock; null = off (specs/21 section 3).</summary>
         public TowerRules Tower { get; set; }
 
@@ -506,8 +512,10 @@ namespace IdleRng.Sim.Combat
                 DoubleTurns = k.MonDoubleTurns, RebirthHeal = k.MonRebirthHeal, WailStagger = k.MonWailStagger, WailWither = k.MonWailWither,
                 VeilEvadeCap = k.MonVeilEvadeCap, FeastStr = k.MonFeastStr, CounterMult = k.MonCounterMult, FireBonus = k.MonFireBonus,
                 VeilEvadeBonus = k.MonVeilEvadeBonus, FeastDmg = k.MonFeastDmg, FeastStart = k.MonFeastStart, EchoDecoys = k.MonEchoDecoys, DrainShieldCap = k.MonDrainShieldCap,
+                TriggerDepth = k.MonTriggerDepth, ExtraActionsCap = k.MonExtraActionsCap,
             };
             foreach (var e in c.ElementList) r.StrongVs[e.Id] = e.StrongVs;
+            LoadLanes(r, c);
             return r;
         }
 

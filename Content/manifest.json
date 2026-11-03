@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "6.3",
+  "content_version": "6.4",
   "source_revision": "2026-10-30 overhaul phase 1 placeholder content",
   "tables": {
     "achievements": {
@@ -21,7 +21,7 @@
     },
     "constants": {
       "file": "constants.json",
-      "sha256": "db5353da9978084d505cce28c13ae77e13dbb7871f5cd94952668ca24cedbf90"
+      "sha256": "781a5960369c3935493a12df66e4c13317961dc54f189779abe8c56e0747a515"
     },
     "drill_tiers": {
       "file": "drill_tiers.json",
@@ -100,5 +100,5 @@
       "sha256": "c0990547f40a07b8e887252255f714dcea429276ef14619c531a5a4e1a1d18f1"
     }
   },
-  "content_hash": "7b01a5f6dfbc567b257266637f45192780ee6222ee01e0326fd6a5ded82d30f4"
+  "content_hash": "3827fcd6e4fa67e62b832cea8d01d7fe9687bfa638e06e681efafc4d63358a29"
 }

@@ -13,8 +13,9 @@ namespace IdleRng.Sim.Training
     /// feedback, then a 1v1 rank fight every FIGHT_EVERY cycles; skill points buy tree nodes in order; milestones, books and
     /// chase conditions offer new trees for the 4 slots. Pure functions over a RunState: no clock, IO or Math.Pow; rolls come
     /// from the run's training and draft streams and fight seeds derive from the run seed, so the command log replays exactly.
+    /// Partial: the run-rule hooks are in Rules/RunHooks.cs and the idea-pool lanes' rules in Rules/LaneF.cs and LaneG.cs.
     /// </summary>
-    public static class TrainingRun
+    public static partial class TrainingRun
     {
         public const string TrainingStream = "training", DraftStream = "draft", FightStream = "fight", ChaseStream = "chase", LadderStream = "ladder";
         public const string MonsterId = "monster";
@@ -104,7 +105,9 @@ namespace IdleRng.Sim.Training
             int span = def.GainMax - def.GainMin + 1;
             int raw = def.GainMin + Math.Min(span - 1, (int)(s.Training.NextDouble() * span));
             double before = s.Stats.Get(stat);
-            double after = Math.Min(k.StatMax, before + Math.Floor(raw * Growth(c, s, stat)));
+            double gain = Math.Floor(raw * Growth(c, s, stat));
+            HookDrillGain(c, s, stat, tier, ref gain);
+            double after = Math.Min(StatCap(c, s, stat), before + gain);
             Set(s.Stats, stat, after);
 
             double injuryP = InjuryChance(k, e);
@@ -130,7 +133,7 @@ namespace IdleRng.Sim.Training
                 var others = new List<string>(StatIds.Trained.Length - 1);
                 foreach (var id in StatIds.Trained) if (id != stat) others.Add(id);
                 string echo = others[Math.Min(others.Count - 1, (int)(s.Training.NextDouble() * others.Count))];
-                double eb = s.Stats.Get(echo), ea = Math.Min(k.StatMax, eb + Math.Floor(result.Gain * s.Mods.EchoFrac));
+                double eb = s.Stats.Get(echo), ea = Math.Min(StatCap(c, s, echo), eb + Math.Floor(result.Gain * s.Mods.EchoFrac));
                 Set(s.Stats, echo, ea);
                 result.EchoStat = echo;
                 result.EchoGain = ea - eb;
@@ -143,10 +146,11 @@ namespace IdleRng.Sim.Training
             return result;
         }
 
-        /// <summary>Rest: restore REST_ENERGY plus the Deep Rest bonus (capped at max). Costs 1 AP. No roll.</summary>
+        /// <summary>Rest: restore REST_ENERGY plus the Deep Rest bonus (capped at max). Costs 1 AP. No roll. Refused when a run rule forbids it (<see cref="CanRest"/>).</summary>
         public static RestResult Rest(ContentDb c, RunState s)
         {
             RequirePhase(s, RunPhase.Training, "Rest");
+            if (!CanRest(c, s)) throw new InvalidOperationException("a run rule forbids Rest");
             var k = c.Constants;
             double before = s.Energy;
             s.Energy = Math.Min(k.RunEnergyMax, s.Energy + RestEnergy(c, s));
@@ -169,6 +173,7 @@ namespace IdleRng.Sim.Training
             RequirePhase(s, RunPhase.AwaitFight, "Fight");
             var monster = MonsterFighter(c, s);
             var opponent = OpponentFighter(c, s, s.Rank);
+            HookRankFightStart(c, s, monster, opponent);
             var fight = BattleSim.Resolve(FightRules.FromContent(c), new[] { monster }, new[] { opponent }, FightSeed(s.Seed, s.FightsFought), onAction, onStart);
 
             var result = new RankFightResult
@@ -190,6 +195,7 @@ namespace IdleRng.Sim.Training
                 result.SpGained = s.Mods.LossSp;
             }
             result.RankAfter = s.Rank;
+            HookRankFightResult(c, s, result);
             s.Log.Add(new RunCommand(RunCommandKind.Fight));
             NextCycle(c, s);
             Reconcile(c, s, null);
@@ -298,7 +304,7 @@ namespace IdleRng.Sim.Training
             if (node.Kind == NodeKind.Stat)
             {
                 double before = s.Stats.Get(node.Stat);
-                double add = Math.Max(0, Math.Min(node.Amount, c.Constants.StatMax - before));
+                double add = Math.Max(0, Math.Min(node.Amount, StatCap(c, s, node.Stat) - before));
                 Set(s.Stats, node.Stat, before + add);
                 ts.FlatAdded[Array.IndexOf(StatIds.Trained, node.Stat)] += add;
                 result.StatGain = add;
@@ -345,7 +351,8 @@ namespace IdleRng.Sim.Training
         public static Fighter BuildFighter(ContentDb c, string speciesId, MonsterStats stats, IEnumerable<(string TreeId, TreeRoll Roll, int Bought)> trees)
         {
             var f = new Fighter { Id = MonsterId, Element = c.Species[speciesId].Element, Stats = stats.Clone() };
-            foreach (var (treeId, roll, bought) in trees)
+            var list = trees.ToList();
+            foreach (var (treeId, roll, bought) in list)
             {
                 var nodes = Nodes(c, treeId, roll);
                 for (int i = 0; i < bought; i++)
@@ -359,6 +366,7 @@ namespace IdleRng.Sim.Training
                     }
                 }
             }
+            HookKit(c, speciesId, list, f);
             return f;
         }
 
@@ -438,6 +446,7 @@ namespace IdleRng.Sim.Training
                     if (nodes[i].Kind == NodeKind.Growth && nodes[i].Stat == stat) g += nodes[i].Amount;
                 if (ts.Roll != null && ts.Roll.Stat == stat && ts.Bought >= nodes.Count) g += ts.Roll.CapGrowth;
             }
+            HookGrowth(c, s, stat, ref g);
             if (s.Mods.GlassCannonBonus > 0) g = stat == StatIds.Hp ? 0 : g * (1 + s.Mods.GlassCannonBonus);   // Glass Cannon
             double b = s.Mods.SpecialistBonus;
             if (b == 0) return g;
@@ -502,10 +511,36 @@ namespace IdleRng.Sim.Training
         // ------------------------------------------------------------------ odds (public for the UI and tests)
 
         /// <summary>Energy the next drill costs: DRILL_ENERGY_COST times the run's talent modifier, or 0 while Momentum has a free drill.</summary>
-        public static double DrillCost(ContentDb c, RunState s) => s.FreeDrills > 0 ? 0 : c.Constants.DrillEnergyCost * s.Mods.DrillCostMult;
+        public static double DrillCost(ContentDb c, RunState s)
+        {
+            double cost = s.FreeDrills > 0 ? 0 : c.Constants.DrillEnergyCost * s.Mods.DrillCostMult;
+            HookDrillCost(c, s, ref cost);
+            return cost;
+        }
 
         /// <summary>Energy a rest restores this run before the cap: REST_ENERGY plus the Deep Rest bonus, times Iron Constitution's multiplier.</summary>
-        public static double RestEnergy(ContentDb c, RunState s) => (c.Constants.RestEnergy + s.Mods.RestEnergyBonus) * s.Mods.RestEnergyMult;
+        public static double RestEnergy(ContentDb c, RunState s)
+        {
+            double energy = (c.Constants.RestEnergy + s.Mods.RestEnergyBonus) * s.Mods.RestEnergyMult;
+            HookRestEnergy(c, s, ref energy);
+            return energy;
+        }
+
+        /// <summary>Whether Rest is allowed in this run now (a lane's run rule may forbid it; the UI shows why).</summary>
+        public static bool CanRest(ContentDb c, RunState s)
+        {
+            bool allowed = true;
+            HookRestAllowed(c, s, ref allowed);
+            return allowed;
+        }
+
+        /// <summary>The most a trained stat can reach in this run: STAT_MAX, unless a lane's run rule raises it for that stat.</summary>
+        public static double StatCap(ContentDb c, RunState s, string stat)
+        {
+            double cap = c.Constants.StatMax;
+            HookStatCap(c, s, stat, ref cap);
+            return cap;
+        }
 
         /// <summary>The run's fail chance at energy fraction e: <see cref="FailChance"/> plus the Steady Hands delta, not below 0; 0 with Gambler's Blood.</summary>
         public static double RunFailChance(ContentDb c, RunState s, double e) => s.Mods.NeverFail ? 0 : Math.Max(0, FailChance(c.Constants, e) + s.Mods.FailChanceDelta);
@@ -587,6 +622,7 @@ namespace IdleRng.Sim.Training
             s.ApLeft = CycleAp(c, s);
             s.Sp += c.Constants.SpPerCycle;
             s.Phase = RunPhase.Training;
+            HookCycleStart(c, s);
         }
 
         /// <summary>
@@ -1023,6 +1059,7 @@ namespace IdleRng.Sim.Training
                 w.Str("legendary");
                 w.Bool(m.InjuryImmune); w.F64(m.RestEnergyMult); w.Bool(m.NeverFail); w.F64(m.GlassCannonBonus); w.F64(m.EchoFrac);
             }
+            HookHashRun(w, s);   // lane run-rule state, only for runs that have it
             return Sha256.Hex(Sha256.Compute(w.ToArray()));
         }
 

@@ -59,6 +59,12 @@ namespace IdleRng.Bots.Balance
         /// </summary>
         public bool BookCanary { get; set; } = true;
 
+        /// <summary>
+        /// The trees the tree power section measures (TreePower), in this order; null = every generic tree whose capstone is a
+        /// rule node (TreePower.Trees). Any tree id works, so a test can measure a chase tree's capstone.
+        /// </summary>
+        public IList<string> PowerTrees { get; set; }
+
         /// <summary>Worker threads (1 = serial). Results are collected by index, so the report does not depend on it.</summary>
         public int Jobs { get; set; } = 1;
     }
@@ -430,6 +436,12 @@ namespace IdleRng.Bots.Balance
         /// <summary>The book canary pass (BalanceOptions.BookCanary): the same cells, every run bringing every skill book. Empty when not run.</summary>
         public List<CellSummary> BookCells { get; set; } = new List<CellSummary>();
 
+        /// <summary>Whether the tree power section ran: it needs the focus policy (TreePower.Policy).</summary>
+        public bool TreePowerRan { get; set; }
+
+        /// <summary>Tree power (TreePower): per measured tree, a row per species and a pooled row. Empty when no tree qualifies.</summary>
+        public List<TreePowerSummary> TreePower { get; set; } = new List<TreePowerSummary>();
+
         /// <summary>The loose sanity checks (BalanceChecks), evaluated over everything above.</summary>
         public List<CheckResult> Checks { get; set; } = new List<CheckResult>();
     }
@@ -464,6 +476,10 @@ namespace IdleRng.Bots.Balance
                     if (!c.SkillBooks.ContainsKey(b)) throw new ArgumentException($"unknown skill book '{b}'");
             if (books != null && o.OwnBooks) throw new ArgumentException("pass either a list of books or own books, not both");
             var mods = TalentMods(c, o.Talents);
+            var powerTrees = o.PowerTrees == null ? TreePower.Trees(c) : o.PowerTrees.Select(id =>
+                c.Trees.TryGetValue(id, out var t) ? t : throw new ArgumentException($"unknown tree '{id}'")).ToList();
+            if (powerTrees.Select(t => t.Id).Distinct().Count() != powerTrees.Count) throw new ArgumentException("a power tree is listed twice");
+            if (powerTrees.Any(t => t.Nodes.Count == 0)) throw new ArgumentException("a power tree has no nodes");
 
             var runs = PlayAll(c, o, policies, species, books, mods);
             var report = new BalanceReport
@@ -474,6 +490,12 @@ namespace IdleRng.Bots.Balance
                 GauntletBossEvery = c.Constants.GauntletBossEvery,
             };
             report.Cells = Summarise(c, o, policies, species, runs);
+            int focus = policies.IndexOf(TreePower.Policy);
+            if (focus >= 0)
+            {
+                report.TreePowerRan = true;
+                report.TreePower = MeasureTrees(c, o, species, new ArraySegment<RunSample>(runs, focus * species.Count * o.Seeds, species.Count * o.Seeds), powerTrees);
+            }
             if (books == null && !o.OwnBooks && o.BookCanary && c.SkillBooks.Count > 0)
             {
                 var all = c.SkillBooks.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
@@ -525,6 +547,16 @@ namespace IdleRng.Bots.Balance
                     cells.Add(CellSummary.From(species[s], policies[p], c.FightRanks.Count,
                         new ArraySegment<RunSample>(runs, p * perPolicy + s * o.Seeds, o.Seeds), c.Constants.GauntletBossEvery));
             return cells;
+        }
+
+        /// <summary>Tree power over the focus runs: every (tree, run) pair, collected by index.</summary>
+        static List<TreePowerSummary> MeasureTrees(ContentDb c, BalanceOptions o, List<string> species, IReadOnlyList<RunSample> focusRuns, List<TreeDef> trees)
+        {
+            var samples = new (int Base, int With)[trees.Count * focusRuns.Count];
+            For(samples.Length, o.Jobs, i => samples[i] = TreePower.Measure(c, focusRuns[i % focusRuns.Count].State, trees[i / focusRuns.Count]));
+            var perTree = Enumerable.Range(0, trees.Count)
+                .Select(t => (IReadOnlyList<(int, int)>)new ArraySegment<(int, int)>(samples, t * focusRuns.Count, focusRuns.Count)).ToArray();
+            return TreePower.Summarise(trees, species, focusRuns.Select(r => r.Species).ToList(), perTree);
         }
 
         static void ClimbAll(ContentDb c, BalanceOptions o, List<string> policies, List<string> species, RunSample[] runs, BalanceReport report)
@@ -616,7 +648,15 @@ namespace IdleRng.Bots.Balance
         /// full on top: a tree it already holds (slotted or absorbed) gets its missing nodes, any other tree is added (flat stats capped
         /// at STAT_MAX).
         /// </summary>
-        public static Fighter BuildFighter(ContentDb c, RunState s, IEnumerable<string> maxed)
+        public static Fighter BuildFighter(ContentDb c, RunState s, IEnumerable<string> maxed) =>
+            BuildFighter(c, s, maxed.Select(id => (id, c.Trees[id].Nodes.Count)));
+
+        /// <summary>
+        /// As <see cref="BuildFighter(ContentDb, RunState, IEnumerable{string})"/>, with each tree bought to exactly
+        /// <c>Bought</c> nodes: a held tree gets its missing nodes, or loses its last ones when it holds more (only skill, trigger
+        /// and rule nodes can be taken back: their flat stats are not tracked per node); any other tree is added.
+        /// </summary>
+        public static Fighter BuildFighter(ContentDb c, RunState s, IEnumerable<(string TreeId, int Bought)> buys)
         {
             var stats = s.Stats.Clone();
             var held = new List<(string TreeId, int Bought)>();
@@ -626,17 +666,21 @@ namespace IdleRng.Bots.Balance
                     for (int i = 0; i < StatIds.Trained.Length; i++) AddStat(stats, StatIds.Trained[i], -t.FlatAdded[i]);
                 else held.Add((t.TreeId, t.Bought));
             }
-            foreach (var id in maxed)
+            foreach (var (id, bought) in buys)
             {
                 var tree = c.Trees[id];
+                if (bought < 0 || bought > tree.Nodes.Count) throw new ArgumentOutOfRangeException(nameof(buys), $"{id}: {bought} of {tree.Nodes.Count} nodes");
                 int k = held.FindIndex(x => x.TreeId == id);
                 int from = k < 0 ? 0 : held[k].Bought;
-                for (int i = from; i < tree.Nodes.Count; i++)
+                for (int i = from; i < bought; i++)
                 {
                     var n = tree.Nodes[i];
                     if (n.Kind == NodeKind.Stat) AddStat(stats, n.Stat, Math.Max(0, Math.Min(n.Amount, c.Constants.StatMax - stats.Get(n.Stat))));
                 }
-                if (k < 0) held.Add((id, tree.Nodes.Count)); else held[k] = (id, tree.Nodes.Count);
+                for (int i = bought; i < from; i++)
+                    if (tree.Nodes[i].Kind == NodeKind.Stat)
+                        throw new ArgumentException($"{id}: cannot take back node {i}, a flat stat node", nameof(buys));
+                if (k < 0) held.Add((id, bought)); else held[k] = (id, bought);
             }
             var f = new Fighter { Id = TrainingRun.MonsterId, Element = c.Species[s.SpeciesId].Element, Stats = stats };
             foreach (var (id, bought) in held)

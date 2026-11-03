@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using IdleRng.Bots.Balance;
 using IdleRng.Bots.Training;
+using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
 using IdleRng.Sim.Training;
 using NUnit.Framework;
@@ -373,6 +374,108 @@ namespace IdleRng.Bots.Tests
             StringAssert.Contains("## Gauntlet stall floors", text);
             StringAssert.Contains("## Dungeon", text);
             Assert.Throws<ArgumentException>(() => BalanceWriter.Write(r, "xml"));
+        }
+
+        [Test]
+        public void TreePower_Trees_AreTheGenericTreesWithARuleCapstone()
+        {
+            var db = Content.Db;
+            var trees = TreePower.Trees(db);
+            Assert.That(trees.All(t => t.Kind == TreeKind.Generic && t.Nodes[t.Nodes.Count - 1].Kind == NodeKind.Rule), Is.True);
+            Assert.That(trees.Select(t => t.Id), Is.EqualTo(db.TreeList.Where(t => t.Kind == TreeKind.Generic && t.Nodes.Count > 0
+                && t.Nodes[t.Nodes.Count - 1].Kind == NodeKind.Rule).Select(t => t.Id)), "content order");
+        }
+
+        [Test]
+        public void TreePower_Summarise_PerSpeciesThenPooled_AndFlagsAboveTheGuideline()
+        {
+            var db = Content.Db;
+            var trees = db.TreeList.Take(2).ToList();
+            var runSpecies = new[] { "x", "y", "x" };
+            var samples = new IReadOnlyList<(int, int)>[]
+            {
+                new[] { (3, 5), (4, 4), (5, 9) },
+                new[] { (1, 10), (2, 11), (3, 12) },
+            };
+            var rows = TreePower.Summarise(trees, new[] { "x", "y", "z" }, runSpecies, samples);
+            Assert.That(rows.Select(x => (x.TreeId, x.Species)), Is.EqualTo(new[]
+            {
+                (trees[0].Id, "x"), (trees[0].Id, "y"), (trees[0].Id, TreePower.AllSpecies),
+                (trees[1].Id, "x"), (trees[1].Id, "y"), (trees[1].Id, TreePower.AllSpecies),
+            }), "a species with no runs gets no row");
+            var x0 = rows[0];
+            Assert.That((x0.N, x0.BaseFloor.Mean, x0.Gain.Mean, x0.Gain.Min, x0.Gain.Max), Is.EqualTo((2, 4.0, 3.0, 2.0, 4.0)));
+            Assert.That((rows[2].N, rows[2].Gain.Mean), Is.EqualTo((3, 2.0)));
+            Assert.That(rows[2].Flag, Is.EqualTo(""), "within the guideline");
+            Assert.That(rows[5].Gain.Mean, Is.EqualTo(9.0));
+            Assert.That(rows[5].Flag, Is.EqualTo("above"), $"a mean gain above {TreePower.GuideMax} floors is flagged");
+            Assert.That(rows[0].Stat, Is.EqualTo(trees[0].OfferStat ?? "any"));
+            Assert.Throws<ArgumentException>(() => TreePower.Summarise(trees, new[] { "x" }, runSpecies, samples.Take(1).ToArray()));
+        }
+
+        [Test]
+        public void TreePower_MeasuresTheCapstoneOnTopOfTheRestOfTheTree()
+        {
+            // No generic tree has a rule capstone yet (the idea-pool lanes add them), so measure a chase tree's rule capstone.
+            var db = Content.Db;
+            var sp = db.Species["slime"];
+            var tree = db.Trees[sp.ChaseTreeRun];
+            Assert.That(tree.Nodes[tree.Nodes.Count - 1].Kind, Is.EqualTo(NodeKind.Rule));
+            var o = new BalanceOptions { Seeds = 3, SeedBase = 5, Tower = false, Endless = false, BookCanary = false, Species = new[] { "slime", "drake" },
+                                         Policies = new[] { "balanced", "focus" }, PowerTrees = new[] { tree.Id } };
+            var r = BalanceHarness.Run(db, o);
+            Assert.That(r.TreePowerRan, Is.True);
+            Assert.That(r.TreePower.Select(x => x.Species), Is.EqualTo(new[] { "slime", "drake", TreePower.AllSpecies }));
+            var slime = r.TreePower[0];
+            var want = Enumerable.Range(5, 3).Select(seed =>
+                TreePower.Measure(db, RunBot.Play(db, RunPolicies.Create(TreePower.Policy), "slime", (ulong)seed), tree)).ToList();
+            Assert.That((slime.N, slime.BaseFloor.Mean, slime.Gain.Mean), Is.EqualTo((3, want.Average(x => x.Base), want.Average(x => x.With - x.Base))));
+            Assert.That(r.TreePower[2].N, Is.EqualTo(6));
+
+            // The two builds differ only by the capstone rule.
+            var state = RunBot.Play(db, RunPolicies.Create(TreePower.Policy), "slime", 5);
+            var without = BalanceHarness.BuildFighter(db, state, new[] { (tree.Id, tree.Nodes.Count - 1) });
+            var with = BalanceHarness.BuildFighter(db, state, new[] { (tree.Id, tree.Nodes.Count) });
+            Assert.That(with.Rules.Except(without.Rules), Is.EqualTo(new[] { tree.Nodes[tree.Nodes.Count - 1].RuleId }));
+            Assert.That(StatIds.Trained.Select(id => with.Stats.Get(id)), Is.EqualTo(StatIds.Trained.Select(id => without.Stats.Get(id))));
+
+            // Same numbers whatever the thread count; no focus policy, no section.
+            o.Jobs = 4;
+            Assert.That(BalanceWriter.Json(BalanceHarness.Run(db, o)), Is.EqualTo(BalanceWriter.Json(r)));
+            var noFocus = BalanceHarness.Run(db, new BalanceOptions { Seeds = 1, Tower = false, Endless = false, BookCanary = false,
+                                                                     Species = new[] { "slime" }, Policies = new[] { "balanced" }, PowerTrees = new[] { tree.Id } });
+            Assert.That((noFocus.TreePowerRan, noFocus.TreePower.Count), Is.EqualTo((false, 0)));
+            StringAssert.Contains("not run: needs the focus policy", BalanceWriter.Text(noFocus));
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Seeds = 1, PowerTrees = new[] { "nope" } }));
+            Assert.Throws<ArgumentException>(() => BalanceHarness.Run(db, new BalanceOptions { Seeds = 1, PowerTrees = new[] { tree.Id, tree.Id } }));
+            Assert.Throws<ArgumentOutOfRangeException>(() => BalanceHarness.BuildFighter(db, state, new[] { (tree.Id, tree.Nodes.Count + 1) }));
+        }
+
+        [Test]
+        public void TreePower_Writers_TextJsonAndCsv()
+        {
+            var db = Content.Db;
+            var tree = db.Trees[db.Species["slime"].ChaseTreeRun];
+            var r = BalanceHarness.Run(db, new BalanceOptions { Seeds = 2, Tower = false, Endless = false, BookCanary = false, Species = new[] { "slime" },
+                                                               Policies = new[] { "focus" }, PowerTrees = new[] { tree.Id } });
+            StringAssert.Contains("## Tree power", BalanceWriter.Text(r));
+            var tp = (Dictionary<string, object>)((Dictionary<string, object>)MiniJson.Parse(BalanceWriter.Json(r)))["treePower"];
+            Assert.That((tp["ran"], tp["policy"], Convert.ToDouble(tp["guideMin"]), Convert.ToDouble(tp["guideMax"])),
+                Is.EqualTo((true, "focus", (double)TreePower.GuideMin, (double)TreePower.GuideMax)));
+            var rows = (List<object>)tp["rows"];
+            Assert.That(rows.Count, Is.EqualTo(2));
+            var row = (Dictionary<string, object>)rows[0];
+            Assert.That((row["tree"], row["species"]), Is.EqualTo((tree.Id, "slime")));
+            Assert.That(row.ContainsKey("baseFloor") && row.ContainsKey("gain") && row.ContainsKey("flag"), Is.True);
+            var csv = BalanceWriter.Csv(r).Split('\n').Where(l => l.StartsWith("tree_power,", StringComparison.Ordinal)).ToList();
+            Assert.That(csv.Count, Is.EqualTo(4), "base floor and gain, per species and pooled");
+            Assert.That(csv.Any(l => l.StartsWith($"tree_power,all,focus,,{tree.Id}_gain,2,", StringComparison.Ordinal)), Is.True);
+
+            // Today's content: the section runs and says no tree qualifies (the lanes add them).
+            var today = BalanceHarness.Run(db, new BalanceOptions { Seeds = 1, Tower = false, Endless = false, BookCanary = false, Species = new[] { "slime" },
+                                                                   Policies = new[] { "focus" } });
+            Assert.That(today.TreePower.Select(x => x.TreeId).Distinct(), Is.EqualTo(TreePower.Trees(db).Select(t => t.Id)));
+            if (TreePower.Trees(db).Count == 0) StringAssert.Contains("(no generic tree has a rule capstone)", BalanceWriter.Text(today));
         }
 
         [Test]

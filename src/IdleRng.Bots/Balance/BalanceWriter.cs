@@ -81,6 +81,8 @@ namespace IdleRng.Bots.Balance
                       Pcts(c.CapstoneGainRun), Num(c.CapstoneGainBook.Mean), Pcts(c.CapstoneGainBook));
             t.AppendTo(sb);
 
+            TreePowerTable(sb, r);
+
             if (r.GauntletBossEvery > 0)
             {
                 sb.Append($"\n## Gauntlet stall floors: % of the runs that did not clear, by floor reached mod {r.GauntletBossEvery} (x0 = boss floor; issue #99)\n");
@@ -159,6 +161,21 @@ namespace IdleRng.Bots.Balance
                 }
                 t.Row(row);
             }
+            t.AppendTo(sb);
+        }
+
+        /// <summary>Tree power (TreePower): the floors each generic tree's rule capstone adds, per species and pooled.</summary>
+        static void TreePowerTable(StringBuilder sb, BalanceReport r)
+        {
+            sb.Append($"\n## Tree power: gauntlet floors a generic tree's rule capstone adds on top of the rest of the tree, {TreePower.Policy} runs ")
+              .Append($"(guideline: fewer than an in-run chase tree's {TreePower.GuideMin}-{TreePower.GuideMax}, specs/15 section 5.5; a report, not a check)\n");
+            if (!r.TreePowerRan) { sb.Append($"(not run: needs the {TreePower.Policy} policy)\n"); return; }
+            if (r.TreePower.Count == 0) { sb.Append("(no generic tree has a rule capstone)\n"); return; }
+            var t = new Table(3, textLast: true);
+            t.Row("tree", "stat", "species", "runs", "base floor", "capstone +", "p10/p50/p90", "min", "max", "flag");
+            foreach (var x in r.TreePower)
+                t.Row(x.TreeId, x.Stat, x.Species, x.N.ToString(Inv), Num(x.BaseFloor.Mean), Num(x.Gain.Mean), Pcts(x.Gain), Num(x.Gain.Min),
+                      Num(x.Gain.Max), x.Flag == "" ? "-" : x.Flag);
             t.AppendTo(sb);
         }
 
@@ -313,6 +330,16 @@ namespace IdleRng.Bots.Balance
                 j.Close('}');
             }
             j.Close(']');
+            j.Key("treePower").Open('{').Key("ran").Bool(r.TreePowerRan).Key("policy").Str(TreePower.Policy)
+             .Key("guideMin").Num(TreePower.GuideMin).Key("guideMax").Num(TreePower.GuideMax).Key("rows").Open('[');
+            foreach (var x in r.TreePower)
+            {
+                j.Open('{').Key("tree").Str(x.TreeId).Key("stat").Str(x.Stat).Key("species").Str(x.Species).Key("n").Num(x.N);
+                j.Key("baseFloor"); Dist(j, x.BaseFloor);
+                j.Key("gain"); Dist(j, x.Gain);
+                j.Key("flag").Str(x.Flag).Close('}');
+            }
+            j.Close(']').Close('}');
             j.Key("bookCells").Open('[');
             foreach (var b in r.BookCells)
             {
@@ -399,7 +426,8 @@ namespace IdleRng.Bots.Balance
         /// "books_chase" for the canary) holds capstone_rate and capstone_cycle, then per chase tree &lt;tree&gt;_unlock_rate,
         /// &lt;tree&gt;_capstone_rate, &lt;tree&gt;_capstone_cycle and per condition &lt;condition id&gt;_held_rate. Section "opponent" has
         /// per rank pool monster &lt;id&gt;_rolled_rate (share of the runs whose ladder had it) and &lt;id&gt;_win_rate (n = rank fights
-        /// against it).
+        /// against it). Section "tree_power" holds per measured tree and species (and "all") &lt;tree&gt;_base_floor and
+        /// &lt;tree&gt;_gain (TreePower).
         /// </summary>
         public static string Csv(BalanceReport r)
         {
@@ -433,6 +461,11 @@ namespace IdleRng.Bots.Balance
                     Rate(sb, "opponent", c.Species, c.Policy, "", x.Id + "_rolled_rate", c.N, c.N == 0 ? 0 : (double)x.Rolled / c.N);
                     Rate(sb, "opponent", c.Species, c.Policy, "", x.Id + "_win_rate", x.Fought, x.WinRate);
                 }
+            }
+            foreach (var x in r.TreePower)
+            {
+                Row(sb, "tree_power", x.Species, TreePower.Policy, "", x.TreeId + "_base_floor", x.BaseFloor);
+                Row(sb, "tree_power", x.Species, TreePower.Policy, "", x.TreeId + "_gain", x.Gain);
             }
             foreach (var b in r.BookCells)
             {
