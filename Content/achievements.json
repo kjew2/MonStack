@@ -40,6 +40,14 @@
       "ref": null,
       "amount": 20.0,
       "unlocks_species": null
+    },
+    {
+      "id": "castle_walls",
+      "name_key": "achievement.castle_walls.name",
+      "kind": "stat_reached",
+      "ref": "def",
+      "amount": 650.0,
+      "unlocks_species": "keepshell_crab"
     }
   ]
 }

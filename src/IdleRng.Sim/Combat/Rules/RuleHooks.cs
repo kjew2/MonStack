@@ -5,7 +5,8 @@ namespace IdleRng.Sim.Combat
     // The rule hooks of the idea-pool lanes (specs/16 section 6.4, epic #132). The fight calls each Hook* method at a fixed
     // point; it calls the same hook of lanes A to E in that order. Each lane's hooks are partial methods that the lane
     // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
-    // until its lane fills it. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
+    // until its lane fills it. Species rules (specs/14 section 3.1) fill partials named after the species (Rules/<Species>.cs),
+    // called after lane E; the HitMitigated hook exists for them. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
     // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
     public static partial class BattleSim
     {
@@ -113,6 +114,7 @@ namespace IdleRng.Sim.Combat
             ConvertHit_C(c, h);
             ConvertHit_D(c, h);
             ConvertHit_E(c, h);
+            ConvertHit_KeepshellCrab(c, h);
         }
 
         static partial void ConvertHit_A(RuleCtx c, HitInfo h);
@@ -120,6 +122,18 @@ namespace IdleRng.Sim.Combat
         static partial void ConvertHit_C(RuleCtx c, HitInfo h);
         static partial void ConvertHit_D(RuleCtx c, HitInfo h);
         static partial void ConvertHit_E(RuleCtx c, HitInfo h);
+        static partial void ConvertHit_KeepshellCrab(RuleCtx c, HitInfo h);
+
+        /// <summary>
+        /// HitMitigated (species rules): a landed hit's damage after mitigation, crit and the tower's multipliers, before the shield
+        /// takes its part; only hits come here (not counters, true or max-HP damage).
+        /// </summary>
+        static void HookHitMitigated(RuleCtx c, HitInfo h, ref double damage)
+        {
+            OnHitMitigated_KeepshellCrab(c, h, ref damage);
+        }
+
+        static partial void OnHitMitigated_KeepshellCrab(RuleCtx c, HitInfo h, ref double damage);
 
         /// <summary>ModifyOutgoing: the attacker's damage multipliers on h.Raw, after crit, element and dmg_dealt, before mitigation.</summary>
         static void HookOutgoing(RuleCtx c, HitInfo h)
@@ -273,6 +287,7 @@ namespace IdleRng.Sim.Combat
             HashUnit_C(w, s, u);
             HashUnit_D(w, s, u);
             HashUnit_E(w, s, u);
+            HashUnit_KeepshellCrab(w, s, u);
         }
 
         static partial void HashUnit_A(CanonicalWriter w, FightState s, FightUnit u);
@@ -280,6 +295,7 @@ namespace IdleRng.Sim.Combat
         static partial void HashUnit_C(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_D(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_E(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_KeepshellCrab(CanonicalWriter w, FightState s, FightUnit u);
 
         /// <summary>HashFight: StateHash, at the end: fight-wide lane state, only when some unit carries the rule.</summary>
         static void HookHashFight(CanonicalWriter w, FightState s)
@@ -305,6 +321,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_C(r, ref ok);
             ValidateRules_D(r, ref ok);
             ValidateRules_E(r, ref ok);
+            ValidateRules_KeepshellCrab(r, ref ok);
         }
 
         static partial void ValidateRules_A(FightRules r, ref bool ok);
@@ -312,6 +329,7 @@ namespace IdleRng.Sim.Combat
         static partial void ValidateRules_C(FightRules r, ref bool ok);
         static partial void ValidateRules_D(FightRules r, ref bool ok);
         static partial void ValidateRules_E(FightRules r, ref bool ok);
+        static partial void ValidateRules_KeepshellCrab(FightRules r, ref bool ok);
 
         /// <summary>StatFlat: a flat amount added to a trained stat's current value (after its effect multiplier and floor; not HP). Hot path: keep it cheap.</summary>
         static void HookStatFlat(FightRules r, FightUnit u, string stat, ref double flat)
@@ -372,6 +390,7 @@ namespace IdleRng.Sim.Combat
             Load_C(r, c);
             Load_D(r, c);
             Load_E(r, c);
+            Load_KeepshellCrab(r, c);
         }
 
         static partial void Load_A(FightRules r, ContentDb c);
@@ -379,6 +398,7 @@ namespace IdleRng.Sim.Combat
         static partial void Load_C(FightRules r, ContentDb c);
         static partial void Load_D(FightRules r, ContentDb c);
         static partial void Load_E(FightRules r, ContentDb c);
+        static partial void Load_KeepshellCrab(FightRules r, ContentDb c);
     }
 
     public sealed partial class FightUnit

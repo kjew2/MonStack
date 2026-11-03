@@ -169,3 +169,7 @@ BREATH_SAFE,double,30,second_breath run rule: a drill made below this much energ
 ASCETIC_AP,int,1,ascetic run rule: action points added at each cycle start; rank-fight wins give no SP_PER_WIN. Placeholder
 HUNGRY_STAT,double,60,hungry_core run rule: flat bonus to every trained stat in a rank fight while the core is fed. Placeholder
 HUNGRY_ENERGY,double,10,"hungry_core run rule: energy the core eats at each cycle start; with less energy it goes dormant for that cycle (no bonus, nothing eaten). Placeholder"
+MON_MOAT_DEF,double,0.8,"tide_moat rule: against magical hits the unit mitigates with the higher of its WIS and this x its DEF. Placeholder"
+MON_WALL_DEF,double,0.25,"unbreached rule: a hit on the unit that would deal at most this x its DEF (its wall, after mitigation and crit, before shields) deals 0. Placeholder"
+MON_WALL_ERODE,double,0.05,"unbreached rule: each blocked hit lowers the wall by this fraction of its starting value, so the walls always fall. Placeholder"
+MON_CRACK_DEF,double,0.8,"shellcrack rule: the unit's physical hits ignore the target's DEF and add this x the target's DEF to the raw damage. Placeholder"

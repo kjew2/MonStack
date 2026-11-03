@@ -755,6 +755,21 @@ namespace IdleRng.Sim.Combat
         /// <summary>Each cycle start eats HUNGRY_ENERGY; while fed, +HUNGRY_STAT to every trained stat in the cycle's rank fight. The Hungry Core generic capstone.</summary>
         public const string HungryCore = "hungry_core";
 
+        // Species Keepshell Crab (#152), coded in Combat/Rules/KeepshellCrab.cs.
+
+        /// <summary>Against magical hits the unit mitigates with the higher of its WIS and MON_MOAT_DEF x its DEF. The Tide Moat native capstone (Keepshell Crab).</summary>
+        public const string TideMoat = "tide_moat";
+
+        /// <summary>
+        /// A hit on the unit that would deal at most its wall (MON_WALL_DEF x DEF, after mitigation and crit, before shields) deals 0;
+        /// each blocked hit lowers the wall by MON_WALL_ERODE of its starting height. True and max-HP damage are not hits and pass.
+        /// The Unbreached Keep in-run chase capstone (Keepshell Crab).
+        /// </summary>
+        public const string Unbreached = "unbreached";
+
+        /// <summary>The unit's physical hits ignore the target's DEF and add MON_CRACK_DEF x that DEF to the raw damage. The Siege Pincers book chase capstone (Keepshell Crab).</summary>
+        public const string Shellcrack = "shellcrack";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
@@ -763,7 +778,8 @@ namespace IdleRng.Sim.Combat
             LoneWolf, Arise, LastRite,
             MimicCore, Heirloom, Mastery, LimitBreak,
             Hemorrhage, PrivilegedStatus, Equilibrium, Corruption, DeadBranch,
-            IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore };
+            IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore,
+            TideMoat, Unbreached, Shellcrack };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

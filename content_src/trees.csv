@@ -48,7 +48,7 @@ hall_of_mirrors,tree.hall_of_mirrors.name,fusion,,,tree.hall_of_mirrors.apex,min
 arcana_deck,tree.arcana_deck.name,fusion,,,tree.arcana_deck.apex,fortune,spellcraft,fusion tree (specs/15 section 5.6)
 iron_reflexes,tree.iron_reflexes.name,generic,dex,400,,,,idea-pool lane A (#134): PoE Iron Reflexes
 elemental_avatar,tree.elemental_avatar.name,generic,int,400,,,,idea-pool lane A (#134): PoE Avatar of Fire
-fortress_fist,tree.fortress_fist.name,generic,def,400,,,,idea-pool lane A (#134): Bofuri all-VIT Maple
+fortress_fist,tree.fortress_fist.name,native,,,,,,"idea-pool lane A (#134): Bofuri all-VIT Maple; Keepshell Crab's native tree 1 (#152, kj 2026-11-03)"
 blood_magic,tree.blood_magic.name,generic,hp,400,,,,idea-pool lane A (#134): PoE Blood Magic
 resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monster Hunter Resentment
 vantage,tree.vantage.name,generic,spd,400,,,,idea-pool lane B (#135): MH Heroics / Fire Emblem Vantage
@@ -77,3 +77,7 @@ devourer,tree.devourer.name,generic,str,400,,,,idea-pool lane G (#140): Berserk 
 second_breath,tree.second_breath.name,generic,hp,400,,,,idea-pool lane G (#140): Umamusume failure rate
 ascetic,tree.ascetic.name,generic,dex,400,,,,idea-pool lane G (#140): Slay the Spire Ectoplasm
 hungry_core,tree.hungry_core.name,generic,int,400,,,,idea-pool lane G (#140): Reverend Insanity Gu upkeep
+tide_moat,tree.tide_moat.name,native,,,,,,keepshell crab native tree 2 (#152)
+siege_manual,tree.siege_manual.name,book,,,,,,keepshell crab's book tree (Siege Pincers)
+unbreached_keep,tree.unbreached_keep.name,chase,,,tree.unbreached_keep.apex,,,keepshell crab in-run chase tree
+siege_pincers,tree.siege_pincers.name,chase,,,tree.siege_pincers.apex,,,keepshell crab book-gated chase tree

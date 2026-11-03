@@ -850,6 +850,26 @@
       "key": "HUNGRY_ENERGY",
       "type": "double",
       "value": 10.0
+    },
+    {
+      "key": "MON_MOAT_DEF",
+      "type": "double",
+      "value": 0.8
+    },
+    {
+      "key": "MON_WALL_DEF",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_WALL_ERODE",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "MON_CRACK_DEF",
+      "type": "double",
+      "value": 0.8
     }
   ]
 }

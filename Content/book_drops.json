@@ -25,6 +25,11 @@
       "book_id": "book_shadows",
       "min_floor": 10,
       "weight": 1.0
+    },
+    {
+      "book_id": "book_siege",
+      "min_floor": 10,
+      "weight": 1.0
     }
   ]
 }

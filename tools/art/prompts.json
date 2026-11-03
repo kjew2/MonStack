@@ -32,6 +32,10 @@
   "shade_hound": {
    "name": "Shade Hound",
    "prompt": "A dog made purely of shadow, deep purple-black with soft violet edges, in a real canine pose with a lean body and four jointed legs, its tail dissolving into drifting smoke. Bright acid-green eyes and small white fangs. Unsettling detail: a short row of tiny extra acid-green eyes along its cheek."
+  },
+  "keepshell_crab": {
+   "name": "Keepshell Crab",
+   "prompt": "A stubby rust-orange hermit crab that wears a whole stone castle keep as its shell: crenellated towers, a portcullis gate over its face, coral and seaweed growing in the mortar. Its claws are wrapped in riveted gate-plates and raised to punch. Cute, glaring little castle."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -86,6 +90,16 @@
    "species": "shade_hound",
    "name": "Eclipse Hound",
    "prompt": "the shadow dog is crimson and black, a golden eclipse ring burns like a halo behind its head, and all its eyes glow gold."
+  },
+  "unbreached_keep": {
+   "species": "keepshell_crab",
+   "name": "Citadel Kingcrab",
+   "prompt": "the keep grows into a walled citadel of towers and banners with a seawater moat; the claws become gatehouses, portcullises down."
+  },
+  "siege_pincers": {
+   "species": "keepshell_crab",
+   "name": "Siegebreaker Crab",
+   "prompt": "the castle shell has been rebuilt as a dark iron-and-timber siege tower on wheels, its claws replaced by heavy black iron battering rams with crab-claw heads, cracked enemy shields hung on its walls as trophies. Colour palette shifts from grey stone to black iron, dark wood and rust red."
   }
  }
 }

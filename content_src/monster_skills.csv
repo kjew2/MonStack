@@ -93,3 +93,8 @@ momentum,mskill.momentum.name,buff,self,spd,,0.1,0,2,
 coin_toss,mskill.coin_toss.name,damage,enemy,,luk,2,3,0,
 windfall,mskill.windfall.name,buff,self,crit_rate,,0.15,0,2,
 hex,mskill.hex.name,debuff,enemy,wis,,0.25,4,3,
+moat_surge,mskill.moat_surge.name,damage,enemy,,def,1.3,2,0,water
+battering_claw,mskill.battering_claw.name,damage,enemy,,def,1.5,2,0,
+rubble_rain,mskill.rubble_rain.name,damage,all_enemies,,def,0.3,0,0,
+keep_gate,mskill.keep_gate.name,shield,self,,def,1.2,4,3,
+trophy_wall,mskill.trophy_wall.name,shield,self,,def,1.5,4,3,

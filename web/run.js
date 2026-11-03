@@ -676,6 +676,10 @@
     'rule:equilibrium': (n) => 'element shift, +' + Math.round(n * 100) + '% damage',
     'rule:corruption': (n) => 'casts it again, then locks it (' + Math.round(n) + ' locked)',
     'rule:dead_branch': () => 'gains a random skill',
+    // species Keepshell Crab (#152): the defence the moat used, the wall left after a block, the DEF cracked into damage
+    'rule:tide_moat': (n) => 'moat defends with ' + Math.round(n),
+    'rule:unbreached': (n) => 'blocked, wall ' + Math.round(n) + ' left',
+    'rule:shellcrack': (n) => '+' + Math.round(n) + ' damage from its DEF',
   };
 
   function actionResult(x) {
