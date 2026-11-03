@@ -2,7 +2,7 @@
 // Browser check of the Endless Tower screen (specs/28 section 9 step 5), at phone width 390x844: plays and seals one run, then
 // seeds a Vault of five copies of the sealed monster (ids 0..4, entry id 1 with a rulebook) through the save and checks the
 // Dungeon tab's Endless card, the screen (Team / Floors / Board sections, issue #130; season, mutators, next floors with their
-// squads), the team picker (exactly four, reorder, the rule count and Rules button per slot), a climb with its result, save
+// squads), the team picker (exactly four, reorder, the rule count and Rules button per slot), a climb on the reel (opened landed) with its result, save
 // record and deciding-floor playback (a rule firing reads "follows rule 1"), a second climb paying nothing new, the season
 // board and display name (a refused name, a saved one, the player's row after the climb), watching another floor (same fight
 // hash as the climb's list), the layout and Back.
@@ -116,9 +116,18 @@ const H = require('./harness.js');
   check((await count('[data-act=rb-sheet]')) === 0, 'and closes back to the Endless screen');
   await t.layout('endless team');
 
-  // ---- climb: the deciding floor plays back at once, a rule firing reads as a rule line
+  // ---- climb: it plays out on the reel (landed at once under reduced motion), then Watch plays the deciding floor back and a
+  // rule firing reads as a rule line
   const shards0 = (await acct()).Shards || 0;
   await act('endless-climb').click();
+  await page.locator('#modal [data-id=endless-reel]').waitFor();
+  const landed = await text('[data-id=endless-landed]');
+  check((await count('[data-act=endless-skip]')) === 0 && (await count('#modal [data-id=endless-arena] .squad .sprite')) === 4
+    && /^Floor \d+/.test(await text('[data-id=endless-now]')) && /(Fell on floor \d+ to \S|nothing stopped this team)/.test(landed),
+    'the climb plays out on the reel: with reduced motion it opens landed, the team of four in the arena: ' + landed.replace(/\s+/g, ' '));
+  check((await count('[data-id=endless-banner].anim')) === 0, 'the result banner waits under the reel');
+  await t.layout('endless reel');
+  await act('endless-reel-watch').click();
   const play = page.locator('#modal [data-id=fight-play]');
   await play.waitFor();
   check(/^Floor \d+: \S/.test(await play.innerText()) && (await count('#modal [data-id=endless-play-mutators]')) === 1 && (await count('#modal .units.endless [data-id^=unit-]')) === 8,
@@ -131,7 +140,8 @@ const H = require('./harness.js');
   check(logs.some((l) => / follows rule 1$/.test(l)), 'the deciding floor\'s log has the rulebook\'s rule firing: ' + (logs[0] || 'none'));
   const decidingHash = await play.getAttribute('data-hash');
   await act('endless-play-close').click();
-  check((await count('#modal [data-id=fight-play]')) === 0 && (await count('[data-id=endless-result]')) === 1, 'Close leaves the result card');
+  check((await count('#modal [data-id=fight-play]')) === 0 && (await count('#modal [data-id=endless-reel]')) === 0 && (await count('[data-id=endless-result]')) === 1,
+    'Close leaves the result card, not the reel');
   const a1 = await acct();
   const fell = await text('[data-id=endless-fell]');
   check(/^(Fell on floor \d+ to \S|All \d+ floors cleared)/.test(fell), 'the result says where the climb ended: ' + fell);
@@ -141,6 +151,19 @@ const H = require('./harness.js');
   const rows = await page.$$eval('[data-id^=endless-fought-]', (rs) => rs.map((r) => ({ id: r.dataset.id, hash: r.dataset.hash })));
   check(rows.length >= 1 && rows[rows.length - 1].hash === decidingHash, 'the floors fought are listed, the deciding one last with the played fight\'s hash');
   check(/best this season \d+/.test(await status.innerText()) && /1 climb this season/.test(await status.innerText()), 'the season line counts the climb');
+  // the damage chart: four monsters, the team totals are the bars' sum, one floor at a time on request
+  await act('endless-chart').click();
+  await page.locator('#modal [data-id=chart-endless]').waitFor();
+  const parse = (v) => +v.split(' ')[0].replace(/,/g, '');
+  const dealt = (await page.$$eval('#modal .crow.dealt .cval', (vs) => vs.map((v) => v.textContent))).map(parse);
+  const teamDealt = +((/dealt ([\d,]+)/.exec(await text('[data-id=chart-total]')) || [])[1] || '-1').replace(/,/g, '');
+  check(dealt.length === 4 && Math.abs(dealt.reduce((a, b) => a + b, 0) - teamDealt) <= 4,
+    'the damage chart has a bar per monster and the team total is their sum: ' + dealt.join(' + ') + ' = ' + teamDealt);
+  await page.selectOption('[data-act=chart-floor]', rows[rows.length - 1].id.slice('endless-fought-'.length));
+  check((await page.locator('#modal [data-id=chart-endless]').getAttribute('data-floor')) === rows[rows.length - 1].id.slice('endless-fought-'.length), 'the floor picker shows the deciding floor alone');
+  await t.layout('endless damage chart');
+  await act('chart-close').click();
+  check((await count('#modal [data-id=chart-endless]')) === 0 && (await count('[data-id=endless-result]')) === 1, 'Close leaves the result card');
   const best1 = a1.Endless.ClearedSeason || 0;
   await act('endless-tab-board').click();
   if (best1 > 0) {
@@ -152,9 +175,10 @@ const H = require('./harness.js');
   await t.layout('endless board');
   await t.layout('endless result');
 
-  // ---- a second climb pays nothing new (Skip is remembered: no playback)
+  // ---- a second climb pays nothing new (the reel again; See the result closes it onto the card, its banner slamming in)
   await act('endless-climb').click();
-  await page.locator('[data-id=endless-shards]').waitFor();
+  await act('endless-reel-done').click();
+  check((await count('#modal [data-id=endless-reel]')) === 0 && (await count('[data-id=endless-banner].anim')) === 1, 'See the result closes the reel and slams in the banner');
   const a2 = await acct();
   check((await count('#modal [data-id=fight-play]')) === 0 && /^No new floors this season/.test(await text('[data-id=endless-shards]'))
     && (a2.Endless.Climbs || 0) === 2 && (a2.Shards || 0) === (a1.Shards || 0), 'a second climb pays nothing new and counts a second climb');

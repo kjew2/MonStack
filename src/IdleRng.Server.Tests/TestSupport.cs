@@ -91,12 +91,16 @@ namespace IdleRng.Server.Tests
 
         public readonly SpyStore Store = new SpyStore();
         public readonly MemoryLeaderboardStore Boards = new MemoryLeaderboardStore();
+        public readonly MemoryProfileStore Profiles = new MemoryProfileStore();
         public readonly ServerConfig Config;
         public readonly AccountServer Server;
         public long Now = Start;
         ulong _rng = 12345;
 
-        public Rig(params string[] debugPlayers)
+        public Rig(params string[] debugPlayers) : this(true, debugPlayers) { }
+
+        /// <param name="profiles">False: the server keeps no profiles (<see cref="Profiles"/> is then unused).</param>
+        public Rig(bool profiles, params string[] debugPlayers)
         {
             Config = new ServerConfig
             {
@@ -104,7 +108,7 @@ namespace IdleRng.Server.Tests
                 Random = () => Sim.Rng.SplitMix64.Derive(_rng++, 7),
                 DebugPlayers = new HashSet<string>(debugPlayers, StringComparer.Ordinal),
             };
-            Server = new AccountServer(Content.Db, Store, Config, Boards);
+            Server = new AccountServer(Content.Db, Store, Config, Boards, profiles ? Profiles : null);
         }
 
         public Device Device(string id) => new Device(this, id);

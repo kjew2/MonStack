@@ -553,6 +553,62 @@ namespace IdleRng.Server.Tests
             Assert.That(rig.Store.Head(P).Content, Is.EqualTo(Db.Version));
         }
 
+        /// <summary>Rewrite the stored head's save schema, as an older or newer module would have written it.</summary>
+        static void SetStoredSchema(Rig rig, int schema)
+        {
+            var h = rig.Store.Head(P);
+            h.Schema = schema;
+            var stored = rig.Store.Inner.ReadHeadAsync(P).Result;
+            Assert.That(rig.Store.Inner.WriteHeadAsync(P, h.ToJson(), stored.WriteLock).Result, Is.True);
+        }
+
+        [Test]
+        public void AnAccountStoredUnderTheLastSchema_Opens_AndTheNextCommitRewritesItUnderTheCurrentOne()
+        {
+            var rig = new Rig();
+            var a = rig.Device("a");
+            a.Open();
+            a.SealOne(rig.Now);
+            SetStoredSchema(rig, AccountState.CurrentSchemaVersion - 1);   // written by the module before the bump (#127)
+
+            var r = a.Open();
+            Assert.That(r.Accepted, Is.True, "an open migrates it");
+            Assert.That(r.Notice, Is.Null);
+            Assert.That(a.Acct.Vault.Count, Is.EqualTo(1));
+            Assert.That(rig.Store.Head(P).Schema, Is.EqualTo(AccountState.CurrentSchemaVersion - 1), "an open does not write");
+            rig.Store.ClearLog();
+            a.Do("setLoadout", new List<string>());
+            Assert.That(a.Commit().Accepted, Is.True);
+            Assert.That(rig.Store.Read.Count, Is.EqualTo(9), "every part and the entry are loaded");
+            Assert.That(rig.Store.Head(P).Schema, Is.EqualTo(AccountState.CurrentSchemaVersion), "rewritten under the current schema");
+            Assert.That(rig.Store.Keys(P), Is.EqualTo(rig.Store.Referenced(P)), "nothing left over");
+
+            rig.Store.ClearLog();
+            a.Do("lock", 0, true);
+            Assert.That(a.Commit().Accepted, Is.True, "an ordinary commit after the rewrite");
+            Assert.That(rig.Store.Written, Is.EqualTo(new[] { rig.Store.Head(P).Parts["vault"] }), "which loads and writes only its parts again");
+        }
+
+        [Test]
+        public void AnAccountStoredUnderANewerSchema_IsContentStale_AndNothingIsWritten()
+        {
+            var rig = new Rig();
+            var a = rig.Device("a");
+            a.Open();
+            a.Do("setLoadout", new List<string>());
+            var req = a.Request();
+            SetStoredSchema(rig, AccountState.CurrentSchemaVersion + 1);   // a newer module wrote it, then this one was rolled back
+
+            AssertUnchanged(rig, () => Assert.That(a.Commit(req).Code, Is.EqualTo(Rejection.ContentStale)));
+            AssertUnchanged(rig, () =>
+            {
+                var o = rig.Server.OpenAsync(P, new OpenRequest { DeviceId = "b", Claim = true }).Result;
+                Assert.That(o.Code, Is.EqualTo(Rejection.ContentStale));
+                Assert.That(o.Account, Is.Null);
+            });
+            Assert.That(rig.Store.Head(P).Holder.DeviceId, Is.EqualTo("a"), "a claim is not written either");
+        }
+
         [Test]
         public void EveryAccountCommand_InItsOwnCommit_LoadingOnlyTheParts_ItDeclares()
         {

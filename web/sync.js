@@ -310,8 +310,9 @@
         r = await timed(S.transport.open({ deviceId: S.st.deviceId, claim: !!S.st.claim }), OPEN_TIMEOUT_MS, 'Opening the account');
         stamp(r);
         if (r.code === 'NotHolder') { notices.push(SIGNED_OUT); await signOutHere(); continue; }
-        if (r.code && r.code !== 'None') throw new Error('the server answered ' + r.code);
-        if (r.contentVersion && r.contentVersion !== core.contentVersion) {
+        if (r.code && r.code !== 'None' && r.code !== 'ContentStale') throw new Error('the server answered ' + r.code);
+        // Other content on the server, or an account stored by a newer server (ContentStale): a reload onto the new version.
+        if (r.code === 'ContentStale' || (r.contentVersion && r.contentVersion !== core.contentVersion)) {
           S.blocked = 'version';
           showWait('version');
           return new Promise(() => {});

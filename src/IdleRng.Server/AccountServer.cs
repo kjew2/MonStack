@@ -35,6 +35,7 @@ namespace IdleRng.Server
         readonly IAccountStore _store;
         readonly ServerConfig _cfg;
         readonly EndlessBoard _board;
+        readonly Profiles _profiles;
 
         /// <summary>
         /// A new account's parts, standing in for the parts a commit does not load: a command's result does not depend on the
@@ -44,13 +45,16 @@ namespace IdleRng.Server
         readonly IReadOnlyDictionary<string, string> _standIn;
 
         /// <param name="leaderboards">Where the boards live (specs/27 section 3.3); null keeps none.</param>
-        public AccountServer(ContentDb content, IAccountStore store, ServerConfig config = null, ILeaderboardStore leaderboards = null)
+        /// <param name="profiles">Where the profiles live (specs/27 section 3.3); null keeps none.</param>
+        public AccountServer(ContentDb content, IAccountStore store, ServerConfig config = null, ILeaderboardStore leaderboards = null,
+            IProfileStore profiles = null)
         {
             _c = content ?? throw new ArgumentNullException(nameof(content));
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _cfg = config ?? new ServerConfig();
             _standIn = AccountParts.Split(AccountOps.New(_c, 0));
             _board = leaderboards == null ? null : new EndlessBoard(leaderboards);
+            _profiles = profiles == null ? null : new Profiles(profiles);
         }
 
         public ContentDb Content => _c;
@@ -58,12 +62,17 @@ namespace IdleRng.Server
         /// <summary>The Endless Tower season board (specs/28 section 6), or null when the server keeps no boards.</summary>
         public EndlessBoard Board => _board;
 
+        /// <summary>The profiles other players read (specs/27 section 3.3), or null when the server keeps none.</summary>
+        public Profiles Profiles => _profiles;
+
         // ------------------------------------------------------------------ open
 
         /// <summary>
         /// The account for a device (section 5.1). Creates it on the first call (genesis: the server draws the seed). A device
         /// that does not hold the account gets NotHolder unless it claims, which makes it the holder. Also deletes items left by
-        /// commits that never landed. Throws ArgumentException for a missing player or device id.
+        /// commits that never landed. An account stored in an older save schema is returned migrated (it is rewritten at the next
+        /// commit); one stored in a newer schema than this server reads gets ContentStale and nothing is written. Throws
+        /// ArgumentException for a missing player or device id.
         /// </summary>
         public async Task<OpenResult> OpenAsync(string playerId, OpenRequest request)
         {
@@ -86,6 +95,8 @@ namespace IdleRng.Server
                 else
                 {
                     head = AccountHead.FromJson(stored.Json);
+                    if (head.Schema > AccountState.CurrentSchemaVersion)   // written by a newer server: nothing here can read it
+                        return new OpenResult { Code = Rejection.ContentStale, ServerSec = now / 1000, Day = DayOf(now), ContentVersion = _c.Version };
                     if (head.Holder.DeviceId != device)
                     {
                         if (!request.Claim) return new OpenResult { Code = Rejection.NotHolder, ServerSec = now / 1000, Day = DayOf(now), ContentVersion = _c.Version };
@@ -145,7 +156,7 @@ namespace IdleRng.Server
 
         /// <summary>
         /// Re-apply a client's commands and keep the result when it matches (section 4). Returns Accepted with the new commit
-        /// number and hash, or a rejection: NotHolder, Stale, ContentStale, Refused (with the command's index and reason) or
+        /// number and hash, or a rejection: NotHolder, Stale, ContentStale (also for an account stored by a newer server), Refused (with the command's index and reason) or
         /// Mismatch. A retry of the last accepted commit returns Accepted again without applying anything. Throws
         /// ArgumentException for a missing player id and AccountDamagedException when a stored item fails its hash.
         /// </summary>
@@ -174,9 +185,8 @@ namespace IdleRng.Server
                 return CommitResult.Reject(Rejection.Stale, -1, "the account is at commit " + head.Seq + ", not " + req.FromSeq);
             if (req.ContentVersion != _c.Version)
                 return CommitResult.Reject(Rejection.ContentStale, -1, "the server runs content " + _c.Version + ", the client " + req.ContentVersion);
-            if (head.Schema != AccountState.CurrentSchemaVersion)
-                // TODO(#127): migrate stored parts when the save schema moves; until then a stored account is always current.
-                throw new InvalidOperationException("the stored account is in save schema v" + head.Schema + ", the server reads v" + AccountState.CurrentSchemaVersion);
+            if (head.Schema > AccountState.CurrentSchemaVersion)
+                return CommitResult.Reject(Rejection.ContentStale, -1, "the account is stored in save schema v" + head.Schema + ", the server reads v" + AccountState.CurrentSchemaVersion);
 
             // Parse and screen every command before loading anything.
             int n = req.Commands.Count;
@@ -211,9 +221,14 @@ namespace IdleRng.Server
                 touched |= AccountCommands.Reads(cmd.Kind) | AccountCommands.Writes(cmd.Kind);
                 commands.Add(cmd);
             }
-            // Content moved since the last commit: load and rewrite every part, so what loading under the new content changes
-            // (a run that no longer loads, an achievement added) is kept, exactly as the client's load did it (section 7).
-            if (head.Content != _c.Version) touched = AllParts;
+            // Content or the save schema moved since the last commit: load and rewrite every part, so what loading under the new
+            // content changes (a run that no longer loads, an achievement added) and what the schema migration changes are kept,
+            // exactly as the client's load did it (section 7).
+            if (head.Content != _c.Version || head.Schema != AccountState.CurrentSchemaVersion) touched = AllParts;
+            // A commit that changes what the profile shows loads every part it is built from, so it is never built from a stand-in.
+            bool profile = _profiles != null && (head.Content != _c.Version || head.Schema != AccountState.CurrentSchemaVersion
+                                                 || commands.Any(c => (AccountCommands.Writes(c.Kind) & Profiles.Sources) != 0));
+            if (profile) touched |= Profiles.Sources;
             if ((touched & (AccountPart.Vault | AccountPart.Entries)) != 0) touched |= AccountPart.Vault | AccountPart.Entries;   // the index pins the entries
 
             var (account, _) = await TryLoadAsync(playerId, head, touched, stored.Json).ConfigureAwait(false);
@@ -296,6 +311,11 @@ namespace IdleRng.Server
             }
             await TryDeleteAsync(playerId, superseded).ConfigureAwait(false);
             await ProjectAsync(playerId, commands, account, head.DebugUsed, next.DebugUsed, now).ConfigureAwait(false);
+            if (profile)
+            {
+                try { await _profiles.WriteAsync(playerId, Profiles.Of(_c, account, now)).ConfigureAwait(false); }
+                catch (Exception) { }   // best effort, as the boards: the commit has landed; the next commit that changes it rewrites it
+            }
             return new CommitResult { Seq = seq, Hash = hash };
         }
 
@@ -377,9 +397,10 @@ namespace IdleRng.Server
             return items;
         }
 
-        AccountState Join(IReadOnlyDictionary<string, string> items, out string notice)
+        /// <summary>The account from its items, migrated forward from the save schema they are stored in (section 7, #127).</summary>
+        AccountState Join(IReadOnlyDictionary<string, string> items, int schema, out string notice)
         {
-            try { return AccountParts.Join(_c, items, out notice); }
+            try { return AccountParts.Join(_c, items, schema, out notice); }
             catch (SaveInvalidException e) { throw new AccountDamagedException("the stored account does not load: " + e.Message, e); }
         }
 
@@ -410,7 +431,7 @@ namespace IdleRng.Server
         {
             try
             {
-                var account = Join(await LoadAsync(playerId, head, parts).ConfigureAwait(false), out var notice);
+                var account = Join(await LoadAsync(playerId, head, parts).ConfigureAwait(false), head.Schema, out var notice);
                 return (account, notice);
             }
             catch (AccountDamagedException)
