@@ -1,4 +1,3 @@
-using System;
 using IdleRng.Sim.Content;
 
 namespace IdleRng.Sim.Combat
@@ -59,7 +58,7 @@ namespace IdleRng.Sim.Combat
             if (c.Log != null)
             {
                 if (h.Cracked > 0) c.Log(new FightAction(h.Src.Id, CrackEvent, h.Tgt.Id, h.Cracked));
-                if (h.Moat > 0) c.Log(new FightAction(h.Tgt.Id, MoatEvent, h.Src.Id, h.Moat));
+                if (h.Moat > 0 && h.Mitigation == h.Moat) c.Log(new FightAction(h.Tgt.Id, MoatEvent, h.Src.Id, h.Moat));   // seep may undo it
             }
             var t = h.Tgt;
             if (!Has(t, RuleModifiers.Unbreached)) return;
@@ -70,7 +69,7 @@ namespace IdleRng.Sim.Combat
                 t.WallStart = r.WallDef * Eff(r, t, StatIds.Def);
             }
             double wall = WallLeft(r, t);
-            if (wall <= 0 || damage > wall) return;
+            if (wall <= 0 || damage <= 0 || damage > wall) return;   // nothing to block, or it breaks through
             damage = 0;
             t.WallBlocks++;
             c.Log?.Invoke(new FightAction(t.Id, WallEvent, h.Src.Id, WallLeft(r, t)));
