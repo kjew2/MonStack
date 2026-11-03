@@ -46,6 +46,7 @@ const H = require('./harness.js');
   await act('hometab-vault').click();
   await page.locator('[data-id=vault-entry]').first().waitFor();
   await act('detail-1').click();
+  await t.layout('Vault detail');
   check(await act('detail-rulebook').isVisible() && (await act('detail-rulebook').innerText()) === 'Rulebook: none', 'the Vault detail shows "Rulebook: none"');
   await act('detail-rulebook').click();
   await act('rb-sheet').waitFor();

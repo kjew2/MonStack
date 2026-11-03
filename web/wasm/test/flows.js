@@ -65,6 +65,8 @@ const H = require('./harness.js');
   await act('tab-ladder').click();
   await page.locator('[data-id=ladder]').waitFor();
   await t.layout('rank ladder');
+  await act('tab-trees').click();
+  await t.layout('trees tab');
   await act('tab-train').click();
   const r0 = (await t.readAccount()).Run;
   check(r0 && r0.SpeciesId === speciesId && r0.Books.length === 1, 'the run started with the ' + speciesId + ' and the book');
@@ -168,6 +170,12 @@ const H = require('./harness.js');
   await act('hometab-vault').click();
   await t.layout('Vault (home after a run)');
   check((await page.locator('[data-id=vault-entry]').count()) === 1, 'the Vault lists the sealed monster');
+  await act('hometab-dungeon').click();
+  await t.layout('Dungeon tab');
+  await act('tower').click();
+  await act('tower-climb').waitFor();
+  await t.layout('Dungeon screen');
+  await act('tower-back').click();
   await act('hometab-raise').click();
 
   // ---- a save whose run in progress refers to something no longer in the game (specs/06 section 5): only that run is dropped

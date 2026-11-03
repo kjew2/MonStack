@@ -75,6 +75,26 @@ async function open(opts) {
         return out;
       }, PHONE.width);
       check(wide.length === 0, screen + ': no horizontal scroll at ' + PHONE.width + 'px' + (wide.length ? ' (' + wide.join(', ') + ')' : ''));
+      // Issue #130: the screen's actions are in view without a scroll. On the top layer (the rulebook or account sheet, else an
+      // open #modal, else the page), every action-bar button, full-size primary button and Back button lies inside the screen and
+      // above the tab bar.
+      const hidden = await page.evaluate(() => {
+        const vis = (e) => e && !e.hidden && e.getClientRects().length > 0;
+        const modal = document.getElementById('modal');
+        const layer = [...document.querySelectorAll('.rbsheet, #account-sheet')].find(vis) || (vis(modal) ? modal : document.getElementById('app'));
+        const tabs = document.getElementById('tabs');
+        const floor = vis(tabs) && layer.contains(tabs) ? tabs.getBoundingClientRect().top : window.innerHeight;   // an open #modal covers the tabs
+        // Measured as the screen opens: every scrolling pane back at its top for the measure, then restored.
+        const panes = [...document.querySelectorAll('#main, #modal, #account-sheet, .rbbody')].map((e) => [e, e.scrollTop]);
+        panes.forEach(([e]) => { e.scrollTop = 0; });
+        const out = [...layer.querySelectorAll('.actionbar button, .btn.primary:not(.small), [data-act$="-back"]')].filter(vis).filter((b) => {
+          const r = b.getBoundingClientRect();
+          return r.top < 0 || r.bottom > floor + 0.5;
+        }).map((b) => b.dataset.act || b.textContent.trim().slice(0, 24));
+        panes.forEach(([e, y]) => { e.scrollTop = y; });
+        return out;
+      });
+      check(hidden.length === 0, screen + ': its actions are in view without scrolling' + (hidden.length ? ' (below the fold: ' + hidden.join(', ') + ')' : ''));
       check(errors.length === 0, screen + ': no page/console errors' + (errors.length ? ': ' + errors.join(' | ') : ''));
       await h.shot(screen.replace(/\W+/g, '-'));
     },

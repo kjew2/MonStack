@@ -307,7 +307,9 @@
         ]),
       ]));
     }
-    kids.push(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'rb-save', disabled: !dirty(), text: dirty() ? 'Save rulebook' : 'Saved', onclick: save }));
+    // Save rides the bottom of the sheet (the action bar, issue #130), in reach with six rules or a test playback above it.
+    kids.push(h('div', { class: 'actionbar', 'data-id': 'actionbar' }, [
+      h('button', { class: 'btn primary block', type: 'button', 'data-act': 'rb-save', disabled: !dirty(), text: dirty() ? 'Save rulebook' : 'Saved', onclick: save })]));
     st.body.replaceChildren(...kids);
     st.el.querySelectorAll('.rbpick, .rbscrim').forEach((x) => x.remove());
     if (st.pick) st.el.append(...picker(e));
