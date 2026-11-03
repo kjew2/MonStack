@@ -62,3 +62,7 @@ latent_power,tree.latent_power.name,generic,spd,400,,,,idea-pool lane C (#136): 
 lone_wolf,tree.lone_wolf.name,generic,str,400,,,,idea-pool lane E (#138): Divinity Original Sin 2 Lone Wolf
 arise,tree.arise.name,generic,int,400,,,,idea-pool lane E (#138): Solo Leveling Shadow Extraction
 last_rite,tree.last_rite.name,generic,hp,400,,,,idea-pool lane E (#138): Super Auto Pets faint triggers
+mimic_core,tree.mimic_core.name,generic,,400,,,,idea-pool lane F (#139): Balatro Blueprint
+heirloom,tree.heirloom.name,generic,,400,,,,idea-pool lane F (#139): Hades keepsakes
+mastery,tree.mastery.name,generic,wis,400,,,,idea-pool lane F (#139): Final Fantasy IX learned abilities
+limit_break,tree.limit_break.name,generic,,400,,,,idea-pool lane F (#139): Power Pro super abilities

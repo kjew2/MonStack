@@ -1,4 +1,4 @@
-# training-run vectors, hash v9 content=6.8/f43d9e3d
+# training-run vectors, hash v9 content=6.9/00add1ed
 
 slime balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -98,9 +98,9 @@ sprite hoarder seed=7
 
 sprite chaser seed=7
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=2 sp=0 injuries=0
-  stats hp 90 str 60 int 582 wis 155 dex 155 def 70 spd 519 luk 110
-  trees aether_striker:8/8 mind_warp:7/8 arise:4/8 starlit_ascension:8/8
-  hash c775da508f989b42685e58cc0132a0fc1d87dca4635514c2ce4d9ead1153aaef
+  stats hp 90 str 60 int 445 wis 155 dex 155 def 70 spd 602 luk 110
+  trees aether_striker:8/8 mind_warp:8/8 quickstep:1/8 starlit_ascension:8/8
+  hash b8c557756a3dfcf51f9f94cff06ae016c8bcb42c63dde478de111cab8ab38336
 
 sprite focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
@@ -179,3 +179,11 @@ shade_hound focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,b
   stats hp 100 str 145 int 75 wis 70 dex 865 def 70 spd 210 luk 155
   trees umbral_step:8/8 shadow_harvest:7/8 tome_of_echoes:2/8 umbral_veil:8/8
   hash 38104a21049b6acf958acee8e41005001438adc99b1a348d8b7891a45d0ecfd2
+
+drake focus seed=7 lane-f slots=pyromancy,heavy_armor,mimic_core,mastery,heirloom,limit_break
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=26 injuries=0
+  stats hp 215 str 1005 int 95 wis 130 dex 140 def 155 spd 90 luk 70
+  trees pyromancy:8/8 heavy_armor:8/8 mimic_core:8/8 mastery:8/8 heirloom:8/8 limit_break:8/8
+  end: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,2,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra heavy_armor_n7 | skills flame_breath,iron_hide,plate_mastery,mirror_feint,enlightened,second_wind,rally_cry,plate_mastery
+  fortune over heavy_armor: caps hp 999 str 1299 int 999 wis 999 dex 999 def 999 spd 999 luk 999 | keepsakes  | wins 2,0,2,0,2,2 | mastered pyromancy_n7,heavy_armor_n7,mimic_core_n7,heirloom_n7,limit_break_n7 | extra fortune_n7,heavy_armor_n7 | skills flame_breath,mirror_feint,enlightened,second_wind,rally_cry,jackpot,plate_mastery
+  hash 09b6748bf2d42d110d0fa01d5870af85adab1b21a0ff31ce1470f9e4784bd877

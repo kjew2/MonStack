@@ -150,3 +150,8 @@ MON_LONE_BONUS,double,0.4,lone_wolf rule: all the unit's stats rise by this frac
 MON_LONE_MALUS,double,0.2,lone_wolf rule: all the unit's stats fall by this fraction when it has allies at fight start. Placeholder
 MON_ARISE_STATS,double,0.3,arise rule: the first enemy the unit kills (not the last) rises on its side with this fraction of its stats. Placeholder
 MON_RITE_SHARE,double,0.3,last_rite rule: when the unit dies its living allies split this fraction of its base stats for the rest of the fight. Placeholder
+KEEPSAKE_STEP,double,0.05,heirloom: a growth_use node's extra growth per KEEPSAKE_DRILLS drills of its stat after it is bought (the heirloom capstone doubles it). Placeholder
+KEEPSAKE_DRILLS,int,3,heirloom: drills of the node's stat per KEEPSAKE_STEP of extra growth. Placeholder
+KEEPSAKE_MAX,double,0.3,heirloom: the most extra growth one growth_use node can reach. Placeholder
+MASTERY_WINS,int,2,mastery: rank fights a slotted tree with its capstone bought must win (while the mastery capstone is held) to become mastered. Placeholder
+LIMIT_BREAK_MAX,double,1299,limit_break: the cap of the tree's own stat while its capstone is held (instead of STAT_MAX). Placeholder

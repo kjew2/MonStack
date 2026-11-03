@@ -33,7 +33,7 @@ Every tap gives instant feedback (the command's result object). Fights are resol
 
 Tree commands (`SpendPoint`, `TakeTree`, `DiscardOffer`, `UseBook`; `specs/15` section 3; and `RerollDraft` with the Second Look talent, `specs/18` section 3) work in every phase. `Drill`, `Rest` and `Fight` also wait until no tree offer is pending. A command that is not allowed throws `InvalidOperationException`; an unknown stat throws `ArgumentException`. Only accepted commands enter the log.
 
-**Run-rule hooks (issue #133).** `TrainingRun` is a partial class with named hooks for the idea-pool run rules (lanes F and G of epic #132), declared in `Training/Rules/RunHooks.cs` and filled in `Training/Rules/LaneF.cs` and `LaneG.cs`; an unfilled hook does nothing. Hooks: the kit (`BuildFighter`, after the bought nodes), growth (before the talents' factors), drill gain (before the cap), drill cost, whether Rest is allowed (`CanRest`; `Rest` throws when it is not, and the UI locks the button), rest energy, cycle start, rank-fight start (both fresh fighters) and result, the stat cap (`StatCap`, `STAT_MAX` unless a rule raises it) and the run hash. A rule's run state is saved as lean JSON and hashed only when the run has it, so other runs keep their hash.
+**Run-rule hooks (issue #133).** `TrainingRun` is a partial class with named hooks for the idea-pool run rules (lanes F and G of epic #132), declared in `Training/Rules/RunHooks.cs` and filled in `Training/Rules/LaneF.cs` and `LaneG.cs`; an unfilled hook does nothing. Hooks: the kit (`BuildFighter`, after the bought nodes), growth (before the talents' factors), drill gain (before the cap), drill cost, whether Rest is allowed (`CanRest`; `Rest` throws when it is not, and the UI locks the button), rest energy, cycle start, rank-fight start (both fresh fighters) and result, the stat cap (`StatCap`, `STAT_MAX` unless a rule raises it) and the run hash; lane F added a rolled tree's own stat (`RollOwnStat`, before its filler nodes roll), a tree leaving its slot (`TreeRemoved`) and the extra kit nodes (`KitExtra`, which `BuildFighter` adds after the trees' nodes and `Vault.Seal` stores). Lane F's run rules (*Mimic Core*, *Heirloom*, *Mastery*, *Limit Break*) are in `specs/15` section 11. A rule's run state is saved as lean JSON and hashed only when the run has it, so other runs keep their hash.
 
 ## 3. Species
 
@@ -47,7 +47,7 @@ Content table `species`: `id`, `name_key`, `element`, `base_<stat>` and `grow_<s
 fail   = DRILL_FAIL_MIN + (DRILL_FAIL_MAX - DRILL_FAIL_MIN) * (1 - e)
 tier   = draw u1:  u1 < fail -> Fail;  u1 < 1 - DRILL_SUPER_P -> Success;  else Super
 raw    = gain_min + floor(u2 * (gain_max - gain_min + 1))           (drill_tiers row of the tier; draw u2)
-gain   = floor(raw * species.grow_<stat>), stat capped at STAT_MAX
+gain   = floor(raw * species.grow_<stat>), stat capped at STAT_MAX (StatCap: higher under a Limit Break, specs/15 section 11)
 injury = INJURY_MAX_P * (INJURY_BELOW - e) / INJURY_BELOW when e < INJURY_BELOW, else 0   (draw u3 only when > 0)
 energy = max(0, energy - DRILL_ENERGY_COST)
 ```

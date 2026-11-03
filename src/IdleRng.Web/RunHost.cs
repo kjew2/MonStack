@@ -215,8 +215,8 @@ namespace IdleRng.Web
                     id += "~cap~" + roll.Stat + "~" + Num(roll.CapGrowth);
                 }
                 else if (roll != null && roll.NodeStats[i] != null) id += "~" + n.Stat + "~" + Num(n.Amount);
-                w.Obj().P("id", id).P("cost", n.Cost).P("kind", n.Kind.ToString().ToLowerInvariant()).P("name", name).P("desc", desc).P("last", last);
-                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat) w.P("stat", n.Stat).P("amount", n.Amount);
+                w.Obj().P("id", id).P("cost", n.Cost).P("kind", KindName(n.Kind)).P("name", name).P("desc", desc).P("last", last);
+                if (TrainingRun.IsFiller(n.Kind)) w.P("stat", n.Stat).P("amount", n.Amount);
                 if (roll != null)
                 {
                     var tip = BattleText.NodeTip(_db, n, name, desc, last);
@@ -229,11 +229,11 @@ namespace IdleRng.Web
             var boosts = new List<(string stat, double growth, double flat)>();
             foreach (var n in nodes)
             {
-                if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
+                if (!TrainingRun.IsFiller(n.Kind)) continue;
                 int k = boosts.FindIndex(b => b.stat == n.Stat);
                 if (k < 0) { boosts.Add((n.Stat, 0, 0)); k = boosts.Count - 1; }
                 var b0 = boosts[k];
-                boosts[k] = n.Kind == NodeKind.Growth ? (b0.stat, b0.growth + n.Amount, b0.flat) : (b0.stat, b0.growth, b0.flat + n.Amount);
+                boosts[k] = n.Kind != NodeKind.Stat ? (b0.stat, b0.growth + n.Amount, b0.flat) : (b0.stat, b0.growth, b0.flat + n.Amount);
             }
             if (roll != null)
             {
@@ -255,10 +255,20 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
+        /// <summary>A node kind as content spells it (growth_use for NodeKind.GrowthUse).</summary>
+        private static string KindName(NodeKind k) => k == NodeKind.GrowthUse ? "growth_use" : k.ToString().ToLowerInvariant();
+
         private (string name, string desc) NodeText(TreeNodeDef n)
         {
             switch (n.Kind)
             {
+                case NodeKind.GrowthUse:
+                {
+                    var c = _db.ConstantValues;
+                    return ("+" + Num(n.Amount) + " " + n.Stat.ToUpperInvariant() + " growth (keepsake)",
+                            "Drills raise " + n.Stat.ToUpperInvariant() + " faster, and more with use: +" + Num(c["KEEPSAKE_STEP"]) + " growth per "
+                            + Num(c["KEEPSAKE_DRILLS"]) + " drills of " + n.Stat.ToUpperInvariant() + " after it is bought, up to +" + Num(c["KEEPSAKE_MAX"]) + ".");
+                }
                 case NodeKind.Growth:
                     return ("+" + Num(n.Amount) + " " + n.Stat.ToUpperInvariant() + " growth", "Drills raise " + n.Stat.ToUpperInvariant() + " faster.");
                 case NodeKind.Stat:
@@ -1228,6 +1238,9 @@ namespace IdleRng.Web
             w.Key("odds").Obj().P("fail", fail).P("super", super).P("success", Math.Max(0, 1 - fail - super))
                 .P("injury", TrainingRun.InjuryChance(k, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);
+            w.Key("statCaps").Obj();   // each stat's cap this run: STAT_MAX, or higher under a Limit Break (specs/15 section 11)
+            foreach (var id in StatIds.Trained) w.P(id, TrainingRun.StatCap(_db, s, id));
+            w.EndObj();
             var opp = TrainingRun.OpponentFighter(_db, s, s.Rank);
             var oppEnemy = TrainingRun.LadderEnemy(_db, s, s.Rank);
             string oppName = _db.Text(oppEnemy != null ? oppEnemy.NameKey : _db.FightRanks[s.Rank].NameKey);

@@ -630,6 +630,46 @@
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
+    },
+    {
+      "id": "mimic_core",
+      "name_key": "tree.mimic_core.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "heirloom",
+      "name_key": "tree.heirloom.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "mastery",
+      "name_key": "tree.mastery.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "limit_break",
+      "name_key": "tree.limit_break.name",
+      "kind": "generic",
+      "offer_stat": null,
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
     }
   ]
 }

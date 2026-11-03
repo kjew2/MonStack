@@ -28,7 +28,7 @@ SCHEMA_VERSION = 1
 ENUMS = {
     "ConstantType": ["int", "double", "bool"],
     "TreeKind": ["native", "generic", "chase", "book", "fusion"],
-    "NodeKind": ["growth", "stat", "skill", "trigger", "rule"],
+    "NodeKind": ["growth", "stat", "skill", "trigger", "rule", "growth_use"],
     "FightTrigger": ["battle_start", "on_action", "on_basic_attack", "on_crit", "on_hit_taken", "on_evade"],
     "ConditionType": ["tree_maxed", "node_owned", "stat_at_least", "tally_at_least"],
     "TalentEffect": ["drill_cost", "stat_floor", "start_sp", "rest_energy", "fail_chance", "super_chance",
@@ -101,6 +101,9 @@ REQUIRED_CONSTANTS = {
     "MON_BREAK_BONUS": "double", "MON_LATENT_ACTIONS": "int", "MON_LATENT_BONUS": "double",
     # idea-pool lane E, team and mode rules (specs/16 section 6.2, #138)
     "MON_LONE_BONUS": "double", "MON_LONE_MALUS": "double", "MON_ARISE_STATS": "double", "MON_RITE_SHARE": "double",
+    # idea-pool lane F, tree and kit run rules (specs/15 section 11, #139)
+    "KEEPSAKE_STEP": "double", "KEEPSAKE_DRILLS": "int", "KEEPSAKE_MAX": "double", "MASTERY_WINS": "int",
+    "LIMIT_BREAK_MAX": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -116,7 +119,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane C (#136)
             "brave_heart", "one_more", "guard_break", "latent_power",
             # idea-pool lane E (#138)
-            "lone_wolf", "arise", "last_rite"]
+            "lone_wolf", "arise", "last_rite",
+            # idea-pool lane F (#139): run rules (tree and kit build)
+            "mimic_core", "heirloom", "mastery", "limit_break"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -193,6 +198,10 @@ MON_RANGES = {
     # idea-pool lane E (#138)
     "MON_LONE_BONUS": (">= 0", lambda v: v >= 0), "MON_LONE_MALUS": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_ARISE_STATS": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_RITE_SHARE": (">= 0", lambda v: v >= 0),
+    # idea-pool lane F (#139)
+    "KEEPSAKE_STEP": (">= 0", lambda v: v >= 0), "KEEPSAKE_DRILLS": (">= 1", lambda v: v >= 1),
+    "KEEPSAKE_MAX": (">= 0", lambda v: v >= 0), "MASTERY_WINS": (">= 1", lambda v: v >= 1),
+    "LIMIT_BREAK_MAX": (">= 0", lambda v: v >= 0),   # and >= STAT_MAX, checked in validate
 }
 
 
@@ -403,7 +412,7 @@ def validate_trees(t, errs):
         if n["cost"] < 1:
             errs.add("E043", loc, "cost must be >= 1")
         k = n["kind"]
-        if k in ("growth", "stat"):
+        if k in ("growth", "stat", "growth_use"):
             if n["stat"] not in STATS:
                 errs.add("E023", loc, f"stat '{n['stat']}' is not a trained stat")
             if n["amount"] is None or not n["amount"] > 0:
@@ -866,6 +875,8 @@ def validate(t, errs):
     for k, (rule, ok) in MON_RANGES.items():
         if k in keys and not ok(keys[k]["value"]):
             errs.add("E043", f"constants[{k}]", f"value out of range ({rule})")
+    if "LIMIT_BREAK_MAX" in keys and "STAT_MAX" in keys and not keys["LIMIT_BREAK_MAX"]["value"] >= keys["STAT_MAX"]["value"]:
+        errs.add("E043", "constants[LIMIT_BREAK_MAX]", "value out of range (>= STAT_MAX)")
     validate_training(t, keys, errs)
     # elements
     orders = sorted(r["sort_order"] for r in t["elements"])

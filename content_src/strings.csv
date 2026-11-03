@@ -608,3 +608,16 @@ rule.arise.unit,{name} (risen)
 rule.last_rite.name,Last Rite
 rule.last_rite.desc,"When it is knocked out, its living allies split {MON_RITE_SHARE:pct} of its base stats among them for the rest of the fight. A save from Rebirth or Death's Door is not a knockout. Does nothing in a one-on-one fight."
 rule.last_rite.log,each ally gains {amount:pct} of its stats
+tree.mimic_core.name,Mimic Core
+tree.heirloom.name,Heirloom
+tree.mastery.name,Mastery
+tree.limit_break.name,Limit Break
+rule.mimic_core.name,Mimic Core
+rule.mimic_core.desc,"It also gets the capstone of the tree in the slot just before this one, bought or not, while that tree stays there. Nothing in the first slot; chase and fusion capstones are never copied."
+rule.heirloom.name,Heirloom
+rule.heirloom.desc,"Keepsake growth nodes grow twice as fast: +{KEEPSAKE_STEP} growth per {KEEPSAKE_DRILLS} drills of their stat becomes twice that, still up to +{KEEPSAKE_MAX}."
+rule.mastery.name,Mastery
+rule.mastery.desc,"A slotted tree with its capstone bought that wins {MASTERY_WINS} rank fights while this is held becomes mastered: if it is overwritten, its capstone stays in the kit (last) while this is held. Chase and fusion trees, and Mastery itself, are never mastered."
+rule.limit_break.name,Limit Break
+rule.limit_break.desc,"This tree's own stat can rise past the usual cap, up to {LIMIT_BREAK_MAX}, by drills and flat nodes."
+tip.tag.growth_use,Keepsake growth

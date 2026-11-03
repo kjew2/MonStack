@@ -156,7 +156,8 @@ namespace IdleRng.Sim.Combat
             {
                 case NodeKind.Growth:
                 case NodeKind.Stat:
-                    tip.Tags.Add(db.Text(n.Kind == NodeKind.Growth ? "tip.tag.growth" : "tip.tag.stat"));
+                case NodeKind.GrowthUse:
+                    tip.Tags.Add(db.Text(n.Kind == NodeKind.Growth ? "tip.tag.growth" : n.Kind == NodeKind.GrowthUse ? "tip.tag.growth_use" : "tip.tag.stat"));
                     tip.Text = fillerDesc;
                     tip.Fact(n.Stat.ToUpperInvariant() + " · " + StatName(db, n.Stat), StatDesc(db, n.Stat));
                     break;

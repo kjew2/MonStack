@@ -2437,6 +2437,58 @@
     {
       "key": "rule.last_rite.log",
       "text": "each ally gains {amount:pct} of its stats"
+    },
+    {
+      "key": "tree.mimic_core.name",
+      "text": "Mimic Core"
+    },
+    {
+      "key": "tree.heirloom.name",
+      "text": "Heirloom"
+    },
+    {
+      "key": "tree.mastery.name",
+      "text": "Mastery"
+    },
+    {
+      "key": "tree.limit_break.name",
+      "text": "Limit Break"
+    },
+    {
+      "key": "rule.mimic_core.name",
+      "text": "Mimic Core"
+    },
+    {
+      "key": "rule.mimic_core.desc",
+      "text": "It also gets the capstone of the tree in the slot just before this one, bought or not, while that tree stays there. Nothing in the first slot; chase and fusion capstones are never copied."
+    },
+    {
+      "key": "rule.heirloom.name",
+      "text": "Heirloom"
+    },
+    {
+      "key": "rule.heirloom.desc",
+      "text": "Keepsake growth nodes grow twice as fast: +{KEEPSAKE_STEP} growth per {KEEPSAKE_DRILLS} drills of their stat becomes twice that, still up to +{KEEPSAKE_MAX}."
+    },
+    {
+      "key": "rule.mastery.name",
+      "text": "Mastery"
+    },
+    {
+      "key": "rule.mastery.desc",
+      "text": "A slotted tree with its capstone bought that wins {MASTERY_WINS} rank fights while this is held becomes mastered: if it is overwritten, its capstone stays in the kit (last) while this is held. Chase and fusion trees, and Mastery itself, are never mastered."
+    },
+    {
+      "key": "rule.limit_break.name",
+      "text": "Limit Break"
+    },
+    {
+      "key": "rule.limit_break.desc",
+      "text": "This tree's own stat can rise past the usual cap, up to {LIMIT_BREAK_MAX}, by drills and flat nodes."
+    },
+    {
+      "key": "tip.tag.growth_use",
+      "text": "Keepsake growth"
     }
   ]
 }
