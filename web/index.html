@@ -393,6 +393,34 @@ small, .small { font-size: 12px; }
 .now.event { border-color: var(--gold); } .now.event b { color: var(--gold); }
 .tipword { text-decoration: underline dotted; text-underline-offset: 2px; }
 .tslot { min-height: 34px; } .tslot.empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 0 10px; }
+/* ---- Endless Tower screen (specs/28 section 9 step 5): a team slot with its rulebook line, the mutator list, the next floors with
+   their squads, the climb's result, and the 4v4 playback (no unit spans the row) with its mutators and rule-firing lines. */
+.tslot2 { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; border-bottom: 1px solid var(--line-faint); }
+.tslot2:last-child { border-bottom: 0; }
+.trules { padding-left: 30px; min-height: 32px; }
+.emuts { display: flex; flex-direction: column; gap: 8px; }
+.emut { padding: 6px 10px; border-left: 3px solid var(--line); border-radius: var(--r-xs); }
+.emut.on { border-left-color: var(--epic); background: var(--epic-deep); }
+.emut.on .tag { border-color: var(--epic); color: var(--epic-stroke); }
+.efloors { display: flex; flex-direction: column; gap: 10px; }
+.efloor { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--line-faint); }
+.efloor:last-child, .efloors details > .efloor:last-child { border-bottom: 0; padding-bottom: 0; }
+.efloors details { display: flex; flex-direction: column; gap: 10px; }
+.efloors details > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.efloors details[open] > summary { margin-bottom: 6px; }
+.efloor.elite { border-left: 3px solid var(--gold); padding-left: 8px; }
+.tag.elite { border-color: var(--gold); color: var(--gold); background: var(--gold-deep); }
+.tag.hint { border-style: dashed; color: var(--muted); background: transparent; }
+.efoes { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
+.efoe { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.efoe b { font-weight: 700; }
+.eresult { display: flex; flex-direction: column; gap: 10px; }
+.epay { display: flex; flex-direction: column; gap: 2px; text-align: center; }
+.epay [data-id=endless-shards] { font: 700 18px var(--font-title); }
+.epay .muted[data-id=endless-shards] { font: 600 13px var(--font-display); }
+.units.endless .unit.foe { grid-column: auto; }
+.alog .gambit { color: var(--epic); font-style: italic; }
+.now.gambit { border-color: var(--epic); background: var(--epic-deep); } .now.gambit b { color: var(--epic); }
 .speed { display: flex; align-items: center; gap: 6px; }
 .speed > span { flex: 1; }
 .speed button { min-height: 44px; min-width: 56px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel-2); font: 600 13px var(--font-display); color: var(--muted); }
@@ -588,6 +616,51 @@ small, .small { font-size: 12px; }
 #toasts { position: absolute; left: 12px; right: 12px; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 6px; pointer-events: none; z-index: 10; }
 .toast { padding: 8px 12px; border-radius: var(--r-sm); font-size: 13px; font-weight: 600; background: var(--toast-bg); box-shadow: var(--shadow-pop); animation: tin .2s ease-out; }
 @keyframes tin { from { transform: translateY(8px); opacity: 0; } }
+/* ---- Rulebook editor (specs/28 section 4.5): web/rulebook.js. A full-screen sheet in #app over the Vault sheet or the Endless
+   screen; rule cards on one line where they fit; chips open a bottom picker inside the sheet; the acting rule's card lights up. */
+.rbsheet { position: absolute; inset: 0; z-index: 9; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+.rbbody { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 14px var(--gutter-r) 20px var(--gutter-l); display: flex; flex-direction: column; gap: 12px; }
+.rbbody > * { flex-shrink: 0; }
+.rbhead h2 { line-height: 1.1; }
+.rbhelp { margin: 0; }
+.rberr { margin: 0; color: var(--bad); border-color: var(--bad); }
+.rblist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rbcard { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 5px; padding: 8px 8px 8px 10px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); box-shadow: var(--shadow-card); transition: box-shadow var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast); }
+.rbcard.warn { border-color: var(--warn); }
+.rbcard.lit { border-color: var(--gold); background: var(--gold-deep); box-shadow: 0 0 0 2px var(--gold), var(--glow-gold); }
+.rbnum { flex: none; margin-right: 3px; width: 22px; height: 22px; border-radius: var(--r-pill); display: grid; place-items: center; background: var(--gems-bg); color: var(--gems); font-weight: 800; font-size: 12px; }
+.rbcard.lit .rbnum { background: var(--gold); color: var(--on-ok); }
+.rbline { display: contents; }   /* the chips flow with the number and the move buttons, which sit beside the last chip when they fit */
+.rbk { font: 800 10px var(--font-display); letter-spacing: .08em; color: var(--muted); }
+.rbchip { min-height: 34px; max-width: 100%; padding: 4px 10px; border-radius: var(--r-pill); border: 1px solid var(--gems-keycap); background: var(--gems-bg); color: var(--text);
+  font: 800 13px/1.15 var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rbchip.value { background: var(--gold-bg); border-color: var(--gold-dark); }
+.rbchip.warn { background: var(--warn-bg); border-color: var(--warn); }
+.rbwarn { flex-basis: 100%; color: var(--warn); }
+.rbmoves { display: flex; gap: 4px; margin-left: auto; }
+.rbbtn { width: 40px; height: 40px; border-radius: var(--r-sm); border: 1px solid var(--keycap); background: var(--panel); box-shadow: 0 2px 0 var(--keycap); font-size: 16px; font-weight: 800; }
+.rbtools { flex-wrap: wrap; gap: 8px; }
+.rbscrim { position: absolute; inset: 0; background: var(--cd-veil); z-index: 1; }
+.rbpick { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; max-height: 75%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+  padding: 14px var(--gutter-r) calc(14px + env(safe-area-inset-bottom, 0px)) var(--gutter-l); background: var(--panel); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--shadow-pop); }
+.rbrow { display: flex; align-items: stretch; gap: 6px; }
+.rbopt { flex: 1; min-width: 0; min-height: 48px; text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel-2); }
+.rbrow.sel .rbopt { border-color: var(--gems); background: var(--gems-bg); }
+.rbinfo { flex: none; width: 44px; display: grid; place-items: center; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel); font: 800 15px var(--font-display); color: var(--gems); text-decoration: none; }
+.rbvals { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.rbplay { gap: 6px; }
+.rbsides { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.rbside { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rbunit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; border-radius: var(--r-xs); padding: 1px 3px; }
+.rbunit.me .rbuname { font-weight: 800; color: var(--gems); }
+.rbunit.acting { background: var(--gems-bg); }
+.rbunit.down { opacity: .45; }
+.rbuname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rbunit .bar { height: 12px; }
+.rbunit .bar span { font-size: 9px; line-height: 12px; }
+.rbnow { min-height: 1.4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rbresult { min-width: 0; }
 /* ---- Skin: daylight (specs/26 section 4.1). A pale sky with soft clouds; every panel a white rounded card with a soft blue shadow;
    buttons are chunky keys that press down (a solid shadow under them); the tab bar is a row of pills. Colours come from :root only. */
 body, #app { background: radial-gradient(ellipse 60% 90px at 18% 40px, var(--cloud), transparent 70%), radial-gradient(ellipse 45% 70px at 86% 90px, var(--cloud), transparent 70%),
@@ -744,6 +817,7 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 <script src="run-engine.js"></script>
 <script src="sprites.js"></script>
 <script src="tooltips.js"></script>
+<script src="rulebook.js"></script>
 <script src="vault.js"></script>
 <script src="run.js"></script>
 <script src="auth.js"></script>

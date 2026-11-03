@@ -286,6 +286,25 @@ namespace IdleRng.Sim.Tower
             return result;
         }
 
+        /// <summary>
+        /// One floor's fight on its own (playback, and the rulebook editor's test): the same fight <see cref="Run"/> fights on that
+        /// floor, since every floor starts at full HP from its own seed with the season's mutators so far. Returns the floor's plan,
+        /// the mutators in force and the fight. Observers only read.
+        /// </summary>
+        public static (EndlessFloorPlan plan, List<MutatorDef> mutators, FightResult fight) FightFloor(ContentDb c, IReadOnlyList<Fighter> team,
+            int season, int floor, Action<FightAction> onAction = null, Action<FightState> onStart = null)
+        {
+            if (c == null) throw new ArgumentNullException(nameof(c));
+            if (floor < 1 || floor > c.Constants.EndlessMaxFloors)
+                throw new ArgumentOutOfRangeException(nameof(floor), $"floor must be 1..{c.Constants.EndlessMaxFloors}");
+            var side = Team(c, team);
+            int b = c.Constants.EndlessBand;
+            var plan = Band(c, season, (floor - 1) / b)[(floor - 1) % b];
+            var mutators = SeasonMutators(c, season, plan.Mutators);
+            var fight = BattleSim.Resolve(Rules(c, mutators), side, Squad(c, plan), FloorSeed(c, season, floor), onAction, onStart);
+            return (plan, mutators, fight);
+        }
+
         public static EndlessEnemyDef Enemy(ContentDb c, string id)
         {
             foreach (var e in c.EndlessEnemies) if (e.Id == id) return e;

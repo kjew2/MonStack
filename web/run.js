@@ -10,7 +10,7 @@
 
   let run = null, C = null, shownView = null, shownHomeTab = null;   // shownView: the view the last render drew (shownHomeTab: and the home tab)
   const ui = {
-    view: 'home',            // home | run | climb | grade | vendor | tower
+    view: 'home',            // home | run | climb | grade | vendor | tower | endless
     tab: 'train',            // train | trees | ladder | log
     homeTab: 'raise',        // the home screen's tab: raise | vault | talents | dungeon | goals
     pick: null,              // species chosen on the home screen
@@ -40,6 +40,9 @@
     heldToasts: [],          // toasts waiting for the tree offer to close (issue #115: they covered it)
     towerFight: null,        // the tower floor fight shown in the playback modal (issue #98), or null
     reveal: null,            // the merchant's card reveal on the vendor screen (issue #108): {i, phase: 'hint'|'flip', timer}, or null
+    endlessTeam: [],         // Endless Tower team: exactly teamSize Vault indices in slot order (specs/28 section 2)
+    endlessResult: null,     // the last climb's result from the engine (run.runEndless) plus its season and team, shown on the Endless screen
+    endlessFight: null,      // the Endless floor fight shown in the playback modal, or null
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -153,6 +156,11 @@
     if (ui.view === 'tower') {   // a floor playback (issue #98) opens in the modal over the tower screen
       tabs.hidden = true; modal.hidden = true; modal.replaceChildren(); renderTower(main, modal);
       if (wasView === 'tower') main.scrollTop = prevScroll;
+      return;
+    }
+    if (ui.view === 'endless') {   // a floor playback opens in the modal over the Endless screen (the rulebook editor draws its own overlay)
+      tabs.hidden = true; modal.hidden = true; modal.replaceChildren(); renderEndless(main, modal);
+      if (wasView === 'endless') main.scrollTop = prevScroll;
       return;
     }
     const s = run.state;
@@ -947,6 +955,8 @@
       modal.append(h('h2', { text: v.title, 'data-id': 'fight-play', 'data-hash': f.hash }),
         h('div', { class: 'row between' }, [progress, h('div', { class: 'corrow', 'data-id': 'corruption' }, [h('span', { class: 'small muted tipword', text: tipName('corruption'), ...towerTip('corruption') }), corruption])]));
     } else modal.append(h('div', { class: 'row between' }, [h('h2', { text: v.title, 'data-id': 'fight-play' }), progress]));
+    if (v.cls) units.root.classList.add(v.cls);   // a layout of the view's own (the Endless Tower's 4v4 grid)
+    if (v.head) modal.append(v.head);             // what the view shows under the title (the Endless Tower's mutators)
     if (v.stage) modal.append(h('div', { class: 'fstage' }, [units.root, now]), units.skillRows, speedToggle(), h('h3', { text: 'Latest' }), recent);
     else modal.append(units.root, now, speedToggle(), h('h3', { text: 'Latest' }), recent);
     if (extra) modal.append(extra);
@@ -968,9 +978,14 @@
       d.corruption.querySelector('span').textContent = 'lv ' + lv;
     }
     const side = x && d.v.ours(x.actor) ? 'you' : 'foe';
-    const ev = x && x.event && x.event.indexOf('rule:') !== 0 ? x.event : null;   // a tower event (rule events read like actions)
-    d.now.className = 'now' + (x ? ' ' + (ev ? 'event' : side) : '');
-    d.now.replaceChildren(...(x ? (ev ? eventBanner(x, d.v.name) : [
+    const gambit = !!x && x.event === 'gambit';   // a rulebook rule firing: its own banner, not a tower warning
+    const ev = x && !gambit && x.event && x.event.indexOf('rule:') !== 0 ? x.event : null;   // a tower event (rule events read like actions)
+    d.now.className = 'now' + (x ? ' ' + (gambit ? 'gambit ' + side : ev ? 'event' : side) : '');
+    d.now.replaceChildren(...(x ? (gambit ? [
+      h('small', { text: d.v.name(x.actor) }),
+      h('b', { 'data-id': 'fight-gambit', text: 'Rule ' + (Math.round(x.amount) + 1) }),
+      h('span', { text: gambitText(x, d.v.name(x.actor)) }),
+    ] : ev ? eventBanner(x, d.v.name) : [
       h('small', { text: d.v.name(x.actor) }),
       h('b', { text: actionName(x) }),
       h('span', { text: (x.target ? '→ ' + d.v.name(x.target) + ': ' : '') + actionResult(x) }),
@@ -1362,6 +1377,16 @@
           onclick: () => { ui.view = 'tower'; ui.towerResult = null; ui.towerFight = null; ui.towerTeam = ui.towerTeam.filter((i) => i < run.account.vault.length); render(); $('main').scrollTop = 0; } }),
       ]),
     ]));
+    // The Endless Tower (specs/28): free, unlimited, a new lineup every week.
+    const ei = run.endlessInfo(run.endlessSeason());
+    main.append(h('h3', { text: 'Endless Tower' }), h('div', { class: 'card', 'data-id': 'endless-card' }, [
+      h('p', { class: 'small muted', text: 'A free weekly climb with no top floor: exactly ' + ei.teamSize + ' Vault monsters fight ' + ei.teamSize + 'v' + ei.teamSize +
+        ' squads that keep getting stronger, and a new mutator joins every ' + ei.band + ' floors. Climb as often as you like; floors new this season pay shards. Each monster follows its own rulebook.' }),
+      h('div', { class: 'row between' }, [
+        h('span', { class: 'small num', 'data-id': 'endless-bests', text: 'Best this season ' + ei.clearedSeason + ' · best ever ' + ei.clearedEver }),
+        h('button', { class: 'btn gemsy small', type: 'button', 'data-act': 'endless', text: 'Enter', onclick: openEndless }),
+      ]),
+    ]));
   }
 
   // ---- Dungeon (specs/21 section 8): today's lineup, a team of Vault monsters, one attempt at a time. The engine runs the
@@ -1418,37 +1443,44 @@
 
   // The team (issue #98): the slots in order, each movable up or down (slot order breaks ATB ties and sets default targets,
   // specs/21 section 2) or removable, then the Vault with its search, sort and filters (web/vault.js) to pick from.
-  function towerTeamPicker(main, teamMax) {
-    const acct = run.account, team = ui.towerTeam;
+  function towerTeamPicker(main, teamMax) { teamPicker(main, ui.towerTeam, teamMax, 'tower', null); }
+  // The picker for any team: `team` (Vault indices, changed in place), `slotsN` slots, `pre` the prefix of every data-act and
+  // data-id ('tower' for the Dungeon, 'endless' for the Endless Tower), and `extra(k, i, e)`, an optional line under a filled slot.
+  function teamPicker(main, team, slotsN, pre, extra) {
+    const acct = run.account;
     const name = (i) => { const e = acct.vault[i]; return e.name || (speciesDef(e.species) || { name: e.species }).name; };   // the apex form's name when it has one, as in the Vault
     const move = (k, d) => { const t = team[k]; team[k] = team[k + d]; team[k + d] = t; render(); };
-    const slots = h('div', { class: 'card tslots', 'data-id': 'tower-slots' });
-    for (let k = 0; k < teamMax; k++) {
+    const slots = h('div', { class: 'card tslots', 'data-id': pre + '-slots' });
+    for (let k = 0; k < slotsN; k++) {
       const i = team[k], e = i === undefined ? null : acct.vault[i];
-      slots.append(h('div', { class: 'row between tslot' + (e ? '' : ' empty'), 'data-id': 'tower-slot-' + k }, e ? [
+      const kids = e ? [
         h('span', { class: 'row', style: 'min-width:0' }, [h('span', { class: 'tag num', text: String(k + 1) }), h('b', { text: name(i) }), h('span', { class: 'tag', text: up(e.grade) })]),
         h('span', { class: 'row', style: 'gap:4px' }, [
-          h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-slot-up-' + k, 'aria-label': 'Move ' + name(i) + ' up', text: '↑', disabled: k === 0, onclick: () => move(k, -1) }),
-          h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-slot-down-' + k, 'aria-label': 'Move ' + name(i) + ' down', text: '↓', disabled: k === team.length - 1, onclick: () => move(k, 1) }),
-          h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-slot-remove-' + k, 'aria-label': 'Take ' + name(i) + ' off the team', text: '✕', onclick: () => { team.splice(k, 1); render(); } }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': pre + '-slot-up-' + k, 'aria-label': 'Move ' + name(i) + ' up', text: '↑', disabled: k === 0, onclick: () => move(k, -1) }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': pre + '-slot-down-' + k, 'aria-label': 'Move ' + name(i) + ' down', text: '↓', disabled: k === team.length - 1, onclick: () => move(k, 1) }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': pre + '-slot-remove-' + k, 'aria-label': 'Take ' + name(i) + ' off the team', text: '✕', onclick: () => { team.splice(k, 1); render(); } }),
         ]),
-      ] : [h('span', { class: 'small muted', text: 'Slot ' + (k + 1) + ': empty' })]));
+      ] : [h('span', { class: 'small muted', text: 'Slot ' + (k + 1) + ': empty' })];
+      const more = e && extra ? extra(k, i, e) : null;
+      slots.append(more
+        ? h('div', { class: 'tslot tslot2', 'data-id': pre + '-slot-' + k }, [h('div', { class: 'row between' }, kids), more])
+        : h('div', { class: 'row between tslot' + (e ? '' : ' empty'), 'data-id': pre + '-slot-' + k }, kids));
     }
     main.append(slots, h('p', { class: 'small muted', text: 'Slot 1 acts first on a tie and is the default target. Pick from the Vault:' }));
-    const list = h('div', { class: 'card', 'data-id': 'tower-vault' });
+    const list = h('div', { class: 'card', 'data-id': pre + '-vault' });
     main.append(VAULT.browse(vaultHelpers(), (rows, size) => {
       const kids = [];
-      if (rows.length !== size) kids.push(h('div', { class: 'row between small muted', 'data-id': 'tower-showing' }, [
+      if (rows.length !== size) kids.push(h('div', { class: 'row between small muted', 'data-id': pre + '-showing' }, [
         h('span', { text: 'Showing ' + rows.length + ' of ' + size }),
-        h('button', { class: 'btn small', type: 'button', 'data-act': 'tower-clear', text: 'Clear filters', onclick: VAULT.clear }),
+        h('button', { class: 'btn small', type: 'button', 'data-act': pre + '-clear', text: 'Clear filters', onclick: VAULT.clear }),
       ]));
       if (!rows.length) kids.push(h('p', { class: 'small muted', text: 'No monster in the Vault matches.' }));
       rows.forEach(([e, i]) => {
         const slot = team.indexOf(i);
-        const cb = h('input', { type: 'checkbox', 'data-act': 'tower-pick-' + i, disabled: slot < 0 && team.length >= teamMax,
+        const cb = h('input', { type: 'checkbox', 'data-act': pre + '-pick-' + i, disabled: slot < 0 && team.length >= slotsN,
           onchange: (ev) => { if (ev.target.checked) team.push(i); else team.splice(team.indexOf(i), 1); render(); } });
         cb.checked = slot >= 0;
-        kids.push(h('label', { class: 'row between small', 'data-id': 'tower-entry', 'data-index': String(i) }, [
+        kids.push(h('label', { class: 'row between small', 'data-id': pre + '-entry', 'data-index': String(i) }, [
           h('span', { class: 'row', style: 'min-width:0;flex-wrap:wrap' }, [cb, sprite(e.species, e.apex, 'small'), h('b', { text: name(i) }), h('span', { class: 'tag', text: up(e.grade) }),
             e.gauntlet ? h('span', { class: 'muted', text: e.gauntlet.label }) : null]),
           h('span', { class: 'row', style: 'gap:6px;flex-shrink:0' }, [h('span', { class: 'muted num', style: 'white-space:nowrap', text: 'Σ ' + num(VAULT.total(e)) }),
@@ -1576,9 +1608,14 @@
 
   // One line of a tower fight's log: an ordinary action, or a tower event (rule events read like actions).
   function towerLine(x, name, sideOf) {
+    if (x.event === 'gambit') return { cls: 'gambit', text: gambitText(x, name(x.actor)) };
     if (x.event && x.event.indexOf('rule:') !== 0) return { cls: 'gold', text: towerEventText(x, name(x.actor)) };
     return { cls: sideOf[x.actor] === 0 ? 'you' : 'foe', text: name(x.actor) + ' · ' + actionName(x) + ' → ' + (x.target ? name(x.target) : 'all') + ': ' + actionResult(x) };
   }
+
+  // A rulebook rule firing (specs/28 section 4.3): the gambit event comes just before the action the rule chose; amount is the
+  // rule's index from 0.
+  const gambitText = (x, who) => who + ' follows rule ' + (Math.round(x.amount) + 1);
 
   function towerEventText(x, who) {
     const n = Math.round(x.amount);
@@ -1591,6 +1628,206 @@
     if (x.event === 'channel_broken') return '✓ ' + who + "'s channel is interrupted";
     if (x.event === 'channel_strike') return '⚠ ' + who + "'s channel strikes the team for " + n;
     return who + ': ' + x.event;
+  }
+
+  // ---- Endless Tower (specs/28 sections 2, 3, 5 and 6): this week's season, its mutators and the next floors, a team of exactly
+  // teamSize Vault monsters (each fights by its own rulebook) and free, unlimited climbs. The engine runs the climb and pays the
+  // floors new this season (run.runEndless); this screen only lays out what it returns. The deciding floor plays back at once
+  // (unless the speed is Skip), any floor fought from its Watch button (run.endlessFloor replays it, read only).
+  function openEndless() {
+    stopPlayback();
+    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null;
+    ui.endlessTeam = ui.endlessTeam.filter((i) => i < run.account.vault.length);
+    render();
+    $('main').scrollTop = 0;
+  }
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+  const CHECK_HINT = { aoe: 'many weak foes', focus: 'a tough core', open: 'open' };   // what a squad shape asks of the team (specs/28 section 3.1)
+  // A list of floors in words: "floor 4", "floors 3–7" when they run in a row, else "floors 2, 5, 9".
+  function floorsText(fs) {
+    const inRow = fs.every((f, k) => !k || f === fs[k - 1] + 1);
+    return fs.length === 1 ? 'floor ' + fs[0] : 'floors ' + (inRow ? fs[0] + '⁠–⁠' + fs[fs.length - 1] : fs.join(', '));
+  }
+  // Time left in season s by this device's clock: it ends at the next Monday 00:00 UTC, day 7(s + 1) - 3 (run.endlessSeason).
+  function seasonLeft(season) {
+    const ms = ((season + 1) * 7 - 3) * 86400000 - Date.now();
+    if (ms <= 0) return 'ending now';
+    const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), hh = Math.floor((m % 1440) / 60);
+    return (d ? d + 'd ' + hh + 'h' : hh + 'h ' + (m % 60) + 'm') + ' left';
+  }
+  // The rules in a Vault entry's rulebook text (BRIDGE.md: entry.rulebook, rules split by "|"; empty = the default AI).
+  const ruleCount = (e) => (e && e.rulebook ? e.rulebook.split('|').filter(Boolean).length : 0);
+  // Each team slot's rulebook now, to tell whether the shown climb was fought with the same ones.
+  const teamBooks = (team) => team.map((i) => (run.account.vault[i] || {}).rulebook || '').join('\n');
+
+  function renderEndless(main, modal) {
+    const acct = run.account, season = run.endlessSeason(), ei = run.endlessInfo(season), r = ui.endlessResult;
+    const size = ei.teamSize, team = ui.endlessTeam, next = Math.min(ei.maxFloors, ei.clearedSeason + 1);
+    main.append(h('div', { class: 'row between' }, [h('h2', { text: 'Endless Tower' }), h('span', { class: 'num gems', 'data-id': 'shards', text: acct.shards + ' shards' })]),
+      h('p', { class: 'small muted', 'data-id': 'endless-status', 'data-season': String(season), text: 'Season ' + season + ' · ' + seasonLeft(season) +
+        ' · best this season ' + ei.clearedSeason + ' · best ever ' + ei.clearedEver + ' · ' + plural(ei.climbs, 'climb', 'climbs') + ' this season' }));
+    if (r) endlessResult(main, r, season);
+
+    main.append(h('h3', { text: 'Team' }));
+    if (acct.vault.length < size) main.append(h('p', { class: 'small muted', 'data-id': 'endless-need', text: acct.vault.length
+      ? 'The climb takes exactly ' + size + ' monsters and your Vault holds ' + acct.vault.length + ': finish ' + plural(size - acct.vault.length, 'more run', 'more runs') + ' first.'
+      : 'Finish a run first: the team of ' + size + ' comes from your Vault.' }));
+    if (acct.vault.length) teamPicker(main, team, size, 'endless', (k, i, e) => {
+      const n = ruleCount(e);
+      return h('div', { class: 'row between small trules' }, [
+        h('span', { class: n ? '' : 'muted', 'data-id': 'endless-rules-n-' + k, text: n ? plural(n, 'rule', 'rules') : 'No rules' }),
+        h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-rules-' + k, text: 'Rules', onclick: () => openRulebook(i) }),
+      ]);
+    });
+    const ready = team.length === size;
+    main.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'endless-climb', disabled: !ready,
+      text: ready ? 'Climb with this team' : 'Pick ' + (team.length ? plural(size - team.length, 'more monster', 'more monsters') : size + ' monsters'),
+      onclick: climbEndless }));
+
+    // The season's mutators so far (specs/28 section 3.2): fixed and shown in advance; those in force on the next floor are marked.
+    main.append(h('h3', { text: 'Mutators' }));
+    const mc = h('div', { class: 'card emuts', 'data-id': 'endless-mutators' }, [h('p', { class: 'small muted', text: 'Rule changes for both sides. One joins every ' + ei.band + ' floors and they stack.' })]);
+    ei.mutators.forEach((m, k) => {
+      const on = m.fromFloor <= next;
+      mc.append(h('div', { class: 'emut' + (on ? ' on' : ''), 'data-id': 'endless-mutator-' + k, 'data-on': on ? '1' : null }, [
+        h('div', { class: 'row between' }, [h('b', { text: m.name }), h('span', { class: 'tag num', text: (on ? 'In force · ' : '') + 'from floor ' + m.fromFloor })]),
+        h('div', { class: 'small muted', text: m.desc }),
+      ]));
+    });
+    main.append(mc);
+
+    // The next floors after the season's best (specs/28 section 3.1): shape and what it asks, the squad, the shards a first clear pays.
+    main.append(h('h3', { text: 'Next floors' }));
+    const fl = h('div', { class: 'card efloors', 'data-id': 'endless-floors' });
+    if (!ei.floors.length) fl.append(h('p', { class: 'small muted', text: 'Every floor is cleared this season: a new lineup comes on Monday.' }));
+    const floorRow = (f) => h('div', { class: 'efloor' + (f.elite ? ' elite' : ''), 'data-id': 'endless-floor-' + f.floor }, [
+      h('div', { class: 'row between' }, [
+        h('span', { class: 'row', style: 'min-width:0;flex-wrap:wrap' }, [
+          h('span', { class: 'num muted', text: 'F' + f.floor }), h('b', { class: f.elite ? 'gold' : '', text: f.shapeName }),
+          f.elite ? h('span', { class: 'tag elite', text: 'Elite' }) : null,
+          h('span', { class: 'tag hint', 'data-id': 'endless-check', text: CHECK_HINT[f.check] || f.check }),
+        ]),
+        h('span', { class: 'small num gems', style: 'white-space:nowrap', text: '+' + f.shards + ' shards' }),
+      ]),
+      h('div', { class: 'efoes' }, f.enemies.map((x) => h('span', { class: 'efoe', 'data-id': 'endless-foe' }, [h('b', { text: x.name }), h('span', { class: 'muted', text: x.role }), elementTag(x.element)]))),
+      h('div', { class: 'small muted num', text: 'lv ' + f.level + (f.mutators ? ' · ' + plural(f.mutators, 'mutator', 'mutators') : ' · no mutators') }),
+    ]);
+    ei.floors.slice(0, 3).forEach((f) => fl.append(floorRow(f)));
+    if (ei.floors.length > 3) fl.append(h('details', { 'data-id': 'endless-more-floors' }, [
+      h('summary', { class: 'small', text: plural(ei.floors.length - 3, 'more floor', 'more floors') + ' (to floor ' + ei.floors[ei.floors.length - 1].floor + ')' }),
+      ...ei.floors.slice(3).map(floorRow),
+    ]));
+    main.append(fl);
+    main.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'endless-back', text: 'Back',
+      onclick: () => { stopPlayback(); ui.view = 'home'; ui.endlessResult = null; ui.endlessFight = null; render(); } }));
+
+    if (ui.endlessFight) { modal.hidden = false; endlessPlayModal(modal, ui.endlessFight); }
+  }
+
+  // The rulebook editor (web/rulebook.js, specs/28 section 4.5) draws its own overlay and calls onChange after a save. Its Test
+  // button replays `floor` with the edited rulebooks: the floor that stopped the shown climb, else the next floor not yet cleared;
+  // it needs a full team, so with fewer than teamSize monsters picked the editor gets no options and hides it.
+  // The season is read at the tap, not at the render: a week can end while the screen is open.
+  function openRulebook(vaultIndex) {
+    if (!window.RulebookView) { toast('Rulebook editor not loaded'); return; }
+    const season = run.endlessSeason(), ei = run.endlessInfo(season), r = ui.endlessResult;
+    const floor = r && r.season === season ? r.final.floor : Math.min(ei.maxFloors, ei.clearedSeason + 1);
+    const opts = ui.endlessTeam.length === ei.teamSize ? { season: season, team: ui.endlessTeam.slice(), floor: floor } : null;
+    window.RulebookView.open({ run: run, C: C, h: h, toast: toast, sprite: sprite, TIP: TIP, up: up, num: num, onChange: () => render() }, vaultIndex, opts);
+  }
+
+  function climbEndless() {
+    const season = run.endlessSeason(), team = ui.endlessTeam.slice();
+    const r = run.runEndless(season, team);
+    if (!r.ok) { toast(r.reason); render(); return; }
+    r.team = team; r.books = teamBooks(team);   // what endlessFloor needs to replay this climb's other floors, and the rulebooks it used
+    ui.endlessResult = r;
+    (r.achievements || []).forEach((a) => toast('Achievement: ' + a.name + (a.species ? '. ' + a.speciesName + ' unlocked!' : '')));
+    stopPlayback();
+    ui.endlessFight = ui.speed === 'skip' ? null : r.final;   // the deciding floor plays at once, unless the speed is Skip
+    if (ui.endlessFight) startPlayback(r.final);
+    render();
+    $('main').scrollTop = 0;
+  }
+
+  // The climb's result: a banner (it slams in once, when the player first sees it: after the deciding floor's playback closes, or
+  // at once on Skip), what it paid, then every floor fought with a Watch button and the deciding floor's log.
+  const FOUGHT_SHOWN = 10;   // a long climb lists its last floors, the rest one tap away
+  function endlessResult(main, r, season) {
+    const reveal = !r.seen && !ui.endlessFight;
+    if (reveal) r.seen = true;
+    const n = r.floorsCleared;
+    const big = r.capped ? 'Reached the top!' : n ? plural(n, 'floor cleared', 'floors cleared') : 'Defeated';
+    const sub = r.capped ? 'All ' + n + ' floors cleared: nothing stopped this team' : 'Fell on floor ' + r.floorReached + ' to ' + r.final.name;
+    const pay = [
+      h('div', { class: r.shards ? 'gems num' : 'muted', 'data-id': 'endless-shards', text: r.shards ? '+' + r.shards + ' Training Shards' : 'No new floors this season: nothing to pay' }),
+      r.newFloors.length ? h('div', { 'data-id': 'endless-new', text: 'New this season: ' + floorsText(r.newFloors) }) : null,
+      r.firstClears.length ? h('div', { class: 'gold', 'data-id': 'endless-first', text: 'First clears ever: ' + floorsText(r.firstClears) }) : null,
+      ...(r.achievements || []).map((a) => h('div', { class: 'gold', 'data-id': 'endless-earned-' + a.id }, [h('b', { text: '🏆 ' + a.name }), h('span', { class: 'muted', text: ' · ' + a.text })])),
+    ];
+    const card = h('div', { class: 'card alert eresult', 'data-id': 'endless-result', 'data-season': String(r.season) }, [
+      h('div', { class: 'loot ' + (r.capped ? 'clear' : r.shards ? 'some' : 'none') + (reveal ? ' anim' : ''), 'data-id': 'endless-banner' }, [
+        h('div', { class: 'lhead' }, [h('div', { class: 'big', text: big }), h('div', { class: 'sub', 'data-id': 'endless-fell', text: sub })]),
+      ]),
+      h('div', { class: 'epay small' }, pay),
+      r.season !== season ? h('p', { class: 'small muted', 'data-id': 'endless-old', text: "This climb was last season's: this week's floors are new." }) : null,
+      teamBooks(r.team) !== r.books ? h('p', { class: 'small muted', 'data-id': 'endless-books-changed', text: 'Rulebooks changed since this climb: Watch replays a floor with the new ones.' }) : null,
+    ]);
+    const rows = h('div', { class: 'small floors-fought', 'data-id': 'endless-fought' });
+    const all = r.showAll || r.floors.length <= FOUGHT_SHOWN + 2;
+    if (!all) rows.append(h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-fought-all', text: 'Show all ' + r.floors.length + ' floors',
+      onclick: () => { r.showAll = true; render(); } }));
+    (all ? r.floors : r.floors.slice(-FOUGHT_SHOWN)).forEach((f) => rows.append(h('div', { class: 'row between', 'data-id': 'endless-fought-' + f.floor, 'data-hash': f.hash }, [
+      h('span', null, [
+        h('span', { class: f.won ? 'ok' : 'bad', text: (f.won ? '✓ ' : '✗ ') + 'F' + f.floor + ' ' + (f.shapeName || f.shape) }),
+        f.elite ? h('span', { class: 'gold', text: ' · elite' }) : null,
+        h('span', { class: 'muted', text: [f.phases.join(' → '), f.vents ? plural(f.vents, 'vent', 'vents') : ''].filter(Boolean).map((t) => ' · ' + t).join('') }),
+      ]),
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-watch-' + f.floor, text: 'Watch', onclick: () => endlessWatch(f.floor) }),
+    ])));
+    card.append(rows);
+    const f = r.final, v = endlessView(f);
+    const list = h('ul', { class: 'alog', 'data-id': 'endless-log' });
+    f.actions.forEach((x) => { const l = v.line(x); list.append(h('li', { class: l.cls, text: l.text })); });
+    card.append(h('details', null, [h('summary', { class: 'small', text: 'Floor ' + f.floor + ' fight log (' + f.actionCount + ' actions' + (f.actionCount > f.actions.length ? ', first ' + f.actions.length + ' shown' : '') + ')' }), list]));
+    main.append(card);
+  }
+
+  // Plays one floor of the shown climb: the deciding floor is in the climb's result (while the rulebooks are the ones it used);
+  // the engine replays any other (read only).
+  function endlessWatch(floor) {
+    const r = ui.endlessResult;
+    if (!r) return;
+    const f = floor === r.final.floor && teamBooks(r.team) === r.books ? r.final : run.endlessFloor(r.season, r.team, floor);
+    if (f.ok === false) { toast(f.reason); return; }
+    ui.endlessFight = f;
+    startPlayback(f, true);
+    render();
+  }
+
+  // The playback modal: the tower floor's view over a 4v4 grid with the floor's mutators, plus watch again, the floors either
+  // side and close.
+  function endlessPlayModal(modal, f) {
+    const r = ui.endlessResult, at = r ? r.floors.findIndex((x) => x.floor === f.floor) : -1;
+    const prev = at > 0 ? r.floors[at - 1] : null, next = r && at >= 0 && at < r.floors.length - 1 ? r.floors[at + 1] : null;
+    const close = () => { stopPlayback(); ui.endlessFight = null; render(); };
+    fightPlayView(modal, f, endlessView(f), h('div', { class: 'row', style: 'flex-wrap:wrap' }, [
+      ui.play ? null : h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-replay', text: 'Watch again', onclick: () => endlessWatch(f.floor) }),
+      prev ? h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-prev', text: '← Floor ' + prev.floor, onclick: () => endlessWatch(prev.floor) }) : null,
+      next ? h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-next', text: 'Floor ' + next.floor + ' →', onclick: () => endlessWatch(next.floor) }) : null,
+    ]));
+    modal.append(h('button', { class: 'btn primary block', type: 'button', 'data-act': 'endless-play-close', text: 'Close', onclick: close }));
+  }
+
+  // An Endless floor's fight is labelled as a tower floor's ("Floor N: <name>", units named by the bridge), laid out 4v4, with
+  // the mutators in force under the title.
+  function endlessView(f) {
+    const v = towerView(f);
+    v.cls = 'endless';
+    v.head = h('div', { class: 'emuts small', 'data-id': 'endless-play-mutators' }, f.mutators && f.mutators.length
+      ? f.mutators.map((m) => h('div', { class: 'emut on' }, [h('b', { text: m.name }), h('span', { class: 'muted', text: ' · ' + m.desc })]))
+      : [h('span', { class: 'muted', text: 'No mutators on this floor' })]);
+    return v;
   }
 
   function vaultHelpers() {

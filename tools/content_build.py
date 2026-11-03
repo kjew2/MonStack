@@ -279,6 +279,10 @@ def read_table(path, name, schema, errs):
         cells = [x.strip() for x in raw]
         if not any(cells):
             continue
+        if len(cells) > len(header) and not (header and header[-1].startswith("#")):
+            # An unquoted comma splits a cell and the rest would be dropped without a word (a string cut short).
+            errs.add("E004", f"{name}[row {i}]", f"{len(cells)} cells but {len(header)} columns: quote a cell that holds a comma")
+            continue
         rec = dict(zip(header, cells + [""] * (len(header) - len(cells))))
         row = {}
         for cn, ct, nul in schema["columns"]:
