@@ -608,7 +608,7 @@
       "tree_id": "thunderhoof",
       "type": "tally_at_least",
       "ref": "damage_light",
-      "amount": 2000.0
+      "amount": 12000.0
     }
   ]
 }

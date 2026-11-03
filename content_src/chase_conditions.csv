@@ -85,4 +85,4 @@ headlong_oath_c1,headlong_oath,stat_at_least,str,500
 headlong_oath_c2,headlong_oath,tally_at_least,wins,2
 thunderhoof_c0,thunderhoof,node_owned,ramshorn_hymnal_n0,
 thunderhoof_c1,thunderhoof,node_owned,gilded_fleece_n4,
-thunderhoof_c2,thunderhoof,tally_at_least,damage_light,2000
+thunderhoof_c2,thunderhoof,tally_at_least,damage_light,12000
