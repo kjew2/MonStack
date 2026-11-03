@@ -675,7 +675,7 @@ namespace IdleRng.Web
             foreach (var u in final.Units)
                 FightUnitOut(w, u, o =>
                 {
-                    o.P("name", EndlessUnitName(u.Id, idx)).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u));
+                    o.P("name", RisenName(u.Id, x => EndlessUnitName(x, idx))).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u));
                     int slot = TeamSlot(u.Id);
                     if (slot >= 0 && slot < idx.Count && !u.IsAdd) o.P("vault", idx[slot]);
                 });
@@ -685,6 +685,18 @@ namespace IdleRng.Web
             foreach (var x in log.Entries) Action(w, x);
             w.EndArr();
             return fight.Hash;
+        }
+
+        /// <summary>
+        /// A display name that knows arise's risen allies (specs/16 section 6.2): "&lt;id&gt;#risen" is the fallen unit's name in
+        /// rule.arise.unit ("Goblin (risen)"); any other id is named by <paramref name="name"/>.
+        /// </summary>
+        private string RisenName(string id, Func<string, string> name)
+        {
+            int at = id.IndexOf(BattleSim.RisenSuffix, StringComparison.Ordinal);
+            if (at < 0) return name(id);
+            string fallen = name(id.Substring(0, at));
+            return TextTemplate.Fill(_db, _db.Text("rule.arise.unit"), (n, fmt) => n == "name" ? fallen : null);
         }
 
         /// <summary>The team slot of a unit id "t&lt;slot&gt;_...", else -1.</summary>
@@ -835,7 +847,7 @@ namespace IdleRng.Web
                 .P("corruptMax", BattleSim.CorruptionLevel(rules, rules.TimeLimitTicks)).P("corruption", BattleSim.CorruptionLevel(rules, final.Ticks));
             w.Key("units").Arr();
             foreach (var u in final.Units)
-                FightUnitOut(w, u, o => o.P("name", TowerUnitName(u.Id, idx)).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u)));
+                FightUnitOut(w, u, o => o.P("name", RisenName(u.Id, x => TowerUnitName(x, idx))).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u)));
             w.EndArr();
             w.P("actionCount", log.Count);
             w.Key("actions").Arr();

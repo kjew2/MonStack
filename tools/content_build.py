@@ -99,6 +99,8 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane C, turn-gauge rules (specs/16 section 6.2, #136)
     "MON_BRAVE_MAX": "int", "MON_BRAVE_GUARD": "double", "MON_ONE_MORE": "double", "MON_BREAK_PIPS": "int",
     "MON_BREAK_BONUS": "double", "MON_LATENT_ACTIONS": "int", "MON_LATENT_BONUS": "double",
+    # idea-pool lane E, team and mode rules (specs/16 section 6.2, #138)
+    "MON_LONE_BONUS": "double", "MON_LONE_MALUS": "double", "MON_ARISE_STATS": "double", "MON_RITE_SHARE": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -112,7 +114,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane B (#135)
             "resentment", "vantage", "deaths_door", "barricade", "mana_ward",
             # idea-pool lane C (#136)
-            "brave_heart", "one_more", "guard_break", "latent_power"]
+            "brave_heart", "one_more", "guard_break", "latent_power",
+            # idea-pool lane E (#138)
+            "lone_wolf", "arise", "last_rite"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -186,6 +190,9 @@ MON_RANGES = {
     "MON_ONE_MORE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_BREAK_PIPS": (">= 1", lambda v: v >= 1),
     "MON_BREAK_BONUS": (">= 0", lambda v: v >= 0), "MON_LATENT_ACTIONS": (">= 1", lambda v: v >= 1),
     "MON_LATENT_BONUS": (">= 0", lambda v: v >= 0),
+    # idea-pool lane E (#138)
+    "MON_LONE_BONUS": (">= 0", lambda v: v >= 0), "MON_LONE_MALUS": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_ARISE_STATS": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_RITE_SHARE": (">= 0", lambda v: v >= 0),
 }
 
 
