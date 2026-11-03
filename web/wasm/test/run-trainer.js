@@ -709,6 +709,13 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   const tw = await page.evaluate(() => document.documentElement.scrollWidth);
   check(tw <= 390, 'the tower screen fits the phone width (' + tw + 'px)');
   await shot('06b-tower');
+  check(await page.locator('#tabs').isVisible() && (await act('hometab-dungeon').getAttribute('aria-selected')) === 'true',
+    'the home tabs stay on the Dungeon screen, Dungeon selected');
+  await act('hometab-goals').click();
+  check((await act('tower-back').count()) === 0 && (await act('hometab-goals').getAttribute('aria-selected')) === 'true',
+    'a home tab leaves the Dungeon screen for that tab');
+  await act('hometab-dungeon').click();
+  await act('tower').click();
   await act('tower-back').click();
   await act('tower').waitFor();
   check((await act('hometab-dungeon').getAttribute('aria-selected')) === 'true', 'Back returns to the Dungeon tab');
