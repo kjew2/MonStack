@@ -70,7 +70,7 @@
   "world_root": {
    "species": "mandrake",
    "name": "Worldroot Colossus",
-   "prompt": "the root creature has grown huge and ancient, with dark bark, a small tree crown of leaves and golden blossoms on its head, and roots spreading far into the ground around it."
+   "prompt": "the root creature has grown into a colossal ancient tree-giant: towering and broad, its bark covered in thick green moss and glowing gold runes, a full wide canopy of bright green leaves and golden blossoms spreading above its head like a crown, massive roots splitting the ground and spreading far around it. Colour palette shifts from brown to deep moss green, leaf green and gold."
   },
   "mandragora_scream": {
    "species": "mandrake",
@@ -80,7 +80,7 @@
   "umbral_veil": {
    "species": "shade_hound",
    "name": "Grave Shuck",
-   "prompt": "the shadow dog has gone nearly black and tattered like an old shroud, wreathed in grave mist, and all its eyes now glow pale cyan."
+   "prompt": "the shadow dog has become a towering spectral grave hound: its body pale, translucent ghostly silver-blue mist with a dark core, tattered like an old burial shroud trailing into fog, glowing cyan eyes, standing among leaning old gravestones on a misty hill under a cold moon. Colour palette shifts from black and violet to pale silver, ghost blue and cyan."
   },
   "night_feast": {
    "species": "shade_hound",

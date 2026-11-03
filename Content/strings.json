@@ -2387,6 +2387,178 @@
       "text": "After its {MON_LATENT_ACTIONS}th action of a fight, all its stats but HP rise by {MON_LATENT_BONUS:pct} for the rest of the fight."
     },
     {
+      "key": "tree.lone_wolf.name",
+      "text": "Lone Wolf"
+    },
+    {
+      "key": "tree.arise.name",
+      "text": "Arise"
+    },
+    {
+      "key": "tree.last_rite.name",
+      "text": "Last Rite"
+    },
+    {
+      "key": "rule.lone_wolf.name",
+      "text": "Lone Wolf"
+    },
+    {
+      "key": "rule.lone_wolf.desc",
+      "text": "If it starts a fight alone on its side, all its stats rise by {MON_LONE_BONUS:pct} for the fight. With allies, they fall by {MON_LONE_MALUS:pct} instead. Strong in run fights and the gauntlet, weak in a team."
+    },
+    {
+      "key": "rule.lone_wolf.log",
+      "text": "all stats change by {amount:pct}"
+    },
+    {
+      "key": "rule.arise.name",
+      "text": "Arise"
+    },
+    {
+      "key": "rule.arise.desc",
+      "text": "Once per fight, the first enemy it knocks out rises on its side with {MON_ARISE_STATS:pct} of its stats and its skills, but none of its rules. Not the last enemy: the fight is over then. Does nothing in a one-on-one fight."
+    },
+    {
+      "key": "rule.arise.log",
+      "text": "raises {amount:pct} of a fallen foe"
+    },
+    {
+      "key": "rule.arise.unit",
+      "text": "{name} (risen)"
+    },
+    {
+      "key": "rule.last_rite.name",
+      "text": "Last Rite"
+    },
+    {
+      "key": "rule.last_rite.desc",
+      "text": "When it is knocked out, its living allies split {MON_RITE_SHARE:pct} of its base stats among them for the rest of the fight. A save from Rebirth or Death's Door is not a knockout. Does nothing in a one-on-one fight."
+    },
+    {
+      "key": "rule.last_rite.log",
+      "text": "each ally gains {amount:pct} of its stats"
+    },
+    {
+      "key": "tree.mimic_core.name",
+      "text": "Mimic Core"
+    },
+    {
+      "key": "tree.heirloom.name",
+      "text": "Heirloom"
+    },
+    {
+      "key": "tree.mastery.name",
+      "text": "Mastery"
+    },
+    {
+      "key": "tree.limit_break.name",
+      "text": "Limit Break"
+    },
+    {
+      "key": "rule.mimic_core.name",
+      "text": "Mimic Core"
+    },
+    {
+      "key": "rule.mimic_core.desc",
+      "text": "It also gets the capstone of the tree in the slot just before this one, bought or not, while that tree stays there. Nothing in the first slot; chase and fusion capstones are never copied."
+    },
+    {
+      "key": "rule.heirloom.name",
+      "text": "Heirloom"
+    },
+    {
+      "key": "rule.heirloom.desc",
+      "text": "Keepsake growth nodes grow twice as fast: +{KEEPSAKE_STEP} growth per {KEEPSAKE_DRILLS} drills of their stat becomes twice that, still up to +{KEEPSAKE_MAX}."
+    },
+    {
+      "key": "rule.mastery.name",
+      "text": "Mastery"
+    },
+    {
+      "key": "rule.mastery.desc",
+      "text": "A slotted tree with its capstone bought that wins {MASTERY_WINS} rank fights while this is held becomes mastered: if it is overwritten, its capstone stays in the kit (last) while this is held. Chase and fusion trees, and Mastery itself, are never mastered."
+    },
+    {
+      "key": "rule.limit_break.name",
+      "text": "Limit Break"
+    },
+    {
+      "key": "rule.limit_break.desc",
+      "text": "This tree's own stat can rise past the usual cap, up to {LIMIT_BREAK_MAX}, by drills and flat nodes."
+    },
+    {
+      "key": "tip.tag.growth_use",
+      "text": "Keepsake growth"
+    },
+    {
+      "key": "tree.hemorrhage.name",
+      "text": "Hemorrhage"
+    },
+    {
+      "key": "tree.privileged_status.name",
+      "text": "Privileged Status"
+    },
+    {
+      "key": "tree.equilibrium.name",
+      "text": "Equilibrium"
+    },
+    {
+      "key": "tree.corruption.name",
+      "text": "Corruption"
+    },
+    {
+      "key": "tree.dead_branch.name",
+      "text": "Dead Branch"
+    },
+    {
+      "key": "rule.hemorrhage.name",
+      "text": "Hemorrhage"
+    },
+    {
+      "key": "rule.hemorrhage.desc",
+      "text": "Each hit it lands fills the target's bleed gauge by {MON_BLEED_PER_HIT} per {MON_BLEED_DEX_REF} DEX. A full gauge (100) bursts for {MON_BLEED_BURST:pct} of the target's max HP as true damage, then empties. Answers high-HP bosses."
+    },
+    {
+      "key": "rule.privileged_status.name",
+      "text": "Privileged Status"
+    },
+    {
+      "key": "rule.privileged_status.desc",
+      "text": "Its hits deal +{MON_PRIV_BONUS:pct} damage to a target with at least {MON_PRIV_DEBUFFS} active debuffs from any source (stacked copies count). Corruption casts a debuff twice."
+    },
+    {
+      "key": "rule.equilibrium.name",
+      "text": "Equilibrium"
+    },
+    {
+      "key": "rule.equilibrium.desc",
+      "text": "Each hit marks the target with the hit's element. Its next hit on that target of a different element deals +{MON_EQ_BONUS:pct} damage and clears the mark. Elemental Avatar makes every hit one element."
+    },
+    {
+      "key": "rule.corruption.name",
+      "text": "Corruption"
+    },
+    {
+      "key": "rule.corruption.desc",
+      "text": "Each active skill it uses is cast twice at once (the second at full power), then is locked for the rest of the fight. Pairs with Dead Branch: each lock draws a new skill."
+    },
+    {
+      "key": "rule.dead_branch.name",
+      "text": "Dead Branch"
+    },
+    {
+      "key": "rule.dead_branch.desc",
+      "text": "Whenever one of its skills is locked for the fight, it gains a random active skill it lacks for the rest of the fight. Corruption locks every skill it uses."
+    },
+    {
+      "key": "mskill.hex.name",
+      "text": "Hex"
+    },
+    {
+      "key": "mskill.hex.desc",
+      "text": "An enemy loses {power:pct} {stat} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
       "key": "tree.iron_vow.name",
       "text": "Iron Vow"
     },

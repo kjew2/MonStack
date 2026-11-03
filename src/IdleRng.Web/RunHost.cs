@@ -215,9 +215,9 @@ namespace IdleRng.Web
                     id += "~cap~" + roll.Stat + "~" + Num(roll.CapGrowth);
                 }
                 else if (roll != null && roll.NodeStats[i] != null) id += "~" + n.Stat + "~" + Num(n.Amount);
-                w.Obj().P("id", id).P("cost", n.Cost).P("kind", n.Kind.ToString().ToLowerInvariant()).P("name", name).P("desc", desc).P("last", last);
+                w.Obj().P("id", id).P("cost", n.Cost).P("kind", KindName(n.Kind)).P("name", name).P("desc", desc).P("last", last);
                 if (n.Kind == NodeKind.Rule && Array.IndexOf(TrainingRun.BuyWarnRules, n.RuleId) >= 0) w.P("warn", true);   // the UI asks before the purchase
-                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat) w.P("stat", n.Stat).P("amount", n.Amount);
+                if (TrainingRun.IsFiller(n.Kind)) w.P("stat", n.Stat).P("amount", n.Amount);
                 if (roll != null)
                 {
                     var tip = BattleText.NodeTip(_db, n, name, desc, last);
@@ -230,11 +230,11 @@ namespace IdleRng.Web
             var boosts = new List<(string stat, double growth, double flat)>();
             foreach (var n in nodes)
             {
-                if (n.Kind != NodeKind.Growth && n.Kind != NodeKind.Stat) continue;
+                if (!TrainingRun.IsFiller(n.Kind)) continue;
                 int k = boosts.FindIndex(b => b.stat == n.Stat);
                 if (k < 0) { boosts.Add((n.Stat, 0, 0)); k = boosts.Count - 1; }
                 var b0 = boosts[k];
-                boosts[k] = n.Kind == NodeKind.Growth ? (b0.stat, b0.growth + n.Amount, b0.flat) : (b0.stat, b0.growth, b0.flat + n.Amount);
+                boosts[k] = n.Kind != NodeKind.Stat ? (b0.stat, b0.growth + n.Amount, b0.flat) : (b0.stat, b0.growth, b0.flat + n.Amount);
             }
             if (roll != null)
             {
@@ -256,10 +256,20 @@ namespace IdleRng.Web
             w.EndObj();
         }
 
+        /// <summary>A node kind as content spells it (growth_use for NodeKind.GrowthUse).</summary>
+        private static string KindName(NodeKind k) => k == NodeKind.GrowthUse ? "growth_use" : k.ToString().ToLowerInvariant();
+
         private (string name, string desc) NodeText(TreeNodeDef n)
         {
             switch (n.Kind)
             {
+                case NodeKind.GrowthUse:
+                {
+                    var c = _db.ConstantValues;
+                    return ("+" + Num(n.Amount) + " " + n.Stat.ToUpperInvariant() + " growth (keepsake)",
+                            "Drills raise " + n.Stat.ToUpperInvariant() + " faster, and more with use: +" + Num(c["KEEPSAKE_STEP"]) + " growth per "
+                            + Num(c["KEEPSAKE_DRILLS"]) + " drills of " + n.Stat.ToUpperInvariant() + " after it is bought, up to +" + Num(c["KEEPSAKE_MAX"]) + ".");
+                }
                 case NodeKind.Growth:
                     return ("+" + Num(n.Amount) + " " + n.Stat.ToUpperInvariant() + " growth", "Drills raise " + n.Stat.ToUpperInvariant() + " faster.");
                 case NodeKind.Stat:
@@ -676,7 +686,7 @@ namespace IdleRng.Web
             foreach (var u in final.Units)
                 FightUnitOut(w, u, o =>
                 {
-                    o.P("name", EndlessUnitName(u.Id, idx)).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u));
+                    o.P("name", RisenName(u.Id, x => EndlessUnitName(x, idx))).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u));
                     int slot = TeamSlot(u.Id);
                     if (slot >= 0 && slot < idx.Count && !u.IsAdd) o.P("vault", idx[slot]);
                 });
@@ -686,6 +696,18 @@ namespace IdleRng.Web
             foreach (var x in log.Entries) Action(w, x);
             w.EndArr();
             return fight.Hash;
+        }
+
+        /// <summary>
+        /// A display name that knows arise's risen allies (specs/16 section 6.2): "&lt;id&gt;#risen" is the fallen unit's name in
+        /// rule.arise.unit ("Goblin (risen)"); any other id is named by <paramref name="name"/>.
+        /// </summary>
+        private string RisenName(string id, Func<string, string> name)
+        {
+            int at = id.IndexOf(BattleSim.RisenSuffix, StringComparison.Ordinal);
+            if (at < 0) return name(id);
+            string fallen = name(id.Substring(0, at));
+            return TextTemplate.Fill(_db, _db.Text("rule.arise.unit"), (n, fmt) => n == "name" ? fallen : null);
         }
 
         /// <summary>The team slot of a unit id "t&lt;slot&gt;_...", else -1.</summary>
@@ -836,7 +858,7 @@ namespace IdleRng.Web
                 .P("corruptMax", BattleSim.CorruptionLevel(rules, rules.TimeLimitTicks)).P("corruption", BattleSim.CorruptionLevel(rules, final.Ticks));
             w.Key("units").Arr();
             foreach (var u in final.Units)
-                FightUnitOut(w, u, o => o.P("name", TowerUnitName(u.Id, idx)).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u)));
+                FightUnitOut(w, u, o => o.P("name", RisenName(u.Id, x => TowerUnitName(x, idx))).P("add", u.IsAdd).P("entropy", u.Entropy).P("vent", BattleSim.NextVent(u)));
             w.EndArr();
             w.P("actionCount", log.Count);
             w.Key("actions").Arr();
@@ -1113,7 +1135,7 @@ namespace IdleRng.Web
                 if (actor != null && x.Skill != null)
                     for (int i = 0; i < actor.Source.Skills.Count && e.Si < 0; i++)
                         if (actor.Source.Skills[i].Id == x.Skill.Id && actor.Source.Skills[i].Kind != SkillKind.Passive) e.Si = i;
-                e.Cd = actor == null ? new int[0] : (int[])actor.Cooldowns.Clone();
+                e.Cd = actor == null ? new int[0] : Cds(actor);
                 if (_tower != null)
                 {
                     e.Entropy = new double[n];
@@ -1129,6 +1151,14 @@ namespace IdleRng.Web
             }
         }
 
+        /// <summary>The unit's cooldowns left, with -1 for a skill locked for the rest of the fight (lane D's corruption).</summary>
+        private static int[] Cds(FightUnit u)
+        {
+            var cd = (int[])u.Cooldowns.Clone();
+            for (int i = 0; i < cd.Length; i++) if (u.SkillLocked(i)) cd[i] = -1;
+            return cd;
+        }
+
         private void FightUnitOut(JsonOut w, FightUnit u, Action<JsonOut> extra = null)
         {
             w.Obj().P("id", u.Id).P("side", u.Side).P("hp", Math.Max(0, u.Hp)).P("maxHp", u.MaxHp).P("shield", Math.Max(0, u.Shield)).P("ward", Math.Max(0, u.Ward))
@@ -1137,8 +1167,8 @@ namespace IdleRng.Web
             foreach (var sk in u.Source.Skills)
                 w.Obj().P("name", _db.Text("mskill." + sk.Id + ".name")).P("kind", sk.Kind.ToString().ToLowerInvariant()).P("cooldown", sk.Cooldown).EndObj();
             w.EndArr();
-            w.Key("cd").Arr();       // cooldowns left when the fight ended
-            foreach (var c in u.Cooldowns) w.Int(c);
+            w.Key("cd").Arr();       // cooldowns left when the fight ended (-1: locked for the fight)
+            foreach (var c in Cds(u)) w.Int(c);
             w.EndArr();
             extra?.Invoke(w);
             w.EndObj();
@@ -1222,6 +1252,9 @@ namespace IdleRng.Web
             w.Key("odds").Obj().P("fail", fail).P("super", super).P("success", Math.Max(0, 1 - fail - super))
                 .P("injury", TrainingRun.RunInjuryChance(_db, s, e)).EndObj();
             w.Key("stats"); Stats(w, s.Stats);
+            w.Key("statCaps").Obj();   // each stat's cap this run: STAT_MAX, or higher under a Limit Break (specs/15 section 11)
+            foreach (var id in StatIds.Trained) w.P(id, TrainingRun.StatCap(_db, s, id));
+            w.EndObj();
             var opp = TrainingRun.OpponentFighter(_db, s, s.Rank);
             var oppEnemy = TrainingRun.LadderEnemy(_db, s, s.Rank);
             string oppName = _db.Text(oppEnemy != null ? oppEnemy.NameKey : _db.FightRanks[s.Rank].NameKey);

@@ -473,7 +473,7 @@ namespace IdleRng.Sim.Content
                 if (!nodesByTree.TryGetValue(n.TreeId, out var list)) nodesByTree[n.TreeId] = list = new List<TreeNodeDef>();
                 list.Add(n);
                 if (n.Cost < 1) errors.Add(new ContentError("E043", loc, "cost must be >= 1"));
-                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat)
+                if (n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat || n.Kind == NodeKind.GrowthUse)
                 {
                     if (!Trained(n.Stat)) errors.Add(new ContentError("E023", loc, $"stat '{n.Stat}' is not a trained stat"));
                     if (!(n.Amount > 0)) errors.Add(new ContentError("E043", loc, "amount must be > 0"));
@@ -1047,6 +1047,7 @@ namespace IdleRng.Sim.Content
                 case "skill": return NodeKind.Skill;
                 case "trigger": return NodeKind.Trigger;
                 case "rule": return NodeKind.Rule;
+                case "growth_use": return NodeKind.GrowthUse;
                 default: throw new FormatException($"unknown node kind '{s}'");
             }
         }

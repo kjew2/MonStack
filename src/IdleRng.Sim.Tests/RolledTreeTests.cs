@@ -17,7 +17,7 @@ namespace IdleRng.Sim.Tests
 
         static IEnumerable<TreeDef> Generic => Db.TreeList.Where(t => t.Kind == TreeKind.Generic);
 
-        static bool Filler(TreeNodeDef n) => n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat;
+        static bool Filler(TreeNodeDef n) => TrainingRun.IsFiller(n.Kind);
 
         [Test]
         public void RollTree_KeepsThePremadeTree_AndRollsItsNumbersInRange()
@@ -25,19 +25,23 @@ namespace IdleRng.Sim.Tests
             var r = new RngStream("test", 42);
             foreach (var t in Generic)
             {
-                string own = t.OfferStat ?? t.Nodes.First(Filler).Stat;
+                string contentOwn = t.OfferStat ?? t.Nodes.First(Filler).Stat;
+                bool rolledOwn = t.Nodes.Last().RuleId == RuleModifiers.LimitBreak;   // lane F: Limit Break rolls its own stat
                 var amounts = new HashSet<double>();
                 for (int k = 0; k < 200; k++)
                 {
                     var roll = TrainingRun.RollTree(Db, r, t);
-                    Assert.That(roll.Stat, Is.EqualTo(own), "a stat's tree keeps its stat; an any-stat tree takes its first filler node's");
+                    if (rolledOwn) Assert.That(StatIds.IsTrained(roll.Stat), Is.True, t.Id + ": a rolled own stat");
+                    else Assert.That(roll.Stat, Is.EqualTo(contentOwn), "a stat's tree keeps its stat; an any-stat tree takes its first filler node's");
+                    string own = roll.Stat;
                     Assert.That(roll.CapGrowth, Is.InRange(K.RollCapGrowthMin, K.RollCapGrowthMax));
                     var nodes = TrainingRun.Nodes(Db, t.Id, roll);
                     Assert.That(nodes.Count, Is.EqualTo(t.Nodes.Count));
                     for (int i = 0; i < nodes.Count; i++)
                     {
                         var (n, c) = (nodes[i], t.Nodes[i]);
-                        Assert.That((n.Id, n.Cost, n.Kind, n.Index, n.Stat), Is.EqualTo((c.Id, c.Cost, c.Kind, c.Index, c.Stat)), "kj: premade trees, only the numbers roll");
+                        Assert.That((n.Id, n.Cost, n.Kind, n.Index, n.Stat), Is.EqualTo((c.Id, c.Cost, c.Kind, c.Index, c.Stat == contentOwn && c.Stat != null ? own : c.Stat)),
+                            "kj: premade trees, only the numbers roll (a rolled own stat takes the own-stat nodes with it)");
                         if (!Filler(c))
                         {
                             Assert.That(roll.NodeStats[i], Is.Null);
@@ -46,7 +50,7 @@ namespace IdleRng.Sim.Tests
                         }
                         amounts.Add(n.Amount);
                         bool isOwn = n.Stat == own;
-                        if (n.Kind == NodeKind.Growth)
+                        if (n.Kind != NodeKind.Stat)
                             Assert.That(n.Amount, isOwn ? Is.InRange(K.RollGrowthOwnMin, K.RollGrowthOwnMax) : Is.InRange(K.RollGrowthOffMin, K.RollGrowthOffMax));
                         else
                         {
@@ -101,13 +105,14 @@ namespace IdleRng.Sim.Tests
         public void Awakening_WithTheStatsTreesSlotted_DrawsEveryCardFromAnyStat()
         {
             var own = Generic.Where(t => t.OfferStat == StatIds.Str).Select(t => t.Id).ToList();
-            var s = TrainingRun.Start(Db, "drake", 4);
-            Assert.That(own.Count, Is.LessThanOrEqualTo(K.TreeSlots));
+            // Idea-pool lane G (content 6.11) gives STR more own trees than a run has slots: add slots so all of them fit.
+            var s = TrainingRun.Start(Db, "drake", 4, null, new RunModifiers { TreeSlotBonus = Math.Max(0, own.Count - K.TreeSlots) });
+            Assert.That(own.Count, Is.LessThanOrEqualTo(s.Slots.Length));
             for (int i = 0; i < own.Count; i++)
             {
                 // From the last slot down: past two STR trees (idea-pool lanes add more) the native trees are overwritten too.
                 s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { own[i] } });
-                TrainingRun.TakeTree(Db, s, 0, K.TreeSlots - 1 - i);
+                TrainingRun.TakeTree(Db, s, 0, s.Slots.Length - 1 - i);
             }
             var o = StrAwakening(s);
             Assert.That(o.Trees.Intersect(own), Is.Empty);

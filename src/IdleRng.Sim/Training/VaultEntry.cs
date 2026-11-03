@@ -50,6 +50,12 @@ namespace IdleRng.Sim.Training
         public List<VaultTree> Trees { get; set; } = new List<VaultTree>();
 
         /// <summary>
+        /// Tree nodes (ids, in kit order) a run rule added to the kit beyond the trees' bought nodes, as they were at sealing
+        /// (TrainingRun.KitExtra: a Mimic Core copy, Mastery's kept capstones). Null when there were none (lean JSON).
+        /// </summary>
+        public List<string> KitExtra { get; set; }
+
+        /// <summary>
         /// The end-of-run gauntlet's result (specs/19), run at sealing: the floor the monster fell on (GAUNTLET_FLOORS + 1 when it
         /// cleared the tower), the gauntlet enemy that beat it (null when cleared) and the Legacy Title's string key (its text may
         /// contain {killer}). Only the result is kept: the wheel shows the floors once, from the seal (kj 2026-11-01).
@@ -75,7 +81,7 @@ namespace IdleRng.Sim.Training
         {
             var trees = new List<(string, TreeRoll, int)>(Trees.Count);
             foreach (var t in Trees) trees.Add((t.TreeId, t.Roll, t.Bought));
-            return TrainingRun.BuildFighter(c, SpeciesId, Stats, trees);
+            return TrainingRun.BuildFighter(c, SpeciesId, Stats, trees, KitExtra);
         }
     }
 
@@ -109,6 +115,8 @@ namespace IdleRng.Sim.Training
                 foreach (var a in slot.Absorbed) e.Trees.Add(new VaultTree { TreeId = a.TreeId, Bought = a.Bought, FusedInto = slot.TreeId, Roll = a.Roll });
                 e.Trees.Add(new VaultTree { TreeId = slot.TreeId, Bought = slot.Bought, Roll = slot.Roll });
             }
+            var extra = TrainingRun.KitExtra(c, s);
+            if (extra.Count > 0) e.KitExtra = extra;
             var g = Gauntlet.GauntletSim.Run(c, TrainingRun.MonsterFighter(c, s), s.Seed);
             e.GauntletFloor = g.FloorReached;
             e.GauntletKiller = g.KillerId;

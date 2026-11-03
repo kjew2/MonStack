@@ -165,10 +165,20 @@ namespace IdleRng.Sim.Training
         /// </summary>
         public TreeRoll Roll { get; set; }
 
+        /// <summary>
+        /// heirloom (lane F, specs/15 section 11): per node index, the drills of a bought growth_use node's stat since it was bought.
+        /// Null until one is counted (lean JSON); removed with the tree.
+        /// </summary>
+        public int[] KeepsakeDrills { get; set; }
+
+        /// <summary>mastery (lane F, specs/15 section 11): rank fights won while slotted with its capstone bought and the mastery capstone held.</summary>
+        public int MasteryWins { get; set; }
+
         public TreeSlot Clone()
         {
             var c = (TreeSlot)MemberwiseClone();
             c.FlatAdded = (double[])FlatAdded.Clone();
+            c.KeepsakeDrills = (int[])KeepsakeDrills?.Clone();
             c.Absorbed = Absorbed.ConvertAll(a => a.Clone());
             return c;
         }
@@ -355,6 +365,12 @@ namespace IdleRng.Sim.Training
         public List<InjuryHit> Injuries { get; set; } = new List<InjuryHit>();
         public List<RunCommand> Log { get; set; } = new List<RunCommand>();
 
+        /// <summary>
+        /// mastery (lane F, specs/15 section 11): the capstone node ids of the trees mastered this run, in the order they were
+        /// mastered. Null until the first one (lean JSON).
+        /// </summary>
+        public List<string> Mastered { get; set; }
+
         public RunState Clone()
         {
             var c = (RunState)MemberwiseClone();
@@ -374,6 +390,7 @@ namespace IdleRng.Sim.Training
             c.Milestones = Milestones.ConvertAll(m => new MilestoneHit { Stat = m.Stat, Threshold = m.Threshold, Cycle = m.Cycle });
             c.Injuries = Injuries.ConvertAll(i => i.Clone());
             c.Log = Log.ConvertAll(l => l.Clone());
+            c.Mastered = Mastered == null ? null : new List<string>(Mastered);
             return c;
         }
     }

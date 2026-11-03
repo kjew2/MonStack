@@ -671,6 +671,68 @@ namespace IdleRng.Sim.Combat
         /// fight. The Latent Power generic capstone.
         /// </summary>
         public const string LatentPower = "latent_power";
+        // ---- idea-pool lane E: team size and mode (#138, specs/16 section 6.2)
+
+        /// <summary>Decided at fight start: alone on its side, all the unit's stats rise by MON_LONE_BONUS; with allies they fall by MON_LONE_MALUS.</summary>
+        public const string LoneWolf = "lone_wolf";
+
+        /// <summary>Once per fight, the first enemy the unit kills (not the last) rises on its side at MON_ARISE_STATS of its stats, with its skills and no rules.</summary>
+        public const string Arise = "arise";
+
+        /// <summary>When the unit dies, its living allies split MON_RITE_SHARE of its base stats for the rest of the fight.</summary>
+        public const string LastRite = "last_rite";
+
+        // Idea-pool lane F (#139): run rules. They change how the monster is built in a training run (TrainingRun, Rules/LaneF.cs),
+        // not the fight: in the fight kit they do nothing.
+
+        /// <summary>
+        /// The monster's kit also gets the capstone node of the tree in the slot just before this tree's, bought or not, while it
+        /// stays there (none in slot 0; chase and fusion capstones are never copied). The Mimic Core generic capstone.
+        /// </summary>
+        public const string MimicCore = "mimic_core";
+
+        /// <summary>Doubles KEEPSAKE_STEP for the run's growth_use nodes. The Heirloom generic capstone.</summary>
+        public const string Heirloom = "heirloom";
+
+        /// <summary>
+        /// A slotted tree with its capstone bought that wins MASTERY_WINS rank fights while this is held becomes mastered: when it
+        /// is overwritten its capstone node stays in the kit, last. The Mastery generic capstone.
+        /// </summary>
+        public const string Mastery = "mastery";
+
+        /// <summary>The tree's own stat may rise past STAT_MAX up to LIMIT_BREAK_MAX. The Limit Break generic capstone.</summary>
+        public const string LimitBreak = "limit_break";
+        // Idea-pool lane D (#137): debuffs, stacking and skill locks, coded in Combat/Rules/LaneD.cs.
+
+        /// <summary>
+        /// Each hit the unit lands fills the target's bleed gauge by MON_BLEED_PER_HIT x DEX / MON_BLEED_DEX_REF; at 100 it bursts
+        /// for MON_BLEED_BURST of the target's max HP as true damage and resets. The Hemorrhage generic capstone.
+        /// </summary>
+        public const string Hemorrhage = "hemorrhage";
+
+        /// <summary>
+        /// The unit's hits deal x(1 + MON_PRIV_BONUS) to a target with at least MON_PRIV_DEBUFFS active debuffs from any source. The
+        /// Privileged Status generic capstone.
+        /// </summary>
+        public const string PrivilegedStatus = "privileged_status";
+
+        /// <summary>
+        /// A hit of an element marks the target with it; the unit's next hit on that target of another element deals x(1 +
+        /// MON_EQ_BONUS) and clears the mark. The Equilibrium generic capstone.
+        /// </summary>
+        public const string Equilibrium = "equilibrium";
+
+        /// <summary>
+        /// Each active skill the unit casts as an action is cast a second time at once at full power, then is locked for the rest
+        /// of the fight. The Corruption generic capstone.
+        /// </summary>
+        public const string Corruption = "corruption";
+
+        /// <summary>
+        /// Whenever one of the unit's skills is locked for the fight, it gains a random active skill (one it lacks) for the rest
+        /// of the fight. The Dead Branch generic capstone.
+        /// </summary>
+        public const string DeadBranch = "dead_branch";
 
         // Idea-pool lane G (#140): run rules, coded in TrainingRun (Training/Rules/LaneG.cs; specs/14 section 4.3). In battle they do
         // nothing, except that GauntletSim weakens the enemies of a cursed_mark carrier.
@@ -698,6 +760,9 @@ namespace IdleRng.Sim.Combat
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
             Resentment, Vantage, DeathsDoor, Barricade, ManaWard,
             BraveHeart, OneMore, GuardBreak, LatentPower,
+            LoneWolf, Arise, LastRite,
+            MimicCore, Heirloom, Mastery, LimitBreak,
+            Hemorrhage, PrivilegedStatus, Equilibrium, Corruption, DeadBranch,
             IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;

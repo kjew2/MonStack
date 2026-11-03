@@ -62,7 +62,7 @@ namespace IdleRng.Bots.Training
             if (TrainingRun.EnergyFraction(c.Constants, s.Energy) < _restBelow && TrainingRun.CanRest(c, s)) return new RunCommand(RunCommandKind.Rest);
             if (target != null)
                 foreach (var (stat, _) in target.StatGoals)
-                    if (s.Stats.Get(stat) < c.Constants.StatMax) return new RunCommand(RunCommandKind.Drill, stat);
+                    if (s.Stats.Get(stat) < TrainingRun.StatCap(c, s, stat)) return new RunCommand(RunCommandKind.Drill, stat);
             return new RunCommand(RunCommandKind.Drill, _pick(c, s));
         }
 
@@ -198,13 +198,13 @@ namespace IdleRng.Bots.Training
         /// <summary>The best-growth stat (species plus tree growth nodes) that is not capped yet (ties in sheet order).</summary>
         public static string BestGrowth(ContentDb c, RunState s)
         {
-            var open = StatIds.Trained.Where(id => s.Stats.Get(id) < c.Constants.StatMax).ToList();
+            var open = StatIds.Trained.Where(id => s.Stats.Get(id) < TrainingRun.StatCap(c, s, id)).ToList();
             return (open.Count > 0 ? open : StatIds.Trained.ToList()).OrderByDescending(id => TrainingRun.Growth(c, s, id)).First();
         }
 
         /// <summary>Drill <paramref name="stat"/> until it is capped, then fall back to the best-growth stat.</summary>
         public static Func<ContentDb, RunState, string> Mono(string stat) =>
-            (c, s) => s.Stats.Get(stat) < c.Constants.StatMax ? stat : BestGrowth(c, s);
+            (c, s) => s.Stats.Get(stat) < TrainingRun.StatCap(c, s, stat) ? stat : BestGrowth(c, s);
     }
 
     public static class RunPolicies
@@ -252,6 +252,12 @@ namespace IdleRng.Bots.Training
             var s = TrainingRun.Start(c, speciesId, seed, books, mods);
             setup?.Invoke(s);   // a golden vector's fixed start (lane G: capstones held from cycle 1)
             observe?.Invoke(s);
+            return Continue(c, policy, s, log, observe);
+        }
+
+        /// <summary>Play run <paramref name="s"/> on from where it is to its end (as <see cref="Play"/> after the start).</summary>
+        public static RunState Continue(ContentDb c, IRunPolicy policy, RunState s, Action<string> log = null, Action<RunState> observe = null)
+        {
             const int guard = 100000;
             for (int i = 0; ; i++)
             {
@@ -376,9 +382,39 @@ namespace IdleRng.Bots.Training
                 foreach (var name in RunPolicies.Names) Append(sp.Id, name, null);
                 Append(sp.Id, "focus", allBooks);
             }
+            AppendLaneF();
             // Idea-pool lane G (#140): runs that hold two lane G run-rule capstones from cycle 1 (LaneGRuns).
             foreach (var (species, name, trees) in LaneGRuns) Append(species, name, null, trees);
             return sb.ToString();
+
+            // Idea-pool lane F (#139, specs/15 section 11): a drake with two extra slots and the SP to buy every node at once holds
+            // Pyromancy, Heavy Armor, Mimic Core (copies Heavy Armor's capstone), Mastery, Heirloom and Limit Break (content
+            // nodes, own stat STR) and plays focus; then a Fortune book offer overwrites the mastered Heavy Armor.
+            void AppendLaneF()
+            {
+                var s = TrainingRun.Start(c, "drake", seed, null, new RunModifiers { TreeSlotBonus = 2, StartSp = 64 });
+                string[] lane = { "mimic_core", "mastery", "heirloom", "limit_break" };
+                for (int i = 0; i < lane.Length; i++) s.Slots[2 + i] = new TreeSlot { TreeId = lane[i] };
+                Continue(c, RunPolicies.Create("focus"), s);
+                sb.Append("\ndrake focus seed=").Append(seed).Append(" lane-f slots=pyromancy,heavy_armor,").Append(string.Join(",", lane)).Append('\n');
+                sb.Append("  ").Append(Summary(c, s)).Append('\n');
+                LaneFLine("end");
+                s.Offers.Add(new TreeOffer { Source = OfferSource.Book, Trees = { "fortune" } });
+                TrainingRun.TakeTree(c, s, 0, 1);
+                LaneFLine("fortune over heavy_armor");
+                sb.Append("  hash ").Append(TrainingRun.StateHash(s)).Append('\n');
+
+                void LaneFLine(string when)
+                {
+                    var f = TrainingRun.MonsterFighter(c, s);
+                    sb.Append("  ").Append(when).Append(": caps ").Append(string.Join(" ", StatIds.Trained.Select(id => $"{id} {TrainingRun.StatCap(c, s, id):0}")))
+                      .Append(" | keepsakes ").Append(string.Join(",", s.Slots.Where(t => t?.KeepsakeDrills != null).Select(t => string.Join("/", t.KeepsakeDrills))))
+                      .Append(" | wins ").Append(string.Join(",", s.Slots.Select(t => t == null ? "-" : t.MasteryWins.ToString(Inv))))
+                      .Append(" | mastered ").Append(s.Mastered == null ? "-" : string.Join(",", s.Mastered))
+                      .Append(" | extra ").Append(string.Join(",", TrainingRun.KitExtra(c, s)))
+                      .Append(" | skills ").Append(string.Join(",", f.Skills.Select(k => k.Id))).Append('\n');
+                }
+            }
 
             void Append(string species, string name, List<string> books, string[] held = null)
             {

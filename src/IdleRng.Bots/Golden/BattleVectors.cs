@@ -227,7 +227,50 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("4v2 turn gauge capstones vs boss", 12,
                 new[] { Braveheart("a_brave"), Gambler("a_gambler"), Breaker("a_breaker"), Latent("a_latent") },
                 new[] { Boss("b_boss"), Brawler("b_brawler", "fire") });
+            // Idea-pool lane E (#138): the team and mode capstones; lone_wolf with allies takes its malus, arise raises a fallen
+            // enemy mid-fight, last_rite's carrier falls and feeds its allies.
+            yield return new Vector("4v4 team and mode capstones", 12,
+                new[] { LoneWolf("a_lone"), Arise("a_arise"), LastRite("a_rite"), Brawler("a_brawler", "light") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
+            // Idea-pool lane D (#137): the debuff and lock capstones (Corruption and Dead Branch on one unit) against a mixed team.
+            yield return new Vector("4v4 debuff and lock capstones", 11,
+                new[] { Hemorrhage("a_bleed"), Privileged("a_priv"), Equilibrium("a_eq"), CorruptBranch("a_corrupt") },
+                new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
         }
+
+        // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.
+        static Fighter Hemorrhage(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(520, 240, 80, 160, 640, 220, 300, 140),
+            Skills = { Dmg("lunge", StatIds.Dex, 1.4, 2) },
+            Rules = { RuleModifiers.Hemorrhage },
+        };
+
+        static Fighter Privileged(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(480, 80, 120, 440, 200, 220, 230, 120),
+            Skills =
+            {
+                Fx("hex", SkillKind.Debuff, SkillTarget.Enemy, StatIds.Wis, null, 0.25, 4, 3),
+                Fx("confuse", SkillKind.Debuff, SkillTarget.AllEnemies, StatIds.Dex, null, 0.3, 4, 3),
+                Dmg("spirit_lash", StatIds.Wis, 1.5, 2),
+            },
+            Rules = { RuleModifiers.PrivilegedStatus },
+        };
+
+        static Fighter Equilibrium(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(460, 60, 440, 240, 200, 200, 220, 140),
+            Skills = { Dmg("aether_bolt", StatIds.Int, 1.8, 2, SkillTarget.Enemy, "light") },
+            Rules = { RuleModifiers.Equilibrium },
+        };
+
+        static Fighter CorruptBranch(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(500, 120, 160, 360, 180, 220, 240, 360),
+            Skills = { Dmg("spirit_lash", StatIds.Wis, 1.5, 2), Dmg("coin_toss", StatIds.Luk, 2.0, 3) },
+            Rules = { RuleModifiers.Corruption, RuleModifiers.DeadBranch },
+        };
 
         // Idea-pool lane A (#134): one conversion capstone each.
         static Fighter IronReflexes(string id) => new Fighter
@@ -285,6 +328,28 @@ namespace IdleRng.Bots.Golden
             Id = id, Element = "water", Stats = S(260, 60, 200, 460, 180, 160, 220, 160),
             Skills = { Dmg("spirit_lash", StatIds.Wis, 1.3, 2), Dmg("mind_storm", StatIds.Wis, 0.7, 4, SkillTarget.AllEnemies) },
             Rules = { RuleModifiers.ManaWard },
+        };
+
+        // Idea-pool lane E (#138): the team and mode capstones.
+        static Fighter LoneWolf(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(360, 420, 80, 160, 220, 220, 250, 180),
+            Skills = { Dmg("rend", StatIds.Str, 1.4, 2) },
+            Rules = { RuleModifiers.LoneWolf },
+        };
+
+        static Fighter Arise(string id) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(340, 60, 700, 260, 180, 180, 330, 160),
+            Skills = { Dmg("echo_bolt", StatIds.Int, 1.4, 2), Dmg("grave_wave", StatIds.Int, 0.8, 4, SkillTarget.AllEnemies) },
+            Rules = { RuleModifiers.Arise },
+        };
+
+        static Fighter LastRite(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(60, 300, 80, 60, 100, 60, 200, 120),
+            Skills = { Fx("second_wind", SkillKind.Heal, SkillTarget.Self, null, StatIds.Hp, 0.25, 5, 0), Dmg("maul", StatIds.Str, 1.5, 2) },
+            Rules = { RuleModifiers.LastRite },
         };
 
         /// <summary>The fighter with a gambit rulebook (specs/28 section 4).</summary>

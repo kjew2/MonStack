@@ -1014,6 +1014,18 @@ namespace IdleRng.Sim.Combat
             return false;
         }
 
+        /// <summary>
+        /// The unit's active debuffs from any source (a shared helper for the idea-pool lanes, epic #132): its stat effects with a
+        /// negative value, each stacked copy counted (debuff skills, triggered debuffs). Buffs, passives and rule state (a bleed
+        /// gauge, an element mark) are not debuffs.
+        /// </summary>
+        internal static int DebuffCount(FightUnit u)
+        {
+            int n = 0;
+            foreach (var e in u.Effects) if (e.Frac < 0) n++;
+            return n;
+        }
+
         static bool Has(FightUnit u, string rule) => u.Source.Rules.Contains(rule);
 
         // ------------------------------------------------------------------ the tower (specs/21 section 3)
@@ -1148,10 +1160,7 @@ namespace IdleRng.Sim.Combat
                 {
                     string id;
                     do id = u.Id + "#" + (++u.Spawned); while (HasId(s, id));
-                    var add = NewUnit(r, WithId(p.Add, id), u.Side, CountOnSide(s, u.Side));
-                    add.IsAdd = true;
-                    s.Units.Add(add);
-                    Fire(r, s, add, FightTrigger.BattleStart, rng, onAction);
+                    Summon(r, s, WithId(p.Add, id), u.Side, rng, onAction);
                 }
 
             if (p.AddSkills.Count > 0)
@@ -1176,6 +1185,23 @@ namespace IdleRng.Sim.Combat
             int n = 0;
             foreach (var u in s.Units) if (u.Side == side && u.Alive) n++;
             return n;
+        }
+
+        /// <summary>
+        /// A unit that joins the fight mid-way (specs/16 section 6.4): a split phase's add, a lane rule's summon. It takes the next
+        /// slot on its side, starts with an empty gauge and full HP, is an add (it never keeps its side alive, and the Dungeon
+        /// leaves it out of the team tallies), and fires its BattleStart triggers (its passives) at once. The caller checks the id
+        /// is new and the side's room. <paramref name="joined"/> (a lane rule's event) is logged once the unit is in, before its triggers.
+        /// </summary>
+        internal static FightUnit Summon(FightRules r, FightState s, Fighter f, int side, IRandomSource rng, Action<FightAction> onAction,
+                                         FightAction? joined = null)
+        {
+            var add = NewUnit(r, f, side, CountOnSide(s, side));
+            add.IsAdd = true;
+            s.Units.Add(add);
+            if (joined.HasValue) onAction?.Invoke(joined.Value);
+            Fire(r, s, add, FightTrigger.BattleStart, rng, onAction);
+            return add;
         }
 
         static int CountOnSide(FightState s, int side)

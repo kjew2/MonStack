@@ -138,7 +138,7 @@
     h('button', { class: 'btn small', type: 'button', 'data-act': act, 'aria-label': 'Back', text: '‹ Back', onclick: onBack }), h('h2', { text: title }), right]);
   // The eight stats as two columns of compact bars (grade screen, Vault detail).
   const statGrid = (stats) => h('div', { class: 'statgrid' }, C.stats.map((st) => h('div', { class: 'stat' }, [
-    h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(stats[st], C.consts.statMax, num(stats[st]))])));
+    h('span', { class: 'lbl', text: up(st), ...TIP.attrs('stat:' + st) }), bar(stats[st], Math.max(C.consts.statMax, stats[st]), num(stats[st]))])));   // a Limit Break stat can pass STAT_MAX
   const speciesDef = (id) => C.species.find((s) => s.id === id);
   const rank = (i) => C.ranks[i];
   const elementTag = (e) => h('span', { class: 'tag', text: (C.elements[e] || { name: e }).name, style: C.elements[e] && C.elements[e].color ? 'border-color:' + C.elements[e].color : '' });
@@ -427,7 +427,7 @@
   // A stat as a gauge in its colour (issue #115): the value against the stat cap (the tile shows the number above it), and a tick at
   // each milestone this run crosses (RunState milestoneAt, lowered by Early Bloom), lit once the stat has reached it.
   function statGauge(s, st) {
-    const max = C.consts.statMax, v = s.stats[st];
+    const max = (s.statCaps && s.statCaps[st]) || C.consts.statMax, v = s.stats[st];   // a Limit Break raises its stat's cap
     const g = h('div', { class: 'bar gauge', title: num(v) + ' / ' + max }, [h('div', { class: 'fill', style: 'width:' + Math.max(0, Math.min(100, (v / max) * 100)) + '%' })]);
     s.milestoneAt.forEach((m) => g.append(h('i', { class: 'tick' + (v >= m ? ' hit' : ''), 'data-at': num(m), title: 'Milestone ' + num(m) + (v >= m ? ' (reached)' : ''),
       style: 'left:' + Math.max(0, Math.min(100, (m / max) * 100)) + '%' })));
@@ -664,12 +664,18 @@
   }
   const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
   // Rule events whose amount is not HP restored (specs/16 section 6.2): idea-pool lane A logs its conversions at fight start
-  // and blood_magic's HP cost at each cast.
+  // and blood_magic's HP cost at each cast; lane D its procs.
   const RULE_RESULT = {
     'rule:iron_reflexes': (n) => 'never evades, +' + Math.round(n) + ' DEF from DEX',
     'rule:elemental_avatar': (n) => 'all hits take its element, +' + Math.round(n * 100) + '% damage',
     'rule:fortress_fist': (n) => '+' + Math.round(n) + ' damage per hit from DEF',
     'rule:blood_magic': (n) => 'pays ' + Math.round(n) + ' HP',
+    // idea-pool lane D: the bleed burst's damage, the target's debuffs, the element bonus and the locks so far (a drawn skill shows when used)
+    'rule:hemorrhage': (n) => 'bleed bursts for ' + Math.round(n) + ' dmg',
+    'rule:privileged_status': (n) => Math.round(n) + ' debuffs, bonus damage',
+    'rule:equilibrium': (n) => 'element shift, +' + Math.round(n * 100) + '% damage',
+    'rule:corruption': (n) => 'casts it again, then locks it (' + Math.round(n) + ' locked)',
+    'rule:dead_branch': () => 'gains a random skill',
   };
 
   function actionResult(x) {
@@ -960,12 +966,13 @@
       }
       r.chips.forEach((c, si) => {
         if (!c) return;
-        const sk = r.u.skills[si], left = now[k].cd[si] || 0;
+        const sk = r.u.skills[si], left = now[k].cd[si] || 0, locked = left < 0;   // -1: locked for the fight (corruption, BRIDGE.md)
         c.classList.toggle('ready', left === 0);
+        c.classList.toggle('locked', locked);
         c.classList.toggle('used', !!x && x.actor === r.u.id && x.si === si);
-        setCdFill(c.querySelector('.cdfill'), sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0);
-        c.querySelector('.st').textContent = left ? String(left) : '';
-        c.title = sk.name + ': ' + (left ? 'ready in ' + left + ' of its actions' : 'ready') + ', cooldown ' + sk.cooldown;
+        setCdFill(c.querySelector('.cdfill'), locked ? 100 : sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0);
+        c.querySelector('.st').textContent = locked ? '🔒' : left ? String(left) : '';
+        c.title = sk.name + ': ' + (locked ? 'locked for the rest of the fight' : left ? 'ready in ' + left + ' of its actions' : 'ready') + ', cooldown ' + sk.cooldown;
       });
     });
   }
@@ -1106,7 +1113,7 @@
       b.growth ? h('span', { class: 'num', text: '▲' + signed(b.growth) }) : null,
       b.flat ? h('span', { class: 'num', text: signed(b.flat) }) : null,
     ]))));
-    const perks = t.nodes.filter((n) => n.last || (n.kind !== 'growth' && n.kind !== 'stat'));
+    const perks = t.nodes.filter((n) => n.last || !isFiller(n));
     card.append(h('div', { class: 'perks' }, perks.map((n) => h('div', { class: 'perk' + (n.last ? ' cap' : '') }, [
       h('span', { class: 'pg', 'aria-hidden': 'true', text: n.last ? '★' : n.kind === 'trigger' ? '⚡' : n.kind === 'rule' ? '◆' : '✦' }),
       h('span', null, [h('b', { text: n.name, ...TIP.attrs('node:' + n.id) }), ' ', h('span', { class: 'muted', text: n.desc.replace(/^Chase trait\.\s*/, '') })]),
@@ -1152,18 +1159,21 @@
     return card;
   }
 
+  // A filler node: growth, flat stat, or keepsake growth (growth_use, specs/15 section 2).
+  const isFiller = (n) => n.kind === 'growth' || n.kind === 'stat' || n.kind === 'growth_use';
+
   // A tree's nodes as a strip of tiles in buy order: stat nodes show their stat (▲ growth, + flat), skills their initials, the
   // capstone a star. Each tile opens its node's tooltip. With `bought` (a slotted tree on the Trees tab, issue #115) the bought
   // tiles are lit, the next one is outlined and the rest dimmed; without it (an offer card) every tile shows plain.
   function nodePath(t, bought) {
     const prog = typeof bought === 'number';
     return h('div', { class: 'npath' + (prog ? ' prog' : ''), 'data-id': 'npath', 'aria-label': t.nodes.length + ' nodes' + (prog ? ', ' + bought + ' bought' : '') }, t.nodes.map((n, j) => {
-      const filler = n.kind === 'growth' || n.kind === 'stat';
+      const filler = isFiller(n);
       const cls = 'nt ' + (n.last ? 'cap' : filler ? 'fill st-' + n.stat : 'sk k-' + n.kind) + (prog ? (j < bought ? ' got' : j === bought ? ' next' : '') : '');
       const face = n.last ? '★' : filler ? up(n.stat) : skillAbbr(n.name);
       return h('span', { class: cls, ...TIP.attrs('node:' + n.id), style: !filler && !n.last ? '--hue:' + (hash(n.name) % 360) : null }, [
         h('span', { class: 'f', text: face }),
-        filler ? h('span', { class: 'm', text: n.kind === 'growth' ? '▲' : '+' }) : null,
+        filler ? h('span', { class: 'm', text: n.kind === 'growth' ? '▲' : n.kind === 'growth_use' ? '⇑' : '+' }) : null,   // ⇑ keepsake growth (grows with use)
       ]);
     }));
   }
