@@ -731,9 +731,10 @@ body, #app { background: radial-gradient(ellipse 60% 90px at 18% 40px, var(--clo
 #tabs { background: var(--panel); border-top: 1px solid var(--line); gap: 6px; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); box-shadow: var(--shadow-bar); }
 #tabs button { border-radius: var(--r); padding-top: 10px; padding-bottom: 10px; font-weight: 800; color: var(--muted); }
 #tabs button[aria-selected="true"] { color: var(--gems); background: var(--gems-bg); box-shadow: none; }
-/* Six home tabs on a 390 px phone: a tighter gap and type so "Dungeon" stays inside its tab */
-#tabs:has(> :nth-child(6)) { gap: 3px; }
-#tabs:has(> :nth-child(6)) button { font-size: 12px; letter-spacing: 0; }
+/* Six home tabs on a 390 px phone: a tighter gap and type so "Dungeon" stays inside its tab, also in a wide fallback font
+   (DejaVu Sans, when Nunito has not loaded: 55.5 px of a 58 px tab at 11 px; it overflowed at 12 px) */
+#tabs:has(> :nth-child(6)) { gap: 2px; }
+#tabs:has(> :nth-child(6)) button { font-size: 11px; letter-spacing: 0; }
 h2 { font: 700 21px/1.15 var(--font-title); letter-spacing: .01em; }
 h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); letter-spacing: .1em; }
 .tag { border-radius: var(--r-pill); font-weight: 800; padding: 2px 8px; }

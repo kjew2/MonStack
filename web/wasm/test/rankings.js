@@ -55,10 +55,15 @@ const H = require('./harness.js');
   const label = await text('[data-id=vault-title]');
   check(/^(Floor \d+: \S|All \d+ floors: \S)/.test(label), 'the sealed monster has a Legacy Title in the Vault: ' + label);
 
-  // ---- six home tabs fit the phone: no label runs past its tab
+  // ---- six home tabs fit the phone: no label runs past its tab, in the page's font and in DejaVu Sans (the wide fallback CI's
+  // Ubuntu runner draws when Nunito is not loaded; local machines often fall back to a narrower font and passed where CI failed)
   const tabs = await page.$$eval('#tabs button', (bs) => bs.map((b) => {
-    const r = document.createRange(); r.selectNodeContents(b.firstChild);
-    return { act: b.dataset.act, fits: r.getBoundingClientRect().width <= b.getBoundingClientRect().width + 0.5 };
+    const fits = () => { const r = document.createRange(); r.selectNodeContents(b.firstChild); return r.getBoundingClientRect().width <= b.getBoundingClientRect().width + 0.5; };
+    const own = fits();
+    b.style.fontFamily = '"DejaVu Sans", sans-serif';
+    const wide = fits();
+    b.style.fontFamily = '';
+    return { act: b.dataset.act, fits: own && wide };
   }));
   check(tabs.length === 6 && tabs[5].act === 'hometab-rankings' && tabs.every((x) => x.fits), 'six home tabs, Ranks last, every label inside its tab: ' + JSON.stringify(tabs));
 
