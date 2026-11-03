@@ -1145,10 +1145,7 @@ namespace IdleRng.Sim.Combat
                 {
                     string id;
                     do id = u.Id + "#" + (++u.Spawned); while (HasId(s, id));
-                    var add = NewUnit(r, WithId(p.Add, id), u.Side, CountOnSide(s, u.Side));
-                    add.IsAdd = true;
-                    s.Units.Add(add);
-                    Fire(r, s, add, FightTrigger.BattleStart, rng, onAction);
+                    Summon(r, s, WithId(p.Add, id), u.Side, rng, onAction);
                 }
 
             if (p.AddSkills.Count > 0)
@@ -1173,6 +1170,21 @@ namespace IdleRng.Sim.Combat
             int n = 0;
             foreach (var u in s.Units) if (u.Side == side && u.Alive) n++;
             return n;
+        }
+
+        /// <summary>
+        /// A unit that joins the fight mid-way (specs/16 section 6.4): a split phase's add, a lane rule's summon. It takes the next
+        /// slot on its side, starts with an empty gauge and full HP, is an add (it never keeps its side alive, and the Dungeon
+        /// leaves it out of the team tallies), and fires its BattleStart triggers (its passives) at once. The caller checks the id
+        /// is new and the side's room.
+        /// </summary>
+        internal static FightUnit Summon(FightRules r, FightState s, Fighter f, int side, IRandomSource rng, Action<FightAction> onAction)
+        {
+            var add = NewUnit(r, f, side, CountOnSide(s, side));
+            add.IsAdd = true;
+            s.Units.Add(add);
+            Fire(r, s, add, FightTrigger.BattleStart, rng, onAction);
+            return add;
         }
 
         static int CountOnSide(FightState s, int side)
