@@ -62,6 +62,7 @@ namespace IdleRng.Sim.Combat
             c.Log?.Invoke(new FightAction(u.Id, TitheEvent, u.Id, pay));
         }
 
+        // TODO(#165): a per-skill HP cost column would replace this id check and MON_IMMOLATE_SELF.
         /// <summary>Immolate: the cast's HP cost (an echo of the cast costs nothing more).</summary>
         static partial void OnSkillUsed_PyreStag(RuleCtx c, FightUnit u, int index, CombatSkill sk)
         {
