@@ -48,9 +48,10 @@
    "species": "cuckling",
    "tier": 2,
    "name": "Clutch Empress",
-   "prompt": "a towering brood-mother cuckoo whose plumage hangs with stolen speckled eggs.",
+   "prompt": "the chick has grown into a tall, elegant, regal brood-mother cuckoo empress: sleek glossy plumage in deep violet and black with a soft lavender chest, a long flowing train of tail feathers like a royal gown, and a small cracked-eggshell tiara. She sits on a grand throne-like nest of woven thorny branches, gently sheltering just three large pale-blue speckled eggs under one wing. Calm, proud, motherly expression. Smooth feathers with no clusters, no bumps, no holes, no eggs attached to her body. Colour palette adds soft lavender and warm gold accents to the violet.",
    "file": "cuckling_apex2.webp",
-   "ref": "tools/art/drafts/c3_cuckling_1.webp"
+   "ref": "tools/art/drafts/c3_cuckling_1.webp",
+   "redrawn": "v2: softened on request (fewer eggs, none on the body); redo_base"
   },
   {
    "species": "fountain_axolotl",
