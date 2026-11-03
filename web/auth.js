@@ -58,7 +58,7 @@
     try {
       r = await fetch(CONFIG.authBase + path, { method: 'POST', headers, body: JSON.stringify(body || {}), signal: ctl ? ctl.signal : undefined });
     } catch (e) {
-      throw new AuthError('Could not reach the account server. You can keep playing; your progress is saved on this device.', 0, 'NETWORK');
+      throw new AuthError('Could not reach the account server.', 0, 'NETWORK');
     } finally { if (timer) clearTimeout(timer); }
     let j = null;
     try { j = await r.json(); } catch (e) { /* not JSON */ }

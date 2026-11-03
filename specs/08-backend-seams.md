@@ -14,7 +14,7 @@ Scope: what the server will own, where the calls go, and what the client does wh
 |---|---|---|
 | `IdleRng.Sim` | The rules: training runs, the gauntlet, the Vault, the vendor, the Dungeon (`TowerSim`), battles (`BattleSim`). Shared with the server. | Built |
 | `IdleRng.Runtime` | The account save: `AccountSave`, `ISaveStore` with `FileSaveStore` and `MemorySaveStore` (`specs/06`). | Built |
-| `IdleRng.Web` + `web/` | The browser client. Since `specs/27` step 3: the account from the account server through `web/sync.js` (the local test server in the page until the Cloud Code module is deployed), the Dungeon day and Endless season from the server's time. | Built (local test server) |
+| `IdleRng.Web` + `web/` | The browser client. Since `specs/27` step 3: the account from the account server through `web/sync.js` (the Cloud Code module through `web/ugs-transport.js` on GitHub Pages, the local test server in the page everywhere else), the Dungeon day and Endless season from the server's time. | Built (Pages waits for the module's deploy) |
 | `server/ugs/IdleRngBattle` | The Cloud Code C# module. Today one spike endpoint, `ResolveFight` (section 10.1). Becomes the T12 PvP module (section 10.3). | Spike |
 | Server tests | An in-process fake of the module's handlers so `dotnet test` and `check.sh` cover the remote paths without credentials (#28). | Not started |
 
@@ -177,7 +177,7 @@ Against PlayFab: the base fee and the Azure Functions deployment pipeline are mo
 
 **Status: done (pass).** The module is built and deployed, and all 47 fights resolve to the same hash, outcome and ticks in process, across .NET 8 and .NET 10, and remotely as an anonymous player calling the deployed endpoint. The remote run was on 2026-10-31 from a Claude cloud session (`server/ugs/SpikeClient remote`, see `server/ugs/README.md`).
 
-What is in the repo (not in `check.sh`, because it needs credentials):
+What is in the repo (the remote run is not in `check.sh`, because it needs credentials; the account module that followed, section 10.4, is):
 - `server/ugs/IdleRngBattle`: the module. A net10.0 class library with a `ProjectReference` to `src/IdleRng.Sim` (netstandard2.1), so the server compiles the same sources: no copy, no port, no change to `IdleRng.Sim`. One endpoint, `ResolveFight(FightRules rules, Fighter[] sideA, Fighter[] sideB, string seed)`, returns outcome, ticks, `BattleSim.StateHash`, the hash version, the time inside `Resolve` and the worker's runtime and culture.
 - `server/ugs/deploy.sh`: `dotnet publish -c Release -r linux-x64`, zip to `IdleRngBattle.ccm`, create or update the module through the Cloud Code Admin API with the service account (Basic auth on `services.api.unity.com`). It uses `curl` instead of the `ugs` CLI: the CLI's npm installer downloads its binary from GitHub's release API and failed on the API's rate limit.
 - `server/ugs/SpikeClient`: the test script. It builds 49 fights: the 9 `BattleVectors` fights (the ninth, with gambit rulebooks, added after the spike ran), and every floor of the `TowerVectors` all-species team run on days 0 and 20391 (40 floors, all four boss phase kinds and an entropy vent; each floor's rebuilt hash is checked against `TowerSim.Run`). `local` regenerates all four golden files on the module's runtime and binds each fight's JSON params into the module the way Cloud Code does (by parameter name, Newtonsoft.Json); `remote` signs in anonymously, calls the deployed endpoint for each fight, and times 20 warm calls of the smallest and the largest fight.
@@ -232,6 +232,15 @@ The spike's `ResolveFight` takes the fighters as the client sends them: right fo
 - **Seeds travel as decimal strings** (JavaScript numbers lose precision past 2^53).
 - **Cold start** (#109): a cold worker takes 12 to 15 s, against Cloud Code's 15 s call limit. The client waits more than 15 s, shows a "resolving" state, and retries once on a timeout (a deterministic fight gives the same result again). A scheduled keep-warm call is added once there are players.
 - **Idempotent submits**: a resubmitted fight request (same id) returns the stored result and changes no rating.
+
+### 10.4 The account module (`specs/27` section 10 step 4, 2026-11-03)
+
+**Built; deploying waits for kj's service account secret.** `server/ugs/MonStackAccount` is the account server on Cloud Code, a thin shell over `src/IdleRng.Server` (the same open and commit code the tests and the page's local test server run): endpoints `Open`, `Commit`, `EndlessBoard`, `Profile` and `Warm`, the player taken from the Cloud Code context only, the account in Cloud Save private player items with `head` swapped under its write lock, the season boards in Cloud Save private custom items, the profile in a protected player item, the content embedded from the same commit. Details and the agent's decisions are in `specs/27` (sections 3.3, 7 and 10 step 4); setup, endpoints and the keep-warm config in `server/ugs/README.md`.
+
+- **Tests** (#28): `server/ugs/MonStackAccount.Tests` runs the handlers in process over an in-memory Cloud Save with Cloud Save's write-lock, key and batch rules, in `check.sh`. Both SDKs: the module and its tests are .NET 10 and run with a .NET 10 SDK kept apart from the default .NET 8 (`MONSTACK_DOTNET10`; CI installs one beside .NET 8 and may not skip them), building into `build/obj-net10` and `build/bin-net10` so the two SDKs never share restore state.
+- **Deploy:** the `module` job of `.github/workflows/pages.yml` tests and deploys the module (`server/ugs/deploy.sh`, .NET 10 in that job only), then the site job runs. Secrets `UGS_SERVICE_KEY_ID` and `UGS_SERVICE_SECRET_KEY` (a service account with Cloud Code Editor and Unity Environments Viewer); without them the job logs a notice and skips. One environment for now, `production`, the one `web/auth.js` signs into; a dev environment with a tagged deploy (#28) is open.
+- **Client:** `web/ugs-transport.js` calls the module through the Cloud Code REST API (`POST https://cloud-code.services.api.unity.com/v1/projects/<project>/modules/MonStackAccount/<endpoint>`, `{ params }`, the player's id token as Bearer). The page uses it on Pages once `web/sync.js` (`specs/27` step 3) is in.
+- **Cold start** (#109): `Warm` is the target of a 10-minute schedule documented in `server/ugs/README.md`, not enabled.
 
 ## 11. What the client keeps, and what the server owns
 

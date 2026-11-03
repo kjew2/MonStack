@@ -12,7 +12,8 @@
 // - stale content: the server runs other content; the device says a new version is out, keeps its moves and plays them again
 //   after the reload;
 // - one tab plays: a second tab says the game is open elsewhere and can take over;
-// - without a transport the page runs the local test server and says "Local test build".
+// - without a transport the page runs the local test server and says "Local test build"; on the GitHub Pages address it uses
+//   the Cloud Code module and, with that unreachable, waits on "Connecting..." instead of falling back.
 // Usage: node web/wasm/test/sync.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
 const H = require('./harness.js');
@@ -162,7 +163,9 @@ function deviceTransport() {
   await act(next).click();
   if (next === 'start') { await act('drill-str').waitFor(); await act('tab-log').click(); await act('abandon').click(); await act('abandon-yes').click(); }
   await home(page);
-  check((await sync(page)).status === 'saved' && await vaultCount(page) === 1, 'play resumes, the sealed monster is in the Vault');
+  await page.waitForFunction(() => MonStackSync.state().status === 'saved', null, { timeout: 30000 });
+  const resumed = await sync(page), vc = await vaultCount(page);
+  check(resumed.status === 'saved' && vc === 1, 'play resumes, the sealed monster is in the Vault (' + resumed.status + ', ' + vc + ')');
   const seqA = (await sync(page)).seq;
 
   // ---- a second device signs in to the same player: it takes the account
@@ -246,6 +249,26 @@ function deviceTransport() {
   await pl.locator('[data-act="account"]').click();
   check(/Saved on the server/.test(await pl.locator('[data-id=sync-status]').innerText()) && (await pl.locator('[data-id=sync-local]').count()) === 1, 'the account sheet shows the sync state and the local test build');
   await lctx.close();
+
+  // ---- on the GitHub Pages address the page syncs with the Cloud Code module (web/ugs-transport.js), never the local test
+  // server: with the module unreachable it waits on "Connecting..." with Try again
+  const gctx = await browser.newContext({ viewport: H.PHONE });
+  await gctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await gctx.route(/(\.services\.api\.unity\.com|accounts\.google\.com)\//, (r) => r.abort());   // UGS (auth and Cloud Code) unreachable
+  await gctx.route(/^https:\/\/kjew2\.github\.io\/MonStack\//, async (r) => {   // the Pages site, served from web/
+    const rest = new URL(r.request().url()).pathname.slice('/MonStack/'.length) || 'index.html';
+    const res = await r.fetch({ url: new URL(rest, base).href });
+    await r.fulfill({ response: res });
+  });
+  const pg = await gctx.newPage();
+  pg.on('pageerror', (e) => t.errors.push('pageerror (pages): ' + e.message));
+  await pg.goto('https://kjew2.github.io/MonStack/');
+  await pg.locator('[data-act="sync-retry"]').waitFor({ timeout: 90000 });
+  const gs = await sync(pg);
+  check(/Connecting/.test(await pg.locator('#sync-wait').innerText()) && (gs.status === 'connecting' || gs.status === 'offline') && gs.seq === -1 && !gs.local && (await pg.locator('#server-mode').count()) === 0
+    && (await pg.locator('[data-act="start"]').count()) === 0, 'on GitHub Pages with the module unreachable the page waits on "Connecting..." with Try again, no local fallback (' + JSON.stringify(gs) + ')');
+  check(await pg.evaluate(() => localStorage.getItem('monstack-local-server-v1') === null), 'and no local test server store was made');
+  await gctx.close();
   await sctx.close();
 
   await t.finish();

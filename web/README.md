@@ -13,6 +13,7 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `tooltips.js` | Tap-to-open tooltips for stats and abilities (`role="tooltip"`, long press, Escape). Text and numbers come from the engine (`wasm/BRIDGE.md`, "Tooltips"). |
 | `auth.js`, `account.js` | Player accounts (issue #19, `specs/08` section 4): anonymous sign-in to Unity Authentication on launch, Google sign-in linking (Google Identity Services, loaded when the sheet opens), sign out; the header's account button and its sheet. Never blocks play. The session is in `localStorage['monstack-auth-v1']`. |
 | `sync.js` | Sync with the account server (`specs/27` sections 4 to 6): the device id and pending command log, checkpoints, "Connecting..." waits, open and claim, sign-out on `NotHolder`, the rejections, the one-tab rule, the wipe of old saves, the server's time; the transport is pluggable (`wasm/BRIDGE.md`, "Sync transport"), the local test server in the page by default. |
+| `ugs-transport.js` | The account server on UGS (`specs/27` section 10 step 4): `open`, `commit`, `endlessBoard` and `profile` on the `MonStackAccount` Cloud Code module (`server/ugs/`) with the player's token from `auth.js`; the account arrives gzip+base64 and is handed back as text; failures that are not verdicts throw as retryable. `sync.js` takes it as its transport on the GitHub Pages address. |
 | `run-engine.js` | Facade over the C# trainer bridge (`IdleRng.Web.Engine.Run*` / `Account*`): the account (shards, talents, achievements, vendor offers, Vault, active run), opened through `sync.js`. |
 | `engine.js` | Loader for the .NET runtime and the content pack. |
 | `sprites.js` | Seeded 12x12 pixel sprites drawn on canvas (a rank opponent: its own shape tinted by its element, horns at the top rank). Cosmetic only, never touches the game's RNG. |
@@ -29,13 +30,14 @@ To play: `./play.sh` from the repo root (details in the root README, "Running th
 | `wasm/test/golden.js` | Headless-Chromium check that the WebAssembly build regenerates the four `golden/` files byte for byte (`Engine.GoldenVectors`; part of `./check.sh`). |
 | `wasm/test/sync.js` | Headless-Chromium test of the sync: a server page and two devices through a test transport; checkpoints, the server's clock, a lost connection, takeover, a rejection, stale content, one tab, the local test build (part of `./check.sh`). |
 | `wasm/test/auth.js` | Headless-Chromium test of accounts against a fake Unity Authentication and a fake Google script: guest, reload, link, second device, sign out, rejected session, offline (part of `./check.sh`). |
+| `wasm/test/ugs-transport.js` | Plain-Node test of `ugs-transport.js` against a fake Cloud Code endpoint: the calls and their requests (never a player id), the unpacked account, verdicts, retryable and final failures (part of `./check.sh`). |
 | `wasm/test/harness.js` | Shared helpers for the browser tests (phone-sized page, save encoding, play loop, layout check: no horizontal scroll, and every action-bar, full-size primary and Back button in view without a scroll, `specs/26` section 4.1, issue #130). |
 
 ## Where things come from
 
 - **Rules and numbers**: the C# core and `Content/*.json` (built from `content_src/` by `tools/content_build.py`). Change a number in `content_src/`, rebuild content and the bundle, reload.
 - **Names and descriptions**: `Content/strings.json` through the bridge. The UI never evaluates a game formula itself: tooltip numbers (crit chance at this LUK, damage taken at this DEF) are computed by the C# battle formulas (`specs/16` section 9).
-- **Saves**: the account lives on the account server (`specs/27`); `web/sync.js` opens it, records each command and commits at checkpoints. Until the Cloud Code module is deployed the server is the local test server inside the page (its store in `localStorage['monstack-local-server-v1']`; the header says "Local test build"). `localStorage['idle-rng-account-v1']` is a cache of the server's account plus the commands not yet committed (`specs/06`, `specs/18` section 6).
+- **Saves**: the account lives on the account server (`specs/27`); `web/sync.js` opens it, records each command and commits at checkpoints. On the GitHub Pages address the server is the Cloud Code module (`ugs-transport.js`); everywhere else (`./play.sh`, the checks, the phone artifact) it is the local test server inside the page (its store in `localStorage['monstack-local-server-v1']`; the header says "Local test build"). `localStorage['idle-rng-account-v1']` is a cache of the server's account plus the commands not yet committed (`specs/06`, `specs/18` section 6).
 
 ## Known limits
 

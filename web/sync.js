@@ -261,12 +261,30 @@
     if (root.MonStackAuth) { try { await root.MonStackAuth.signOut(); } catch (e) { /* the auth sheet shows its own error */ } }
   }
 
+  // The UGS transport, made at the first call so web/auth.js (loaded after this file) is there; a failure to make it is a
+  // failed call (retried), not a fallback.
+  function ugsTransport() {
+    let t = null;
+    const get = () => {
+      if (!t) {
+        if (!root.MonStackUgsTransport) throw new Error('web/ugs-transport.js is not loaded');
+        t = root.MonStackUgsTransport.create();
+      }
+      return t;
+    };
+    return {
+      kind: 'ugs',
+      open(req) { return get().open(req); },
+      commit(req) { return get().commit(req); },
+    };
+  }
+
   function pickTransport(host) {
     if (S.transport) return S.transport;                       // set by a test or another script before start
     if (root.MonStackSyncTransport) return root.MonStackSyncTransport;
-    // TODO(specs/27 step 4): on GitHub Pages use the UGS Cloud Code transport (MonStackUgsTransport, same open/commit JSON);
-    // until it is deployed the Pages build runs the local test server too, and says so in the header.
-    if (onPages() && root.MonStackUgsTransport) return root.MonStackUgsTransport;
+    // GitHub Pages: the Cloud Code module (web/ugs-transport.js). Never the local test server there: when the module cannot be
+    // reached (not deployed yet, offline) the open fails and the page waits on "Connecting..." with Try again.
+    if (onPages()) return ugsTransport();
     return localTransport(host);
   }
 
