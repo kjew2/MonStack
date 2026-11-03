@@ -3,9 +3,9 @@ using IdleRng.Sim.Content;
 namespace IdleRng.Sim.Combat
 {
     // The rule hooks of the idea-pool lanes (specs/16 section 6.4, epic #132). The fight calls each Hook* method at a fixed
-    // point; it calls the same hook of lanes A to E in that order, then each species lane's (epic #160: Rules/<Species>.cs, a
-    // _<Species> suffix). Each lane's hooks are partial methods that the lane
-    // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
+    // point; it calls the same hook of lanes A to E in that order, then each species lane's (epic #160). Each lane's hooks are
+    // partial methods that the lane implements in its own file (Rules/LaneA.cs to LaneE.cs; a species lane in
+    // Rules/<Species>.cs, suffix _<Species>); an unimplemented one is compiled away, so a hook is a no-op
     // until its lane fills it. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
     // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
     public static partial class BattleSim

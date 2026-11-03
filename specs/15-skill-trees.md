@@ -199,7 +199,7 @@ Chase trees (node numbers are 0-based `index`; the UI says "node index+1"):
 | sprite | *Starlit Ascension*: Aether Striker maxed, SPD >= 500, 2 wins; `double_turn_start` | *Arcane Overflow*: Echo Song node 0, Mind Warp node 4, 2 crits; `echo_cast` |
 | mandrake | *World Root*: Rootbound maxed, HP >= 500, 2 wins; `root_rebirth` | *Mandragora Scream*: Sporebloom node 0, Mandrake Wail node 4, 2000 nature damage; `wail_stagger` |
 | shade_hound | *Umbral Veil*: Umbral Step maxed, DEX >= 500, 2 wins; `umbral_veil` | *Night Feast*: Bloodhunt node 0, Shadow Harvest node 4, 7000 dark damage; `night_feast` |
-| pyre_stag | *Inverted Mercy*: Funeral Pyre maxed, Ashen Vigil node 4, STR >= 450, 3000 fire damage; *Cinder Rite* (a STR self heal) at node 4; `pyre_mercy` | *Undying Pyre*: Litany of Embers node 0, Funeral Pyre node 7, Ashen Vigil node 4, 4 wins; `ember_eternal` |
+| pyre_stag | *Inverted Mercy*: Funeral Pyre maxed, Ashen Vigil node 4, STR >= 450, 3000 fire damage; *Cinder Rite* (a STR self heal) at node 4; `pyre_mercy` | *Undying Pyre*: Litany of Embers node 0, Funeral Pyre node 7, Ashen Vigil node 4, 2 wins (the issue's 4 was never reached: the stag wins about 2.5 rank fights a run); `ember_eternal` |
 
 The two original chase trees were shared by every species until issue #78 assigned them: *Unbreakable Will* to drake, *Arcane Overflow* to sprite. Every tree and threshold is a placeholder. Content `4.10` (issue #111) retuned the book-gated conditions and the chase tree costs toward the reachability targets of section 10; *Arcane Overflow* named the generic *Spellcraft* until then, which a sprite run slotted in under 6% of runs.
 

@@ -265,7 +265,7 @@
       "tree_id": "undying_pyre",
       "type": "tally_at_least",
       "ref": "wins",
-      "amount": 4.0
+      "amount": 2.0
     }
   ]
 }
