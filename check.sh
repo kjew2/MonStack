@@ -121,6 +121,9 @@ else
     step "Web: Endless Tower screen (team, climb, playback) in headless Chromium"
     node web/wasm/test/endless.js
 
+    step "Web: Rankings tab (Endless and gauntlet boards, species chips, display name, failed reads) in headless Chromium"
+    node web/wasm/test/rankings.js
+
     step "Web: rulebook editor (rules, pickers, save, test preview) in headless Chromium"
     node web/wasm/test/rulebook.js
 
