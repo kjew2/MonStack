@@ -735,6 +735,31 @@
       "key": "MON_LATENT_BONUS",
       "type": "double",
       "value": 0.3
+    },
+    {
+      "key": "KEEPSAKE_STEP",
+      "type": "double",
+      "value": 0.05
+    },
+    {
+      "key": "KEEPSAKE_DRILLS",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "KEEPSAKE_MAX",
+      "type": "double",
+      "value": 0.3
+    },
+    {
+      "key": "MASTERY_WINS",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "LIMIT_BREAK_MAX",
+      "type": "double",
+      "value": 1299.0
     }
   ]
 }

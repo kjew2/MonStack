@@ -595,3 +595,16 @@ rule.guard_break.name,Guard Break
 rule.guard_break.desc,"Each enemy has {MON_BREAK_PIPS} guard pips. Its crits and its hits whose element is strong against the enemy strip one. At 0 the enemy breaks: it loses its next action and takes +{MON_BREAK_BONUS:pct} hit damage until it acts again, then its pips refill."
 rule.latent_power.name,Latent Power
 rule.latent_power.desc,"After its {MON_LATENT_ACTIONS}th action of a fight, all its stats but HP rise by {MON_LATENT_BONUS:pct} for the rest of the fight."
+tree.mimic_core.name,Mimic Core
+tree.heirloom.name,Heirloom
+tree.mastery.name,Mastery
+tree.limit_break.name,Limit Break
+rule.mimic_core.name,Mimic Core
+rule.mimic_core.desc,"It also gets the capstone of the tree in the slot just before this one, bought or not, while that tree stays there. Nothing in the first slot; chase and fusion capstones are never copied."
+rule.heirloom.name,Heirloom
+rule.heirloom.desc,"Keepsake growth nodes grow twice as fast: +{KEEPSAKE_STEP} growth per {KEEPSAKE_DRILLS} drills of their stat becomes twice that, still up to +{KEEPSAKE_MAX}."
+rule.mastery.name,Mastery
+rule.mastery.desc,"A slotted tree with its capstone bought that wins {MASTERY_WINS} rank fights while this is held becomes mastered: if it is overwritten, its capstone stays in the kit (last) while this is held. Chase and fusion trees, and Mastery itself, are never mastered."
+rule.limit_break.name,Limit Break
+rule.limit_break.desc,"This tree's own stat can rise past the usual cap, up to {LIMIT_BREAK_MAX}, by drills and flat nodes."
+tip.tag.growth_use,Keepsake growth

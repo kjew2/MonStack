@@ -345,7 +345,7 @@ namespace IdleRng.Sim.Training
 
         /// <summary>
         /// Tree nodes (ids, in kit order) a run rule adds to the monster's kit beyond the bought nodes of its trees (specs/15
-        /// section 7). Empty for a run without such a rule. Vault.Seal stores them with the entry.
+        /// section 11). Empty for a run without such a rule. Vault.Seal stores them with the entry.
         /// </summary>
         public static List<string> KitExtra(ContentDb c, RunState s) => HookKitExtra(c, s);
 

@@ -672,11 +672,33 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string LatentPower = "latent_power";
 
+        // Idea-pool lane F (#139): run rules. They change how the monster is built in a training run (TrainingRun, Rules/LaneF.cs),
+        // not the fight: in the fight kit they do nothing.
+
+        /// <summary>
+        /// The monster's kit also gets the capstone node of the tree in the slot just before this tree's, bought or not, while it
+        /// stays there (none in slot 0; chase and fusion capstones are never copied). The Mimic Core generic capstone.
+        /// </summary>
+        public const string MimicCore = "mimic_core";
+
+        /// <summary>Doubles KEEPSAKE_STEP for the run's growth_use nodes. The Heirloom generic capstone.</summary>
+        public const string Heirloom = "heirloom";
+
+        /// <summary>
+        /// A slotted tree with its capstone bought that wins MASTERY_WINS rank fights while this is held becomes mastered: when it
+        /// is overwritten its capstone node stays in the kit, last. The Mastery generic capstone.
+        /// </summary>
+        public const string Mastery = "mastery";
+
+        /// <summary>The tree's own stat may rise past STAT_MAX up to LIMIT_BREAK_MAX. The Limit Break generic capstone.</summary>
+        public const string LimitBreak = "limit_break";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
             Resentment, Vantage, DeathsDoor, Barricade, ManaWard,
-            BraveHeart, OneMore, GuardBreak, LatentPower };
+            BraveHeart, OneMore, GuardBreak, LatentPower,
+            MimicCore, Heirloom, Mastery, LimitBreak };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

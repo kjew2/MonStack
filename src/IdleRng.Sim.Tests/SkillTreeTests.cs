@@ -36,7 +36,7 @@ namespace IdleRng.Sim.Tests
             foreach (var t in Db.TreeList)
             {
                 Assert.That(t.Nodes.Last().Kind, Is.AnyOf(NodeKind.Skill, NodeKind.Trigger, NodeKind.Rule), t.Id);
-                double filler = t.Nodes.Count(n => n.Kind == NodeKind.Growth || n.Kind == NodeKind.Stat) / (double)t.Nodes.Count;
+                double filler = t.Nodes.Count(n => TrainingRun.IsFiller(n.Kind)) / (double)t.Nodes.Count;
                 Assert.That(filler, Is.InRange(0.6, 0.9), $"{t.Id}: about 75% filler (kj)");
             }
             foreach (var sp in Db.SpeciesList)

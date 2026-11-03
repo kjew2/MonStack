@@ -267,5 +267,33 @@ class Endless(unittest.TestCase):
         self.assertIn("E043 constants", self.errors(self.tables(), keys)[0])
 
 
+class LaneFRules(unittest.TestCase):
+    """Idea-pool lane F (#139): the growth_use node kind and the run rule constants (specs/15 section 11)."""
+
+    build = EndToEnd.build
+
+    def replace(self, name, old, new):
+        def go(src):
+            path = os.path.join(src, name + ".csv")
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+            self.assertIn(old, text)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text.replace(old, new))
+        return go
+
+    def test_shipped_content_passes(self):
+        self.assertEqual(0, self.build(lambda src: None, []))
+
+    def test_limit_break_max_below_stat_max_is_e043(self):
+        self.assertEqual(1, self.build(self.replace("constants", "LIMIT_BREAK_MAX,double,1299", "LIMIT_BREAK_MAX,double,500"), []))
+
+    def test_keepsake_drills_below_one_is_e043(self):
+        self.assertEqual(1, self.build(self.replace("constants", "KEEPSAKE_DRILLS,int,3", "KEEPSAKE_DRILLS,int,0"), []))
+
+    def test_growth_use_needs_a_trained_stat(self):
+        self.assertEqual(1, self.build(self.replace("tree_nodes", "heirloom_n0,heirloom,0,1,growth_use,hp,", "heirloom_n0,heirloom,0,1,growth_use,xyz,"), []))
+
+
 if __name__ == "__main__":
     unittest.main()
