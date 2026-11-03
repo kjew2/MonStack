@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.9/00add1ed
+# battle-sim vectors, hash v2 content=6.10/01954124
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -109,3 +109,14 @@
   B3 b_healer hp      0.00/  3000.00 act   8 dealt     372.08 taken    3268.33 heal   3124.33 crit  1 evade  0 kill 0 counter  0
   A4 b_brawler#risen hp    960.00/   960.00 act   0 dealt       0.00 taken       0.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   hash 7098ad73aa729744303aaf6a79bcc4f1a4e92f98ab83cae8b9318ccd5db85cfc
+
+4v4 debuff and lock capstones seed=11 outcome=SideAWon ticks=73
+  A0 a_bleed  hp      0.00/  5200.00 act   9 dealt    3123.97 taken    5200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  A1 a_priv   hp   2949.47/  4800.00 act  16 dealt    3148.90 taken    1850.53 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  A2 a_eq     hp    950.86/  4600.00 act  16 dealt    6181.47 taken    3649.15 heal      0.00 crit  0 evade  0 kill 4 counter  0
+  A3 a_corrupt hp   1469.34/  5000.00 act  17 dealt    4791.51 taken    7326.66 heal   3796.00 crit  8 evade  1 kill 0 counter  0
+  B0 b_tank   hp      0.00/  5200.00 act   4 dealt    6915.25 taken    5684.85 heal      0.00 crit  0 evade  0 kill 1 counter  9
+  B1 b_brawler hp      0.00/  3200.00 act  17 dealt    5370.05 taken    4271.00 heal      0.00 crit  2 evade  1 kill 0 counter  0
+  B2 b_mage   hp      0.00/  2400.00 act  13 dealt    5395.35 taken    3093.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B3 b_healer hp      0.00/  3000.00 act  11 dealt     345.68 taken    4197.00 heal   3445.85 crit  0 evade  1 kill 0 counter  0
+  hash b640b25239ccbbe8d2c66cef05c20b57ba59cfcd14170a3c414b0db53a868ca5

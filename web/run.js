@@ -650,12 +650,18 @@
   }
   const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
   // Rule events whose amount is not HP restored (specs/16 section 6.2): idea-pool lane A logs its conversions at fight start
-  // and blood_magic's HP cost at each cast.
+  // and blood_magic's HP cost at each cast; lane D its procs.
   const RULE_RESULT = {
     'rule:iron_reflexes': (n) => 'never evades, +' + Math.round(n) + ' DEF from DEX',
     'rule:elemental_avatar': (n) => 'all hits take its element, +' + Math.round(n * 100) + '% damage',
     'rule:fortress_fist': (n) => '+' + Math.round(n) + ' damage per hit from DEF',
     'rule:blood_magic': (n) => 'pays ' + Math.round(n) + ' HP',
+    // idea-pool lane D: the bleed burst's damage, the target's debuffs, the element bonus and the locks so far (a drawn skill shows when used)
+    'rule:hemorrhage': (n) => 'bleed bursts for ' + Math.round(n) + ' dmg',
+    'rule:privileged_status': (n) => Math.round(n) + ' debuffs, bonus damage',
+    'rule:equilibrium': (n) => 'element shift, +' + Math.round(n * 100) + '% damage',
+    'rule:corruption': (n) => 'casts it again, then locks it (' + Math.round(n) + ' locked)',
+    'rule:dead_branch': () => 'gains a random skill',
   };
 
   function actionResult(x) {
@@ -946,12 +952,13 @@
       }
       r.chips.forEach((c, si) => {
         if (!c) return;
-        const sk = r.u.skills[si], left = now[k].cd[si] || 0;
+        const sk = r.u.skills[si], left = now[k].cd[si] || 0, locked = left < 0;   // -1: locked for the fight (corruption, BRIDGE.md)
         c.classList.toggle('ready', left === 0);
+        c.classList.toggle('locked', locked);
         c.classList.toggle('used', !!x && x.actor === r.u.id && x.si === si);
-        setCdFill(c.querySelector('.cdfill'), sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0);
-        c.querySelector('.st').textContent = left ? String(left) : '';
-        c.title = sk.name + ': ' + (left ? 'ready in ' + left + ' of its actions' : 'ready') + ', cooldown ' + sk.cooldown;
+        setCdFill(c.querySelector('.cdfill'), locked ? 100 : sk.cooldown ? Math.min(100, (left / sk.cooldown) * 100) : 0);
+        c.querySelector('.st').textContent = locked ? '🔒' : left ? String(left) : '';
+        c.title = sk.name + ': ' + (locked ? 'locked for the rest of the fight' : left ? 'ready in ' + left + ' of its actions' : 'ready') + ', cooldown ' + sk.cooldown;
       });
     });
   }

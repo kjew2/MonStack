@@ -1,4 +1,4 @@
-# training-run vectors, hash v9 content=6.9/00add1ed
+# training-run vectors, hash v9 content=6.10/01954124
 
 slime balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -151,28 +151,28 @@ shade_hound balanced seed=7
   hash 960467738523fd0a16b358204ecd0d54465050921033759dd3864d147fadea84
 
 shade_hound focus seed=7
-  end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
-  stats hp 100 str 145 int 60 wis 70 dex 889 def 70 spd 210 luk 155
-  trees umbral_step:8/8 shadow_harvest:7/8 nimble_feet:2/8 umbral_veil:8/8
-  hash 9b87652c8f7473d771648a1d93120ef39a376be1fb595b75d9e7cb90afa476e0
+  end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=1 sp=1 injuries=0
+  stats hp 100 str 145 int 60 wis 70 dex 865 def 70 spd 210 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 duelist:1/8 umbral_veil:8/8
+  hash 65b6e6c5783d2bf800896a00c7df3a75e83832126fb5c22d0dd20f8eeafdb0e4
 
 shade_hound reckless seed=7
   end=Completed cycle=12 rank=b fights=3/5 drills=30 rests=0 energy=0 milestones=1 sp=0 injuries=c2,c5,c9,c12
   stats hp 100 str 145 int 60 wis 70 dex 642 def 70 spd 190 luk 135
-  trees umbral_step:8/8 shadow_harvest:5/8 nimble_feet:1/8 umbral_veil:5/8
-  hash aed8841069846845f5753b533ac9916d6723bb52ff4cf15661c67d3102567742
+  trees umbral_step:8/8 shadow_harvest:5/8 duelist:1/8 umbral_veil:5/8
+  hash 2c35fa72888153198fe7dc1e3f41f1f9c891cbb69a17531a05af8f838e201a8d
 
 shade_hound hoarder seed=7
-  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
-  stats hp 100 str 145 int 60 wis 70 dex 853 def 70 spd 210 luk 155
-  trees umbral_step:8/8 shadow_harvest:7/8 nimble_feet:2/8 umbral_veil:7/8
-  hash d37d1dd89c876aa773bc1161d78287b85b7488715951502b8205cc9e5a6670b3
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=1 injuries=0
+  stats hp 100 str 145 int 60 wis 70 dex 829 def 70 spd 210 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 duelist:1/8 umbral_veil:7/8
+  hash 29d529d9f9db05ccec45f41d54a53e87aa18e6e7eba5f7994ce6a5bc5d535bfe
 
 shade_hound chaser seed=7
-  end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
-  stats hp 100 str 145 int 60 wis 70 dex 889 def 70 spd 210 luk 155
-  trees umbral_step:8/8 shadow_harvest:7/8 nimble_feet:2/8 umbral_veil:8/8
-  hash ae214bdcfc3a30c6546af672f4e4500e43bde0c7265fc663ff04f4000d64f0f4
+  end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=1 sp=1 injuries=0
+  stats hp 100 str 145 int 60 wis 70 dex 865 def 70 spd 210 luk 155
+  trees umbral_step:8/8 shadow_harvest:7/8 duelist:1/8 umbral_veil:8/8
+  hash fb200661988a7779dc49e53b21dd0a4566493d85a9214a2c10b820a0f99a6e2d
 
 shade_hound focus seed=7 books=book_echoes,book_embers,book_roots,book_shadows,book_tides
   end=Completed cycle=12 rank=s fights=5/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0

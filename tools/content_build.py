@@ -104,6 +104,9 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane F, tree and kit run rules (specs/15 section 11, #139)
     "KEEPSAKE_STEP": "double", "KEEPSAKE_DRILLS": "int", "KEEPSAKE_MAX": "double", "MASTERY_WINS": "int",
     "LIMIT_BREAK_MAX": "double",
+    # idea-pool lane D, debuff and stacking rules (specs/16 section 6.2, #137)
+    "MON_BLEED_PER_HIT": "double", "MON_BLEED_DEX_REF": "double", "MON_BLEED_BURST": "double", "MON_PRIV_BONUS": "double",
+    "MON_PRIV_DEBUFFS": "int", "MON_EQ_BONUS": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -121,7 +124,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane E (#138)
             "lone_wolf", "arise", "last_rite",
             # idea-pool lane F (#139): run rules (tree and kit build)
-            "mimic_core", "heirloom", "mastery", "limit_break"]
+            "mimic_core", "heirloom", "mastery", "limit_break",
+            # idea-pool lane D (#137)
+            "hemorrhage", "privileged_status", "equilibrium", "corruption", "dead_branch"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -202,6 +207,10 @@ MON_RANGES = {
     "KEEPSAKE_STEP": (">= 0", lambda v: v >= 0), "KEEPSAKE_DRILLS": (">= 1", lambda v: v >= 1),
     "KEEPSAKE_MAX": (">= 0", lambda v: v >= 0), "MASTERY_WINS": (">= 1", lambda v: v >= 1),
     "LIMIT_BREAK_MAX": (">= 0", lambda v: v >= 0),   # and >= STAT_MAX, checked in validate
+    # idea-pool lane D (#137)
+    "MON_BLEED_PER_HIT": (">= 0", lambda v: v >= 0), "MON_BLEED_DEX_REF": ("> 0", lambda v: v > 0),
+    "MON_BLEED_BURST": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_PRIV_BONUS": (">= 0", lambda v: v >= 0),
+    "MON_PRIV_DEBUFFS": (">= 1", lambda v: v >= 1), "MON_EQ_BONUS": (">= 0", lambda v: v >= 0),
 }
 
 

@@ -1014,6 +1014,18 @@ namespace IdleRng.Sim.Combat
             return false;
         }
 
+        /// <summary>
+        /// The unit's active debuffs from any source (a shared helper for the idea-pool lanes, epic #132): its stat effects with a
+        /// negative value, each stacked copy counted (debuff skills, triggered debuffs). Buffs, passives and rule state (a bleed
+        /// gauge, an element mark) are not debuffs.
+        /// </summary>
+        internal static int DebuffCount(FightUnit u)
+        {
+            int n = 0;
+            foreach (var e in u.Effects) if (e.Frac < 0) n++;
+            return n;
+        }
+
         static bool Has(FightUnit u, string rule) => u.Source.Rules.Contains(rule);
 
         // ------------------------------------------------------------------ the tower (specs/21 section 3)

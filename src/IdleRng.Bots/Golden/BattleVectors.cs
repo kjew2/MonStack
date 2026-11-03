@@ -232,7 +232,45 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("4v4 team and mode capstones", 12,
                 new[] { LoneWolf("a_lone"), Arise("a_arise"), LastRite("a_rite"), Brawler("a_brawler", "light") },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
+            // Idea-pool lane D (#137): the debuff and lock capstones (Corruption and Dead Branch on one unit) against a mixed team.
+            yield return new Vector("4v4 debuff and lock capstones", 11,
+                new[] { Hemorrhage("a_bleed"), Privileged("a_priv"), Equilibrium("a_eq"), CorruptBranch("a_corrupt") },
+                new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
         }
+
+        // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.
+        static Fighter Hemorrhage(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(520, 240, 80, 160, 640, 220, 300, 140),
+            Skills = { Dmg("lunge", StatIds.Dex, 1.4, 2) },
+            Rules = { RuleModifiers.Hemorrhage },
+        };
+
+        static Fighter Privileged(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(480, 80, 120, 440, 200, 220, 230, 120),
+            Skills =
+            {
+                Fx("hex", SkillKind.Debuff, SkillTarget.Enemy, StatIds.Wis, null, 0.25, 4, 3),
+                Fx("confuse", SkillKind.Debuff, SkillTarget.AllEnemies, StatIds.Dex, null, 0.3, 4, 3),
+                Dmg("spirit_lash", StatIds.Wis, 1.5, 2),
+            },
+            Rules = { RuleModifiers.PrivilegedStatus },
+        };
+
+        static Fighter Equilibrium(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(460, 60, 440, 240, 200, 200, 220, 140),
+            Skills = { Dmg("aether_bolt", StatIds.Int, 1.8, 2, SkillTarget.Enemy, "light") },
+            Rules = { RuleModifiers.Equilibrium },
+        };
+
+        static Fighter CorruptBranch(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(500, 120, 160, 360, 180, 220, 240, 360),
+            Skills = { Dmg("spirit_lash", StatIds.Wis, 1.5, 2), Dmg("coin_toss", StatIds.Luk, 2.0, 3) },
+            Rules = { RuleModifiers.Corruption, RuleModifiers.DeadBranch },
+        };
 
         // Idea-pool lane A (#134): one conversion capstone each.
         static Fighter IronReflexes(string id) => new Fighter

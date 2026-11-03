@@ -155,3 +155,9 @@ KEEPSAKE_DRILLS,int,3,heirloom: drills of the node's stat per KEEPSAKE_STEP of e
 KEEPSAKE_MAX,double,0.3,heirloom: the most extra growth one growth_use node can reach. Placeholder
 MASTERY_WINS,int,2,mastery: rank fights a slotted tree with its capstone bought must win (while the mastery capstone is held) to become mastered. Placeholder
 LIMIT_BREAK_MAX,double,1299,limit_break: the cap of the tree's own stat while its capstone is held (instead of STAT_MAX). Placeholder
+MON_BLEED_PER_HIT,double,10,hemorrhage rule: bleed each of the unit's landed hits adds to the target's gauge (bursts at 100) at MON_BLEED_DEX_REF DEX; scales with the unit's DEX. Placeholder
+MON_BLEED_DEX_REF,double,300,hemorrhage rule: the DEX at which a hit adds exactly MON_BLEED_PER_HIT bleed. Placeholder
+MON_BLEED_BURST,double,0.15,hemorrhage rule: a full bleed gauge bursts for this fraction of the target's max HP as true damage. Placeholder
+MON_PRIV_BONUS,double,0.4,privileged_status rule: the unit's hits deal x(1 + this) to a target with at least MON_PRIV_DEBUFFS debuffs. Placeholder
+MON_PRIV_DEBUFFS,int,2,privileged_status rule: active debuffs (any source; stacked copies count) the target needs. Placeholder
+MON_EQ_BONUS,double,0.35,equilibrium rule: a hit of another element than the target's mark deals x(1 + this) and clears the mark. Placeholder

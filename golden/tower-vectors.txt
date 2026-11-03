@@ -1,4 +1,4 @@
-# tower vectors, hash v1 content=6.9/00add1ed
+# tower vectors, hash v1 content=6.10/01954124
 
 day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_king tide_warden tide_warden gloom_stalker apex_chimera* bramble_king mire_brute sun_idol cinder_wyrm storm_titan* tide_warden sun_idol gloom_stalker cinder_wyrm storm_titan*
   slime focus seed=7: floor=17 cleared=False vents=5 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
@@ -10,7 +10,7 @@ day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_k
   mandrake focus seed=7: floor=2 cleared=False vents=1 phases=-
     hash 50609eca8f7a64f51b8a4fe7776907b47045a0f9944422815fe8e2b06e6fad4b
   shade_hound focus seed=7: floor=16 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
-    hash 86767e9ed6484233e3f9d3bf9e17cba1996b99b5f09a2276ba3a83b417b983df
+    hash eeaa8929f46700b0506f3b852f9c3ff52cf20bf5ba1e05331f8a025ec8f4f092
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=2 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
     hash 6d346f21af11d5e3bae558c2741bebb86f0305bc0286efd01f10bd235bf7c600
 
@@ -24,6 +24,6 @@ day 20391 lineup sun_idol cinder_wyrm bramble_king tide_warden apex_chimera* glo
   mandrake focus seed=7: floor=1 cleared=False vents=0 phases=-
     hash 23278231359b41776fb92c920c4883b76d87d3c981224516b975362438717e2f
   shade_hound focus seed=7: floor=15 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel
-    hash ee8af6dab40cfe311b3b99f58d63c4182b22b5b14360681311f6564a3b8aaacc
+    hash 3f1bfef781c9efdc497dfa68e6a2389ec35157dacdf081e2567c9f39d80e8a00
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
     hash c28aa190d9d58a3d5fab7b16bbb54e8fd2f3a5a461617520c53015830720bc55

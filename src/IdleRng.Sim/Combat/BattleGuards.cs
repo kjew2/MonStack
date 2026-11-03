@@ -17,6 +17,9 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>echo_cast's repeat (part of the cast, so it adds no depth): an echo is never echoed again.</summary>
         Echo = 9,
+
+        /// <summary>corruption's second cast (lane D, part of the cast, so it adds no depth): never corrupted or echoed again.</summary>
+        Corrupt = 10,
     }
 
     /// <summary>What every rule hook gets: the fight's rules, its state, its random source and its log (null = no log).</summary>

@@ -66,3 +66,8 @@ mimic_core,tree.mimic_core.name,generic,,400,,,,idea-pool lane F (#139): Balatro
 heirloom,tree.heirloom.name,generic,,400,,,,idea-pool lane F (#139): Hades keepsakes
 mastery,tree.mastery.name,generic,wis,400,,,,idea-pool lane F (#139): Final Fantasy IX learned abilities
 limit_break,tree.limit_break.name,generic,,400,,,,idea-pool lane F (#139): Power Pro super abilities
+hemorrhage,tree.hemorrhage.name,generic,dex,400,,,,idea-pool lane D (#137): Elden Ring bleed
+privileged_status,tree.privileged_status.name,generic,wis,400,,,,idea-pool lane D (#137): Hades Privileged Status
+equilibrium,tree.equilibrium.name,generic,int,400,,,,idea-pool lane D (#137): PoE Elemental Equilibrium
+corruption,tree.corruption.name,generic,wis,400,,,,idea-pool lane D (#137): Slay the Spire Corruption
+dead_branch,tree.dead_branch.name,generic,luk,400,,,,idea-pool lane D (#137): Slay the Spire Dead Branch
