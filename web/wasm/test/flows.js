@@ -80,10 +80,10 @@ const H = require('./harness.js');
   check(await act('fight').isEnabled(), 'a rank fight is due after ' + played.steps + ' steps');
   const clipped = await page.$$eval('#main [data-id=stage], #main [data-id=pad]', (cs) => cs.map((c) => ({ card: Math.round(c.getBoundingClientRect().height), rows: c.scrollHeight })));
   check(clipped.length === 2 && clipped.every((c) => c.card >= c.rows - 1), 'issue #113: the stage and the drill tiles are not squeezed while a fight is due: ' + JSON.stringify(clipped));
+  await page.waitForTimeout(500);                                         // the hype screen's entrance lands
+  await t.layout('fight hype');
   await act('fight').click();
-  await page.locator('[data-id=fight-intro]').waitFor();
-  await t.layout('fight intro');
-  await act('intro-skip').click();
+  if (await page.locator('[data-id=fight-intro]').count()) await act('intro-skip').click();   // the "Fight!" beat, if still up
   await page.locator('[data-id=fight-play]').waitFor();
   await page.waitForTimeout(600);
   await t.layout('fight playback');
@@ -210,14 +210,14 @@ const H = require('./harness.js');
   check((await t.readAccount()).Run !== undefined, 'the account still starts a run');
 
   // ---- an injury (specs/14 section 4.1, issue #89): drilling without rest injures the monster; it loses the rest of the cycle
-  // and its fight and sits out the next cycle, then the run goes on. While training (no fight card up), the stage, the drill pad
+  // and its fight and sits out the next cycle, then the run goes on. While training (no hype screen or fight up), the stage, the drill pad
   // and Rest stay where they are, results and the injury banner included: buttons never move under a thumb.
   const hurt = await page.evaluate(() => {
     const q = (s) => document.querySelector(s);
     const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
     const at = (s) => Math.round(q(s).getBoundingClientRect().top + q('#main').scrollTop);
     const spots = new Set();
-    const measure = () => { if (!q('[data-id=fight-card]') && q('[data-act=rest]')) spots.add([at('[data-id=stage]'), at('[data-id=pad]'), at('[data-act=rest]')].join('/')); };
+    const measure = () => { if (q('#modal').hidden && q('[data-act=rest]')) spots.add([at('[data-id=stage]'), at('[data-id=pad]'), at('[data-act=rest]')].join('/')); };
     for (let i = 0; i < 200; i++) {
       measure();
       if (q('[data-id=injury-result]')) return { cycle: q('[data-id=cycle]').textContent, result: q('[data-id=injury-result]').textContent,
