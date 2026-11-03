@@ -824,7 +824,7 @@ clutch_empress_n5,clutch_empress,5,1,growth,hp,0.1,,,
 clutch_empress_n6,clutch_empress,6,1,stat,hp,20,,,
 clutch_empress_n7,clutch_empress,7,2,rule,,,,,foundling_egg
 mudwork_n0,mudwork,0,1,growth,wis,0.1,,,
-mudwork_n1,mudwork,1,1,stat,wis,15,,,
+mudwork_n1,mudwork,1,2,skill,,,shield_bash,,
 mudwork_n2,mudwork,2,1,growth,hp,0.1,,,
 mudwork_n3,mudwork,3,1,stat,hp,15,,,
 mudwork_n4,mudwork,4,2,skill,,,mud_patch,,

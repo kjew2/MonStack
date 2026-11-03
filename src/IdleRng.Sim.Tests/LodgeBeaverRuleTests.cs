@@ -91,7 +91,7 @@ namespace IdleRng.Sim.Tests
             {
                 var t = db.Trees[kv.Key];
                 Assert.That(t.Nodes.Count, Is.EqualTo(8), kv.Key);
-                Assert.That(t.Nodes.Sum(n => n.Cost), Is.EqualTo(11), kv.Key);
+                Assert.That(t.Nodes.Sum(n => n.Cost), Is.EqualTo(kv.Key == "mudwork" ? 12 : 11), kv.Key);   // Mudwork: Shield Bash costs 2 (#169)
                 Assert.That((t.Nodes[7].Kind, t.Nodes[7].RuleId), Is.EqualTo((NodeKind.Rule, kv.Value)), kv.Key);
                 Assert.That(t.Nodes[4].Kind, Is.EqualTo(NodeKind.Skill), kv.Key);
                 Assert.That(RuleModifiers.IsKnown(kv.Value), kv.Value);
@@ -100,6 +100,10 @@ namespace IdleRng.Sim.Tests
                 Assert.That(db.Text("rule." + kv.Value + ".name"), Is.Not.EqualTo("rule." + kv.Value + ".name"), kv.Value);
             }
             Assert.That(db.Trees["mudwork"].Kind, Is.EqualTo(TreeKind.Native));
+            // #169: the native kit holds a DEF-scaled damage skill (Mudwork node 1), so a DEF wall still ends its fights (epic #132
+            // rule 5: a rule that makes a unit hard to kill must not raise timeouts).
+            var bash = db.Trees["mudwork"].Nodes[1];
+            Assert.That((bash.Kind, bash.Skill.Id, bash.Skill.Kind, bash.Skill.Scales), Is.EqualTo((NodeKind.Skill, "shield_bash", SkillKind.Damage, StatIds.Def)));
             // The second chase is a harder in-run chase: no book node, both natives maxed, every in-run condition asked again.
             var dam = db.Trees["great_dam"];
             Assert.That((dam.Kind, dam.BookGated, dam.SecondChase), Is.EqualTo((TreeKind.Chase, false, true)));
