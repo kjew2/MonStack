@@ -114,6 +114,9 @@ else
     step "Web: phone-width screens, tree overwrite, save/reload/resume and stale or damaged saves in headless Chromium"
     node web/wasm/test/flows.js
 
+    step "Web: rulebook editor (rules, pickers, save, test preview) in headless Chromium"
+    node web/wasm/test/rulebook.js
+
     step "Web: player accounts (guest, Google link, second device, sign out, offline) in headless Chromium"
     node web/wasm/test/auth.js
 
