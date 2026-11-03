@@ -4,7 +4,7 @@ using IdleRng.Sim.Content;
 
 namespace IdleRng.Sim.Training
 {
-    // The run-rule hooks of the idea-pool lanes F and G (specs/15 section 4.3, epic #132). The run calls each Hook* method at a
+    // The run-rule hooks of the idea-pool lanes F and G (specs/14 section 2, epic #132). The run calls each Hook* method at a
     // fixed point, lane F then lane G; each lane implements its partial methods in Rules/LaneF.cs or LaneG.cs, and an
     // unimplemented one is compiled away, so a hook is a no-op until its lane fills it. A rule takes effect only for a run that
     // holds its capstone; its state goes into the save as lean JSON and into the run hash only when present (HashRun).

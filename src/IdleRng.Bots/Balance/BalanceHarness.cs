@@ -478,6 +478,8 @@ namespace IdleRng.Bots.Balance
             var mods = TalentMods(c, o.Talents);
             var powerTrees = o.PowerTrees == null ? TreePower.Trees(c) : o.PowerTrees.Select(id =>
                 c.Trees.TryGetValue(id, out var t) ? t : throw new ArgumentException($"unknown tree '{id}'")).ToList();
+            if (powerTrees.Select(t => t.Id).Distinct().Count() != powerTrees.Count) throw new ArgumentException("a power tree is listed twice");
+            if (powerTrees.Any(t => t.Nodes.Count == 0)) throw new ArgumentException("a power tree has no nodes");
 
             var runs = PlayAll(c, o, policies, species, books, mods);
             var report = new BalanceReport

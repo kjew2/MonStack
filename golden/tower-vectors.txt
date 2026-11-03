@@ -1,10 +1,10 @@
-# tower vectors, hash v1 content=6.3/7b01a5f6
+# tower vectors, hash v1 content=6.4/3827fcd6
 
 day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_king tide_warden tide_warden gloom_stalker apex_chimera* bramble_king mire_brute sun_idol cinder_wyrm storm_titan* tide_warden sun_idol gloom_stalker cinder_wyrm storm_titan*
   slime focus seed=7: floor=17 cleared=False vents=5 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
     hash 8b141c9d6bd4b457729a2cc1cb95a536a9d90f91d47b41ca2923c31bbd5cff01
-  drake focus seed=7: floor=9 cleared=False vents=0 phases=5:split,5:channel
-    hash f8729ce4bbae6bd34f3f8347feacc2c3032ef569abbdd510ac0120c2bcdd8985
+  drake focus seed=7: floor=8 cleared=False vents=0 phases=5:split,5:channel
+    hash 47e182c5765baa404845508633f00b0168dd1a2f348cc9575033a71e222e7d87
   sprite focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage
     hash c3482ad3429f9ac401c890eab2dbb2e69665b3106405423c7f3b05dea09e3507
   mandrake focus seed=7: floor=2 cleared=False vents=0 phases=-
