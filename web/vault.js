@@ -280,7 +280,15 @@
         onclick: () => { const r = X.run.acct('lock', i, !e.locked); if (!r.ok) X.toast(r.reason); X.rerender(); } }),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'detail-compare', text: 'Compare with…',
         onclick: () => { st.pick = ref(e, i); st.detail = null; X.rerender(); } }),
+      rulebookButton(e, i),
     ]));
+  }
+
+  // Opens the monster's gambit rulebook editor (web/rulebook.js, specs/28 section 4.5) over the detail sheet.
+  function rulebookButton(e, i) {
+    const n = (e.rulebook || '').split('|').filter(Boolean).length;
+    return X.h('button', { class: 'btn small', type: 'button', 'data-act': 'detail-rulebook', text: n ? 'Rulebook (' + n + (n === 1 ? ' rule)' : ' rules)') : 'Rulebook: none',
+      onclick: () => window.RulebookView.open({ run: X.run, C: X.C, h: X.h, toast: X.toast, sprite: X.sprite, TIP: X.TIP, up: X.up, num: X.num, onChange: X.rerender }, i, null) });
   }
 
   function compareSheet(modal) {
