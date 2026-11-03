@@ -9,7 +9,7 @@
 // Also checks the header build stamp from dist/build-info.json (vMAJOR.MINOR · commit), and that a missing stamp shows "dev".
 // Species unlocks and the post-run vendor (specs/18 sections 4 and 8): a new account shows locked species with their unlock
 // condition; the run is played on an account save that has drake unlocked; after the run the vendor (closed by leaving it or by a reload) offers 5 talent offers and
-// buying one spends shards. The Dungeon: ticket pieces on the grade screen, one ticket spent on a climb, its result card, and floor playback (entropy gauges, the next vent, the
+// buying one spends shards. The Dungeon: ticket pieces on the grade screen, one ticket spent on a climb, its reel (spin, tap to land, the defeat), its result card, and floor playback (entropy gauges, the next vent, the
 // corruption meter and their tooltips, an earlier floor replayed by towerFloor with the same fight hash; issue #98), and the
 // team picker over a varied Vault (the Vault's search, slot reordering); the test book button is debug only.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
@@ -614,8 +614,17 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('tower-pick-0').check();
   check(/Enter with 1 monster/.test(await act('tower-climb').innerText()), 'picking a Vault monster puts it on the team');
   await act('tower-climb').click();
+  await page.locator('#modal [data-id=tower-reel]').waitFor();             // the climb plays out on the reel, like the gauntlet wheel
+  check(await act('tower-skip').isVisible() && /^Floor \d+/.test(await text('[data-id=tower-now]')), 'the climb spins the reel with a skip button: ' + (await text('[data-id=tower-now]')));
+  check(await page.locator('[data-id=tower-loot].anim').count() === 0, 'the loot banner waits under the reel');
+  await page.locator('[data-id=tower-reel]').tap();                        // tap the reel to land it
+  await page.locator('#modal [data-id=tower-arena]').waitFor();
+  check((await act('tower-skip').count()) === 0 && /(Fell on floor \d+ to \S|All \d+ floors beaten)/.test(await text('[data-id=tower-landed]')),
+    'tapping lands it on where the team stopped, then the defeat plays: ' + (await text('[data-id=tower-landed]')).replace(/\s+/g, ' '));
+  await shot('06a-tower-reel');
+  await act('tower-reel-done').click();
   await page.locator('[data-id=tower-result]').waitFor();
-  check(await page.locator('#modal').isHidden(), 'at Skip the climb shows the result at once, with no playback');
+  check(await page.locator('#modal').isHidden(), 'See the loot closes the reel onto the result');
   check(await page.locator('[data-id=tower-loot].anim').count() === 1, 'and slams in the loot banner');
   const lootCards = await page.locator('[data-id=tower-cards] .lcard').count();
   check(lootCards === 0 || (await page.locator('[data-id=tower-cards] .lcard.up').count()) === 0, 'the loot waits face down (' + lootCards + ' cards)');
