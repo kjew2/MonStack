@@ -154,6 +154,7 @@ namespace MonStackAccount.Tests
     public class CloudSaveLeaderboardStoreTests
     {
         static string Show(LeaderboardEntry e) => e == null ? "-" : $"{e.Rank}:{e.PlayerId}:{e.Name}:{e.Score}:{e.AtMs}";
+        static string ShowRow(LeaderboardEntry e) => e == null ? "-" : $"{e.Rank}:{e.RowId}:{e.PlayerId}:{e.Tag}:{e.Name}:{e.Score}:{e.AtMs}";
 
         [Test]
         public void MatchesTheMemoryStore_OverRandomOperations()
@@ -193,6 +194,60 @@ namespace MonStackAccount.Tests
             }
             Assert.That(save.Keys(CloudSaveOwner.Entity("endless-1")).All(k => k.StartsWith("rows-")), Is.True);
             Assert.That(save.Keys(CloudSaveOwner.Entity(CloudSaveLeaderboardStore.NamesEntity)).All(k => k.StartsWith("names-")), Is.True);
+        }
+
+        [Test]
+        public void ManyRowsPerPlayer_MatchTheMemoryStore_OverRandomOperations()
+        {
+            var save = new FakeCloudSave();
+            var ugs = new CloudSaveLeaderboardStore(save);
+            var mem = new MemoryLeaderboardStore();
+            var rnd = new Random(11);
+            var players = Enumerable.Range(0, 30).Select(i => "p" + i).ToList();
+            string[] boards = { "gauntlet", "gauntlet-drake" };
+            for (int step = 0; step < 400; step++)
+            {
+                string p = players[rnd.Next(players.Count)], b = boards[rnd.Next(2)];
+                switch (rnd.Next(10))
+                {
+                    case 0: ugs.RemoveAsync(b, p).Wait(); mem.RemoveAsync(b, p).Wait(); break;
+                    case 1:
+                        string name = rnd.Next(3) == 0 ? null : "N" + rnd.Next(5);
+                        ugs.SetNameAsync(p, name).Wait(); mem.SetNameAsync(p, name).Wait();
+                        break;
+                    default:
+                        var rows = Enumerable.Range(0, rnd.Next(1, 4)).Select(_ => rnd.Next(6)).Distinct()
+                            .Select(i => new LeaderboardRow { RowId = p + ":" + i, Score = rnd.Next(1, 30), Tag = "t" + rnd.Next(3) }).ToList();
+                        long at = 1000 + step / 3;   // ties on time too: the row id breaks them
+                        ugs.SubmitRowsAsync(b, p, rows, at).Wait(); mem.SubmitRowsAsync(b, p, rows, at).Wait();
+                        break;
+                }
+            }
+            foreach (var b in boards)
+            {
+                var (ut, un) = ugs.TopAsync(b, 40).Result;
+                var (mt, mn) = mem.TopAsync(b, 40).Result;
+                Assert.That(un, Is.EqualTo(mn), b + " total");
+                Assert.That(un, Is.GreaterThan(players.Count), b + ": players hold several rows");
+                Assert.That(ut.Select(ShowRow), Is.EqualTo(mt.Select(ShowRow)), b + " top");
+                foreach (var p in players)
+                    Assert.That(ShowRow(ugs.EntryAsync(b, p).Result), Is.EqualTo(ShowRow(mem.EntryAsync(b, p).Result)), b + " " + p);
+            }
+        }
+
+        [Test]
+        public void OnePlayerRows_AndNamedRows_ReadTheirOwnShapes()
+        {
+            var save = new FakeCloudSave();
+            var store = new CloudSaveLeaderboardStore(save);
+            store.SubmitAsync("endless-4", "ann", 5, 10).Wait();
+            store.SubmitRowsAsync("gauntlet", "ann", new[] { new LeaderboardRow { RowId = "ann:1", Score = 40, Tag = "slime|t|" } }, 20).Wait();
+            string key = CloudSaveLeaderboardStore.RowsKey(CloudSaveLeaderboardStore.ShardOf("ann"));
+            Assert.That(save.GetOneAsync(CloudSaveOwner.Entity("endless-4"), key).Result.Value, Is.EqualTo("{\"ann\":[5,10]}"), "the Endless shape is unchanged");
+            Assert.That(save.GetOneAsync(CloudSaveOwner.Entity("gauntlet"), key).Result.Value, Is.EqualTo("{\"ann:1\":[40,20,\"ann\",\"slime|t|\"]}"));
+            Assert.That(ShowRow(store.EntryAsync("gauntlet", "ann").Result), Is.EqualTo("1:ann:1:ann:slime|t|::40:20"));
+            store.RemoveAsync("gauntlet", "ann").Wait();
+            Assert.That(store.TopAsync("gauntlet", 5).Result.Total, Is.EqualTo(0));
         }
 
         [Test]

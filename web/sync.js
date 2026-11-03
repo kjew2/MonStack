@@ -276,6 +276,8 @@
       kind: 'ugs',
       open(req) { return get().open(req); },
       commit(req) { return get().commit(req); },
+      endlessBoard(season, top) { return get().endlessBoard(season, top); },
+      gauntletBoard(species, top) { return get().gauntletBoard(species, top); },
     };
   }
 

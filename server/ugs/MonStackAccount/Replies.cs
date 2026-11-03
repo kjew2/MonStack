@@ -85,20 +85,59 @@ namespace MonStackAccount
             r == null ? null : new BoardRowReply { Rank = r.Rank, Name = r.Name, Floor = r.Floor, You = r.You };
     }
 
-    /// <summary>EndlessBoard's answer.</summary>
+    /// <summary>EndlessBoard's answer. <c>fallbackName</c> is the name the caller's rows show until they pick one.</summary>
     public sealed class BoardReply
     {
         [JsonProperty("season")] public int Season { get; set; }
         [JsonProperty("total")] public int Total { get; set; }
         [JsonProperty("top")] public List<BoardRowReply> Top { get; set; } = new List<BoardRowReply>();
         [JsonProperty("you", NullValueHandling = NullValueHandling.Ignore)] public BoardRowReply You { get; set; }
+        [JsonProperty("fallbackName")] public string FallbackName { get; set; }
 
-        public static BoardReply From(BoardView v) => new BoardReply
+        public static BoardReply From(BoardView v, string playerId) => new BoardReply
         {
             Season = v.Season,
             Total = v.Total,
             Top = v.Top.Select(BoardRowReply.From).ToList(),
             You = BoardRowReply.From(v.You),
+            FallbackName = EndlessBoard.FallbackName(playerId),
+        };
+    }
+
+    /// <summary>One row of a gauntlet board (specs/19 section 9): a sealed monster, no player ids.</summary>
+    public sealed class GauntletRowReply
+    {
+        [JsonProperty("rank")] public int Rank { get; set; }
+        [JsonProperty("name")] public string Name { get; set; }
+        [JsonProperty("species")] public string Species { get; set; }
+        [JsonProperty("speciesName")] public string SpeciesName { get; set; }
+        [JsonProperty("floor")] public int Floor { get; set; }
+        [JsonProperty("cleared")] public bool Cleared { get; set; }
+        [JsonProperty("label")] public string Label { get; set; }
+        [JsonProperty("you")] public bool You { get; set; }
+
+        public static GauntletRowReply From(GauntletRow r) => r == null ? null : new GauntletRowReply
+        {
+            Rank = r.Rank, Name = r.Name, Species = r.Species, SpeciesName = r.SpeciesName, Floor = r.Floor, Cleared = r.Cleared, Label = r.Label, You = r.You,
+        };
+    }
+
+    /// <summary>GauntletBoard's answer; <c>species</c> is left out for the overall board.</summary>
+    public sealed class GauntletBoardReply
+    {
+        [JsonProperty("species", NullValueHandling = NullValueHandling.Ignore)] public string Species { get; set; }
+        [JsonProperty("total")] public int Total { get; set; }
+        [JsonProperty("top")] public List<GauntletRowReply> Top { get; set; } = new List<GauntletRowReply>();
+        [JsonProperty("you", NullValueHandling = NullValueHandling.Ignore)] public GauntletRowReply You { get; set; }
+        [JsonProperty("fallbackName")] public string FallbackName { get; set; }
+
+        public static GauntletBoardReply From(GauntletBoardView v, string playerId) => new GauntletBoardReply
+        {
+            Species = v.Species,
+            Total = v.Total,
+            Top = v.Top.Select(GauntletRowReply.From).ToList(),
+            You = GauntletRowReply.From(v.You),
+            FallbackName = EndlessBoard.FallbackName(playerId),
         };
     }
 

@@ -7,7 +7,9 @@
 //                                                           created, contentVersion, serverSec, day }
 //   await t.commit({ deviceId, fromSeq, fromHash, commands: [{ k, a }], toHash, contentVersion })
 //                                                       -> { code, accepted, index, reason, seq, hash, serverSec, day }
-//   await t.endlessBoard(season, top)                  -> { season, total, top: [{ rank, name, floor, you }], you }
+//   await t.endlessBoard(season, top)                  -> { season, total, top: [{ rank, name, floor, you }], you, fallbackName }
+//   await t.gauntletBoard(species, top)                -> { species, total, top: [{ rank, name, species, speciesName, floor,
+//                                                           cleared, label, you }], you, fallbackName }  (species null: overall)
 //   await t.profile(of)                                -> { found, profile }  (of: whose, a UGS player id; empty: the caller's)
 //
 // `code` is "None" for an accepted call, else the rejection (NotHolder, Stale, ContentStale, Mismatch, Refused): a verdict.
@@ -103,6 +105,9 @@
       },
       async endlessBoard(season, top) {
         return call('EndlessBoard', { season: season == null ? -1 : season, top: top || 0 });
+      },
+      async gauntletBoard(species, top) {
+        return call('GauntletBoard', { species: species || '', top: top || 0 });
       },
       async profile(of) {
         return call('Profile', { of: of || '' });
