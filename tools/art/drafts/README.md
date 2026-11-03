@@ -105,3 +105,48 @@ Every creature concept and draft portrait from the idea-pool species work (#132,
 | Hungry Core | 1 | Gu Centipede | dark | grimdark | cut (tree stays an Awakening tree) | tree_hungry_core_1.webp |
 | Hungry Core | 2 | Ember Grub | fire | cute | alternative | tree_hungry_core_2.webp |
 | Hungry Core | 3 | Lumen Axolotl | light | mythic | alternative | tree_hungry_core_3.webp |
+
+## Apex forms (2026-11-03, epic #160)
+
+All 36 apex forms of the 18 planned species, drawn from kj's picked portraits above with `tools/art/generate.py`'s edit (gpt-image-2, medium, hunter style), then audited so each one differs clearly from its base form and its sibling apex (silhouette, palette or both) and nothing reads as disturbing (`specs/26` section 8.2). Shown to kj in the look book; prompts and references in `apex/apex.json`. Tier 1 is the in-run chase apex, tier 2 the book or harder in-run chase apex.
+
+**For a species lane:** do not generate new apex art. Copy `apex/<species>_apex<tier>.webp` to `tools/art/final/<chase_tree>.webp` (on main), add the two prompts from `apex.json` to `tools/art/prompts.json`, make the battle sprites with `generate.py sprite`, then run `export.py`.
+
+| Species | Tier | Apex form | Chase tree (final file name) | File |
+|---|---|---|---|---|
+| candlemane | 1 | Martyr Pyrelion | `martyrs_pyre` | apex/candlemane_apex1.webp |
+| candlemane | 2 | Hollow Sun Lion | `hollow_sun` | apex/candlemane_apex2.webp |
+| pyre_stag | 1 | Cinder Saint | `inverted_mercy` | apex/pyre_stag_apex1.webp |
+| pyre_stag | 2 | Everpyre Hart | `undying_pyre` | apex/pyre_stag_apex2.webp |
+| cuckling | 1 | Usurper Cuckoo | `usurper_cuckoo` | apex/cuckling_apex1.webp |
+| cuckling | 2 | Clutch Empress | `clutch_empress` | apex/cuckling_apex2.webp |
+| fountain_axolotl | 1 | Aquifer Olm | `aquifer` | apex/fountain_axolotl_apex1.webp |
+| fountain_axolotl | 2 | Xolotl Wellspring | `six_fountains` | apex/fountain_axolotl_apex2.webp |
+| keepshell_crab | 1 | Citadel Kingcrab | `unbreached_keep` | apex/keepshell_crab_apex1.webp |
+| keepshell_crab | 2 | Siegebreaker Crab | `siege_pincers` | apex/keepshell_crab_apex2.webp |
+| lamprey_wyrm | 1 | Latchmaw Wyrm | `ride_the_host` | apex/lamprey_wyrm_apex1.webp |
+| lamprey_wyrm | 2 | Sanguine Leviathan | `surfeit` | apex/lamprey_wyrm_apex2.webp |
+| sunmoon_koi | 1 | Syzygy Koi | `turning_tide` | apex/sunmoon_koi_apex1.webp |
+| sunmoon_koi | 2 | Longmen Dragon | `heavens_scales` | apex/sunmoon_koi_apex2.webp |
+| gearbell_jelly | 1 | Carillon Medusa | `carillon` | apex/gearbell_jelly_apex1.webp |
+| gearbell_jelly | 2 | Orrery Moonbell | `perpetual_escapement` | apex/gearbell_jelly_apex2.webp |
+| blight_amphisbaena | 1 | Plaguechain Basilisk | `spreading_blight` | apex/blight_amphisbaena_apex1.webp |
+| blight_amphisbaena | 2 | Sealbound Ouroboros | `hoop_of_seals` | apex/blight_amphisbaena_apex2.webp |
+| aegis_ram | 1 | Aries Vanguard | `headlong_oath` | apex/aegis_ram_apex1.webp |
+| aegis_ram | 2 | Chrysomallos | `thunderhoof` | apex/aegis_ram_apex2.webp |
+| daybreak_chick | 1 | Dawnherald Rooster | `dawn_chorus` | apex/daybreak_chick_apex1.webp |
+| daybreak_chick | 2 | Solstice Sunbird | `midnight_sun` | apex/daybreak_chick_apex2.webp |
+| brimful_hamster | 1 | Cornucopia Hamster | `cornucopia` | apex/brimful_hamster_apex1.webp |
+| brimful_hamster | 2 | Measureless Behemoth | `unmeasured` | apex/brimful_hamster_apex2.webp |
+| anvil_ape | 1 | Slagglass Titan | `brittle_quench` | apex/anvil_ape_apex1.webp |
+| anvil_ape | 2 | Worldsmith Silverback | `shatterpoint` | apex/anvil_ape_apex2.webp |
+| ronin_tiger | 1 | Peerless Tiger | `hunters_measure` | apex/ronin_tiger_apex1.webp |
+| ronin_tiger | 2 | Hundred-Scar Tyrant | `hundred_scars` | apex/ronin_tiger_apex2.webp |
+| taotie_boar | 1 | Bronze Cauldron Taotie | `gorging_maw` | apex/taotie_boar_apex1.webp |
+| taotie_boar | 2 | All-Devouring Taotie | `trophy_hall` | apex/taotie_boar_apex2.webp |
+| iaido_mantis | 1 | Ghost Orchid Reaper | `still_hunt` | apex/iaido_mantis_apex1.webp |
+| iaido_mantis | 2 | Thousand-Petal Kensei | `severed_arts` | apex/iaido_mantis_apex2.webp |
+| gravecap | 1 | Ringcap Puppeteer | `fairy_ring` | apex/gravecap_apex1.webp |
+| gravecap | 2 | Cordyceps Monarch | `cordyceps_crown` | apex/gravecap_apex2.webp |
+| lodge_beaver | 1 | Logjam Warden | `tail_slap` | apex/lodge_beaver_apex1.webp |
+| lodge_beaver | 2 | Floodgate Colossus | `great_dam` | apex/lodge_beaver_apex2.webp |

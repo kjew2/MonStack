@@ -1,0 +1,350 @@
+{
+ "_doc": "Apex-form drafts for the 18 planned species (epic #160), 2026-11-03. One take each: tools/art/generate.py edit() with gpt-image-2, medium, 1024, hunter style; prompt = prompts.json apex_base + the apex look from the species issue + the hunter style. tier 1 = in-run chase apex, tier 2 = book or harder in-run chase apex. Not reviewed by kj yet; not used by the game. Audit (same day): 20 forms that read too close to their base form or sibling apex were redrawn with redo_base and a bolder change (\"redrawn\" set); git history keeps the first takes.",
+ "apex": [
+  {
+   "species": "candlemane",
+   "tier": 1,
+   "name": "Martyr Pyrelion",
+   "prompt": "the same lion, but its fire has turned white-hot: the whole wax mane is now a tall roaring pyre of white and pale ice-blue flame, the candles burn white, the body is pale ivory wax streaked with blue-white light. Colour palette shifts from warm gold to white and pale blue.",
+   "file": "candlemane_apex1.webp",
+   "ref": "tools/art/drafts/c1_candlemane_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "martyrs_pyre"
+  },
+  {
+   "species": "candlemane",
+   "tier": 2,
+   "name": "Hollow Sun Lion",
+   "prompt": "the same lion, darkened: its body is now charcoal-black wax with molten cracks, its halo is a huge black-cored sun ringed in white fire behind its head, and its chest is an open furnace glowing crimson-orange. Colour palette shifts from gold to black, crimson and white.",
+   "file": "candlemane_apex2.webp",
+   "ref": "tools/art/drafts/c1_candlemane_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "hollow_sun"
+  },
+  {
+   "species": "pyre_stag",
+   "tier": 1,
+   "name": "Cinder Saint",
+   "prompt": "the stag has burnt down to a hollow blackened ribcage with a white-hot, blue-white fire burning inside it, a burning antler halo above its head, and its chains glowing white-hot. Colour palette shifts from orange to white and electric blue-white flame on charred black.",
+   "file": "pyre_stag_apex1.webp",
+   "ref": "tools/art/drafts/c2_pyre_stag_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "inverted_mercy"
+  },
+  {
+   "species": "pyre_stag",
+   "tier": 2,
+   "name": "Everpyre Hart",
+   "prompt": "a colossal hart of living flame with no hide left, its antler pyre risen into a crown-shaped bonfire, black bells ringing in the smoke.",
+   "file": "pyre_stag_apex2.webp",
+   "ref": "tools/art/drafts/c2_pyre_stag_1.webp",
+   "chase_tree": "undying_pyre"
+  },
+  {
+   "species": "cuckling",
+   "tier": 1,
+   "name": "Usurper Cuckoo",
+   "prompt": "a grown cuckoo, larger than any host, wearing a crown of broken eggshell.",
+   "file": "cuckling_apex1.webp",
+   "ref": "tools/art/drafts/c3_cuckling_1.webp",
+   "chase_tree": "usurper_cuckoo"
+  },
+  {
+   "species": "cuckling",
+   "tier": 2,
+   "name": "Clutch Empress",
+   "prompt": "the chick has grown into a tall, elegant, regal brood-mother cuckoo empress: sleek glossy plumage in deep violet and black with a soft lavender chest, a long flowing train of tail feathers like a royal gown, and a small cracked-eggshell tiara. She sits on a grand throne-like nest of woven thorny branches, gently sheltering just three large pale-blue speckled eggs under one wing. Calm, proud, motherly expression. Smooth feathers with no clusters, no bumps, no holes, no eggs attached to her body. Colour palette adds soft lavender and warm gold accents to the violet.",
+   "file": "cuckling_apex2.webp",
+   "ref": "tools/art/drafts/c3_cuckling_1.webp",
+   "redrawn": "v2: softened on request (fewer eggs, none on the body); redo_base",
+   "chase_tree": "clutch_empress"
+  },
+  {
+   "species": "fountain_axolotl",
+   "tier": 1,
+   "name": "Aquifer Olm",
+   "prompt": "the axolotl has transformed into an olm: a long, slender, serpent-like cave salamander, pale white and translucent like frosted glass with no pink at all, glowing aqua from inside, coiled in an S-curve through cracked dark bedrock with water seeping from every crack. Tiny legs, long body. Colour palette: white, pale cyan and aqua only.",
+   "file": "fountain_axolotl_apex1.webp",
+   "ref": "tools/art/drafts/tree_elemental_avatar_2.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "aquifer"
+  },
+  {
+   "species": "fountain_axolotl",
+   "tier": 2,
+   "name": "Xolotl Wellspring",
+   "prompt": "the axolotl has become a huge mythic river-dragon: a long, powerful dragon body with the axolotl's face, deep teal and turquoise scales with gold accents, its six gills now towering geysers shooting high, a carved stone fountain basin floating behind it like a halo, rain falling upward. Much larger and more majestic. Colour palette: deep teal, turquoise and gold.",
+   "file": "fountain_axolotl_apex2.webp",
+   "ref": "tools/art/drafts/tree_elemental_avatar_2.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "six_fountains"
+  },
+  {
+   "species": "keepshell_crab",
+   "tier": 1,
+   "name": "Citadel Kingcrab",
+   "prompt": "the keep grows into a walled citadel of towers and banners with a seawater moat; the claws become gatehouses, portcullises down.",
+   "file": "keepshell_crab_apex1.webp",
+   "ref": "tools/art/drafts/tree_fortress_fist_1.webp",
+   "chase_tree": "unbreached_keep"
+  },
+  {
+   "species": "keepshell_crab",
+   "tier": 2,
+   "name": "Siegebreaker Crab",
+   "prompt": "the castle shell has been rebuilt as a dark iron-and-timber siege tower on wheels, its claws replaced by heavy black iron battering rams with crab-claw heads, cracked enemy shields hung on its walls as trophies. Colour palette shifts from grey stone to black iron, dark wood and rust red.",
+   "file": "keepshell_crab_apex2.webp",
+   "ref": "tools/art/drafts/tree_fortress_fist_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "siege_pincers"
+  },
+  {
+   "species": "lamprey_wyrm",
+   "tier": 1,
+   "name": "Latchmaw Wyrm",
+   "prompt": "the lamprey is now huge and coiled tightly around the exposed ribs of a far bigger, dead-eyed horned beast lying on its side, the lamprey's spiral tooth-ring sunk into the host's flank, its glass bladder glowing red through the host's wounds. Two creatures in frame: the giant host and the lamprey wrapped around it.",
+   "file": "lamprey_wyrm_apex1.webp",
+   "ref": "tools/art/drafts/tree_hemorrhage_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "ride_the_host"
+  },
+  {
+   "species": "lamprey_wyrm",
+   "tier": 2,
+   "name": "Sanguine Leviathan",
+   "prompt": "the lamprey has become a bloated crimson sea serpent: its whole body is now deep blood-red and crimson, its throat-bladder grown into a huge translucent belly sloshing with glowing blood, spiral tooth-rings open all along its body, withered pale husks drifting around it. Colour palette shifts from slate blue to crimson and dark red.",
+   "file": "lamprey_wyrm_apex2.webp",
+   "ref": "tools/art/drafts/tree_hemorrhage_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "surfeit"
+  },
+  {
+   "species": "sunmoon_koi",
+   "tier": 1,
+   "name": "Syzygy Koi",
+   "prompt": "during a total eclipse: the koi's two halves now swim in a full circle, nose to tail, around a huge black eclipse disc with a blazing gold corona filling the centre of the frame, its two long tails sweeping a ring of water and light. The sun orb and the moon orb have merged into that eclipse. Background turns deep indigo-black with a gold glow. Clearly a ring composition, not a single S-curve.",
+   "file": "sunmoon_koi_apex1.webp",
+   "ref": "tools/art/drafts/tree_equilibrium_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "turning_tide"
+  },
+  {
+   "species": "sunmoon_koi",
+   "tier": 2,
+   "name": "Longmen Dragon",
+   "prompt": "the koi has leapt the Dragon Gate and become a true eastern dragon: a very long serpentine dragon body coiling across the whole frame in an S-curve, with four clawed legs, branching antlers, a dragon's snout, a flowing mane and long whiskers of light; gold scales on one flank, ink-blue on the other; a gold pearl in one claw and a silver pearl in the other. Behind it stands a huge vermilion-red ornate gate arch over a roaring waterfall. No fish fins, no fish body. Colour palette adds vermilion red and jade to the gold and ink-blue.",
+   "file": "sunmoon_koi_apex2.webp",
+   "ref": "tools/art/drafts/tree_equilibrium_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "heavens_scales"
+  },
+  {
+   "species": "gearbell_jelly",
+   "tier": 1,
+   "name": "Carillon Medusa",
+   "prompt": "the bell grows into a tower of nested rune bells, tentacles hanging like bell ropes, a violet shockwave pulsing from the rim.",
+   "file": "gearbell_jelly_apex1.webp",
+   "ref": "tools/art/drafts/tree_mana_ward_2.webp",
+   "chase_tree": "carillon"
+  },
+  {
+   "species": "gearbell_jelly",
+   "tier": 2,
+   "name": "Orrery Moonbell",
+   "prompt": "the jelly has become a vast moon-like bell of pale silver glass, holding a slowly turning orrery of brass rune gears and tiny glowing planets inside, a glowing clock face showing through the crown, tentacles frozen mid-drift as if time stopped. Colour palette shifts from violet to pale silver, moonlight white and brass.",
+   "file": "gearbell_jelly_apex2.webp",
+   "ref": "tools/art/drafts/tree_mana_ward_2.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "perpetual_escapement"
+  },
+  {
+   "species": "blight_amphisbaena",
+   "tier": 1,
+   "name": "Plaguechain Basilisk",
+   "prompt": "the serpent is longer and gaunter with visible ribs, and sickly rot-green corruption now spreads through its violet veins; rusted chains run off into the air and end padlocked around ghostly, glowing green-violet copies of spell sigils hovering around it. Colour palette adds toxic rot green to the violet.",
+   "file": "blight_amphisbaena_apex1.webp",
+   "ref": "tools/art/drafts/tree_corruption_2.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "spreading_blight"
+  },
+  {
+   "species": "blight_amphisbaena",
+   "tier": 2,
+   "name": "Sealbound Ouroboros",
+   "prompt": "rolled into a hoop, each head biting the other's tail: a burning violet ring hung with chains, every padlock glowing with the spell sealed inside.",
+   "file": "blight_amphisbaena_apex2.webp",
+   "ref": "tools/art/drafts/tree_corruption_2.webp",
+   "chase_tree": "hoop_of_seals"
+  },
+  {
+   "species": "aegis_ram",
+   "tier": 1,
+   "name": "Aries Vanguard",
+   "prompt": "the ram rears up on its hind legs mid-charge, pushing the golden shield ahead of it like a battering wall, its horns sheathed in heavy gold plate, five pips burning along them, three gold and two cracked glowing crimson; crimson light bleeds through cracks in the shield. Colour palette shifts to gold and deep crimson.",
+   "file": "aegis_ram_apex1.webp",
+   "ref": "tools/art/drafts/tree_brave_heart_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "headlong_oath"
+  },
+  {
+   "species": "aegis_ram",
+   "tier": 2,
+   "name": "Chrysomallos",
+   "prompt": "the winged ram of myth: fleece of beaten gold, sun-disc horns, the shield become wide golden wings, three pips orbiting like small suns.",
+   "file": "aegis_ram_apex2.webp",
+   "ref": "tools/art/drafts/tree_brave_heart_1.webp",
+   "chase_tree": "thunderhoof"
+  },
+  {
+   "species": "daybreak_chick",
+   "tier": 1,
+   "name": "Dawnherald Rooster",
+   "prompt": "a proud white-and-gold rooster on a hilltop at sunrise, its comb a blazing sunburst, eight tail feathers fanned like dawn rays, mid-crow.",
+   "file": "daybreak_chick_apex1.webp",
+   "ref": "tools/art/drafts/tree_latent_power_3.webp",
+   "chase_tree": "dawn_chorus"
+  },
+  {
+   "species": "daybreak_chick",
+   "tier": 2,
+   "name": "Solstice Sunbird",
+   "prompt": "the chick has grown into a great, slender, long-necked sunbird with long elegant wings spread wide, hanging high in a starry midnight-blue night sky, while a low sun on the horizon behind it never sets; its body glows like a small white sun and eight long ray feathers fan behind it in a full solar crown. Background changes to a starry night sky with a gold horizon.",
+   "file": "daybreak_chick_apex2.webp",
+   "ref": "tools/art/drafts/tree_latent_power_3.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "midnight_sun"
+  },
+  {
+   "species": "brimful_hamster",
+   "tier": 1,
+   "name": "Cornucopia Hamster",
+   "prompt": "grown large and golden, curled inside an overflowing horn of plenty pouring glowing grain and light over a shattered measuring cup, cheeks stuffed round.",
+   "file": "brimful_hamster_apex1.webp",
+   "ref": "tools/art/drafts/tree_limit_break_3.webp",
+   "chase_tree": "cornucopia"
+  },
+  {
+   "species": "brimful_hamster",
+   "tier": 2,
+   "name": "Measureless Behemoth",
+   "prompt": "the hamster is now colossal, seen from a low angle rising over a small valley and tiny trees far below it, its arms like pillars of white light, holding up a snapped ruler like a trophy, shards of a measuring cup floating around its head like a broken halo, seed-shaped motes streaming from its stuffed cheeks. Colour palette shifts to radiant white-gold light against a dusky valley.",
+   "file": "brimful_hamster_apex2.webp",
+   "ref": "tools/art/drafts/tree_limit_break_3.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "unmeasured"
+  },
+  {
+   "species": "anvil_ape",
+   "tier": 1,
+   "name": "Slagglass Titan",
+   "prompt": "a hulking silverback whose molten cracks have cooled into black volcanic glass plates, steam pouring off its quenched hammer fists.",
+   "file": "anvil_ape_apex1.webp",
+   "ref": "tools/art/drafts/tree_guard_break_2.webp",
+   "chase_tree": "brittle_quench"
+  },
+  {
+   "species": "anvil_ape",
+   "tier": 2,
+   "name": "Worldsmith Silverback",
+   "prompt": "a colossal ape of white-hot iron and cooling slag, its back a smoking forge with a chimney spine, one fist a sledgehammer and the other gripping an anvil, ringed by broken-shield shards.",
+   "file": "anvil_ape_apex2.webp",
+   "ref": "tools/art/drafts/tree_guard_break_2.webp",
+   "chase_tree": "shatterpoint"
+  },
+  {
+   "species": "ronin_tiger",
+   "tier": 1,
+   "name": "Peerless Tiger",
+   "prompt": "lean and huge with a duellist's calm; stripes burn white-gold, the snapped tether tied as a red sash, a scar over one eye glowing like a coal.",
+   "file": "ronin_tiger_apex1.webp",
+   "ref": "tools/art/drafts/tree_lone_wolf_1.webp",
+   "chase_tree": "hunters_measure"
+  },
+  {
+   "species": "ronin_tiger",
+   "tier": 2,
+   "name": "Hundred-Scar Tyrant",
+   "prompt": "the tiger is colossal and its hide has darkened to black and deep crimson, covered in a map of glowing orange scars burning like fuse lines, broken sword blades and arrowheads lodged in its shoulders, the red tether wound around one foreleg, and a huge flaring ember mane behind its head. Colour palette shifts from orange to black and crimson with glowing scars.",
+   "file": "ronin_tiger_apex2.webp",
+   "ref": "tools/art/drafts/tree_lone_wolf_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "hundred_scars"
+  },
+  {
+   "species": "taotie_boar",
+   "tier": 1,
+   "name": "Bronze Cauldron Taotie",
+   "prompt": "the boar's hide has set into green-gold ancient ritual bronze with verdigris patina, cast with coiled cloud-and-thunder patterns, a taotie mask face cast across its flank, its belly opened into a three-legged bronze cauldron full of fire, its trophy horns cast in bronze. Colour palette shifts from red-brown to green-gold bronze and turquoise verdigris.",
+   "file": "taotie_boar_apex1.webp",
+   "ref": "tools/art/drafts/tree_devourer_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "gorging_maw"
+  },
+  {
+   "species": "taotie_boar",
+   "tier": 2,
+   "name": "All-Devouring Taotie",
+   "prompt": "the Taotie that ate its own body: a colossal boar head with nothing below the jaw but furnace smoke, crowned with every trophy horn, its maw a furnace.",
+   "file": "taotie_boar_apex2.webp",
+   "ref": "tools/art/drafts/tree_devourer_1.webp",
+   "chase_tree": "trophy_hall"
+  },
+  {
+   "species": "iaido_mantis",
+   "tier": 1,
+   "name": "Ghost Orchid Reaper",
+   "prompt": "the jade fades to translucent white-and-violet like a ghost orchid, the torn wing a fan of petals; perfectly still, both scythes sheathed, petals frozen in the air.",
+   "file": "iaido_mantis_apex1.webp",
+   "ref": "tools/art/drafts/tree_vantage_1.webp",
+   "chase_tree": "still_hunt"
+  },
+  {
+   "species": "iaido_mantis",
+   "tier": 2,
+   "name": "Thousand-Petal Kensei",
+   "prompt": "a tall mantis sword saint with both scythes drawn, the wing regrown as a cloak of orchid petals, cut paper talismans pinned along its scabbard.",
+   "file": "iaido_mantis_apex2.webp",
+   "ref": "tools/art/drafts/tree_vantage_1.webp",
+   "chase_tree": "severed_arts"
+  },
+  {
+   "species": "gravecap",
+   "tier": 1,
+   "name": "Ringcap Puppeteer",
+   "prompt": "the toadstool is taller, its cap now deep indigo-blue with glowing cyan spots, standing in a fairy ring of small glowing blue mushrooms, glowing cyan spore threads hanging from its arms like puppet strings to the run's beaten foes, now mushroom puppets dancing in the ring. Colour palette shifts from red and green to indigo, cyan and teal.",
+   "file": "gravecap_apex1.webp",
+   "ref": "tools/art/drafts/tree_arise_1.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "fairy_ring"
+  },
+  {
+   "species": "gravecap",
+   "tier": 2,
+   "name": "Cordyceps Monarch",
+   "prompt": "the cap split into a branching crown of orange cordyceps stalks pouring spore light, a kneeling court of husked beasts on its strings.",
+   "file": "gravecap_apex2.webp",
+   "ref": "tools/art/drafts/tree_arise_1.webp",
+   "chase_tree": "cordyceps_crown"
+  },
+  {
+   "species": "lodge_beaver",
+   "tier": 1,
+   "name": "Logjam Warden",
+   "prompt": "the beaver has grown huge, and its log wall is now a massive rampart of dark timber bound with heavy polished steel bands and bolts, bolted to its back; its flat tail is a great timber paddle studded with river stones, raised high to slap. Colour palette shifts to dark wood, steel grey and cold blue highlights.",
+   "file": "lodge_beaver_apex1.webp",
+   "ref": "tools/art/drafts/tree_barricade_2.webp",
+   "redrawn": "v2: base prompt replaced by redo_base so the palette may change",
+   "chase_tree": "tail_slap"
+  },
+  {
+   "species": "lodge_beaver",
+   "tier": 2,
+   "name": "Floodgate Colossus",
+   "prompt": "a colossal beaver grown into its own dam: logs and river stone across its chest with sluice gates pouring white water, a pond and a little lodge on its back.",
+   "file": "lodge_beaver_apex2.webp",
+   "ref": "tools/art/drafts/tree_barricade_2.webp",
+   "chase_tree": "great_dam"
+  }
+ ],
+ "redo_base": "This is the creature's evolved apex form. Keep it recognisably the same species and the same face as the reference image, in exactly the same art style and kind of background, but make the change bold and obvious at a glance: a clearly different silhouette, a clearly different colour palette, or both, so it can never be mistaken for the reference. Do not add text. The change:"
+}
