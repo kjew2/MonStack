@@ -47,7 +47,7 @@ living_fortress,tree.living_fortress.name,fusion,,,tree.living_fortress.apex,hea
 hall_of_mirrors,tree.hall_of_mirrors.name,fusion,,,tree.hall_of_mirrors.apex,mind_warp,nimble_feet,fusion tree (specs/15 section 5.6)
 arcana_deck,tree.arcana_deck.name,fusion,,,tree.arcana_deck.apex,fortune,spellcraft,fusion tree (specs/15 section 5.6)
 iron_reflexes,tree.iron_reflexes.name,generic,dex,400,,,,idea-pool lane A (#134): PoE Iron Reflexes
-elemental_avatar,tree.elemental_avatar.name,generic,int,400,,,,idea-pool lane A (#134): PoE Avatar of Fire
+elemental_avatar,tree.elemental_avatar.name,native,,,,,,"idea-pool lane A (#134): PoE Avatar of Fire; native-only, Fountain Axolotl native tree 1 (#150)"
 fortress_fist,tree.fortress_fist.name,generic,def,400,,,,idea-pool lane A (#134): Bofuri all-VIT Maple
 blood_magic,tree.blood_magic.name,generic,hp,400,,,,idea-pool lane A (#134): PoE Blood Magic
 resentment,tree.resentment.name,generic,hp,400,,,,idea-pool lane B (#135): Monster Hunter Resentment
@@ -77,3 +77,7 @@ devourer,tree.devourer.name,generic,str,400,,,,idea-pool lane G (#140): Berserk 
 second_breath,tree.second_breath.name,generic,hp,400,,,,idea-pool lane G (#140): Umamusume failure rate
 ascetic,tree.ascetic.name,generic,dex,400,,,,idea-pool lane G (#140): Slay the Spire Ectoplasm
 hungry_core,tree.hungry_core.name,generic,int,400,,,,idea-pool lane G (#140): Reverend Insanity Gu upkeep
+clear_spring,tree.clear_spring.name,native,,,,,,Fountain Axolotl native tree 2 (#150): cancels the Elemental Avatar drawback
+springs_almanac,tree.springs_almanac.name,book,,,,,,Fountain Axolotl book tree (Six Fountains)
+aquifer,tree.aquifer.name,chase,,,tree.aquifer.apex,,,Fountain Axolotl in-run chase tree
+six_fountains,tree.six_fountains.name,chase,,,tree.six_fountains.apex,,,Fountain Axolotl book-gated chase tree

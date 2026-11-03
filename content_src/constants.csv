@@ -169,3 +169,6 @@ BREATH_SAFE,double,30,second_breath run rule: a drill made below this much energ
 ASCETIC_AP,int,1,ascetic run rule: action points added at each cycle start; rank-fight wins give no SP_PER_WIN. Placeholder
 HUNGRY_STAT,double,60,hungry_core run rule: flat bonus to every trained stat in a rank fight while the core is fed. Placeholder
 HUNGRY_ENERGY,double,10,"hungry_core run rule: energy the core eats at each cycle start; with less energy it goes dormant for that cycle (no bonus, nothing eaten). Placeholder"
+MON_SEEP_SHIELD,double,0.5,"seep rule: each of the unit's hits is mitigated by the lower of the target's DEF and WIS, and this fraction of it passes through shields straight to HP. Placeholder"
+MON_JETS,int,4,"fountain_jets rule: each single-target hit of the unit's active skills and basic attacks splits into this many jets (whole number, 2 to 6). Placeholder"
+MON_JET_POWER,double,0.45,fountain_jets rule: each jet deals this fraction of the hit's power; each rolls and procs on its own. Placeholder

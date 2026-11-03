@@ -125,6 +125,31 @@
       "grow_def": 0.7,
       "grow_spd": 1.2,
       "grow_luk": 1.1
+    },
+    {
+      "id": "fountain_axolotl",
+      "name_key": "species.fountain_axolotl.name",
+      "element": "water",
+      "native_tree_1": "elemental_avatar",
+      "native_tree_2": "clear_spring",
+      "chase_tree_run": "aquifer",
+      "chase_tree_book": "six_fountains",
+      "base_hp": 140.0,
+      "base_str": 60.0,
+      "base_int": 150.0,
+      "base_wis": 120.0,
+      "base_dex": 80.0,
+      "base_def": 70.0,
+      "base_spd": 90.0,
+      "base_luk": 130.0,
+      "grow_hp": 1.0,
+      "grow_str": 0.6,
+      "grow_int": 1.3,
+      "grow_wis": 1.1,
+      "grow_dex": 0.8,
+      "grow_def": 0.7,
+      "grow_spd": 0.9,
+      "grow_luk": 1.2
     }
   ]
 }

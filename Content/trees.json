@@ -484,9 +484,9 @@
     {
       "id": "elemental_avatar",
       "name_key": "tree.elemental_avatar.name",
-      "kind": "generic",
-      "offer_stat": "int",
-      "offer_threshold": 400,
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -778,6 +778,46 @@
       "offer_stat": "int",
       "offer_threshold": 400,
       "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "clear_spring",
+      "name_key": "tree.clear_spring.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "springs_almanac",
+      "name_key": "tree.springs_almanac.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "aquifer",
+      "name_key": "tree.aquifer.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.aquifer.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "six_fountains",
+      "name_key": "tree.six_fountains.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.six_fountains.apex",
       "fuse_a": null,
       "fuse_b": null
     }

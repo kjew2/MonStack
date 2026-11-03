@@ -93,3 +93,8 @@ momentum,mskill.momentum.name,buff,self,spd,,0.1,0,2,
 coin_toss,mskill.coin_toss.name,damage,enemy,,luk,2,3,0,
 windfall,mskill.windfall.name,buff,self,crit_rate,,0.15,0,2,
 hex,mskill.hex.name,debuff,enemy,wis,,0.25,4,3,
+fountain_spout,mskill.fountain_spout.name,damage,all_enemies,,int,0.6,3,0,water
+riptide,mskill.riptide.name,damage,enemy,,int,2.0,2,0,water
+gill_jet,mskill.gill_jet.name,damage,enemy,,int,1.5,3,0,water
+gill_spray,mskill.gill_spray.name,damage,enemy,,int,0.35,0,0,water
+wellspring_rain,mskill.wellspring_rain.name,damage,all_enemies,,int,0.9,3,0,water
