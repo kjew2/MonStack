@@ -1,4 +1,4 @@
-# tower vectors, hash v1 content=6.17/80fcab38
+# tower vectors, hash v1 content=6.18/588f8358
 
 day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_king tide_warden tide_warden gloom_stalker apex_chimera* bramble_king mire_brute sun_idol cinder_wyrm storm_titan* tide_warden sun_idol gloom_stalker cinder_wyrm storm_titan*
   slime focus seed=7: floor=17 cleared=False vents=5 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
@@ -23,6 +23,8 @@ day 0 lineup mire_brute sun_idol gloom_stalker cinder_wyrm void_hydra* bramble_k
     hash 13abd3930a5fc1f5a81ad23c8df5282b74c81ec9eb792b5ea9c054e9db64aa7e
   cuckling focus seed=7: floor=17 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage
     hash 1f965130046955aeef42a6b2c42441673b77e2b7478a3f546d213ef5c7caa2ef
+  gearbell_jelly focus seed=7: floor=10 cleared=False vents=0 phases=5:split,5:channel,10:shield_check,10:split
+    hash 9c0d8e192d7991364ff220b2e313fedc2101c9488fcc93c6ef54d671fbec27ed
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=2 phases=5:split,5:channel,10:shield_check,10:split,10:enrage,15:channel,15:shield_check,15:enrage,20:channel,20:shield_check,20:enrage
     hash 6d346f21af11d5e3bae558c2741bebb86f0305bc0286efd01f10bd235bf7c600
 
@@ -49,5 +51,7 @@ day 20391 lineup sun_idol cinder_wyrm bramble_king tide_warden apex_chimera* glo
     hash 2d96a699144a7e4804108a8acce2b37538befc7a054234962fff0bd92ace3db0
   cuckling focus seed=7: floor=17 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage
     hash 8c47d600a77bd68eab2d118e3d3387467e3e74eafe52b08b05a23dda28330570
+  gearbell_jelly focus seed=7: floor=11 cleared=False vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel
+    hash 9a6d1edc5ce69598f1cb371f3e46c90949c2cc618f88f515082b6add7d2fff65
   slime+drake+sprite+mandrake focus seed=7: floor=21 cleared=True vents=0 phases=5:shield_check,5:split,5:enrage,10:split,10:channel,15:channel,15:shield_check,15:enrage,20:shield_check,20:split,20:enrage
     hash c28aa190d9d58a3d5fab7b16bbb54e8fd2f3a5a461617520c53015830720bc55

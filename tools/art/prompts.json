@@ -56,6 +56,10 @@
   "cuckling": {
    "name": "Cuckling",
    "prompt": "A plump, fluffy cuckoo chick, round as a ball and oddly large for its nest, with soot-black and deep violet down, a pale lavender belly, tiny stubby wings and oversized clawed orange feet gripping a nest of black thorny twigs. It wears the cracked top half of a white speckled eggshell like a little helmet tilted over one eye: the shell of an egg that was not its own. Its huge beak gapes wide open, begging, and the inside of its mouth glows bright magenta-violet. Large glossy round eyes with violet glints, adorable but greedy. On the ground beside the nest lies a small pale blue egg that has been pushed out. Cute, with something quietly wrong about it."
+  },
+  "gearbell_jelly": {
+   "name": "Gearbell Jelly",
+   "prompt": "A small floating moon jellyfish creature in deep indigo and violet. Its translucent bell is a glowing mana barrier, and tiny luminous rune gears turn slowly inside it like clockwork. Soft trailing tentacles drift beneath it, tipped with faint violet light. Big gentle glowing eyes inside the bell. Cute, calm and a little mysterious, a dark-element monster."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -170,6 +174,16 @@
    "species": "cuckling",
    "name": "Clutch Empress",
    "prompt": "the chick has grown into a tall, elegant, regal brood-mother cuckoo empress: sleek glossy plumage in deep violet and black with a soft lavender chest, a long flowing train of tail feathers like a royal gown, and a small cracked-eggshell tiara. She sits on a grand throne-like nest of woven thorny branches, gently sheltering just three large pale-blue speckled eggs under one wing. Calm, proud, motherly expression. Smooth feathers with no clusters, no bumps, no holes, no eggs attached to her body. Colour palette adds soft lavender and warm gold accents to the violet."
+  },
+  "carillon": {
+   "species": "gearbell_jelly",
+   "name": "Carillon Medusa",
+   "prompt": "the bell grows into a tower of nested rune bells, tentacles hanging like bell ropes, a violet shockwave pulsing from the rim."
+  },
+  "perpetual_escapement": {
+   "species": "gearbell_jelly",
+   "name": "Orrery Moonbell",
+   "prompt": "the jelly has become a vast moon-like bell of pale silver glass, holding a slowly turning orrery of brass rune gears and tiny glowing planets inside, a glowing clock face showing through the crown, tentacles frozen mid-drift as if time stopped. Colour palette shifts from violet to pale silver, moonlight white and brass."
   }
  }
 }

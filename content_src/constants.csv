@@ -198,3 +198,10 @@ MON_USURP_STEALS,int,2,"usurp rule: turns a usurp carrier may steal from each en
 MON_EGG_HP,double,0.3,foundling_egg rule: the egg laid at fight start has this fraction of the unit's max HP. Placeholder
 MON_HATCH_ACTIONS,int,3,foundling_egg rule: the egg hatches after this many of the unit's own actions (whole number >= 1). Placeholder
 MON_HATCH_STATS,double,0.5,"foundling_egg rule: the Foundling hatches with this fraction of the unit's trained stats (max HP too). Placeholder"
+MON_REWIND_WIS,double,0.2,"ward_rewind rule: each active skill with a cooldown of 2 or more it casts restores this x WIS of its mana_ward ward, up to the ward's full size (a broken ward re-forms). Placeholder"
+MON_TOLL_DMG,double,1.0,"ward_toll rule: when its ward breaks it deals this x the ward's full size as dark magical damage to every living enemy (WIS mitigates, can graze, never crits). Placeholder"
+MON_TOLL_SHARE,double,0.6,"ward_toll rule: its ward takes the larger of MON_WARD_SHARE and this share of each blow's HP damage, so the bell breaks and tolls (#158). Placeholder"
+MON_TOLL_REFORM,double,0.5,"ward_toll rule: after a toll the ward re-forms at this fraction of its full size. Placeholder"
+MON_TOLL_DELAY,int,2,"ward_toll rule: the ward re-forms after this many of the unit's own actions. Placeholder"
+MON_TOLL_MAX,int,3,"ward_toll rule: most tolls per fight. Placeholder"
+MON_ESCAPE_POWER,double,1.3,"escapement rule: power factor of a skill cast on the fight clock (out of turn). Placeholder"

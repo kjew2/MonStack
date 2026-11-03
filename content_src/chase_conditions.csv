@@ -67,3 +67,9 @@ usurper_cuckoo_c2,usurper_cuckoo,tally_at_least,kills,3
 clutch_empress_c0,clutch_empress,node_owned,foundling_ledger_n0,
 clutch_empress_c1,clutch_empress,node_owned,mimic_core_n4,
 clutch_empress_c2,clutch_empress,tally_at_least,damage_dark,2000
+carillon_c0,carillon,tree_maxed,mana_ward,
+carillon_c1,carillon,stat_at_least,wis,700
+carillon_c2,carillon,tally_at_least,wins,2
+perpetual_escapement_c0,perpetual_escapement,node_owned,still_hours_codex_n0,
+perpetual_escapement_c1,perpetual_escapement,node_owned,rune_gearwork_n4,
+perpetual_escapement_c2,perpetual_escapement,tally_at_least,evades,2

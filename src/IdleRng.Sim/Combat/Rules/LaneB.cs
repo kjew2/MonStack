@@ -28,7 +28,8 @@ namespace IdleRng.Sim.Combat
         /// <summary>mana_ward: while the ward holds, each own action ticks the cooldowns MON_WARD_CDR more (whole ticks, the rest carried).</summary>
         static partial void BeforeAction_B(RuleCtx c, FightUnit u, ref bool skip)
         {
-            if (skip || !(u.Ward > 0) || !(c.Rules.WardCdr > 0) || !Has(u, RuleModifiers.ManaWard)) return;
+            // escapement (Gearbell Jelly): its cooldowns, and so this haste, run on the fight clock instead (Rules/GearbellJelly.cs)
+            if (skip || !(u.Ward > 0) || !(c.Rules.WardCdr > 0) || !Has(u, RuleModifiers.ManaWard) || Has(u, RuleModifiers.Escapement)) return;
             u.WardCdr += c.Rules.WardCdr;
             while (u.WardCdr >= 1)
             {
@@ -106,12 +107,13 @@ namespace IdleRng.Sim.Combat
             if (!(amount > 0)) return;
             if (tgt.Ward > 0 && Has(tgt, RuleModifiers.ManaWard))
             {
-                double take = Math.Min(tgt.Ward, c.Rules.WardShare * amount);
+                double take = Math.Min(tgt.Ward, WardShareOf(c.Rules, tgt) * amount);   // ward_toll rings the bell harder (Rules/GearbellJelly.cs)
                 if (take > 0)
                 {
                     tgt.Ward -= take;
                     amount -= take;
                     c.Log?.Invoke(new FightAction(tgt.Id, WardEvent, tgt.Id, tgt.Ward));
+                    if (!(tgt.Ward > 0)) HookWardBroke(c, src, tgt);   // species rules: the Gearbell Jelly's ward_toll
                 }
             }
             if (src.Side != tgt.Side && c.Rules.ResentFrac > 0 && Has(tgt, RuleModifiers.Resentment))

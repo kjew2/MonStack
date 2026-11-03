@@ -3289,6 +3289,118 @@
     {
       "key": "rule.foundling_egg.unit",
       "text": "{name}'s Foundling"
+    },
+    {
+      "key": "species.gearbell_jelly.name",
+      "text": "Gearbell Jelly"
+    },
+    {
+      "key": "tree.rune_gearwork.name",
+      "text": "Rune Gearwork"
+    },
+    {
+      "key": "tree.still_hours_codex.name",
+      "text": "Codex of Still Hours"
+    },
+    {
+      "key": "tree.carillon.name",
+      "text": "Carillon"
+    },
+    {
+      "key": "tree.perpetual_escapement.name",
+      "text": "Perpetual Escapement"
+    },
+    {
+      "key": "tree.carillon.apex",
+      "text": "Carillon Medusa"
+    },
+    {
+      "key": "tree.perpetual_escapement.apex",
+      "text": "Orrery Moonbell"
+    },
+    {
+      "key": "book.book_hours.name",
+      "text": "Skill Book: Codex of Still Hours"
+    },
+    {
+      "key": "achievement.still_waters.name",
+      "text": "Still Waters"
+    },
+    {
+      "key": "rule.ward_rewind.name",
+      "text": "Rewind"
+    },
+    {
+      "key": "rule.ward_rewind.desc",
+      "text": "Each skill with a cooldown of 2 or more it casts restores {MON_REWIND_WIS} times its WIS of its Mana Ward ward, up to the ward's full size. A broken ward re-forms. Does nothing without Mana Ward."
+    },
+    {
+      "key": "rule.ward_rewind.log",
+      "text": "ward restored by {amount}"
+    },
+    {
+      "key": "rule.ward_toll.name",
+      "text": "Carillon"
+    },
+    {
+      "key": "rule.ward_toll.desc",
+      "text": "Its ward takes {MON_TOLL_SHARE:pct} of each blow (if more than usual). When the ward breaks, it tolls: {MON_TOLL_DMG:pct} of the ward's full size as dark damage to every enemy (WIS defends; can graze, never crits). The ward re-forms at {MON_TOLL_REFORM:pct} after {MON_TOLL_DELAY} of its actions. At most {MON_TOLL_MAX} tolls per fight."
+    },
+    {
+      "key": "rule.ward_toll.log",
+      "text": "tolls for {amount}"
+    },
+    {
+      "key": "rule.escapement.name",
+      "text": "Perpetual Escapement"
+    },
+    {
+      "key": "rule.escapement.desc",
+      "text": "Its skill cooldowns run on the fight clock, one per turn of time, not on its actions. A skill that comes ready is cast at once, out of turn, at {MON_ESCAPE_POWER:pct} power. Its own turns use skills with no cooldown or basic attacks."
+    },
+    {
+      "key": "rule.escapement.log",
+      "text": "casts a skill out of turn on the clock"
+    },
+    {
+      "key": "mskill.bell_sting.name",
+      "text": "Bell Sting"
+    },
+    {
+      "key": "mskill.bell_sting.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.knell.name",
+      "text": "Knell"
+    },
+    {
+      "key": "mskill.knell.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.hour_hand.name",
+      "text": "Hour Hand"
+    },
+    {
+      "key": "mskill.hour_hand.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.second_hand.name",
+      "text": "Second Hand"
+    },
+    {
+      "key": "mskill.second_hand.desc",
+      "text": "Book trait. On evade: strike back for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.chime_cascade.name",
+      "text": "Chime Cascade"
+    },
+    {
+      "key": "mskill.chime_cascade.desc",
+      "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
     }
   ]
 }
