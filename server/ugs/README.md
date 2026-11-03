@@ -6,7 +6,7 @@ section 10 (the vendor and the spike).
 
 | Path | What |
 |---|---|
-| `MonStackAccount/` | **The account server** (`specs/27` section 10 step 4): a thin shell over `src/IdleRng.Server` with Cloud Save stores. Endpoints `Open`, `Commit`, `EndlessBoard`, `Profile` and `Warm`. |
+| `MonStackAccount/` | **The account server** (`specs/27` section 10 step 4): a thin shell over `src/IdleRng.Server` with Cloud Save stores. Endpoints `Open`, `Commit`, `EndlessBoard`, `GauntletBoard`, `Profile` and `Warm`. |
 | `MonStackAccount.Tests/` | Its handlers in process over an in-memory Cloud Save with Cloud Save's write-lock rules (issue #28). In `check.sh`. |
 | `deploy.sh` | Publishes a module for linux-x64, zips `<Module>.ccm` and creates or updates it through the Cloud Code Admin API. `--check` only builds and packages. |
 | `IdleRngBattle/`, `SpikeClient/` | The spike of issue #17 (`specs/08` section 10.1): `ResolveFight` and its test script. Kept for re-measuring; not deployed by CI. |
@@ -17,7 +17,8 @@ section 10 (the vendor and the spike).
 |---|---|---|
 | `Open` | `request: { deviceId, claim }` | `{ code, accepted, account, notice, seq, hash, created, contentVersion, serverSec, day }`; `account` is the `AccountSave` text, gzip then base64 |
 | `Commit` | `request: { deviceId, fromSeq, fromHash, commands: [{ k, a }], toHash, contentVersion }` | `{ code, accepted, index, reason, seq, hash, serverSec, day }` |
-| `EndlessBoard` | `season` (negative: the server's current one), `top` (0: 20; at most 100) | `{ season, total, top: [{ rank, name, floor, you }], you }` |
+| `EndlessBoard` | `season` (negative: the server's current one), `top` (0: 20; at most 100) | `{ season, total, top: [{ rank, name, floor, you }], you, fallbackName }` |
+| `GauntletBoard` | `species` (a species id; empty for the overall board; another id is refused), `top` (0: 20; at most 100) | `{ species, total, top: [{ rank, name, species, speciesName, floor, cleared, label, you }], you, fallbackName }` (`specs/19` section 9; `species` left out for the overall board) |
 | `Profile` | `of`: whose profile (a UGS player id; empty for the caller's own) | `{ found, profile }`, the profile as its lean JSON (`specs/27` section 3.3.2) |
 | `Warm` | none | `{ contentVersion, serverSec }`: the keep-warm target, needs no player |
 

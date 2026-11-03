@@ -62,6 +62,7 @@ namespace MonStackAccount.Tests
             Assert.Throws<InvalidOperationException>(() => rig.Module.Open(anonymous, new OpenRequest { DeviceId = "x" }).GetAwaiter().GetResult());
             Assert.Throws<InvalidOperationException>(() => rig.Module.Commit(anonymous, new CommitRequest { DeviceId = "x" }).GetAwaiter().GetResult());
             Assert.Throws<InvalidOperationException>(() => rig.Module.EndlessBoard(anonymous, 0, 5).GetAwaiter().GetResult());
+            Assert.Throws<InvalidOperationException>(() => rig.Module.GauntletBoard(anonymous, "", 5).GetAwaiter().GetResult());
 
             // No endpoint parameter or request field can name a player.
             foreach (var m in typeof(AccountModule).GetMethods().Where(m => m.GetCustomAttribute<CloudCodeFunctionAttribute>() != null))
@@ -72,7 +73,7 @@ namespace MonStackAccount.Tests
                         Assert.That(p.ParameterType.GetProperties().Select(x => x.Name), Has.None.Contains("Player"), m.Name + "." + p.Name);
                 }
             var functions = typeof(AccountModule).GetMethods().Select(m => m.GetCustomAttribute<CloudCodeFunctionAttribute>()?.Name).Where(n => n != null);
-            Assert.That(functions, Is.EquivalentTo(new[] { "Open", "Commit", "EndlessBoard", "Profile", "Warm" }));
+            Assert.That(functions, Is.EquivalentTo(new[] { "Open", "Commit", "EndlessBoard", "GauntletBoard", "Profile", "Warm" }));
         }
 
         [Test]
@@ -187,6 +188,28 @@ namespace MonStackAccount.Tests
         }
 
         [Test]
+        public void TheGauntletBoards_AreWrittenBySeals_OneRowPerMonster()
+        {
+            var rig = new Rig();
+            var a = rig.Device(P, "phone");
+            a.Open();
+            a.Do("setName", "Misty");
+            for (int i = 0; i < 2; i++) a.SealOne(rig.Now);   // commits the name with the first seal
+            string sp = a.Acct.Vault[0].SpeciesId;
+
+            var all = rig.Module.GauntletBoard(new FakeContext("someone-else"), "", 0).GetAwaiter().GetResult();
+            Assert.That((all.Species, all.Total, all.Top.Count, all.You), Is.EqualTo(((string)null, 2, 2, (GauntletRowReply)null)), "a row per monster");
+            Assert.That(all.Top.Select(r => (r.Name, r.Species, r.Floor, r.You)),
+                Is.EquivalentTo(a.Acct.Vault.Select(e => ("Misty", e.SpeciesId, e.GauntletFloor, false))));
+            Assert.That(all.Top[0].Label, Does.StartWith(all.Top[0].Cleared ? "All " : "Floor " + all.Top[0].Floor + ": "));
+            Assert.That(JsonConvert.SerializeObject(all), Does.Not.Contain(P), "rows carry no player ids");
+
+            var mine = rig.Module.GauntletBoard(new FakeContext(P), sp, 5).GetAwaiter().GetResult();
+            Assert.That((mine.Species, mine.Total, mine.You.You, mine.You.Rank), Is.EqualTo((sp, a.Acct.Vault.Count(e => e.SpeciesId == sp), true, 1)));
+            Assert.Throws<ArgumentException>(() => rig.Module.GauntletBoard(new FakeContext(P), "no-such-species", 5).GetAwaiter().GetResult());
+        }
+
+        [Test]
         public void Replies_AreTheJsonTheBrowserReads()
         {
             var rig = new Rig();
@@ -205,7 +228,9 @@ namespace MonStackAccount.Tests
             Assert.That(commit.Properties().Select(p => p.Name), Is.EquivalentTo(new[] { "code", "accepted", "index", "seq", "hash", "serverSec", "day" }));
 
             var board = JObject.Parse(JsonConvert.SerializeObject(rig.Module.EndlessBoard(new FakeContext(P), 0, 3).GetAwaiter().GetResult()));
-            Assert.That(board.Properties().Select(p => p.Name), Is.EquivalentTo(new[] { "season", "total", "top" }));
+            Assert.That(board.Properties().Select(p => p.Name), Is.EquivalentTo(new[] { "season", "total", "top", "fallbackName" }));
+            var gauntlet = JObject.Parse(JsonConvert.SerializeObject(rig.Module.GauntletBoard(new FakeContext(P), "", 3).GetAwaiter().GetResult()));
+            Assert.That(gauntlet.Properties().Select(p => p.Name), Is.EquivalentTo(new[] { "total", "top", "fallbackName" }), "the overall board names no species");
 
             // And the module reads the requests the browser sends: camelCase, commands as { k, a }.
             var req = JsonConvert.DeserializeObject<CommitRequest>("{\"deviceId\":\"phone\",\"fromSeq\":3,\"fromHash\":\"h\",\"commands\":[{\"k\":\"drill\",\"a\":[2]}],\"toHash\":\"t\",\"contentVersion\":\"v\"}");

@@ -278,6 +278,7 @@
       open(req) { return get().open(req); },
       commit(req) { return get().commit(req); },
       endlessBoard(season, top) { return get().endlessBoard(season, top); },
+      gauntletBoard(species, top) { return get().gauntletBoard(species, top); },
     };
   }
 
@@ -507,17 +508,22 @@
     reloadWith(null);
   }
 
-  // The Endless Tower season board as the server keeps it (specs/28 section 6.1), for a remote transport that reads one
-  // (web/ugs-transport.js): a promise of {season, total, top[{rank, name, floor, you}], you}. Null on the local test server or a
-  // transport without the call: the page then shows the engine's board of this account only.
-  function onlineBoard() { return !!S.transport && S.transport.kind !== 'local' && typeof S.transport.endlessBoard === 'function'; }
-  function endlessBoard(season, top) {
-    if (!onlineBoard()) return null;
-    return timed(Promise.resolve().then(() => S.transport.endlessBoard(season, top)), BOARD_TIMEOUT_MS, 'Reading the board').then((d) => {
+  // A board as the server keeps it, for a remote transport that reads one (web/ugs-transport.js): kind 'endless' (the season
+  // board, specs/28 section 6.1: arg the season) or 'gauntlet' (specs/19 section 9: arg a species id or null). A promise of
+  // {total, top[...], you, fallbackName, season | species}; null on the local test server or a transport without the call: the
+  // page then shows the engine's board of this account only. Times out (a cold worker, #109) and checks the shape.
+  function onlineBoard(kind) {
+    return !!S.transport && S.transport.kind !== 'local' && typeof S.transport[(kind || 'endless') + 'Board'] === 'function';
+  }
+  function board(kind, arg, top) {
+    if (!onlineBoard(kind)) return null;
+    return timed(Promise.resolve().then(() => S.transport[kind + 'Board'](arg, top)), BOARD_TIMEOUT_MS, 'Reading the board').then((d) => {
       if (!d || !Array.isArray(d.top) || typeof d.total !== 'number') throw new Error('the server sent a board the page cannot read');
       return d;
     });
   }
+  const endlessBoard = (season, top) => board('endless', season, top);
+  const gauntletBoard = (species, top) => board('gauntlet', species, top);
 
   root.MonStackSync = {
     CHECKPOINT_RUN_COMMANDS, SYNC_KEY, LOCAL_STORE_KEY, RUN_COMMANDS: RUN_COMMANDS.slice(),
@@ -526,7 +532,7 @@
     localTransport,
     start, mayApply, waitReason, record, commit, retry: tryAgain, signedIn,
     now, day: () => Math.floor(now() / DAY_MS),
-    state, onlineBoard, endlessBoard,
+    state, onlineBoard, endlessBoard, gauntletBoard,
     onChange: (f) => { S.listeners.push(f); return () => { const i = S.listeners.indexOf(f); if (i >= 0) S.listeners.splice(i, 1); }; },
     // Test and development hook of the local test server: store an account as this player's (web/wasm/test/harness.js).
     install(saveText) {

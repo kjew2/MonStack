@@ -71,3 +71,17 @@ After `finishRun` seals the monster, `web/run.js` shows the wheel before the gra
 - Pay shards by floor instead of by rank once the gauntlet replaces the rank as the grade (kj's call; the rank stays the MVP grade).
 - Done: the wheel spin and the comic defeat animation in the web client (section 7).
 - Enemy skills and boss phases (they share the Dungeon work, `specs/13` T10; boss skills and phases are designed in `specs/21`).
+
+## 9. Gauntlet boards (kj, 2026-11-03)
+
+kj's answers: one row per monster (a player can hold several), all time, an overall board and one per species, and rows stay when the monster is dismantled.
+
+- **Boards:** `gauntlet` (every species) and `gauntlet-<species>`. A row is one sealed monster: its trainer's display name (or the generated one, `specs/28` section 6.1), species, floor reached and Legacy Title, shown as the Vault card's label ("Floor 42: Professional Punching Bag", "All 100 floors: Tower Breaker"). Ranked by the floor reached (a cleared tower is GAUNTLET_FLOORS + 1, above every floor), **ties to whoever the server first saw with it** (the time of the commit that put the row there), then the row id. Rows carry no player ids.
+- **Written only by the server** (`specs/27` section 3.3), as the Endless board: after it accepts a commit holding a `finishRun`, `AccountServer` puts every Vault monster with a gauntlet result on the overall board and its species' board (`GauntletBoard.RecordAsync`, keep-best per row: a monster already there changes nothing). A monster sealed and dismantled inside one commit still gets its row. A monster sealed before the boards existed joins at its trainer's next seal **(agent, 2026-11-03: no backfill job; kj can veto)**. Best effort after the commit lands. A seal also refreshes the shown name.
+- **Rows stay** when the monster is dismantled: the board is a record. The page's local board (below) holds the Vault only, so there a dismantled monster is gone.
+- **Left out:** an account that used a debug command (`specs/27` section 6.3) leaves every gauntlet board at that commit and is never written again.
+- **Store:** `ILeaderboardStore.SubmitRowsAsync` (rows the player names: the row id is `<player>:<entry id>`, the tag keeps species, title key and killer as sealed so a content change never rewrites a row); `RemoveAsync` takes every row the player owns and `EntryAsync` gives their best row. On UGS, `CloudSaveLeaderboardStore` keeps such a row as `[floor, atMs, player, tag]` in its owner's shard (Endless rows keep `[floor, atMs]`).
+- **Reads:** `GauntletBoard.ReadAsync(player, species|null, top)`: the best `GAUNTLET_BOARD_TOP` (placeholder 20, at most 100) rows, the reader's best row also when below them, and how many rows. The module's `GauntletBoard` endpoint (`server/ugs/README.md`); the bridge's `gauntletBoard` and `readBoard` (`web/wasm/BRIDGE.md`).
+- **The page:** shown in the home Rankings tab with an All chip and a chip per species (`specs/28` section 6.1). Off Pages (the local test server) the board holds this account's Vault only (`local: true`).
+
+Tests: `src/IdleRng.Server.Tests/GauntletBoardTests.cs` (rows, ties, reads, seals write a row per monster, dismantled rows stay, debug accounts leave), `server/ugs/MonStackAccount.Tests` (the Cloud Save store equal to the memory store with many rows per player, the endpoint).

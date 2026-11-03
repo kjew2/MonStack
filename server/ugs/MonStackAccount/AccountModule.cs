@@ -81,7 +81,20 @@ namespace MonStackAccount
             var server = Server(context, out var player);
             if (season < 0) season = EndlessSim.SeasonOf(AccountServer.DayOf(_settings.ServerConfig().NowMs()));
             if (top <= 0) top = IdleRng.Server.EndlessBoard.DefaultTop;
-            return BoardReply.From(await server.Board.ReadAsync(player, season, top).ConfigureAwait(false));
+            return BoardReply.From(await server.Board.ReadAsync(player, season, top).ConfigureAwait(false), player);
+        }
+
+        /// <summary>
+        /// A gauntlet board as the caller sees it (specs/19 section 9): <paramref name="species"/> (a species id; empty for the
+        /// overall board) and up to <paramref name="top"/> rows (1 to 100). A species not in the content is refused.
+        /// </summary>
+        [CloudCodeFunction("GauntletBoard")]
+        public async Task<GauntletBoardReply> GauntletBoard(IExecutionContext context, string species, int top)
+        {
+            var server = Server(context, out var player);
+            if (top <= 0) top = IdleRng.Server.GauntletBoard.DefaultTop;
+            string sp = string.IsNullOrEmpty(species) ? null : species;
+            return GauntletBoardReply.From(await server.Gauntlet.ReadAsync(player, sp, top).ConfigureAwait(false), player);
         }
 
         /// <summary>

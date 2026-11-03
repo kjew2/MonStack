@@ -63,9 +63,30 @@
       endlessFloor(season, vaultIndices, floor) { return parse(host.AccountCmd('endlessFloor', JSON.stringify([season, vaultIndices, floor]))); },
       endlessPreview(season, vaultIndices, floor, rulebooks) { return parse(host.AccountCmd('endlessPreview', JSON.stringify([season, vaultIndices, floor, rulebooks]))); },
       setRulebook(vaultIndex, text) { return run.acct('setRulebook', vaultIndex, text); },
-      // The season board (specs/28 section 6), read only: the top rows and the player's own. `local` while it is this account's
-      // board only (the server's board is read through its endpoint from specs/27 step 4).
+      // The season board (specs/28 section 6), read only: the top rows and the player's own, from this account only (local:
+      // true). readBoard gives the server's board when there is one.
       endlessBoard(season, top) { return parse(host.AccountCmd('endlessBoard', JSON.stringify(top == null ? [season] : [season, top]))); },
+      // A gauntlet board (specs/19 section 9), read only: null for the overall board, else a species id. Local as endlessBoard.
+      gauntletBoard(species, top) { return parse(host.AccountCmd('gauntletBoard', JSON.stringify(top == null ? [species == null ? null : species] : [species == null ? null : species, top]))); },
+      // Any board, as a promise: kind 'endless' (arg: the season) or 'gauntlet' (arg: a species id, null for overall). The
+      // server's board when the page syncs with a remote server (web/sync.js on Pages), else the local board above (local: true).
+      // A server board also says how far behind it is: `mine` is this account's own best (floor) for the "once it is saved" note.
+      // The name fields come from this account (the server's may lag a pending setName); the generated name from the server,
+      // which knows the player id. Rejects on a network failure.
+      readBoard(kind, arg, top) {
+        if (kind !== 'endless' && kind !== 'gauntlet') return Promise.reject(new Error('unknown board ' + kind));
+        let own;
+        try { own = kind === 'endless' ? run.endlessBoard(arg, top) : run.gauntletBoard(arg, top); }
+        catch (e) { return Promise.reject(e); }
+        const online = sync && sync.onlineBoard && sync.onlineBoard(kind) ? sync[kind + 'Board'](arg, top) : null;   // timed and checked
+        if (!online) return Promise.resolve(own);
+        return online.then((b) => ({
+          ok: true, kind: kind, local: false, total: b.total || 0, top: b.top || [], you: b.you || null,
+          season: kind === 'endless' ? b.season : undefined, species: kind === 'gauntlet' ? (b.species || null) : undefined,
+          name: own.name, fallbackName: b.fallbackName || (b.you && !own.name ? b.you.name : null) || 'a generated name',
+          nameMin: own.nameMin, nameMax: own.nameMax, mine: own.you ? own.you.floor : 0,
+        }));
+      },
       // The display name boards show ("" clears it); refused with the reason for a name the rules do not allow.
       setName(name) { return run.acct('setName', name); },
       startRun(speciesId, books, talentsOff) { return talentsOff ? run.acct('startRun', speciesId, books || [], talentsOff) : run.acct('startRun', speciesId, books || []); },
