@@ -234,6 +234,7 @@ namespace IdleRng.Sim.Combat
                 do
                 {
                     if (extra != null) onAction?.Invoke(new FightAction(actor.Id, extra, actor.Id, 0));
+                    actor.TurnAction = extras;
                     Act(rules, s, actor, rng, onAction);
                     HookAfterAction(ctx, actor);
                     ProcessDeaths(ctx);
