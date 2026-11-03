@@ -71,8 +71,8 @@ Written by the module after an accepted commit, rebuildable from the parts, allo
 
 | Projection | Where | Holds | For |
 |---|---|---|---|
-| `profile` | Cloud Save **protected** player item, indexed; other players read it through a server call | Display name (later), best grade, best Dungeon floor, achievement count, the showcase monster's result | Other players, profile cards |
-| Leaderboards | UGS Leaderboards | Dungeon best floor per day, later PvP rating | Rankings |
+| `profile` | Cloud Save **protected** player item, indexed; other players read it through a server call | Display name (built: the account's `Name`, `specs/28` section 6.1), best grade, best Dungeon floor, achievement count, the showcase monster's result | Other players, profile cards |
+| Leaderboards | UGS Leaderboards (`ILeaderboardStore`), with the player name | Endless Tower season best (built in the core: `EndlessBoard`, written after an accepted commit with a climb, `specs/28` section 6.1), Dungeon best floor per day, later PvP rating | Rankings |
 | `pvp.team` | Cloud Save **protected** player item, indexed (T12) | The defending team: entry ids, results, the rating bracket | Matchmaking across players (`specs/10` section 9) |
 
 ### 3.3.1 Access classes
@@ -277,7 +277,7 @@ Per-cycle seeds cost the same calls as **C (dealt hands)** and leave exactly the
 
 ## 9. Threats left
 
-- **Replay** (accepted, decision 2): a script plays a run several ways from its known seed and sends the best; about half a grade on average (section 8.2). Where it would matter is competitive play: when PvP or leaderboards ship (T12), revisit with the measured gap, the per-cycle seeds of section 8.2, or statistical flags.
+- **Replay** (accepted, decision 2): a script plays a run several ways from its known seed and sends the best; about half a grade on average (section 8.2). Where it would matter is competitive play: when PvP or ranked rewards ship (T12), revisit with the measured gap, the per-cycle seeds of section 8.2, or statistical flags. The Endless Tower season board (`specs/28` section 6.1) ships with this risk accepted (kj, 2026-11-03).
 - **Dungeon preview**: the daily seed comes from the public constant `TOWER_SEED` (`specs/21` section 2), so a player can try every team against today's or a future day's floors before spending a ticket. Part of the accepted replay risk; a server-secret daily seed (`PRF(secret, day)` sent only on that day) closes the future-day part cheaply if kj wants it.
 - **Bots playing legal moves** are playing (`specs/10` section 1, non-goals).
 
@@ -289,7 +289,7 @@ Each step merges on its own with `./check.sh` green.
 2. **Server core. Done (2026-11-02).** `src/IdleRng.Server` (netstandard2.1): `AccountServer.OpenAsync` and `CommitAsync` over `IAccountStore` (a write-locked `head`, items written once under fresh keys, a key listing for the sweep) with `MemoryAccountStore`; `AccountHead` (the root item and the key form of section 4); `JsonArgs` (command arguments read by the bridge's rules with Newtonsoft); `ServerConfig` (the command cap, the clock slack, the debug list, injectable clock and random source). The caller authenticates and passes the player id. `AccountParts.AccountHashOf` gives the account hash from part hashes. Tests (`src/IdleRng.Server.Tests`, in `check.sh` on .NET 8 through the solution, #28): genesis with a server seed and its lost race, a whole run committed at checkpoints ending equal to the client item by item, every account command in its own commit, a mid-run checkpoint reading and writing only `training`, every rejection (no account, stale base or hash, other content, a forged result, illegal and malformed commands with their index, the command cap, a second `finishRun`) leaving the store unchanged, the retry of the last commit, the holder rule with claim and takeover, the seal-time slack, the Dungeon day, the debug list and `debugUsed`, a crash before the swap and the sweep, a lost swap, a commit landing during another call's load, a damaged item, and a content change rewriting every part. A save schema change on stored parts is open (#127).
 3. **Client on the local test server.** `web/sync.js`: the pending log, checkpoints, the waits of section 5.2, open and claim, sign-out on `NotHolder`, the one-tab rule, the wipe of old saves; the server core in the page (section 5.4); the account sheet shows the sync state. Browser checks for two devices, takeover, a lost connection, a rejection and stale content, in `check.sh`.
 4. **Module and deploy.** `server/ugs/MonStackAccount`, a net10.0 shell over `IdleRng.Server` with a Cloud Save store; the deploy step in `pages.yml` (kj adds the secret); the page uses it on Pages.
-5. **Projections:** `profile`, then Leaderboards for the Dungeon.
+5. **Projections:** `profile`, then Leaderboards for the Dungeon. The Endless Tower season board and display names are built in the core ahead of the rest (kj, 2026-11-03; `specs/28` section 6.1): `ILeaderboardStore` with `MemoryLeaderboardStore`, `EndlessBoard`, and the board written by `CommitAsync`; step 4 adds the UGS store and a read endpoint.
 
 ## 11. kj's answers (2026-11-01)
 

@@ -419,6 +419,16 @@ small, .small { font-size: 12px; }
 .epay [data-id=endless-shards] { font: 700 18px var(--font-title); }
 .epay .muted[data-id=endless-shards] { font: 600 13px var(--font-display); }
 .units.endless .unit.foe { grid-column: auto; }
+.eboard { display: flex; flex-direction: column; gap: 8px; }
+.blist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.brow { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 36px; padding: 2px 8px; border-bottom: 1px solid var(--line-faint); }
+.brow:last-child { border-bottom: 0; }
+.brow.you { background: var(--gold-deep); border-radius: var(--r-xs); }
+.brow.you .bname { color: var(--gold); }
+.brow.gap { display: block; text-align: center; min-height: 0; }
+.bname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bname-edit { display: flex; flex-direction: column; gap: 6px; }
+.bname-edit input { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel-2); color: var(--text); font: inherit; font-size: 16px; }
 .alog .gambit { color: var(--epic); font-style: italic; }
 .now.gambit { border-color: var(--epic); background: var(--epic-deep); } .now.gambit b { color: var(--epic); }
 .speed { display: flex; align-items: center; gap: 6px; }

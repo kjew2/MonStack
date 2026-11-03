@@ -90,6 +90,7 @@ namespace IdleRng.Server.Tests
         public static readonly long Start = 20391L * 86_400_000L + 12 * 3_600_000L;   // noon UTC on Dungeon day 20391
 
         public readonly SpyStore Store = new SpyStore();
+        public readonly MemoryLeaderboardStore Boards = new MemoryLeaderboardStore();
         public readonly ServerConfig Config;
         public readonly AccountServer Server;
         public long Now = Start;
@@ -103,7 +104,7 @@ namespace IdleRng.Server.Tests
                 Random = () => Sim.Rng.SplitMix64.Derive(_rng++, 7),
                 DebugPlayers = new HashSet<string>(debugPlayers, StringComparer.Ordinal),
             };
-            Server = new AccountServer(Content.Db, Store, Config);
+            Server = new AccountServer(Content.Db, Store, Config, Boards);
         }
 
         public Device Device(string id) => new Device(this, id);

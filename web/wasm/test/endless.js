@@ -3,8 +3,8 @@
 // seeds a Vault of five copies of the sealed monster (ids 0..4, entry id 1 with a rulebook) through the save and checks the
 // Dungeon tab's Endless card, the screen (season, mutators, next floors with their squads), the team picker (exactly four,
 // reorder, the rule count and Rules button per slot), a climb with its result, save record and deciding-floor playback (a rule
-// firing reads "follows rule 1"), a second climb paying nothing new, watching another floor (same fight hash as the climb's
-// list), the layout and Back.
+// firing reads "follows rule 1"), a second climb paying nothing new, the season board and display name (a refused name, a saved
+// one, the player's row after the climb), watching another floor (same fight hash as the climb's list), the layout and Back.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/endless.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
@@ -64,6 +64,22 @@ const H = require('./harness.js');
   check(floors.length === 10 && floors[0].id === 'endless-floor-1' && floors.every((f) => f.foes === 4 && f.check) && floors[9].elite,
     'the next ten floors show four enemies each and their check, the tenth an elite: ' + JSON.stringify(floors.map((f) => f.check)));
   check(await act('endless-climb').isDisabled(), 'Climb is off with no team');
+
+  // ---- the season board (specs/28 section 6): empty before a climb, this device's only, a generated name until one is picked
+  check((await count('[data-id=endless-board-empty]')) === 1 && (await count('[data-id=endless-board-local]')) === 1
+    && /^Your name: Trainer [0-9A-F]{4} \(until you pick one\)$/.test(await text('[data-id=endless-name]')),
+    'the board is empty, says it is local, and shows a generated name: ' + (await text('[data-id=endless-name]')));
+  await act('endless-name').click();
+  const nameIn = page.locator('[data-id=endless-name-input]');
+  await nameIn.fill('Ash!');
+  await act('endless-name-save').click();
+  check(/only letters/.test(await text('[data-id=endless-name-error]')) && (await nameIn.inputValue()) === 'Ash!' && !(await acct()).Name,
+    'a name the rules refuse shows why, keeps the field as typed and saves nothing');
+  await nameIn.fill('  Ash   Ketchum ');
+  await nameIn.press('Enter');
+  await page.locator('[data-id=endless-name]').waitFor();
+  check((await text('[data-id=endless-name]')) === 'Your name: Ash Ketchum' && (await acct()).Name === 'Ash Ketchum',
+    'Enter saves the name, trimmed and with its spaces folded, to the account');
   await t.layout('endless screen');
   await page.locator('[data-id=endless-mutators]').scrollIntoViewIfNeeded();
   await t.layout('endless mutators and floors');
@@ -114,6 +130,15 @@ const H = require('./harness.js');
   const rows = await page.$$eval('[data-id^=endless-fought-]', (rs) => rs.map((r) => ({ id: r.dataset.id, hash: r.dataset.hash })));
   check(rows.length >= 1 && rows[rows.length - 1].hash === decidingHash, 'the floors fought are listed, the deciding one last with the played fight\'s hash');
   check(/best this season \d+/.test(await status.innerText()) && /1 climb this season/.test(await status.innerText()), 'the season line counts the climb');
+  const best1 = a1.Endless.ClearedSeason || 0;
+  if (best1 > 0) {
+    const me = page.locator('[data-id=endless-board-row-1]'), meText = (await me.innerText()).replace(/\s+/g, ' ').trim();
+    check((await me.getAttribute('data-you')) === '1' && meText === '#1 Ash Ketchum (you) ' + best1 + (best1 === 1 ? ' floor' : ' floors')
+      && /^1 trainer on the board/.test(await text('[data-id=endless-board-total]')),
+      'the board shows the player first with the season best and their name: ' + meText);
+  } else check((await count('[data-id=endless-board-empty]')) === 1, 'no floor cleared: the board stays empty');
+  await page.locator('[data-id=endless-board]').scrollIntoViewIfNeeded();
+  await t.layout('endless board');
   await t.layout('endless result');
 
   // ---- a second climb pays nothing new (Skip is remembered: no playback)

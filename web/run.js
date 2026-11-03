@@ -43,6 +43,7 @@
     endlessTeam: [],         // Endless Tower team: exactly teamSize Vault indices in slot order (specs/28 section 2)
     endlessResult: null,     // the last climb's result from the engine (run.runEndless) plus its season and team, shown on the Endless screen
     endlessFight: null,      // the Endless floor fight shown in the playback modal, or null
+    nameEdit: null,          // the season board's name field while it is open: {draft, error}, else null
   };
 
   // ------------------------------------------------------------ small DOM helpers
@@ -1636,7 +1637,7 @@
   // (unless the speed is Skip), any floor fought from its Watch button (run.endlessFloor replays it, read only).
   function openEndless() {
     stopPlayback();
-    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null;
+    ui.view = 'endless'; ui.endlessResult = null; ui.endlessFight = null; ui.nameEdit = null;
     ui.endlessTeam = ui.endlessTeam.filter((i) => i < run.account.vault.length);
     render();
     $('main').scrollTop = 0;
@@ -1684,6 +1685,8 @@
       text: ready ? 'Climb with this team' : 'Pick ' + (team.length ? plural(size - team.length, 'more monster', 'more monsters') : size + ' monsters'),
       onclick: climbEndless }));
 
+    endlessBoard(main, season);
+
     // The season's mutators so far (specs/28 section 3.2): fixed and shown in advance; those in force on the next floor are marked.
     main.append(h('h3', { text: 'Mutators' }));
     const mc = h('div', { class: 'card emuts', 'data-id': 'endless-mutators' }, [h('p', { class: 'small muted', text: 'Rule changes for both sides. One joins every ' + ei.band + ' floors and they stack.' })]);
@@ -1722,6 +1725,57 @@
       onclick: () => { stopPlayback(); ui.view = 'home'; ui.endlessResult = null; ui.endlessFight = null; render(); } }));
 
     if (ui.endlessFight) { modal.hidden = false; endlessPlayModal(modal, ui.endlessFight); }
+  }
+
+  // The season board (specs/28 section 6): the best floors cleared this season, ties to whoever got there first, the player's
+  // own row marked (and shown under the top when it is below it), and the display name the board shows, edited in place. The
+  // engine ranks, names and checks names; this only lays it out. While the page has no server the board is this device's only.
+  function endlessBoard(main, season) {
+    const b = run.endlessBoard(season);
+    main.append(h('h3', { text: 'Season board' }));
+    const card = h('div', { class: 'card eboard', 'data-id': 'endless-board' });
+    if (b.local) card.append(h('p', { class: 'small muted', 'data-id': 'endless-board-local', text: 'Only your own results show here until online accounts are live.' }));
+    const row = (r) => h('li', { class: 'brow' + (r.you ? ' you' : ''), 'data-id': 'endless-board-row-' + r.rank, 'data-you': r.you ? '1' : null }, [
+      h('span', { class: 'num muted', text: '#' + r.rank }),
+      h('b', { class: 'bname', text: r.name + (r.you ? ' (you)' : '') }),
+      h('span', { class: 'num', text: plural(r.floor, 'floor', 'floors') }),
+    ]);
+    if (!b.top.length) card.append(h('p', { class: 'small', 'data-id': 'endless-board-empty', text: 'Nobody has cleared a floor this season yet. Climb to get on the board.' }));
+    else {
+      const list = h('ol', { class: 'blist' }, b.top.map(row));
+      if (b.you && !b.top.some((r) => r.you)) list.append(h('li', { class: 'brow gap muted', text: '…' }), row(b.you));
+      card.append(list);
+      card.append(h('p', { class: 'small muted num', 'data-id': 'endless-board-total', text: plural(b.total, 'trainer', 'trainers') + ' on the board · ties go to whoever got there first' }));
+    }
+
+    const ed = ui.nameEdit;
+    if (!ed) card.append(h('div', { class: 'row between small' }, [
+      h('span', { 'data-id': 'endless-name' }, b.name ? ['Your name: ', h('b', { text: b.name })]
+        : ['Your name: ', h('span', { class: 'muted', text: b.fallbackName + ' (until you pick one)' })]),
+      h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-name', text: b.name ? 'Change' : 'Pick a name',
+        onclick: () => { ui.nameEdit = { draft: b.name || '', error: null }; render(); const i = document.querySelector('[data-id=endless-name-input]'); if (i) i.focus(); } }),
+    ]));
+    else {
+      const input = h('input', { type: 'text', 'data-id': 'endless-name-input', maxlength: String(b.nameMax + 8), autocomplete: 'off', spellcheck: 'false',
+        placeholder: b.fallbackName, 'aria-label': 'Display name', value: ed.draft });
+      input.oninput = () => { ed.draft = input.value; };
+      const save = () => {
+        const r = run.setName(input.value);
+        if (!r.ok) { ed.draft = input.value; ed.error = r.reason; render(); const i = document.querySelector('[data-id=endless-name-input]'); if (i) i.focus(); return; }
+        ui.nameEdit = null; toast(r.name ? 'Name saved: ' + r.name : 'Name cleared'); render();
+      };
+      input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } else if (e.key === 'Escape') { ui.nameEdit = null; render(); } };
+      card.append(h('div', { class: 'bname-edit' }, [
+        h('label', { class: 'small', text: 'Display name: ' + b.nameMin + ' to ' + b.nameMax + ' letters, digits, spaces, - or _. Leave it empty to clear it.' }),
+        input,
+        ed.error ? h('p', { class: 'small bad', 'data-id': 'endless-name-error', role: 'alert', text: ed.error }) : null,
+        h('div', { class: 'row' }, [
+          h('button', { class: 'btn small primary', type: 'button', 'data-act': 'endless-name-save', text: 'Save', onclick: save }),
+          h('button', { class: 'btn small', type: 'button', 'data-act': 'endless-name-cancel', text: 'Cancel', onclick: () => { ui.nameEdit = null; render(); } }),
+        ]),
+      ]));
+    }
+    main.append(card);
   }
 
   // The rulebook editor (web/rulebook.js, specs/28 section 4.5) draws its own overlay and calls onChange after a save. Its Test

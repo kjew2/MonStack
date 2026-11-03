@@ -180,6 +180,8 @@ This promotes the "replay log of commands" row in `specs/03` section 20 from a P
 
 ## 7. Leaderboards (P1)
 
+> **Built for the trainer:** the Endless Tower season board (`specs/28` section 6.1) follows this section under `specs/27` instead of certified segments: the server writes it from the account it accepted at a commit, rows are one per account, ties go to the earlier server time, debug accounts are left out, and no endpoint takes a score from a client. The bullets below describe the idle game's stage board.
+
 - **Key**: `highestStage` from the certified record. Tie-break: earlier `certifiedAtServerSec`. A second board, "clear time to stage N", is possible later because the log has ticks.
 - **Writers**: `IProgressCertifier` only (4.7). `ILeaderboardService` has read endpoints and no score submission.
 - **Eligibility**: `RankedLineage`, not `DebugTainted`, not flagged. One entry per account.

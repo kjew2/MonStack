@@ -374,6 +374,25 @@ namespace IdleRng.Runtime.Tests
         }
 
         [Test]
+        public void DisplayName_RoundTrips_AndAV11SaveHasNone()
+        {
+            var db = TestContent.Db;
+            var a = Played();
+            AccountOps.SetName(a, "  Ash   Ketch ");
+            var b = AccountSave.Decode(db, AccountSave.Encode(a));
+            Assert.That(b.Name, Is.EqualTo("Ash Ketch"));
+
+            var body = Newtonsoft.Json.Linq.JObject.Parse(SaveBody(AccountSave.Encode(Played())));
+            var acct = (Newtonsoft.Json.Linq.JObject)body["Account"];
+            Assert.That(acct["Name"], Is.Null, "no name is written as nothing (lean JSON)");
+            body["SchemaVersion"] = 11;
+            acct["SchemaVersion"] = 11;
+            var c = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
+            Assert.That(notice, Is.Null);
+            Assert.That((c.SchemaVersion, c.Name), Is.EqualTo((12, (string)null)));
+        }
+
+        [Test]
         public void V10Save_MigratesToV11_WithNoClimbsAndNoRulebooks()
         {
             var db = TestContent.Db;
@@ -386,7 +405,7 @@ namespace IdleRng.Runtime.Tests
             acct["SchemaVersion"] = 10;
             var b = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
             Assert.That(notice, Is.Null);
-            Assert.That(b.SchemaVersion, Is.EqualTo(11));
+            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
             Assert.That((b.Endless.Season, b.Endless.Climbs, b.Endless.ClearedSeason, b.Endless.ClearedEver), Is.EqualTo((-1, 0, 0, 0)));
             Assert.That(b.Rulebooks, Is.Empty);
             Assert.That(b.Vault.Count, Is.EqualTo(a.Vault.Count));

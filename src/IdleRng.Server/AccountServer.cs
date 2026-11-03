@@ -34,6 +34,7 @@ namespace IdleRng.Server
         readonly ContentDb _c;
         readonly IAccountStore _store;
         readonly ServerConfig _cfg;
+        readonly EndlessBoard _board;
 
         /// <summary>
         /// A new account's parts, standing in for the parts a commit does not load: a command's result does not depend on the
@@ -42,15 +43,20 @@ namespace IdleRng.Server
         /// </summary>
         readonly IReadOnlyDictionary<string, string> _standIn;
 
-        public AccountServer(ContentDb content, IAccountStore store, ServerConfig config = null)
+        /// <param name="leaderboards">Where the boards live (specs/27 section 3.3); null keeps none.</param>
+        public AccountServer(ContentDb content, IAccountStore store, ServerConfig config = null, ILeaderboardStore leaderboards = null)
         {
             _c = content ?? throw new ArgumentNullException(nameof(content));
             _store = store ?? throw new ArgumentNullException(nameof(store));
             _cfg = config ?? new ServerConfig();
             _standIn = AccountParts.Split(AccountOps.New(_c, 0));
+            _board = leaderboards == null ? null : new EndlessBoard(leaderboards);
         }
 
         public ContentDb Content => _c;
+
+        /// <summary>The Endless Tower season board (specs/28 section 6), or null when the server keeps no boards.</summary>
+        public EndlessBoard Board => _board;
 
         // ------------------------------------------------------------------ open
 
@@ -289,7 +295,34 @@ namespace IdleRng.Server
                 return CommitResult.Reject(Rejection.Stale, -1, "another commit landed first");
             }
             await TryDeleteAsync(playerId, superseded).ConfigureAwait(false);
+            await ProjectAsync(playerId, commands, account, head.DebugUsed, next.DebugUsed, now).ConfigureAwait(false);
             return new CommitResult { Seq = seq, Hash = hash };
+        }
+
+        /// <summary>
+        /// The boards after an accepted commit (specs/27 section 3.3, specs/28 section 6): a climb puts the season best on its
+        /// board and a climb or a setName refreshes the name shown; an account that just used a debug command leaves the boards
+        /// of this season, the last one and its last climb's. Both commands load the progress part (the name) and a climb the
+        /// endless part, so no stand-in is read. Best effort: the commit has landed, so a failed write leaves the board behind
+        /// until the next climb, and a retry of a commit writes nothing.
+        /// </summary>
+        async Task ProjectAsync(string playerId, List<AccountCommand> commands, AccountState account, bool wasDebug, bool debug, long now)
+        {
+            if (_board == null) return;
+            bool climbed = commands.Any(c => c.Kind == CommandKind.RunEndless), named = commands.Any(c => c.Kind == CommandKind.SetName);
+            try
+            {
+                if (debug && !wasDebug)
+                {
+                    int season = EndlessSim.SeasonOf(DayOf(now));
+                    var seasons = new SortedSet<int> { season, Math.Max(0, season - 1) };
+                    if (account.Endless != null && account.Endless.Season >= 0) seasons.Add(account.Endless.Season);
+                    await _board.RemoveAsync(playerId, seasons).ConfigureAwait(false);
+                }
+                if (climbed || named) await _board.SetNameAsync(playerId, account.Name).ConfigureAwait(false);
+                if (climbed && !debug) await _board.RecordAsync(playerId, account.Endless, now).ConfigureAwait(false);
+            }
+            catch (Exception) { }
         }
 
         /// <summary>The inputs a client supplies besides its choices (section 6.2). Throws InvalidOperationException to refuse.</summary>

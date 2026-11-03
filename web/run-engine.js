@@ -67,7 +67,7 @@
       get state() { if (runCache === undefined) runCache = parse(host.RunState()); return runCache; },   // the active run, or null
       persist() { const t = host.AccountSave(); if (t && t !== 'null') ls.set(SAVE_KEY, t); },
       // Account command (startRun, finishRun, buyOffer, rerollVendor, setLoadout, abandon, dismantle, lock, runTower, setRulebook, runEndless,
-      // debugGrantBook); returns the result, ok:false when refused.
+      // setName, debugGrantBook); returns the result, ok:false when refused.
       acct(name) {
         const r = parse(host.AccountCmd(name, JSON.stringify([].slice.call(arguments, 1))));
         dirty();
@@ -96,6 +96,11 @@
       endlessFloor(season, vaultIndices, floor) { return parse(host.AccountCmd('endlessFloor', JSON.stringify([season, vaultIndices, floor]))); },
       endlessPreview(season, vaultIndices, floor, rulebooks) { return parse(host.AccountCmd('endlessPreview', JSON.stringify([season, vaultIndices, floor, rulebooks]))); },
       setRulebook(vaultIndex, text) { return run.acct('setRulebook', vaultIndex, text); },
+      // The season board (specs/28 section 6), read only: the top rows and the player's own. `local` while it is this device's
+      // board only (until the page syncs with the server, specs/27 step 3).
+      endlessBoard(season, top) { return parse(host.AccountCmd('endlessBoard', JSON.stringify(top == null ? [season] : [season, top]))); },
+      // The display name boards show ("" clears it); refused with the reason for a name the rules do not allow.
+      setName(name) { return run.acct('setName', name); },
       startRun(speciesId, books, talentsOff) { return talentsOff ? run.acct('startRun', speciesId, books || [], talentsOff) : run.acct('startRun', speciesId, books || []); },
       finishRun() { return run.acct('finishRun', Date.now()); },
       randomSeedHex: randomSeedHex,

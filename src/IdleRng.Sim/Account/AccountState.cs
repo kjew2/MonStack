@@ -15,9 +15,9 @@ namespace IdleRng.Sim.Account
         /// The account save lineage (specs/18 section 6). v2: Vault entries carry Locked. v3: achievements, records and the post-run
         /// vendor. v4: Dungeon progress. v5: Dungeon tickets. v6: the vendor's reroll count. v7: the talent loadout. v8: legacy drafts on
         /// saved runs. v9: Vault entries gain Id and drop their replay log. v10: entries keep only their result; the run in progress is saved
-        /// as its state. v11: Endless Tower progress and the rulebooks (AccountSave migrates v1 to v11).
+        /// as its state. v11: Endless Tower progress and the rulebooks. v12: the display name (AccountSave migrates v1 to v12).
         /// </summary>
-        public const int CurrentSchemaVersion = 11;
+        public const int CurrentSchemaVersion = 12;
 
         public int SchemaVersion { get; set; } = CurrentSchemaVersion;
         public string ContentVersion { get; set; } = "";
@@ -48,6 +48,9 @@ namespace IdleRng.Sim.Account
 
         /// <summary>Achievement ids earned, in the order they were earned (specs/18 section 8).</summary>
         public List<string> Achievements { get; set; } = new List<string>();
+
+        /// <summary>The display name others see (DisplayName.Check), or null for none: boards show a generated one (specs/28 section 6).</summary>
+        public string Name { get; set; }
 
         /// <summary>Lifetime bests the achievements are checked against.</summary>
         public AccountRecords Records { get; set; } = new AccountRecords();
