@@ -276,7 +276,7 @@ All placeholders (content `2.3`; since 3.0 only the groups here and in `specs/14
 | `MON_TITHE_COST` | 0.05 | `[0, 1]` | `pyre_tithe`: HP cost of each action, fraction of max HP (Pyre Stag) |
 | `MON_SHROUD_FRAC` | 0.25 | `[0, 1)` | `ash_shroud`: share of HP that becomes a lasting shield at fight start (Pyre Stag) |
 | `MON_MERCY_MULT` | 2.5 | `>= 0` | `pyre_mercy`: a heal burns an enemy for this multiple of its amount (Pyre Stag) |
-| `MON_EMBER_DMG` | 0.015 | `>= 0` | `ember_eternal`: damage bonus per 1% of starting max HP burned (Pyre Stag) |
+| `MON_EMBER_DMG` | 0.025 | `>= 0` | `ember_eternal`: damage bonus per 1% of starting max HP burned (Pyre Stag; the concept said 0.015, raised so the book chase stays above the in-run one under `focus`) |
 | `MON_EMBER_FLOOR` | 0.3 | `(0, 1]` | `ember_eternal`: the unit dies once a burn would take max HP under this fraction of its start (Pyre Stag) |
 | `VOW_GAIN`, `CURSE_FOE`, `DEVOUR_FRAC`, `DEVOUR_ENERGY`, `BREATH_SAFE`, `ASCETIC_AP`, `HUNGRY_STAT`, `HUNGRY_ENERGY` | see `specs/14` section 8 | | lane G's run rules (#140): run constants, listed with the training run's |
 | `MON_SEEP_SHIELD` | 0.5 | `[0, 1]` | `seep`: share of each hit's damage that passes through shields straight to HP (species Fountain Axolotl, #150) |

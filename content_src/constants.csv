@@ -179,5 +179,5 @@ MON_IMMOLATE_SELF,double,0.05,"Immolate (pyre stag, #142): each cast as an actio
 MON_TITHE_COST,double,0.05,"pyre_tithe rule: each action costs this fraction of max HP (never below 1 HP, not damage); its damage is x(1 + the fraction of max HP it is missing). Placeholder"
 MON_SHROUD_FRAC,double,0.25,ash_shroud rule: at fight start this fraction of current HP becomes a shield that does not expire. Placeholder
 MON_MERCY_MULT,double,2.5,"pyre_mercy rule: a heal it would receive burns an enemy for this multiple of the heal, as fire damage (element edge, WIS mitigation). Placeholder"
-MON_EMBER_DMG,double,0.015,"ember_eternal rule: damage bonus for each 1% of its starting max HP burned instead of dying. Placeholder"
+MON_EMBER_DMG,double,0.025,"ember_eternal rule: damage bonus for each 1% of its starting max HP burned instead of dying. Placeholder"
 MON_EMBER_FLOOR,double,0.3,"ember_eternal rule: the unit dies once a blow would burn its max HP below this fraction of its starting max HP. Placeholder"

@@ -904,7 +904,7 @@
     {
       "key": "MON_EMBER_DMG",
       "type": "double",
-      "value": 0.015
+      "value": 0.025
     },
     {
       "key": "MON_EMBER_FLOOR",
