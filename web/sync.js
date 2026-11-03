@@ -28,6 +28,7 @@
   const COMMIT_MAX_CLIMBS = 10;                        // the server's cap on Endless climbs in one commit (ServerConfig)
   const OPEN_TIMEOUT_MS = 20000;                       // above a cold Cloud Code worker (section 5.1)
   const COMMIT_TIMEOUT_MS = 20000;
+  const BOARD_TIMEOUT_MS = 20000;                      // a board read can meet a cold Cloud Code worker too (#109)
   const RETRY_MS = [1000, 2000, 4000, 8000, 15000, 30000];
   const REFRESH_AFTER_HIDDEN_MS = 10 * 60 * 1000;      // a page shown again after this long asks the server for its time again
   const TAB_WAIT_MS = 300;                              // how long a new tab listens for one already playing
@@ -507,6 +508,23 @@
     reloadWith(null);
   }
 
+  // A board as the server keeps it, for a remote transport that reads one (web/ugs-transport.js): kind 'endless' (the season
+  // board, specs/28 section 6.1: arg the season) or 'gauntlet' (specs/19 section 9: arg a species id or null). A promise of
+  // {total, top[...], you, fallbackName, season | species}; null on the local test server or a transport without the call: the
+  // page then shows the engine's board of this account only. Times out (a cold worker, #109) and checks the shape.
+  function onlineBoard(kind) {
+    return !!S.transport && S.transport.kind !== 'local' && typeof S.transport[(kind || 'endless') + 'Board'] === 'function';
+  }
+  function board(kind, arg, top) {
+    if (!onlineBoard(kind)) return null;
+    return timed(Promise.resolve().then(() => S.transport[kind + 'Board'](arg, top)), BOARD_TIMEOUT_MS, 'Reading the board').then((d) => {
+      if (!d || !Array.isArray(d.top) || typeof d.total !== 'number') throw new Error('the server sent a board the page cannot read');
+      return d;
+    });
+  }
+  const endlessBoard = (season, top) => board('endless', season, top);
+  const gauntletBoard = (species, top) => board('gauntlet', species, top);
+
   root.MonStackSync = {
     CHECKPOINT_RUN_COMMANDS, SYNC_KEY, LOCAL_STORE_KEY, RUN_COMMANDS: RUN_COMMANDS.slice(),
     get transport() { return S.transport; },
@@ -514,7 +532,7 @@
     localTransport,
     start, mayApply, waitReason, record, commit, retry: tryAgain, signedIn,
     now, day: () => Math.floor(now() / DAY_MS),
-    state,
+    state, onlineBoard, endlessBoard, gauntletBoard,
     onChange: (f) => { S.listeners.push(f); return () => { const i = S.listeners.indexOf(f); if (i >= 0) S.listeners.splice(i, 1); }; },
     // Test and development hook of the local test server: store an account as this player's (web/wasm/test/harness.js).
     install(saveText) {

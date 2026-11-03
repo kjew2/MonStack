@@ -1847,8 +1847,8 @@
   const rankArg = (sel) => (sel.kind === 'endless' ? run.endlessSeason() - (sel.last ? 1 : 0) : sel.species);
   const rankKey = (sel) => (sel.kind === 'endless' ? 'endless:' + rankArg(sel) : 'gauntlet:' + (sel.species || 'all'));
   function loadBoard(sel) {
-    const kind = sel.kind, arg = rankArg(sel), key = rankKey(sel), seq = ++rankSeq, old = ui.rankCache[key];
-    ui.rankCache[key] = { board: old && old.board, error: null, loading: true, seq };
+    const kind = sel.kind, arg = rankArg(sel), key = rankKey(sel), seq = ++rankSeq, old = ui.rankCache[key], at = serverSeq();
+    ui.rankCache[key] = { board: old && old.board, error: null, loading: true, seq, at };
     ui.rankShown = key;
     Promise.resolve().then(() => run.readBoard(kind, arg)).then((b) => {
       if (!b || b.ok === false) throw new Error((b && b.reason) || 'The board could not be read.');
@@ -1856,10 +1856,12 @@
     }).catch((e) => ({ board: null, error: (e && e.message) || String(e) })).then((res) => {
       const e = ui.rankCache[key];
       if (!e || e.seq !== seq) return;   // a newer read of this board (or a name change) replaced it
-      ui.rankCache[key] = { board: res.board, error: res.error, loading: false, seq };
+      ui.rankCache[key] = { board: res.board, error: res.error, loading: false, seq, at };
       if (ui.view === 'home' && ui.homeTab === 'rankings' && rankKey(ui.rank) === key) rerenderKeepingFocus();
     });
   }
+  // The server commit the account is at (web/sync.js), or null without sync.
+  function serverSeq() { const Y = window.MonStackSync; return Y && Y.state ? Y.state().seq : null; }
   // A board that lands while the name field is open would take its focus away: put it back where it was.
   function rerenderKeepingFocus() {
     const a = document.activeElement, id = a && a.dataset ? a.dataset.id : null;
@@ -1882,8 +1884,10 @@
     const ranked = C.species.filter((sp) => sp.starter || sp.unlock || owned(sp.id));   // a species nobody can raise has no board
     if (sel.species && !ranked.some((sp) => sp.id === sel.species)) sel.species = null;
     const key = rankKey(sel);
-    if (ui.rankShown !== key) loadBoard(sel);
-    const ent = ui.rankCache[key];
+    let ent = ui.rankCache[key];
+    // Read on opening the tab or picking a board; a server board again once a commit lands (a climb, a seal or a new name).
+    if (ui.rankShown !== key || (ent && ent.board && !ent.board.local && !ent.loading && !ent.error && ent.at !== serverSeq())) loadBoard(sel);
+    ent = ui.rankCache[key];
 
     const seg = (id, opts, cur, pick) => h('div', { class: 'seg', role: 'tablist', 'data-id': id }, opts.map(([v, label, act]) => h('button', { type: 'button', role: 'tab',
       'aria-selected': String(cur === v), 'data-act': act, text: label, onclick: () => { if (cur !== v) pick(v); } })));
@@ -1932,6 +1936,10 @@
       h('b', { class: 'bname', text: r.name + (r.you ? ' (you)' : '') }),
       h('span', { class: 'num', text: plural(r.floor, 'floor', 'floors') }),
     ]);
+    // A climb the server has not accepted yet is not on its board: say so rather than look lost. Only while commands wait to be
+    // saved: an account the server leaves off its boards (debug commands) is never behind for that reason.
+    if (!b.local && !gauntlet && !sel.last && b.mine > (b.you ? b.you.floor : 0) && window.MonStackSync && window.MonStackSync.state().pending > 0)
+      card.append(h('p', { class: 'small muted', 'data-id': 'rank-board-unsaved', text: 'Your best this season (' + plural(b.mine, 'floor', 'floors') + ') shows here once it is saved to the server.' }));
     if (!b.top.length) {
       const sp = sel.species && speciesDef(sel.species);
       card.append(h('p', { class: 'small', 'data-id': 'rank-board-empty', text: !gauntlet
@@ -1950,18 +1958,20 @@
   // account's own season board, read at once, so the field does not wait for a board read.
   function nameCard(main) {
     const b = run.endlessBoard(run.endlessSeason());
+    // Without a name the server shows "Trainer XXXX" from the player id, which only a server board tells the page.
+    const shown = ui.rankCache[rankKey(ui.rank)], fallback = shown && shown.board && !shown.board.local ? shown.board.fallbackName : b.fallbackName;
     const card = h('div', { class: 'card', 'data-id': 'rank-name-card' });
     const focusInput = () => { const i = document.querySelector('[data-id=rank-name-input]'); if (i) i.focus(); };
     const ed = ui.nameEdit;
     if (!ed) card.append(h('div', { class: 'row between small' }, [
       h('span', { 'data-id': 'rank-name' }, b.name ? ['Your name: ', h('b', { text: b.name })]
-        : ['Your name: ', h('span', { class: 'muted', text: b.fallbackName + ' (until you pick one)' })]),
+        : ['Your name: ', h('span', { class: 'muted', text: fallback + ' (until you pick one)' })]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'rank-name', text: b.name ? 'Change' : 'Pick a name',
         onclick: () => { ui.nameEdit = { draft: b.name || '', error: null }; render(); focusInput(); } }),
     ]));
     else {
       const input = h('input', { type: 'text', 'data-id': 'rank-name-input', maxlength: String(b.nameMax + 8), autocomplete: 'off', spellcheck: 'false',
-        placeholder: b.fallbackName, 'aria-label': 'Display name', value: ed.draft });
+        placeholder: fallback, 'aria-label': 'Display name', value: ed.draft });
       input.oninput = () => { ed.draft = input.value; };
       const save = () => {
         const r = run.setName(input.value);
@@ -2579,6 +2589,10 @@
       watchDebugTaps();
       if (run.state) ui.view = 'run';
       if (run.loadNotice) toast(run.loadNotice);
+      // A commit landing while a server board shows reads it again (homeRankings compares the commit each read started at).
+      if (window.MonStackSync) window.MonStackSync.onChange(() => {
+        if (ui.view === 'home' && ui.homeTab === 'rankings' && !ui.nameEdit) render();
+      });
       render();
     } catch (e) {
       $('main').replaceChildren(h('h2', { text: 'The game did not load' }), h('p', { class: 'err', text: e && e.message ? e.message : String(e) }));

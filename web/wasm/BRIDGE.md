@@ -58,6 +58,10 @@ open({deviceId, claim})
 commit({deviceId, fromSeq, fromHash, commands: [{k, a}], toHash, contentVersion})
   -> {code: "None"|"NotHolder"|"Stale"|"ContentStale"|"Mismatch"|"Refused", index (-1 or the refused command), reason|null, seq, hash, serverSec, day}
 signOut()   optional: the device was signed out (NotHolder); its next open is a new guest
+endlessBoard(season, top?)   optional, remote only: the server's Endless season board, {season, total, top[{rank, name, floor, you}], you, fallbackName}
+             (`EndlessBoard.ReadAsync`); `MonStackSync.endlessBoard(season)` calls it (20 s timeout, shape checked) for run.readBoard (specs/28 section 6.1)
+gauntletBoard(species|null, top?)   optional, remote only: a gauntlet board, {species, total, top[{rank, name, species, speciesName, floor, cleared,
+             label, you}], you, fallbackName} (`GauntletBoard.ReadAsync`, specs/19 section 9); `MonStackSync.gauntletBoard(species)` the same way
 kind        "local" for the local test server (the header then says "Local test build"), anything else for a remote one
 ```
 
