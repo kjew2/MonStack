@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.4/3827fcd6
+# battle-sim vectors, hash v2 content=6.7/eeb93f0f
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -66,3 +66,34 @@
   B2 b_mage   hp   1920.60/  2400.00 act  48 dealt   17558.15 taken    5817.43 heal      0.00 crit 13 evade  0 kill 2 counter  0
   B3 b_healer hp   3000.00/  3000.00 act  51 dealt    3371.06 taken    4940.63 heal  13898.77 crit  5 evade  0 kill 1 counter  0
   hash ca3b94cba7d8a7894166fc2b0d09cefa8469aa6b80394b7bf666c5b135f05d94
+
+4v4 conversion capstones seed=10 outcome=SideBWon ticks=48
+  A0 a_iron   hp      0.00/  3800.00 act  10 dealt    2109.52 taken    3800.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A1 a_avatar hp      0.00/  2600.00 act   8 dealt    4853.74 taken    2600.00 heal      0.00 crit  3 evade  0 kill 0 counter  0
+  A2 a_fortress hp      0.00/  4200.00 act   6 dealt    1433.15 taken    4200.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  A3 a_blood  hp      0.00/  5200.00 act  10 dealt    2651.38 taken    3016.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B0 b_brawler hp   1262.56/  3200.00 act  11 dealt    3926.21 taken    2357.44 heal      0.00 crit  3 evade  1 kill 2 counter  0
+  B1 b_mage   hp   1164.85/  2400.00 act  10 dealt    7033.51 taken    3167.15 heal      0.00 crit  3 evade  1 kill 1 counter  0
+  B2 b_support hp    965.37/  2600.00 act  15 dealt    1934.50 taken    3062.63 heal      0.00 crit  5 evade  1 kill 0 counter  0
+  B3 b_healer hp    959.42/  3000.00 act  11 dealt     721.79 taken    2460.58 heal   4200.00 crit  1 evade  1 kill 1 counter  0
+  hash b3a130a827bd9f1e4d72619db0a993e95461a7c9421b6ec76b38ee87945ac64d
+
+4v4 survival capstones seed=11 outcome=SideAWon ticks=80
+  A0 a_spite  hp   1073.27/  4800.00 act  16 dealt    7470.97 taken    3726.73 heal      0.00 crit  0 evade  0 kill 4 counter  0
+  A1 a_vantage hp      0.00/  2800.00 act  15 dealt    5173.32 taken    2801.00 heal      0.00 crit  1 evade  0 kill 0 counter  4
+  A2 a_barricade hp      0.00/  5000.00 act  11 dealt    1246.37 taken    5000.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A3 a_ward   hp      0.00/  2600.00 act   9 dealt    3021.34 taken    2600.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B0 b_brawler hp      0.00/  3200.00 act  19 dealt    5733.63 taken    4124.00 heal      0.00 crit  4 evade  0 kill 2 counter  0
+  B1 b_mage   hp      0.00/  2400.00 act  15 dealt    6269.36 taken    5046.00 heal      0.00 crit  2 evade  1 kill 1 counter  0
+  B2 b_support hp      0.00/  2600.00 act  14 dealt    1217.55 taken    2810.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  B3 b_healer hp      0.00/  3000.00 act  17 dealt     907.19 taken    4932.00 heal   5712.00 crit  3 evade  0 kill 0 counter  0
+  hash a18a9c5fc3f2a697d3c31090fd098548843004f5dd167e836d9e1aa984dfce8b
+
+4v2 turn gauge capstones vs boss seed=12 outcome=SideAWon ticks=35
+  A0 a_brave  hp   3293.92/  3400.00 act  10 dealt    2676.98 taken     106.08 heal      0.00 crit  3 evade  0 kill 0 counter  0
+  A1 a_gambler hp   1411.00/  2800.00 act  11 dealt    4342.46 taken    1389.00 heal      0.00 crit  6 evade  0 kill 1 counter  0
+  A2 a_breaker hp   2195.25/  4000.00 act   9 dealt    3485.07 taken    1804.75 heal      0.00 crit  6 evade  1 kill 1 counter  0
+  A3 a_latent hp   1318.68/  3000.00 act  12 dealt    2685.49 taken    1681.32 heal      0.00 crit  3 evade  0 kill 0 counter  0
+  B0 b_boss   hp      0.00/  9990.00 act   7 dealt    3203.83 taken    9990.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B1 b_brawler hp      0.00/  3200.00 act   6 dealt    1777.32 taken    3200.00 heal      0.00 crit  0 evade  1 kill 0 counter  0
+  hash 31a7c240425ef9d1d1678c88927224a9ce94729fa544372ba224c2e558c90f04

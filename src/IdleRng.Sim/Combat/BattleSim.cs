@@ -400,7 +400,7 @@ namespace IdleRng.Sim.Combat
                     if (u.Alive)
                     {
                         Use(r, s, u, sk, rng, onAction, triggered: true);
-                        if (trigger != FightTrigger.BattleStart) GainEntropy(r, s, u, r.Tower?.EntropyPerTrigger ?? 0, onAction);
+                        if (trigger != FightTrigger.BattleStart) GainEntropy(r, s, u, r.Tower?.EntropyPerTrigger ?? 0, rng, onAction);
                     }
             }
             finally { ExitGuard(s, saved); }
@@ -467,7 +467,7 @@ namespace IdleRng.Sim.Combat
                 try
                 {
                     Use(r, s, u, Echo(sk, r.EchoPower), rng, onAction, triggered: false);
-                    GainEntropy(r, s, u, r.Tower?.EntropyPerEcho ?? 0, onAction);
+                    GainEntropy(r, s, u, r.Tower?.EntropyPerEcho ?? 0, rng, onAction);
                 }
                 finally { ExitGuard(s, saved); }
             }
@@ -644,11 +644,8 @@ namespace IdleRng.Sim.Combat
                 {
                     double amt = Scaled(r, src, sk) * HealScale(r, s);
                     var targets = Allies(s, src, sk.Target);
-                    foreach (var t in targets)
-                    {
-                        t.Shield = Math.Max(t.Shield, amt);
-                        t.ShieldTicks = Math.Max(t.ShieldTicks, ticks);
-                    }
+                    var ctx = new RuleCtx(r, s, rng, onAction);
+                    foreach (var t in targets) GainShield(ctx, t, amt, ticks);
                     onAction?.Invoke(new FightAction(src.Id, sk, targets.Count == 1 ? targets[0].Id : null, amt, false, false, aoe, false));
                     break;
                 }
@@ -796,7 +793,7 @@ namespace IdleRng.Sim.Combat
                     double c = Absorb(ctx, tgt, src, mitigated * r.CounterMult, null);
                     onAction?.Invoke(new FightAction(tgt.Id, null, src.Id, c, false, false, false, true));
                     Reborn(src, onAction);
-                    GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, onAction);
+                    GainEntropy(r, s, tgt, r.Tower?.EntropyPerCounter ?? 0, rng, onAction);
                 }
                 finally { ExitGuard(s, saved); }
             }
@@ -816,6 +813,7 @@ namespace IdleRng.Sim.Combat
             double capFrac = Math.Max(overflowCap, Has(t, RuleModifiers.TidalOverflow) ? r.TideShieldCap : 0);
             if (over > 0 && capFrac > 0)
             {
+                HookShieldCap(r, t, ref capFrac);
                 double cap = capFrac * t.MaxHp;
                 if (t.Shield < cap)
                 {
@@ -867,6 +865,18 @@ namespace IdleRng.Sim.Combat
                 }
             }
             return dealt;
+        }
+
+        /// <summary>
+        /// A timed shield of <paramref name="amount"/> for <paramref name="ticks"/> (0 = no expiry): the unit keeps the bigger of its
+        /// shield and this one, and the longer timer; the shield-gain hook may change both (specs/16 section 6.4).
+        /// </summary>
+        static void GainShield(RuleCtx c, FightUnit t, double amount, int ticks)
+        {
+            double shield = Math.Max(t.Shield, amount);
+            HookShieldGain(c, t, amount, ref shield, ref ticks);
+            t.Shield = shield;
+            t.ShieldTicks = Math.Max(t.ShieldTicks, ticks);
         }
 
         /// <summary>Sends root_rebirth's event after the action that triggered it.</summary>
@@ -1045,9 +1055,10 @@ namespace IdleRng.Sim.Combat
 
         /// <summary>
         /// Add entropy to a unit (scaled by its entropy_gain effects). At the cap the gauge vents and resets: recoil, stun, then enrage,
-        /// by the unit's vent count; a unit with entropy_convert shields itself instead.
+        /// by the unit's vent count; a unit with entropy_convert shields itself instead. A recoil that would kill meets the
+        /// would-die hook (not root_rebirth, which only saves from another unit's damage).
         /// </summary>
-        static void GainEntropy(FightRules r, FightState s, FightUnit u, double amount, Action<FightAction> onAction)
+        static void GainEntropy(FightRules r, FightState s, FightUnit u, double amount, IRandomSource rng, Action<FightAction> onAction)
         {
             var t = r.Tower;
             if (t == null || !u.Alive || !(amount > 0)) return;
@@ -1059,8 +1070,7 @@ namespace IdleRng.Sim.Combat
             if (kind == VentConvert)
             {
                 double amt = t.ConvertShield * u.MaxHp;
-                u.Shield = Math.Max(u.Shield, amt);
-                u.ShieldTicks = Math.Max(u.ShieldTicks, t.ConvertTurns * r.TurnTicks);
+                GainShield(new RuleCtx(r, s, rng, onAction), u, amt, t.ConvertTurns * r.TurnTicks);
                 onAction?.Invoke(new FightAction(u.Id, "vent:convert", u.Id, amt));
                 return;
             }
@@ -1075,6 +1085,11 @@ namespace IdleRng.Sim.Combat
                     u.Hp -= lost;
                     u.Tally.DamageTaken += lost;
                     onAction?.Invoke(new FightAction(u.Id, "vent:recoil", u.Id, lost));
+                    if (lost > 0 && !u.Alive)
+                    {
+                        bool saved = false;
+                        HookWouldDie(new RuleCtx(r, s, rng, onAction), u, u, ref saved);
+                    }
                     break;
                 }
                 case VentStun:
@@ -1285,13 +1300,15 @@ namespace IdleRng.Sim.Combat
         static double Scaled(FightRules r, FightUnit src, CombatSkill sk) => (sk.Scales == StatIds.Hp ? src.MaxHp : Eff(r, src, sk.Scales)) * sk.Power;
 
         /// <summary>
-        /// Current value of a trained stat: base x (1 + sum of effect fractions), floored at STAT_FLOOR_FRAC of base. "hp" is max HP,
-        /// which already carries the HP effects (RecalcMaxHp).
+        /// Current value of a trained stat: base x (1 + sum of effect fractions), floored at STAT_FLOOR_FRAC of base, plus the lanes'
+        /// flat bonuses (the stat-flat hook). "hp" is max HP, which already carries the HP effects (RecalcMaxHp).
         /// </summary>
         public static double Eff(FightRules r, FightUnit u, string stat)
         {
             if (stat == StatIds.Hp) return u.MaxHp;
-            return u.Source.Stats.Get(stat) * Math.Max(r.StatFloor, 1 + Bonus(u, stat));
+            double flat = 0;
+            HookStatFlat(r, u, stat, ref flat);
+            return u.Source.Stats.Get(stat) * Math.Max(r.StatFloor, 1 + Bonus(u, stat)) + flat;
         }
 
         /// <summary>Sum of effect values (plus night_feast's STR) on <paramref name="stat"/> (the whole value for crit_rate and crit_dmg bonuses).</summary>

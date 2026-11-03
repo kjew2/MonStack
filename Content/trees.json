@@ -472,6 +472,96 @@
       "fuse_b": "spellcraft"
     },
     {
+      "id": "iron_reflexes",
+      "name_key": "tree.iron_reflexes.name",
+      "kind": "generic",
+      "offer_stat": "dex",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "elemental_avatar",
+      "name_key": "tree.elemental_avatar.name",
+      "kind": "generic",
+      "offer_stat": "int",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "fortress_fist",
+      "name_key": "tree.fortress_fist.name",
+      "kind": "generic",
+      "offer_stat": "def",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "blood_magic",
+      "name_key": "tree.blood_magic.name",
+      "kind": "generic",
+      "offer_stat": "hp",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "resentment",
+      "name_key": "tree.resentment.name",
+      "kind": "generic",
+      "offer_stat": "hp",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "vantage",
+      "name_key": "tree.vantage.name",
+      "kind": "generic",
+      "offer_stat": "spd",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "deaths_door",
+      "name_key": "tree.deaths_door.name",
+      "kind": "generic",
+      "offer_stat": "luk",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "barricade",
+      "name_key": "tree.barricade.name",
+      "kind": "generic",
+      "offer_stat": "def",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "mana_ward",
+      "name_key": "tree.mana_ward.name",
+      "kind": "generic",
+      "offer_stat": "wis",
+      "offer_threshold": 400,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
       "id": "brave_heart",
       "name_key": "tree.brave_heart.name",
       "kind": "generic",

@@ -10,7 +10,7 @@ namespace IdleRng.Bots.Golden
 {
     /// <summary>
     /// golden/battle-sim-vectors.txt (specs/16 section 8): fixed fights through BattleSim.Resolve, covering 1v1, 4v1 and 4v4
-    /// plus every skill kind, a trigger, every chase capstone rule modifier and a gambit rulebook of every condition and target. Any change to the battle rules or the content they read moves
+    /// plus every skill kind, a trigger, every chase capstone rule modifier, the idea-pool lanes' capstones and a gambit rulebook of every condition and target. Any change to the battle rules or the content they read moves
     /// this file. The fighters are placeholder monsters defined here until species content exists (specs/13 T3).
     /// </summary>
     public static class BattleVectors
@@ -216,10 +216,76 @@ namespace IdleRng.Bots.Golden
                         new GambitRule(GambitConditions.AllyHpBelow, 0.6, "mend")),
                 },
                 new[] { Tank("b_tank", "fire"), Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Healer("b_healer", "dark") });
+            // Idea-pool lane A (#134): the conversion capstones against a mixed team.
+            yield return new Vector("4v4 conversion capstones", 10,
+                new[] { IronReflexes("a_iron"), Avatar("a_avatar"), FortressFist("a_fortress"), BloodMagic("a_blood") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
+            // Idea-pool lane B (#135): the survival capstones (vantage and deaths_door share a carrier) against a mixed team.
+            yield return new Vector("4v4 survival capstones", 11,
+                new[] { Spiteful("a_spite"), Vantage("a_vantage"), Barricade("a_barricade"), Warded("a_ward") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
             yield return new Vector("4v2 turn gauge capstones vs boss", 12,
                 new[] { Braveheart("a_brave"), Gambler("a_gambler"), Breaker("a_breaker"), Latent("a_latent") },
                 new[] { Boss("b_boss"), Brawler("b_brawler", "fire") });
         }
+
+        // Idea-pool lane A (#134): one conversion capstone each.
+        static Fighter IronReflexes(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(380, 300, 80, 200, 420, 260, 230, 140),
+            Skills = { Fx("iron_hide", SkillKind.Buff, SkillTarget.Self, StatIds.Def, null, 0.3, 4, 3), Dmg("lash", StatIds.Dex, 1.2, 2) },
+            Rules = { RuleModifiers.IronReflexes },
+        };
+
+        static Fighter Avatar(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(260, 60, 440, 280, 180, 150, 220, 180),
+            Skills = { Dmg("arcane_blast", StatIds.Int, 2.0, 3, SkillTarget.Enemy, "light"), Dmg("cinder", StatIds.Int, 0.7, 3, SkillTarget.AllEnemies, "fire") },
+            Rules = { RuleModifiers.ElementalAvatar },
+        };
+
+        static Fighter FortressFist(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(420, 260, 120, 220, 120, 460, 160, 100),
+            Skills = { Dmg("iron_press", StatIds.Def, 1.2, 2), Dmg("smash", StatIds.Str, 2.2, 3) },
+            Rules = { RuleModifiers.FortressFist },
+        };
+
+        static Fighter BloodMagic(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(520, 280, 100, 160, 160, 200, 210, 120),
+            Skills = { Dmg("body_slam", StatIds.Hp, 0.12, 3) },
+            Rules = { RuleModifiers.BloodMagic },
+        };
+
+        // Idea-pool lane B (#135): the survival capstones.
+        static Fighter Spiteful(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(480, 320, 80, 160, 160, 240, 200, 260),
+            Skills = { Dmg("maul", StatIds.Str, 1.6, 2) },
+            Rules = { RuleModifiers.Resentment },
+        };
+
+        static Fighter Vantage(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(280, 340, 80, 140, 260, 180, 340, 160),
+            Skills = { Dmg("rush", StatIds.Spd, 1.2, 2) },
+            Rules = { RuleModifiers.Vantage, RuleModifiers.DeathsDoor },
+        };
+
+        static Fighter Barricade(string id) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(500, 180, 60, 240, 120, 440, 150, 100),
+            Skills = { Fx("bulwark", SkillKind.Shield, SkillTarget.AllAllies, null, StatIds.Def, 0.5, 3, 2), Dmg("bash", StatIds.Def, 0.8, 2) },
+            Rules = { RuleModifiers.Barricade },
+        };
+
+        static Fighter Warded(string id) => new Fighter
+        {
+            Id = id, Element = "water", Stats = S(260, 60, 200, 460, 180, 160, 220, 160),
+            Skills = { Dmg("spirit_lash", StatIds.Wis, 1.3, 2), Dmg("mind_storm", StatIds.Wis, 0.7, 4, SkillTarget.AllEnemies) },
+            Rules = { RuleModifiers.ManaWard },
+        };
 
         /// <summary>The fighter with a gambit rulebook (specs/28 section 4).</summary>
         static Fighter Ruled(Fighter f, params GambitRule[] rules)
