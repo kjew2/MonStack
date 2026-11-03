@@ -358,19 +358,23 @@
     } else if (s.phase === 'awaitfight') {
       main.append(fightCard(s));
     }
+    // An injury that just happened, or one the monster is back from, shows as a banner laid over the monster on the stage (not a
+    // card above it, which pushed the drill pad down), until the first action of the cycle it is back in.
     const hurt = s.injuries.length ? s.injuries[s.injuries.length - 1] : null;
-    if (hurt && hurt.back === s.cycle && s.phase === 'training') main.append(h('div', { class: 'card injury', 'data-id': 'injury' }, [
+    const hurtBanner = hurt && hurt.back === s.cycle && s.phase === 'training' && s.ap === k.runAp ? h('div', { class: 'injury-banner', 'data-id': 'injury' }, [
       h('b', { class: 'bad', text: ui.last && ui.last.injury ? 'Injured!' : 'Back from injury' }), h('div', { class: 'small', text: injuryText(hurt) }),
-    ]));
+    ]) : null;
     const busy = s.phase !== 'training' || s.offers.length > 0;
     // The monster on a stage in the middle: actions and energy in its top corners, the last action's result under it (a fixed line,
-    // so feedback stays in view and nothing shifts), and the drill's "+x" pops over it (showDrillPop).
+    // so feedback stays in view and nothing shifts), and the drill's "+x" pops over it (showDrillPop). Nothing above the drill pad
+    // and Rest changes height while the player trains, so they never move under a thumb.
     main.append(h('div', { class: 'card stage', 'data-id': 'stage' }, [
       h('div', { class: 'stage-meters' }, [
         h('div', { class: 'stage-ap' }, [h('span', { class: 'small muted', text: 'Actions' }), apPips(s)]),
         energyBar(s),
       ]),
       h('div', { class: 'stage-mon', 'data-id': 'stage-mon' }, [sprite(s.species, s.apex)]),
+      hurtBanner,
       resultLine(ui.last, s),
     ]));
     if (s.phase !== 'finished') main.append(oddsChips(s));   // no drills are left once the run is over (issue #130: keep the stats in view)
@@ -392,9 +396,10 @@
       ]));
     });
     main.append(pad);
-    if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     if (s.phase !== 'finished') main.append(h('button', { class: 'btn gemsy block', type: 'button', 'data-act': 'rest', disabled: busy,
       text: 'Rest (+' + num(s.restEnergy) + ' energy)', onclick: rest }));
+    // Under Rest, so it does not push Rest down.
+    if (s.offers.length) main.append(h('p', { class: 'gems', text: 'A tree offer is waiting. Choose or discard it to keep training.' }));
     ui.flash = null;
   }
 
@@ -425,18 +430,26 @@
     return g;
   }
 
-  // The last action's outcome, a fixed line under the monster on the stage; before the first action of a visit, a hint.
+  // The last action's outcome under the monster on the stage; before the first action of a visit, a hint. Always two lines high
+  // (the outcome, then its notes on one line, cut short with an ellipsis if they do not fit, the full text in its title), so a
+  // result with an injury or a note does not push the odds, drill pad and Rest down.
   function resultLine(r, s) {
     if (!r) return h('div', { class: 'result hint small muted', 'data-id': 'result-hint',
       text: s.phase === 'training' && s.ap > 0 ? 'Drill a stat or Rest. ' + s.ap + ' action' + (s.ap === 1 ? '' : 's') + ' left this cycle.' : 'No actions left this cycle.' });
     if (r.kind === 'drill') {
+      const notes = [
+        r.injury ? h('span', { class: 'bad', 'data-id': 'injury-result' }, [h('b', { text: 'Injured! ' }),
+          r.injury.back ? 'Back in cycle ' + r.injury.back + '.' : 'The run is over.']) : null,
+        r.shielded ? h('span', { class: 'gold', 'data-id': 'shield-result' }, [h('b', { text: 'Second Wind! ' }), 'Injury prevented, energy 0.']) : null,
+        r.free ? h('span', { class: 'gems', 'data-id': 'free-result', text: 'Momentum: free drill.' }) : null,
+        r.echoStat ? h('span', { class: 'gold', 'data-id': 'echo-result', text: 'Echo: ' + up(r.echoStat) + ' +' + num(r.echoGain) + '.' }) : null,
+      ].filter(Boolean);
+      const line = h('div', { class: 'notes' });
+      notes.forEach((n, i) => line.append(...(i ? [' · ', n] : [n])));
+      if (notes.length) line.title = line.textContent;
       return h('div', { class: 'result', 'data-id': 'result' }, [
         h('div', null, [h('b', { class: r.tier, text: r.tierName }), h('span', { text: ' ' + up(r.stat) + ' ' + (r.gain ? '+' + num(r.gain) : '+0') + ' → ' + num(r.value) })]),
-        r.injury ? h('div', { class: 'bad', 'data-id': 'injury-result' }, [h('b', { text: 'Injured! ' }),
-          r.injury.back ? 'Back in cycle ' + r.injury.back + '.' : 'The run is over.']) : null,
-        r.shielded ? h('div', { class: 'gold', 'data-id': 'shield-result' }, [h('b', { text: 'Second Wind! ' }), 'The injury was prevented; energy dropped to 0.']) : null,
-        r.free ? h('div', { class: 'small gems', 'data-id': 'free-result', text: 'Momentum: this drill cost no energy.' }) : null,
-        r.echoStat ? h('div', { class: 'small gold', 'data-id': 'echo-result', text: 'Echo Training: ' + up(r.echoStat) + ' +' + num(r.echoGain) + '.' }) : null,
+        line,
       ]);
     }
     return h('div', { class: 'result', 'data-id': 'result' }, [h('div', null, [h('b', { text: 'Rest' }), h('span', { text: ' +' + num(r.restored) + ' energy' })])]);

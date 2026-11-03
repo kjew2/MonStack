@@ -210,13 +210,18 @@ const H = require('./harness.js');
   check((await t.readAccount()).Run !== undefined, 'the account still starts a run');
 
   // ---- an injury (specs/14 section 4.1, issue #89): drilling without rest injures the monster; it loses the rest of the cycle
-  // and its fight and sits out the next cycle, then the run goes on
+  // and its fight and sits out the next cycle, then the run goes on. While training (no fight card up), the stage, the drill pad
+  // and Rest stay where they are, results and the injury banner included: buttons never move under a thumb.
   const hurt = await page.evaluate(() => {
     const q = (s) => document.querySelector(s);
     const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
+    const at = (s) => Math.round(q(s).getBoundingClientRect().top + q('#main').scrollTop);
+    const spots = new Set();
+    const measure = () => { if (!q('[data-id=fight-card]') && q('[data-act=rest]')) spots.add([at('[data-id=stage]'), at('[data-id=pad]'), at('[data-act=rest]')].join('/')); };
     for (let i = 0; i < 200; i++) {
+      measure();
       if (q('[data-id=injury-result]')) return { cycle: q('[data-id=cycle]').textContent, result: q('[data-id=injury-result]').textContent,
-        text: (q('[data-id=injury]') || {}).textContent || '' };
+        text: (q('[data-id=injury]') || {}).textContent || '', spots: [...spots] };
       if (q('[data-id=fight-play]') || q('[data-id=fight-intro]')) { click('[data-act="speed-skip"]'); continue; }
       if (click('[data-act="fight-continue"]') || click('[data-act="discard"]') || click('[data-act="fight"]')) continue;
       if (!click('[data-act="drill-str"]')) return null;
@@ -225,7 +230,8 @@ const H = require('./harness.js');
   });
   check(!!hurt, 'drilling without rest injures the monster: ' + JSON.stringify(hurt));
   const hm = hurt && /Lost: the rest of cycle (\d+), its rank fight, cycle (\d+) \(no drills, fights or cycle SP\)\. Back in cycle (\d+) with (\d+) energy\./.exec(hurt.text);
-  check(!!hm && +hm[2] === +hm[1] + 1 && +hm[3] === +hm[1] + 2 && /^Injured!/.test(hurt.text), 'a card at the top says what the injury cost and when the monster is back: ' + (hurt && hurt.text));
+  check(!!hm && +hm[2] === +hm[1] + 1 && +hm[3] === +hm[1] + 2 && /^Injured!/.test(hurt.text), 'a banner on the stage says what the injury cost and when the monster is back: ' + (hurt && hurt.text));
+  check(!!hurt && hurt.spots.length === 1, 'drills, results and the injury banner never move the stage, the drill pad or Rest (stage/pad/rest tops: ' + (hurt && hurt.spots.join(', ')) + ')');
   check(!!hm && hurt.result === 'Injured! Back in cycle ' + hm[3] + '.', 'so does the drill result: ' + (hurt && hurt.result));
   check(!!hm && hurt.cycle === 'Cycle ' + hm[3] + '/12', 'the run goes on in the cycle after the lost one: ' + (hurt && hurt.cycle));
   check(!!hm && new RegExp('Energy ' + hm[4] + '/').test(await text('.bar.energy span')), 'with the energy it came back with');
@@ -235,6 +241,7 @@ const H = require('./harness.js');
   check(/Back from injury/.test(await text('[data-id=injury]')) && (await text('[data-id=injury]')).includes('Back in cycle ' + (hm && hm[3])),
     'after a reload the run screen still says the monster is back from injury');
   await act('drill-str').click();
+  check((await page.locator('[data-id=injury]').count()) === 0, 'the injury banner leaves the stage at the first action back');
   check((await t.readAccount()).Run.Drills > 0, 'and it trains again');
 
   // ---- a damaged copy on the device: every load opens the server's account (specs/27 section 5.3), so it does not matter

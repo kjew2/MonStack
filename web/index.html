@@ -152,7 +152,6 @@ small, .small { font-size: 12px; }
 
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .card.alert { border-color: var(--gems); }
-.card.injury { border-color: var(--bad); }
 .row { display: flex; align-items: center; gap: 10px; }
 .row.between { justify-content: space-between; }
 .btn { border: 1px solid var(--line); background: var(--panel-2); border-radius: var(--r); padding: 10px 14px; font-weight: 600; min-height: 44px; }
@@ -233,8 +232,14 @@ small, .small { font-size: 12px; }
   78% { transform: translateY(8px) scale(1.04, .9) rotate(-2deg); filter: saturate(.45) brightness(.88); } 100% { transform: none; filter: none; } }
 @keyframes tear { 0%, 20% { opacity: 0; transform: translateY(0) scale(.4); } 30% { opacity: 1; transform: translateY(0) scale(1); }
   85% { opacity: 1; transform: translateY(44px); } 100% { opacity: 0; transform: translateY(54px); } }
-.stage .result { min-height: 34px; justify-content: center; align-items: center; text-align: center; font-size: 13px; }
+/* The result line keeps one height whatever it says (the outcome, then its notes on one line), so nothing under it moves */
+.stage .result { height: 38px; overflow: hidden; justify-content: center; align-items: center; text-align: center; font-size: 13px; line-height: 17px; }
 .stage .result.hint { font-size: 12px; }
+.stage .result > * { max-width: 100%; }
+.stage .result .notes { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* An injury: a banner laid over the monster (not a card above the stage, which pushed the drill pad down) */
+.stage .injury-banner { position: absolute; left: 10px; right: 10px; top: 40px; z-index: 3; padding: 8px 10px; border: 1px solid var(--bad);
+  border-radius: var(--r-sm); background: color-mix(in srgb, var(--panel) 92%, transparent); box-shadow: var(--shadow-card); text-align: center; pointer-events: none; }
 /* The drill pad: a 4x2 grid of stat tiles in the stat's colour. The whole tile is the Drill button (issue #124); the stat's
    tooltip is the small "i" in its top right corner, a sibling over the button, so a drill tap never lands on a tooltip trigger. */
 .pad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
@@ -242,7 +247,7 @@ small, .small { font-size: 12px; }
   background: color-mix(in srgb, var(--st) 12%, var(--tile)); overflow: hidden; }
 .dtile .meta { padding-right: 16px; white-space: nowrap; }   /* the label; the right end is left to the "i" */
 .dtile .lbl { font: 700 12px var(--font-display); letter-spacing: .04em; color: var(--st); }
-.dtile .vrow { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; column-gap: 4px; white-space: nowrap; }   /* the value, the growth at its right (below it when a big value or a wide font leaves no room) */
+.dtile .vrow { display: flex; flex-direction: column; align-items: flex-start; white-space: nowrap; }   /* the value, the growth below it: always, so a wider value (113.5) never grows the tile and moves the pad and Rest */
 .dtile .gmul { color: var(--muted); font-size: 10px; }
 .dtile .drill { flex: 1; width: 100%; display: flex; flex-direction: column; gap: 5px; border: 0; background: none; padding: 5px 7px 8px; text-align: left; min-height: 44px; transition: transform var(--dur-fast); }
 .dtile .drill:active:not(:disabled) { transform: scale(.95); }
