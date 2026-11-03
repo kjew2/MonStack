@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Browser check of the Endless Tower screen (specs/28 section 9 step 5), at phone width 390x844: plays and seals one run, then
 // seeds a Vault of five copies of the sealed monster (ids 0..4, entry id 1 with a rulebook) through the save and checks the
-// Dungeon tab's Endless card, the screen (season, mutators, next floors with their squads), the team picker (exactly four,
-// reorder, the rule count and Rules button per slot), a climb with its result, save record and deciding-floor playback (a rule
-// firing reads "follows rule 1"), a second climb paying nothing new, the season board and display name (a refused name, a saved
-// one, the player's row after the climb), watching another floor (same fight hash as the climb's list), the layout and Back.
+// Dungeon tab's Endless card, the screen (Team / Floors / Board sections, issue #130; season, mutators, next floors with their
+// squads), the team picker (exactly four, reorder, the rule count and Rules button per slot), a climb with its result, save
+// record and deciding-floor playback (a rule firing reads "follows rule 1"), a second climb paying nothing new, the season
+// board and display name (a refused name, a saved one, the player's row after the climb), watching another floor (same fight
+// hash as the climb's list), the layout and Back.
 // Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
 // Usage: node web/wasm/test/endless.js [--shots dir]   (screenshots are debug output, never compared)
 'use strict';
@@ -57,6 +58,12 @@ const H = require('./harness.js');
   const season = Math.floor((Math.floor(Date.now() / 86400000) + 3) / 7);   // run.endlessSeason(): the UTC week from Monday
   check((await status.getAttribute('data-season')) === String(season) && new RegExp('^Season ' + season + ' · \\d+[dh] \\d+[hm] left · best this season 0').test(await status.innerText()),
     'the season line shows this UTC week, the time left and the bests: ' + (await status.innerText()));
+  // Issue #130: the screen opens on its Team section, with the next floor in one line; Floors and Board are one tap each
+  check((await act('endless-tab-team').getAttribute('aria-selected')) === 'true' && /^Next\s+F1 /.test(await text('[data-id=endless-next]'))
+    && (await count('[data-id=endless-mutators]')) === 0 && (await count('[data-id=endless-board]')) === 0,
+    'the screen opens on Team with the next floor in one line, floors and board on their own tabs: ' + (await text('[data-id=endless-next]')).replace(/\s+/g, ' '));
+  await act('endless-see-floors').click();
+  check((await act('endless-tab-floors').getAttribute('aria-selected')) === 'true', 'the next floor line leads to the Floors tab');
   const muts = await page.$$eval('[data-id^=endless-mutator-]', (es) => es.map((e) => ({ on: e.dataset.on === '1', text: e.innerText })));
   check(muts.length >= 1 && muts.every((m) => /from floor \d+/.test(m.text)) && !muts[0].on, 'the season\'s mutators are listed with the floor each joins (none in force on floor 1): ' + muts.length);
   const floors = await page.$$eval('[data-id^=endless-floor-]', (es) => es.map((e) => ({ id: e.dataset.id, foes: e.querySelectorAll('[data-id=endless-foe]').length,
@@ -64,8 +71,10 @@ const H = require('./harness.js');
   check(floors.length === 10 && floors[0].id === 'endless-floor-1' && floors.every((f) => f.foes === 4 && f.check) && floors[9].elite,
     'the next ten floors show four enemies each and their check, the tenth an elite: ' + JSON.stringify(floors.map((f) => f.check)));
   check(await act('endless-climb').isDisabled(), 'Climb is off with no team');
+  await t.layout('endless floors');
 
   // ---- the season board (specs/28 section 6): empty before a climb, this device's only, a generated name until one is picked
+  await act('endless-tab-board').click();
   check((await count('[data-id=endless-board-empty]')) === 1 && (await count('[data-id=endless-board-local]')) === 1
     && /^Your name: Trainer [0-9A-F]{4} \(until you pick one\)$/.test(await text('[data-id=endless-name]')),
     'the board is empty, says it is local, and shows a generated name: ' + (await text('[data-id=endless-name]')));
@@ -80,15 +89,17 @@ const H = require('./harness.js');
   await page.locator('[data-id=endless-name]').waitFor();
   check((await text('[data-id=endless-name]')) === 'Your name: Ash Ketchum' && (await acct()).Name === 'Ash Ketchum',
     'Enter saves the name, trimmed and with its spaces folded, to the account');
+  await t.layout('endless board (empty)');
+  await act('endless-tab-team').click();
   await t.layout('endless screen');
-  await page.locator('[data-id=endless-mutators]').scrollIntoViewIfNeeded();
-  await t.layout('endless mutators and floors');
 
   // ---- the team: exactly four
   for (const i of [0, 1, 2]) await act('endless-pick-' + i).check();
   check(await act('endless-climb').isDisabled(), 'three picked: Climb is still off');
   await act('endless-pick-3').check();
   check(await act('endless-climb').isEnabled() && (await act('endless-pick-4').isDisabled()), 'four picked: Climb is on and a fifth monster cannot be picked');
+  check((await page.locator('[data-id=endless-swap]').count()) === 1 && !(await page.locator('[data-id=endless-swap]').evaluate((d) => d.open)),
+    'a full team folds the Vault list behind "Swap a monster"');
   check((await count('[data-act^=endless-rules-]')) === 4 && (await text('[data-id=endless-rules-n-1]')) === '1 rule' && (await text('[data-id=endless-rules-n-0]')) === 'No rules',
     'each filled slot shows its rule count and a Rules button');
   await act('endless-slot-up-1').click();             // the monster with the rulebook moves to slot 1
@@ -131,13 +142,13 @@ const H = require('./harness.js');
   check(rows.length >= 1 && rows[rows.length - 1].hash === decidingHash, 'the floors fought are listed, the deciding one last with the played fight\'s hash');
   check(/best this season \d+/.test(await status.innerText()) && /1 climb this season/.test(await status.innerText()), 'the season line counts the climb');
   const best1 = a1.Endless.ClearedSeason || 0;
+  await act('endless-tab-board').click();
   if (best1 > 0) {
     const me = page.locator('[data-id=endless-board-row-1]'), meText = (await me.innerText()).replace(/\s+/g, ' ').trim();
     check((await me.getAttribute('data-you')) === '1' && meText === '#1 Ash Ketchum (you) ' + best1 + (best1 === 1 ? ' floor' : ' floors')
       && /^1 trainer on the board/.test(await text('[data-id=endless-board-total]')),
       'the board shows the player first with the season best and their name: ' + meText);
   } else check((await count('[data-id=endless-board-empty]')) === 1, 'no floor cleared: the board stays empty');
-  await page.locator('[data-id=endless-board]').scrollIntoViewIfNeeded();
   await t.layout('endless board');
   await t.layout('endless result');
 

@@ -407,11 +407,16 @@ small, .small { font-size: 12px; }
 .now.event { border-color: var(--gold); } .now.event b { color: var(--gold); }
 .tipword { text-decoration: underline dotted; text-underline-offset: 2px; }
 .tslot { min-height: 34px; } .tslot.empty { border: 1px dashed var(--line); border-radius: var(--r); padding: 0 10px; }
-/* ---- Endless Tower screen (specs/28 section 9 step 5): a team slot with its rulebook line, the mutator list, the next floors with
-   their squads, the climb's result, and the 4v4 playback (no unit spans the row) with its mutators and rule-firing lines. */
-.tslot2 { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; border-bottom: 1px solid var(--line-faint); }
-.tslot2:last-child { border-bottom: 0; }
-.trules { padding-left: 30px; min-height: 32px; }
+/* ---- Endless Tower screen (specs/28 section 9 step 5): Team / Floors / Board as a segmented switch (issue #130), a team slot on one
+   row with its rule count under the name, the mutator list, the next floors with their squads, the climb's result, and the 4v4
+   playback (no unit spans the row) with its mutators and rule-firing lines. */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-pill); }
+.seg button { border: 0; background: none; padding: 8px 0; border-radius: var(--r-pill); font: 700 13px var(--font-display); color: var(--muted); }
+.seg button[aria-selected="true"] { background: var(--panel); color: var(--gems); box-shadow: var(--shadow-card); }
+.card.enext { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; text-align: left; }
+.card.enext > .row { flex: 1; min-width: 0; justify-content: flex-start; }
+.tslot-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tslots .tslot + .tslot:not(.empty) { border-top: 1px solid var(--line-faint); padding-top: 6px; }
 .emuts { display: flex; flex-direction: column; gap: 8px; }
 .emut { padding: 6px 10px; border-left: 3px solid var(--line); border-radius: var(--r-xs); }
 .emut.on { border-left-color: var(--epic); background: var(--epic-deep); }
