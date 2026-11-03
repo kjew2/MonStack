@@ -86,3 +86,10 @@ headlong_oath_c2,headlong_oath,tally_at_least,wins,2
 thunderhoof_c0,thunderhoof,node_owned,ramshorn_hymnal_n0,
 thunderhoof_c1,thunderhoof,node_owned,gilded_fleece_n4,
 thunderhoof_c2,thunderhoof,tally_at_least,damage_light,12000
+brittle_quench_c0,brittle_quench,tree_maxed,guard_break,
+brittle_quench_c1,brittle_quench,stat_at_least,str,500
+brittle_quench_c2,brittle_quench,tally_at_least,crits,4
+shatterpoint_c0,shatterpoint,tree_maxed,guard_break,
+shatterpoint_c1,shatterpoint,tree_maxed,ringing_anvil,
+shatterpoint_c2,shatterpoint,stat_at_least,str,650
+shatterpoint_c3,shatterpoint,tally_at_least,crits,4

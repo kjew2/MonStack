@@ -2,8 +2,10 @@
 self.MONSTACK_ART_KEYS = [
   "abyssal_bloom",
   "aegis_ram",
+  "anvil_ape",
   "aquifer",
   "arcane_overflow",
+  "brittle_quench",
   "candlemane",
   "carillon",
   "clutch_empress",
@@ -28,6 +30,7 @@ self.MONSTACK_ART_KEYS = [
   "pyre_stag",
   "severed_arts",
   "shade_hound",
+  "shatterpoint",
   "siege_pincers",
   "six_fountains",
   "slime",

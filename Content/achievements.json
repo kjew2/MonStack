@@ -112,6 +112,14 @@
       "ref": null,
       "amount": 30.0,
       "unlocks_species": "aegis_ram"
+    },
+    {
+      "id": "heavy_hands",
+      "name_key": "achievement.heavy_hands.name",
+      "kind": "stat_reached",
+      "ref": "str",
+      "amount": 650.0,
+      "unlocks_species": "anvil_ape"
     }
   ]
 }

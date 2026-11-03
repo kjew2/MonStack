@@ -1085,6 +1085,36 @@
       "key": "MON_RAM_RAMP",
       "type": "double",
       "value": 0.15
+    },
+    {
+      "key": "MON_RHYTHM_HITS",
+      "type": "int",
+      "value": 3
+    },
+    {
+      "key": "MON_BRITTLE_STEP",
+      "type": "int",
+      "value": 1
+    },
+    {
+      "key": "MON_BRITTLE_MIN",
+      "type": "int",
+      "value": 1
+    },
+    {
+      "key": "MON_SHATTER_FRAC",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_SHATTER_SHARDS",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "MON_SHATTER_BOSS",
+      "type": "double",
+      "value": 0.1
     }
   ]
 }

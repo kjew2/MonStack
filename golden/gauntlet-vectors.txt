@@ -1,4 +1,4 @@
-# gauntlet vectors, hash v1 content=6.20/1cb44175
+# gauntlet vectors, hash v1 content=6.21/376569a7
 
 slime focus seed=7 rank=a
   floor=53 cleared=False killer=golem title=title.professional_punching_bag
@@ -55,3 +55,7 @@ lodge_beaver focus seed=7 rank=b
 aegis_ram focus seed=7 rank=a
   floor=49 cleared=False killer=wisp title=title.professional_punching_bag
   hash 34672be2db45a302ebd205be28f6847a7d3b27230d387782f46e57e78571c297
+
+anvil_ape focus seed=7 rank=b
+  floor=31 cleared=False killer=slimeling title=title.respectable_brawler
+  hash e6927943d7e07349ce9d4711a7dbf83b7b31d954ed7226b559dc0c8441901d88

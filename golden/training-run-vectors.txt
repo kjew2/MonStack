@@ -1,4 +1,4 @@
-# training-run vectors, hash v9 content=6.20/1cb44175
+# training-run vectors, hash v9 content=6.21/376569a7
 
 slime balanced seed=7
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
@@ -495,14 +495,50 @@ aegis_ram hoarder seed=7
 aegis_ram chaser seed=7
   end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
   stats hp 140 str 539 int 50 wis 90 dex 70 def 150 spd 368 luk 100
-  trees brave_heart:8/8 gilded_fleece:1/8 quickstep:0/8 headlong_oath:8/8
-  hash 10cc73f85ee3c2bf63c0ff4f45f8309e6a6141b089d9b5c5cf36994385e12375
+  trees brave_heart:8/8 gilded_fleece:1/8 berserker:0/8 headlong_oath:8/8
+  hash 803e89238add4fc74e1688fef8f16d7a34c4dbf395e2bb0f9e2953989ec0ef3e
 
 aegis_ram focus seed=7 books=book_echoes,book_embers,book_hours,book_ledger,book_litany,book_psalter,book_ramshorn,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
   end=Completed cycle=12 rank=a fights=4/12 drills=44 rests=16 energy=20 milestones=2 sp=0 injuries=0
   stats hp 155 str 145 int 65 wis 125 dex 70 def 546 spd 427 luk 100
   trees brave_heart:8/8 gilded_fleece:8/8 tome_of_echoes:7/8 ember_codex:2/8
   hash 49f03512f5f2c49b6c14ec48b2c41fcebd6d60069dda3d8bbeb801eea1bd34d8
+
+anvil_ape balanced seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=0 sp=6 injuries=0
+  stats hp 150 str 210 int 145 wis 149 dex 145 def 141 spd 145 luk 145
+  trees guard_break:8/8 ringing_anvil:8/8 - -
+  hash 54c8930a883c3c8728961ee32a7598b9650cae7347af2aaf6b503d6f79b1f6cc
+
+anvil_ape focus seed=7
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
+  stats hp 150 str 989 int 40 wis 70 dex 145 def 100 spd 96 luk 160
+  trees guard_break:8/8 ringing_anvil:7/8 berserker:4/8 brittle_quench:5/8
+  hash a99847059daeab56a438f329cf8d64464479704005f4821ef893ae5ebd33499c
+
+anvil_ape reckless seed=7
+  end=Completed cycle=12 rank=c fights=2/5 drills=30 rests=0 energy=0 milestones=1 sp=0 injuries=c2,c5,c9,c12
+  stats hp 150 str 691 int 40 wis 70 dex 145 def 100 spd 80 luk 145
+  trees guard_break:8/8 ringing_anvil:7/8 berserker:2/8 -
+  hash 809ee8709c3f73f97c4785e18d0b0d949e5cbfea58b7f77124086a258ea1aeb2
+
+anvil_ape hoarder seed=7
+  end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
+  stats hp 150 str 891 int 40 wis 70 dex 145 def 100 spd 80 luk 180
+  trees guard_break:8/8 ringing_anvil:7/8 berserker:1/8 brittle_quench:7/8
+  hash a53bbd5e7c19e82fd2eb337b4d66823500ddabe6062672d27c911d3430665156
+
+anvil_ape chaser seed=7
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
+  stats hp 150 str 999 int 40 wis 70 dex 125 def 100 spd 80 luk 180
+  trees guard_break:8/8 ringing_anvil:6/8 berserker:1/8 brittle_quench:8/8
+  hash e1c53520f5194e3d8b5f0e7def3d90c46aa316652bf9d38dc1df9a635e9e7a65
+
+anvil_ape focus seed=7 books=book_echoes,book_embers,book_hours,book_ledger,book_litany,book_psalter,book_ramshorn,book_roots,book_shadows,book_siege,book_springs,book_tides,book_unseen
+  end=Completed cycle=12 rank=b fights=3/12 drills=44 rests=16 energy=20 milestones=1 sp=0 injuries=0
+  stats hp 150 str 929 int 55 wis 85 dex 145 def 100 spd 80 luk 160
+  trees guard_break:8/8 ringing_anvil:7/8 tome_of_echoes:4/8 brittle_quench:5/8
+  hash ce9d226b678260170b67cdda466c4efc3a3f073fda5b96b896c8cf7847627a75
 
 drake focus seed=7 lane-f slots=pyromancy,heavy_armor,mimic_core,mastery,heirloom,limit_break
   end=Completed cycle=12 rank=c fights=2/12 drills=44 rests=16 energy=20 milestones=1 sp=26 injuries=0

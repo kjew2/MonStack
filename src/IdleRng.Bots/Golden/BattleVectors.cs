@@ -279,6 +279,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 aries vanguard and chrysomallos", 1,
                 new[] { AegisRam("a_oath", RuleModifiers.BraveDebt), AegisRam("a_hoof", RuleModifiers.RamShock) },
                 new[] { Brawler("b_brawler", "dark"), Mage("b_mage", "water"), Tank("b_tank", "fire") });
+            // Species Anvil Ape (#153): Guard Break with Smith's Rhythm on both, one making the guards brittle and one shattering
+            // broken foes, against a nature mage (fire strips a pip on every hit), a brawler and a healer.
+            yield return new Vector("2v3 anvil ape brittle and shatter", 20,
+                new[] { AnvilApe("a_brittle", RuleModifiers.BrittleGuard), AnvilApe("a_shatter", RuleModifiers.Shatterpoint) },
+                new[] { Mage("b_mage", "nature"), Brawler("b_brawler", "water"), Healer("b_healer", "light") });
         }
 
         // Species Aegis Ram (#147): the native kit (brave_heart, Fleece Ward, fleece_aegis), Shofar Call from its book, plus one
@@ -392,6 +397,14 @@ namespace IdleRng.Bots.Golden
                 Fx("windfall", SkillKind.Buff, SkillTarget.Self, StatIds.CritRate, null, 0.15, 0, 2),
             },
             Rules = { RuleModifiers.StolenTurn, chase },
+        };
+
+        // Species Anvil Ape (#153): the native kit (guard_break, Ringing Anvil's anvil_rhythm and Hammer Tap) plus one chase capstone.
+        static Fighter AnvilApe(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(600, 560, 40, 260, 320, 380, 220, 400),
+            Skills = { Dmg("smash", StatIds.Str, 2.2, 3), Dmg("hammer_tap", StatIds.Str, 1.0, 1, SkillTarget.Enemy, "fire") },
+            Rules = { RuleModifiers.GuardBreak, RuleModifiers.AnvilRhythm, chase },
         };
 
         // Species Gearbell Jelly (#158): the native kit (Mana Ward, Rune Gearwork's Rewind and Bell Sting) plus one chase capstone.

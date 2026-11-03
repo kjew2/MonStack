@@ -6,7 +6,7 @@ namespace IdleRng.Sim.Combat
     // point; it calls the same hook of lanes A to E in that order. Each lane's hooks are partial methods that the lane
     // implements in its own file (Rules/LaneA.cs to LaneE.cs); an unimplemented one is compiled away, so a hook is a no-op
     // until its lane fills it. Species chase rules (specs/14 section 3.1) fill partials named after the species
-    // (Rules/<Species>.cs), called after lane E; the Healed, HpPaid, HitMitigated, BeforeAoe, VantageCounter, Tick, TurnBudget, WardBroke, ShieldIn, HpHeld and TurnEnd hooks exist for them. Cuckling's stolen_turn and usurp sit in Step and Act
+    // (Rules/<Species>.cs), called after lane E; the Healed, HpPaid, HitMitigated, BeforeAoe, VantageCounter, Tick, TurnBudget, WardBroke, ShieldIn, HpHeld, TurnEnd, GuardBroke and CritRolled hooks exist for them. Cuckling's stolen_turn and usurp sit in Step and Act
     // themselves (BattleSim.StealTurn, BattleSim.Usurp): no hook runs before a turn is taken. Rules: every rule runs only behind Has(unit, RuleModifiers.X); a new random draw only for a
     // unit that carries it; new state is hashed only for carriers; every proc is logged as rule:<id> with its key number.
     public static partial class BattleSim
@@ -110,6 +110,22 @@ namespace IdleRng.Sim.Combat
         }
 
         static partial void OnWardBroke_GearbellJelly(RuleCtx c, FightUnit src, FightUnit tgt);
+
+        /// <summary>GuardBroke (species rules): lane C's guard_break guard of tgt just broke (its pips reached 0) through src's hit or shards.</summary>
+        static void HookGuardBroke(RuleCtx c, FightUnit src, FightUnit tgt)
+        {
+            OnGuardBroke_AnvilApe(c, src, tgt);
+        }
+
+        static partial void OnGuardBroke_AnvilApe(RuleCtx c, FightUnit src, FightUnit tgt);
+
+        /// <summary>CritRolled (species rules): the hit's avoid and crit rolls are done (h.Graze, h.Crit set); a rule may set h.Crit (never on a graze).</summary>
+        static void HookCritRolled(RuleCtx c, HitInfo h)
+        {
+            CritRolled_AnvilApe(c, h);
+        }
+
+        static partial void CritRolled_AnvilApe(RuleCtx c, HitInfo h);
 
         /// <summary>ExtraAction: after an action: set evt (the log event, rule:&lt;id&gt;) to grant an extra action now; leave it if already set. MON_EXTRA_ACTIONS_CAP applies.</summary>
         static void HookExtraAction(RuleCtx c, FightUnit u, ref string evt)
@@ -279,6 +295,7 @@ namespace IdleRng.Sim.Combat
             OnHitLanded_Candlemane(c, h);
             OnHitLanded_IaidoMantis(c, h);
             OnHitLanded_AegisRam(c, h);
+            OnHitLanded_AnvilApe(c, h);
         }
 
         static partial void OnHitLanded_A(RuleCtx c, HitInfo h);
@@ -289,6 +306,7 @@ namespace IdleRng.Sim.Combat
         static partial void OnHitLanded_Candlemane(RuleCtx c, HitInfo h);
         static partial void OnHitLanded_IaidoMantis(RuleCtx c, HitInfo h);
         static partial void OnHitLanded_AegisRam(RuleCtx c, HitInfo h);
+        static partial void OnHitLanded_AnvilApe(RuleCtx c, HitInfo h);
 
         /// <summary>OnHitTaken: the same point, for the target's rules.</summary>
         static void HookHitTaken(RuleCtx c, HitInfo h)
@@ -445,6 +463,7 @@ namespace IdleRng.Sim.Combat
             HashUnit_GearbellJelly(w, s, u);
             HashUnit_LodgeBeaver(w, s, u);
             HashUnit_AegisRam(w, s, u);
+            HashUnit_AnvilApe(w, s, u);
         }
 
         static partial void HashUnit_A(CanonicalWriter w, FightState s, FightUnit u);
@@ -460,6 +479,7 @@ namespace IdleRng.Sim.Combat
         static partial void HashUnit_GearbellJelly(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_LodgeBeaver(CanonicalWriter w, FightState s, FightUnit u);
         static partial void HashUnit_AegisRam(CanonicalWriter w, FightState s, FightUnit u);
+        static partial void HashUnit_AnvilApe(CanonicalWriter w, FightState s, FightUnit u);
 
         /// <summary>HashFight: StateHash, at the end: fight-wide lane state, only when some unit carries the rule.</summary>
         static void HookHashFight(CanonicalWriter w, FightState s)
@@ -494,6 +514,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_GearbellJelly(r, ref ok);
             ValidateRules_LodgeBeaver(r, ref ok);
             ValidateRules_AegisRam(r, ref ok);
+            ValidateRules_AnvilApe(r, ref ok);
         }
 
         static partial void ValidateRules_A(FightRules r, ref bool ok);
@@ -509,6 +530,7 @@ namespace IdleRng.Sim.Combat
         static partial void ValidateRules_GearbellJelly(FightRules r, ref bool ok);
         static partial void ValidateRules_LodgeBeaver(FightRules r, ref bool ok);
         static partial void ValidateRules_AegisRam(FightRules r, ref bool ok);
+        static partial void ValidateRules_AnvilApe(FightRules r, ref bool ok);
 
         /// <summary>StatFlat: a flat amount added to a trained stat's current value (after its effect multiplier and floor; not HP). Hot path: keep it cheap.</summary>
         static void HookStatFlat(FightRules r, FightUnit u, string stat, ref double flat)
@@ -599,6 +621,7 @@ namespace IdleRng.Sim.Combat
             Load_GearbellJelly(r, c);
             Load_LodgeBeaver(r, c);
             Load_AegisRam(r, c);
+            Load_AnvilApe(r, c);
         }
 
         static partial void Load_A(FightRules r, ContentDb c);
@@ -614,6 +637,7 @@ namespace IdleRng.Sim.Combat
         static partial void Load_GearbellJelly(FightRules r, ContentDb c);
         static partial void Load_LodgeBeaver(FightRules r, ContentDb c);
         static partial void Load_AegisRam(FightRules r, ContentDb c);
+        static partial void Load_AnvilApe(FightRules r, ContentDb c);
     }
 
     public sealed partial class FightUnit

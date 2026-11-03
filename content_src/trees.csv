@@ -57,7 +57,7 @@ barricade,tree.barricade.name,native,,,,,,"idea-pool lane B (#135): Slay the Spi
 mana_ward,tree.mana_ward.name,native,,,,,,"idea-pool lane B (#135): PoE Mind over Matter / Eldritch Battery; Gearbell Jelly's native tree 1 (#158, kj 2026-11-03)"
 brave_heart,tree.brave_heart.name,native,,,,,,"idea-pool lane C (#136): Bravely Default Brave/Default; native-only, Aegis Ram native tree 1 (#147)"
 one_more,tree.one_more.name,generic,luk,400,,,,"idea-pool lane C (#136): Persona One More, FE Galeforce"
-guard_break,tree.guard_break.name,generic,str,400,,,,idea-pool lane C (#136): Octopath Break
+guard_break,tree.guard_break.name,native,,,,,,"idea-pool lane C (#136): Octopath Break; native-only, Anvil Ape's native tree 1 (#153, kj 2026-11-03)"
 latent_power,tree.latent_power.name,generic,spd,400,,,,idea-pool lane C (#136): MH Latent Power
 lone_wolf,tree.lone_wolf.name,generic,str,400,,,,idea-pool lane E (#138): Divinity Original Sin 2 Lone Wolf
 arise,tree.arise.name,generic,int,400,,,,idea-pool lane E (#138): Solo Leveling Shadow Extraction
@@ -113,3 +113,6 @@ gilded_fleece,tree.gilded_fleece.name,native,,,,,,Aegis Ram native tree 2 (#147)
 ramshorn_hymnal,tree.ramshorn_hymnal.name,book,,,,,,Aegis Ram book tree (Thunderhoof)
 headlong_oath,tree.headlong_oath.name,chase,,,tree.headlong_oath.apex,,,Aegis Ram in-run chase tree
 thunderhoof,tree.thunderhoof.name,chase,,,tree.thunderhoof.apex,,,Aegis Ram book-gated chase tree
+ringing_anvil,tree.ringing_anvil.name,native,,,,,,anvil ape native tree 2 (#153): the trigger supplier of Guard Break
+brittle_quench,tree.brittle_quench.name,chase,,,tree.brittle_quench.apex,,,anvil ape in-run chase tree
+shatterpoint,tree.shatterpoint.name,chase,,,tree.shatterpoint.apex,,,anvil ape harder in-run second chase tree (no book)

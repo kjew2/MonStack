@@ -609,6 +609,55 @@
       "type": "tally_at_least",
       "ref": "damage_light",
       "amount": 12000.0
+    },
+    {
+      "id": "brittle_quench_c0",
+      "tree_id": "brittle_quench",
+      "type": "tree_maxed",
+      "ref": "guard_break",
+      "amount": null
+    },
+    {
+      "id": "brittle_quench_c1",
+      "tree_id": "brittle_quench",
+      "type": "stat_at_least",
+      "ref": "str",
+      "amount": 500.0
+    },
+    {
+      "id": "brittle_quench_c2",
+      "tree_id": "brittle_quench",
+      "type": "tally_at_least",
+      "ref": "crits",
+      "amount": 4.0
+    },
+    {
+      "id": "shatterpoint_c0",
+      "tree_id": "shatterpoint",
+      "type": "tree_maxed",
+      "ref": "guard_break",
+      "amount": null
+    },
+    {
+      "id": "shatterpoint_c1",
+      "tree_id": "shatterpoint",
+      "type": "tree_maxed",
+      "ref": "ringing_anvil",
+      "amount": null
+    },
+    {
+      "id": "shatterpoint_c2",
+      "tree_id": "shatterpoint",
+      "type": "stat_at_least",
+      "ref": "str",
+      "amount": 650.0
+    },
+    {
+      "id": "shatterpoint_c3",
+      "tree_id": "shatterpoint",
+      "type": "tally_at_least",
+      "ref": "crits",
+      "amount": 4.0
     }
   ]
 }

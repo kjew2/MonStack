@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.20/1cb44175
+# battle-sim vectors, hash v2 content=6.21/376569a7
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -196,3 +196,11 @@
   B1 b_mage   hp   1549.09/  2400.00 act  10 dealt     810.31 taken     850.91 heal      0.00 crit  2 evade  0 kill 0 counter  0
   B2 b_tank   hp   2883.90/  5200.00 act   6 dealt    6284.77 taken    2316.10 heal      0.00 crit  1 evade  3 kill 2 counter 26
   hash 132156dc3a8a19084b90c62dd54e78699e907a9d610569a123dd4f1f4ddb1cab
+
+2v3 anvil ape brittle and shatter seed=20 outcome=SideAWon ticks=41
+  A0 a_brittle hp   4275.76/  6000.00 act   9 dealt    5951.89 taken    1724.24 heal      0.00 crit  4 evade  1 kill 2 counter  0
+  A1 a_shatter hp   4910.04/  6000.00 act   8 dealt    5084.11 taken    1089.96 heal      0.00 crit  3 evade  0 kill 1 counter  0
+  B0 b_mage   hp      0.00/  2400.00 act   3 dealt     573.75 taken    3618.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B1 b_brawler hp      0.00/  3200.00 act   7 dealt    1927.06 taken    3914.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  B2 b_healer hp      0.00/  3000.00 act   8 dealt     313.39 taken    3504.00 heal   2436.00 crit  0 evade  0 kill 0 counter  0
+  hash 1bd5762ea24f6d16bd5781a6359df92f79e8d492c1be4fda5e9ff380540e62e3

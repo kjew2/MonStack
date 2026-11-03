@@ -132,6 +132,9 @@ REQUIRED_CONSTANTS = {
     "MON_DAM_SPILL": "double", "MON_DAM_BREAK": "double",
     # species Aegis Ram (#147): fleece_aegis, brave_debt, ram_shock
     "MON_FLEECE_SHIELD": "double", "MON_FLEECE_CAP": "double", "MON_DEBT_MAX": "int", "MON_RAM_KNOCK": "double", "MON_RAM_RAMP": "double",
+    # species Anvil Ape (#153): anvil_rhythm, brittle_guard, shatterpoint (specs/16 section 6.2)
+    "MON_RHYTHM_HITS": "int", "MON_BRITTLE_STEP": "int", "MON_BRITTLE_MIN": "int", "MON_SHATTER_FRAC": "double", "MON_SHATTER_SHARDS": "int",
+    "MON_SHATTER_BOSS": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -171,7 +174,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species Lodge Beaver (#146), coded in Combat/Rules/LodgeBeaver.cs
             "mudwork", "tail_slap", "holdback",
             # species Aegis Ram (#147)
-            "fleece_aegis", "brave_debt", "ram_shock"]
+            "fleece_aegis", "brave_debt", "ram_shock",
+            # species Anvil Ape (#153), coded in Combat/Rules/AnvilApe.cs
+            "anvil_rhythm", "brittle_guard", "shatterpoint"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -297,6 +302,12 @@ MON_RANGES = {
     "MON_FLEECE_SHIELD": (">= 0", lambda v: v >= 0), "MON_FLEECE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_DEBT_MAX": ("a whole number >= 0", lambda v: v == int(v) and v >= 0), "MON_RAM_KNOCK": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_RAM_RAMP": (">= 0", lambda v: v >= 0),
+    # species Anvil Ape (#153); MON_BRITTLE_MIN <= MON_BREAK_PIPS is checked in validate()
+    "MON_RHYTHM_HITS": ("a whole number >= 2", lambda v: v == int(v) and v >= 2),
+    "MON_BRITTLE_STEP": ("a whole number >= 0", lambda v: v == int(v) and v >= 0),
+    "MON_BRITTLE_MIN": ("a whole number >= 1", lambda v: v == int(v) and v >= 1),
+    "MON_SHATTER_FRAC": ("(0, 1)", lambda v: 0 < v < 1), "MON_SHATTER_SHARDS": ("a whole number >= 0", lambda v: v == int(v) and v >= 0),
+    "MON_SHATTER_BOSS": ("[0, 1]", lambda v: 0 <= v <= 1),
 }
 
 
@@ -971,6 +982,8 @@ def validate(t, errs):
             errs.add("E043", f"constants[{k}]", f"value out of range ({rule})")
     if "LIMIT_BREAK_MAX" in keys and "STAT_MAX" in keys and not keys["LIMIT_BREAK_MAX"]["value"] >= keys["STAT_MAX"]["value"]:
         errs.add("E043", "constants[LIMIT_BREAK_MAX]", "value out of range (>= STAT_MAX)")
+    if "MON_BRITTLE_MIN" in keys and "MON_BREAK_PIPS" in keys and not keys["MON_BRITTLE_MIN"]["value"] <= keys["MON_BREAK_PIPS"]["value"]:
+        errs.add("E043", "constants[MON_BRITTLE_MIN]", "value out of range (<= MON_BREAK_PIPS)")
     validate_training(t, keys, errs)
     # elements
     orders = sorted(r["sort_order"] for r in t["elements"])
