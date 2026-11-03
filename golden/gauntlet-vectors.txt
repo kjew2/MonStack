@@ -1,4 +1,4 @@
-# gauntlet vectors, hash v1 content=6.18/588f8358
+# gauntlet vectors, hash v1 content=6.20/1cb44175
 
 slime focus seed=7 rank=a
   floor=53 cleared=False killer=golem title=title.professional_punching_bag
@@ -36,9 +36,9 @@ keepshell_crab focus seed=7 rank=a
   floor=49 cleared=False killer=wisp title=title.professional_punching_bag
   hash 5024299f0c6e47e148430870efe23519f9837f71bcb0f3c2c28d4bc8ccad2766
 
-iaido_mantis focus seed=7 rank=a
+iaido_mantis focus seed=7 rank=s
   floor=52 cleared=False killer=imp title=title.professional_punching_bag
-  hash f90b64f35f93a5c63fded1a7c3fc1a055f68a44d42d000976b83310f075bad88
+  hash a592d6d95592abb8981105036bc2b18b1cb7f5092e92f08d53540d408ad2daa7
 
 cuckling focus seed=7 rank=a
   floor=42 cleared=False killer=imp title=title.professional_punching_bag
@@ -47,3 +47,11 @@ cuckling focus seed=7 rank=a
 gearbell_jelly focus seed=7 rank=b
   floor=35 cleared=False killer=shade title=title.respectable_brawler
   hash 749984639c0707fccfaf3469217fbcca5eff8ef83eb28890e5967417f9789de3
+
+lodge_beaver focus seed=7 rank=b
+  floor=29 cleared=False killer=wisp title=title.respectable_brawler
+  hash 6f219c072c5da59a59ad97b8ee271c4cca432b17f152dec07ac7a4ebc1c485e9
+
+aegis_ram focus seed=7 rank=a
+  floor=49 cleared=False killer=wisp title=title.professional_punching_bag
+  hash 34672be2db45a302ebd205be28f6847a7d3b27230d387782f46e57e78571c297

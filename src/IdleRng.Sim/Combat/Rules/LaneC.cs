@@ -65,7 +65,7 @@ namespace IdleRng.Sim.Combat
                 u.BreakStripped = 0;
             }
 
-            if (brave && u.TurnAction == 0 && u.BravePips < r.BraveMax && (u.Hp >= u.MaxHp || u.Shield > 0))
+            if (brave && u.TurnAction == 0 && u.BravePips >= 0 && u.BravePips < r.BraveMax && (u.Hp >= u.MaxHp || u.Shield > 0))   // below 0: brave_debt repays instead (Rules/AegisRam.cs)
             {
                 skip = true;   // Default: no action (no cooldowns, no OnAction triggers), +1 pip, guarded until the next turn
                 u.BravePips++;

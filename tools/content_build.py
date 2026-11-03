@@ -130,6 +130,8 @@ REQUIRED_CONSTANTS = {
     # species Lodge Beaver (#146): mudwork, tail_slap and holdback (specs/16 section 6.2)
     "MON_MUD_CAP": "double", "MON_MUD_TURNS": "int", "MON_SLAP_SHIELD": "double", "MON_DAM_FLOW": "double",
     "MON_DAM_SPILL": "double", "MON_DAM_BREAK": "double",
+    # species Aegis Ram (#147): fleece_aegis, brave_debt, ram_shock
+    "MON_FLEECE_SHIELD": "double", "MON_FLEECE_CAP": "double", "MON_DEBT_MAX": "int", "MON_RAM_KNOCK": "double", "MON_RAM_RAMP": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -167,7 +169,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # species Gearbell Jelly (#158), coded in Combat/Rules/GearbellJelly.cs
             "ward_rewind", "ward_toll", "escapement",
             # species Lodge Beaver (#146), coded in Combat/Rules/LodgeBeaver.cs
-            "mudwork", "tail_slap", "holdback"]
+            "mudwork", "tail_slap", "holdback",
+            # species Aegis Ram (#147)
+            "fleece_aegis", "brave_debt", "ram_shock"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -289,6 +293,10 @@ MON_RANGES = {
     "MON_MUD_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_MUD_TURNS": (">= 1", lambda v: v >= 1),
     "MON_SLAP_SHIELD": (">= 0", lambda v: v >= 0), "MON_DAM_FLOW": ("(0, 1]", lambda v: 0 < v <= 1),
     "MON_DAM_SPILL": (">= 0", lambda v: v >= 0), "MON_DAM_BREAK": ("> 0", lambda v: v > 0),
+    # species Aegis Ram (#147)
+    "MON_FLEECE_SHIELD": (">= 0", lambda v: v >= 0), "MON_FLEECE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_DEBT_MAX": ("a whole number >= 0", lambda v: v == int(v) and v >= 0), "MON_RAM_KNOCK": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_RAM_RAMP": (">= 0", lambda v: v >= 0),
 }
 
 

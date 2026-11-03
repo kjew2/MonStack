@@ -211,3 +211,8 @@ MON_SLAP_SHIELD,double,0.5,"tail_slap rule: each hit the unit lands adds this x 
 MON_DAM_FLOW,double,0.3,"holdback rule: share of the Reservoir (HP damage held back) that drains into HP at the start of each own action. Placeholder"
 MON_DAM_SPILL,double,1.0,"holdback rule: true nature damage to an enemy per point of stored damage a gained shield washes out. Placeholder"
 MON_DAM_BREAK,double,1.0,"holdback rule: the dam breaks (the whole Reservoir lands on HP) once it holds this x max HP. Placeholder"
+MON_FLEECE_SHIELD,double,0.25,"fleece_aegis rule: at the end of a turn in which the unit dealt no damage, the least-shielded living ally gets a shield of this x the unit's DEF. Placeholder"
+MON_FLEECE_CAP,double,0.2,"fleece_aegis rule: the fleece shield fills the ally's shield pool up to this fraction of its max HP, never lowering it. Placeholder"
+MON_DEBT_MAX,int,2,"brave_debt rule: extra actions the unit may borrow below 0 pips after spending its pips (whole number, at least 0). Placeholder"
+MON_RAM_KNOCK,double,0.2,"ram_shock rule: each pip or debt action that hits an enemy pushes its gauge back by this x BATTLE_GAUGE x its place in the chain, never below 0. Placeholder"
+MON_RAM_RAMP,double,0.15,"ram_shock rule: damage bonus of a pip or debt action per earlier pip or debt action in the same chain. Placeholder"

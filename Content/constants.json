@@ -1060,6 +1060,31 @@
       "key": "MON_DAM_BREAK",
       "type": "double",
       "value": 1.0
+    },
+    {
+      "key": "MON_FLEECE_SHIELD",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "MON_FLEECE_CAP",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "MON_DEBT_MAX",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "MON_RAM_KNOCK",
+      "type": "double",
+      "value": 0.2
+    },
+    {
+      "key": "MON_RAM_RAMP",
+      "type": "double",
+      "value": 0.15
     }
   ]
 }

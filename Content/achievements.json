@@ -104,6 +104,14 @@
       "ref": null,
       "amount": 15.0,
       "unlocks_species": "lodge_beaver"
+    },
+    {
+      "id": "steadfast",
+      "name_key": "achievement.steadfast.name",
+      "kind": "endless_floor",
+      "ref": null,
+      "amount": 30.0,
+      "unlocks_species": "aegis_ram"
     }
   ]
 }

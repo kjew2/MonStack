@@ -131,3 +131,8 @@ chime_cascade,mskill.chime_cascade.name,damage,all_enemies,,wis,1.0,4,0,dark
 mud_patch,mskill.mud_patch.name,heal,self,,wis,1.0,3,0,nature
 tail_thump,mskill.tail_thump.name,damage,enemy,,str,1.2,2,0,nature
 sluice_gate,mskill.sluice_gate.name,shield,self,,wis,1.2,4,3,nature
+fleece_ward,mskill.fleece_ward.name,shield,self,,def,1.2,3,3,light
+horn_charge,mskill.horn_charge.name,damage,enemy,,str,1.4,2,0,light
+shofar_call,mskill.shofar_call.name,damage,enemy,,str,0.3,0,0,light
+oath_bulwark,mskill.oath_bulwark.name,shield,self,,def,0.6,4,2,
+stampede,mskill.stampede.name,damage,enemy,,str,1.6,3,0,light

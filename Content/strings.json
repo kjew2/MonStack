@@ -3489,6 +3489,118 @@
     {
       "key": "mskill.sluice_gate.desc",
       "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "species.aegis_ram.name",
+      "text": "Aegis Ram"
+    },
+    {
+      "key": "tree.gilded_fleece.name",
+      "text": "Gilded Fleece"
+    },
+    {
+      "key": "tree.ramshorn_hymnal.name",
+      "text": "Hymnal of the Ram's Horn"
+    },
+    {
+      "key": "tree.headlong_oath.name",
+      "text": "Headlong Oath"
+    },
+    {
+      "key": "tree.thunderhoof.name",
+      "text": "Thunderhoof"
+    },
+    {
+      "key": "tree.headlong_oath.apex",
+      "text": "Aries Vanguard"
+    },
+    {
+      "key": "tree.thunderhoof.apex",
+      "text": "Chrysomallos"
+    },
+    {
+      "key": "book.book_ramshorn.name",
+      "text": "Skill Book: Hymnal of the Ram's Horn"
+    },
+    {
+      "key": "achievement.steadfast.name",
+      "text": "Steadfast"
+    },
+    {
+      "key": "rule.fleece_aegis.name",
+      "text": "Shepherd's Fleece"
+    },
+    {
+      "key": "rule.fleece_aegis.desc",
+      "text": "At the end of each turn in which it deals no damage (a Default, a debt skip, a shield, heal or other support move), the living ally with the least shield (itself when alone) gains a shield of {MON_FLEECE_SHIELD:pct} of its DEF, up to {MON_FLEECE_CAP:pct} of that ally's max HP. It never lowers a bigger shield."
+    },
+    {
+      "key": "rule.fleece_aegis.log",
+      "text": "shields {amount}"
+    },
+    {
+      "key": "rule.brave_debt.name",
+      "text": "Headlong Oath"
+    },
+    {
+      "key": "rule.brave_debt.desc",
+      "text": "After spending its pips, if its target still stands it keeps going: up to {MON_DEBT_MAX} more extra actions in a row, taking its pips below 0 (within {MON_EXTRA_ACTIONS_CAP} extra actions per turn). While below 0 pips it skips each turn, unguarded, for +1 pip until it is back at 0."
+    },
+    {
+      "key": "rule.brave_debt.log",
+      "text": "pips now {amount}"
+    },
+    {
+      "key": "rule.ram_shock.name",
+      "text": "Thunderhoof"
+    },
+    {
+      "key": "rule.ram_shock.desc",
+      "text": "Each pip or debt action that hits an enemy pushes the enemy's turn gauge back by {MON_RAM_KNOCK:pct} of a turn times its place in the chain (never below empty), and deals +{MON_RAM_RAMP:pct} damage for each earlier one in the chain."
+    },
+    {
+      "key": "rule.ram_shock.log",
+      "text": "thrown back {amount:pct} of a turn"
+    },
+    {
+      "key": "mskill.fleece_ward.name",
+      "text": "Fleece Ward"
+    },
+    {
+      "key": "mskill.fleece_ward.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.horn_charge.name",
+      "text": "Horn Charge"
+    },
+    {
+      "key": "mskill.horn_charge.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.shofar_call.name",
+      "text": "Shofar Call"
+    },
+    {
+      "key": "mskill.shofar_call.desc",
+      "text": "Chase trait. Every basic attack: {element} hit for {power:pct} {scales}."
+    },
+    {
+      "key": "mskill.oath_bulwark.name",
+      "text": "Oath Bulwark"
+    },
+    {
+      "key": "mskill.oath_bulwark.desc",
+      "text": "Shield self for {power:pct} {scales} for {duration} turns. Cooldown {cooldown}."
+    },
+    {
+      "key": "mskill.stampede.name",
+      "text": "Stampede"
+    },
+    {
+      "key": "mskill.stampede.desc",
+      "text": "{element} damage for {power:pct} {scales}. Cooldown {cooldown}."
     }
   ]
 }
