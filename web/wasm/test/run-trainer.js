@@ -1010,12 +1010,11 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   {
     // The Vault here came from the v1 save above, whose monsters have no id (-1): give the first four ids, so they can hold
     // rulebooks, and leave the rest as they are (a monster with no id is refused a rulebook). The header's CRC is rewritten.
-    const crc32 = (buf) => { let c, crc = 0xffffffff; for (const b of buf) { c = (crc ^ b) & 0xff; for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1; crc = (crc >>> 8) ^ c; } return (crc ^ 0xffffffff) >>> 0; };
     const raw = await page.evaluate(() => localStorage.getItem('idle-rng-account-v1'));
     const body = JSON.parse(raw.slice(raw.indexOf('\n') + 1));
     body.Account.Vault.slice(0, 4).forEach((v, i) => { v.Id = 9000 + i; });
     const bodyText = JSON.stringify(body), bytes = Buffer.from(bodyText, 'utf8');
-    const saveText = 'IDLERNG-SAVE fmt=json crc32=' + crc32(bytes).toString(16).padStart(8, '0') + ' len=' + bytes.length + '\n' + bodyText;
+    const saveText = 'IDLERNG-SAVE fmt=json crc32=' + (require('zlib').crc32(bytes) >>> 0).toString(16).padStart(8, '0') + ' len=' + bytes.length + '\n' + bodyText;
     const ectx = await browser.newContext();
     await ectx.addInitScript((t) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('idle-rng-account-v1', t); sessionStorage.setItem('seeded', '1'); } }, saveText);
     const ep = await ectx.newPage();
