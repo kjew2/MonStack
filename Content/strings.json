@@ -2209,6 +2209,86 @@
     {
       "key": "gambit.basic.desc",
       "text": "A plain attack, always ready."
+    },
+    {
+      "key": "tree.resentment.name",
+      "text": "Resentment"
+    },
+    {
+      "key": "tree.vantage.name",
+      "text": "Vantage"
+    },
+    {
+      "key": "tree.deaths_door.name",
+      "text": "Death's Door"
+    },
+    {
+      "key": "tree.barricade.name",
+      "text": "Barricade"
+    },
+    {
+      "key": "tree.mana_ward.name",
+      "text": "Mana Ward"
+    },
+    {
+      "key": "rule.resentment.name",
+      "text": "Resentment"
+    },
+    {
+      "key": "rule.resentment.desc",
+      "text": "{MON_RESENT_FRAC:pct} of the HP damage enemies deal it fills a red pool that adds to its STR. Each of its own actions drains {MON_RESENT_DECAY:pct} of the pool."
+    },
+    {
+      "key": "rule.resentment.log",
+      "text": "STR +{amount} from spite"
+    },
+    {
+      "key": "rule.vantage.name",
+      "text": "Vantage"
+    },
+    {
+      "key": "rule.vantage.desc",
+      "text": "Below {MON_VANTAGE_HP:pct} HP, it strikes first: an enemy aiming a single-target attack at it takes a basic attack before it lands, once per enemy action. If that knocks the attacker out, the attack never comes."
+    },
+    {
+      "key": "rule.vantage.log",
+      "text": "strikes first"
+    },
+    {
+      "key": "rule.deaths_door.name",
+      "text": "Death's Door"
+    },
+    {
+      "key": "rule.deaths_door.desc",
+      "text": "Once per fight, a blow that would knock it out leaves it at 1 HP, on Death's Door. There, each blow that would knock it out is survived at 1 HP with a {MON_DOOR_START:pct} chance, {MON_DOOR_STEP:pct} lower for each blow it already survived."
+    },
+    {
+      "key": "rule.deaths_door.log",
+      "text": "rolls {amount:pct} odds to hold on at 1 HP"
+    },
+    {
+      "key": "rule.barricade.name",
+      "text": "Barricade"
+    },
+    {
+      "key": "rule.barricade.desc",
+      "text": "Its shields never run out and stack, up to {MON_BARRICADE_CAP:pct} of its max HP. Overheal that turns into shield (Living Ocean, Abyssal Bloom) also fills up to that cap."
+    },
+    {
+      "key": "rule.barricade.log",
+      "text": "shield stacks to {amount}"
+    },
+    {
+      "key": "rule.mana_ward.name",
+      "text": "Mana Ward"
+    },
+    {
+      "key": "rule.mana_ward.desc",
+      "text": "Starts each fight with a ward of {MON_WARD_WIS} times its WIS. The ward takes {MON_WARD_SHARE:pct} of each blow's HP damage first. While the ward holds, its cooldowns run {MON_WARD_CDR:pct} faster."
+    },
+    {
+      "key": "rule.mana_ward.log",
+      "text": "ward {amount} left"
     }
   ]
 }

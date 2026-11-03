@@ -125,3 +125,12 @@ ENDLESS_SHARDS_BASE,int,2,Endless Tower rewards (specs/28 section 6): a floor cl
 ENDLESS_SHARDS_PER_FLOOR,double,0.5,Endless Tower: shards added per floor number. Placeholder
 ENDLESS_ELITE_SHARD_MULT,int,2,Endless Tower: an elite floor pays this many times its shards. Placeholder
 GAMBIT_SLOTS,int,6,most rules in one monster's rulebook (specs/28 section 4.4). Placeholder
+MON_RESENT_FRAC,double,0.5,resentment rule: share of the HP damage enemies deal the unit that goes into its red pool (a flat STR bonus). Placeholder
+MON_RESENT_DECAY,double,0.25,resentment rule: share of the red pool each of the unit's own actions removes. Placeholder
+MON_VANTAGE_HP,double,0.5,vantage rule: below this fraction of max HP the unit strikes first against single-target damaging actions. Placeholder
+MON_DOOR_START,double,0.7,deaths_door rule: chance to survive the first killing blow on Death's Door. Placeholder
+MON_DOOR_STEP,double,0.1,deaths_door rule: survival chance lost per killing blow already survived on Death's Door. Placeholder
+MON_BARRICADE_CAP,double,0.6,barricade rule: shields never expire and stack up to this fraction of max HP (also the overheal-to-shield cap). Placeholder
+MON_WARD_WIS,double,1.5,mana_ward rule: the ward at fight start as a multiple of WIS. Placeholder
+MON_WARD_SHARE,double,0.3,mana_ward rule: share of each blow's HP damage (after shields) the ward takes first. Placeholder
+MON_WARD_CDR,double,0.5,mana_ward rule: extra cooldown ticks per own action while the ward holds. Placeholder

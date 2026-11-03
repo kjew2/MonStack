@@ -601,8 +601,26 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string EntropyConvert = "entropy_convert";
 
+        // ---- idea-pool lane B: hits taken and survival (#135, specs/16 section 6.2)
+
+        /// <summary>MON_RESENT_FRAC of the HP damage enemies deal the unit goes into a red pool, a flat STR bonus; each own action removes MON_RESENT_DECAY of it.</summary>
+        public const string Resentment = "resentment";
+
+        /// <summary>Below MON_VANTAGE_HP of max HP, the unit basic-attacks an enemy that aims a single-target damaging action at it, first (cancelling the action if that kills).</summary>
+        public const string Vantage = "vantage";
+
+        /// <summary>Once per fight a killing blow leaves the unit at 1 HP on Death's Door; later killing blows are survived with a falling chance.</summary>
+        public const string DeathsDoor = "deaths_door";
+
+        /// <summary>The unit's shields never expire and stack up to MON_BARRICADE_CAP of max HP.</summary>
+        public const string Barricade = "barricade";
+
+        /// <summary>A ward of MON_WARD_WIS x WIS takes MON_WARD_SHARE of each blow's HP damage; while it holds, cooldowns tick MON_WARD_CDR faster.</summary>
+        public const string ManaWard = "mana_ward";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
-            RootRebirth, WailStagger, UmbralVeil, NightFeast };
+            RootRebirth, WailStagger, UmbralVeil, NightFeast,
+            Resentment, Vantage, DeathsDoor, Barricade, ManaWard };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }
