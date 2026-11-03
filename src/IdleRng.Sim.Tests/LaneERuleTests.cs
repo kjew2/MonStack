@@ -157,6 +157,7 @@ namespace IdleRng.Sim.Tests
             var fallen = Harmless("b1", x => { x.Hp = 1; x.Def = 200; });
             fallen.Element = "fire";
             fallen.Skills.Add(new CombatSkill { Id = "jab", Kind = SkillKind.Damage, Target = SkillTarget.Enemy, Scales = StatIds.Str, Power = 1 });
+            fallen.Skills.Add(new CombatSkill { Id = "thick_hide", Kind = SkillKind.Passive, Target = SkillTarget.Self, Stat = StatIds.Def, Power = 0.2 });
             fallen.Rules.Add(RuleModifiers.RootRebirth);
             fallen.Gambits.Add(new GambitRule(GambitConditions.Always, 0, GambitRule.Basic));
             var s = BattleSim.Start(r, new[] { Killer("a", RuleModifiers.Arise) }, new[] { fallen, Harmless("b2") });
@@ -173,7 +174,11 @@ namespace IdleRng.Sim.Tests
             Assert.That(risen.Hp, Is.EqualTo(risen.MaxHp));
             Assert.That(risen.Gauge, Is.EqualTo(0));
             Assert.That(risen.Source.Element, Is.EqualTo("fire"));
-            Assert.That(risen.Source.Skills.Select(x => x.Id), Is.EqualTo(new[] { "jab" }), "its skills");
+            Assert.That(risen.Source.Skills.Select(x => x.Id), Is.EqualTo(new[] { "jab", "thick_hide" }), "its skills");
+            Assert.That(risen.Effects.Any(e => e.Source == "thick_hide" && e.Stat == StatIds.Def), Is.True, "its passives apply as it joins");
+            int evAt = log.FindIndex(x => x.Event == FightAction.RulePrefix + RuleModifiers.Arise);
+            int passiveAt = log.FindLastIndex(x => x.Actor == risen.Id && x.Skill?.Id == "thick_hide");
+            Assert.That(evAt >= 0 && passiveAt > evAt, Is.True, "the rise is logged before its passives");
             Assert.That(risen.Source.Rules, Is.Empty, "no rules");
             Assert.That(risen.Source.Gambits, Is.Empty, "no rulebook");
             Assert.That(s.Units[0].AriseUsed, Is.True);
