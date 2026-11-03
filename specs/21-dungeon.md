@@ -177,11 +177,11 @@ A fight is still a pure function of (content, team, day, slot order), so the sam
 
 The test button that grants books (`specs/13` T3) stays as a debug-only control now that the tower grants them **(agent)**: the home screen shows it only with `?debug` in the page URL, or after five quick taps on the header's build stamp (remembered on the device in `localStorage['idle-rng-debug']`; five more taps turn it off). The bridge command `debugGrantBook` is unchanged.
 
-The day number is read from the device clock by the caller. The sim cannot tell if the clock is wrong, so a player who moves it forward can claim more days. Accepted while the game is single-player and offline-first; the server-checked day arrives with T12 (`specs/10`) **(agent)**.
+The day number comes from the caller. Since `specs/27` step 3 (2026-11-03) it is the server's day, from the time of the last open or commit, and the server accepts only its day or the day before (`specs/27` section 6.2), so moving the device clock grants nothing (#21).
 
 ## 8. Web client
 
-**Built (first version).** A **Dungeon** card on the home screen's Dungeon tab (the tab shows the tickets ready as a count; the card shows tickets ready, pieces toward the next, today's best, and how tickets are earned) opens the Dungeon screen, whose Back returns to that tab; everything comes through the bridge (`AccountCmd` `towerInfo` and `runTower`, `web/wasm/BRIDGE.md`), and the page computes no rule. The day is the UTC day number from the device clock (`run.towerDay()`).
+**Built (first version).** A **Dungeon** card on the home screen's Dungeon tab (the tab shows the tickets ready as a count; the card shows tickets ready, pieces toward the next, today's best, and how tickets are earned) opens the Dungeon screen, whose Back returns to that tab; everything comes through the bridge (`AccountCmd` `towerInfo` and `runTower`, `web/wasm/BRIDGE.md`), and the page computes no rule. The day is the UTC day number of the server's time (`run.towerDay()`, `specs/27` section 6.2).
 
 - Status line: tickets (held plus the free ones due, `towerInfo.tickets`), pieces, floors cleared today and ever. The enter button is disabled with no ticket and says how to get one.
 - The grade screen shows the pieces the sealed run earned, any ticket they completed and the progress toward the next (`finishRun`'s `ticketPieces`, `ticketsEarned`).

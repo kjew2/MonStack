@@ -353,6 +353,10 @@ namespace IdleRng.Web
         /// <summary>Saved form (AccountSave text: a header line, then JSON). The active run is its replay recipe.</summary>
         public string SaveAccount() => _acct == null ? "null" : Encoding.UTF8.GetString(AccountSave.Encode(_acct));
 
+        /// <summary>{hash}: the account hash (AccountParts.AccountHash of its parts), as the server computes it after re-applying a commit.</summary>
+        public string AccountHash() => _acct == null ? JsonOut.Error("no account")
+            : new JsonOut().Obj().P("hash", AccountParts.AccountHash(AccountParts.Split(_acct))).EndObj().ToString();
+
         /// <summary>
         /// Rebuild the account from its save. Throws (returned as {"error"}) when the save is damaged or from a newer schema.
         /// A run in progress that no longer replays is dropped instead; the view then carries a <c>notice</c> sentence (specs/06 section 5).

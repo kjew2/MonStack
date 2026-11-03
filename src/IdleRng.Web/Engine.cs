@@ -34,6 +34,18 @@ namespace IdleRng.Web
         [JSExport] public static string RunState() => GuardRun(h => h.State());
         [JSExport] public static string RunCmd(string name, string argsJson) => GuardRun(h => h.Cmd(name, argsJson));
 
+        /// <summary>The account hash of the loaded account (specs/27 section 3.2): the toHash of the client's next commit.</summary>
+        [JSExport] public static string AccountHash() => GuardRun(h => h.AccountHash());
+
+        /// <summary>
+        /// The local test server (specs/27 section 5.4, src/IdleRng.Web/LocalServer.cs): one open, commit or install call on the
+        /// server core over the store text the page keeps; returns {"response", "store"}. Uses the loaded content; never touches
+        /// the player's account in this engine.
+        /// </summary>
+        [JSExport]
+        public static string LocalServerCall(string op, string playerId, string requestJson, string storeText, double nowMs) =>
+            GuardRun(h => LocalServer.Call(h.Db, op, playerId, requestJson, storeText, nowMs));
+
         /// <summary>
         /// The wasm golden check (specs/08 section 10.1, issue #122): runs every generator of the bot CLI's `golden` verb
         /// (IdleRng.Bots.Golden.GoldenFiles.All: battle, training-run, gauntlet, tower and endless vectors) on the loaded content and returns

@@ -9,8 +9,7 @@ const { start } = require('./serve.js');
 
 const WEB = path.resolve(__dirname, '..', '..');
 const PHONE = { width: 390, height: 844 };
-const SAVE_KEY = 'idle-rng-account-v1';            // web/run-engine.js SAVE_KEY
-const BAD_KEY = 'idle-rng-account-v1-unloadable';  // web/run-engine.js BAD_KEY (legacy); backups are BAD_KEY + '-' + ms
+const SAVE_KEY = 'idle-rng-account-v1';            // web/run-engine.js SAVE_KEY: the cache of the server's account plus pending commands
 const STATS = ['str', 'hp', 'def', 'spd', 'int', 'wis', 'dex', 'luk'];
 
 // AccountSave text (src/IdleRng.Runtime/Save/SaveSerializer.cs): a header line with the body's CRC-32 and length, then the JSON.
@@ -55,10 +54,10 @@ async function open(opts) {
       await page.screenshot({ path: path.join(opts.shotsDir, n + '.png') });
     },
     readSaveText: () => page.evaluate((k) => localStorage.getItem(k), SAVE_KEY),
-    // The saves kept aside (web/run-engine.js keepAside), oldest first.
-    readBadTexts: () => page.evaluate(() => RunEngine.badKeys().map((k) => localStorage.getItem(k))),
     readAccount: async () => decodeSave(await h.readSaveText()),
-    writeSaveText: (t) => page.evaluate(([k, v]) => localStorage.setItem(k, v), [SAVE_KEY, t]),
+    // The page's account comes from the server (web/sync.js): store this AccountSave text as the account on the page's local test
+    // server (MonStackSync.install, specs/27 section 5.4). The next load (h.reload) opens it.
+    writeSaveText: (t) => page.evaluate((v) => MonStackSync.install(v), t),
     // Reload and wait for the engine: the run screen (a drill button) or the home screen (the start button).
     reload: async () => { await page.reload(); await page.locator('[data-act="start"], [data-act^="drill-"]').first().waitFor({ timeout: 90000 }); },
     // The phone-width layout check (issue #87): neither the page nor its scrolling panes (#main, an open #modal: overflow-y:auto
@@ -99,12 +98,15 @@ async function open(opts) {
       await h.shot(screen.replace(/\W+/g, '-'));
     },
     // Taps through the run (drill, rest, fights skipped, drafts taken into an empty slot or discarded, nodes bought) until
-    // stop: 'fight' when a rank fight is due, 'end' at the seal button. Returns counts of what it did.
-    playUntil: (stop) => page.evaluate(([stop, stats]) => {
+    // stop: 'fight' when a rank fight is due, 'end' at the seal button. Returns counts of what it did. While play waits for the
+    // server (web/sync.js shows #sync-wait) it yields to the event loop until the commit lands (at most 30 s).
+    playUntil: (stop) => page.evaluate(async ([stop, stats]) => {
       const q = (s) => document.querySelector(s);
       const click = (s) => { const e = q(s); if (!e || e.disabled) return false; e.click(); return true; };
       const st = { fights: 0, drafts: 0, bought: 0, steps: 0 };
+      const until = Date.now() + 30000;
       for (let i = 0; i < 1500 && !q('[data-act="seal"]'); i++) {
+        if (q('#sync-wait') && Date.now() < until) { i--; await new Promise((r) => setTimeout(r, 20)); continue; }
         st.steps++;
         if (q('[data-id=fight-play]') || q('[data-id=fight-intro]')) { click('[data-act="speed-skip"]'); continue; }
         if (click('[data-act="fight-continue"]')) continue;
@@ -138,4 +140,4 @@ async function open(opts) {
 
 const shotsArg = () => (process.argv.includes('--shots') ? process.argv[process.argv.indexOf('--shots') + 1] : null);
 
-module.exports = { open, encodeSave, decodeSave, shotsArg, SAVE_KEY, BAD_KEY, PHONE };
+module.exports = { open, encodeSave, decodeSave, shotsArg, SAVE_KEY, PHONE };

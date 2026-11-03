@@ -625,7 +625,10 @@
         h('p', { text: 'Abandon this run? Nothing is sealed and no shards are paid. Unused books come back.' }),
         h('div', { class: 'row' }, [
           h('button', { class: 'btn small warn', type: 'button', 'data-act': 'abandon-yes', text: 'Yes, abandon', onclick: () => {
-            ui.confirmAbandon = false; run.acct('abandon'); resetRunUi(); ui.view = 'home'; render();
+            ui.confirmAbandon = false;
+            const r = run.acct('abandon');
+            if (!r.ok) { toast(r.reason); render(); return; }
+            resetRunUi(); ui.view = 'home'; render();
           } }),
           h('button', { class: 'btn small', type: 'button', 'data-act': 'abandon-no', text: 'Keep playing', onclick: () => { ui.confirmAbandon = false; render(); } }),
         ]),
@@ -1731,9 +1734,9 @@
     const inRow = fs.every((f, k) => !k || f === fs[k - 1] + 1);
     return fs.length === 1 ? 'floor ' + fs[0] : 'floors ' + (inRow ? fs[0] + '⁠–⁠' + fs[fs.length - 1] : fs.join(', '));
   }
-  // Time left in season s by this device's clock: it ends at the next Monday 00:00 UTC, day 7(s + 1) - 3 (run.endlessSeason).
+  // Time left in season s by the server's clock (run.now, issue #21): it ends at the next Monday 00:00 UTC, day 7(s + 1) - 3 (run.endlessSeason).
   function seasonLeft(season) {
-    const ms = ((season + 1) * 7 - 3) * 86400000 - Date.now();
+    const ms = ((season + 1) * 7 - 3) * 86400000 - run.now();
     if (ms <= 0) return 'ending now';
     const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), hh = Math.floor((m % 1440) / 60);
     return (d ? d + 'd ' + hh + 'h' : hh + 'h ' + (m % 60) + 'm') + ' left';
@@ -2123,6 +2126,7 @@
   function closeVendor() {
     stopReveal();
     const r = run.acct('closeVendor');
+    if (!r.ok && r.waiting) return;   // play waits for the server (web/sync.js): stay on the vendor until it has the last moves
     if (!r.ok) toast('The vendor did not close: ' + r.reason);
     resetRunUi();
     ui.view = 'home';
@@ -2464,7 +2468,7 @@
   // ------------------------------------------------------------ boot
   async function boot() {
     try {
-      run = await RE.create({});
+      run = await RE.create({ sync: window.MonStackSync });   // the account comes from the server (web/sync.js, specs/27)
       C = run.content;
       TIP.init(() => C, () => run.state);
       ui.pick = C.species[0].id;
@@ -2472,7 +2476,6 @@
       watchDebugTaps();
       if (run.state) ui.view = 'run';
       if (run.loadNotice) toast(run.loadNotice);
-      if (run.loadError) toast('Your saved account could not be loaded and was kept aside: ' + run.loadError);
       render();
     } catch (e) {
       $('main').replaceChildren(h('h2', { text: 'The game did not load' }), h('p', { class: 'err', text: e && e.message ? e.message : String(e) }));
