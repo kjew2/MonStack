@@ -119,10 +119,14 @@ namespace IdleRng.Sim.Combat
 
         // ------------------------------------------------------------------ escapement
 
-        /// <summary>escapement: on its gauge turns a skill with a cooldown is never ready (it runs on the clock).</summary>
+        /// <summary>
+        /// escapement: on its gauge turns a skill with a cooldown is never ready (it runs on the clock); unless MON_EXTRA_ACTIONS_CAP
+        /// is 0, which leaves no clock cast, when its turns may still use them.
+        /// </summary>
         static partial void SkillReady_GearbellJelly(RuleCtx c, FightUnit u, int index, ref bool ready)
         {
-            if (ready && !u.OnClock && u.Source.Skills[index].Cooldown > 0 && Has(u, RuleModifiers.Escapement)) ready = false;
+            if (ready && !u.OnClock && c.Rules.ExtraActionsCap > 0 && u.Source.Skills[index].Cooldown > 0 && Has(u, RuleModifiers.Escapement))
+                ready = false;
         }
 
         /// <summary>escapement: the clock casts since its last turn are spent from this turn's extra actions.</summary>

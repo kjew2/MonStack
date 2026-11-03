@@ -381,6 +381,12 @@ namespace IdleRng.Sim.Tests
             Assert.That(log.Count(x => x.Event == BattleSim.EscapeEvent), Is.EqualTo(1), "one per tick");
             (_, log) = Run(r, two, Wall("b"), 2, 0.99);
             Assert.That(log.Where(x => x.Event == BattleSim.EscapeEvent).Select(x => x.Amount), Is.EqualTo(new double[] { 0, 1 }));
+
+            // A cap of 0 leaves no clock cast: its turns use the skills, so they are never dead.
+            r.ExtraActionsCap = 0;
+            (_, log) = Run(r, two, Wall("b"), r.TurnTicks, 0.99);
+            Assert.That(log.Any(x => x.Event == BattleSim.EscapeEvent), Is.False);
+            Assert.That(log.Count(x => x.Skill?.Id == "hour_hand"), Is.EqualTo(1));
         }
 
         [Test]
