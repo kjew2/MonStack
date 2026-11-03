@@ -534,7 +534,7 @@ namespace IdleRng.Web
             w.Key("floors").Arr();
             foreach (var f in res.Floors)
             {
-                w.Obj().P("floor", f.Floor).P("shape", f.ShapeId).P("elite", f.Elite).P("won", f.Won).P("ticks", f.Ticks)
+                w.Obj().P("floor", f.Floor).P("shape", f.ShapeId).P("shapeName", _db.Text(EndlessSim.Shape(_db, f.ShapeId).NameKey)).P("elite", f.Elite).P("won", f.Won).P("ticks", f.Ticks)
                     .P("vents", f.Vents).P("corruption", f.PeakCorruption).P("hash", f.FightHash);
                 w.Key("phases").Arr();
                 foreach (var ph in f.Phases) w.Str(_db.Text("phase." + ph + ".name"));

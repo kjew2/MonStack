@@ -1,0 +1,139 @@
+#!/usr/bin/env node
+// Browser check of the Endless Tower screen (specs/28 section 9 step 5), at phone width 390x844: plays and seals one run, then
+// seeds a Vault of five copies of the sealed monster (ids 0..4, entry id 1 with a rulebook) through the save and checks the
+// Dungeon tab's Endless card, the screen (season, mutators, next floors with their squads), the team picker (exactly four,
+// reorder, the rule count and Rules button per slot), a climb with its result, save record and deciding-floor playback (a rule
+// firing reads "follows rule 1"), a second climb paying nothing new, watching another floor (same fight hash as the climb's
+// list), the layout and Back.
+// Fails (exit 1) on any page error, console error (Google Fonts aborts excluded) or failed assertion.
+// Usage: node web/wasm/test/endless.js [--shots dir]   (screenshots are debug output, never compared)
+'use strict';
+const H = require('./harness.js');
+
+(async () => {
+  const t = await H.open({ shotsDir: H.shotsArg() });
+  const { page, check, act, text } = t;
+  const count = (sel) => page.locator(sel).count();
+  const acct = async () => (await t.readAccount()).Account;
+
+  // ---- one run to the end, sealed, through the wheel, the grade screen and the vendor back home
+  await page.goto(t.url);
+  await act('start').waitFor({ timeout: 90000 });
+  await act('start').click();
+  await act('drill-str').waitFor();
+  await t.playUntil('end');
+  if (await act('fight-continue').count()) await act('fight-continue').click();
+  check(await act('seal').isVisible(), 'the run plays to its end');
+  await page.emulateMedia({ reducedMotion: 'reduce' });   // the wheel lands at once
+  await act('seal').click();
+  await act('climb-continue').click();
+  await page.locator('[data-id=grade]').waitFor();
+  if (await act('to-vendor').count()) { await act('to-vendor').click(); await act('vendor-done').click(); }
+  else await act('new-run').click();
+  await act('start').waitFor();
+
+  // ---- one monster in the Vault: the screen explains the team of four and the climb stays off
+  await act('hometab-dungeon').click();
+  check((await count('[data-id=endless-card]')) === 1 && /Best this season 0 · best ever 0/.test(await text('[data-id=endless-bests]')),
+    'the Dungeon tab shows the Endless Tower card with this season\'s and the best ever floors');
+  await act('endless').click();
+  await page.locator('[data-id=endless-status]').waitFor();
+  check(/4 monsters and your Vault holds 1/.test(await text('[data-id=endless-need]')) && (await act('endless-climb').isDisabled()),
+    'with one monster the screen says the climb takes four, and Climb is off');
+  await act('endless-back').click();
+
+  // ---- a Vault of five copies of the sealed monster (ids 0..4); entry id 1 has a rulebook that always fires
+  const save = await t.readAccount();
+  const base = save.Account.Vault[0];
+  save.Account.Vault = [0, 1, 2, 3, 4].map((id) => Object.assign(JSON.parse(JSON.stringify(base)), { Id: id }));
+  save.Account.Rulebooks = { 1: 'always>basic@lowest_hp' };
+  await t.writeSaveText(H.encodeSave(save));
+  await page.evaluate(() => localStorage.setItem('idle-rng-fight-speed', '1'));   // playUntil left the remembered speed at Skip
+  await t.reload();
+  await act('hometab-dungeon').click();
+  await act('endless').click();
+  const status = page.locator('[data-id=endless-status]');
+  await status.waitFor();
+  const season = Math.floor((Math.floor(Date.now() / 86400000) + 3) / 7);   // run.endlessSeason(): the UTC week from Monday
+  check((await status.getAttribute('data-season')) === String(season) && new RegExp('^Season ' + season + ' · \\d+[dh] \\d+[hm] left · best this season 0').test(await status.innerText()),
+    'the season line shows this UTC week, the time left and the bests: ' + (await status.innerText()));
+  const muts = await page.$$eval('[data-id^=endless-mutator-]', (es) => es.map((e) => ({ on: e.dataset.on === '1', text: e.innerText })));
+  check(muts.length >= 1 && muts.every((m) => /from floor \d+/.test(m.text)) && !muts[0].on, 'the season\'s mutators are listed with the floor each joins (none in force on floor 1): ' + muts.length);
+  const floors = await page.$$eval('[data-id^=endless-floor-]', (es) => es.map((e) => ({ id: e.dataset.id, foes: e.querySelectorAll('[data-id=endless-foe]').length,
+    check: (e.querySelector('[data-id=endless-check]') || {}).textContent, elite: e.classList.contains('elite') })));
+  check(floors.length === 10 && floors[0].id === 'endless-floor-1' && floors.every((f) => f.foes === 4 && f.check) && floors[9].elite,
+    'the next ten floors show four enemies each and their check, the tenth an elite: ' + JSON.stringify(floors.map((f) => f.check)));
+  check(await act('endless-climb').isDisabled(), 'Climb is off with no team');
+  await t.layout('endless screen');
+  await page.locator('[data-id=endless-mutators]').scrollIntoViewIfNeeded();
+  await t.layout('endless mutators and floors');
+
+  // ---- the team: exactly four
+  for (const i of [0, 1, 2]) await act('endless-pick-' + i).check();
+  check(await act('endless-climb').isDisabled(), 'three picked: Climb is still off');
+  await act('endless-pick-3').check();
+  check(await act('endless-climb').isEnabled() && (await act('endless-pick-4').isDisabled()), 'four picked: Climb is on and a fifth monster cannot be picked');
+  check((await count('[data-act^=endless-rules-]')) === 4 && (await text('[data-id=endless-rules-n-1]')) === '1 rule' && (await text('[data-id=endless-rules-n-0]')) === 'No rules',
+    'each filled slot shows its rule count and a Rules button');
+  await act('endless-slot-up-1').click();             // the monster with the rulebook moves to slot 1
+  check((await text('[data-id=endless-rules-n-0]')) === '1 rule' && (await text('[data-id=endless-rules-n-1]')) === 'No rules', 'a slot moves up');
+  if (!(await page.evaluate(() => !!window.RulebookView))) {
+    await act('endless-rules-0').click();
+    await page.locator('.toast', { hasText: 'Rulebook editor not loaded' }).waitFor();
+    check(true, 'without the editor loaded, Rules says so');
+  }
+  await t.layout('endless team');
+
+  // ---- climb: the deciding floor plays back at once, a rule firing reads as a rule line
+  const shards0 = (await acct()).Shards || 0;
+  await act('endless-climb').click();
+  const play = page.locator('#modal [data-id=fight-play]');
+  await play.waitFor();
+  check(/^Floor \d+: \S/.test(await play.innerText()) && (await count('#modal [data-id=endless-play-mutators]')) === 1 && (await count('#modal .units.endless [data-id^=unit-]')) === 8,
+    'the deciding floor plays back 4v4 with its mutators: ' + (await play.innerText()));
+  await page.waitForTimeout(700);
+  await t.layout('endless playback');
+  await act('speed-skip').click();
+  check((await count('[data-act=endless-replay]')) === 1, 'Skip ends the playback, Watch again shows');
+  const logs = await page.$$eval('[data-id=endless-log] li.gambit', (ls) => ls.map((l) => l.textContent));
+  check(logs.some((l) => / follows rule 1$/.test(l)), 'the deciding floor\'s log has the rulebook\'s rule firing: ' + (logs[0] || 'none'));
+  const decidingHash = await play.getAttribute('data-hash');
+  await act('endless-play-close').click();
+  check((await count('#modal [data-id=fight-play]')) === 0 && (await count('[data-id=endless-result]')) === 1, 'Close leaves the result card');
+  const a1 = await acct();
+  const fell = await text('[data-id=endless-fell]');
+  check(/^(Fell on floor \d+ to \S|All \d+ floors cleared)/.test(fell), 'the result says where the climb ended: ' + fell);
+  const paid = await text('[data-id=endless-shards]'), paidN = +((/^\+(\d+)/.exec(paid) || [])[1] || 0);
+  check(a1.Endless && a1.Endless.Season === season && (a1.Endless.Climbs || 0) === 1 && (a1.Shards || 0) - shards0 === paidN,
+    'the climb is saved for this season (1 climb) and paid what the card says: ' + paid);
+  const rows = await page.$$eval('[data-id^=endless-fought-]', (rs) => rs.map((r) => ({ id: r.dataset.id, hash: r.dataset.hash })));
+  check(rows.length >= 1 && rows[rows.length - 1].hash === decidingHash, 'the floors fought are listed, the deciding one last with the played fight\'s hash');
+  check(/best this season \d+/.test(await status.innerText()) && /1 climb this season/.test(await status.innerText()), 'the season line counts the climb');
+  await t.layout('endless result');
+
+  // ---- a second climb pays nothing new (Skip is remembered: no playback)
+  await act('endless-climb').click();
+  await page.locator('[data-id=endless-shards]').waitFor();
+  const a2 = await acct();
+  check((await count('#modal [data-id=fight-play]')) === 0 && /^No new floors this season/.test(await text('[data-id=endless-shards]'))
+    && (a2.Endless.Climbs || 0) === 2 && (a2.Shards || 0) === (a1.Shards || 0), 'a second climb pays nothing new and counts a second climb');
+
+  // ---- watch another floor: the same fight the climb's list names
+  const first = rows[0], floorN = +first.id.slice('endless-fought-'.length);
+  await act('endless-watch-' + floorN).click();
+  await play.waitFor();
+  check((await play.getAttribute('data-hash')) === first.hash && (await play.innerText()).startsWith('Floor ' + floorN + ':'), 'Watch plays floor ' + floorN + ' with the listed fight hash');
+  if (rows.length >= 2) {
+    await act('endless-next').click();
+    check((await play.getAttribute('data-hash')) === rows[1].hash, 'the next-floor button plays the next floor fought');
+    await act('endless-prev').click();
+    check((await play.getAttribute('data-hash')) === first.hash, 'and the previous-floor button goes back');
+  }
+  await act('endless-play-close').click();
+
+  // ---- Back: home, with the new best on the card
+  await act('endless-back').click();
+  await act('endless').waitFor();
+  check(new RegExp('Best this season ' + (a2.Endless.ClearedSeason || 0) + ' ').test(await text('[data-id=endless-bests]')), 'Back returns home; the card shows the season best');
+  await t.finish();
+})().catch((e) => { console.error(e); process.exit(1); });
