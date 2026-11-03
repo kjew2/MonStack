@@ -657,10 +657,13 @@
     modal.hidden = true;
   }
 
+  // The run's monster is "monster"; foundling_egg's egg (Cuckling, #143) is "monster#egg", on its side.
+  const ownUnit = (id) => id === 'monster' || String(id).indexOf('monster#') === 0;
+  const unitName = (id, foeName, youName) => (id === 'monster' ? youName : ownUnit(id) ? youName + "'s Foundling" : foeName);
   function actionLine(x, foeName, youName) {
-    const who = (id) => (id === 'monster' ? youName : foeName);
+    const who = (id) => unitName(id, foeName, youName);
     const a = who(x.actor), t = x.target ? who(x.target) : 'all';
-    return { text: a + ' · ' + actionName(x) + ' → ' + t + ': ' + actionResult(x), you: x.actor === 'monster', skillId: x.skillId };
+    return { text: a + ' · ' + actionName(x) + ' → ' + t + ': ' + actionResult(x), you: ownUnit(x.actor), skillId: x.skillId };
   }
   const actionName = (x) => x.skill || x.event || (x.counter ? 'Counter' : 'Attack');
   // Rule events whose amount is not HP restored (specs/16 section 6.2): idea-pool lane A logs its conversions at fight start
@@ -679,6 +682,7 @@
     // Candlemane (#141): heals burned into light damage, and stored Radiance released on a hit
     'rule:martyr_flame': (n) => 'burns ' + Math.round(n) + ' light dmg',
     'rule:hollow_sun': (n) => 'releases ' + Math.round(n) + ' light dmg',
+    // Cuckling (#143) logs its rules' numbers through rule.<id>.log (x.note)
   };
 
   function actionResult(x) {
@@ -896,26 +900,27 @@
   function fightUnits(f, you, foe, upto, art, stage) {
     const refs = [], tower = f.entropyCap > 0;
     const root = h('div', { class: 'units' + (tower ? ' tower' : '') }, f.units.map((u, k) => {
-      const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + (tower ? k : u.side) + '-' + si, 'data-kind': sk.kind }, [
+      const key = tower ? k : u.add ? u.side + '-' + k : u.side;   // an add in a side fight (foundling_egg's egg) gets ids of its own
+      const chips = u.skills.map((sk, si) => (sk.kind === 'passive' ? null : h('div', { class: 'skill', 'data-id': 'skill-' + key + '-' + si, 'data-kind': sk.kind }, [
         h('div', { class: 'tile', style: '--hue:' + (hash(sk.name) % 360) }, [
           h('div', { class: 'cdfill' }), h('span', { class: 'ab', 'aria-hidden': 'true', text: skillAbbr(sk.name) }), h('span', { class: 'st num', 'aria-hidden': 'true' }),
         ]),
         h('span', { class: 'nm', text: sk.name }),
       ])));
       const hpBar = bar(0, 1, '', 'hp');
-      hpBar.insertBefore(h('div', { class: 'shield', 'data-id': 'shield-' + (tower ? k : u.side) }), hpBar.querySelector('span'));
+      hpBar.insertBefore(h('div', { class: 'shield', 'data-id': 'shield-' + key }), hpBar.querySelector('span'));
       let entropy = null;
       if (tower) {
         entropy = { bar: bar(0, f.entropyCap, '', 'ent'), vent: h('span', { class: 'vent small tipword', 'data-id': 'vent-' + k }) };
         entropy.row = h('div', { class: 'entrow', 'data-id': 'entropy-' + k }, [h('span', { class: 'small muted tipword', text: 'EN', ...towerTip('entropy') }), entropy.bar, entropy.vent]);
       }
-      const name = u.name || (u.side ? foe : you);
-      const skills = h('div', { class: 'skills', 'data-id': 'skills-' + (tower ? k : u.side) }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]);
+      const name = u.name || (u.side ? foe : u.add ? you + "'s Foundling" : you);
+      const skills = h('div', { class: 'skills', 'data-id': 'skills-' + key }, chips.some(Boolean) ? chips : [h('small', { class: 'muted', text: 'Basic attacks only' })]);
       const totals = upto === null ? h('small', { class: 'muted', text: Math.round(u.damage) + ' dmg · ' + u.crits + ' crits · ' + u.evades + ' dodges' }) : null;
       const float = stage ? h('div', { class: 'dmgfloat', 'aria-hidden': 'true' }) : null;
       const el = stage
-        ? h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + u.side }, [h('b', { class: 'uname', text: name }), hpBar, totals, h('div', { class: 'uart' }, [art(u), float])])
-        : h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + (tower ? k : u.side) }, [
+        ? h('div', { class: 'unit' + (u.side ? ' foe' : '') + (u.add ? ' add' : ''), 'data-id': 'unit-' + key }, [h('b', { class: 'uname', text: name }), hpBar, totals, h('div', { class: 'uart' }, [art(u), float])])
+        : h('div', { class: 'unit' + (u.side ? ' foe' : ''), 'data-id': 'unit-' + key }, [
           art ? h('div', { class: 'row unithead' }, [art(u), h('b', { text: name })]) : h('b', { text: name }),
           hpBar, entropy ? entropy.row : null, totals, skills,
         ]);
@@ -923,7 +928,7 @@
       return el;
     }));
     const skillRows = stage ? h('div', { class: 'skillrows' }, refs.map((r) => h('div', { class: 'skillrow' + (r.u.side ? ' foe' : '') }, [
-      h('span', { class: 'who', text: r.u.side ? 'Foe' : 'You' }), r.skills]))) : null;
+      h('span', { class: 'who', text: r.u.side ? 'Foe' : r.u.add ? 'Foundling' : 'You' }), r.skills]))) : null;
     paintUnits(refs, unitsAt(f, upto), null, f.entropyCap);
     return { root: root, refs: refs, skillRows: skillRows };
   }
@@ -996,7 +1001,7 @@
   function rankView(f, s) {
     const you = speciesDef(s.species).name, foe = f.opponent.name;
     return { stage: true, you: you, foe: foe, title: 'Rank ' + f.opponent.letter + ' fight: ' + foe, art: rankArt(f, s),
-      name: (id) => (id === 'monster' ? you : foe), ours: (id) => id === 'monster',
+      name: (id) => unitName(id, foe, you), ours: ownUnit,
       line: (x) => { const l = actionLine(x, foe, you); return { cls: l.you ? 'you' : 'foe', text: l.text }; } };
   }
   // The unit panels' sprites in a rank fight: the monster's and the opponent's (BRIDGE.md, fight.opponent).

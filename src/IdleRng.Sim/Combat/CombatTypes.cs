@@ -791,6 +791,23 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string HollowSun = "hollow_sun";
 
+        // Species Cuckling (#143): coded in Combat/Rules/Cuckling.cs; its native tree 2 carries lane F's mimic_core.
+
+        /// <summary>
+        /// When an enemy's turn comes and the unit's gauge is at least MON_STEAL_GAUGE full, it acts in the enemy's place (the
+        /// enemy loses the turn, the unit's gauge drops to 0), MON_STEALS_PER_FOE per enemy per fight. Nest Thief's capstone.
+        /// </summary>
+        public const string StolenTurn = "stolen_turn";
+
+        /// <summary>A stolen turn casts the victim's first ready skill with the unit's stats and puts it on cooldown for the victim. The Usurped Nest chase capstone.</summary>
+        public const string Usurp = "usurp";
+
+        /// <summary>
+        /// At fight start the unit lays an egg on its side (even a full one) that hatches into a Foundling after MON_HATCH_ACTIONS
+        /// of its actions. The Clutch Throne chase capstone.
+        /// </summary>
+        public const string FoundlingEgg = "foundling_egg";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
@@ -801,7 +818,8 @@ namespace IdleRng.Sim.Combat
             Hemorrhage, PrivilegedStatus, Equilibrium, Corruption, DeadBranch,
             IronVow, CursedMark, Devourer, SecondBreath, Ascetic, HungryCore,
             ClearSpring, Seep, FountainJets,
-            MartyrFlame, HollowSun };
+            MartyrFlame, HollowSun,
+            StolenTurn, Usurp, FoundlingEgg };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }

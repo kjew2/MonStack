@@ -40,6 +40,10 @@
   "candlemane": {
    "name": "Candlemane",
    "prompt": "A majestic lion-like beast of living light and candle wax, ivory-white and pale gold. Its mane is a full ring of tall burning candle flames in white-gold and amber, and soft wax drips and pools down its shoulders and flanks where the flames touch, as if it is slowly burning itself to shine. A thin golden halo-wheel floats behind its head. Its eyes glow bright gold, and molten gold light seeps through cracks in its chest like a lantern. Proud, sacred and solemn, powerful, a light-element monster."
+  },
+  "cuckling": {
+   "name": "Cuckling",
+   "prompt": "A plump, fluffy cuckoo chick, round as a ball and oddly large for its nest, with soot-black and deep violet down, a pale lavender belly, tiny stubby wings and oversized clawed orange feet gripping a nest of black thorny twigs. It wears the cracked top half of a white speckled eggshell like a little helmet tilted over one eye: the shell of an egg that was not its own. Its huge beak gapes wide open, begging, and the inside of its mouth glows bright magenta-violet. Large glossy round eyes with violet glints, adorable but greedy. On the ground beside the nest lies a small pale blue egg that has been pushed out. Cute, with something quietly wrong about it."
   }
  },
  "apex_base": "This is the creature's evolved apex form: the same species and recognisably the same individual as the reference image (same body shape, face and colours), but grander and more powerful, in exactly the same art style, lighting and kind of background as the reference. Do not add text. The change:",
@@ -114,6 +118,16 @@
    "species": "candlemane",
    "name": "Hollow Sun Lion",
    "prompt": "the same lion, darkened: its body is now charcoal-black wax with molten cracks, its halo is a huge black-cored sun ringed in white fire behind its head, and its chest is an open furnace glowing crimson-orange. Colour palette shifts from gold to black, crimson and white."
+  },
+  "usurper_cuckoo": {
+   "species": "cuckling",
+   "name": "Usurper Cuckoo",
+   "prompt": "a grown cuckoo, larger than any host, wearing a crown of broken eggshell."
+  },
+  "clutch_empress": {
+   "species": "cuckling",
+   "name": "Clutch Empress",
+   "prompt": "the chick has grown into a tall, elegant, regal brood-mother cuckoo empress: sleek glossy plumage in deep violet and black with a soft lavender chest, a long flowing train of tail feathers like a royal gown, and a small cracked-eggshell tiara. She sits on a grand throne-like nest of woven thorny branches, gently sheltering just three large pale-blue speckled eggs under one wing. Calm, proud, motherly expression. Smooth feathers with no clusters, no bumps, no holes, no eggs attached to her body. Colour palette adds soft lavender and warm gold accents to the violet."
   }
  }
 }

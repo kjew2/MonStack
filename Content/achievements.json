@@ -56,6 +56,14 @@
       "ref": "hp",
       "amount": 700.0,
       "unlocks_species": "candlemane"
+    },
+    {
+      "id": "luk_650",
+      "name_key": "achievement.luk_650.name",
+      "kind": "stat_reached",
+      "ref": "luk",
+      "amount": 650.0,
+      "unlocks_species": "cuckling"
     }
   ]
 }

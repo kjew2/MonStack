@@ -634,9 +634,9 @@
     {
       "id": "mimic_core",
       "name_key": "tree.mimic_core.name",
-      "kind": "generic",
+      "kind": "native",
       "offer_stat": null,
-      "offer_threshold": 400,
+      "offer_threshold": null,
       "apex_name_key": null,
       "fuse_a": null,
       "fuse_b": null
@@ -858,6 +858,46 @@
       "offer_stat": null,
       "offer_threshold": null,
       "apex_name_key": "tree.hollow_sun.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "nest_thief",
+      "name_key": "tree.nest_thief.name",
+      "kind": "native",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "foundling_ledger",
+      "name_key": "tree.foundling_ledger.name",
+      "kind": "book",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": null,
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "usurper_cuckoo",
+      "name_key": "tree.usurper_cuckoo.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.usurper_cuckoo.apex",
+      "fuse_a": null,
+      "fuse_b": null
+    },
+    {
+      "id": "clutch_empress",
+      "name_key": "tree.clutch_empress.name",
+      "kind": "chase",
+      "offer_stat": null,
+      "offer_threshold": null,
+      "apex_name_key": "tree.clutch_empress.apex",
       "fuse_a": null,
       "fuse_b": null
     }

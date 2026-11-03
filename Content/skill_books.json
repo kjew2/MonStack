@@ -35,6 +35,11 @@
       "id": "book_psalter",
       "name_key": "book.book_psalter.name",
       "tree_id": "unburnt_psalter"
+    },
+    {
+      "id": "book_ledger",
+      "name_key": "book.book_ledger.name",
+      "tree_id": "foundling_ledger"
     }
   ]
 }

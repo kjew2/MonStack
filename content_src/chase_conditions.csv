@@ -41,3 +41,9 @@ martyrs_pyre_c2,martyrs_pyre,tally_at_least,wins,2
 hollow_sun_c0,hollow_sun,node_owned,unburnt_psalter_n0,
 hollow_sun_c1,hollow_sun,node_owned,sanctum_grace_n4,
 hollow_sun_c2,hollow_sun,tally_at_least,damage_light,2000
+usurper_cuckoo_c0,usurper_cuckoo,tree_maxed,nest_thief,
+usurper_cuckoo_c1,usurper_cuckoo,stat_at_least,spd,500
+usurper_cuckoo_c2,usurper_cuckoo,tally_at_least,kills,3
+clutch_empress_c0,clutch_empress,node_owned,foundling_ledger_n0,
+clutch_empress_c1,clutch_empress,node_owned,mimic_core_n4,
+clutch_empress_c2,clutch_empress,tally_at_least,damage_dark,2000

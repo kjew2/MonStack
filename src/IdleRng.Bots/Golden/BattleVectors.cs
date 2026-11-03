@@ -245,6 +245,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v2 martyr flame and hollow sun", 13,
                 new[] { Candlemane("a_pyre", RuleModifiers.MartyrFlame), Candlemane("a_sun", RuleModifiers.HollowSun) },
                 new[] { Brawler("b_brawler", "dark"), Healer("b_healer", "water") });
+            // Species Cuckling (#143): Nest Thief's stolen_turn on both, one with the Usurped Nest capstone, one with the Clutch
+            // Throne's egg (a third unit on side A), against a skill user, a healer and a mage to steal from.
+            yield return new Vector("2v3 usurper cuckoo and clutch empress", 13,
+                new[] { Cuckling("a_usurp", RuleModifiers.Usurp), Cuckling("a_empress", RuleModifiers.FoundlingEgg) },
+                new[] { Brawler("b_brawler", "light"), Healer("b_healer", "water"), Mage("b_mage", "nature") });
         }
 
         // Species Fountain Axolotl (#150).
@@ -283,6 +288,18 @@ namespace IdleRng.Bots.Golden
             },
             Triggers = { new TriggeredSkill(FightTrigger.OnHitTaken, Fx("kindled_grace", SkillKind.Heal, SkillTarget.Self, null, StatIds.Wis, 0.5, 0, 0)) },
             Rules = { RuleModifiers.BloodMagic, chase },
+        };
+
+        // Species Cuckling (#143): its native kit (Coin Toss, Windfall, stolen_turn) plus one chase capstone.
+        static Fighter Cuckling(string id, string chase) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(420, 300, 60, 160, 200, 240, 420, 520),
+            Skills =
+            {
+                Dmg("coin_toss", StatIds.Luk, 2.0, 3),
+                Fx("windfall", SkillKind.Buff, SkillTarget.Self, StatIds.CritRate, null, 0.15, 0, 2),
+            },
+            Rules = { RuleModifiers.StolenTurn, chase },
         };
 
         // Idea-pool lane D (#137): one debuff or lock capstone each; Corruption and Dead Branch share a unit.
