@@ -195,6 +195,11 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("4v4 survival capstones", 11,
                 new[] { Spiteful("a_spite"), Vantage("a_vantage"), Barricade("a_barricade"), Warded("a_ward") },
                 new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
+            // Idea-pool lane E (#138): the team and mode capstones; lone_wolf with allies takes its malus, arise raises a fallen
+            // enemy mid-fight, last_rite's carrier falls and feeds its allies.
+            yield return new Vector("4v4 team and mode capstones", 12,
+                new[] { LoneWolf("a_lone"), Arise("a_arise"), LastRite("a_rite"), Brawler("a_brawler", "light") },
+                new[] { Brawler("b_brawler", "water"), Mage("b_mage", "nature"), Support("b_support"), Healer("b_healer", "dark") });
         }
 
         // Idea-pool lane A (#134): one conversion capstone each.
@@ -253,6 +258,28 @@ namespace IdleRng.Bots.Golden
             Id = id, Element = "water", Stats = S(260, 60, 200, 460, 180, 160, 220, 160),
             Skills = { Dmg("spirit_lash", StatIds.Wis, 1.3, 2), Dmg("mind_storm", StatIds.Wis, 0.7, 4, SkillTarget.AllEnemies) },
             Rules = { RuleModifiers.ManaWard },
+        };
+
+        // Idea-pool lane E (#138): the team and mode capstones.
+        static Fighter LoneWolf(string id) => new Fighter
+        {
+            Id = id, Element = "fire", Stats = S(360, 420, 80, 160, 220, 220, 250, 180),
+            Skills = { Dmg("rend", StatIds.Str, 1.4, 2) },
+            Rules = { RuleModifiers.LoneWolf },
+        };
+
+        static Fighter Arise(string id) => new Fighter
+        {
+            Id = id, Element = "nature", Stats = S(340, 60, 700, 260, 180, 180, 330, 160),
+            Skills = { Dmg("echo_bolt", StatIds.Int, 1.4, 2), Dmg("grave_wave", StatIds.Int, 0.8, 4, SkillTarget.AllEnemies) },
+            Rules = { RuleModifiers.Arise },
+        };
+
+        static Fighter LastRite(string id) => new Fighter
+        {
+            Id = id, Element = "dark", Stats = S(60, 300, 80, 60, 100, 60, 200, 120),
+            Skills = { Fx("second_wind", SkillKind.Heal, SkillTarget.Self, null, StatIds.Hp, 0.25, 5, 0), Dmg("maul", StatIds.Str, 1.5, 2) },
+            Rules = { RuleModifiers.LastRite },
         };
 
         /// <summary>The fighter with a gambit rulebook (specs/28 section 4).</summary>

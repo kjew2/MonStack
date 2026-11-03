@@ -96,6 +96,8 @@ REQUIRED_CONSTANTS = {
     # idea-pool lane A, conversion rules (specs/16 section 6.2, #134)
     "MON_IRON_DEX": "double", "MON_AVATAR_BONUS": "double", "MON_FORTRESS_DEF": "double", "MON_BLOOD_COST": "double",
     "MON_BLOOD_FLOOR": "double",
+    # idea-pool lane E, team and mode rules (specs/16 section 6.2, #138)
+    "MON_LONE_BONUS": "double", "MON_LONE_MALUS": "double", "MON_ARISE_STATS": "double", "MON_RITE_SHARE": "double",
 }
 
 STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
@@ -107,7 +109,9 @@ RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain",
             # idea-pool lane A (#134)
             "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic",
             # idea-pool lane B (#135)
-            "resentment", "vantage", "deaths_door", "barricade", "mana_ward"]
+            "resentment", "vantage", "deaths_door", "barricade", "mana_ward",
+            # idea-pool lane E (#138)
+            "lone_wolf", "arise", "last_rite"]
 TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
@@ -176,6 +180,9 @@ MON_RANGES = {
     "MON_IRON_DEX": (">= 0", lambda v: v >= 0), "MON_AVATAR_BONUS": (">= 0", lambda v: v >= 0),
     "MON_FORTRESS_DEF": (">= 0", lambda v: v >= 0), "MON_BLOOD_COST": ("[0, 1]", lambda v: 0 <= v <= 1),
     "MON_BLOOD_FLOOR": ("[0, 1]", lambda v: 0 <= v <= 1),
+    # idea-pool lane E (#138)
+    "MON_LONE_BONUS": (">= 0", lambda v: v >= 0), "MON_LONE_MALUS": ("[0, 1]", lambda v: 0 <= v <= 1),
+    "MON_ARISE_STATS": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_RITE_SHARE": (">= 0", lambda v: v >= 0),
 }
 
 

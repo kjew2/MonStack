@@ -1176,13 +1176,15 @@ namespace IdleRng.Sim.Combat
         /// A unit that joins the fight mid-way (specs/16 section 6.4): a split phase's add, a lane rule's summon. It takes the next
         /// slot on its side, starts with an empty gauge and full HP, is an add (it never keeps its side alive, and the Dungeon
         /// leaves it out of the team tallies), and fires its BattleStart triggers (its passives) at once. The caller checks the id
-        /// is new and the side's room.
+        /// is new and the side's room. <paramref name="joined"/> (a lane rule's event) is logged once the unit is in, before its triggers.
         /// </summary>
-        internal static FightUnit Summon(FightRules r, FightState s, Fighter f, int side, IRandomSource rng, Action<FightAction> onAction)
+        internal static FightUnit Summon(FightRules r, FightState s, Fighter f, int side, IRandomSource rng, Action<FightAction> onAction,
+                                         FightAction? joined = null)
         {
             var add = NewUnit(r, f, side, CountOnSide(s, side));
             add.IsAdd = true;
             s.Units.Add(add);
+            if (joined.HasValue) onAction?.Invoke(joined.Value);
             Fire(r, s, add, FightTrigger.BattleStart, rng, onAction);
             return add;
         }

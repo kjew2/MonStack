@@ -583,3 +583,16 @@ rule.barricade.log,shield stacks to {amount}
 rule.mana_ward.name,Mana Ward
 rule.mana_ward.desc,"Starts each fight with a ward of {MON_WARD_WIS} times its WIS. The ward takes {MON_WARD_SHARE:pct} of each blow's HP damage first. While the ward holds, its cooldowns run {MON_WARD_CDR:pct} faster."
 rule.mana_ward.log,ward {amount} left
+tree.lone_wolf.name,Lone Wolf
+tree.arise.name,Arise
+tree.last_rite.name,Last Rite
+rule.lone_wolf.name,Lone Wolf
+rule.lone_wolf.desc,"If it starts a fight alone on its side, all its stats rise by {MON_LONE_BONUS:pct} for the fight. With allies, they fall by {MON_LONE_MALUS:pct} instead. Strong in run fights and the gauntlet, weak in a team."
+rule.lone_wolf.log,all stats change by {amount:pct}
+rule.arise.name,Arise
+rule.arise.desc,"Once per fight, the first enemy it knocks out rises on its side with {MON_ARISE_STATS:pct} of its stats and its skills, but none of its rules. Not the last enemy: the fight is over then. Does nothing in a one-on-one fight."
+rule.arise.log,raises {amount:pct} of a fallen foe
+rule.arise.unit,{name} (risen)
+rule.last_rite.name,Last Rite
+rule.last_rite.desc,"When it is knocked out, its living allies split {MON_RITE_SHARE:pct} of its base stats among them for the rest of the fight. A save from Rebirth or Death's Door is not a knockout. Does nothing in a one-on-one fight."
+rule.last_rite.log,each ally gains {amount:pct} of its stats

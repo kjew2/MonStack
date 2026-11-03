@@ -102,10 +102,12 @@ namespace IdleRng.Sim.Tests
         {
             var own = Generic.Where(t => t.OfferStat == StatIds.Str).Select(t => t.Id).ToList();
             var s = TrainingRun.Start(Db, "drake", 4);
+            // the last slots, so a stat with more trees than free slots (lane E's Lone Wolf is STR's third) overwrites native ones
+            Assume.That(own.Count, Is.LessThanOrEqualTo(s.Slots.Length));
             for (int i = 0; i < own.Count; i++)
             {
                 s.Offers.Add(new TreeOffer { Source = OfferSource.Milestone, Stat = StatIds.Str, Threshold = 300, Trees = { own[i] } });
-                TrainingRun.TakeTree(Db, s, 0, 2 + i);
+                TrainingRun.TakeTree(Db, s, 0, s.Slots.Length - own.Count + i);
             }
             var o = StrAwakening(s);
             Assert.That(o.Trees.Intersect(own), Is.Empty);

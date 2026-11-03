@@ -139,3 +139,7 @@ MON_BARRICADE_CAP,double,0.6,barricade rule: shields never expire and stack up t
 MON_WARD_WIS,double,1.5,mana_ward rule: the ward at fight start as a multiple of WIS. Placeholder
 MON_WARD_SHARE,double,0.3,mana_ward rule: share of each blow's HP damage (after shields) the ward takes first. Placeholder
 MON_WARD_CDR,double,0.5,mana_ward rule: extra cooldown ticks per own action while the ward holds. Placeholder
+MON_LONE_BONUS,double,0.4,lone_wolf rule: all the unit's stats rise by this fraction when it is alone on its side at fight start. Placeholder
+MON_LONE_MALUS,double,0.2,lone_wolf rule: all the unit's stats fall by this fraction when it has allies at fight start. Placeholder
+MON_ARISE_STATS,double,0.3,arise rule: the first enemy the unit kills (not the last) rises on its side with this fraction of its stats. Placeholder
+MON_RITE_SHARE,double,0.3,last_rite rule: when the unit dies its living allies split this fraction of its base stats for the rest of the fight. Placeholder

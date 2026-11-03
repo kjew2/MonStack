@@ -644,10 +644,22 @@ namespace IdleRng.Sim.Combat
         /// <summary>A ward of MON_WARD_WIS x WIS takes MON_WARD_SHARE of each blow's HP damage; while it holds, cooldowns tick MON_WARD_CDR faster.</summary>
         public const string ManaWard = "mana_ward";
 
+        // ---- idea-pool lane E: team size and mode (#138, specs/16 section 6.2)
+
+        /// <summary>Decided at fight start: alone on its side, all the unit's stats rise by MON_LONE_BONUS; with allies they fall by MON_LONE_MALUS.</summary>
+        public const string LoneWolf = "lone_wolf";
+
+        /// <summary>Once per fight, the first enemy the unit kills (not the last) rises on its side at MON_ARISE_STATS of its stats, with its skills and no rules.</summary>
+        public const string Arise = "arise";
+
+        /// <summary>When the unit dies, its living allies split MON_RITE_SHARE of its base stats for the rest of the fight.</summary>
+        public const string LastRite = "last_rite";
+
         public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
-            Resentment, Vantage, DeathsDoor, Barricade, ManaWard };
+            Resentment, Vantage, DeathsDoor, Barricade, ManaWard,
+            LoneWolf, Arise, LastRite };
 
         public static bool IsKnown(string id) => Array.IndexOf(Known, id) >= 0;
     }
