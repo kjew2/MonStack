@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The account server as a UGS Cloud Code C# module (specs/27 section 10 step 4): a thin shell over src/IdleRng.Server with a
+    Cloud Save store. The project name is the module name, and the deployed archive is named after it (server/ugs/deploy.sh).
+    Cloud Code modules target .NET 10 (specs/08 section 10.1). The game content is embedded from Content/ of the same commit.
+    MonStackDebugPlayers (deploy.sh, from MONSTACK_DEBUG_PLAYERS) is stamped into the assembly: the debug list (specs/27 6.3).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <RootNamespace>MonStackAccount</RootNamespace>
+    <AssemblyName>MonStackAccount</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Com.Unity.Services.CloudCode.Core" Version="0.0.9" />
+    <PackageReference Include="Com.Unity.Services.CloudCode.Apis" Version="0.0.27" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/IdleRng.Server/IdleRng.Server.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../../../Content/*.json" LogicalName="Content/%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="MonStack.DebugPlayers" Value="$(MonStackDebugPlayers)" />
+    <InternalsVisibleTo Include="MonStackAccount.Tests" />
+  </ItemGroup>
+</Project>

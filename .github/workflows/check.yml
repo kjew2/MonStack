@@ -52,6 +52,15 @@ jobs:
           dotnet --info
           dotnet --version | grep -q '^8\.' || { echo "expected a .NET 8 SDK, got $(dotnet --version)" >&2; exit 1; }
 
+      # The Cloud Code module's tests (server/ugs/MonStackAccount.Tests) need .NET 10. Install it into its own directory with no
+      # PATH change, so `dotnet` stays .NET 8 for the wasm steps; check.sh runs the module tests with MONSTACK_DOTNET10.
+      - name: Install a .NET 10 SDK beside .NET 8 (Cloud Code module tests only)
+        run: |
+          curl -sSfL https://dot.net/v1/dotnet-install.sh -o "$RUNNER_TEMP/dotnet-install.sh"
+          bash "$RUNNER_TEMP/dotnet-install.sh" --channel 10.0 --install-dir "$RUNNER_TEMP/dotnet10" --no-path
+          echo "MONSTACK_DOTNET10=$RUNNER_TEMP/dotnet10/dotnet" >> "$GITHUB_ENV"
+          dotnet --version | grep -q '^8\.' || { echo "the default dotnet is no longer .NET 8" >&2; exit 1; }
+
       - uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
