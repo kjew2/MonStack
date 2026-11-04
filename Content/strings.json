@@ -3697,6 +3697,1286 @@
     {
       "key": "rule.fortune_bank.desc",
       "text": "Failed critical rolls bank +{MON_FORTUNE_BANK_STEP:pct} Fortune reroll chance (up to +{MON_FORTUNE_BANK_CAP:pct}). A successful critical roll resets the bank. Requires Fortune V capstone."
+    },
+    {
+      "key": "lineage.vital_core.v.name",
+      "text": "Reserve Heart"
+    },
+    {
+      "key": "lineage.vital_core.v.desc",
+      "text": "Overhealing stores up to {MON_LINEAGE_CAP:pct} max HP. After each action, restore up to {MON_LINEAGE_GAIN:pct} max HP from the reserve."
+    },
+    {
+      "key": "rule.lineage_vital_core_v.name",
+      "text": "Reserve Heart"
+    },
+    {
+      "key": "rule.lineage_vital_core_v.desc",
+      "text": "Overhealing stores up to {MON_LINEAGE_CAP:pct} max HP. After each action, restore up to {MON_LINEAGE_GAIN:pct} max HP from the reserve."
+    },
+    {
+      "key": "lineage.vital_core.x.name",
+      "text": "Heartlink"
+    },
+    {
+      "key": "lineage.vital_core.x.desc",
+      "text": "Reserve recovery instead reaches the most injured living ally when they need it more; works on yourself when alone."
+    },
+    {
+      "key": "rule.lineage_vital_core_x.name",
+      "text": "Heartlink"
+    },
+    {
+      "key": "rule.lineage_vital_core_x.desc",
+      "text": "Reserve recovery instead reaches the most injured living ally when they need it more; works on yourself when alone."
+    },
+    {
+      "key": "lineage.brute_force.v.name",
+      "text": "Heavy Rhythm"
+    },
+    {
+      "key": "lineage.brute_force.v.desc",
+      "text": "Landed basic attacks build {MON_LINEAGE_GAIN:pct} Heavy Rhythm, up to {MON_LINEAGE_CAP:pct}. At full rhythm the next basic gains that damage bonus and resets the cycle."
+    },
+    {
+      "key": "rule.lineage_brute_force_v.name",
+      "text": "Heavy Rhythm"
+    },
+    {
+      "key": "rule.lineage_brute_force_v.desc",
+      "text": "Landed basic attacks build {MON_LINEAGE_GAIN:pct} Heavy Rhythm, up to {MON_LINEAGE_CAP:pct}. At full rhythm the next basic gains that damage bonus and resets the cycle."
+    },
+    {
+      "key": "lineage.brute_force.x.name",
+      "text": "Demolition"
+    },
+    {
+      "key": "lineage.brute_force.x.desc",
+      "text": "The empowered basic also removes shielding up to {MON_LINEAGE_GAIN:pct} of its empowered raw damage and adds the removed amount as damage."
+    },
+    {
+      "key": "rule.lineage_brute_force_x.name",
+      "text": "Demolition"
+    },
+    {
+      "key": "rule.lineage_brute_force_x.desc",
+      "text": "The empowered basic also removes shielding up to {MON_LINEAGE_GAIN:pct} of its empowered raw damage and adds the removed amount as damage."
+    },
+    {
+      "key": "lineage.spellcraft.v.name",
+      "text": "Arcane Residue"
+    },
+    {
+      "key": "lineage.spellcraft.v.desc",
+      "text": "A damaging skill stores {MON_LINEAGE_GAIN:pct} charge for the next magical damaging skill, up to {MON_LINEAGE_CAP:pct}."
+    },
+    {
+      "key": "rule.lineage_spellcraft_v.name",
+      "text": "Arcane Residue"
+    },
+    {
+      "key": "rule.lineage_spellcraft_v.desc",
+      "text": "A damaging skill stores {MON_LINEAGE_GAIN:pct} charge for the next magical damaging skill, up to {MON_LINEAGE_CAP:pct}."
+    },
+    {
+      "key": "lineage.spellcraft.x.name",
+      "text": "Spell Weaving"
+    },
+    {
+      "key": "lineage.spellcraft.x.desc",
+      "text": "A magical skill different from your previous damaging skill adds another {MON_LINEAGE_GAIN:pct} charge, up to {MON_LINEAGE_CAP:pct}."
+    },
+    {
+      "key": "rule.lineage_spellcraft_x.name",
+      "text": "Spell Weaving"
+    },
+    {
+      "key": "rule.lineage_spellcraft_x.desc",
+      "text": "A magical skill different from your previous damaging skill adds another {MON_LINEAGE_GAIN:pct} charge, up to {MON_LINEAGE_CAP:pct}."
+    },
+    {
+      "key": "lineage.sage_mind.v.name",
+      "text": "Measured Ward"
+    },
+    {
+      "key": "lineage.sage_mind.v.desc",
+      "text": "When your shields or wards absorb a hit, store {MON_LINEAGE_GAIN:pct} charge, up to {MON_LINEAGE_CAP:pct}, for your next WIS-scaled hit."
+    },
+    {
+      "key": "rule.lineage_sage_mind_v.name",
+      "text": "Measured Ward"
+    },
+    {
+      "key": "rule.lineage_sage_mind_v.desc",
+      "text": "When your shields or wards absorb a hit, store {MON_LINEAGE_GAIN:pct} charge, up to {MON_LINEAGE_CAP:pct}, for your next WIS-scaled hit."
+    },
+    {
+      "key": "lineage.sage_mind.x.name",
+      "text": "Sanctuary"
+    },
+    {
+      "key": "lineage.sage_mind.x.desc",
+      "text": "Allied shield or ward absorption also charges your next WIS-scaled hit."
+    },
+    {
+      "key": "rule.lineage_sage_mind_x.name",
+      "text": "Sanctuary"
+    },
+    {
+      "key": "rule.lineage_sage_mind_x.desc",
+      "text": "Allied shield or ward absorption also charges your next WIS-scaled hit."
+    },
+    {
+      "key": "lineage.nimble_feet.v.name",
+      "text": "Read the Strike"
+    },
+    {
+      "key": "lineage.nimble_feet.v.desc",
+      "text": "Landed enemy hits add 10 percentage points to your evade chance, up to {MON_LINEAGE_CAP:pct}, respecting the evade cap. An evasion clears the bonus after your next action."
+    },
+    {
+      "key": "rule.lineage_nimble_feet_v.name",
+      "text": "Read the Strike"
+    },
+    {
+      "key": "rule.lineage_nimble_feet_v.desc",
+      "text": "Landed enemy hits add 10 percentage points to your evade chance, up to {MON_LINEAGE_CAP:pct}, respecting the evade cap. An evasion clears the bonus after your next action."
+    },
+    {
+      "key": "lineage.nimble_feet.x.name",
+      "text": "Borrowed Opening"
+    },
+    {
+      "key": "lineage.nimble_feet.x.desc",
+      "text": "An evasion grants the most injured ally {MON_LINEAGE_GAIN:pct} damage reduction for two of your actions. You receive the opening when alone."
+    },
+    {
+      "key": "rule.lineage_nimble_feet_x.name",
+      "text": "Borrowed Opening"
+    },
+    {
+      "key": "rule.lineage_nimble_feet_x.desc",
+      "text": "An evasion grants the most injured ally {MON_LINEAGE_GAIN:pct} damage reduction for two of your actions. You receive the opening when alone."
+    },
+    {
+      "key": "lineage.bulwark.v.name",
+      "text": "Pressure Plate"
+    },
+    {
+      "key": "lineage.bulwark.v.desc",
+      "text": "When your shields or wards absorb a hit, store {MON_LINEAGE_GAIN:pct} charge, up to {MON_LINEAGE_CAP:pct}, for your next DEF-scaled hit."
+    },
+    {
+      "key": "rule.lineage_bulwark_v.name",
+      "text": "Pressure Plate"
+    },
+    {
+      "key": "rule.lineage_bulwark_v.desc",
+      "text": "When your shields or wards absorb a hit, store {MON_LINEAGE_GAIN:pct} charge, up to {MON_LINEAGE_CAP:pct}, for your next DEF-scaled hit."
+    },
+    {
+      "key": "lineage.bulwark.x.name",
+      "text": "Bastion"
+    },
+    {
+      "key": "lineage.bulwark.x.desc",
+      "text": "Allied shield or ward absorption also charges your next DEF-scaled hit."
+    },
+    {
+      "key": "rule.lineage_bulwark_x.name",
+      "text": "Bastion"
+    },
+    {
+      "key": "rule.lineage_bulwark_x.desc",
+      "text": "Allied shield or ward absorption also charges your next DEF-scaled hit."
+    },
+    {
+      "key": "lineage.overclock.v.name",
+      "text": "Controlled Overdrive"
+    },
+    {
+      "key": "lineage.overclock.v.desc",
+      "text": "Each action builds {MON_LINEAGE_GAIN:pct} gauge-fill speed, up to {MON_LINEAGE_CAP:pct}. After acting at full speed, reset and recover for two actions."
+    },
+    {
+      "key": "rule.lineage_overclock_v.name",
+      "text": "Controlled Overdrive"
+    },
+    {
+      "key": "rule.lineage_overclock_v.desc",
+      "text": "Each action builds {MON_LINEAGE_GAIN:pct} gauge-fill speed, up to {MON_LINEAGE_CAP:pct}. After acting at full speed, reset and recover for two actions."
+    },
+    {
+      "key": "lineage.overclock.x.name",
+      "text": "Gear Shift"
+    },
+    {
+      "key": "lineage.overclock.x.desc",
+      "text": "Reaching recovery transfers your stored momentum into up to {MON_LINEAGE_CAP:pct} action gauge for the most injured ally, or yourself when alone. Gauge cannot exceed one ready turn."
+    },
+    {
+      "key": "rule.lineage_overclock_x.name",
+      "text": "Gear Shift"
+    },
+    {
+      "key": "rule.lineage_overclock_x.desc",
+      "text": "Reaching recovery transfers your stored momentum into up to {MON_LINEAGE_CAP:pct} action gauge for the most injured ally, or yourself when alone. Gauge cannot exceed one ready turn."
+    },
+    {
+      "key": "lineage.fortune.v.name",
+      "text": "Fortune Bank"
+    },
+    {
+      "key": "lineage.fortune.v.desc",
+      "text": "A failed critical roll stores {MON_LINEAGE_GAIN:pct} fortune reroll chance, up to 40%. A successful critical clears the bank."
+    },
+    {
+      "key": "rule.lineage_fortune_v.name",
+      "text": "Fortune Bank"
+    },
+    {
+      "key": "rule.lineage_fortune_v.desc",
+      "text": "A failed critical roll stores {MON_LINEAGE_GAIN:pct} fortune reroll chance, up to 40%. A successful critical clears the bank."
+    },
+    {
+      "key": "lineage.fortune.x.name",
+      "text": "Shared Fortune"
+    },
+    {
+      "key": "lineage.fortune.x.desc",
+      "text": "After an action with a full bank, spend it to grant the most injured eligible ally 10 percentage points of crit chance on their next attack. Keep the personal bank when alone, when allies are crit-capped, or while a gift is pending."
+    },
+    {
+      "key": "rule.lineage_fortune_x.name",
+      "text": "Shared Fortune"
+    },
+    {
+      "key": "rule.lineage_fortune_x.desc",
+      "text": "After an action with a full bank, spend it to grant the most injured eligible ally 10 percentage points of crit chance on their next attack. Keep the personal bank when alone, when allies are crit-capped, or while a gift is pending."
+    },
+    {
+      "key": "lineage.battle_instinct.v.name",
+      "text": "Read the Opponent"
+    },
+    {
+      "key": "lineage.battle_instinct.v.desc",
+      "text": "A landed noncritical hit marks its target. Your next attack against that target gains {MON_LINEAGE_GAIN:pct} damage; critical hits clear the read."
+    },
+    {
+      "key": "rule.lineage_battle_instinct_v.name",
+      "text": "Read the Opponent"
+    },
+    {
+      "key": "rule.lineage_battle_instinct_v.desc",
+      "text": "A landed noncritical hit marks its target. Your next attack against that target gains {MON_LINEAGE_GAIN:pct} damage; critical hits clear the read."
+    },
+    {
+      "key": "lineage.battle_instinct.x.name",
+      "text": "Adaptive Read"
+    },
+    {
+      "key": "lineage.battle_instinct.x.desc",
+      "text": "Switching targets retains {MON_LINEAGE_GAIN:pct} of your stored read for the new attack."
+    },
+    {
+      "key": "rule.lineage_battle_instinct_x.name",
+      "text": "Adaptive Read"
+    },
+    {
+      "key": "rule.lineage_battle_instinct_x.desc",
+      "text": "Switching targets retains {MON_LINEAGE_GAIN:pct} of your stored read for the new attack."
+    },
+    {
+      "key": "lineage.survivor.v.name",
+      "text": "Recovery Reserve"
+    },
+    {
+      "key": "lineage.survivor.v.desc",
+      "text": "Store {MON_LINEAGE_GAIN:pct} of HP damage taken as recovery, capped at {MON_LINEAGE_CAP:pct} max HP. After each action, recover up to {MON_LINEAGE_GAIN:pct} max HP from the reserve."
+    },
+    {
+      "key": "rule.lineage_survivor_v.name",
+      "text": "Recovery Reserve"
+    },
+    {
+      "key": "rule.lineage_survivor_v.desc",
+      "text": "Store {MON_LINEAGE_GAIN:pct} of HP damage taken as recovery, capped at {MON_LINEAGE_CAP:pct} max HP. After each action, recover up to {MON_LINEAGE_GAIN:pct} max HP from the reserve."
+    },
+    {
+      "key": "lineage.survivor.x.name",
+      "text": "Hardened Recovery"
+    },
+    {
+      "key": "lineage.survivor.x.desc",
+      "text": "Repeated hits from the same source deal {MON_LINEAGE_GAIN:pct} less damage for two of your actions after taking HP damage."
+    },
+    {
+      "key": "rule.lineage_survivor_x.name",
+      "text": "Hardened Recovery"
+    },
+    {
+      "key": "rule.lineage_survivor_x.desc",
+      "text": "Repeated hits from the same source deal {MON_LINEAGE_GAIN:pct} less damage for two of your actions after taking HP damage."
+    },
+    {
+      "key": "lineage.lifeblood.v.name",
+      "text": "Living Power"
+    },
+    {
+      "key": "lineage.lifeblood.v.desc",
+      "text": "Healing received stores damage charge equal to the fraction of max HP restored, capped at {MON_LINEAGE_CAP:pct}. Your next HP-scaled hit consumes it."
+    },
+    {
+      "key": "rule.lineage_lifeblood_v.name",
+      "text": "Living Power"
+    },
+    {
+      "key": "rule.lineage_lifeblood_v.desc",
+      "text": "Healing received stores damage charge equal to the fraction of max HP restored, capped at {MON_LINEAGE_CAP:pct}. Your next HP-scaled hit consumes it."
+    },
+    {
+      "key": "lineage.lifeblood.x.name",
+      "text": "Vital Return"
+    },
+    {
+      "key": "lineage.lifeblood.x.desc",
+      "text": "Your empowered HP-scaled hit heals you for damage dealt times its charge, capped at {MON_LINEAGE_GAIN:pct} max HP."
+    },
+    {
+      "key": "rule.lineage_lifeblood_x.name",
+      "text": "Vital Return"
+    },
+    {
+      "key": "rule.lineage_lifeblood_x.desc",
+      "text": "Your empowered HP-scaled hit heals you for damage dealt times its charge, capped at {MON_LINEAGE_GAIN:pct} max HP."
+    },
+    {
+      "key": "lineage.berserker.v.name",
+      "text": "Controlled Fury"
+    },
+    {
+      "key": "lineage.berserker.v.desc",
+      "text": "HP damage taken builds an equal fraction of bonus damage, capped at {MON_LINEAGE_CAP:pct}. Healing reduces Fury by the fraction of max HP restored."
+    },
+    {
+      "key": "rule.lineage_berserker_v.name",
+      "text": "Controlled Fury"
+    },
+    {
+      "key": "rule.lineage_berserker_v.desc",
+      "text": "HP damage taken builds an equal fraction of bonus damage, capped at {MON_LINEAGE_CAP:pct}. Healing reduces Fury by the fraction of max HP restored."
+    },
+    {
+      "key": "lineage.berserker.x.name",
+      "text": "Bloodburst"
+    },
+    {
+      "key": "lineage.berserker.x.desc",
+      "text": "Attacking at full Fury gains another {MON_LINEAGE_GAIN:pct} damage and spends the Fury. You take {MON_LINEAGE_GAIN:pct} more damage during a two-action recovery window."
+    },
+    {
+      "key": "rule.lineage_berserker_x.name",
+      "text": "Bloodburst"
+    },
+    {
+      "key": "rule.lineage_berserker_x.desc",
+      "text": "Attacking at full Fury gains another {MON_LINEAGE_GAIN:pct} damage and spends the Fury. You take {MON_LINEAGE_GAIN:pct} more damage during a two-action recovery window."
+    },
+    {
+      "key": "lineage.runeweaver.v.name",
+      "text": "Inscribed Rune"
+    },
+    {
+      "key": "lineage.runeweaver.v.desc",
+      "text": "Landed basics build {MON_LINEAGE_GAIN:pct} rune charge, up to {MON_LINEAGE_CAP:pct}. Your next magical skill consumes the charge as bonus damage."
+    },
+    {
+      "key": "rule.lineage_runeweaver_v.name",
+      "text": "Inscribed Rune"
+    },
+    {
+      "key": "rule.lineage_runeweaver_v.desc",
+      "text": "Landed basics build {MON_LINEAGE_GAIN:pct} rune charge, up to {MON_LINEAGE_CAP:pct}. Your next magical skill consumes the charge as bonus damage."
+    },
+    {
+      "key": "lineage.runeweaver.x.name",
+      "text": "Piercing Rune"
+    },
+    {
+      "key": "lineage.runeweaver.x.desc",
+      "text": "That magical skill also reduces its target mitigation by the stored rune percentage."
+    },
+    {
+      "key": "rule.lineage_runeweaver_x.name",
+      "text": "Piercing Rune"
+    },
+    {
+      "key": "rule.lineage_runeweaver_x.desc",
+      "text": "That magical skill also reduces its target mitigation by the stored rune percentage."
+    },
+    {
+      "key": "lineage.hermit.v.name",
+      "text": "Quiet Recovery"
+    },
+    {
+      "key": "lineage.hermit.v.desc",
+      "text": "Actions build {MON_LINEAGE_GAIN:pct} recovery strength, up to {MON_LINEAGE_CAP:pct}; each action restores max HP times this strength times {MON_LINEAGE_GAIN:pct}. Normal healing resets the accumulated strength."
+    },
+    {
+      "key": "rule.lineage_hermit_v.name",
+      "text": "Quiet Recovery"
+    },
+    {
+      "key": "rule.lineage_hermit_v.desc",
+      "text": "Actions build {MON_LINEAGE_GAIN:pct} recovery strength, up to {MON_LINEAGE_CAP:pct}; each action restores max HP times this strength times {MON_LINEAGE_GAIN:pct}. Normal healing resets the accumulated strength."
+    },
+    {
+      "key": "lineage.hermit.x.name",
+      "text": "Solitary Insight"
+    },
+    {
+      "key": "lineage.hermit.x.desc",
+      "text": "Your next WIS-scaled hit can consume recovery strength as bonus damage."
+    },
+    {
+      "key": "rule.lineage_hermit_x.name",
+      "text": "Solitary Insight"
+    },
+    {
+      "key": "rule.lineage_hermit_x.desc",
+      "text": "Your next WIS-scaled hit can consume recovery strength as bonus damage."
+    },
+    {
+      "key": "lineage.duelist.v.name",
+      "text": "Patient Focus"
+    },
+    {
+      "key": "lineage.duelist.v.desc",
+      "text": "Landed hits build {MON_LINEAGE_GAIN:pct} damage focus, up to {MON_LINEAGE_CAP:pct}. Switching targets retains only {MON_LINEAGE_GAIN:pct} of current focus."
+    },
+    {
+      "key": "rule.lineage_duelist_v.name",
+      "text": "Patient Focus"
+    },
+    {
+      "key": "rule.lineage_duelist_v.desc",
+      "text": "Landed hits build {MON_LINEAGE_GAIN:pct} damage focus, up to {MON_LINEAGE_CAP:pct}. Switching targets retains only {MON_LINEAGE_GAIN:pct} of current focus."
+    },
+    {
+      "key": "lineage.duelist.x.name",
+      "text": "Decisive Focus"
+    },
+    {
+      "key": "lineage.duelist.x.desc",
+      "text": "At full focus, gain an additional {MON_LINEAGE_GAIN:pct} damage and consume the focus. Switching targets instead retains 90% of focus."
+    },
+    {
+      "key": "rule.lineage_duelist_x.name",
+      "text": "Decisive Focus"
+    },
+    {
+      "key": "rule.lineage_duelist_x.desc",
+      "text": "At full focus, gain an additional {MON_LINEAGE_GAIN:pct} damage and consume the focus. Switching targets instead retains 90% of focus."
+    },
+    {
+      "key": "lineage.stonewall.v.name",
+      "text": "Set Stance"
+    },
+    {
+      "key": "lineage.stonewall.v.desc",
+      "text": "Physical HP damage taken builds {MON_LINEAGE_GAIN:pct} physical damage reduction, up to {MON_LINEAGE_CAP:pct}. The stance expires after two of your actions without another physical hit."
+    },
+    {
+      "key": "rule.lineage_stonewall_v.name",
+      "text": "Set Stance"
+    },
+    {
+      "key": "rule.lineage_stonewall_v.desc",
+      "text": "Physical HP damage taken builds {MON_LINEAGE_GAIN:pct} physical damage reduction, up to {MON_LINEAGE_CAP:pct}. The stance expires after two of your actions without another physical hit."
+    },
+    {
+      "key": "lineage.stonewall.x.name",
+      "text": "Release the Wall"
+    },
+    {
+      "key": "lineage.stonewall.x.desc",
+      "text": "Your next DEF-scaled hit may consume the stance as bonus damage, trading protection for offense."
+    },
+    {
+      "key": "rule.lineage_stonewall_x.name",
+      "text": "Release the Wall"
+    },
+    {
+      "key": "rule.lineage_stonewall_x.desc",
+      "text": "Your next DEF-scaled hit may consume the stance as bonus damage, trading protection for offense."
+    },
+    {
+      "key": "lineage.quickstep.v.name",
+      "text": "Basic Momentum"
+    },
+    {
+      "key": "lineage.quickstep.v.desc",
+      "text": "Landed basics build {MON_LINEAGE_GAIN:pct} gauge-fill speed, up to {MON_LINEAGE_CAP:pct}. Using a skill resets momentum."
+    },
+    {
+      "key": "rule.lineage_quickstep_v.name",
+      "text": "Basic Momentum"
+    },
+    {
+      "key": "rule.lineage_quickstep_v.desc",
+      "text": "Landed basics build {MON_LINEAGE_GAIN:pct} gauge-fill speed, up to {MON_LINEAGE_CAP:pct}. Using a skill resets momentum."
+    },
+    {
+      "key": "lineage.quickstep.x.name",
+      "text": "Flowing Step"
+    },
+    {
+      "key": "lineage.quickstep.x.desc",
+      "text": "Your next damaging skill first spends momentum to gain the same fraction of action gauge, capped at one ready turn."
+    },
+    {
+      "key": "rule.lineage_quickstep_x.name",
+      "text": "Flowing Step"
+    },
+    {
+      "key": "rule.lineage_quickstep_x.desc",
+      "text": "Your next damaging skill first spends momentum to gain the same fraction of action gauge, capped at one ready turn."
+    },
+    {
+      "key": "lineage.lucky_star.v.name",
+      "text": "Windfall"
+    },
+    {
+      "key": "lineage.lucky_star.v.desc",
+      "text": "Critical hits store {MON_LINEAGE_GAIN:pct} Windfall, up to {MON_LINEAGE_CAP:pct}. At full reserve, a later hit spends it as bonus damage."
+    },
+    {
+      "key": "rule.lineage_lucky_star_v.name",
+      "text": "Windfall"
+    },
+    {
+      "key": "rule.lineage_lucky_star_v.desc",
+      "text": "Critical hits store {MON_LINEAGE_GAIN:pct} Windfall, up to {MON_LINEAGE_CAP:pct}. At full reserve, a later hit spends it as bonus damage."
+    },
+    {
+      "key": "lineage.lucky_star.x.name",
+      "text": "Guiding Star"
+    },
+    {
+      "key": "lineage.lucky_star.x.desc",
+      "text": "Healing or shielding skills may spend stored Windfall to grant the most injured ally additional healing or shield equal to their max HP times Windfall times {MON_LINEAGE_GAIN:pct}. Full-reserve damage remains available; works on yourself when alone."
+    },
+    {
+      "key": "rule.lineage_lucky_star_x.name",
+      "text": "Guiding Star"
+    },
+    {
+      "key": "rule.lineage_lucky_star_x.desc",
+      "text": "Healing or shielding skills may spend stored Windfall to grant the most injured ally additional healing or shield equal to their max HP times Windfall times {MON_LINEAGE_GAIN:pct}. Full-reserve damage remains available; works on yourself when alone."
+    },
+    {
+      "key": "lineage.iron_reflexes.v.name",
+      "text": "Pressure Guard"
+    },
+    {
+      "key": "lineage.iron_reflexes.v.desc",
+      "text": "Physical hits lose MON_LINEAGE_GAIN of raw damage and store converted DEX pressure, capped at MON_LINEAGE_CAP of max HP. Evasion and graze stay disabled."
+    },
+    {
+      "key": "rule.lineage_iron_reflexes_v.name",
+      "text": "Pressure Guard"
+    },
+    {
+      "key": "rule.lineage_iron_reflexes_v.desc",
+      "text": "Physical hits lose MON_LINEAGE_GAIN of raw damage and store converted DEX pressure, capped at MON_LINEAGE_CAP of max HP. Evasion and graze stay disabled."
+    },
+    {
+      "key": "lineage.iron_reflexes.x.name",
+      "text": "Tempered Answer"
+    },
+    {
+      "key": "lineage.iron_reflexes.x.desc",
+      "text": "The next physical strike spends the stored pressure as flat damage; magical strikes retain it. No additional action is granted."
+    },
+    {
+      "key": "rule.lineage_iron_reflexes_x.name",
+      "text": "Tempered Answer"
+    },
+    {
+      "key": "rule.lineage_iron_reflexes_x.desc",
+      "text": "The next physical strike spends the stored pressure as flat damage; magical strikes retain it. No additional action is granted."
+    },
+    {
+      "key": "lineage.resentment.v.name",
+      "text": "Red Memory"
+    },
+    {
+      "key": "lineage.resentment.v.desc",
+      "text": "Save MON_LINEAGE_GAIN of normal red-pool decay into a reserve, capped at MON_LINEAGE_CAP of max HP."
+    },
+    {
+      "key": "rule.lineage_resentment_v.name",
+      "text": "Red Memory"
+    },
+    {
+      "key": "rule.lineage_resentment_v.desc",
+      "text": "Save MON_LINEAGE_GAIN of normal red-pool decay into a reserve, capped at MON_LINEAGE_CAP of max HP."
+    },
+    {
+      "key": "lineage.resentment.x.name",
+      "text": "Revenge Release"
+    },
+    {
+      "key": "lineage.resentment.x.desc",
+      "text": "The next non-triggered hit spends the reserve as damage and sacrifices MON_LINEAGE_GAIN of the ongoing STR pool."
+    },
+    {
+      "key": "rule.lineage_resentment_x.name",
+      "text": "Revenge Release"
+    },
+    {
+      "key": "rule.lineage_resentment_x.desc",
+      "text": "The next non-triggered hit spends the reserve as damage and sacrifices MON_LINEAGE_GAIN of the ongoing STR pool."
+    },
+    {
+      "key": "lineage.deaths_door.v.name",
+      "text": "Borrowed Recovery"
+    },
+    {
+      "key": "lineage.deaths_door.v.desc",
+      "text": "Only the first survived lethal blow opens MON_LINEAGE_WINDOW own actions of healing MON_LINEAGE_GAIN of missing HP. Survival odds are unchanged."
+    },
+    {
+      "key": "rule.lineage_deaths_door_v.name",
+      "text": "Borrowed Recovery"
+    },
+    {
+      "key": "rule.lineage_deaths_door_v.desc",
+      "text": "Only the first survived lethal blow opens MON_LINEAGE_WINDOW own actions of healing MON_LINEAGE_GAIN of missing HP. Survival odds are unchanged."
+    },
+    {
+      "key": "lineage.deaths_door.x.name",
+      "text": "Final Answer"
+    },
+    {
+      "key": "lineage.deaths_door.x.desc",
+      "text": "A survived lethal blow prepares one hit with MON_LINEAGE_CAP bonus damage, consumed on attack. Preparation ends above MON_LINEAGE_CAP max HP; recovery never refreshes."
+    },
+    {
+      "key": "rule.lineage_deaths_door_x.name",
+      "text": "Final Answer"
+    },
+    {
+      "key": "rule.lineage_deaths_door_x.desc",
+      "text": "A survived lethal blow prepares one hit with MON_LINEAGE_CAP bonus damage, consumed on attack. Preparation ends above MON_LINEAGE_CAP max HP; recovery never refreshes."
+    },
+    {
+      "key": "lineage.one_more.v.name",
+      "text": "Carried Momentum"
+    },
+    {
+      "key": "lineage.one_more.v.desc",
+      "text": "Bank MON_LINEAGE_GAIN of otherwise wasted gauge refund, capped at MON_LINEAGE_CAP of a gauge. Release into own ordinary gauge on a later action."
+    },
+    {
+      "key": "rule.lineage_one_more_v.name",
+      "text": "Carried Momentum"
+    },
+    {
+      "key": "rule.lineage_one_more_v.desc",
+      "text": "Bank MON_LINEAGE_GAIN of otherwise wasted gauge refund, capped at MON_LINEAGE_CAP of a gauge. Release into own ordinary gauge on a later action."
+    },
+    {
+      "key": "lineage.one_more.x.name",
+      "text": "Shared Opening"
+    },
+    {
+      "key": "lineage.one_more.x.desc",
+      "text": "Release the bank into the first living non-risen ally instead, capped at a full gauge. Use self when alone. Existing action limits remain."
+    },
+    {
+      "key": "rule.lineage_one_more_x.name",
+      "text": "Shared Opening"
+    },
+    {
+      "key": "rule.lineage_one_more_x.desc",
+      "text": "Release the bank into the first living non-risen ally instead, capped at a full gauge. Use self when alone. Existing action limits remain."
+    },
+    {
+      "key": "lineage.latent_power.v.name",
+      "text": "Stirring Power"
+    },
+    {
+      "key": "lineage.latent_power.v.desc",
+      "text": "MON_LINEAGE_WINDOW actions before full activation, gain a short MON_LINEAGE_GAIN damage anticipation window. Original activation threshold remains."
+    },
+    {
+      "key": "rule.lineage_latent_power_v.name",
+      "text": "Stirring Power"
+    },
+    {
+      "key": "rule.lineage_latent_power_v.desc",
+      "text": "MON_LINEAGE_WINDOW actions before full activation, gain a short MON_LINEAGE_GAIN damage anticipation window. Original activation threshold remains."
+    },
+    {
+      "key": "lineage.latent_power.x.name",
+      "text": "Awakening Surge"
+    },
+    {
+      "key": "lineage.latent_power.x.desc",
+      "text": "Full activation advances all current skill cooldowns by MON_LINEAGE_WINDOW once per fight. The normal full awakening still applies."
+    },
+    {
+      "key": "rule.lineage_latent_power_x.name",
+      "text": "Awakening Surge"
+    },
+    {
+      "key": "rule.lineage_latent_power_x.desc",
+      "text": "Full activation advances all current skill cooldowns by MON_LINEAGE_WINDOW once per fight. The normal full awakening still applies."
+    },
+    {
+      "key": "lineage.lone_wolf.v.name",
+      "text": "Personal Challenge"
+    },
+    {
+      "key": "lineage.lone_wolf.v.desc",
+      "text": "While alone, actions build MON_LINEAGE_GAIN damage against a designated first living enemy, capped at MON_LINEAGE_CAP. Switching opponent resets progress."
+    },
+    {
+      "key": "rule.lineage_lone_wolf_v.name",
+      "text": "Personal Challenge"
+    },
+    {
+      "key": "rule.lineage_lone_wolf_v.desc",
+      "text": "While alone, actions build MON_LINEAGE_GAIN damage against a designated first living enemy, capped at MON_LINEAGE_CAP. Switching opponent resets progress."
+    },
+    {
+      "key": "lineage.lone_wolf.x.name",
+      "text": "Duel Within The Crowd"
+    },
+    {
+      "key": "lineage.lone_wolf.x.desc",
+      "text": "The challenge also builds with allies, at MON_LINEAGE_GAIN of solo effectiveness. Original team stat penalty remains."
+    },
+    {
+      "key": "rule.lineage_lone_wolf_x.name",
+      "text": "Duel Within The Crowd"
+    },
+    {
+      "key": "rule.lineage_lone_wolf_x.desc",
+      "text": "The challenge also builds with allies, at MON_LINEAGE_GAIN of solo effectiveness. Original team stat penalty remains."
+    },
+    {
+      "key": "lineage.arise.v.name",
+      "text": "Protective Shade"
+    },
+    {
+      "key": "lineage.arise.v.desc",
+      "text": "A newly raised ally grants its summoner a barrier equal to MON_LINEAGE_GAIN of its max HP and records ownership. Original raise limits remain."
+    },
+    {
+      "key": "rule.lineage_arise_v.name",
+      "text": "Protective Shade"
+    },
+    {
+      "key": "rule.lineage_arise_v.desc",
+      "text": "A newly raised ally grants its summoner a barrier equal to MON_LINEAGE_GAIN of its max HP and records ownership. Original raise limits remain."
+    },
+    {
+      "key": "lineage.arise.x.name",
+      "text": "Shade Communion"
+    },
+    {
+      "key": "lineage.arise.x.desc",
+      "text": "On its next action the owner sacrifices its living shade once, healing MON_LINEAGE_GAIN of shade max HP and gaining MON_LINEAGE_CAP damage for MON_LINEAGE_WINDOW ticks. No extra action or revival."
+    },
+    {
+      "key": "rule.lineage_arise_x.name",
+      "text": "Shade Communion"
+    },
+    {
+      "key": "rule.lineage_arise_x.desc",
+      "text": "On its next action the owner sacrifices its living shade once, healing MON_LINEAGE_GAIN of shade max HP and gaining MON_LINEAGE_CAP damage for MON_LINEAGE_WINDOW ticks. No extra action or revival."
+    },
+    {
+      "key": "lineage.last_rite.v.name",
+      "text": "Living Legacy"
+    },
+    {
+      "key": "lineage.last_rite.v.desc",
+      "text": "Own actions build a visible shield legacy by MON_LINEAGE_GAIN, capped at MON_LINEAGE_CAP. On death each living ally receives max HP × reserve × original rite share as shield, alongside the original stat transfer."
+    },
+    {
+      "key": "rule.lineage_last_rite_v.name",
+      "text": "Living Legacy"
+    },
+    {
+      "key": "rule.lineage_last_rite_v.desc",
+      "text": "Own actions build a visible shield legacy by MON_LINEAGE_GAIN, capped at MON_LINEAGE_CAP. On death each living ally receives max HP × reserve × original rite share as shield, alongside the original stat transfer."
+    },
+    {
+      "key": "lineage.last_rite.x.name",
+      "text": "Early Bequest"
+    },
+    {
+      "key": "lineage.last_rite.x.desc",
+      "text": "At full reserve, once per fight grant the first living non-risen ally max HP × reserve × MON_LINEAGE_GAIN as shield, spending MON_LINEAGE_GAIN of reserve. Remaining legacy can still transfer on death."
+    },
+    {
+      "key": "rule.lineage_last_rite_x.name",
+      "text": "Early Bequest"
+    },
+    {
+      "key": "rule.lineage_last_rite_x.desc",
+      "text": "At full reserve, once per fight grant the first living non-risen ally max HP × reserve × MON_LINEAGE_GAIN as shield, spending MON_LINEAGE_GAIN of reserve. Remaining legacy can still transfer on death."
+    },
+    {
+      "key": "lineage.hemorrhage.v.name",
+      "text": "Clot Memory"
+    },
+    {
+      "key": "lineage.hemorrhage.v.desc",
+      "text": "A bleed burst retains at least MON_LINEAGE_GAIN and at most MON_LINEAGE_CAP of the bleed threshold as overflow, including natural excess. The original burst remains."
+    },
+    {
+      "key": "rule.lineage_hemorrhage_v.name",
+      "text": "Clot Memory"
+    },
+    {
+      "key": "rule.lineage_hemorrhage_v.desc",
+      "text": "A bleed burst retains at least MON_LINEAGE_GAIN and at most MON_LINEAGE_CAP of the bleed threshold as overflow, including natural excess. The original burst remains."
+    },
+    {
+      "key": "lineage.hemorrhage.x.name",
+      "text": "Spreading Rupture"
+    },
+    {
+      "key": "lineage.hemorrhage.x.desc",
+      "text": "Also seed the same bounded overflow on one other living enemy without causing an immediate burst. Alone, add MON_LINEAGE_GAIN of that overflow back to the original target."
+    },
+    {
+      "key": "rule.lineage_hemorrhage_x.name",
+      "text": "Spreading Rupture"
+    },
+    {
+      "key": "rule.lineage_hemorrhage_x.desc",
+      "text": "Also seed the same bounded overflow on one other living enemy without causing an immediate burst. Alone, add MON_LINEAGE_GAIN of that overflow back to the original target."
+    },
+    {
+      "key": "lineage.privileged_status.v.name",
+      "text": "Read The Weakness"
+    },
+    {
+      "key": "lineage.privileged_status.v.desc",
+      "text": "DEF/WIS debuffs reduce mitigation by MON_LINEAGE_GAIN; SPD/DEX debuffs refund a small MON_LINEAGE_GAIN squared gauge fraction; other stat debuffs heal MON_LINEAGE_GAIN squared of missing HP and build a capped reserve. Original debuff-threshold damage stays."
+    },
+    {
+      "key": "rule.lineage_privileged_status_v.name",
+      "text": "Read The Weakness"
+    },
+    {
+      "key": "rule.lineage_privileged_status_v.desc",
+      "text": "DEF/WIS debuffs reduce mitigation by MON_LINEAGE_GAIN; SPD/DEX debuffs refund a small MON_LINEAGE_GAIN squared gauge fraction; other stat debuffs heal MON_LINEAGE_GAIN squared of missing HP and build a capped reserve. Original debuff-threshold damage stays."
+    },
+    {
+      "key": "lineage.privileged_status.x.name",
+      "text": "Exploit And Release"
+    },
+    {
+      "key": "lineage.privileged_status.x.desc",
+      "text": "At MON_LINEAGE_CAP reserve, empower one hit by the reserve, spend it, and remove one negative target effect, giving up sustained debuff pressure."
+    },
+    {
+      "key": "rule.lineage_privileged_status_x.name",
+      "text": "Exploit And Release"
+    },
+    {
+      "key": "rule.lineage_privileged_status_x.desc",
+      "text": "At MON_LINEAGE_CAP reserve, empower one hit by the reserve, spend it, and remove one negative target effect, giving up sustained debuff pressure."
+    },
+    {
+      "key": "lineage.equilibrium.v.name",
+      "text": "Resonant Sequence"
+    },
+    {
+      "key": "lineage.equilibrium.v.desc",
+      "text": "MON_LINEAGE_WINDOW successive element changes discharge a MON_LINEAGE_GAIN damage bonus; repeated elements reset progress. Original target marks still apply."
+    },
+    {
+      "key": "rule.lineage_equilibrium_v.name",
+      "text": "Resonant Sequence"
+    },
+    {
+      "key": "rule.lineage_equilibrium_v.desc",
+      "text": "MON_LINEAGE_WINDOW successive element changes discharge a MON_LINEAGE_GAIN damage bonus; repeated elements reset progress. Original target marks still apply."
+    },
+    {
+      "key": "lineage.equilibrium.x.name",
+      "text": "Resonant Relay"
+    },
+    {
+      "key": "lineage.equilibrium.x.desc",
+      "text": "Discharge grants the first non-risen ally of another element MON_LINEAGE_CAP damage for MON_LINEAGE_WINDOW ticks; without such an ally empower the current hit by MON_LINEAGE_CAP."
+    },
+    {
+      "key": "rule.lineage_equilibrium_x.name",
+      "text": "Resonant Relay"
+    },
+    {
+      "key": "rule.lineage_equilibrium_x.desc",
+      "text": "Discharge grants the first non-risen ally of another element MON_LINEAGE_CAP damage for MON_LINEAGE_WINDOW ticks; without such an ally empower the current hit by MON_LINEAGE_CAP."
+    },
+    {
+      "key": "lineage.corruption.v.name",
+      "text": "Forbidden Residue"
+    },
+    {
+      "key": "lineage.corruption.v.desc",
+      "text": "Each recorded skill lock adds MON_LINEAGE_GAIN damage to remaining damaging skills, capped at MON_LINEAGE_CAP. Original duplicate cast and lock remain."
+    },
+    {
+      "key": "rule.lineage_corruption_v.name",
+      "text": "Forbidden Residue"
+    },
+    {
+      "key": "rule.lineage_corruption_v.desc",
+      "text": "Each recorded skill lock adds MON_LINEAGE_GAIN damage to remaining damaging skills, capped at MON_LINEAGE_CAP. Original duplicate cast and lock remain."
+    },
+    {
+      "key": "lineage.corruption.x.name",
+      "text": "Reclaimed Spell"
+    },
+    {
+      "key": "lineage.corruption.x.desc",
+      "text": "Once after MON_LINEAGE_WINDOW recorded locks, restore the oldest locked skill with MON_LINEAGE_WINDOW recovery cooldown. Spend residue; all subsequent damaging skills operate at one minus MON_LINEAGE_GAIN power and still lock normally."
+    },
+    {
+      "key": "rule.lineage_corruption_x.name",
+      "text": "Reclaimed Spell"
+    },
+    {
+      "key": "rule.lineage_corruption_x.desc",
+      "text": "Once after MON_LINEAGE_WINDOW recorded locks, restore the oldest locked skill with MON_LINEAGE_WINDOW recovery cooldown. Spend residue; all subsequent damaging skills operate at one minus MON_LINEAGE_GAIN power and still lock normally."
+    },
+    {
+      "key": "lineage.dead_branch.v.name",
+      "text": "Guided Growth"
+    },
+    {
+      "key": "lineage.dead_branch.v.desc",
+      "text": "When drawing, first favor a skill role not currently present among unlocked skills. The original random draw picks within that role; an exhausted pool grants nothing."
+    },
+    {
+      "key": "rule.lineage_dead_branch_v.name",
+      "text": "Guided Growth"
+    },
+    {
+      "key": "rule.lineage_dead_branch_v.desc",
+      "text": "When drawing, first favor a skill role not currently present among unlocked skills. The original random draw picks within that role; an exhausted pool grants nothing."
+    },
+    {
+      "key": "lineage.dead_branch.x.name",
+      "text": "Signature Branch"
+    },
+    {
+      "key": "lineage.dead_branch.x.desc",
+      "text": "The first drawn skill becomes a temporary signature that resists one subsequent lock. It then follows normal cooldown and lock rules. No skill is inherited permanently."
+    },
+    {
+      "key": "rule.lineage_dead_branch_x.name",
+      "text": "Signature Branch"
+    },
+    {
+      "key": "rule.lineage_dead_branch_x.desc",
+      "text": "The first drawn skill becomes a temporary signature that resists one subsequent lock. It then follows normal cooldown and lock rules. No skill is inherited permanently."
+    },
+    {
+      "key": "lineage.heirloom.v.name",
+      "text": "Chosen Keepsake"
+    },
+    {
+      "key": "lineage.heirloom.v.desc",
+      "text": "Nominate a bought keepsake stat. Each drill of it builds {LINEAGE_TRAIN_GAIN:pct} extra growth, up to {LINEAGE_TRAIN_CAP:pct}."
+    },
+    {
+      "key": "rule.lineage_heirloom_v.name",
+      "text": "Chosen Keepsake"
+    },
+    {
+      "key": "rule.lineage_heirloom_v.desc",
+      "text": "Nominate a bought keepsake stat. Each drill of it builds {LINEAGE_TRAIN_GAIN:pct} extra growth, up to {LINEAGE_TRAIN_CAP:pct}."
+    },
+    {
+      "key": "lineage.heirloom.x.name",
+      "text": "Living Inheritance"
+    },
+    {
+      "key": "lineage.heirloom.x.desc",
+      "text": "Once per run, redirect {LINEAGE_TRAIN_GAIN:pct} of the built keepsake growth to another stat. The original keeps the remainder."
+    },
+    {
+      "key": "rule.lineage_heirloom_x.name",
+      "text": "Living Inheritance"
+    },
+    {
+      "key": "rule.lineage_heirloom_x.desc",
+      "text": "Once per run, redirect {LINEAGE_TRAIN_GAIN:pct} of the built keepsake growth to another stat. The original keeps the remainder."
+    },
+    {
+      "key": "lineage.mastery.v.name",
+      "text": "Master’s Commitment"
+    },
+    {
+      "key": "lineage.mastery.v.desc",
+      "text": "Commit to preserving one mastered ordinary capstone, or pursuing a bought ordinary capstone with one extra mastery step per rank victory. Chase, fusion and Mastery itself are excluded."
+    },
+    {
+      "key": "rule.lineage_mastery_v.name",
+      "text": "Master’s Commitment"
+    },
+    {
+      "key": "rule.lineage_mastery_v.desc",
+      "text": "Commit to preserving one mastered ordinary capstone, or pursuing a bought ordinary capstone with one extra mastery step per rank victory. Chase, fusion and Mastery itself are excluded."
+    },
+    {
+      "key": "lineage.mastery.x.name",
+      "text": "Integrated Discipline"
+    },
+    {
+      "key": "lineage.mastery.x.desc",
+      "text": "While preserving your chosen mastered capstone, your current kit gains {LINEAGE_TRAIN_GAIN:pct} growth to every trained stat. Pursuit remains available instead."
+    },
+    {
+      "key": "rule.lineage_mastery_x.name",
+      "text": "Integrated Discipline"
+    },
+    {
+      "key": "rule.lineage_mastery_x.desc",
+      "text": "While preserving your chosen mastered capstone, your current kit gains {LINEAGE_TRAIN_GAIN:pct} growth to every trained stat. Pursuit remains available instead."
+    },
+    {
+      "key": "lineage.limit_break.v.name",
+      "text": "Overflow Reserve"
+    },
+    {
+      "key": "lineage.limit_break.v.desc",
+      "text": "Drilling a stat already at its normal cap stores {LINEAGE_TRAIN_GAIN:pct} of its drill gain as a rank-fight DEF bonus, bounded at {LINEAGE_TRAIN_CAP:pct} of the normal stat cap. The training cap remains unchanged."
+    },
+    {
+      "key": "rule.lineage_limit_break_v.name",
+      "text": "Overflow Reserve"
+    },
+    {
+      "key": "rule.lineage_limit_break_v.desc",
+      "text": "Drilling a stat already at its normal cap stores {LINEAGE_TRAIN_GAIN:pct} of its drill gain as a rank-fight DEF bonus, bounded at {LINEAGE_TRAIN_CAP:pct} of the normal stat cap. The training cap remains unchanged."
+    },
+    {
+      "key": "lineage.limit_break.x.name",
+      "text": "Manifestation"
+    },
+    {
+      "key": "lineage.limit_break.x.desc",
+      "text": "Once per run, commit the stored overflow to rank-fight STR or DEF. Stored overflow never feeds itself and cannot exceed its bound."
+    },
+    {
+      "key": "rule.lineage_limit_break_x.name",
+      "text": "Manifestation"
+    },
+    {
+      "key": "rule.lineage_limit_break_x.desc",
+      "text": "Once per run, commit the stored overflow to rank-fight STR or DEF. Stored overflow never feeds itself and cannot exceed its bound."
+    },
+    {
+      "key": "lineage.iron_vow.v.name",
+      "text": "Training Rhythm"
+    },
+    {
+      "key": "lineage.iron_vow.v.desc",
+      "text": "Consecutive drills of the same stat build {LINEAGE_TRAIN_GAIN:pct} bonus drill gain each, up to {LINEAGE_TRAIN_CAP:pct}. Switching stats restarts the rhythm; rank fights clear it. Rest remains forbidden."
+    },
+    {
+      "key": "rule.lineage_iron_vow_v.name",
+      "text": "Training Rhythm"
+    },
+    {
+      "key": "rule.lineage_iron_vow_v.desc",
+      "text": "Consecutive drills of the same stat build {LINEAGE_TRAIN_GAIN:pct} bonus drill gain each, up to {LINEAGE_TRAIN_CAP:pct}. Switching stats restarts the rhythm; rank fights clear it. Rest remains forbidden."
+    },
+    {
+      "key": "lineage.iron_vow.x.name",
+      "text": "Vow Recovery"
+    },
+    {
+      "key": "lineage.iron_vow.x.desc",
+      "text": "Spend {LINEAGE_TRAIN_CHARGE} rhythm to recover {LINEAGE_TRAIN_CAP:pct} maximum energy without using Rest. Rebuilding rhythm still costs drills."
+    },
+    {
+      "key": "rule.lineage_iron_vow_x.name",
+      "text": "Vow Recovery"
+    },
+    {
+      "key": "rule.lineage_iron_vow_x.desc",
+      "text": "Spend {LINEAGE_TRAIN_CHARGE} rhythm to recover {LINEAGE_TRAIN_CAP:pct} maximum energy without using Rest. Rebuilding rhythm still costs drills."
+    },
+    {
+      "key": "lineage.cursed_mark.v.name",
+      "text": "Focused Curse"
+    },
+    {
+      "key": "lineage.cursed_mark.v.desc",
+      "text": "Commit to a non-DEF specialization. Rank opponents lose another {LINEAGE_TRAIN_GAIN:pct} of that stat after the ordinary curse. DEF training stays disabled."
+    },
+    {
+      "key": "rule.lineage_cursed_mark_v.name",
+      "text": "Focused Curse"
+    },
+    {
+      "key": "rule.lineage_cursed_mark_v.desc",
+      "text": "Commit to a non-DEF specialization. Rank opponents lose another {LINEAGE_TRAIN_GAIN:pct} of that stat after the ordinary curse. DEF training stays disabled."
+    },
+    {
+      "key": "lineage.cursed_mark.x.name",
+      "text": "Shared Burden"
+    },
+    {
+      "key": "lineage.cursed_mark.x.desc",
+      "text": "While alive in a team, reduce damage to another ally by {MON_LINEAGE_GAIN:pct} when the attacker has more DEF than you. Multiple carriers do not stack; no extra solo benefit."
+    },
+    {
+      "key": "rule.lineage_cursed_mark_x.name",
+      "text": "Shared Burden"
+    },
+    {
+      "key": "rule.lineage_cursed_mark_x.desc",
+      "text": "While alive in a team, reduce damage to another ally by {MON_LINEAGE_GAIN:pct} when the attacker has more DEF than you. Multiple carriers do not stack; no extra solo benefit."
+    },
+    {
+      "key": "lineage.devourer.v.name",
+      "text": "Directed Absorption"
+    },
+    {
+      "key": "lineage.devourer.v.desc",
+      "text": "Choose which trained stat receives future devoured growth. Rank wins remain required and cycle energy upkeep stays unchanged."
+    },
+    {
+      "key": "rule.lineage_devourer_v.name",
+      "text": "Directed Absorption"
+    },
+    {
+      "key": "rule.lineage_devourer_v.desc",
+      "text": "Choose which trained stat receives future devoured growth. Rank wins remain required and cycle energy upkeep stays unchanged."
+    },
+    {
+      "key": "lineage.devourer.x.name",
+      "text": "Adaptive Feeding"
+    },
+    {
+      "key": "lineage.devourer.x.desc",
+      "text": "Choose to divert {LINEAGE_TRAIN_CAP:pct} of future devoured growth into a temporary chosen-stat bonus for the next rank fight, bounded at {LINEAGE_TRAIN_CAP:pct} of the normal stat cap. The remainder stays permanent."
+    },
+    {
+      "key": "rule.lineage_devourer_x.name",
+      "text": "Adaptive Feeding"
+    },
+    {
+      "key": "rule.lineage_devourer_x.desc",
+      "text": "Choose to divert {LINEAGE_TRAIN_CAP:pct} of future devoured growth into a temporary chosen-stat bonus for the next rank fight, bounded at {LINEAGE_TRAIN_CAP:pct} of the normal stat cap. The remainder stays permanent."
+    },
+    {
+      "key": "lineage.second_breath.v.name",
+      "text": "Refund Reserve"
+    },
+    {
+      "key": "lineage.second_breath.v.desc",
+      "text": "Each refunded Super drill adds one reserve charge, up to {LINEAGE_TRAIN_CHARGE}. Low-energy drills still cannot Super."
+    },
+    {
+      "key": "rule.lineage_second_breath_v.name",
+      "text": "Refund Reserve"
+    },
+    {
+      "key": "rule.lineage_second_breath_v.desc",
+      "text": "Each refunded Super drill adds one reserve charge, up to {LINEAGE_TRAIN_CHARGE}. Low-energy drills still cannot Super."
+    },
+    {
+      "key": "lineage.second_breath.x.name",
+      "text": "Steady Breath"
+    },
+    {
+      "key": "lineage.second_breath.x.desc",
+      "text": "Spend {LINEAGE_TRAIN_CHARGE} reserve charges to stabilize the next drill against injury. Failure, Super restrictions and the ordinary drill costs remain unchanged."
+    },
+    {
+      "key": "rule.lineage_second_breath_x.name",
+      "text": "Steady Breath"
+    },
+    {
+      "key": "rule.lineage_second_breath_x.desc",
+      "text": "Spend {LINEAGE_TRAIN_CHARGE} reserve charges to stabilize the next drill against injury. Failure, Super restrictions and the ordinary drill costs remain unchanged."
+    },
+    {
+      "key": "lineage.ascetic.v.name",
+      "text": "Patient Practice"
+    },
+    {
+      "key": "lineage.ascetic.v.desc",
+      "text": "Bank one action point within the current cycle, then release it when wanted. Unreleased actions expire at the cycle boundary; no extra actions are created."
+    },
+    {
+      "key": "rule.lineage_ascetic_v.name",
+      "text": "Patient Practice"
+    },
+    {
+      "key": "rule.lineage_ascetic_v.desc",
+      "text": "Bank one action point within the current cycle, then release it when wanted. Unreleased actions expire at the cycle boundary; no extra actions are created."
+    },
+    {
+      "key": "lineage.ascetic.x.name",
+      "text": "Chosen Sacrifice"
+    },
+    {
+      "key": "lineage.ascetic.x.desc",
+      "text": "Once per run, exchange one action point for the normal victory SP amount. The exchange requires another action left; rank victories still grant no SP."
+    },
+    {
+      "key": "rule.lineage_ascetic_x.name",
+      "text": "Chosen Sacrifice"
+    },
+    {
+      "key": "rule.lineage_ascetic_x.desc",
+      "text": "Once per run, exchange one action point for the normal victory SP amount. The exchange requires another action left; rank victories still grant no SP."
+    },
+    {
+      "key": "lineage.hungry_core.v.name",
+      "text": "Feeding Regimen"
+    },
+    {
+      "key": "lineage.hungry_core.v.desc",
+      "text": "Commit next cycle to modest feeding with {LINEAGE_TRAIN_CAP:pct} less upkeep and fed bonus, or heavy feeding with {LINEAGE_TRAIN_CAP:pct} more upkeep and fed bonus. Starvation still disables the core."
+    },
+    {
+      "key": "rule.lineage_hungry_core_v.name",
+      "text": "Feeding Regimen"
+    },
+    {
+      "key": "rule.lineage_hungry_core_v.desc",
+      "text": "Commit next cycle to modest feeding with {LINEAGE_TRAIN_CAP:pct} less upkeep and fed bonus, or heavy feeding with {LINEAGE_TRAIN_CAP:pct} more upkeep and fed bonus. Starvation still disables the core."
+    },
+    {
+      "key": "lineage.hungry_core.x.name",
+      "text": "Specialized Core"
+    },
+    {
+      "key": "lineage.hungry_core.x.desc",
+      "text": "Alternatively keep normal upkeep and move {LINEAGE_TRAIN_CAP:pct} of every other fed stat bonus into one chosen stat for the next cycle’s rank fight. Feeding choices never retune an already paid meal."
+    },
+    {
+      "key": "rule.lineage_hungry_core_x.name",
+      "text": "Specialized Core"
+    },
+    {
+      "key": "rule.lineage_hungry_core_x.desc",
+      "text": "Alternatively keep normal upkeep and move {LINEAGE_TRAIN_CAP:pct} of every other fed stat bonus into one chosen stat for the next cycle’s rank fight. Feeding choices never retune an already paid meal."
     }
   ]
 }

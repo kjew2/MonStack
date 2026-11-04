@@ -114,6 +114,7 @@ namespace IdleRng.Sim.Combat
         static void LockSkill(RuleCtx c, FightUnit u, int index)
         {
             if (u.SkillLocked(index)) return;
+            if (LineageAdvancedKeepSignature(c, u, index)) return;
             (u.Locked ??= new List<int>()).Add(index);
             if (u.Alive && Has(u, RuleModifiers.DeadBranch)) GainBranchSkill(c, u);
         }
@@ -128,6 +129,7 @@ namespace IdleRng.Sim.Combat
             if (pool == null || pool.Count == 0) return;
             var options = new List<CombatSkill>(pool.Count);
             foreach (var sk in pool) if (!HasSkill(u, sk.Id)) options.Add(sk);
+            LineageAdvancedBranchOptions(c, u, options);
             if (options.Count == 0) return;
             var pick = options.Count == 1 || c.Rng == null ? options[0]
                 : options[Math.Min(options.Count - 1, (int)(c.Rng.NextDouble() * options.Count))];

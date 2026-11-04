@@ -303,7 +303,7 @@ namespace IdleRng.Sim.Training
 
             s.Sp -= node.Cost;
             ts.Bought++;
-            if (s.Lineage != null && ts.TreeId == "fortune")
+            if (s.Lineage != null && ts.TreeId == s.Lineage.TreeId)
                 s.Lineage.Deepest = Math.Max(s.Lineage.Deepest, ts.Bought);
             var result = new SpendResult { Node = node };
             if (node.Kind == NodeKind.Stat)
@@ -374,8 +374,11 @@ namespace IdleRng.Sim.Training
                 foreach (var id in extra) AddToKit(f, c.TreeNodes[id]);
             HookKit(c, speciesId, list, f);
             foreach (var t in list)
-                if (t.TreeId == "fortune" && t.Roll?.LineageRank >= 5 && t.Bought >= c.Trees["fortune"].Nodes.Count)
-                    f.Rules.Add(RuleModifiers.FortuneBank);
+                if (t.Roll?.LineageRank >= 5 && t.Bought >= c.Trees[t.TreeId].Nodes.Count)
+                {
+                    f.Rules.Add(t.TreeId == "fortune" ? RuleModifiers.FortuneBank : "lineage_" + t.TreeId + "_v");
+                    if (t.Roll.LineageRank >= 10) f.Rules.Add("lineage_" + t.TreeId + "_x");
+                }
             return f;
         }
 
@@ -989,6 +992,7 @@ namespace IdleRng.Sim.Training
                 case RunCommandKind.SpendPoint: SpendPoint(c, s, cmd.Slot); break;
                 case RunCommandKind.UseBook: UseBook(c, s, cmd.Book); break;
                 case RunCommandKind.RerollDraft: RerollDraft(c, s); break;
+                case RunCommandKind.LineageChoice: LineageChoice(c, s, cmd.LineageAction, cmd.Stat); break;
                 default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd.Kind, "unknown command");
             }
         }
@@ -1103,6 +1107,7 @@ namespace IdleRng.Sim.Training
             {
                 w.Str("lineage-v1"); w.I32(s.Lineage.Rank); w.I32(s.Lineage.Deepest);
                 w.I32(s.Lineage.Primary); w.I32(s.Lineage.Supporting);
+                if (s.Lineage.TreeId != "fortune") { w.Str("lineage-tree"); w.Str(s.Lineage.TreeId); }
             }
             HookHashRun(w, s);   // lane run-rule state, only for runs that have it
             return Sha256.Hex(Sha256.Compute(w.ToArray()));

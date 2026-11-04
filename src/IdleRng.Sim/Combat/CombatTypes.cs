@@ -415,6 +415,9 @@ namespace IdleRng.Sim.Combat
         /// <summary>Fortune = min(FortuneCap, LUK / (LUK + FortuneK)): the chance to reroll a roll that went against the unit.</summary>
         public double FortuneK { get; set; }
         public double FortuneCap { get; set; }
+        public double LineageGain { get; set; }
+        public double LineageCap { get; set; }
+        public int LineageWindow { get; set; }
         public double FortuneBankStep { get; set; }
         public double FortuneBankCap { get; set; }
         public double SpdMin { get; set; }
@@ -509,7 +512,7 @@ namespace IdleRng.Sim.Combat
                 ElementStrongMult = k.ElementStrongMult, ElementWeakMult = k.ElementWeakMult,
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
-                CritDmg = k.MonCritDmg, CritDmgPerDex = k.MonCritDmgPerDex, GrazeMult = k.MonGrazeMult, FortuneK = k.MonFortuneK, FortuneCap = k.MonFortuneCap, FortuneBankStep = c.ConstantValues["MON_FORTUNE_BANK_STEP"], FortuneBankCap = c.ConstantValues["MON_FORTUNE_BANK_CAP"], SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
+                CritDmg = k.MonCritDmg, CritDmgPerDex = k.MonCritDmgPerDex, GrazeMult = k.MonGrazeMult, FortuneK = k.MonFortuneK, FortuneCap = k.MonFortuneCap, LineageGain = c.ConstantValues["MON_LINEAGE_GAIN"], LineageCap = c.ConstantValues["MON_LINEAGE_CAP"], LineageWindow = (int)c.ConstantValues["MON_LINEAGE_WINDOW"], FortuneBankStep = c.ConstantValues["MON_FORTUNE_BANK_STEP"], FortuneBankCap = c.ConstantValues["MON_FORTUNE_BANK_CAP"], SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
                 TideRegen = k.MonTideRegen, TideShieldCap = k.MonTideShieldCap, DrainFrac = k.MonDrainFrac, FirePierce = k.MonFirePierce,
                 DoubleTurns = k.MonDoubleTurns, RebirthHeal = k.MonRebirthHeal, WailStagger = k.MonWailStagger, WailWither = k.MonWailWither,
                 VeilEvadeCap = k.MonVeilEvadeCap, FeastStr = k.MonFeastStr, CounterMult = k.MonCounterMult, FireBonus = k.MonFireBonus,
@@ -948,7 +951,7 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string Shatterpoint = "shatterpoint";
 
-        public static readonly string[] Known = { FortuneBank, CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
+        public static readonly string[] Known = { "lineage_vital_core_v", "lineage_vital_core_x", "lineage_brute_force_v", "lineage_brute_force_x", "lineage_spellcraft_v", "lineage_spellcraft_x", "lineage_sage_mind_v", "lineage_sage_mind_x", "lineage_nimble_feet_v", "lineage_nimble_feet_x", "lineage_bulwark_v", "lineage_bulwark_x", "lineage_overclock_v", "lineage_overclock_x", "lineage_fortune_v", "lineage_fortune_x", "lineage_battle_instinct_v", "lineage_battle_instinct_x", "lineage_survivor_v", "lineage_survivor_x", "lineage_lifeblood_v", "lineage_lifeblood_x", "lineage_berserker_v", "lineage_berserker_x", "lineage_runeweaver_v", "lineage_runeweaver_x", "lineage_hermit_v", "lineage_hermit_x", "lineage_duelist_v", "lineage_duelist_x", "lineage_stonewall_v", "lineage_stonewall_x", "lineage_quickstep_v", "lineage_quickstep_x", "lineage_lucky_star_v", "lineage_lucky_star_x", "lineage_iron_reflexes_v", "lineage_iron_reflexes_x", "lineage_resentment_v", "lineage_resentment_x", "lineage_deaths_door_v", "lineage_deaths_door_x", "lineage_one_more_v", "lineage_one_more_x", "lineage_latent_power_v", "lineage_latent_power_x", "lineage_lone_wolf_v", "lineage_lone_wolf_x", "lineage_arise_v", "lineage_arise_x", "lineage_last_rite_v", "lineage_last_rite_x", "lineage_heirloom_v", "lineage_heirloom_x", "lineage_mastery_v", "lineage_mastery_x", "lineage_limit_break_v", "lineage_limit_break_x", "lineage_hemorrhage_v", "lineage_hemorrhage_x", "lineage_privileged_status_v", "lineage_privileged_status_x", "lineage_equilibrium_v", "lineage_equilibrium_x", "lineage_corruption_v", "lineage_corruption_x", "lineage_dead_branch_v", "lineage_dead_branch_x", "lineage_iron_vow_v", "lineage_iron_vow_x", "lineage_cursed_mark_v", "lineage_cursed_mark_x", "lineage_devourer_v", "lineage_devourer_x", "lineage_second_breath_v", "lineage_second_breath_x", "lineage_ascetic_v", "lineage_ascetic_x", "lineage_hungry_core_v", "lineage_hungry_core_x", FortuneBank, CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
             Resentment, Vantage, DeathsDoor, Barricade, ManaWard,

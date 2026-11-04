@@ -200,7 +200,7 @@ namespace IdleRng.Web
         /// and carries its own tooltip ("tip"), since the content tooltip (nodeTips) shows the unrolled node; the capstone's text
         /// adds its growth bonus.
         /// </summary>
-        private void NodesAndBoosts(JsonOut w, IReadOnlyList<TreeNodeDef> nodes, TreeRoll roll)
+        private void NodesAndBoosts(JsonOut w, IReadOnlyList<TreeNodeDef> nodes, TreeRoll roll, string treeId = null)
         {
             w.Key("nodes").Arr();
             for (int i = 0; i < nodes.Count; i++)
@@ -218,7 +218,7 @@ namespace IdleRng.Web
                 if (roll?.LineageRank > 0)
                 {
                     id += "~lineage~" + roll.LineageRank;
-                    if (last && roll.LineageRank >= 5) desc += " " + FortuneEffect();
+                    if (last && roll.LineageRank >= 5) desc += " " + LineageEffect(treeId, roll.LineageRank);
                 }
                 w.Obj().P("id", id).P("cost", n.Cost).P("kind", KindName(n.Kind)).P("name", name).P("desc", desc).P("last", last);
                 if (n.Kind == NodeKind.Rule && Array.IndexOf(TrainingRun.BuyWarnRules, n.RuleId) >= 0) w.P("warn", true);   // the UI asks before the purchase
@@ -257,12 +257,17 @@ namespace IdleRng.Web
         {
             if (roll == null) { w.Null(); return; }
             w.Obj().P("stat", roll.Stat).P("capGrowth", roll.CapGrowth).P("lineageRank", roll.LineageRank);
-            NodesAndBoosts(w, TrainingRun.Nodes(_db, treeId, roll), roll);
-            if (roll.LineageRank >= 5) w.P("lineageEffect", FortuneEffect());
+            NodesAndBoosts(w, TrainingRun.Nodes(_db, treeId, roll), roll, treeId);
+            if (roll.LineageRank >= 5) w.P("lineageEffect", LineageEffect(treeId, roll.LineageRank));
             w.EndObj();
         }
 
         private string FortuneEffect() => TextTemplate.Fill(_db, _db.Text("rule.fortune_bank.desc"));
+        private string LineageEffect(string tree, int rank)
+        {
+            string v = tree == "fortune" ? FortuneEffect() : TextTemplate.Fill(_db, _db.Text("lineage." + tree + ".v.desc"));
+            return rank >= 10 ? v + " " + TextTemplate.Fill(_db, _db.Text("lineage." + tree + ".x.desc")) : v;
+        }
 
         /// <summary>A node kind as content spells it (growth_use for NodeKind.GrowthUse).</summary>
         private static string KindName(NodeKind k) => k == NodeKind.GrowthUse ? "growth_use" : k.ToString().ToLowerInvariant();
@@ -920,12 +925,30 @@ namespace IdleRng.Web
             var lineage = ac.Fortuna;
             w.Key("lineage").Obj().P("rank", lineage.Rank).P("points", lineage.Points)
                 .P("required", FortunaBreeding.Required(_db, lineage)).P("chance", FortunaBreeding.Chance(_db, lineage))
-                .P("failures", lineage.Failures).P("attemptsLeft", Math.Max(0, (int)Math.Ceiling((100.0 - FortunaBreeding.Chance(_db, lineage)) / _db.ConstantValues["LINEAGE_V_PITY"]) + 1))
-                .P("baseChance", (int)_db.ConstantValues["LINEAGE_V_CHANCE"])
-                .P("pityStep", (int)_db.ConstantValues["LINEAGE_V_PITY"])
+                .P("failures", lineage.Failures).P("attemptsLeft", TreeLineages.AttemptsLeft(_db, lineage))
+                .P("baseChance", TreeLineages.BaseChance(_db, lineage))
+                .P("pityStep", TreeLineages.Pity(_db, lineage))
                 .P("retryPercent", _db.ConstantValues["LINEAGE_RETRY_FRAC"] * 100)
                 .P("maxPoints", FortunaBreeding.PointsFor(_db, _db.Trees[FortunaBreeding.Tree].Nodes.Count))
                 .P("cost", FortunaBreeding.Cost(_db)).P("lastAward", lineage.LastAward).P("lastResult", lineage.LastResult).EndObj();
+            w.Key("lineages").Arr();
+            foreach (var tree in TreeLineages.Trees(_db))
+            {
+                var p = TreeLineages.GetLedger(ac, tree.Id);
+                w.Obj().P("tree", tree.Id).P("name", _db.Text(tree.NameKey)).P("rank", p.Rank).P("points", p.Points)
+                    .P("required", TreeLineages.Required(_db, p)).P("chance", TreeLineages.Chance(_db, p))
+                    .P("failures", p.Failures).P("attemptsLeft", TreeLineages.AttemptsLeft(_db, p))
+                    .P("baseChance", TreeLineages.BaseChance(_db, p)).P("pityStep", TreeLineages.Pity(_db, p))
+                    .P("retryPercent", _db.ConstantValues["LINEAGE_RETRY_FRAC"] * 100)
+                    .P("cost", TreeLineages.Cost(_db)).P("maxPoints", TreeLineages.PointsFor(_db, tree.Id, tree.Nodes.Count))
+                    .P("lastAward", p.LastAward).P("lastResult", p.LastResult)
+                    .P("vName", _db.Text("lineage." + tree.Id + ".v.name")).P("vDesc", TextTemplate.Fill(_db, _db.Text("lineage." + tree.Id + ".v.desc")))
+                    .P("xName", _db.Text("lineage." + tree.Id + ".x.name")).P("xDesc", TextTemplate.Fill(_db, _db.Text("lineage." + tree.Id + ".x.desc")));
+                w.Key("eligibleParents").Arr();
+                for (int i = 0; i < ac.Vault.Count; i++) if (TreeLineages.EligiblePrimary(_db, ac.Vault[i], tree.Id)) w.Int(i);
+                w.EndArr().EndObj();
+            }
+            w.EndArr();
             w.Key("owned").Arr();
             foreach (var s in ac.OwnedSpecies) w.Str(s);
             w.EndArr();
@@ -1094,6 +1117,7 @@ namespace IdleRng.Web
                         break;
                     }
                     case CommandKind.Book: w.P("ok", true).P("kind", "book"); break;
+                    case CommandKind.LineageChoice: w.P("ok", true).P("kind", "lineageChoice"); break;
                 }
             }
             catch (Exception e) when (e is InvalidOperationException || e is ArgumentException)
@@ -1278,7 +1302,29 @@ namespace IdleRng.Web
             w.P("apex", apex).P("name", ApexForm.Name(_db, s.SpeciesId, apex));
             w.P("phase", s.Phase.ToString().ToLowerInvariant()).P("end", s.End.ToString().ToLowerInvariant());
             w.P("cycle", s.Cycle).P("ap", s.ApLeft).P("energy", s.Energy).P("sp", s.Sp).P("rank", s.Rank);
-            if (s.Lineage != null) w.Key("lineage").Obj().P("rank", s.Lineage.Rank).P("points", FortunaBreeding.PointsFor(_db, s.Lineage.Deepest)).P("maxPoints", FortunaBreeding.PointsFor(_db, _db.Trees[FortunaBreeding.Tree].Nodes.Count)).EndObj();
+            if (s.Lineage != null)
+            {
+                string tree = s.Lineage.TreeId;
+                w.Key("lineage").Obj().P("tree", tree).P("name", _db.Text(_db.Trees[tree].NameKey)).P("rank", s.Lineage.Rank)
+                    .P("points", TreeLineages.PointsFor(_db, tree, s.Lineage.Deepest)).P("maxPoints", TreeLineages.PointsFor(_db, tree, _db.Trees[tree].Nodes.Count)).EndObj();
+                if (s.LineageTraining != null)
+                {
+                    var d = s.LineageTraining;
+                    w.Key("lineageTraining").Obj().P("choice", d.Choice).P("stat", d.Stat).P("sourceStat", d.SourceStat).P("coreStat", d.CoreStat)
+                        .P("charge", d.Charge).P("rhythm", d.Rhythm).P("used", d.Used).P("armed", d.Armed)
+                        .P("excess", d.Excess).P("adaptation", d.Adaptation).P("redirectGrowth", d.RedirectGrowth)
+                        .P("summary", TrainingRun.LineageSummary(_db, s)).EndObj();
+                }
+            }
+            w.Key("lineageChoices").Arr();
+            foreach (var option in TrainingRun.AvailableLineageChoices(_db, s))
+            {
+                w.Obj().P("id", option.Choice + (option.Stat == null ? "" : "_" + option.Stat)).P("label", option.Label).P("description", option.Description);
+                w.Key("args").Arr().Str(option.Choice);
+                if (option.Stat != null) w.Str(option.Stat);
+                w.EndArr().EndObj();
+            }
+            w.EndArr();
             w.P("fightsFought", s.FightsFought).P("fightsWon", s.FightsWon).P("drills", s.Drills).P("rests", s.Rests);
             w.P("fightDue", s.Phase == RunPhase.AwaitFight);
             w.P("drillCost", TrainingRun.DrillCost(_db, s)).P("restEnergy", TrainingRun.RestEnergy(_db, s));

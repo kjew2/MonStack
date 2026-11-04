@@ -89,6 +89,7 @@ namespace IdleRng.Sim.Training
             s.CoreDormant = false;
             if (!HasRunRule(c, s, RuleModifiers.HungryCore)) return;
             double eat = GConst(c, "HUNGRY_ENERGY");
+            LineageCoreCost(c, s, ref eat);
             if (s.Energy >= eat) s.Energy -= eat;
             else s.CoreDormant = true;
         }
@@ -118,8 +119,10 @@ namespace IdleRng.Sim.Training
                 var foe = OpponentFighter(c, s, result.RankBefore).Stats;
                 string top = StatIds.Trained[0];
                 foreach (var id in StatIds.Trained) if (foe.Get(id) > foe.Get(top)) top = id;
+                double amount = Math.Floor(foe.Get(top) * GConst(c, "DEVOUR_FRAC"));
+                LineageDevour(c, s, ref top, ref amount);
                 double before = s.Stats.Get(top);
-                double after = Math.Max(before, Math.Min(StatCap(c, s, top), before + Math.Floor(foe.Get(top) * GConst(c, "DEVOUR_FRAC"))));
+                double after = Math.Max(before, Math.Min(StatCap(c, s, top), before + amount));
                 Set(s.Stats, top, after);
                 result.DevouredStat = top;
                 result.DevouredGain = after - before;

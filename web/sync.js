@@ -34,7 +34,7 @@
   const TAB_WAIT_MS = 300;                              // how long a new tab listens for one already playing
   const DAY_MS = 86400000;
   const PAGES = { origin: 'https://kjew2.github.io', path: '/MonStack/' };   // the GitHub Pages build (case-sensitive path)
-  const RUN_COMMANDS = ['drill', 'rest', 'fight', 'take', 'discard', 'reroll', 'spend', 'book'];   // web/wasm/BRIDGE.md
+  const RUN_COMMANDS = ['drill', 'rest', 'fight', 'take', 'discard', 'reroll', 'spend', 'book', 'lineageChoice'];   // web/wasm/BRIDGE.md
   const SIGNED_OUT = 'Signed out: your account was opened on another device. Sign in to continue here.';
 
   const ls = {

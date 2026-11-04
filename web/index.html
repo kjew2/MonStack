@@ -872,6 +872,41 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
   100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) rotate(45deg) scale(.3); } }
 @keyframes evo-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .evolve, .evolve .sprite, .evo-rays, .evo-sparks i, .evo-flash, .evo-line b { animation: none !important; } }
+/* Lineages: browse a compact library, then focus on one generation at a time. */
+.lineage-power { padding: 14px 0; border-top: 1px solid var(--line); }
+.lineage-power p { margin: 7px 0 0; }
+.lineage-choices h3 { margin-top: 0; }
+.lineage-entry { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.lineage-entry > div { flex: 1 1 200px; }
+.lineage-entry p { margin: 5px 0 0; }
+.lineage-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; margin: 20px 0 10px; }
+.lineage-tools input, .lineage-tools select, .lineage-field select { width: 100%; min-width: 0; box-sizing: border-box; }
+.lineage-library { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 235px; overflow-y: auto; padding: 3px 3px 10px; margin-bottom: 20px; }
+.lineage-choice { display: grid; grid-template-columns: 1fr auto; gap: 5px; text-align: left; padding: 12px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); font: inherit; cursor: pointer; }
+.lineage-choice small { grid-column: 1 / -1; font-size: 11px; }
+.lineage-choice.selected { border-color: var(--gems); background: var(--gems-bg); box-shadow: inset 0 0 0 1px var(--gems); }
+.lineage-choice b { overflow-wrap: anywhere; }
+.lineage-detail, .lineage-breed { padding: 20px; }
+.lineage-detail h3, .lineage-breed h3 { margin: 0 0 12px; }
+.lineage-detail progress { width: 100%; accent-color: var(--ok); height: 10px; }
+.lineage-track { list-style: none; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; padding: 0; margin: 18px 0 24px; }
+.lineage-track li { border-bottom: 3px solid var(--line); padding: 7px 0; text-align: center; color: var(--muted); font-size: 12px; }
+.lineage-track li.earned { color: var(--gems); border-color: var(--gems); font-weight: 800; }
+.lineage-track li.milestone { border-color: var(--gold); background: var(--gold-bg); border-radius: var(--r-xs) var(--r-xs) 0 0; }
+.lineage-track li[aria-current] { outline: 2px solid var(--gems); outline-offset: 2px; border-radius: var(--r-xs); }
+.lineage-milestones { display: grid; gap: 12px; margin-bottom: 20px; }
+.lineage-milestone { border: 1px solid var(--line); border-radius: var(--r); padding: 16px; background: var(--panel-2); }
+.lineage-milestone.unlocked { border-color: var(--gold); background: var(--gold-bg); }
+.lineage-milestone h4 { margin: 7px 0; }
+.lineage-milestone p { margin: 0; }
+.lineage-protection { border-left: 3px solid var(--gems); padding: 10px 14px; background: var(--gems-bg); border-radius: var(--r-xs); margin: 16px 0; }
+.lineage-protection p { margin: 6px 0 0; }
+.lineage-field { display: grid; gap: 7px; margin: 18px 0; }
+.lineage-offspring { display: flex; gap: 16px; align-items: center; margin: 20px 0; padding: 16px; background: var(--gems-bg); border-radius: var(--r); }
+.lineage-breed > .linkish { display: block; margin: 14px auto; }
+#tabs:has(> :nth-child(7)) { gap: 0; }
+#tabs:has(> :nth-child(7)) button { font-size: 10px; letter-spacing: 0; }
+@media (min-width: 600px) { .lineage-milestones { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lineage-library { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>

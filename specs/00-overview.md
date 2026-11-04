@@ -12,7 +12,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Training run: action-point cycles of Drill and Rest, rank fights, milestones | `src/IdleRng.Sim/Training` | `14` |
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
 | Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
-| Breeding and Fortune I–V tree lineages | `src/IdleRng.Sim/Account/FortunaBreeding.cs` | `29` |
+| Breeding and I–X lineages for all 40 generic trees | `src/IdleRng.Sim/Account/TreeLineages.cs` | `30` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
 | Dungeon (built as the Daily Tower): daily lineup of 4v1 boss floors, tickets (one free a day, pieces from sealed runs) and rewards (shards, Skill Book drops, the premium gate), a first web screen | `src/IdleRng.Sim/Tower`, `AccountOps.RunTower`, `web/run.js` | `21` |
 | Endless Tower: 4v4 climb of a weekly season, squad shapes, elites, stacking mutators (sim only so far) | `src/IdleRng.Sim/Tower/EndlessSim.cs` | `28` |
@@ -43,7 +43,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | Training run | `RUN_CYCLES`, `RUN_AP`, `RUN_ENERGY_*`, `DRILL_*`, `REST_ENERGY`, `INJURY_*` (chance, cycles skipped, energy on return), `STAT_MAX`, `FIGHT_EVERY` | `14` section 8 |
 | Skill trees | `SP_PER_CYCLE`, `SP_PER_WIN`, `TREE_SLOTS`, `DRAFT_SIZE`, `TREE_REFUND`, the rolled Awakening tree constants `ROLL_*` (section 4.1), the chase capstone constants `MON_ECHO_POWER`, `MON_TIDE_REGEN`, `MON_TIDE_SHIELD_CAP`, `MON_DRAIN_FRAC`, `MON_FIRE_PIERCE`, `MON_DOUBLE_TURNS` | `15` section 9 |
 | Account | `SHARDS_PER_CYCLE`, `SHARDS_PER_RANK` (section 5), `VAULT_CAP` and the per-grade `fight_ranks.dismantle_shards` refund (section 7) and `fight_ranks.ticket_pieces` (`specs/21` section 7), `VENDOR_OFFERS`, `REROLL_BASE`, `REROLL_STEP`, `LEGENDARY_SLOTS` and the `vendor_rarities` table (section 4), the `achievements` table (section 8) | `18` |
-| Breeding / lineage | `LINEAGE_*`, `MON_FORTUNE_BANK_STEP`, `MON_FORTUNE_BANK_CAP` | `29` sections 4, 5 and 7 |
+| Breeding / lineage | `LINEAGE_*`, `MON_LINEAGE_*`, `MON_FORTUNE_BANK_STEP`, `MON_FORTUNE_BANK_CAP` | `30` sections 2–6 |
 | Gauntlet | `GAUNTLET_FLOORS`, `GAUNTLET_BASE`, `GAUNTLET_GROWTH`, `GAUNTLET_BOSS_EVERY`, `GAUNTLET_BOSS_MULT` | `19` section 4 |
 | Dungeon | `TOWER_*`, `ENTROPY_*`, `CORRUPT_*` | `21` section 5 |
 | Profile and boards (not balance, so in code) | `NAME_MIN` 3 and `NAME_MAX` 16 (`DisplayName`), `ENDLESS_BOARD_TOP` 20 (`EndlessBoard.DefaultTop`, at most 100 a read), `GAUNTLET_BOARD_TOP` 20 (`GauntletBoard.DefaultTop`, at most 100 a read); the server's limits `COMMIT_MAX_COMMANDS`, `COMMIT_MAX_CLIMBS` and `CLOCK_SLACK_SEC` are `ServerConfig` settings | `28` section 6, `27` sections 4 and 6 |
@@ -59,7 +59,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | **Rank** | E to S: how far the monster has climbed in its rank fights; the MVP grade |
 | **Ladder** | A run's rank fight opponents, one per rank, rolled at the start from each rank's pool (`rank_enemies`, `specs/14` section 5); a loss is a rematch |
 | **Tree, node, chase trait** | `specs/15` |
-| **Lineage rank** | Account-unlocked tree quality captured by newly bred offspring; Fortune I–V in the prototype (`specs/29`), separate from bought nodes and fight rank |
+| **Lineage rank** | Account-unlocked tree quality captured by newly bred offspring; I–X for the 40 generic trees (`specs/30`), separate from bought nodes and fight rank |
 | **Vault** | The account's finished, frozen monsters |
 | **Training Shards** | The soft currency, paid at the end of a run; buys talent ranks from the vendor and funds breeding |
 | **Talent** | A permanent account upgrade that changes the next runs (`RunModifiers`) |
@@ -81,7 +81,7 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 
 ```
 CLAUDE.md, README.md, check.sh, play.sh
-specs/                       00 to 29 (the numbers present are the ones that exist); index in specs/README.md
+specs/                       00 to 30 (the numbers present are the ones that exist); index in specs/README.md
 content_src/*.csv            the content source of truth (specs/05)
 Content/*.json               built by tools/content_build.py, committed, checked for drift
 golden/                      generated reference outputs (bot CLI only)

@@ -140,6 +140,14 @@ namespace IdleRng.Bots.Tests
             Run(new AccountCommand { Kind = CommandKind.Spend, A = 2 });
             Run(new AccountCommand { Kind = CommandKind.Abandon });
 
+            // A live, inherited capstone makes a milestone decision available; the command still touches Training only.
+            AccountOps.StartRun(Db, a, "slime");
+            a.Active.Lineage = new LineageRun { TreeId = "devourer", Rank = 5 };
+            a.Active.Slots[2] = new TreeSlot { TreeId = "devourer", Bought = Db.Trees["devourer"].Nodes.Count,
+                Roll = new TreeRoll { Stat = "hp", LineageRank = 5, NodeStats = new string[Db.Trees["devourer"].Nodes.Count], Amounts = new double[Db.Trees["devourer"].Nodes.Count] } };
+            Run(new AccountCommand { Kind = CommandKind.LineageChoice, Id = "absorb", Ids = new List<string> { "str" } });
+            Run(new AccountCommand { Kind = CommandKind.Abandon });
+
             var missing = Enum.GetValues(typeof(CommandKind)).Cast<CommandKind>().Where(k => !seen.Contains(k)
                 && k != CommandKind.Reroll && k != CommandKind.Book && k != CommandKind.Discard).ToList();
             Assert.That(missing, Is.Empty, "every command was checked (draft rerolls, discards and books when a policy uses them)");

@@ -316,6 +316,13 @@ namespace IdleRng.Sim.Content
                     key == "LINEAGE_RETRY_FRAC" || key == "LINEAGE_FILLER_PER_RANK" || key.StartsWith("MON_FORTUNE_BANK_") ? 1 : double.MaxValue;
                 if (!(v > 0 && v <= max)) errors.Add(new ContentError("E043", "constants[" + key + "]", "lineage constant out of range"));
             }
+            foreach (var key in new[] { "LINEAGE_PRE_CAPSTONE_POINTS", "LINEAGE_TO_6", "LINEAGE_TO_7", "LINEAGE_TO_8", "LINEAGE_TO_9", "LINEAGE_TO_10", "LINEAGE_X_CHANCE", "LINEAGE_X_PITY", "LINEAGE_FILLER_LATE_PER_RANK", "MON_LINEAGE_GAIN", "MON_LINEAGE_CAP", "MON_LINEAGE_WINDOW", "LINEAGE_TRAIN_GAIN", "LINEAGE_TRAIN_CAP", "LINEAGE_TRAIN_CHARGE" })
+            {
+                double value = D(key);
+                double max = key.Contains("CHANCE") || key.Contains("PITY") ? 100 :
+                    key.Contains("GAIN") || key.EndsWith("_CAP", StringComparison.Ordinal) || key.Contains("PER_RANK") ? 1 : double.MaxValue;
+                if (!(value > 0 && value <= max)) errors.Add(new ContentError("E043", "constants[" + key + "]", "lineage expansion constant out of range"));
+            }
             BuildTraining(t, errors);
 
             var strings = new Dictionary<string, string>(StringComparer.Ordinal);

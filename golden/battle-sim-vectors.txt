@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.22/c195c5fd
+# battle-sim vectors, hash v2 content=6.23/fced6fd2
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -211,3 +211,23 @@
   B0 b_tank   hp   3901.55/  5200.00 act   3 dealt    4992.17 taken    1298.45 heal      0.00 crit  0 evade  0 kill 2 counter 11
   B1 b_brawler hp   3200.00/  3200.00 act   5 dealt    1807.83 taken       0.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   hash 46e84fa88cfeb227b82d0445b1989d3c77f71270be0aecb13d42ca317249656d
+
+4v4 lineage X shared fortune and wards seed=230 outcome=SideBWon ticks=30
+  A0 a_fortune hp      0.00/  4200.00 act   6 dealt     980.94 taken    4200.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  A1 a_brute  hp      0.00/  3200.00 act   4 dealt    1335.33 taken    3200.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A2 a_sage   hp      0.00/  2600.00 act   8 dealt     560.65 taken    2600.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A3 a_spell  hp      0.00/  2400.00 act   6 dealt    2946.91 taken    2400.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B0 b_tank   hp   2750.33/  5200.00 act   4 dealt    6005.33 taken    3163.67 heal      0.00 crit  1 evade  0 kill 2 counter 10
+  B1 b_brute  hp   2833.51/  3200.00 act   7 dealt    2338.83 taken    1080.49 heal      0.00 crit  0 evade  0 kill 2 counter  0
+  B2 b_mage   hp   1726.92/  2400.00 act   6 dealt    3786.09 taken    1387.08 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  B3 b_heal   hp   2976.15/  3000.00 act   6 dealt     269.75 taken     192.60 heal   2310.75 crit  1 evade  0 kill 0 counter  0
+  hash 73c42430bbdb555ecfd6e3d57080c3293c0ff1f743b491c4632fb26bc3bef726
+
+3v3 lineage X bleed and locked skills seed=231 outcome=SideBWon ticks=59
+  A0 a_bleed  hp      0.00/  3200.00 act   7 dealt    2114.21 taken    3200.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A1 a_branch hp      0.00/  2400.00 act  12 dealt    4399.05 taken    2400.00 heal      0.00 crit  2 evade  2 kill 0 counter  0
+  A2 a_corrupt hp      0.00/  2400.00 act  11 dealt    5635.14 taken    2400.00 heal      0.00 crit  4 evade  0 kill 0 counter  0
+  B0 b_tank   hp    892.79/  5200.00 act   8 dealt    2214.31 taken    6743.21 heal      0.00 crit  0 evade  0 kill 1 counter  4
+  B1 b_brute  hp   1253.66/  3200.00 act  14 dealt    5140.02 taken    3878.34 heal      0.00 crit  1 evade  0 kill 2 counter  0
+  B2 b_heal   hp   1893.15/  3000.00 act  13 dealt     645.67 taken    1526.85 heal   4788.00 crit  0 evade  0 kill 0 counter  0
+  hash 6d5b9613310d094d6ae080051d384a91022217956381b6fa3210257a9fcb214b

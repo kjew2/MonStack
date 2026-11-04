@@ -71,7 +71,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   check(/^v\d+\.(\d+|\?) · [0-9a-f]{4,}(\+dirty)?$/.test(stamp), 'the header shows the version and commit: ' + stamp);
   // ---- species unlocks (specs/18 section 8): a new account owns only the starter; the others show how to unlock them
   const fresh = await readAccount();
-  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 13, 'a new account owns only the starter species (slime), schema v13');
+  check(fresh && JSON.stringify(fresh.Account.OwnedSpecies) === '["slime"]' && fresh.SchemaVersion === 14, 'a new account owns only the starter species (slime), schema v14');
   check((await act('species-drake').getAttribute('data-locked')) === 'true' && await act('species-drake').isDisabled(), 'drake is shown locked and cannot be picked');
   check(/Unlock: \S.*Reach rank C in a run \(\d+\/\d+\)/.test(await text('[data-id=unlock-drake]')), 'the locked card names its unlock condition and progress: ' + (await text('[data-id=unlock-drake]')));
   check(/Unlock: /.test(await text('[data-id=unlock-sprite]')), 'so does sprite: ' + (await text('[data-id=unlock-sprite]')));
@@ -795,7 +795,7 @@ const check = (ok, what) => { console.log((ok ? 'ok   ' : 'FAIL ') + what); if (
   await act('dismantle-' + cap).click();
   await act('dismantle-yes').click();
   const afterDismantle = await readAccount();
-  check(afterDismantle.SchemaVersion === 13 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => !e.Locked), 'dismantling saved the account as v13 with ' + cap + ' unlocked entries');
+  check(afterDismantle.SchemaVersion === 14 && afterDismantle.Account.Vault.length === cap && afterDismantle.Account.Vault.every((e) => !e.Locked), 'dismantling saved the account as v14 with ' + cap + ' unlocked entries');
   check(refund > 0 && afterDismantle.Account.Shards === shardsBefore + refund, 'dismantling refunded ' + refund + ' shards by grade');
   check((await tc('[data-id=vault-count]')) === 'Vault ' + cap + '/' + cap, 'back at the cap');
   const vw = await page.evaluate(() => document.documentElement.scrollWidth);

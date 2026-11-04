@@ -43,6 +43,7 @@ namespace IdleRng.Sim.Combat
             BeforeAction_IaidoMantis(c, u, ref skip);
             BeforeAction_LodgeBeaver(c, u, ref skip);
             BeforeAction_AegisRam(c, u, ref skip);
+            LineageAdvancedBeforeAction(c, u, ref skip);
         }
 
         static partial void BeforeAction_A(RuleCtx c, FightUnit u, ref bool skip);
@@ -59,6 +60,7 @@ namespace IdleRng.Sim.Combat
         static void HookAfterAction(RuleCtx c, FightUnit u)
         {
             AfterAction_A(c, u);
+            LineageAdvancedAfterAction(c, u);
             AfterAction_B(c, u);
             AfterAction_C(c, u);
             AfterAction_D(c, u);
@@ -68,6 +70,7 @@ namespace IdleRng.Sim.Combat
             AfterAction_Cuckling(c, u);
             AfterAction_GearbellJelly(c, u);
             AfterAction_AegisRam(c, u);
+            LineageBasicAfterAction(c, u);
         }
 
         static partial void AfterAction_A(RuleCtx c, FightUnit u);
@@ -162,6 +165,7 @@ namespace IdleRng.Sim.Combat
             OnGaugeTick_D(c, u, ref fill);
             OnGaugeTick_E(c, u, ref fill);
             OnGaugeTick_Cuckling(c, u, ref fill);
+            LineageBasicGaugeTick(c, u, ref fill);
         }
 
         static partial void OnGaugeTick_A(RuleCtx c, FightUnit u, ref double fill);
@@ -223,6 +227,7 @@ namespace IdleRng.Sim.Combat
             ConvertHit_E(c, h);
             ConvertHit_KeepshellCrab(c, h);
             ConvertHit_LodgeBeaver(c, h);
+            LineageBasicConvert(c, h);
         }
 
         static partial void ConvertHit_A(RuleCtx c, HitInfo h);
@@ -252,11 +257,13 @@ namespace IdleRng.Sim.Combat
             ModifyOutgoing_A(c, h);
             ModifyOutgoing_B(c, h);
             ModifyOutgoing_C(c, h);
+            LineageAdvancedOutgoing(c, h);
             ModifyOutgoing_D(c, h);
             ModifyOutgoing_E(c, h);
             ModifyOutgoing_PyreStag(c, h);
             ModifyOutgoing_IaidoMantis(c, h);
             ModifyOutgoing_AegisRam(c, h);
+            LineageBasicOutgoing(c, h);
         }
 
         static partial void ModifyOutgoing_A(RuleCtx c, HitInfo h);
@@ -276,6 +283,9 @@ namespace IdleRng.Sim.Combat
             ModifyIncoming_C(c, h);
             ModifyIncoming_D(c, h);
             ModifyIncoming_E(c, h);
+            LineageBasicIncoming(c, h);
+            LineageAdvancedIncoming(c, h);
+            LineageTrainingIncoming(c, h);
         }
 
         static partial void ModifyIncoming_A(RuleCtx c, HitInfo h);
@@ -289,13 +299,16 @@ namespace IdleRng.Sim.Combat
         {
             OnHitLanded_A(c, h);
             OnHitLanded_B(c, h);
+            LineageAdvancedLanded(c, h);
             OnHitLanded_C(c, h);
             OnHitLanded_D(c, h);
+            LineageAdvancedLandedAfter(c, h);
             OnHitLanded_E(c, h);
             OnHitLanded_Candlemane(c, h);
             OnHitLanded_IaidoMantis(c, h);
             OnHitLanded_AegisRam(c, h);
             OnHitLanded_AnvilApe(c, h);
+            LineageBasicHitLanded(c, h);
         }
 
         static partial void OnHitLanded_A(RuleCtx c, HitInfo h);
@@ -317,6 +330,7 @@ namespace IdleRng.Sim.Combat
             OnHitTaken_D(c, h);
             OnHitTaken_E(c, h);
             OnHitTaken_Candlemane(c, h);
+            LineageBasicHitTaken(c, h);
         }
 
         static partial void OnHitTaken_A(RuleCtx c, HitInfo h);
@@ -333,6 +347,7 @@ namespace IdleRng.Sim.Combat
         static void HookHealed(RuleCtx c, FightUnit t, double healed, double lost)
         {
             OnHealed_Candlemane(c, t, healed, lost);
+            LineageBasicHealed(c, t, healed, lost);
         }
 
         static partial void OnHealed_Candlemane(RuleCtx c, FightUnit t, double healed, double lost);
@@ -384,6 +399,7 @@ namespace IdleRng.Sim.Combat
             OnWouldDie_D(c, src, tgt, ref saved);
             OnWouldDie_E(c, src, tgt, ref saved);
             OnWouldDie_PyreStag(c, src, tgt, ref saved);
+            LineageAdvancedWouldDie(c, src, tgt, ref saved);
         }
 
         static partial void OnWouldDie_A(RuleCtx c, FightUnit src, FightUnit tgt, ref bool saved);
@@ -421,6 +437,8 @@ namespace IdleRng.Sim.Combat
             OnSkillUsed_E(c, u, index, sk);
             OnSkillUsed_PyreStag(c, u, index, sk);
             OnSkillUsed_GearbellJelly(c, u, index, sk);
+            LineageBasicSkillUsed(c, u, index, sk);
+            LineageAdvancedSkillUsed(c, u, index, sk);
         }
 
         static partial void OnSkillUsed_A(RuleCtx c, FightUnit u, int index, CombatSkill sk);
@@ -439,6 +457,7 @@ namespace IdleRng.Sim.Combat
             OnDeath_C(c, u);
             OnDeath_D(c, u);
             OnDeath_E(c, u);
+            LineageAdvancedDeath(c, u);
         }
 
         static partial void OnDeath_A(RuleCtx c, FightUnit u);
@@ -464,6 +483,8 @@ namespace IdleRng.Sim.Combat
             HashUnit_LodgeBeaver(w, s, u);
             HashUnit_AegisRam(w, s, u);
             HashUnit_AnvilApe(w, s, u);
+            LineageBasicHash(w, u);
+            LineageAdvancedHash(w, u);
         }
 
         static partial void HashUnit_A(CanonicalWriter w, FightState s, FightUnit u);
@@ -515,6 +536,7 @@ namespace IdleRng.Sim.Combat
             ValidateRules_LodgeBeaver(r, ref ok);
             ValidateRules_AegisRam(r, ref ok);
             ValidateRules_AnvilApe(r, ref ok);
+            ok &= r.LineageGain >= 0 && r.LineageGain <= 1 && r.LineageCap >= 0 && r.LineageCap <= 1 && r.LineageWindow >= 0;
         }
 
         static partial void ValidateRules_A(FightRules r, ref bool ok);

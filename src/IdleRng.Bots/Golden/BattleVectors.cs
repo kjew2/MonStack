@@ -289,6 +289,24 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v2 Fortune V patience", 174,
                 new[] { Fortuna("a_fortuna"), Support("a_support") },
                 new[] { Tank("b_tank", "water"), Brawler("b_brawler", "nature") });
+            yield return new Vector("4v4 lineage X shared fortune and wards", 230,
+                new[] { LineageX(Fortuna("a_fortune"), "fortune"), LineageX(Brawler("a_brute", "fire"), "brute_force"),
+                        LineageX(Support("a_sage"), "sage_mind"), LineageX(Mage("a_spell", "light"), "spellcraft") },
+                new[] { Tank("b_tank", "water"), Brawler("b_brute", "nature"), Mage("b_mage", "dark"), Healer("b_heal", "light") });
+            yield return new Vector("3v3 lineage X bleed and locked skills", 231,
+                new[] { LineageX(Brawler("a_bleed", "fire"), "hemorrhage"), LineageX(Mage("a_branch", "light"), "dead_branch"),
+                        LineageX(Mage("a_corrupt", "dark"), "corruption") },
+                new[] { Tank("b_tank", "water"), Brawler("b_brute", "nature"), Healer("b_heal", "light") });
+
+        }
+
+        static Fighter LineageX(Fighter f, string tree)
+        {
+            f.Rules = new List<string>(f.Rules);
+            if (RuleModifiers.IsKnown(tree) && !f.Rules.Contains(tree)) f.Rules.Add(tree);
+            if (tree != "fortune") f.Rules.Add("lineage_" + tree + "_v");
+            f.Rules.Add("lineage_" + tree + "_x");
+            return f;
         }
 
         static Fighter Fortuna(string id) => new Fighter
