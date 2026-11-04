@@ -303,6 +303,8 @@ namespace IdleRng.Sim.Training
 
             s.Sp -= node.Cost;
             ts.Bought++;
+            if (s.Lineage != null && ts.TreeId == "fortune")
+                s.Lineage.Deepest = Math.Max(s.Lineage.Deepest, ts.Bought);
             var result = new SpendResult { Node = node };
             if (node.Kind == NodeKind.Stat)
             {
@@ -371,6 +373,9 @@ namespace IdleRng.Sim.Training
             if (extra != null)
                 foreach (var id in extra) AddToKit(f, c.TreeNodes[id]);
             HookKit(c, speciesId, list, f);
+            foreach (var t in list)
+                if (t.TreeId == "fortune" && t.Roll?.LineageRank >= 5 && t.Bought >= c.Trees["fortune"].Nodes.Count)
+                    f.Rules.Add(RuleModifiers.FortuneBank);
             return f;
         }
 
@@ -1094,6 +1099,11 @@ namespace IdleRng.Sim.Training
                 w.Str("legendary");
                 w.Bool(m.InjuryImmune); w.F64(m.RestEnergyMult); w.Bool(m.NeverFail); w.F64(m.GlassCannonBonus); w.F64(m.EchoFrac);
             }
+            if (s.Lineage != null)
+            {
+                w.Str("lineage-v1"); w.I32(s.Lineage.Rank); w.I32(s.Lineage.Deepest);
+                w.I32(s.Lineage.Primary); w.I32(s.Lineage.Supporting);
+            }
             HookHashRun(w, s);   // lane run-rule state, only for runs that have it
             return Sha256.Hex(Sha256.Compute(w.ToArray()));
         }
@@ -1117,6 +1127,7 @@ namespace IdleRng.Sim.Training
         {
             w.Bool(r != null);
             if (r == null) return;
+            if (r.LineageRank > 0) { w.Str("lineage-roll"); w.I32(r.LineageRank); }
             w.Str(r.Stat); w.F64(r.CapGrowth);
             w.I32(r.NodeStats.Length);
             for (int i = 0; i < r.NodeStats.Length; i++) { w.Str(r.NodeStats[i]); w.F64(r.Amounts[i]); }

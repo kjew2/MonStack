@@ -69,6 +69,7 @@ namespace IdleRng.Runtime.Save
             if (a.Tower == null) a.Tower = new TowerProgress();   // a null in the file reads as no attempts yet
             if (a.TalentsOff == null) a.TalentsOff = new List<string>();   // a null in the file reads as every talent on
             if (a.Endless == null) a.Endless = new EndlessProgress();   // a null in the file reads as no climbs yet
+            if (a.Fortuna == null) a.Fortuna = new FortunaLineage();
             if (a.Rulebooks == null) a.Rulebooks = new SortedDictionary<int, string>();
 
             if (body["Run"] is JObject state)
@@ -229,6 +230,7 @@ namespace IdleRng.Runtime.Save
                 // step only moves the version.
                 version = 12;
             }
+            if (version == 12) version = 13; // lineage starts at I, no progress or attempts
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
             return version;

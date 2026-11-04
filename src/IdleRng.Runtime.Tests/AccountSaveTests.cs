@@ -389,7 +389,7 @@ namespace IdleRng.Runtime.Tests
             acct["SchemaVersion"] = 11;
             var c = AccountSave.Decode(db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
             Assert.That(notice, Is.Null);
-            Assert.That((c.SchemaVersion, c.Name), Is.EqualTo((12, (string)null)));
+            Assert.That((c.SchemaVersion, c.Name), Is.EqualTo((AccountState.CurrentSchemaVersion, (string)null)));
         }
 
         [Test]

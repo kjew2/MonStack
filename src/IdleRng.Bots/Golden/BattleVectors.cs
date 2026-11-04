@@ -284,7 +284,19 @@ namespace IdleRng.Bots.Golden
             yield return new Vector("2v3 anvil ape brittle and shatter", 20,
                 new[] { AnvilApe("a_brittle", RuleModifiers.BrittleGuard), AnvilApe("a_shatter", RuleModifiers.Shatterpoint) },
                 new[] { Mage("b_mage", "nature"), Brawler("b_brawler", "water"), Healer("b_healer", "light") });
+            // Fortune V lineage (#174): the capstone's bounded failed-roll bank on a luck build, beside a normal
+            // Support; a longer mixed fight exercises bank growth, reset and deterministic state hashing.
+            yield return new Vector("2v2 Fortune V patience", 174,
+                new[] { Fortuna("a_fortuna"), Support("a_support") },
+                new[] { Tank("b_tank", "water"), Brawler("b_brawler", "nature") });
         }
+
+        static Fighter Fortuna(string id) => new Fighter
+        {
+            Id = id, Element = "light", Stats = S(420, 100, 100, 220, 220, 200, 240, 260),
+            Skills = { Dmg("gamble", StatIds.Luk, 2.5, 4), Fx("jackpot", SkillKind.Passive, SkillTarget.Self, StatIds.CritDmg, null, 0.5, 0, 0) },
+            Rules = { RuleModifiers.FortuneBank },
+        };
 
         // Species Aegis Ram (#147): the native kit (brave_heart, Fleece Ward, fleece_aegis), Shofar Call from its book, plus one
         // chase capstone.

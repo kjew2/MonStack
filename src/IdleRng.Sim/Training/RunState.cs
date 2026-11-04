@@ -191,6 +191,7 @@ namespace IdleRng.Sim.Training
     /// </summary>
     public sealed class TreeRoll
     {
+        public int LineageRank { get; set; }
         /// <summary>The tree's own stat: its offer_stat, or for an any-stat tree the stat of its first filler node.</summary>
         public string Stat { get; set; }
 
@@ -279,6 +280,8 @@ namespace IdleRng.Sim.Training
     /// </summary>
     public sealed class RunState
     {
+        public LineageRun Lineage { get; set; }
+
         public string SpeciesId { get; set; }
 
         /// <summary>Account bonuses captured at Start (specs/18). Never null.</summary>
@@ -374,6 +377,7 @@ namespace IdleRng.Sim.Training
         public RunState Clone()
         {
             var c = (RunState)MemberwiseClone();
+            c.Lineage = Lineage?.Clone();
             c.Stats = Stats.Clone();
             c.Mods = Mods.Clone();
             c.Ladder = new List<string>(Ladder);

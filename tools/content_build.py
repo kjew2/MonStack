@@ -48,6 +48,21 @@ ENUMS = {
 
 # key -> type. Mirrors IdleRng.Sim.Content.Constants (specs/16 to specs/19 list each group).
 REQUIRED_CONSTANTS = {
+    "LINEAGE_BREED_COST": "int",
+    "LINEAGE_TO_2": "int",
+    "LINEAGE_TO_3": "int",
+    "LINEAGE_TO_4": "int",
+    "LINEAGE_TO_5": "int",
+    "LINEAGE_RETRY_FRAC": "double",
+    "LINEAGE_V_CHANCE": "int",
+    "LINEAGE_V_PITY": "int",
+    "LINEAGE_NODE_POINTS": "int",
+    "LINEAGE_SKILL_POINTS": "int",
+    "LINEAGE_CAPSTONE_POINTS": "int",
+    "LINEAGE_FILLER_PER_RANK": "double",
+    "MON_FORTUNE_BANK_STEP": "double",
+    "MON_FORTUNE_BANK_CAP": "double",
+
     "SPD_REF": "double",
     "BATTLE_GAUGE": "double", "ELEMENT_STRONG_MULT": "double", "ELEMENT_WEAK_MULT": "double",
     "BASIC_ATTACK_POWER": "double", "AI_HEAL_BELOW": "double", "AI_SHIELD_BELOW": "double",
@@ -141,7 +156,7 @@ STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
 DRILL_TIERS = ["fail", "success", "super"]
 EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 # Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
-RULE_IDS = ["counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
+RULE_IDS = ["fortune_bank", "counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
             "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast",
             # idea-pool lane A (#134)
             "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic",
@@ -181,6 +196,21 @@ TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
 MON_RANGES = {
+    "LINEAGE_BREED_COST": ("> 0", lambda v: v > 0),
+    "LINEAGE_TO_2": ("> 0", lambda v: v > 0),
+    "LINEAGE_TO_3": ("> 0", lambda v: v > 0),
+    "LINEAGE_TO_4": ("> 0", lambda v: v > 0),
+    "LINEAGE_TO_5": ("> 0", lambda v: v > 0),
+    "LINEAGE_RETRY_FRAC": ("(0, 1]", lambda v: 0 < v <= 1),
+    "LINEAGE_V_CHANCE": ("(0, 100]", lambda v: 0 < v <= 100),
+    "LINEAGE_V_PITY": ("(0, 100]", lambda v: 0 < v <= 100),
+    "LINEAGE_NODE_POINTS": ("> 0", lambda v: v > 0),
+    "LINEAGE_SKILL_POINTS": ("> 0", lambda v: v > 0),
+    "LINEAGE_CAPSTONE_POINTS": ("> 0", lambda v: v > 0),
+    "LINEAGE_FILLER_PER_RANK": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_FORTUNE_BANK_STEP": ("(0, 1]", lambda v: 0 < v <= 1),
+    "MON_FORTUNE_BANK_CAP": ("(0, 1]", lambda v: 0 < v <= 1),
+
     "MON_HP_PER_POINT": ("> 0", lambda v: v > 0), "MON_DEF_K": ("> 0", lambda v: v > 0),
     "MON_EVADE_BASE": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_EVADE_PER_DEX": (">= 0", lambda v: v >= 0),
     "MON_EVADE_CAP": ("[0, 1]", lambda v: 0 <= v <= 1), "MON_CRIT_BASE": ("[0, 1]", lambda v: 0 <= v <= 1),

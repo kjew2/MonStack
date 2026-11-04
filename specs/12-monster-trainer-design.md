@@ -15,7 +15,7 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
 1. **Systems over story.** Zero mandatory narrative. Every choice in a run immediately changes stats, fatigue, skills or risk.
 2. **Rapid-fire runs.** One run is 8-10 minutes, so a session holds several runs and testing a strange build is cheap.
 3. **Legalized exploitation.** Skill trees combine into hidden chase trees and rule-breaking passives. Finding them is the point.
-4. **Rogue-lite meta-progression.** Every run, finished or failed, earns account-wide currency for permanent training upgrades. There is **no breeding**.
+4. **Rogue-lite meta-progression.** Every run, finished or failed, earns account-wide currency for permanent training upgrades. **Breeding lineages** add a longer-term grind: descendants advance inherited tree ranks through node progression, with transformative milestones. The Fortune I–V prototype is `specs/29` (kj, 2026-11-03; #174).
 5. **Fair, low-stress live service.** Asynchronous PvP rewards are cosmetic only. Combat stats cannot be bought.
 
 ## 3. Core loop
@@ -102,7 +102,7 @@ Every tree has a hidden capstone, its **chase trait**, that breaks a standard ru
 
 Agreed direction from the higher-tier spike (`specs/22` section 6); not built yet:
 - **The in-run chase tree should not be forced every run (kj, 2026-10-31):** a first limiter, an attunement roll at run start (Chase Instinct talent), was removed the same day as a bad implementation of that limit. For now every run can unlock its in-run chase tree once its conditions hold; a better limiter is open in issue #119 (`specs/15` section 5.4).
-- **Higher-tier species are later unlocks** (account achievements) and may be **stronger overall**, as in *Monster Rancher*. Mid-run evolution and breeding are much later on the roadmap.
+- **Higher-tier species are later unlocks** (account achievements) and may be **stronger overall**, as in *Monster Rancher*. Mid-run evolution remains later on the roadmap. Breeding was subsequently selected by kj for the Fortune I–V lineage prototype (`specs/29`, #174).
 - **Chase capstones may carry drawbacks** (keystones that give something up, in the *Exiled Heavy Knight* shape).
 - **Some specific tree pairs may fuse** into one tree, and the UI must make each fusing pair clear. Fusion is not a general rule.
 - **Reachability targets:** the in-run chase capstone in about the top 10% of runs; the book chase capstone in about 50% of runs that bring the species' own book (`specs/15` section 10).
@@ -211,6 +211,10 @@ The account-wide rogue-lite talents, bought with Training Shards. Named examples
 **Post-run vendor (kj, T9):** talents are not an always-on shop. After each run a vendor offers a random assortment of upgrades (5 offers), with rarities tied to the run's score. A rarity is the talent's own tier and each offer is one rank (kj, 2026-10-31, #102); the vendor is open only on the post-run screens of the session that sealed the run, and its unbought offers vanish when the player leaves it or reloads (kj, 2026-11-01). Rules: `specs/18` section 4.
 
 **Species unlocks (kj, T9):** a new account owns one species; the others unlock from account achievements with varied conditions (rank reached, a stat reached, runs finished, gauntlet floors). Rules: `specs/18` section 8.
+
+### 9.1 Breeding and tree lineages (kj, 2026-11-03)
+
+Two Vault parents produce a trained descendant without being consumed. The inherited tree uses an existing empty slot and still needs SP investment. Lineage points depend only on the focus tree's deepest node progression, strongly weighted to its capstone; they pay once at sealing. Small inherited rank buffs accumulate, with a transformative effect at V and a later planned X. The prototype is Fortune I–V: II–IV guaranteed, V protected RNG with increasing odds and a hard guarantee. No grades, deeds or compatibility bonuses grant lineage points. Rules, defaults, save and server contracts: `specs/29`.
 
 ## 10. Currencies
 

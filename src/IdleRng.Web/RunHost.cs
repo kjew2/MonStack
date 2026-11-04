@@ -209,19 +209,24 @@ namespace IdleRng.Web
                 bool last = i == nodes.Count - 1;
                 var (name, desc) = NodeText(n);
                 string id = n.Id;
-                if (roll != null && last)
+                if (roll != null && last && roll.LineageRank == 0)
                 {
                     desc += " Also +" + Num(roll.CapGrowth) + " " + roll.Stat.ToUpperInvariant() + " growth.";
                     id += "~cap~" + roll.Stat + "~" + Num(roll.CapGrowth);
                 }
                 else if (roll != null && roll.NodeStats[i] != null) id += "~" + n.Stat + "~" + Num(n.Amount);
+                if (roll?.LineageRank > 0)
+                {
+                    id += "~lineage~" + roll.LineageRank;
+                    if (last && roll.LineageRank >= 5) desc += " " + FortuneEffect();
+                }
                 w.Obj().P("id", id).P("cost", n.Cost).P("kind", KindName(n.Kind)).P("name", name).P("desc", desc).P("last", last);
                 if (n.Kind == NodeKind.Rule && Array.IndexOf(TrainingRun.BuyWarnRules, n.RuleId) >= 0) w.P("warn", true);   // the UI asks before the purchase
                 if (TrainingRun.IsFiller(n.Kind)) w.P("stat", n.Stat).P("amount", n.Amount);
                 if (roll != null)
                 {
                     var tip = BattleText.NodeTip(_db, n, name, desc, last);
-                    if (last) tip.Fact("Rolled growth", "+" + Num(roll.CapGrowth) + " " + roll.Stat.ToUpperInvariant());
+                    if (last && roll.LineageRank == 0) tip.Fact("Rolled growth", "+" + Num(roll.CapGrowth) + " " + roll.Stat.ToUpperInvariant());
                     w.Key("tip"); TipJson.Write(w, tip);
                 }
                 w.EndObj();
@@ -251,10 +256,13 @@ namespace IdleRng.Web
         private void Rolled(JsonOut w, string treeId, TreeRoll roll)
         {
             if (roll == null) { w.Null(); return; }
-            w.Obj().P("stat", roll.Stat).P("capGrowth", roll.CapGrowth);
+            w.Obj().P("stat", roll.Stat).P("capGrowth", roll.CapGrowth).P("lineageRank", roll.LineageRank);
             NodesAndBoosts(w, TrainingRun.Nodes(_db, treeId, roll), roll);
+            if (roll.LineageRank >= 5) w.P("lineageEffect", FortuneEffect());
             w.EndObj();
         }
+
+        private string FortuneEffect() => TextTemplate.Fill(_db, _db.Text("rule.fortune_bank.desc"));
 
         /// <summary>A node kind as content spells it (growth_use for NodeKind.GrowthUse).</summary>
         private static string KindName(NodeKind k) => k == NodeKind.GrowthUse ? "growth_use" : k.ToString().ToLowerInvariant();
@@ -909,6 +917,15 @@ namespace IdleRng.Web
             var m = AccountOps.Modifiers(_db, ac);
             var w = new JsonOut().Obj();
             w.P("seed", ac.Seed.ToString("x16", CultureInfo.InvariantCulture)).P("name", ac.Name).P("runsStarted", ac.RunsStarted).P("shards", ac.Shards).P("hasRun", ac.Active != null);
+            var lineage = ac.Fortuna;
+            w.Key("lineage").Obj().P("rank", lineage.Rank).P("points", lineage.Points)
+                .P("required", FortunaBreeding.Required(_db, lineage)).P("chance", FortunaBreeding.Chance(_db, lineage))
+                .P("failures", lineage.Failures).P("attemptsLeft", Math.Max(0, (int)Math.Ceiling((100.0 - FortunaBreeding.Chance(_db, lineage)) / _db.ConstantValues["LINEAGE_V_PITY"]) + 1))
+                .P("baseChance", (int)_db.ConstantValues["LINEAGE_V_CHANCE"])
+                .P("pityStep", (int)_db.ConstantValues["LINEAGE_V_PITY"])
+                .P("retryPercent", _db.ConstantValues["LINEAGE_RETRY_FRAC"] * 100)
+                .P("maxPoints", FortunaBreeding.PointsFor(_db, _db.Trees[FortunaBreeding.Tree].Nodes.Count))
+                .P("cost", FortunaBreeding.Cost(_db)).P("lastAward", lineage.LastAward).P("lastResult", lineage.LastResult).EndObj();
             w.Key("owned").Arr();
             foreach (var s in ac.OwnedSpecies) w.Str(s);
             w.EndArr();
@@ -945,6 +962,10 @@ namespace IdleRng.Web
                 w.EndArr().EndObj();
             }
             w.Key("mods"); Mods(w, m);
+            w.P("lineageNodePoints", (int)_db.ConstantValues["LINEAGE_NODE_POINTS"])
+                .P("lineageSkillPoints", (int)_db.ConstantValues["LINEAGE_SKILL_POINTS"])
+                .P("lineageCapstonePoints", (int)_db.ConstantValues["LINEAGE_CAPSTONE_POINTS"])
+                .P("lineageFillerPercent", _db.ConstantValues["LINEAGE_FILLER_PER_RANK"] * 100);
             w.P("vaultCap", _db.Constants.VaultCap).P("vaultOver", AccountOps.VaultOver(_db, ac));
             w.Key("vault").Arr();
             foreach (var e in ac.Vault) Entry(w, e);
@@ -965,9 +986,10 @@ namespace IdleRng.Web
 
         private void Entry(JsonOut w, VaultEntry e)
         {
-            w.Obj().P("id", e.Id).P("species", e.SpeciesId)
+            w.Obj().P("id", e.Id).P("species", e.SpeciesId).P("bred", e.Lineage != null)
                 .P("grade", e.Grade).P("rank", e.RankIndex).P("end", e.End.ToString().ToLowerInvariant()).P("cycles", e.Cycles)
                 .P("fightsFought", e.FightsFought).P("fightsWon", e.FightsWon).P("sealedUtcMs", e.SealedUtcMs)
+                .P("canBreedPrimary", e.Id >= 0 && FortunaBreeding.EligiblePrimary(e))
                 .P("locked", e.Locked).P("refund", AccountOps.DismantleRefund(_db, e)).P("rulebook", _acct?.Rulebook(e.Id) ?? "");
             w.Key("skills").Arr();   // the active skills a rulebook may name, in the fighter's order (mskill ids; tooltips under skillTips)
             foreach (var sk in e.Fighter(_db).Skills) if (sk.Kind != SkillKind.Passive) w.Str(sk.Id);
@@ -978,7 +1000,8 @@ namespace IdleRng.Web
             w.Key("trees").Arr();
             foreach (var t in e.Trees)
             {
-                w.Obj().P("id", t.TreeId).P("bought", t.Bought).P("fusedInto", t.FusedInto);
+                w.Obj().P("id", t.TreeId).P("bought", t.Bought).P("fusedInto", t.FusedInto)
+                    .P("name", _db.Text(_db.Trees[t.TreeId].NameKey) + (t.Roll?.LineageRank > 0 ? " " + FortunaBreeding.Roman(t.Roll.LineageRank) : ""));
                 w.Key("rolled"); Rolled(w, t.TreeId, t.Roll);
                 w.EndObj();
             }
@@ -1255,6 +1278,7 @@ namespace IdleRng.Web
             w.P("apex", apex).P("name", ApexForm.Name(_db, s.SpeciesId, apex));
             w.P("phase", s.Phase.ToString().ToLowerInvariant()).P("end", s.End.ToString().ToLowerInvariant());
             w.P("cycle", s.Cycle).P("ap", s.ApLeft).P("energy", s.Energy).P("sp", s.Sp).P("rank", s.Rank);
+            if (s.Lineage != null) w.Key("lineage").Obj().P("rank", s.Lineage.Rank).P("points", FortunaBreeding.PointsFor(_db, s.Lineage.Deepest)).P("maxPoints", FortunaBreeding.PointsFor(_db, _db.Trees[FortunaBreeding.Tree].Nodes.Count)).EndObj();
             w.P("fightsFought", s.FightsFought).P("fightsWon", s.FightsWon).P("drills", s.Drills).P("rests", s.Rests);
             w.P("fightDue", s.Phase == RunPhase.AwaitFight);
             w.P("drillCost", TrainingRun.DrillCost(_db, s)).P("restEnergy", TrainingRun.RestEnergy(_db, s));

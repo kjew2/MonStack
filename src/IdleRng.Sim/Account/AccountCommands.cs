@@ -38,7 +38,7 @@ namespace IdleRng.Sim.Account
     public enum CommandKind
     {
         StartRun, FinishRun, Abandon, BuyOffer, RerollVendor, CloseVendor, SetLoadout, Dismantle, Lock, RunTower, DebugGrantBook,
-        SetRulebook, RunEndless, SetName,
+        SetRulebook, RunEndless, SetName, Breed,
         // run commands from here on (AccountCommands.IsRunCommand)
         Drill, Rest, Fight, Take, Discard, Reroll, Spend, Book,
     }
@@ -99,7 +99,7 @@ namespace IdleRng.Sim.Account
             ["setLoadout"] = CommandKind.SetLoadout, ["dismantle"] = CommandKind.Dismantle, ["lock"] = CommandKind.Lock,
             ["runTower"] = CommandKind.RunTower, ["debugGrantBook"] = CommandKind.DebugGrantBook,
             ["setRulebook"] = CommandKind.SetRulebook, ["runEndless"] = CommandKind.RunEndless,
-            ["setName"] = CommandKind.SetName,
+            ["setName"] = CommandKind.SetName, ["breed"] = CommandKind.Breed,
             ["drill"] = CommandKind.Drill, ["rest"] = CommandKind.Rest, ["fight"] = CommandKind.Fight, ["take"] = CommandKind.Take,
             ["discard"] = CommandKind.Discard, ["reroll"] = CommandKind.Reroll, ["spend"] = CommandKind.Spend, ["book"] = CommandKind.Book,
         };
@@ -125,6 +125,8 @@ namespace IdleRng.Sim.Account
             var c = new AccountCommand { Kind = kind };
             switch (kind)
             {
+                case CommandKind.Breed:
+                    c.A = Int(a, 0); c.B = Int(a, 1); c.TalentsOff = a.Has(2) ? a.StrList(2) : null; break;
                 case CommandKind.StartRun:
                     c.Id = a.Str(0);
                     c.Ids = a.Has(1) ? a.StrList(1) : null;
@@ -169,6 +171,7 @@ namespace IdleRng.Sim.Account
         {
             switch (k)
             {
+                case CommandKind.Breed:
                 case CommandKind.StartRun: return AccountPart.Training | AccountPart.Wallet;
                 case CommandKind.FinishRun:
                     return AccountPart.Training | AccountPart.Wallet | AccountPart.Collection | AccountPart.Progress | AccountPart.Dungeon
@@ -193,6 +196,7 @@ namespace IdleRng.Sim.Account
         {
             switch (k)
             {
+                case CommandKind.Breed: return AccountPart.Collection | AccountPart.Vault | AccountPart.Entries | AccountPart.Progress;
                 case CommandKind.StartRun: return AccountPart.Collection | AccountPart.Vault;   // owned species, talents, the Vault cap
                 case CommandKind.FinishRun: return AccountPart.Endless;   // the endless_floor achievements
                 case CommandKind.RerollVendor: return AccountPart.Collection;                    // maxed talents
@@ -221,6 +225,7 @@ namespace IdleRng.Sim.Account
             if (IsRunCommand(cmd.Kind)) s = a.Active ?? throw new InvalidOperationException("no run");
             switch (cmd.Kind)
             {
+                case CommandKind.Breed: return FortunaBreeding.Breed(c, a, cmd.A, cmd.B, cmd.TalentsOff);
                 case CommandKind.StartRun: return AccountOps.StartRun(c, a, cmd.Id, cmd.Ids, cmd.TalentsOff);
                 case CommandKind.FinishRun: return AccountOps.FinishRun(c, a, cmd.Time);
                 case CommandKind.Abandon: return AccountOps.AbandonRun(c, a);

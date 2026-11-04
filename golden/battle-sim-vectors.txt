@@ -1,4 +1,4 @@
-# battle-sim vectors, hash v2 content=6.21/376569a7
+# battle-sim vectors, hash v2 content=6.22/c195c5fd
 
 1v1 brawler vs mage seed=1 outcome=SideAWon ticks=30
   A0 brawler  hp    967.25/  3200.00 act   7 dealt    2400.00 taken    2232.75 heal      0.00 crit  1 evade  0 kill 1 counter  0
@@ -204,3 +204,10 @@
   B1 b_brawler hp      0.00/  3200.00 act   7 dealt    1927.06 taken    3914.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
   B2 b_healer hp      0.00/  3000.00 act   8 dealt     313.39 taken    3504.00 heal   2436.00 crit  0 evade  0 kill 0 counter  0
   hash 1bd5762ea24f6d16bd5781a6359df92f79e8d492c1be4fda5e9ff380540e62e3
+
+2v2 Fortune V patience seed=174 outcome=SideBWon ticks=25
+  A0 a_fortuna hp      0.00/  4200.00 act   5 dealt     873.76 taken    4200.00 heal      0.00 crit  1 evade  0 kill 0 counter  0
+  A1 a_support hp      0.00/  2600.00 act   8 dealt     424.69 taken    2600.00 heal      0.00 crit  2 evade  0 kill 0 counter  0
+  B0 b_tank   hp   3901.55/  5200.00 act   3 dealt    4992.17 taken    1298.45 heal      0.00 crit  0 evade  0 kill 2 counter 11
+  B1 b_brawler hp   3200.00/  3200.00 act   5 dealt    1807.83 taken       0.00 heal      0.00 crit  0 evade  0 kill 0 counter  0
+  hash 46e84fa88cfeb227b82d0445b1989d3c77f71270be0aecb13d42ca317249656d

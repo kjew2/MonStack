@@ -774,11 +774,18 @@ namespace IdleRng.Sim.Combat
             {
                 double rate = CritChance(r, Eff(r, src, StatIds.Luk), Bonus(src, StatIds.CritRate) + (r.Mutators?.CritBonus ?? 0) + h.CritBonus);
                 bool critLucky = false, deniedLucky = false;
-                crit = Roll(rng, rate, Fortune(r, Eff(r, src, StatIds.Luk)), ref critLucky);
+                bool banking = Has(src, RuleModifiers.FortuneBank);
+                double fortune = Fortune(r, Eff(r, src, StatIds.Luk));
+                crit = Roll(rng, rate, banking ? Math.Min(1, fortune + src.FortuneBank) : fortune, ref critLucky);
                 if (crit && tgtFortune > 0 && Draw(rng) < tgtFortune)   // the target's fortune makes a landed crit roll again
                 {
                     crit = Draw(rng) < rate;
                     deniedLucky = !crit;
+                }
+                if (banking)
+                {
+                    src.FortuneBank = crit ? 0 : Math.Min(r.FortuneBankCap, src.FortuneBank + r.FortuneBankStep);
+                    onAction?.Invoke(new FightAction(src.Id, "rule:fortune_bank", src.Id, src.FortuneBank));
                 }
                 lucky |= crit ? critLucky : deniedLucky;
                 if (crit) raw *= CritMult(r, Eff(r, src, StatIds.Dex), Bonus(src, StatIds.CritDmg));
@@ -1456,6 +1463,7 @@ namespace IdleRng.Sim.Combat
                 foreach (var e in u.Effects) { w.Str(e.Stat); w.F64(e.Frac); w.I32(e.TicksLeft); w.Str(e.Source); }
                 var t = u.Tally;
                 w.I32(t.Actions); w.F64(t.DamageDealt); w.F64(t.DamageTaken); w.F64(t.HealingDone);
+                if (Has(u, RuleModifiers.FortuneBank)) { w.Str("fortune_bank"); w.F64(u.FortuneBank); }
                 w.I32(t.Crits); w.I32(t.Evades); w.I32(t.Grazes); w.I32(t.Kills); w.I32(t.Counters);
                 w.I32(t.DamageByElement.Count);
                 foreach (var kv in t.DamageByElement) { w.Str(kv.Key); w.F64(kv.Value); }

@@ -51,6 +51,7 @@ namespace IdleRng.Sim.Combat
     /// <summary>One combatant during a fight. Source is the fighter snapshot it was built from (shared, read-only).</summary>
     public sealed partial class FightUnit
     {
+        public double FortuneBank { get; set; }
         public Fighter Source { get; set; }
         public string Id => Source.Id;
 
