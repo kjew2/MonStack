@@ -127,6 +127,19 @@ namespace IdleRng.Bots.Tests
             Run(new AccountCommand { Kind = CommandKind.StartRun, Id = "slime" });
             Run(new AccountCommand { Kind = CommandKind.Abandon });
 
+            // An established certified parent fixture isolates command partitioning from bot/training balance.
+            // The existing Vault supplies the second parent; the new parent has legally ordered Fortune skill nodes.
+            a.Vault.Add(new VaultEntry
+            {
+                Id = a.RunsStarted++, SpeciesId = "slime", Grade = Db.FightRanks[0].Id, RankIndex = 0,
+                End = RunEnd.Completed, Cycles = Db.Constants.RunCycles,
+                Stats = Db.Species["slime"].Base.Clone(),
+                Trees = { new VaultTree { TreeId = "fortune", Bought = 2 } },
+            });
+            Run(new AccountCommand { Kind = CommandKind.Breed, A = a.Vault.Count - 1, B = 0 });
+            Run(new AccountCommand { Kind = CommandKind.Spend, A = 2 });
+            Run(new AccountCommand { Kind = CommandKind.Abandon });
+
             var missing = Enum.GetValues(typeof(CommandKind)).Cast<CommandKind>().Where(k => !seen.Contains(k)
                 && k != CommandKind.Reroll && k != CommandKind.Book && k != CommandKind.Discard).ToList();
             Assert.That(missing, Is.Empty, "every command was checked (draft rerolls, discards and books when a policy uses them)");

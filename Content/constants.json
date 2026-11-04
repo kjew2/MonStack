@@ -1115,6 +1115,76 @@
       "key": "MON_SHATTER_BOSS",
       "type": "double",
       "value": 0.1
+    },
+    {
+      "key": "LINEAGE_BREED_COST",
+      "type": "int",
+      "value": 50
+    },
+    {
+      "key": "LINEAGE_TO_2",
+      "type": "int",
+      "value": 40
+    },
+    {
+      "key": "LINEAGE_TO_3",
+      "type": "int",
+      "value": 80
+    },
+    {
+      "key": "LINEAGE_TO_4",
+      "type": "int",
+      "value": 140
+    },
+    {
+      "key": "LINEAGE_TO_5",
+      "type": "int",
+      "value": 180
+    },
+    {
+      "key": "LINEAGE_RETRY_FRAC",
+      "type": "double",
+      "value": 0.25
+    },
+    {
+      "key": "LINEAGE_V_CHANCE",
+      "type": "int",
+      "value": 50
+    },
+    {
+      "key": "LINEAGE_V_PITY",
+      "type": "int",
+      "value": 15
+    },
+    {
+      "key": "LINEAGE_NODE_POINTS",
+      "type": "int",
+      "value": 1
+    },
+    {
+      "key": "LINEAGE_SKILL_POINTS",
+      "type": "int",
+      "value": 2
+    },
+    {
+      "key": "LINEAGE_CAPSTONE_POINTS",
+      "type": "int",
+      "value": 12
+    },
+    {
+      "key": "LINEAGE_FILLER_PER_RANK",
+      "type": "double",
+      "value": 0.025
+    },
+    {
+      "key": "MON_FORTUNE_BANK_STEP",
+      "type": "double",
+      "value": 0.1
+    },
+    {
+      "key": "MON_FORTUNE_BANK_CAP",
+      "type": "double",
+      "value": 0.4
     }
   ]
 }

@@ -415,6 +415,8 @@ namespace IdleRng.Sim.Combat
         /// <summary>Fortune = min(FortuneCap, LUK / (LUK + FortuneK)): the chance to reroll a roll that went against the unit.</summary>
         public double FortuneK { get; set; }
         public double FortuneCap { get; set; }
+        public double FortuneBankStep { get; set; }
+        public double FortuneBankCap { get; set; }
         public double SpdMin { get; set; }
 
         /// <summary>A trained stat never drops below this fraction of its base (STAT_FLOOR_FRAC).</summary>
@@ -507,7 +509,7 @@ namespace IdleRng.Sim.Combat
                 ElementStrongMult = k.ElementStrongMult, ElementWeakMult = k.ElementWeakMult,
                 HpPerPoint = k.MonHpPerPoint, DefK = k.MonDefK, EvadeBase = k.MonEvadeBase, EvadePerDex = k.MonEvadePerDex,
                 EvadeCap = k.MonEvadeCap, CritBase = k.MonCritBase, CritPerLuk = k.MonCritPerLuk, CritCap = k.MonCritCap,
-                CritDmg = k.MonCritDmg, CritDmgPerDex = k.MonCritDmgPerDex, GrazeMult = k.MonGrazeMult, FortuneK = k.MonFortuneK, FortuneCap = k.MonFortuneCap, SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
+                CritDmg = k.MonCritDmg, CritDmgPerDex = k.MonCritDmgPerDex, GrazeMult = k.MonGrazeMult, FortuneK = k.MonFortuneK, FortuneCap = k.MonFortuneCap, FortuneBankStep = c.ConstantValues["MON_FORTUNE_BANK_STEP"], FortuneBankCap = c.ConstantValues["MON_FORTUNE_BANK_CAP"], SpdMin = k.MonSpdMin, StatFloor = k.StatFloorFrac, StackCap = k.EffectStackCap, EchoPower = k.MonEchoPower,
                 TideRegen = k.MonTideRegen, TideShieldCap = k.MonTideShieldCap, DrainFrac = k.MonDrainFrac, FirePierce = k.MonFirePierce,
                 DoubleTurns = k.MonDoubleTurns, RebirthHeal = k.MonRebirthHeal, WailStagger = k.MonWailStagger, WailWither = k.MonWailWither,
                 VeilEvadeCap = k.MonVeilEvadeCap, FeastStr = k.MonFeastStr, CounterMult = k.MonCounterMult, FireBonus = k.MonFireBonus,
@@ -531,6 +533,7 @@ namespace IdleRng.Sim.Combat
     /// <summary>Coded rule modifiers (specs/16 section 6.2): behaviour a table row cannot express, referenced by id.</summary>
     public static class RuleModifiers
     {
+        public const string FortuneBank = "fortune_bank";
         /// <summary>
         /// After taking a single-target physical hit and surviving, counterattack at once for the damage DEF mitigated, as true
         /// damage (no evade, crit, element or mitigation), regardless of gauge. The drafts' Heavy Armor + Unbreakable Will passive.
@@ -945,7 +948,7 @@ namespace IdleRng.Sim.Combat
         /// </summary>
         public const string Shatterpoint = "shatterpoint";
 
-        public static readonly string[] Known = { CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
+        public static readonly string[] Known = { FortuneBank, CounterMitigated, EchoCast, TidalOverflow, AbyssalDrain, FirePierce, DoubleTurnStart, EntropyConvert,
             RootRebirth, WailStagger, UmbralVeil, NightFeast,
             IronReflexes, ElementalAvatar, FortressFist, BloodMagic,
             Resentment, Vantage, DeathsDoor, Barricade, ManaWard,

@@ -91,6 +91,7 @@ namespace IdleRng.Sim.Account
             a.Shards += result.Shards;
             foreach (var b in run.Books) { AddBooks(a, b, 1); result.BooksReturned.Add(b); }
             a.Vault.Add(result.Entry);
+            FortunaBreeding.Award(c, a, run);
             a.Active = null;
             Record(a, result.Entry);
             var ownedBefore = new HashSet<string>(a.OwnedSpecies, StringComparer.Ordinal);

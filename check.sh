@@ -118,6 +118,9 @@ else
     step "Web: phone-width screens, tree overwrite, save/reload/resume and stale or damaged saves in headless Chromium"
     node web/wasm/test/flows.js
 
+    step "Web: Fortune breeding, lineage points, protected breakthrough and reload in headless Chromium"
+    node web/wasm/test/lineage.js
+
     step "Web: Endless Tower screen (team, climb, playback) in headless Chromium"
     node web/wasm/test/endless.js
 

@@ -309,6 +309,13 @@ namespace IdleRng.Sim.Content
                   && mk.MonTimeLimitTicks > 0 && mk.MonSideSize > 0 && mk.StatFloorFrac > 0 && mk.StatFloorFrac <= 1 && mk.EffectStackCap >= 1))
                 errors.Add(new ContentError("E043", "constants", "monster battle constants out of range (specs/16 section 7)"));
 
+            foreach (var key in new[] { "LINEAGE_BREED_COST", "LINEAGE_TO_2", "LINEAGE_TO_3", "LINEAGE_TO_4", "LINEAGE_TO_5", "LINEAGE_RETRY_FRAC", "LINEAGE_V_CHANCE", "LINEAGE_V_PITY", "LINEAGE_NODE_POINTS", "LINEAGE_SKILL_POINTS", "LINEAGE_CAPSTONE_POINTS", "LINEAGE_FILLER_PER_RANK", "MON_FORTUNE_BANK_STEP", "MON_FORTUNE_BANK_CAP" })
+            {
+                double v = D(key);
+                double max = key == "LINEAGE_V_CHANCE" || key == "LINEAGE_V_PITY" ? 100 :
+                    key == "LINEAGE_RETRY_FRAC" || key == "LINEAGE_FILLER_PER_RANK" || key.StartsWith("MON_FORTUNE_BANK_") ? 1 : double.MaxValue;
+                if (!(v > 0 && v <= max)) errors.Add(new ContentError("E043", "constants[" + key + "]", "lineage constant out of range"));
+            }
             BuildTraining(t, errors);
 
             var strings = new Dictionary<string, string>(StringComparer.Ordinal);

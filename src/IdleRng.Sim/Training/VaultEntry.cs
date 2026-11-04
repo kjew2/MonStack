@@ -32,6 +32,8 @@ namespace IdleRng.Sim.Training
         /// </summary>
         public int Id { get; set; } = -1;
 
+        public LineageRun Lineage { get; set; }
+
         public string SpeciesId { get; set; }
 
         /// <summary>Skill books the run brought in (used or not).</summary>
@@ -102,7 +104,7 @@ namespace IdleRng.Sim.Training
 
             var e = new VaultEntry
             {
-                Id = id, SpeciesId = s.SpeciesId, End = s.End, RankIndex = s.Rank, Grade = c.FightRanks[s.Rank].Id,
+                Lineage = s.Lineage?.Clone(), Id = id, SpeciesId = s.SpeciesId, End = s.End, RankIndex = s.Rank, Grade = c.FightRanks[s.Rank].Id,
                 Cycles = s.Cycle, FightsFought = s.FightsFought, FightsWon = s.FightsWon, Stats = s.Stats.Clone(),
                 SealedUtcMs = sealedUtcMs,
             };

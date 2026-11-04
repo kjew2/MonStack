@@ -921,3 +921,5 @@ mskill.slag_hammer.name,Slag Hammer
 mskill.slag_hammer.desc,{element} damage for {power:pct} {scales}. Cooldown {cooldown}.
 mskill.anvilfall.name,Anvilfall
 mskill.anvilfall.desc,{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}.
+rule.fortune_bank.name,Fortune’s Patience
+rule.fortune_bank.desc,"Failed critical rolls bank +{MON_FORTUNE_BANK_STEP:pct} Fortune reroll chance (up to +{MON_FORTUNE_BANK_CAP:pct}). A successful critical roll resets the bank. Requires Fortune V capstone."

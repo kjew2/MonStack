@@ -73,7 +73,7 @@
   function searchText(e) {
     const sp = spDef(e), g = e.gauntlet;
     return [sp.name, sp.speciesName, elementName(sp.element), e.grade, rankName(e), g ? g.title : '', g ? g.label : '', g && g.killerName ? g.killerName : '',
-      e.end, ...e.trees.map((t) => treeName(t.id))].join(' \n ').toLowerCase();
+      e.end, ...e.trees.map((t) => (t.name || treeName(t.id)))].join(' \n ').toLowerCase();
   }
   function matches(e) {
     const v = st.view, sp = spDef(e);
@@ -192,7 +192,7 @@
         h('span', { class: 'small muted num', 'data-id': 'vault-total', text: 'Σ ' + X.num(total(e)) }),
       ]),
       e.gauntlet ? h('div', { class: 'small gold', 'data-id': 'vault-title', text: e.gauntlet.label }) : null,
-      h('div', { class: 'small muted', text: e.trees.map((t) => treeName(t.id) + ' ' + t.bought + '/' + treeSize(t.id)).join(' · ') }),
+      h('div', { class: 'small muted', text: e.trees.map((t) => (t.name || treeName(t.id)) + ' ' + t.bought + '/' + treeSize(t.id)).join(' · ') }),
       e.sealedUtcMs ? h('div', { class: 'small muted', text: new Date(e.sealedUtcMs).toLocaleString() }) : null,
       actions(e, i),
     ]);
@@ -275,8 +275,9 @@
     modal.append(stats);
     e.trees.forEach((t, k) => {
       const def = X.treeView(t.id, t.rolled);   // a rolled Awakening tree shows its own rolls (specs/15 section 4.1)
-      const tc = h('div', { class: 'card', 'data-id': 'detail-tree-' + k }, [h('div', { class: 'row between' }, [h('b', { text: treeName(t.id) }),
+      const tc = h('div', { class: 'card', 'data-id': 'detail-tree-' + k }, [h('div', { class: 'row between' }, [h('b', { text: (t.name || treeName(t.id)) }),
         h('span', { class: 'small muted num', text: t.bought + '/' + treeSize(t.id) + ' bought' })])]);
+      if (t.rolled && t.rolled.lineageEffect) tc.append(h('p', { class: 'small gold', text: (t.bought >= treeSize(t.id) ? 'Active capstone: ' : 'Capstone unlock: ') + t.rolled.lineageEffect }));
       // Nodes are bought in order (specs/15 section 1), so the first `bought` nodes are the bought ones.
       // The node list folds away (issue #130), so the sheet stays a summary; the path tiles show the tree at a glance.
       if (def) tc.append(X.nodePath(def, t.bought), h('details', { class: 'small' }, [h('summary', { class: 'linkish', text: 'All ' + def.nodes.length + ' nodes' }),
@@ -317,7 +318,7 @@
     row('total', 'Σ', total(a), total(b));
     modal.append(grid);
     modal.append(h('div', { class: 'vcmp-heads' }, [a, b].map((e, k) => h('div', { class: 'card', 'data-id': 'compare-trees-' + k }, [h('h3', { text: k ? 'B trees' : 'A trees' }),
-      ...e.trees.map((t) => h('div', { class: 'row between small' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'muted num', text: t.bought + '/' + treeSize(t.id) })]))]))));
+      ...e.trees.map((t) => h('div', { class: 'row between small' }, [h('span', { text: (t.name || treeName(t.id)) }), h('span', { class: 'muted num', text: t.bought + '/' + treeSize(t.id) })]))]))));
     modal.append(h('button', { class: 'btn block', type: 'button', 'data-act': 'compare-swap', text: 'Swap A and B',
       onclick: () => { st.compare = [st.compare[1], st.compare[0]]; X.rerender(); } }));
   }

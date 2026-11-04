@@ -222,3 +222,17 @@ MON_BRITTLE_MIN,int,1,"brittle_guard rule: the pips never refill below this (who
 MON_SHATTER_FRAC,double,0.25,"shatterpoint rule: a broken enemy its hit leaves at or below this fraction of max HP shatters and dies. Placeholder"
 MON_SHATTER_SHARDS,int,2,"shatterpoint rule: a shatter strips this many guard pips from every other living enemy. Placeholder"
 MON_SHATTER_BOSS,double,0.1,"shatterpoint rule: a boss (a unit with boss phases) never shatters; once per break it takes this fraction of its max HP as true damage instead. Placeholder"
+LINEAGE_BREED_COST,int,50,Lineage prototype (specs/29). Placeholder
+LINEAGE_TO_2,int,40,Lineage prototype (specs/29). Placeholder
+LINEAGE_TO_3,int,80,Lineage prototype (specs/29). Placeholder
+LINEAGE_TO_4,int,140,Lineage prototype (specs/29). Placeholder
+LINEAGE_TO_5,int,180,Lineage prototype (specs/29). Placeholder
+LINEAGE_RETRY_FRAC,double,0.25,Lineage prototype (specs/29). Placeholder
+LINEAGE_V_CHANCE,int,50,Lineage prototype (specs/29). Placeholder
+LINEAGE_V_PITY,int,15,Lineage prototype (specs/29). Placeholder
+LINEAGE_NODE_POINTS,int,1,Lineage prototype (specs/29). Placeholder
+LINEAGE_SKILL_POINTS,int,2,Lineage prototype (specs/29). Placeholder
+LINEAGE_CAPSTONE_POINTS,int,12,Lineage prototype (specs/29). Placeholder
+LINEAGE_FILLER_PER_RANK,double,0.025,Lineage prototype (specs/29). Placeholder
+MON_FORTUNE_BANK_STEP,double,0.1,Lineage prototype (specs/29). Placeholder
+MON_FORTUNE_BANK_CAP,double,0.4,Lineage prototype (specs/29). Placeholder

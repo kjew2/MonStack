@@ -3689,6 +3689,14 @@
     {
       "key": "mskill.anvilfall.desc",
       "text": "{element} damage to all enemies for {power:pct} {scales}. Cooldown {cooldown}."
+    },
+    {
+      "key": "rule.fortune_bank.name",
+      "text": "Fortune’s Patience"
+    },
+    {
+      "key": "rule.fortune_bank.desc",
+      "text": "Failed critical rolls bank +{MON_FORTUNE_BANK_STEP:pct} Fortune reroll chance (up to +{MON_FORTUNE_BANK_CAP:pct}). A successful critical roll resets the bank. Requires Fortune V capstone."
     }
   ]
 }

@@ -40,15 +40,17 @@ All parts are Cloud Save player items in the **private** access class: only the 
 | Part | Holds | Bound | Written by |
 |---|---|---|---|
 | `head` | The root: `seq`, the account hash and the one before the last commit, each part's stored key and hash, each Vault entry's stored key, the holder device, schema and content version, `debugUsed` | About 2 KB at a full Vault | Every commit, and a claim (section 5.1) |
-| `training` | `Seed`, `RunsStarted`, `TalentsOff` (the next run's loadout), the run in progress as its state (no command log), and the post-run vendor while it is open | About 1.4 KB at most | `startRun`, every run command, `finishRun` (opens the vendor), `abandon`, `setLoadout`, `buyOffer`, `rerollVendor`, `closeVendor` |
-| `wallet` | `Shards`, `Books` (later any premium currency, section 3.4) | Content size | `startRun` (books leave), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `dismantle`, `runTower`, `runEndless` |
+| `training` | `Seed`, `RunsStarted`, `TalentsOff` (the next run's loadout), the run in progress as its state (no command log), and the post-run vendor while it is open | About 1.4 KB at most | `startRun`, `breed`, every run command, `finishRun` (opens the vendor), `abandon`, `setLoadout`, `buyOffer`, `rerollVendor`, `closeVendor` |
+| `wallet` | `Shards`, `Books` (later any premium currency, section 3.4) | Content size | `breed` (shards), `startRun` (books leave), `finishRun`, `abandon`, `buyOffer`, `rerollVendor`, `dismantle`, `runTower`, `runEndless` |
 | `collection` | `OwnedSpecies`, `Talents` (ranks) | Content size | `finishRun` (unlocks), `buyOffer`, `runEndless` (unlocks) |
-| `progress` | `Achievements`, `Records` | Content size | `finishRun`, `runEndless` (achievements) |
+| `progress` | `Achievements`, `Records`, `Name`, `Fortuna` lineage ledger (`specs/29`) | Content size | `finishRun` (including lineage awards/attempts), `runEndless` (achievements), `setName` |
 | `dungeon` | `Tower`: tickets, pieces, grant day, attempts, bests | Fixed | `runTower`, `finishRun` (pieces), the daily grant |
 | `endless` | `Endless`: the season of the last climb, climbs this season, floors cleared this season and ever (`specs/28` section 5) | Fixed | `runEndless` |
 | `rulebooks` | `Rulebooks`: each Vault monster's gambit rulebook as text, by entry id (`specs/28` section 4.4); apart from the entries, which never change, and from the other parts, since the editor writes it often | At most `VAULT_CAP` rulebooks of `GAMBIT_SLOTS` rules, about 3 KB at 50 | `setRulebook`, `dismantle` (the monster's rulebook goes with it) |
 | `vault` | The Vault index: entry ids in Vault order, the locked ids, each entry's short hash (16 hex characters) | `VAULT_CAP` ids, about 1.1 KB at 50 | `finishRun`, `dismantle`, `lock` |
 | `mon.<id>` | One sealed monster as its result: species, grade, rank, end, cycles, fights, final stats, trees (bought nodes, rolls, fusions), books used, gauntlet floor, killer and Legacy Title, seal time | One per entry, about 0.6 KB | `finishRun` creates; `dismantle` deletes; never changed |
+
+`breed` reads `collection`, `vault`, entries and `progress`, and writes only `training` and `wallet`. Its positional arguments are primary Vault position, supporting Vault position and optional disabled talents. Sealing resolves the node-based lineage award and deterministic protected upgrade with the same command on client and server; the persistent attempt counter prevents reload rerolls. Save v13 migration is shared with local saves (`specs/29`).
 
 Rules behind the split:
 - **By writer set.** Each part changes for one reason. A run command touches only `training`; a vendor buy touches `wallet`, `collection` and `training`. A commit rewrites only the parts its commands changed, so a checkpoint in the middle of a run writes `training` and `head`, a few KB.

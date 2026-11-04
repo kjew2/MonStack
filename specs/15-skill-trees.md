@@ -8,12 +8,16 @@ The design is `specs/12` section 5; the decisions are kj's (2026-10-30) unless m
 
 ## 1. Summary
 
-- A monster has `TREE_SLOTS` (4) slots, plus the Fifth Slot talent's (`specs/18` section 3). A run starts with its species' two **native** trees in slots 0 and 1 and the other slots empty. The Second Look talent rerolls an Awakening (`specs/18` section 3).
+- A monster has `TREE_SLOTS` (4) slots, plus the Fifth Slot talent's (`specs/18` section 3). A normal run starts with its species' two **native** trees in slots 0 and 1 and the other slots empty. A bred run also starts with inherited Fortune in slot 2 (`specs/29`). The Second Look talent rerolls an Awakening (`specs/18` section 3).
 - **Skill points** (SP): `SP_PER_CYCLE` at the start of every cycle (cycle 1 included) plus `SP_PER_WIN` for each rank fight won.
 - SP buy a tree's **nodes in order**. About 75% of nodes are **filler** (a growth bonus or a flat stat boost); the rest grant skills, triggered effects or rule modifiers. The **last node is the tree's chase trait**.
 - Each species owns **two chase trees** of its own: one unlocked in-run, and a second one gated behind a skill book tree or, for some species, a harder in-run chase with no book (kj, 2026-11-03; section 5.1).
 - A species' **native trees are native-only** (kj, 2026-11-03, #160): Awakenings never offer them, and a species' signature rule is not shared with a generic tree (section 2).
 - New trees arrive as **offers**: an Awakening (a milestone draft of **rolled** trees for any stat, section 4.1), a skill book, or an unlocked chase tree. Any offered tree may go into an empty slot or **overwrite any slot**, native trees included; or the offer is discarded.
+
+### 1.1 Inherited lineage ranks
+
+Fortune I–V breeding (`specs/29`, #174) preserves the existing `fortune` id, node order and SP costs. A captured `TreeRoll.LineageRank` distinguishes inherited quality from bought-node investment. Inherited filler amounts use fixed content amounts improved by 2.5% per rank above I; ordinary Awakenings still roll normally. Fortune V's bought capstone also grants `fortune_bank` (`specs/16` section 6.2). Absorbed trees retain that bought contribution through fusion; overwriting removes it from the fighter. A bred run separately tracks the deepest Fortune progression for its once-per-seal lineage award, so overwriting/reacquiring cannot reset or duplicate earned progress. No new tree slot or native/chase inheritance is added.
 
 ## 2. Trees and nodes
 

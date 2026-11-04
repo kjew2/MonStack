@@ -149,7 +149,9 @@
     const t = C.trees[id];
     if (!rolled || !t) return t;
     rolled.nodes.forEach((n) => { if (n.tip && C.nodeTips) C.nodeTips[n.id] = n.tip; });
-    return Object.assign({}, t, { nodes: rolled.nodes, boosts: rolled.boosts, rolledStat: rolled.stat });
+    const rank = rolled.lineageRank || 0;
+    const name = rank ? t.name + ' ' + ['', 'I', 'II', 'III', 'IV', 'V'][rank] : t.name;
+    return Object.assign({}, t, { name, nodes: rolled.nodes, boosts: rolled.boosts, rolledStat: rolled.stat });
   }
 
   // ------------------------------------------------------------ rendering
@@ -538,6 +540,7 @@
           h('b', { text: 'Slot ' + (i + 1) + ': ' + t.name }),
           h('span', null, [rolledChip(t), ' ', h('span', { class: 'tag', text: t.kind }), ' ', h('span', { class: 'small muted num', text: slot.bought + '/' + t.nodes.length })]),
         ]),
+        slot.rolled && slot.rolled.lineageEffect ? h('p', { class: 'small gold', text: 'Capstone: ' + slot.rolled.lineageEffect }) : null,
         fusionLine(s, slot, t),
         nodePath(t, slot.bought),
       ]);
@@ -556,6 +559,7 @@
       main.append(card);
     });
 
+    if (s.lineage) main.append(h('p', { class: 'small', 'data-id': 'run-lineage', text: 'Fortune lineage: ' + s.lineage.points + ' / ' + s.lineage.maxPoints + ' points earned this run. Awarded at sealing, even if the tree is overwritten.' }));
     main.append(h('h3', { text: 'Chase trees' }));
     main.append(h('p', { class: 'small muted', text: 'Each species has two chase trees of its own: one unlocks from its own trees and stats; the other also needs a skill book tree, or, for some species, more trees, stats and wins. A chase tree unlocks when every condition holds, then it is offered. It locks again if a condition stops holding.' }));
     s.chase.forEach((c) => {
@@ -1302,6 +1306,7 @@
       cb.checked = ui.book;
       main.append(h('label', { class: 'small row' }, [cb, h('span', { text: 'Bring ' + C.books[bring].name + ' (you have ' + acct.books[bring] + ')' })]));
     }
+    lineagePanel(main);
     lockedSpecies(main);
 
     const grant = debugOn() ? speciesBook() || Object.keys(C.books)[0] : null;   // debug only: the Dungeon drops books (specs/21 section 7)
@@ -1312,6 +1317,43 @@
     // disabled: a faded button over the cards only gets in the way).
     main.append(h('button', { class: 'btn primary block' + (ui.pick && over <= 0 ? ' sticky-start' : ''), type: 'button', 'data-act': 'start', disabled: !ui.pick || over > 0,
       text: over > 0 ? 'Vault full: dismantle ' + over : ui.pick ? 'Start run' : 'Pick a species', onclick: startRun }));
+  }
+  function lineagePanel(main) {
+    const a = run.account, l = a.lineage;
+    if (!l) return;
+    const roman = ['', 'I', 'II', 'III', 'IV', 'V'];
+    const card = h('details', { class: 'card', 'data-id': 'lineage-panel' }, [
+      h('summary', { text: 'Breed · Fortune ' + roman[l.rank] }),
+      h('p', { text: l.rank >= 5 ? 'Fortune V unlocked. New descendants can learn Fortune’s Patience at the capstone.' :
+        l.points + ' / ' + l.required + ' lineage points toward Fortune ' + roman[l.rank + 1] + (l.failures ? ' (retry)' : '') }),
+      l.rank < 5 ? h('progress', { max: l.required, value: l.points, 'aria-label': 'Fortune lineage progress' }) : null,
+      h('p', { class: 'small', text: 'Only inherited Fortune nodes earn points: ' + a.lineageNodePoints + ' per filler, ' + a.lineageSkillPoints + ' for the skill, ' + a.lineageCapstonePoints + ' for the capstone. Awarded when the run seals; overwriting keeps progress. Each tree rank adds ' + a.lineageFillerPercent + '% to its filler bonuses.' }),
+      h('p', { class: 'small', text: 'II–IV are guaranteed. V starts at ' + l.baseChance + '%; failures add ' + l.pityStep + ' percentage points. Retries cost ' + l.retryPercent + '% of the V threshold, with no downgrade. ' + (l.rank === 4 ? 'Next attempt: ' + l.chance + '%. Guaranteed within ' + l.attemptsLeft + ' attempts.' : '') }),
+      l.lastResult ? h('p', { role: 'status', text: l.lastResult }) : null,
+      l.lastAward ? h('p', { class: 'small', text: 'Last descendant: +' + l.lastAward + ' lineage points.' }) : null,
+      h('p', { class: 'small', text: 'Choose two Vault parents. The primary supplies its species and Fortune; both parents remain. The offspring starts a new run with Fortune in slot 3. Cost: ' + l.cost + ' Training Shards.' }),
+    ]);
+    const primary = h('select', { id: 'breed-primary', style: 'width:100%;max-width:100%', 'aria-label': 'Primary breeding parent', 'data-id': 'breed-primary' });
+    const support = h('select', { id: 'breed-support', style: 'width:100%;max-width:100%', 'aria-label': 'Supporting breeding parent', 'data-id': 'breed-support' });
+    primary.append(h('option', { value: '', text: 'Primary: learned Fortune' }));
+    support.append(h('option', { value: '', text: 'Supporting parent' }));
+    a.vault.forEach((e, i) => {
+      const text = '#' + (i + 1) + ' ' + (e.name || (speciesDef(e.species) || { name: e.species }).name) + ' · ' + e.grade.toUpperCase();
+      if (e.canBreedPrimary) primary.append(h('option', { value: String(i), text }));
+      if (e.id >= 0) support.append(h('option', { value: String(i), text }));
+    });
+    const button = h('button', { type: 'button', class: 'btn small primary', 'data-act': 'breed', text: 'Breed & train Fortune ' + roman[l.rank], disabled: true,
+      onclick: () => {
+        const result = run.acct('breed', Number(primary.value), Number(support.value), a.talentsOff);
+        if (!result.ok) { toast(result.reason); render(); return; }
+        resetRunUi(); ui.view = 'run'; render();
+      } });
+    const update = () => { button.disabled = primary.value === '' || support.value === '' || primary.value === support.value || a.shards < l.cost || a.vaultOver > 0; };
+    primary.onchange = update; support.onchange = update;
+    card.append(h('label', { class: 'small', for: 'breed-primary', text: 'Primary parent' }), primary,
+      h('label', { class: 'small', for: 'breed-support', text: 'Supporting parent' }), support, button);
+    if (primary.options.length === 1) card.append(h('p', { class: 'small muted', text: 'Train a monster that learns Fortune’s skill node to begin this lineage.' }));
+    main.append(card);
   }
   // The owned species as a row of big square cards (the whole portrait, no crop, the name over its foot) that swipes sideways; the card that settles in the middle is the pick (tapping a
   // card or a dot picks it too and glides it to the middle). Locked species stay out of the row, folded under one line.
@@ -2205,9 +2247,18 @@
       h('div', { class: 'center gems num', 'data-id': 'payout', text: '+' + ui.payout + ' Training Shards' }),
       ticketLine(),
     );
+    if (e.bred && run.account.lineage) {
+      const l = run.account.lineage;
+      main.append(h('div', { class: 'card alert', 'data-id': 'grade-lineage', role: 'status' }, [
+        h('b', { text: '+' + l.lastAward + ' Fortune lineage points' }),
+        l.lastResult ? h('p', { class: 'gold', 'data-id': 'grade-lineage-result', text: l.lastResult }) : null,
+        h('p', { class: 'small', text: l.rank >= 5 ? 'Fortune V unlocked for future descendants.' :
+          l.points + ' / ' + l.required + ' points toward the next ' + (l.failures ? 'upgrade attempt (' + l.chance + '% chance).' : 'rank.') }),
+      ]));
+    }
     main.append(h('div', { class: 'card', 'data-id': 'grade-stats' }, [h('h3', { text: 'Stat breakdown' }), statGrid(e.stats)]));
     main.append(h('div', { class: 'card' }, [h('h3', { text: 'Trees' }),
-      ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
+      ...e.trees.map((t) => h('div', { class: 'row between' }, [h('span', { text: t.name || treeName(t.id) }), h('span', { class: 'small muted num', text: t.bought + '/' + (C.trees[t.id] ? C.trees[t.id].nodes.length : '?') })]))]));
     ui.earned.forEach((a) => main.append(h('div', { class: 'card alert', 'data-id': 'earned-' + a.id }, [
       h('b', { text: '🏆 Achievement: ' + a.name }),
       h('div', { class: 'small muted', text: a.text }),
