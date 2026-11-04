@@ -23,7 +23,7 @@ namespace IdleRng.Sim.Training
     /// </summary>
     public enum RunEnd { None, Completed, Injured }
 
-    public enum RunCommandKind { Drill, Rest, Fight, TakeTree, DiscardOffer, SpendPoint, UseBook, RerollDraft }
+    public enum RunCommandKind { Drill, Rest, Fight, TakeTree, DiscardOffer, SpendPoint, UseBook, RerollDraft, LineageChoice }
 
     /// <summary>One accepted command, with only the arguments its kind uses.</summary>
     public sealed class RunCommand
@@ -44,6 +44,7 @@ namespace IdleRng.Sim.Training
 
         /// <summary>UseBook: book id.</summary>
         public string Book { get; set; }
+        public string LineageAction { get; set; }
 
         public RunCommand Clone() => (RunCommand)MemberwiseClone();
     }
@@ -281,6 +282,7 @@ namespace IdleRng.Sim.Training
     public sealed class RunState
     {
         public LineageRun Lineage { get; set; }
+        public LineageTrainingState LineageTraining { get; set; }
 
         public string SpeciesId { get; set; }
 
@@ -378,6 +380,7 @@ namespace IdleRng.Sim.Training
         {
             var c = (RunState)MemberwiseClone();
             c.Lineage = Lineage?.Clone();
+            c.LineageTraining = LineageTraining?.Clone();
             c.Stats = Stats.Clone();
             c.Mods = Mods.Clone();
             c.Ladder = new List<string>(Ladder);

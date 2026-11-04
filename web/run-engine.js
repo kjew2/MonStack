@@ -44,7 +44,7 @@
       // Account command (startRun, finishRun, buyOffer, rerollVendor, setLoadout, abandon, dismantle, lock, runTower, setRulebook, runEndless,
       // setName, debugGrantBook); returns the result, ok:false when refused (or, with sync, while play waits for the server).
       acct(name) { return command(name, [].slice.call(arguments, 1), host.AccountCmd); },
-      // Run command (drill, rest, fight, take, discard, spend, book); returns the result, ok:false when refused.
+      // Run command (drill, rest, fight, take, discard, spend, book, lineageChoice); returns the result, ok:false when refused.
       cmd(name) { return command(name, [].slice.call(arguments, 1), host.RunCmd); },
       // The time: the server's with sync (its time at the last answer plus the time since, issue #21), else this device's.
       now() { return sync ? sync.now() : Date.now(); },

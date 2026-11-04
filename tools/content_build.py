@@ -48,6 +48,22 @@ ENUMS = {
 
 # key -> type. Mirrors IdleRng.Sim.Content.Constants (specs/16 to specs/19 list each group).
 REQUIRED_CONSTANTS = {
+    "LINEAGE_PRE_CAPSTONE_POINTS": "int",
+    "LINEAGE_TO_6": "int",
+    "LINEAGE_TO_7": "int",
+    "LINEAGE_TO_8": "int",
+    "LINEAGE_TO_9": "int",
+    "LINEAGE_TO_10": "int",
+    "LINEAGE_X_CHANCE": "int",
+    "LINEAGE_X_PITY": "int",
+    "LINEAGE_FILLER_LATE_PER_RANK": "double",
+    "MON_LINEAGE_GAIN": "double",
+    "MON_LINEAGE_CAP": "double",
+    "MON_LINEAGE_WINDOW": "int",
+    "LINEAGE_TRAIN_GAIN": "double",
+    "LINEAGE_TRAIN_CAP": "double",
+    "LINEAGE_TRAIN_CHARGE": "int",
+
     "LINEAGE_BREED_COST": "int",
     "LINEAGE_TO_2": "int",
     "LINEAGE_TO_3": "int",
@@ -156,7 +172,7 @@ STATS = ["hp", "str", "int", "wis", "dex", "def", "spd", "luk"]
 DRILL_TIERS = ["fail", "success", "super"]
 EFFECT_STATS = STATS + ["crit_rate", "crit_dmg", "dmg_dealt", "entropy_gain"]
 # Coded rule modifiers (IdleRng.Sim.Combat.RuleModifiers.Known, specs/16 section 6.2).
-RULE_IDS = ["fortune_bank", "counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
+RULE_IDS = ["lineage_vital_core_v","lineage_vital_core_x","lineage_brute_force_v","lineage_brute_force_x","lineage_spellcraft_v","lineage_spellcraft_x","lineage_sage_mind_v","lineage_sage_mind_x","lineage_nimble_feet_v","lineage_nimble_feet_x","lineage_bulwark_v","lineage_bulwark_x","lineage_overclock_v","lineage_overclock_x","lineage_fortune_v","lineage_fortune_x","lineage_battle_instinct_v","lineage_battle_instinct_x","lineage_survivor_v","lineage_survivor_x","lineage_lifeblood_v","lineage_lifeblood_x","lineage_berserker_v","lineage_berserker_x","lineage_runeweaver_v","lineage_runeweaver_x","lineage_hermit_v","lineage_hermit_x","lineage_duelist_v","lineage_duelist_x","lineage_stonewall_v","lineage_stonewall_x","lineage_quickstep_v","lineage_quickstep_x","lineage_lucky_star_v","lineage_lucky_star_x","lineage_iron_reflexes_v","lineage_iron_reflexes_x","lineage_resentment_v","lineage_resentment_x","lineage_deaths_door_v","lineage_deaths_door_x","lineage_one_more_v","lineage_one_more_x","lineage_latent_power_v","lineage_latent_power_x","lineage_lone_wolf_v","lineage_lone_wolf_x","lineage_arise_v","lineage_arise_x","lineage_last_rite_v","lineage_last_rite_x","lineage_heirloom_v","lineage_heirloom_x","lineage_mastery_v","lineage_mastery_x","lineage_limit_break_v","lineage_limit_break_x","lineage_hemorrhage_v","lineage_hemorrhage_x","lineage_privileged_status_v","lineage_privileged_status_x","lineage_equilibrium_v","lineage_equilibrium_x","lineage_corruption_v","lineage_corruption_x","lineage_dead_branch_v","lineage_dead_branch_x","lineage_iron_vow_v","lineage_iron_vow_x","lineage_cursed_mark_v","lineage_cursed_mark_x","lineage_devourer_v","lineage_devourer_x","lineage_second_breath_v","lineage_second_breath_x","lineage_ascetic_v","lineage_ascetic_x","lineage_hungry_core_v","lineage_hungry_core_x","fortune_bank", "counter_mitigated", "echo_cast", "tidal_overflow", "abyssal_drain", "fire_pierce", "double_turn_start",
             "entropy_convert", "root_rebirth", "wail_stagger", "umbral_veil", "night_feast",
             # idea-pool lane A (#134)
             "iron_reflexes", "elemental_avatar", "fortress_fist", "blood_magic",
@@ -196,6 +212,22 @@ TALLIES = ["damage_dealt", "evades", "crits", "kills", "wins"]
 
 # Range rules for the monster battle constants (specs/16 section 7): key -> (rule text, predicate).
 MON_RANGES = {
+    "LINEAGE_PRE_CAPSTONE_POINTS": ("> 0", lambda v: v > 0),
+    "LINEAGE_TO_6": ("valid lineage value", lambda v: v > 0),
+    "LINEAGE_TO_7": ("valid lineage value", lambda v: v > 0),
+    "LINEAGE_TO_8": ("valid lineage value", lambda v: v > 0),
+    "LINEAGE_TO_9": ("valid lineage value", lambda v: v > 0),
+    "LINEAGE_TO_10": ("valid lineage value", lambda v: v > 0),
+    "LINEAGE_X_CHANCE": ("valid lineage value", lambda v: 0 < v <= 100),
+    "LINEAGE_X_PITY": ("valid lineage value", lambda v: 0 < v <= 100),
+    "LINEAGE_FILLER_LATE_PER_RANK": ("valid lineage value", lambda v: 0 < v <= 1),
+    "MON_LINEAGE_GAIN": ("valid lineage value", lambda v: 0 < v <= 1),
+    "MON_LINEAGE_CAP": ("valid lineage value", lambda v: 0 < v <= 1),
+    "MON_LINEAGE_WINDOW": ("valid lineage value", lambda v: v > 0),
+    "LINEAGE_TRAIN_GAIN": ("valid lineage value", lambda v: 0 < v <= 1),
+    "LINEAGE_TRAIN_CAP": ("valid lineage value", lambda v: 0 < v <= 1),
+    "LINEAGE_TRAIN_CHARGE": ("valid lineage value", lambda v: v > 0),
+
     "LINEAGE_BREED_COST": ("> 0", lambda v: v > 0),
     "LINEAGE_TO_2": ("> 0", lambda v: v > 0),
     "LINEAGE_TO_3": ("> 0", lambda v: v > 0),

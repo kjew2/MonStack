@@ -231,6 +231,13 @@ namespace IdleRng.Runtime.Save
                 version = 12;
             }
             if (version == 12) version = 13; // lineage starts at I, no progress or attempts
+            if (version == 13)
+            {
+                // Existing Fortune counters keep their exact stream position; every other tree starts at I.
+                if (body["Account"] is JObject a && a["Fortuna"] is JObject fortune)
+                    a["Lineages"] = new JObject { ["fortune"] = fortune.DeepClone() };
+                version = 14;
+            }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
             return version;
@@ -284,6 +291,8 @@ namespace IdleRng.Runtime.Save
         static void CheckRun(ContentDb c, RunState s)
         {
             if (s == null || s.SpeciesId == null || !c.Species.ContainsKey(s.SpeciesId)) throw new InvalidOperationException("unknown species '" + s?.SpeciesId + "'");
+            if (s.Lineage != null && (s.Lineage.TreeId == null || !c.Trees.ContainsKey(s.Lineage.TreeId)))
+                throw new InvalidOperationException("unknown lineage tree '" + s.Lineage.TreeId + "'");
             foreach (var id in s.Ladder) if (!c.RankEnemies.ContainsKey(id)) throw new InvalidOperationException("unknown rank enemy '" + id + "'");
             foreach (var o in s.Offers) foreach (var t in o.Trees) if (!c.Trees.ContainsKey(t)) throw new InvalidOperationException("unknown tree '" + t + "'");
             foreach (var b in s.Books) if (!c.SkillBooks.ContainsKey(b)) throw new InvalidOperationException("unknown book '" + b + "'");

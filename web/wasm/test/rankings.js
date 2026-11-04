@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Browser check of the home Rankings tab at phone width 390x844: the six home tabs fit, the Endless season board (empty before a
+// Browser check of the home Rankings tab at phone width 390x844: the seven home tabs fit, the Endless season board (empty before a
 // climb, last season, the player's row after a climb), the gauntlet boards (the sealed monster's row with its Legacy Title on the
 // overall board, the species chips filtering it), the display name (shown on the rows once saved), a board read that fails
 // (the error and Retry), a read that lands after another board was picked (drawn nowhere), and the layout.
@@ -55,7 +55,7 @@ const H = require('./harness.js');
   const label = await text('[data-id=vault-title]');
   check(/^(Floor \d+: \S|All \d+ floors: \S)/.test(label), 'the sealed monster has a Legacy Title in the Vault: ' + label);
 
-  // ---- six home tabs fit the phone: no label runs past its tab, in the page's font and in DejaVu Sans (the wide fallback CI's
+  // ---- seven home tabs fit the phone: no label runs past its tab, in the page's font and in DejaVu Sans (the wide fallback CI's
   // Ubuntu runner draws when Nunito is not loaded; local machines often fall back to a narrower font and passed where CI failed)
   const tabs = await page.$$eval('#tabs button', (bs) => bs.map((b) => {
     const fits = () => { const r = document.createRange(); r.selectNodeContents(b.firstChild); return r.getBoundingClientRect().width <= b.getBoundingClientRect().width + 0.5; };
@@ -65,7 +65,7 @@ const H = require('./harness.js');
     b.style.fontFamily = '';
     return { act: b.dataset.act, fits: own && wide };
   }));
-  check(tabs.length === 6 && tabs[5].act === 'hometab-rankings' && tabs.every((x) => x.fits), 'six home tabs, Ranks last, every label inside its tab: ' + JSON.stringify(tabs));
+  check(tabs.length === 7 && tabs[1].act === 'hometab-lineages' && tabs[6].act === 'hometab-rankings' && tabs.every((x) => x.fits), 'seven home tabs, Ranks last, every label inside its tab: ' + JSON.stringify(tabs));
 
   // ---- the Rankings tab opens on the Endless season board: empty before a climb, this account's only
   const r0 = await reads();

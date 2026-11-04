@@ -26,6 +26,7 @@ namespace IdleRng.Sim.Training
         {
             ModifyGrowth_F(c, s, stat, ref growth);
             ModifyGrowth_G(c, s, stat, ref growth);
+            LineageGrowth(c, s, stat, ref growth);
         }
 
         static partial void ModifyGrowth_F(ContentDb c, RunState s, string stat, ref double growth);
@@ -36,6 +37,7 @@ namespace IdleRng.Sim.Training
         {
             ModifyDrillGain_F(c, s, stat, tier, ref gain);
             ModifyDrillGain_G(c, s, stat, tier, ref gain);
+            LineageDrillGain(c, s, stat, tier, ref gain);
         }
 
         static partial void ModifyDrillGain_F(ContentDb c, RunState s, string stat, DrillTier tier, ref double gain);
@@ -66,6 +68,7 @@ namespace IdleRng.Sim.Training
         {
             ModifyInjuryChance_F(c, s, e, ref chance);
             ModifyInjuryChance_G(c, s, e, ref chance);
+            LineageInjury(c, s, e, ref chance);
         }
 
         static partial void ModifyInjuryChance_F(ContentDb c, RunState s, double e, ref double chance);
@@ -79,6 +82,7 @@ namespace IdleRng.Sim.Training
         {
             OnDrillDone_F(c, s, result, energyBefore);
             OnDrillDone_G(c, s, result, energyBefore);
+            LineageDrillDone(c, s, result, energyBefore);
         }
 
         static partial void OnDrillDone_F(ContentDb c, RunState s, DrillResult result, double energyBefore);
@@ -109,6 +113,7 @@ namespace IdleRng.Sim.Training
         {
             OnCycleStart_F(c, s);
             OnCycleStart_G(c, s);
+            LineageCycleStart(c, s);
         }
 
         static partial void OnCycleStart_F(ContentDb c, RunState s);
@@ -119,6 +124,7 @@ namespace IdleRng.Sim.Training
         {
             OnRankFightStart_F(c, s, monster, opponent);
             OnRankFightStart_G(c, s, monster, opponent);
+            LineageRankStart(c, s, monster, opponent);
         }
 
         static partial void OnRankFightStart_F(ContentDb c, RunState s, Fighter monster, Fighter opponent);
@@ -129,6 +135,7 @@ namespace IdleRng.Sim.Training
         {
             OnRankFightResult_F(c, s, result);
             OnRankFightResult_G(c, s, result);
+            LineageRankResult(c, s, result);
         }
 
         static partial void OnRankFightResult_F(ContentDb c, RunState s, RankFightResult result);
@@ -190,6 +197,7 @@ namespace IdleRng.Sim.Training
             var extra = new List<string>();
             KitExtra_F(c, s, extra);
             KitExtra_G(c, s, extra);
+            LineageKitExtra(c, s, extra);
             return extra;
         }
 
@@ -201,6 +209,7 @@ namespace IdleRng.Sim.Training
         {
             HashRun_F(w, s);
             HashRun_G(w, s);
+            LineageHash(w, s);
         }
 
         static partial void HashRun_F(CanonicalWriter w, RunState s);

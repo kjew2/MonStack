@@ -66,3 +66,5 @@ This file is how lessons reach the next agent. When the user corrects you on som
 - Server work follows `specs/27` (option E, kj's choice): the server holds the account and re-checks the client's commands at checkpoints; a connection is needed. Never design a client-uploaded save or timer-based sync; sync at checkpoints.
 - Saves are lean JSON (save v10): a field at its starting value (`0`, `false`, `null`, an `Id` of `-1`) is left out. In browser checks read save fields with a fallback (`x.Shards || 0`, `!e.Locked`, `x.Vendor == null`), never `=== 0`, `=== false` or `=== null`.
 - Breeding lineage progress comes only from the inherited focus tree's deepest node progression, weighted toward its capstone; do not add rewards for grades, wins, deeds, parent quality or run completion (`specs/29`, kj 2026-11-03).
+
+- A new browser bridge command must return an explicit success result and be covered by a browser save/reload flow; sim-only tests do not verify client persistence and checkpoint recording.

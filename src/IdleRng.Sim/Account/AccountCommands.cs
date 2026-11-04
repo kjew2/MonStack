@@ -40,7 +40,7 @@ namespace IdleRng.Sim.Account
         StartRun, FinishRun, Abandon, BuyOffer, RerollVendor, CloseVendor, SetLoadout, Dismantle, Lock, RunTower, DebugGrantBook,
         SetRulebook, RunEndless, SetName, Breed,
         // run commands from here on (AccountCommands.IsRunCommand)
-        Drill, Rest, Fight, Take, Discard, Reroll, Spend, Book,
+        Drill, Rest, Fight, Take, Discard, Reroll, Spend, Book, LineageChoice,
     }
 
     /// <summary>
@@ -99,7 +99,7 @@ namespace IdleRng.Sim.Account
             ["setLoadout"] = CommandKind.SetLoadout, ["dismantle"] = CommandKind.Dismantle, ["lock"] = CommandKind.Lock,
             ["runTower"] = CommandKind.RunTower, ["debugGrantBook"] = CommandKind.DebugGrantBook,
             ["setRulebook"] = CommandKind.SetRulebook, ["runEndless"] = CommandKind.RunEndless,
-            ["setName"] = CommandKind.SetName, ["breed"] = CommandKind.Breed,
+            ["setName"] = CommandKind.SetName, ["breed"] = CommandKind.Breed, ["lineageChoice"] = CommandKind.LineageChoice,
             ["drill"] = CommandKind.Drill, ["rest"] = CommandKind.Rest, ["fight"] = CommandKind.Fight, ["take"] = CommandKind.Take,
             ["discard"] = CommandKind.Discard, ["reroll"] = CommandKind.Reroll, ["spend"] = CommandKind.Spend, ["book"] = CommandKind.Book,
         };
@@ -126,7 +126,7 @@ namespace IdleRng.Sim.Account
             switch (kind)
             {
                 case CommandKind.Breed:
-                    c.A = Int(a, 0); c.B = Int(a, 1); c.TalentsOff = a.Has(2) ? a.StrList(2) : null; break;
+                    c.A = Int(a, 0); c.B = Int(a, 1); c.TalentsOff = a.Has(2) ? a.StrList(2) : null; c.Id = a.Has(3) ? a.Str(3) : "fortune"; break;
                 case CommandKind.StartRun:
                     c.Id = a.Str(0);
                     c.Ids = a.Has(1) ? a.StrList(1) : null;
@@ -141,6 +141,7 @@ namespace IdleRng.Sim.Account
                 case CommandKind.SetName: c.Id = a.Has(0) ? a.Str(0) : ""; break;
                 case CommandKind.DebugGrantBook: c.Id = a.Str(0); c.A = a.Has(1) ? Int(a, 1) : 1; break;
                 case CommandKind.Drill: case CommandKind.Book: c.Id = a.Str(0); break;
+                case CommandKind.LineageChoice: c.Id = a.Str(0); c.Ids = a.Has(1) ? new List<string> { a.Str(1) } : null; break;
                 case CommandKind.Take: c.A = Int(a, 0); c.B = Int(a, 1); break;
             }
             return c;
@@ -225,7 +226,7 @@ namespace IdleRng.Sim.Account
             if (IsRunCommand(cmd.Kind)) s = a.Active ?? throw new InvalidOperationException("no run");
             switch (cmd.Kind)
             {
-                case CommandKind.Breed: return FortunaBreeding.Breed(c, a, cmd.A, cmd.B, cmd.TalentsOff);
+                case CommandKind.Breed: return TreeLineages.Breed(c, a, cmd.A, cmd.B, cmd.Id ?? "fortune", cmd.TalentsOff);
                 case CommandKind.StartRun: return AccountOps.StartRun(c, a, cmd.Id, cmd.Ids, cmd.TalentsOff);
                 case CommandKind.FinishRun: return AccountOps.FinishRun(c, a, cmd.Time);
                 case CommandKind.Abandon: return AccountOps.AbandonRun(c, a);
@@ -257,6 +258,7 @@ namespace IdleRng.Sim.Account
                     return AccountOps.RunEndless(c, a, team, cmd.A);
                 }
                 case CommandKind.SetName: AccountOps.SetName(a, cmd.Id); return null;
+                case CommandKind.LineageChoice: TrainingRun.LineageChoice(c, s, cmd.Id, cmd.Ids != null && cmd.Ids.Count > 0 ? cmd.Ids[0] : null); return null;
                 case CommandKind.Drill: return TrainingRun.Drill(c, s, cmd.Id);
                 case CommandKind.Rest: return TrainingRun.Rest(c, s);
                 case CommandKind.Fight: return TrainingRun.Fight(c, s, onAction, onStart);

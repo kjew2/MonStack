@@ -47,7 +47,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 ## 5. Schema versions
 
-`AccountState.CurrentSchemaVersion` is 13. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
+`AccountState.CurrentSchemaVersion` is 14. When a field changes, bump it and add a forward-only migration step on the `JObject` between `Decode` and materialisation (`AccountSave.Migrate`); a step uses frozen literals, never `ContentDb`, and sets both `SchemaVersion` fields to the version it reaches.
 
 | Step | Change |
 |---|---|
@@ -63,7 +63,8 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 | v10 -> v11 | `Endless` (Endless Tower progress: `Season` -1, no climbs, nothing cleared) and `Rulebooks` (empty), `specs/28` section 5. Both are their starting values, which lean JSON writes as nothing, so the step only moves the version; a null in the file reads as the same empty values |
 | v11 -> v12 | `Name`, the display name (null: none), `specs/28` section 6. Null is its starting value, so the step only moves the version |
 
-| v12 -> v13 | Fortune lineage ledger starts at rank I with zero progress/attempts (`specs/29`). Older active runs and Vault entries have no lineage snapshot; the step only advances the version, with defaults materialised on load |
+| v12 -> v13 | Fortune prototype ledger starts at I; old runs and Vault entries remain unbred (`specs/29`) |
+| v13 -> v14 | Copy the legacy `Fortuna` ledger into `Lineages["fortune"]`, preserving all progress and attempt counters. Other generic trees default to I; run-local lineage training choice state is saved and hashed (`specs/30`). `Fortuna` remains an alias, not a second ledger |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
 
