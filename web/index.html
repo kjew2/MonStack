@@ -946,6 +946,51 @@ body:has(#app.workshop) { background: var(--workshop-bg); }
   .workshop-focus { padding: 10px; max-width: 42%; }
   .workshop .lineage-tools { grid-template-columns: minmax(0, 1fr); }
 }
+/* Parent selection is a bounded roster sheet, with enough room to compare actual monster builds. */
+#modal:has(.parent-picker) { overflow: hidden; }
+.parent-picker { height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.parent-picker > * { flex-shrink: 0; }
+.parent-picker-head { justify-content: space-between; align-items: start; }
+.parent-picker-head > div { flex: 1; min-width: 0; }
+.parent-picker-head h2 { margin-top: 5px; font: 800 22px/1.15 var(--font-display); }
+.parent-picker-head .btn { margin-top: 0; }
+.parent-picker-intro, .parent-picker-foot { margin: 0; }
+.parent-search { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); color: var(--text); font: inherit; font-size: 16px; }
+.parent-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+.parent-filter-row { display: flex; gap: 6px; }
+.parent-filter-row .btn[aria-pressed="true"] { border-color: var(--gems); color: var(--gems); background: var(--gems-bg); }
+.parent-controls .btn { padding: 8px 10px; font-size: 11px; }
+.parent-picker .parent-roster { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: start; overflow-y: auto; padding: 3px; scrollbar-gutter: stable; }
+.parent-option { min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--r); text-align: left; }
+.parent-option:not(:disabled):hover, .parent-option.selected { border-color: var(--gems); background: var(--gems-bg); }
+.parent-option:disabled { opacity: .7; cursor: default; }
+.parent-option-head { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.parent-option-head > div { min-width: 0; display: grid; gap: 5px; }
+.parent-option-head b { overflow-wrap: anywhere; font-weight: 800; }
+.parent-option-head .tag { justify-self: start; font-size: 10px; }
+.parent-option-head .sprite.large { width: 60px; height: 60px; flex-basis: 60px; }
+.parent-option-trees { display: flex; flex-wrap: wrap; gap: 5px; }
+.parent-option-trees .tag { white-space: normal; font-size: 10px; font-weight: 600; }
+.parent-option > small { margin-top: auto; text-align: left; }
+.parent-option-reason { color: var(--muted); }
+.parent-roster-empty { grid-column: 1 / -1; margin: 12px; text-align: center; }
+.parent-pair-preview { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--gold-bg); }
+.parent-pinned { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.parent-pinned > div { display: grid; gap: 3px; min-width: 0; }
+.parent-pinned b { font-size: 13px; overflow-wrap: anywhere; }
+.parent-pinned small { font-size: 10px; }
+.parent-pinned .sprite { flex-shrink: 0; }
+@media (min-width: 760px) { .parent-picker .parent-roster { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 459px) {
+  .parent-picker { gap: 10px; }
+  .parent-picker-head h2 { font-size: 20px; }
+  .parent-picker .parent-roster { grid-template-columns: minmax(0, 1fr); }
+  .parent-option { padding: 12px; }
+  .parent-pair-preview { gap: 8px; padding: 10px; }
+  .parent-pinned { gap: 7px; }
+  .parent-pinned b { font-size: 12px; }
+  .parent-picker-foot { font-size: 10px; }
+}
 .lineage-power { padding: 14px 0; border-top: 1px solid var(--line); }
 .lineage-power p { margin: 7px 0 0; }
 .lineage-choices h3 { margin-top: 0; }

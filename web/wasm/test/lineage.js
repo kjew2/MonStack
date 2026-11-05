@@ -29,19 +29,24 @@ const H = require('./harness.js');
     check(await act('lineage-picker-toggle').evaluate((e) => e === document.activeElement),
       'choosing a focus tree returns keyboard focus to the picker control');
   }
+  const selectedParent = (key) => page.locator('[data-id=breed-' + key + '-card]').getAttribute('data-parent-index');
+  async function chooseParent(key, index) {
+    await act('breed-' + key).click();
+    await page.locator('[data-id=parent-picker]').waitFor();
+    await act('pick' + key + '-' + index).click();
+    check(await page.locator('[data-id=parent-picker]').count() === 0, 'choosing a ' + key + ' card closes the roster');
+  }
   async function breed() {
     await t.layout('breeding parents');
-    await page.locator('[data-id=breed-primary]').focus();
-    await page.locator('[data-id=breed-primary]').selectOption('0');
-    check(await page.locator('[data-id=breed-primary]').evaluate((e) => e === document.activeElement),
-      'selecting a parent preserves keyboard focus through the preview refresh');
-    check(await page.locator('[data-id=breed-support] option[value="0"]').count() === 0 && await act('breed-review').isDisabled(), 'the primary parent is unavailable as support and review needs two different parents');
-    await page.locator('[data-id=breed-support]').selectOption('1');
+    await chooseParent('primary', '0');
+    check(await act('breed-primary').evaluate((e) => e === document.activeElement), 'choosing a card returns keyboard focus to its parent slot');
+    check(await act('breed-review').isDisabled(), 'review needs two different parents');
+    await chooseParent('support', '1');
     check(await act('breed-review').isEnabled(), 'two eligible parents enable offspring review');
     await act('breed-review').click();
     check(await act('breed').isEnabled(), 'the offspring review enables paid breeding');
     await act('breed-back').click();
-    check(await page.locator('[data-id=breed-primary]').inputValue() === '0' && await page.locator('[data-id=breed-support]').inputValue() === '1',
+    check(await selectedParent('primary') === '0' && await selectedParent('support') === '1',
       'returning from review keeps the selected parents for adjustment');
     await act('breed-review').click();
     const reviewVisible = await page.locator('[data-id=breed-offspring-preview]').evaluate((e) => {
@@ -107,14 +112,44 @@ const H = require('./harness.js');
     'desktop places the primary and supporting parent cards side by side');
   await t.shot('breeding-workshop-desktop');
   await page.setViewportSize(H.PHONE);
-  await page.locator('[data-id=breed-primary]').selectOption('0');
-  await page.locator('[data-id=breed-support]').selectOption('1');
+  check(await act('breed-support').isDisabled(), 'partner browsing starts after choosing a primary parent');
+  check(await page.locator('[data-id=breed-primary-card] select, [data-id=breed-support-card] select').count() === 0,
+    'parent selection uses monster cards instead of dropdowns');
+  const beforeBrowsing = JSON.stringify(await t.readAccount());
+  await act('breed-primary').click();
+  check(await act('parent-picker-close').evaluate((e) => e === document.activeElement), 'opening the roster focuses a dialog control without summoning a phone keyboard');
+  await act('parent-filter-all').click();
+  check(await act('pickprimary-0').isEnabled() && await act('pickprimary-1').isDisabled(), 'the roster shows eligible monsters and disables parents without the focus skill');
+  check(/skill/i.test(await text('[data-id=parent-option-1]')), 'an unavailable monster explains its eligibility requirement');
+  await page.locator('[data-id=parent-search]').fill('not-a-monster');
+  check(await page.locator('[data-id^=parent-option-]').count() === 0, 'roster search supports an empty result');
+  await page.locator('[data-id=parent-search]').fill('Coremote');
+  check(await page.locator('[data-id^=parent-option-]').count() === 2, 'roster search finds species names');
+  check(!/Fortune IV/.test(await text('[data-id=parent-option-0]')), 'parent cards show actual inherited ranks rather than account-wide rank');
+  await act('parent-picker-close').focus();
+  await page.keyboard.press('Shift+Tab');
+  check(await page.locator('[data-id=parent-picker]').evaluate((e) => e.contains(document.activeElement)), 'keyboard focus wraps inside the roster');
+  await page.keyboard.press('Tab');
+  check(await act('parent-picker-close').evaluate((e) => e === document.activeElement), 'forward Tab returns to the first roster control');
+  await t.layout('primary monster card roster');
+  await page.keyboard.press('Escape');
+  check(await page.locator('[data-id=parent-picker]').count() === 0 && await selectedParent('primary') === '', 'Escape cancels parent browsing without choosing a monster');
+  check(JSON.stringify(await t.readAccount()) === beforeBrowsing, 'browsing and cancelling make no changes to the saved account');
+  await chooseParent('primary', '0');
+  await act('breed-support').click();
+  check(/Coremote/.test(await text('[data-id=parent-selected-primary]')) && /Coremote/.test(await text('[data-id=parent-offspring-preview]')), 'partner browsing pins the primary parent and previews its offspring');
+  await act('parent-filter-all').click();
+  check(await act('picksupport-0').isDisabled() && await act('picksupport-1').isEnabled(), 'the first parent cannot be its own partner');
+  await t.layout('partner monster card roster');
+  await act('parent-picker-close').click();
+  check(await selectedParent('support') === '', 'closing partner browsing leaves the pairing unchanged');
+  await chooseParent('support', '1');
   check(await act('breed-review').isEnabled(), 'the workshop can prepare an eligible pairing');
   check(/Coremote/.test(await text('[data-id=breed-offspring-preview]')) && /Fortune IV/.test(await text('[data-id=breed-offspring-preview]')),
     'the live offspring preview shows the primary species and frozen inheritance rank');
   await act('lineage-picker-toggle').click();
   await act('lineage-fortune').click();
-  check(await page.locator('[data-id=breed-primary]').inputValue() === '0' && await page.locator('[data-id=breed-support]').inputValue() === '1',
+  check(await selectedParent('primary') === '0' && await selectedParent('support') === '1',
     'choosing the current focus tree retains the prepared pairing');
   await act('lineage-picker-toggle').click();
   check(await page.locator('[data-id=lineage-library] button').count() === 40, 'the focus-tree picker contains all 40 generic trees');
@@ -122,7 +157,7 @@ const H = require('./harness.js');
   check(await page.locator('[data-id=lineage-library] button').count() === 1, 'search narrows the library by tree name');
   await page.locator('[data-id=lineage-search]').fill('');
   await act('lineage-brute_force').click();
-  check(await page.locator('[data-id=breed-primary]').inputValue() === '' && await page.locator('[data-id=breed-support]').inputValue() === '',
+  check(await selectedParent('primary') === '' && await selectedParent('support') === '',
     'switching focus trees clears the previous pairing');
   check(await act('breed-review').isDisabled() && await page.locator('[data-id=lineage-no-parent]').isVisible(),
     'an unlearned focus tree explains parent eligibility and cannot advance to review');
@@ -244,5 +279,25 @@ const H = require('./harness.js');
   const powerSummary = await text('[data-id=lineage-power-summary]');
   check(/Health/i.test(powerSummary), 'the selected power is summarized in player-facing terms: ' + powerSummary);
   await t.layout('inherited training power selected');
+  // A full Vault must stay a browsable roster rather than pushing its controls off-screen.
+  const crowded = await t.readAccount();
+  crowded.Run = null;
+  crowded.Account.RunsStarted = 50;
+  crowded.Account.Vault = Array.from({ length: 50 }, (_, id) => Object.assign(JSON.parse(JSON.stringify(parent)), {
+    Id: id, Trees: [{ TreeId: 'fortune', Bought: 2 }],
+  }));
+  await t.writeSaveText(H.encodeSave(crowded));
+  await t.reload();
+  await openBreeding();
+  await act('breed-primary').click();
+  check(await page.locator('[data-id^=parent-option-]').count() === 50, 'a full Vault exposes every compatible monster card');
+  const scrolls = await page.locator('[data-id=parent-roster]').evaluate((e) => e.scrollHeight > e.clientHeight && e.clientHeight > 0);
+  check(scrolls, 'the full Vault scrolls inside its bounded roster');
+  await t.layout('full Vault parent roster');
+  await act('pickprimary-0').click();
+  check(await selectedParent('primary') === '0', 'the oldest monster remains selectable at the end of a full roster');
+  await chooseParent('support', '49');
+  await chooseParent('primary', '49');
+  check(await selectedParent('support') === '' && await act('breed-review').isDisabled(), 'changing primary clears a conflicting partner and requires a new pairing');
   await t.finish();
 })().catch((e) => { console.error(e); process.exit(1); });

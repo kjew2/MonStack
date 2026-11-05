@@ -127,7 +127,11 @@ Schema **14** stores `AccountState.Lineages`, a sorted dictionary keyed by tree 
 
 The home **Breed** tab opens the **Breeding Workshop**, the user-selected Concept 2 direction (2026-11-05). The default workspace centers the primary and supporting parent cards with a prospective offspring preview. Parents sit side by side on desktop and stack on phones. Cost, eligibility, retained parents and the primary parent's species contribution remain explicit before committing. The dark violet and gold Workshop theme and wider desktop canvas apply only to Breed; other game screens keep their existing theme and width.
 
-The focus-tree picker contains the searchable/filterable library of all 40 generic lineages. Changing focus must clear incompatible parent selections and refresh the offspring preview. The selected lineage's current rank, node points, next threshold/odds/pity, I–X progress and V/X effects stay alongside pairing rather than requiring a separate library-detail stage. An explicit offspring review precedes **Breed & train**; entering review does not spend shards or start training.
+Parent selection uses a monster-card roster rather than dropdowns, following the parent-first selection pattern discussed for DQM/Persona/SMT (kj, 2026-11-05). **Choose primary** opens a searchable roster with portraits, names, grades, elements and tree chips. After selecting the primary, **Choose supporting** opens compatible partner browsing with the first parent pinned and a live offspring preview. Compatibility means the existing engine eligibility rules; the UI invents no compatibility score or inheritance bonus. A compatible-only filter narrows the roster; browsing all monsters exposes disabled cards with their eligibility reason. The same certified monster cannot fill both positions.
+
+Selecting a card updates that parent and the offspring preview. Cancel or Escape closes the roster without changing the pairing, spending shards or starting a run. Keyboard focus stays within the open picker and returns to its Choose/Change control on close. Changing a primary retains an eligible supporting parent or clears it if invalid. An explicit offspring review precedes **Breed & train**; entering review does not spend shards or start training.
+
+The focus-tree picker contains the searchable/filterable library of all 40 generic lineages. Changing focus clears the parent pairing and refreshes the offspring preview. The selected lineage's current rank, node points, next threshold/odds/pity, I–X progress and V/X effects stay alongside pairing rather than requiring a separate library-detail stage.
 
 Training shows high-water node contribution and host-supplied milestone choices. Seal feedback reports automatic unlocks or the next protected attempt. The presentation change does not alter breeding eligibility, inherited ranks, point rewards or breakthrough rules.
 
@@ -140,4 +144,19 @@ The concepts use scripted breakthrough buttons to expose the result screen. Prod
 
 ## 9. Validation and limits
 
-Required coverage: all 40 eligible trees and both milestone ranks; positive normalized point awards; capstone gating and birth isolation; overwrite/fusion/reacquisition; threshold carry, retries and deterministic attempts; v13 migration and save/parts/server round trips; exact command replay and state hashes; combat bounds and team/solo recipients; all nine training choice families and original restrictions; browser workshop, focus-tree search, parent changes, offspring review and in-run choice flows at phone and desktop widths. Full repository validation is recorded with the implementation change; this document does not claim a new balance study. The two standalone concepts have separately passed their six-stage desktop/390px flow and JavaScript/overflow checks.
+Required coverage: all 40 eligible trees and both milestone ranks; positive normalized point awards; capstone gating and birth isolation; overwrite/fusion/reacquisition; threshold carry, retries and deterministic attempts; v13 migration and save/parts/server round trips; exact command replay and state hashes; combat bounds and team/solo recipients; all nine training choice families and original restrictions; browser workshop, focus-tree search, parent-card search and eligibility filters, partner previews, cancel/Escape and keyboard focus, parent changes, offspring review and in-run choice flows at phone and desktop widths. Full repository validation is recorded with the implementation change; this document does not claim a new balance study. The two standalone concepts have separately passed their six-stage desktop/390px flow and JavaScript/overflow checks.
+
+
+## 10. Agreed next design — not implemented
+
+kj approved moving toward consumptive synthesis with monster-held inheritance (2026-11-05). This direction is separate from the implemented card-selection UI and the current rules in sections 1–7. Production still retains both parents and reads account lineage ledgers; the UI must describe that actual behavior until the engine transition ships.
+
+The agreed direction is:
+
+- Tree lineage ranks and accumulated progress belong to individual monsters and pass through their descendants.
+- Synthesis consumes both parents and produces the exact previewed offspring. Consumption has no destructive failure roll.
+- Selecting an inherited tree transfers its rank and progress; parental ranks do not add together. Purchased nodes reset for the descendant's training run.
+- Node-only, capstone-weighted progress and protected V/X breakthroughs remain the long-term growth mechanism.
+- Both parents should contribute meaningfully, through a selected tree or skill inheritance. The detailed contribution rules and migration from account ledgers still need an engine/save-format implementation contract.
+
+This section records the approved direction rather than adding an unimplemented save field, command, species recipe, refund rule or migration policy to the current contract.
