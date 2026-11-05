@@ -14,7 +14,7 @@
     view: 'home',            // home | run | climb | grade | vendor | tower | endless
     tab: 'train',            // train | trees | ladder | log
     homeTab: 'raise',        // the home screen's tab: raise | vault | talents | dungeon | goals | rankings
-    lineage: { tree: null, search: '', filter: 'all', primary: '', support: '', review: false, pickerOpen: false },
+    lineage: { tree: null, search: '', filter: 'all', primary: '', support: '', review: false, pickerOpen: false, pickParent: null, parentSearch: '', parentReady: true, parentSort: 'newest' },
     lineageSummary: null,
     pick: null,              // species chosen on the home screen
     showLocked: false,       // the Raise tab's locked species list is open
@@ -165,6 +165,7 @@
   function renderView() {
     const main = $('main'), tabs = $('tabs'), modal = $('modal');
     $('app').classList.toggle('workshop', ui.view === 'home' && ui.homeTab === 'lineages');
+    main.inert = false; tabs.inert = false; $('top').inert = false;
     const prevScroll = main.scrollTop;
     main.replaceChildren();
     if (ui.view !== 'run') $('floats').replaceChildren();
@@ -1392,18 +1393,18 @@
       workspace.append(h('section', { id: 'lineage-picker', class: 'card workshop-picker', 'aria-label': 'Focus tree library' }, [h('h3', { text: 'Choose a focus tree' }), h('div', { class: 'lineage-tools' }, [search, filter]), library]));
       drawLibrary();
     }
-    const parentCard = (key, label, indices, description) => {
+    const parentCard = (key, label, description) => {
       const entry = u[key] !== '' ? a.vault[Number(u[key])] : null;
-      const input = h('select', { id: 'breed-' + key, 'data-id': 'breed-' + key, 'aria-label': label + ' breeding parent', onchange: (e) => { u[key] = e.target.value; rerenderKeepingFocus(); } }, [h('option', { value: '', text: 'Choose ' + label.toLowerCase() + ' parent' }), ...indices.map((i) => h('option', { value: String(i), text: parentName(i) }))]);
-      input.value = u[key];
-      return h('section', { class: 'card workshop-parent workshop-' + key, 'data-id': 'breed-' + key + '-card', 'aria-label': label + ' parent' }, [
+      return h('section', { class: 'card workshop-parent workshop-' + key, 'data-id': 'breed-' + key + '-card', 'data-parent-index': u[key], 'aria-label': label + ' parent' }, [
         h('small', { class: 'gems workshop-eyebrow', text: label.toUpperCase() + ' PARENT' }),
-        entry ? h('div', { class: 'workshop-portrait' }, [sprite(entry.species, entry.apex, 'large'), h('div', {}, [h('b', { text: entry.name || (speciesDef(entry.species) || { name: entry.species }).name }), h('p', { class: 'small muted', text: 'Grade ' + up(entry.grade) + ' · Certified' })])]) : h('div', { class: 'workshop-empty', text: key === 'primary' ? 'Who starts the next generation?' : 'Who supports the next generation?' }),
-        u.review ? h('p', { class: 'small', text: parentName(u[key]) }) : h('label', { class: 'lineage-field', for: 'breed-' + key }, [h('span', { class: 'small', text: 'Choose ' + label.toLowerCase() + ' parent' }), input]),
+        entry ? h('div', { class: 'workshop-portrait' }, [sprite(entry.species, entry.apex, 'large'), h('div', {}, [h('b', { text: entry.name || (speciesDef(entry.species) || { name: entry.species }).name }), h('p', { class: 'small muted', text: 'Grade ' + up(entry.grade) + ' · Certified' })])]) : h('div', { class: 'workshop-empty', text: key === 'primary' ? 'Who starts the next generation?' : u.primary === '' ? 'Choose the primary parent first.' : 'Who supports the next generation?' }),
+        u.review ? h('p', { class: 'small', text: parentName(u[key]) }) : h('button', { type: 'button', class: 'btn small', 'data-act': 'breed-' + key, disabled: key === 'support' && u.primary === '',
+          text: entry ? 'Change ' + label.toLowerCase() + ' parent' : key === 'primary' ? 'Choose a monster →' : 'Choose a partner →', onclick: () => {
+            u.pickParent = key; u.parentSearch = ''; u.parentReady = true; u.parentSort = 'newest'; render(); document.querySelector('[data-act=parent-picker-close]').focus();
+          } }),
         h('p', { class: 'small muted', text: description })]);
     };
     const primary = u.primary !== '' ? a.vault[Number(u.primary)] : null;
-    const supports = a.vault.map((e, i) => i).filter((i) => a.vault[i].id >= 0 && (!primary || a.vault[i].id !== primary.id));
     const offspring = h('section', { class: 'card workshop-offspring', 'data-id': 'breed-offspring-preview', 'aria-label': 'Offspring preview', 'aria-live': 'polite' }, [
       h('small', { class: 'gold workshop-eyebrow', text: u.review ? 'READY FOR YOUR REVIEW' : 'NEXT GENERATION' }),
       primary ? sprite(primary.species, false, 'large') : h('div', { class: 'workshop-seed', 'aria-hidden': 'true', text: '✦' }),
@@ -1413,8 +1414,8 @@
       h('p', { class: 'small', text: valid ? 'Both parents stay in your Vault.' : 'Choose two different certified parents.' })
     ]);
     workspace.append(h('section', { class: 'workshop-board', 'data-id': 'lineage-breed', 'aria-label': 'Breeding pairing' }, [
-      parentCard('primary', 'Primary', eligible, 'Supplies the species and eligible ' + l.name + ' tree.'),
-      parentCard('support', 'Supporting', supports, 'Supports the pairing and remains in your Vault.'), offspring]));
+      parentCard('primary', 'Primary', 'Supplies the species and eligible ' + l.name + ' tree.'),
+      parentCard('support', 'Supporting', 'Supports the pairing and remains in your Vault.'), offspring]));
     if (!eligible.length) workspace.append(h('p', { class: 'small workshop-notice', 'data-id': 'lineage-no-parent', text: 'To begin, seal a monster that has learned the skill node in ' + l.name + '.' }));
     else if (a.vault.filter((e) => e.id >= 0).length < 2) workspace.append(h('p', { class: 'small workshop-notice', text: 'Seal a second monster to supply a different supporting parent.' }));
     const detail = h('section', { class: 'card lineage-detail', 'data-id': 'lineage-detail', 'aria-label': l.name + ' lineage' }, [
@@ -1448,11 +1449,74 @@
         if (!result.ok) { toast(result.reason); render(); return; }
         u.review = false; u.pickerOpen = false; resetRunUi(); ui.view = 'run'; render();
       } }),
-      u.review ? h('button', { type: 'button', class: 'linkish', 'data-act': 'breed-back', text: 'Change parents', onclick: () => { u.review = false; render(); document.querySelector('[data-id=breed-primary]').focus({ preventScroll: true }); $('main').scrollTop = 0; } }) : null,
+      u.review ? h('button', { type: 'button', class: 'linkish', 'data-act': 'breed-back', text: 'Change parents', onclick: () => { u.review = false; render(); document.querySelector('[data-act=breed-primary]').focus({ preventScroll: true }); $('main').scrollTop = 0; } }) : null,
       a.shards < l.cost ? h('p', { class: 'small bad workshop-warning', text: 'Earn ' + (l.cost - a.shards) + ' more shards to breed.' }) : null,
       a.vaultOver > 0 ? h('p', { class: 'small bad workshop-warning', text: 'Free space in the Vault before starting another run.' }) : null
     ]);
     main.append(actions);
+    if (u.pickParent) parentPicker(l, eligible);
+  }
+
+  // Selecting parents browses real Vault monsters; it never spends shards or starts a run.
+  function parentPicker(lineage, eligible) {
+    const u = ui.lineage, a = run.account, key = u.pickParent, primary = u.primary !== '' ? a.vault[Number(u.primary)] : null;
+    if (key === 'support' && !primary) { u.pickParent = null; return; }
+    const modal = $('modal'); modal.hidden = false;
+    $('main').inert = true; $('tabs').inert = true; $('top').inert = true;
+    const close = () => { u.pickParent = null; render(); const button = document.querySelector('[data-act=breed-' + key + ']'); if (button) button.focus({ preventScroll: true }); };
+    const picker = h('section', { class: 'parent-picker', 'data-id': 'parent-picker', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'parent-picker-title' });
+    picker.append(h('div', { class: 'screenhead parent-picker-head' }, [h('div', {}, [h('small', { class: 'gems workshop-eyebrow', text: key === 'primary' ? 'STEP 1 · CHOOSE PRIMARY' : 'STEP 2 · CHOOSE PARTNER' }), h('h2', { id: 'parent-picker-title', text: key === 'primary' ? 'Who carries the next generation?' : 'Find their partner' })]),
+      h('button', { type: 'button', class: 'btn small', 'data-act': 'parent-picker-close', text: 'Close', onclick: close })]));
+    if (primary && key === 'support') picker.append(h('div', { class: 'parent-pair-preview' }, [
+      h('div', { class: 'parent-pinned', 'data-id': 'parent-selected-primary' }, [sprite(primary.species, primary.apex, 'small'), h('div', {}, [h('small', { class: 'muted', text: 'PRIMARY' }), h('b', { text: primary.name || (speciesDef(primary.species) || { name: primary.species }).name })])]),
+      h('span', { class: 'gold', 'aria-hidden': 'true', text: '→' }),
+      h('div', { class: 'parent-pinned', 'data-id': 'parent-offspring-preview' }, [sprite(primary.species, false, 'small'), h('div', {}, [h('small', { class: 'gold', text: 'OFFSPRING PREVIEW' }), h('b', { text: (speciesDef(primary.species) || { name: primary.species }).name }), h('small', { text: lineage.name + ' ' + ROMAN[lineage.rank] })])])
+    ]));
+    picker.append(h('p', { class: 'small muted parent-picker-intro', text: key === 'primary' ? 'Choose a certified monster that has learned the skill node in ' + lineage.name + '. Your choice supplies the offspring’s species.' : 'Choose a different certified monster. The offspring inherits the primary’s species and selected focus tree.' }));
+    const roster = h('div', { class: 'parent-roster', 'data-id': 'parent-roster', role: 'group', 'aria-label': key === 'primary' ? 'Primary parent candidates' : 'Supporting parent candidates' });
+    const count = h('small', { class: 'muted', 'data-id': 'parent-results', role: 'status' });
+    const reason = (e, i) => e.id < 0 ? 'No certified run ID. Raise and seal a new monster.' : key === 'primary' && !eligible.includes(i) ? 'Needs the first ' + lineage.name + ' skill node.' : key === 'support' && primary && e.id === primary.id ? 'Already chosen as the primary parent.' : '';
+    const draw = () => {
+      const query = u.parentSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const entries = a.vault.map((e, i) => ({ e, i, reason: reason(e, i) })).filter(({ e, i, reason: why }) => {
+        if (u.parentReady && why) return false;
+        const sp = speciesDef(e.species) || { name: e.species };
+        const haystack = [parentName(i), sp.name, (C.elements[sp.element] || {}).name, ...e.trees.map((t) => t.name || treeName(t.id))].join(' ').toLowerCase();
+        return query.every((word) => haystack.includes(word));
+      }).sort((x, y) => u.parentSort === 'grade' ? y.e.rank - x.e.rank || y.i - x.i : y.i - x.i);
+      count.textContent = entries.length + (entries.length === 1 ? ' monster' : ' monsters') + ' · ' + (u.parentReady ? 'Ready to pair' : 'All monsters');
+      roster.replaceChildren(...entries.map(({ e, i, reason: why }) => {
+        const sp = speciesDef(e.species) || { name: e.species };
+        return h('button', { type: 'button', class: 'parent-option' + (u[key] === String(i) ? ' selected' : ''), 'data-id': 'parent-option-' + i, 'data-act': (key === 'primary' ? 'pickprimary-' : 'picksupport-') + i, 'aria-pressed': String(u[key] === String(i)), disabled: !!why,
+          onclick: () => {
+            // A concurrent checkpoint can refresh the Vault; never silently select a different identity at this position.
+            const current = run.account.vault[i];
+            if (!current || current.id !== e.id) { close(); toast('The Vault changed. Choose your parent again.'); return; }
+            u[key] = String(i); u.review = false; close();
+          } }, [
+          h('div', { class: 'parent-option-head' }, [sprite(e.species, e.apex, 'large'), h('div', {}, [h('b', { text: e.name || sp.name }), h('small', { class: 'muted', text: '#' + (i + 1) + ' · Grade ' + up(e.grade) }), elementTag(sp.element)])]),
+          h('div', { class: 'parent-option-trees' }, e.trees.map((t) => h('span', { class: 'tag' + (t.rolled && t.rolled.lineageRank ? ' gold' : ''), text: t.name || treeName(t.id) + (t.rolled && t.rolled.lineageRank ? ' ' + ROMAN[t.rolled.lineageRank] : '') }))),
+          h('small', { class: why ? 'parent-option-reason' : 'gems', 'data-id': 'parent-reason-' + i, text: why || (key === 'primary' ? 'Can pass ' + lineage.name : 'Ready to support this pairing') })
+        ]);
+      }));
+      if (!entries.length) roster.append(h('p', { class: 'parent-roster-empty muted', 'data-id': 'parent-empty', text: a.vault.length ? 'No monsters match. Try All monsters or another search.' : 'Your Vault is empty. Finish and seal a training run to meet your first parent.' }));
+    };
+    const search = h('input', { type: 'search', class: 'parent-search', 'data-id': 'parent-search', 'aria-label': 'Search parent monsters', placeholder: 'Search monsters, elements or trees', value: u.parentSearch, oninput: (e) => { u.parentSearch = e.target.value; draw(); } });
+    const filters = h('div', { class: 'parent-filter-row', 'aria-label': 'Parent availability' });
+    [['ready', 'Ready to pair'], ['all', 'All monsters']].forEach(([id, label]) => filters.append(h('button', { type: 'button', class: 'btn small', 'data-act': 'parent-filter-' + id, 'aria-pressed': String(u.parentReady === (id === 'ready')), text: label, onclick: () => {
+      u.parentReady = id === 'ready'; filters.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.act === 'parent-filter-ready') === u.parentReady))); draw();
+    } })));
+    const sort = h('button', { type: 'button', class: 'btn small', 'data-act': 'parent-sort', text: u.parentSort === 'newest' ? 'Newest first ↓' : 'Highest grade ↓', onclick: () => { u.parentSort = u.parentSort === 'newest' ? 'grade' : 'newest'; sort.textContent = u.parentSort === 'newest' ? 'Newest first ↓' : 'Highest grade ↓'; draw(); } });
+    picker.append(search, h('div', { class: 'parent-controls' }, [filters, sort]), count, roster, h('p', { class: 'small muted parent-picker-foot', text: 'Selecting a monster only updates your pairing. Review the offspring before breeding.' }));
+    picker.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); return; }
+      if (event.key !== 'Tab') return;
+      const stops = [...picker.querySelectorAll('button:not(:disabled), input:not(:disabled)')].filter((node) => node.getClientRects().length);
+      const first = stops[0], last = stops[stops.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+    modal.replaceChildren(picker); draw();
   }
   // The owned species as a row of big square cards (the whole portrait, no crop, the name over its foot) that swipes sideways; the card that settles in the middle is the pick (tapping a
   // card or a dot picks it too and glides it to the middle). Locked species stay out of the row, folded under one line.
