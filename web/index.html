@@ -873,6 +873,79 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 @keyframes evo-flash { 0% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .evolve, .evolve .sprite, .evo-rays, .evo-sparks i, .evo-flash, .evo-line b { animation: none !important; } }
 /* Lineages: browse a compact library, then focus on one generation at a time. */
+/* Concept 2: a violet-and-gold workshop, scoped to Breed so training keeps its daylight skin. */
+:root {
+  --workshop-bg: #101115; --workshop-panel: #20212a; --workshop-panel-2: #282632; --workshop-line: #413b51;
+  --workshop-text: #eeeef2; --workshop-muted: #b8b2c8; --workshop-accent: #bca8ec; --workshop-accent-bg: #302a40;
+  --workshop-accent-key: #746191; --workshop-on-accent: #211a32; --workshop-gold: #edc37b; --workshop-gold-bg: #302b32;
+  --workshop-ok: #83d3bd; --workshop-bad: #ffacb5; --workshop-shadow: none;
+}
+#app.workshop {
+  max-width: 1080px; color-scheme: dark; color: var(--text); background: var(--workshop-bg);
+  --bg: var(--workshop-bg); --panel: var(--workshop-panel); --panel-hi: var(--workshop-panel); --panel-2: var(--workshop-panel-2);
+  --line: var(--workshop-line); --text: var(--workshop-text); --muted: var(--workshop-muted); --keycap: var(--workshop-line);
+  --gems: var(--workshop-accent); --gems-bg: var(--workshop-accent-bg); --gems-stroke: var(--workshop-accent-key); --accent: var(--gems);
+  --gold: var(--workshop-gold); --gold-bg: var(--workshop-gold-bg); --ok: var(--workshop-ok); --bad: var(--workshop-bad);
+  --scrim: var(--workshop-bg); --toast-bg: var(--workshop-panel); --track: var(--workshop-panel-2);
+  --line-soft: var(--workshop-line); --line-faint: var(--workshop-line); --ok-bg: var(--workshop-panel-2);
+  --shadow-card: var(--workshop-shadow); --shadow-key: var(--workshop-shadow); --shadow-key-down: var(--workshop-shadow);
+}
+body:has(#app.workshop) { background: var(--workshop-bg); }
+#app.workshop #main { gap: 20px; }
+.workshop .btn.primary { color: var(--workshop-on-accent); background: var(--gems); border-color: var(--gems); box-shadow: 0 3px 0 var(--gems-stroke); }
+.workshop .btn.primary:not(:disabled):active { box-shadow: 0 1px 0 var(--gems-stroke); }
+.breeding-workshop { display: grid; gap: 20px; }
+.workshop-intro { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.workshop-intro > div { min-width: 0; }
+.workshop-intro h2 { font: 800 clamp(24px, 4vw, 34px)/1.15 var(--font-display); margin: 8px 0; }
+.workshop-intro p { margin: 0; font-size: 13px; }
+.workshop-eyebrow { font-weight: 800; letter-spacing: .12em; font-size: 10px; }
+.workshop-focus { display: grid; gap: 4px; text-align: left; flex: 0 0 auto; max-width: 48%; }
+.workshop-focus b { overflow-wrap: anywhere; }
+.workshop-focus span, .workshop-focus small { font-size: 10px; }
+.workshop-picker { min-width: 0; }
+.workshop-picker .lineage-tools { margin: 8px 0; }
+.workshop-picker .lineage-library { margin-bottom: 0; }
+.workshop-board { display: grid; grid-template-areas: "primary" "support" "offspring"; gap: 14px; }
+.workshop-review .workshop-board { grid-template-areas: "offspring" "primary" "support"; }
+.workshop-parent { min-width: 0; padding: 18px; justify-content: center; }
+.workshop-primary { grid-area: primary; }
+.workshop-support { grid-area: support; }
+.workshop-portrait { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.workshop-portrait b { overflow-wrap: anywhere; }
+.workshop-portrait p { margin: 6px 0 0; }
+.workshop .sprite.large { width: 76px; height: 76px; flex: 0 0 76px; object-fit: contain; border-radius: var(--r); }
+.workshop-empty { min-height: 64px; display: grid; place-items: center; border: 1px dashed var(--line); border-radius: var(--r); color: var(--muted); padding: 12px; text-align: center; font-size: 13px; }
+.workshop-parent .lineage-field { margin: 4px 0; }
+.workshop-parent > p { margin: 4px 0 0; }
+.workshop-offspring { grid-area: offspring; min-width: 0; border-color: var(--gold); background: var(--gold-bg); align-items: center; justify-content: center; text-align: center; padding: 22px 16px; }
+.workshop-offspring h2 { font: 800 24px var(--font-display); }
+.workshop-offspring p { margin: 4px 0; }
+.workshop-offspring .tag { max-width: 100%; white-space: normal; }
+.workshop-offspring .sprite.large { width: 100px; height: 100px; }
+.workshop-seed { display: grid; place-items: center; width: 76px; height: 76px; font-size: 46px; color: var(--gold); }
+.workshop-progress { display: grid; gap: 16px; min-width: 0; }
+.workshop-progress > * { min-width: 0; }
+.workshop-guidance { padding: 20px; }
+.workshop-steps { list-style: none; margin: 6px 0; padding: 0; }
+.workshop-steps li { margin: 0 0 16px; padding-left: 12px; border-left: 2px solid var(--line); font-size: 13px; }
+.workshop-steps p { margin: 5px 0 0; }
+.workshop-notice { border-left: 3px solid var(--gold); padding: 10px 14px; margin: 0; background: var(--gold-bg); border-radius: var(--r-xs); }
+.workshop-cost { display: grid; gap: 4px; flex-basis: 100%; text-align: center; }
+.workshop-cost b { font-size: 12px; }
+.workshop-warning { margin: 0; width: 100%; text-align: center; }
+.workshop .actionbar > .linkish { width: 100%; text-align: center; }
+@media (min-width: 760px) {
+  .workshop-board, .workshop-review .workshop-board { grid-template-columns: 1fr 1.12fr 1fr; grid-template-areas: "primary offspring support"; align-items: stretch; }
+  .workshop-progress { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; }
+  .workshop-intro { margin: 12px 0 4px; }
+}
+@media (max-width: 459px) {
+  .workshop-intro { align-items: start; gap: 10px; }
+  .workshop-intro h2 { font-size: 24px; }
+  .workshop-focus { padding: 10px; max-width: 42%; }
+  .workshop .lineage-tools { grid-template-columns: minmax(0, 1fr); }
+}
 .lineage-power { padding: 14px 0; border-top: 1px solid var(--line); }
 .lineage-power p { margin: 7px 0 0; }
 .lineage-choices h3 { margin-top: 0; }
@@ -880,14 +953,14 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 .lineage-entry > div { flex: 1 1 200px; }
 .lineage-entry p { margin: 5px 0 0; }
 .lineage-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; margin: 20px 0 10px; }
-.lineage-tools input, .lineage-tools select, .lineage-field select { width: 100%; min-width: 0; box-sizing: border-box; }
+.lineage-tools input, .lineage-tools select, .lineage-field select { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; box-sizing: border-box; font: inherit; font-size: 16px; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-sm); }
 .lineage-library { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 235px; overflow-y: auto; padding: 3px 3px 10px; margin-bottom: 20px; }
 .lineage-choice { display: grid; grid-template-columns: 1fr auto; gap: 5px; text-align: left; padding: 12px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); font: inherit; cursor: pointer; }
 .lineage-choice small { grid-column: 1 / -1; font-size: 11px; }
 .lineage-choice.selected { border-color: var(--gems); background: var(--gems-bg); box-shadow: inset 0 0 0 1px var(--gems); }
 .lineage-choice b { overflow-wrap: anywhere; }
-.lineage-detail, .lineage-breed { padding: 20px; }
-.lineage-detail h3, .lineage-breed h3 { margin: 0 0 12px; }
+.lineage-detail { padding: 20px; }
+.lineage-detail h3 { margin: 0 0 12px; }
 .lineage-detail progress { width: 100%; accent-color: var(--ok); height: 10px; }
 .lineage-track { list-style: none; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; padding: 0; margin: 18px 0 24px; }
 .lineage-track li { border-bottom: 3px solid var(--line); padding: 7px 0; text-align: center; color: var(--muted); font-size: 12px; }
@@ -902,8 +975,6 @@ h3 { font-family: var(--font-display); font-weight: 800; color: var(--gems); let
 .lineage-protection { border-left: 3px solid var(--gems); padding: 10px 14px; background: var(--gems-bg); border-radius: var(--r-xs); margin: 16px 0; }
 .lineage-protection p { margin: 6px 0 0; }
 .lineage-field { display: grid; gap: 7px; margin: 18px 0; }
-.lineage-offspring { display: flex; gap: 16px; align-items: center; margin: 20px 0; padding: 16px; background: var(--gems-bg); border-radius: var(--r); }
-.lineage-breed > .linkish { display: block; margin: 14px auto; }
 #tabs:has(> :nth-child(7)) { gap: 0; }
 #tabs:has(> :nth-child(7)) button { font-size: 10px; letter-spacing: 0; }
 @media (min-width: 600px) { .lineage-milestones { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lineage-library { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

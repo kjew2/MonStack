@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Generic I–X lineages (specs/29): real UI breeding, focus-node progress, sealing and reload,
+// Generic I–X lineages (specs/30): Workshop UI breeding, focus-node progress, sealing and reload,
 // a protected V breakthrough, inherited V capstone presentation, and phone layout.
 'use strict';
 const H = require('./harness.js');
@@ -22,17 +22,35 @@ const H = require('./harness.js');
   }
   async function openBreeding(tree = 'fortune') {
     await act('open-lineages').click();
+    await act('lineage-picker-toggle').click();
+    check(await page.locator('[data-id=lineage-search]').evaluate((e) => e === document.activeElement),
+      'opening the focus-tree picker puts keyboard focus in search');
     await act('lineage-' + tree).click();
+    check(await act('lineage-picker-toggle').evaluate((e) => e === document.activeElement),
+      'choosing a focus tree returns keyboard focus to the picker control');
   }
   async function breed() {
-    await act('breed-parents').click();
     await t.layout('breeding parents');
+    await page.locator('[data-id=breed-primary]').focus();
     await page.locator('[data-id=breed-primary]').selectOption('0');
+    check(await page.locator('[data-id=breed-primary]').evaluate((e) => e === document.activeElement),
+      'selecting a parent preserves keyboard focus through the preview refresh');
     check(await page.locator('[data-id=breed-support] option[value="0"]').count() === 0 && await act('breed-review').isDisabled(), 'the primary parent is unavailable as support and review needs two different parents');
     await page.locator('[data-id=breed-support]').selectOption('1');
     check(await act('breed-review').isEnabled(), 'two eligible parents enable offspring review');
     await act('breed-review').click();
     check(await act('breed').isEnabled(), 'the offspring review enables paid breeding');
+    await act('breed-back').click();
+    check(await page.locator('[data-id=breed-primary]').inputValue() === '0' && await page.locator('[data-id=breed-support]').inputValue() === '1',
+      'returning from review keeps the selected parents for adjustment');
+    await act('breed-review').click();
+    const reviewVisible = await page.locator('[data-id=breed-offspring-preview]').evaluate((e) => {
+      document.getElementById('main').scrollTop = 0;
+      const preview = e.getBoundingClientRect();
+      const action = document.querySelector('[data-act=breed]').getBoundingClientRect();
+      return preview.top >= 0 && preview.bottom <= action.top;
+    });
+    check(reviewVisible, 'the phone review shows the offspring preview above its confirmation action without scrolling');
     await t.layout('offspring review');
     await act('breed').click();
     await act('drill-str').waitFor();
@@ -58,10 +76,58 @@ const H = require('./harness.js');
   await t.writeSaveText(H.encodeSave(save));
   await t.reload();
   await openBreeding();
-  check(await page.locator('[data-id=lineage-library] button').count() === 40, 'the lineage library contains all 40 generic trees');
+  check(await page.locator('[data-id=breeding-workshop]').isVisible(), 'Breed opens the parent-focused Breeding Workshop');
+  for (const card of ['breed-primary-card', 'breed-support-card', 'breed-offspring-preview']) {
+    check(await page.locator('[data-id=' + card + ']').isVisible(), 'the workshop presents ' + card + ' before breeding');
+  }
+  check(await page.locator('[data-id=lineage-search]').count() === 0, 'the tree library stays inside the focus-tree picker');
+  const foreground = await page.locator('[data-id=breed-offspring-preview] h2').evaluate((e) => getComputedStyle(e).color);
+  const textChannels = (foreground.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+  check(textChannels.length === 3 && textChannels.every((n) => n >= 180),
+    'Workshop headings use a readable light foreground on their dark cards: ' + foreground);
+  await act('account').click();
+  const accountColors = await page.locator('#account-sheet').evaluate((e) => {
+    const s = getComputedStyle(e); return { background: s.backgroundColor, color: s.color };
+  });
+  const channels = (value) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+  check(channels(accountColors.background).every((n) => n < 80) && channels(accountColors.color).every((n) => n >= 180),
+    'the account overlay keeps a dark surface and readable foreground within Workshop');
+  await t.layout('workshop account overlay');
+  await act('account-close').click();
+  await act('hometab-raise').click();
+  check(!(await page.locator('#app').getAttribute('class') || '').split(/\s+/).includes('workshop') && await page.locator('#app').evaluate((e) => parseFloat(getComputedStyle(e).maxWidth)) <= 560,
+    'returning to Raise restores the standard game theme and column');
+  await openBreeding();
+  await t.layout('breeding workshop phone');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const desktopCards = await page.locator('[data-id=breed-primary-card], [data-id=breed-support-card]').evaluateAll((cards) => cards.map((card) => {
+    const r = card.getBoundingClientRect(); return { top: r.top, left: r.left, right: r.right };
+  }));
+  check(desktopCards.length === 2 && Math.abs(desktopCards[0].top - desktopCards[1].top) < 5 && desktopCards[1].left >= desktopCards[0].right,
+    'desktop places the primary and supporting parent cards side by side');
+  await t.shot('breeding-workshop-desktop');
+  await page.setViewportSize(H.PHONE);
+  await page.locator('[data-id=breed-primary]').selectOption('0');
+  await page.locator('[data-id=breed-support]').selectOption('1');
+  check(await act('breed-review').isEnabled(), 'the workshop can prepare an eligible pairing');
+  check(/Coremote/.test(await text('[data-id=breed-offspring-preview]')) && /Fortune IV/.test(await text('[data-id=breed-offspring-preview]')),
+    'the live offspring preview shows the primary species and frozen inheritance rank');
+  await act('lineage-picker-toggle').click();
+  await act('lineage-fortune').click();
+  check(await page.locator('[data-id=breed-primary]').inputValue() === '0' && await page.locator('[data-id=breed-support]').inputValue() === '1',
+    'choosing the current focus tree retains the prepared pairing');
+  await act('lineage-picker-toggle').click();
+  check(await page.locator('[data-id=lineage-library] button').count() === 40, 'the focus-tree picker contains all 40 generic trees');
   await page.locator('[data-id=lineage-search]').fill('brute');
   check(await page.locator('[data-id=lineage-library] button').count() === 1, 'search narrows the library by tree name');
   await page.locator('[data-id=lineage-search]').fill('');
+  await act('lineage-brute_force').click();
+  check(await page.locator('[data-id=breed-primary]').inputValue() === '' && await page.locator('[data-id=breed-support]').inputValue() === '',
+    'switching focus trees clears the previous pairing');
+  check(await act('breed-review').isDisabled() && await page.locator('[data-id=lineage-no-parent]').isVisible(),
+    'an unlearned focus tree explains parent eligibility and cannot advance to review');
+  await act('lineage-picker-toggle').click();
+  await act('lineage-fortune').click();
   check(await page.locator('.lineage-track li').count() === 10 && (await page.locator('.lineage-track li').allTextContents()).join(',') === 'I,II,III,IV,V,VI,VII,VIII,IX,X', 'the selected lineage has a complete I–X rank track');
   check(await page.locator('.lineage-milestone').count() === 2 && /RANK V/.test(await text('.lineage-milestones')) && /RANK X/.test(await text('.lineage-milestones')), 'both transformative capstone milestones have dedicated cards');
   check(/Fortune IV/.test(await text('[data-id=lineage-detail]')) && /100%/.test(await text('[data-id=lineage-odds]')),

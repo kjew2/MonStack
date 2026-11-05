@@ -123,17 +123,21 @@ Schema **14** stores `AccountState.Lineages`, a sorted dictionary keyed by tree 
 
 `breed(primaryPosition, supportingPosition, talentsOff?, treeId?)` defaults omitted tree id to `fortune` for older callers. Reads collection, vault/entries and progress; writes training and wallet. `lineageChoice` reads/writes training. `finishRun` writes the focus ledger in progress atomically with the sealed result. Client and server share parsing and validation, and the ordinary checkpoint retry protocol protects attempt counters and awards. Local saves and server parts share migration and canonical hash behavior; no new external service or deployment model is required.
 
-## 8. UI and design alternatives
+## 8. Breeding Workshop UI
 
-The home **Breed** tab opens **Lineages**, a searchable/filterable generic-tree library. Selected detail shows current rank, node points, next threshold/odds/pity, I–X progress, and V/X effects. It guides parent selection → offspring review → Breed & train, displaying cost, eligibility and retained parents. Training shows high-water node contribution and host-supplied milestone choices. Seal feedback reports automatic unlocks or the next protected attempt.
+The home **Breed** tab opens the **Breeding Workshop**, the user-selected Concept 2 direction (2026-11-05). The default workspace centers the primary and supporting parent cards with a prospective offspring preview. Parents sit side by side on desktop and stack on phones. Cost, eligibility, retained parents and the primary parent's species contribution remain explicit before committing. The dark violet and gold Workshop theme and wider desktop canvas apply only to Breed; other game screens keep their existing theme and width.
 
-Two optional dark visual explorations accompany the implemented flow, with embedded art and no external dependencies. They are interactive concepts, not production captures:
+The focus-tree picker contains the searchable/filterable library of all 40 generic lineages. Changing focus must clear incompatible parent selections and refresh the offspring preview. The selected lineage's current rank, node points, next threshold/odds/pity, I–X progress and V/X effects stay alongside pairing rather than requiring a separate library-detail stage. An explicit offspring review precedes **Breed & train**; entering review does not spend shards or start training.
+
+Training shows high-water node contribution and host-supplied milestone choices. Seal feedback reports automatic unlocks or the next protected attempt. The presentation change does not alter breeding eligibility, inherited ranks, point rewards or breakthrough rules.
+
+The original dark visual explorations remain available, with embedded art and no external dependencies. Workshop supplies the production flow direction; the screenshots are concept captures rather than production captures:
 
 - [Library concept](../design/lineage-mocks/lineage-library-concept.html), [desktop preview](../design/lineage-mocks/lineage-library-overview.png), [390px preview](../design/lineage-mocks/lineage-library-mobile.png).
-- [Generation workspace concept](../design/lineage-mocks/lineage-workshop-concept.html), [desktop preview](../design/lineage-mocks/lineage-workshop-overview.png), [390px preview](../design/lineage-mocks/lineage-workshop-mobile.png).
+- [Breeding Workshop concept (selected)](../design/lineage-mocks/lineage-workshop-concept.html), [desktop preview](../design/lineage-mocks/lineage-workshop-overview.png), [390px preview](../design/lineage-mocks/lineage-workshop-mobile.png).
 
 The concepts use scripted breakthrough buttons to expose the result screen. Production resolves breakthrough automatically at sealing as specified above.
 
 ## 9. Validation and limits
 
-Required coverage: all 40 eligible trees and both milestone ranks; positive normalized point awards; capstone gating and birth isolation; overwrite/fusion/reacquisition; threshold carry, retries and deterministic attempts; v13 migration and save/parts/server round trips; exact command replay and state hashes; combat bounds and team/solo recipients; all nine training choice families and original restrictions; browser library, parent/review and in-run choice flows at phone and desktop widths. Full repository validation is recorded with the implementation change; this document does not claim a new balance study. The two standalone concepts have separately passed their six-stage desktop/390px flow and JavaScript/overflow checks.
+Required coverage: all 40 eligible trees and both milestone ranks; positive normalized point awards; capstone gating and birth isolation; overwrite/fusion/reacquisition; threshold carry, retries and deterministic attempts; v13 migration and save/parts/server round trips; exact command replay and state hashes; combat bounds and team/solo recipients; all nine training choice families and original restrictions; browser workshop, focus-tree search, parent changes, offspring review and in-run choice flows at phone and desktop widths. Full repository validation is recorded with the implementation change; this document does not claim a new balance study. The two standalone concepts have separately passed their six-stage desktop/390px flow and JavaScript/overflow checks.
