@@ -15,7 +15,7 @@ A fast, systems-driven monster-raising game in the line of *Monster Rancher* and
 1. **Systems over story.** Zero mandatory narrative. Every choice in a run immediately changes stats, fatigue, skills or risk.
 2. **Rapid-fire runs.** One run is 8-10 minutes, so a session holds several runs and testing a strange build is cheap.
 3. **Legalized exploitation.** Skill trees combine into hidden chase trees and rule-breaking passives. Finding them is the point.
-4. **Rogue-lite meta-progression.** Every run, finished or failed, earns account-wide currency for permanent training upgrades. **Breeding lineages** add a longer-term grind: descendants advance inherited tree ranks through node progression, with transformative milestones. The current 40-generic-tree I–X implementation is `specs/30`; `specs/29` preserves the Fortune prototype (#174).
+4. **Rogue-lite meta-progression.** Every run, finished or failed, earns account-wide currency for permanent training upgrades. **Monster-held synthesis lineages** add a longer-term grind: consume two trained monsters to create a descendant carrying one selected generic tree from each, then advance its designated focus through node progression and transformative milestones. The current 40-generic-tree I–X implementation is `specs/30`; `specs/29` preserves the Fortune prototype (#174).
 5. **Fair, low-stress live service.** Asynchronous PvP rewards are cosmetic only. Combat stats cannot be bought.
 
 ## 3. Core loop
@@ -212,9 +212,11 @@ The account-wide rogue-lite talents, bought with Training Shards. Named examples
 
 **Species unlocks (kj, T9):** a new account owns one species; the others unlock from account achievements with varied conditions (rank reached, a stat reached, runs finished, gauntlet floors). Rules: `specs/18` section 8.
 
-### 9.1 Breeding and tree lineages (kj, 2026-11-03)
+### 9.1 Synthesis and monster-held tree lineages (kj, 2026-11-05)
 
-Two certified Vault parents produce a descendant without being consumed. Choose one eligible generic focus, pay 50 Training Shards, and use an existing empty slot with zero bought nodes. Node-only high-water progress awards once at sealing: 8 pre-capstone points plus 12 at capstone. All 40 generic trees have I–X lineages; small filler buffs reach 10% at V and 15% at X, with distinct capstone transformations at V/X. Intermediate ranks are guaranteed; V/X use bounded protected RNG and 25% retry refill. Account unlocks affect future offspring only. Native, book, chase and fusion gates remain unchanged. The dedicated Breed library guides parents and offspring review; training choices are host-driven. Current rules and full catalogue: `specs/30`; prototype history: `specs/29`.
+Two distinct unlocked certified Vault parents are consumed to produce the primary's species. Each supplies a selected, different generic tree: the primary's focus in the third existing slot and the partner's supporting inheritance in the fourth, both with zero bought nodes. Synthesis costs 50 Training Shards and transfers each tree's personal rank, points and protected-attempt state without adding parental ranks or points. Only focus high-water progression earns points once at sealing: 8 before the capstone plus 12 at it; the supporting lineage is carried unchanged. All 40 generic trees have I–X quality, with filler buffs reaching 10% at V and 15% at X and distinct capstone transformations. Both inherited capstones can supply their powers and training choices. Intermediate ranks are guaranteed; V/X use protected RNG and 25% retry refill.
+
+Progress belongs to that monster's lineage, while its trained combat rolls remain frozen at birth quality; a seal-time quality upgrade passes to future descendants. Ordinary learned generic trees can found a lineage at I. Native, book, chase and fusion gates remain unchanged. A searchable parent-card Workshop previews both inherited contributions and the exact two-parent consumption before confirmation; abandoning the offspring does not return its parents. Schema v15 assigns old account progress to the strongest eligible Vault carrier per tree and keeps unmatched one-time reserves. Current rules and full catalogue: `specs/30`; parents-retained prototype history: `specs/29`.
 
 ## 10. Currencies
 

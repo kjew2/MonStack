@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using IdleRng.Sim.Account;
 using IdleRng.Sim.Combat;
 using IdleRng.Sim.Content;
 
@@ -33,6 +34,9 @@ namespace IdleRng.Sim.Training
         public int Id { get; set; } = -1;
 
         public LineageRun Lineage { get; set; }
+
+        /// <summary>Heritable tree quality and progress, independent of the monster's frozen combat rolls.</summary>
+        public SortedDictionary<string, FortunaLineage> Lineages { get; set; }
 
         public string SpeciesId { get; set; }
 
@@ -108,6 +112,9 @@ namespace IdleRng.Sim.Training
                 Cycles = s.Cycle, FightsFought = s.FightsFought, FightsWon = s.FightsWon, Stats = s.Stats.Clone(),
                 SealedUtcMs = sealedUtcMs,
             };
+            e.Lineages = TreeLineages.CloneProgress(s.Lineage?.Progress);
+            // The finished entry keeps one canonical copy of mutable inheritance progress.
+            if (e.Lineage != null) e.Lineage.Progress = null;
             // Books brought into the run = unused ones now + the ones used.
             e.Books.AddRange(s.Books);
             e.Books.AddRange(s.BooksUsed);

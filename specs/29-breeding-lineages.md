@@ -1,6 +1,6 @@
 # 29 - Breeding and Tree Lineages
 
-> **Historical prototype.** [Spec 30](30-lineages-i-x.md) supersedes the current eligibility, I–X progression, milestone effects, schema and UI rules below. This file preserves the original Fortune prototype and its measurements.
+> **Historical prototype.** [Spec 30](30-lineages-i-x.md) supersedes the eligibility, progression ownership, parent consumption, I–X milestones, schema and UI rules below. Current synthesis consumes two parents and carries monster-held progress; parents-retained/account-wide statements below are historical. This file preserves the original Fortune prototype and its measurements.
 
 Status: **Fortune I–V prototype**, selected from spike #174 by kj (2026-11-03). The long-term direction is a slow grind through small tree improvements, with transformative ranks at V and X. This slice implements only I–V for the existing generic **Fortune** tree (`fortune`); “Fortuna” in the discussion names the same lineage. Existing ids are preserved. Other tree lineages and VI–X are not built.
 

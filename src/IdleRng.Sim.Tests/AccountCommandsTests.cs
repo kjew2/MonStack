@@ -106,6 +106,22 @@ namespace IdleRng.Sim.Tests
         }
 
         [Test]
+        public void LegacyQueuedBreed_CannotBecomeAnUnreviewedSacrifice()
+        {
+            var a = AccountOps.New(Db, 53); a.Shards = 500;
+            a.Vault.Add(new VaultEntry { Id = 0, SpeciesId = "slime", Trees = { new VaultTree { TreeId = "fortune", Bought = 2 } } });
+            a.Vault.Add(new VaultEntry { Id = 1, SpeciesId = "slime", Trees = { new VaultTree { TreeId = "brute_force", Bought = 5 } } });
+            var parents = a.Vault.ToArray();
+            var oldCommand = AccountCommand.Parse("breed", new ObjArgs(0, 1, null, "fortune"));
+            Assert.That(Assert.Throws<InvalidOperationException>(() => AccountCommands.Apply(Db, a, oldCommand)).Message,
+                Does.Contain("Review synthesis"));
+            Assert.That(a.Vault, Is.EqualTo(parents));
+            Assert.That(a.Shards, Is.EqualTo(500));
+            Assert.That(a.Active, Is.Null);
+            Assert.That(a.RunsStarted, Is.Zero);
+        }
+
+        [Test]
         public void EveryCommand_DeclaresWhatItWrites()
         {
             foreach (CommandKind k in Enum.GetValues(typeof(CommandKind)))

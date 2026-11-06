@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IdleRng.Sim.Account;
 using IdleRng.Sim.Content;
+using IdleRng.Sim.Rng;
 using IdleRng.Sim.Training;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -32,6 +34,7 @@ namespace IdleRng.Runtime.Save
             if (a == null) throw new ArgumentNullException(nameof(a));
             var acct = JObject.FromObject(a, SaveSerializer.Serializer);
             acct.Remove(nameof(AccountState.Active));
+            acct.Remove(nameof(AccountState.Fortuna)); // v15 writes only the unmatched legacy reserve, never its alias
             var body = new JObject
             {
                 ["Kind"] = Kind,
@@ -59,6 +62,7 @@ namespace IdleRng.Runtime.Save
             if (version != AccountState.CurrentSchemaVersion)
                 throw new SaveInvalidException($"account schema v{version} is not supported (current v{AccountState.CurrentSchemaVersion})");
             if (!(body["Account"] is JObject acct)) throw new SaveInvalidException("Account section missing");
+            acct.Remove(nameof(AccountState.Fortuna)); // old aliases were folded into Lineages by migration
             AccountState a;
             try { a = acct.ToObject<AccountState>(SaveSerializer.Serializer); }
             catch (JsonException e) { throw new SaveInvalidException("Account does not deserialise: " + e.Message, e); }
@@ -69,7 +73,7 @@ namespace IdleRng.Runtime.Save
             if (a.Tower == null) a.Tower = new TowerProgress();   // a null in the file reads as no attempts yet
             if (a.TalentsOff == null) a.TalentsOff = new List<string>();   // a null in the file reads as every talent on
             if (a.Endless == null) a.Endless = new EndlessProgress();   // a null in the file reads as no climbs yet
-            if (a.Fortuna == null) a.Fortuna = new FortunaLineage();
+            if (a.Lineages == null) a.Lineages = new SortedDictionary<string, FortunaLineage>(StringComparer.Ordinal);
             if (a.Rulebooks == null) a.Rulebooks = new SortedDictionary<int, string>();
 
             if (body["Run"] is JObject state)
@@ -107,6 +111,7 @@ namespace IdleRng.Runtime.Save
                     notice = "Your run in progress was saved under older rules and could not continue. It was dropped and its books returned. (" + e.Message + ")";
                 }
             }
+            if (savedVersion < 15) MigratePersonalLineages(c, a);
             // An achievement added to content since the save is granted when the records already meet it (specs/18 section 8).
             AccountOps.CheckAchievements(c, a);
             if (notice == null && !string.IsNullOrEmpty(a.ContentVersion) && !c.IsCompatibleWith(a.ContentVersion))
@@ -238,10 +243,62 @@ namespace IdleRng.Runtime.Save
                     a["Lineages"] = new JObject { ["fortune"] = fortune.DeepClone() };
                 version = 14;
             }
+            if (version == 14)
+            {
+                // v15 materialises personal inheritance after deserialisation, when the current generic tree catalogue is known.
+                // Preserve the v14 pool here, and remove its redundant Fortune alias before materialisation.
+                if (!(acct["Lineages"] is JObject)) acct["Lineages"] = new JObject();
+                if (((JObject)acct["Lineages"])["fortune"] == null && acct["Fortuna"] is JObject fortune)
+                    acct["Lineages"]["fortune"] = fortune.DeepClone();
+                acct.Remove("Fortuna");
+                version = 15;
+            }
             body["SchemaVersion"] = version;
             acct["SchemaVersion"] = version;
             return version;
         }
+
+        // Unlike the structural JSON migrations above, v15 needs the generic tree catalogue to determine eligible carriers.
+        static void MigratePersonalLineages(ContentDb c, AccountState a)
+        {
+            ulong Seed(string tree) => StreamNames.StreamSeed(a.Seed, "lineage." + tree);
+            foreach (var e in a.Vault)
+            {
+                // Old battle rolls remain untouched. The new ledger describes inheritable quality, not a retroactive combat buff.
+                var ranks = new SortedDictionary<string, int>(StringComparer.Ordinal);
+                if (e.Lineage != null && c.Trees.TryGetValue(e.Lineage.TreeId ?? "", out var inherited) && inherited.Kind == TreeKind.Generic)
+                    ranks[e.Lineage.TreeId] = Math.Max(1, e.Lineage.Rank);
+                foreach (var t in e.Trees)
+                    if (t.Roll?.LineageRank > 0 && c.Trees.TryGetValue(t.TreeId, out var def) && def.Kind == TreeKind.Generic)
+                        ranks[t.TreeId] = Math.Max(ranks.TryGetValue(t.TreeId, out var rank) ? rank : 1, t.Roll.LineageRank);
+                if (ranks.Count > 0 && e.Lineages == null) e.Lineages = new SortedDictionary<string, FortunaLineage>(StringComparer.Ordinal);
+                foreach (var pair in ranks)
+                    if (!e.Lineages.TryGetValue(pair.Key, out var current) || current == null || current.Rank < pair.Value)
+                        e.Lineages[pair.Key] = new FortunaLineage { Rank = pair.Value, Seed = Seed(pair.Key) };
+            }
+            foreach (var pair in a.Lineages.ToArray())
+            {
+                var p = pair.Value;
+                if (!TreeLineages.HasProgress(p)) { a.Lineages.Remove(pair.Key); continue; }
+                if (p.Seed == 0) p.Seed = Seed(pair.Key);
+                var carrier = a.Vault.Where(e => e.Id >= 0 && TreeLineages.EligibleTree(c, e, pair.Key))
+                    .OrderByDescending(e => e.RankIndex).ThenByDescending(e => StatTotal(e)).ThenBy(e => e.Id).FirstOrDefault();
+                if (carrier == null) continue;
+                if (carrier.Lineages == null) carrier.Lineages = new SortedDictionary<string, FortunaLineage>(StringComparer.Ordinal);
+                var old = TreeLineages.Carried(c, carrier, pair.Key);
+                if (TreeLineages.CompareProgress(p, old) >= 0) carrier.Lineages[pair.Key] = p.Clone();
+                // A higher frozen birth rank is already stronger than this old pool; it is never downgraded or added to it.
+                a.Lineages.Remove(pair.Key);
+            }
+            if (a.Active?.Lineage != null && a.Active.Lineage.Progress == null)
+            {
+                var l = a.Active.Lineage;
+                l.Progress = new SortedDictionary<string, FortunaLineage>(StringComparer.Ordinal)
+                { [l.TreeId] = new FortunaLineage { Rank = Math.Max(1, l.Rank), Seed = Seed(l.TreeId) } };
+            }
+        }
+
+        static double StatTotal(VaultEntry e) => e.Stats.Hp + e.Stats.Str + e.Stats.Int + e.Stats.Wis + e.Stats.Dex + e.Stats.Def + e.Stats.Spd + e.Stats.Luk;
 
         /// <summary>A seed field as the save writes it (16 lowercase hex characters, specs/06 section 2); 0 when missing or malformed.</summary>
         static ulong HexSeed(JToken t) =>
@@ -291,8 +348,30 @@ namespace IdleRng.Runtime.Save
         static void CheckRun(ContentDb c, RunState s)
         {
             if (s == null || s.SpeciesId == null || !c.Species.ContainsKey(s.SpeciesId)) throw new InvalidOperationException("unknown species '" + s?.SpeciesId + "'");
-            if (s.Lineage != null && (s.Lineage.TreeId == null || !c.Trees.ContainsKey(s.Lineage.TreeId)))
-                throw new InvalidOperationException("unknown lineage tree '" + s.Lineage.TreeId + "'");
+            if (s.Lineage != null)
+            {
+                var l = s.Lineage;
+                if (l.TreeId == null || !c.Trees.TryGetValue(l.TreeId, out var focus) || focus.Kind != TreeKind.Generic
+                    || l.Rank < 1 || l.Rank > TreeLineages.MaxRank || l.Deepest < 0 || l.Deepest > focus.Nodes.Count)
+                    throw new InvalidOperationException("invalid focus lineage '" + l.TreeId + "'");
+                if (l.SupportingTreeId != null && (l.SupportingTreeId == l.TreeId
+                    || !c.Trees.TryGetValue(l.SupportingTreeId, out var supporting) || supporting.Kind != TreeKind.Generic))
+                    throw new InvalidOperationException("invalid supporting lineage '" + l.SupportingTreeId + "'");
+                // Old active runs may lack personal progress until migration. New two-parent runs must have both inheritances.
+                if (l.SupportingTreeId != null && l.Progress == null)
+                    throw new InvalidOperationException("personal inheritance progress is missing");
+                if (l.Progress != null)
+                {
+                    if (!l.Progress.ContainsKey(l.TreeId) || (l.SupportingTreeId != null && !l.Progress.ContainsKey(l.SupportingTreeId))
+                        || l.Progress.Count != (l.SupportingTreeId == null ? 1 : 2))
+                        throw new InvalidOperationException("personal inheritance progress does not match its selected trees");
+                    foreach (var pair in l.Progress)
+                        if (!c.Trees.TryGetValue(pair.Key, out var tree) || tree.Kind != TreeKind.Generic || pair.Value == null
+                            || pair.Value.Rank < 1 || pair.Value.Rank > TreeLineages.MaxRank || pair.Value.Points < 0
+                            || pair.Value.Failures < 0 || pair.Value.Attempts < 0 || pair.Value.LastAward < 0)
+                            throw new InvalidOperationException("invalid personal lineage '" + pair.Key + "'");
+                }
+            }
             foreach (var id in s.Ladder) if (!c.RankEnemies.ContainsKey(id)) throw new InvalidOperationException("unknown rank enemy '" + id + "'");
             foreach (var o in s.Offers) foreach (var t in o.Trees) if (!c.Trees.ContainsKey(t)) throw new InvalidOperationException("unknown tree '" + t + "'");
             foreach (var b in s.Books) if (!c.SkillBooks.ContainsKey(b)) throw new InvalidOperationException("unknown book '" + b + "'");

@@ -92,6 +92,7 @@ namespace IdleRng.Sim.Account
             foreach (var b in run.Books) { AddBooks(a, b, 1); result.BooksReturned.Add(b); }
             a.Vault.Add(result.Entry);
             TreeLineages.Award(c, a, run);
+            entry.Lineages = TreeLineages.CloneProgress(run.Lineage?.Progress);
             a.Active = null;
             Record(a, result.Entry);
             var ownedBefore = new HashSet<string>(a.OwnedSpecies, StringComparer.Ordinal);

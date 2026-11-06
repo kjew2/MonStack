@@ -14,7 +14,7 @@
     view: 'home',            // home | run | climb | grade | vendor | tower | endless
     tab: 'train',            // train | trees | ladder | log
     homeTab: 'raise',        // the home screen's tab: raise | vault | talents | dungeon | goals | rankings
-    lineage: { tree: null, search: '', filter: 'all', primary: '', support: '', review: false, pickerOpen: false, pickParent: null, parentSearch: '', parentReady: true, parentSort: 'newest' },
+    lineage: { tree: null, search: '', filter: 'all', primary: '', support: '', supportTree: '', review: false, pickerOpen: false, pickParent: null, parentSearch: '', parentReady: true, parentSort: 'newest' },
     lineageSummary: null,
     pick: null,              // species chosen on the home screen
     showLocked: false,       // the Raise tab's locked species list is open
@@ -582,7 +582,10 @@
       main.append(card);
     });
 
-    if (s.lineage) main.append(h('p', { class: 'small', 'data-id': 'run-lineage', text: (s.lineage.name || treeName(s.lineage.tree)) + ' lineage: ' + s.lineage.points + ' / ' + s.lineage.maxPoints + ' points earned this run. Awarded at sealing, even if the tree is overwritten.' }));
+    if (s.lineage) {
+      main.append(h('p', { class: 'small', 'data-id': 'run-lineage', text: (s.lineage.name || treeName(s.lineage.tree)) + ' lineage: ' + s.lineage.points + ' / ' + s.lineage.maxPoints + ' points earned this run. Added to this monster’s focus lineage at sealing, even if the tree is overwritten.' }));
+      if (s.lineage.supporting) main.append(h('p', { class: 'small muted', 'data-id': 'run-supporting-lineage', text: s.lineage.supporting.name + ' ' + ROMAN[s.lineage.supporting.rank] + ' is carried from the supporting parent with ' + s.lineage.supporting.points + ' points. Its lineage progress stays unchanged during this run.' }));
+    }
     main.append(h('h3', { text: 'Chase trees' }));
     main.append(h('p', { class: 'small muted', text: 'Each species has two chase trees of its own: one unlocks from its own trees and stats; the other also needs a skill book tree, or, for some species, more trees, stats and wins. A chase tree unlocks when every condition holds, then it is offered. It locks again if a condition stops holding.' }));
     s.chase.forEach((c) => {
@@ -655,7 +658,7 @@
     // An in-page confirm: window.confirm is blocked (returns false) inside sandboxed frames such as the phone artifact.
     if (ui.confirmAbandon) {
       main.append(h('div', { class: 'card alert' }, [
-        h('p', { text: 'Abandon this run? Nothing is sealed and no shards are paid. Unused books come back.' }),
+        h('p', { text: 'Abandon this run? Nothing is sealed and no shards are paid. Unused books come back.' + (s.lineage && s.lineage.supporting ? ' The sacrificed parents will not return, and this descendant’s lineages will be lost.' : '') }),
         h('div', { class: 'row' }, [
           h('button', { class: 'btn small warn', type: 'button', 'data-act': 'abandon-yes', text: 'Yes, abandon', onclick: () => {
             ui.confirmAbandon = false;
@@ -1346,7 +1349,7 @@
   function lineagePanel(main) {
     if (!lineageList().length) return;
     main.append(h('div', { class: 'card lineage-entry', 'data-id': 'lineage-panel' }, [
-      h('div', {}, [h('b', { text: 'Build a lasting lineage' }), h('p', { class: 'small muted', text: 'Breed descendants, grow a tree through ten ranks, and unlock new capstone powers at V and X.' })]),
+      h('div', {}, [h('b', { text: 'Build a lasting lineage' }), h('p', { class: 'small muted', text: 'Synthesize two monsters into a descendant carrying one tree from each parent. Train its focus lineage toward new powers at V and X.' })]),
       h('button', { class: 'btn small', type: 'button', 'data-act': 'open-lineages', text: 'Explore lineages', onclick: () => goHomeTab('lineages') })]));
   }
   function parentName(i) {
@@ -1356,35 +1359,43 @@
   function lineageProgress(l) {
     return l.rank >= 10 ? 'Rank X complete' : l.points + ' / ' + l.required + ' points toward ' + ROMAN[l.rank + 1];
   }
+  function inheritedLineages(entry) { return entry && entry.lineages || []; }
   function homeLineages(main) {
     const a = run.account, list = lineageList(), u = ui.lineage;
-    homeHeader(main, 'Breeding Workshop');
+    homeHeader(main, 'Synthesis Workshop');
     if (!list.length) { main.append(h('p', { class: 'muted', text: 'Lineages are not available yet.' })); return; }
-    const l = list.find((x) => x.tree === u.tree) || list[0]; u.tree = l.tree;
-    const eligible = l.eligibleParents || a.vault.map((e, i) => e.canBreedPrimary ? i : -1).filter((i) => i >= 0);
-    const certified = (value) => value !== '' && a.vault[Number(value)] && a.vault[Number(value)].id >= 0;
+    const reference = list.find((x) => x.tree === u.tree) || list[0]; u.tree = reference.tree;
+    const eligible = reference.eligibleParents || a.vault.map((e, i) => e.canBreedPrimary ? i : -1).filter((i) => i >= 0);
+    const certified = (value) => value !== '' && a.vault[Number(value)] && a.vault[Number(value)].id >= 0 && !a.vault[Number(value)].locked;
     if (!certified(u.primary) || !eligible.includes(Number(u.primary))) u.primary = '';
     if (!certified(u.support) || (u.primary !== '' && a.vault[Number(u.primary)].id === a.vault[Number(u.support)].id)) u.support = '';
-    const valid = u.primary !== '' && u.support !== '';
+    const primary = u.primary !== '' ? a.vault[Number(u.primary)] : null;
+    const l = inheritedLineages(primary).find((x) => x.tree === u.tree) || reference;
+    const support = u.support !== '' ? a.vault[Number(u.support)] : null;
+    const supportOptions = inheritedLineages(support).filter((x) => x.tree !== u.tree).sort((x, y) => x.tree.localeCompare(y.tree));
+    if (!supportOptions.length) { u.support = ''; u.supportTree = ''; }
+    else if (!supportOptions.some((x) => x.tree === u.supportTree)) u.supportTree = supportOptions[0].tree;
+    const supportLineage = supportOptions.find((x) => x.tree === u.supportTree);
+    const valid = u.primary !== '' && u.support !== '' && !!supportLineage;
     if (!valid) u.review = false;
-    const canBreed = valid && a.shards >= l.cost && a.vaultOver <= 0;
+    const canBreed = valid && a.shards >= l.cost && a.vaultOver <= 2;
     const workspace = h('div', { class: 'breeding-workshop' + (u.review ? ' workshop-review' : ''), 'data-id': 'breeding-workshop' });
     main.append(workspace);
     workspace.append(h('div', { class: 'workshop-intro' }, [
       h('div', {}, [h('small', { class: 'gems workshop-eyebrow', text: 'AN INHERITANCE WORTH BUILDING' }),
         h('h2', { text: u.review ? 'Meet your next descendant.' : 'Build on the ones before.' }),
-        h('p', { class: 'muted', text: u.review ? 'Check your pairing before starting a new training run.' : 'Choose a pair. Preview their offspring. Grow a lasting lineage.' })]),
+        h('p', { class: 'muted', text: u.review ? 'Review the inheritance and sacrifice before starting training.' : 'Two parents become one descendant. Choose the trees your family carries forward.' })]),
       h('button', { type: 'button', class: 'btn small workshop-focus', 'data-act': 'lineage-picker-toggle', 'aria-expanded': String(u.pickerOpen), 'aria-controls': 'lineage-picker',
-        onclick: () => { u.pickerOpen = !u.pickerOpen; render(); document.querySelector(u.pickerOpen ? '[data-id=lineage-search]' : '[data-act=lineage-picker-toggle]').focus(); } }, [h('small', { text: 'FOCUS TREE' }), h('b', { text: l.name + ' ' + ROMAN[l.rank] }), h('span', { text: u.pickerOpen ? 'Close library ↑' : 'Change tree ↓' })])
+        onclick: () => { u.pickerOpen = !u.pickerOpen; render(); document.querySelector(u.pickerOpen ? '[data-id=lineage-search]' : '[data-act=lineage-picker-toggle]').focus(); } }, [h('small', { text: 'FOCUS TREE' }), h('b', { text: l.name + (primary ? ' ' + ROMAN[l.rank] : '') }), h('span', { text: u.pickerOpen ? 'Close library ↑' : 'Change tree ↓' })])
     ]));
     if (u.pickerOpen) {
       const library = h('div', { class: 'lineage-library', 'data-id': 'lineage-library', role: 'group', 'aria-label': 'Choose a lineage' });
       const drawLibrary = () => {
-        const matches = list.filter((x) => x.name.toLowerCase().includes(u.search.toLowerCase()) && (u.filter !== 'ready' || (x.eligibleParents || []).length) && (u.filter !== 'progress' || x.rank > 1 || x.points > 0));
+        const matches = list.filter((x) => x.name.toLowerCase().includes(u.search.toLowerCase()) && (u.filter !== 'ready' || (x.eligibleParents || []).length) && (u.filter !== 'progress' || a.vault.some((e) => inheritedLineages(e).some((p) => p.tree === x.tree && (p.rank > 1 || p.points > 0)))));
         library.replaceChildren(...matches.map((x) => h('button', { class: 'lineage-choice' + (x.tree === u.tree ? ' selected' : ''), type: 'button', 'data-act': 'lineage-' + x.tree, 'aria-pressed': String(x.tree === u.tree), onclick: () => {
-          if (u.tree !== x.tree) { u.primary = ''; u.support = ''; u.review = false; }
+          if (u.tree !== x.tree) { u.primary = ''; u.support = ''; u.supportTree = ''; u.review = false; }
           u.tree = x.tree; u.pickerOpen = false; render(); document.querySelector('[data-act=lineage-picker-toggle]').focus();
-        } }, [h('b', { text: x.name }), h('span', { class: 'num', text: ROMAN[x.rank] }), h('small', { class: 'muted', text: lineageProgress(x) })])));
+        } }, [h('b', { text: x.name }), h('span', { class: 'num', text: (x.eligibleParents || []).length + ' parents' }), h('small', { class: 'muted', text: 'Choose a parent to view its inherited rank and progress.' })])));
         if (!matches.length) library.append(h('p', { class: 'small muted', text: 'No lineages match. Try another search or filter.' }));
       };
       const search = h('input', { type: 'search', placeholder: 'Search trees', value: u.search, 'aria-label': 'Search lineages', 'data-id': 'lineage-search', oninput: (e) => { u.search = e.target.value; drawLibrary(); } });
@@ -1402,26 +1413,32 @@
           text: entry ? 'Change ' + label.toLowerCase() + ' parent' : key === 'primary' ? 'Choose a monster →' : 'Choose a partner →', onclick: () => {
             u.pickParent = key; u.parentSearch = ''; u.parentReady = true; u.parentSort = 'newest'; render(); document.querySelector('[data-act=parent-picker-close]').focus();
           } }),
-        h('p', { class: 'small muted', text: description })]);
+        h('p', { class: 'small muted', text: description }),
+        entry && (key === 'primary' || supportLineage) ? h('p', { class: 'small gold', text: key === 'primary' ? l.name + ' ' + ROMAN[l.rank] + ' · ' + l.points + ' points' : supportLineage.name + ' ' + ROMAN[supportLineage.rank] + ' · ' + supportLineage.points + ' points' }) : null,
+        key === 'support' && entry && !u.review && supportOptions.length > 1 ? h('div', { class: 'support-tree-choices', role: 'group', 'aria-label': 'Supporting tree inheritance' }, [
+          h('small', { class: 'muted', text: 'Choose the tree this parent passes on' }),
+          ...supportOptions.map((x) => h('button', { type: 'button', class: 'btn small', 'data-act': 'support-tree-' + x.tree, 'aria-pressed': String(u.supportTree === x.tree), text: x.name + ' ' + ROMAN[x.rank], onclick: () => { u.supportTree = x.tree; render(); document.querySelector('[data-act=support-tree-' + x.tree + ']').focus({ preventScroll: true }); } }))
+        ]) : null]);
     };
-    const primary = u.primary !== '' ? a.vault[Number(u.primary)] : null;
     const offspring = h('section', { class: 'card workshop-offspring', 'data-id': 'breed-offspring-preview', 'aria-label': 'Offspring preview', 'aria-live': 'polite' }, [
       h('small', { class: 'gold workshop-eyebrow', text: u.review ? 'READY FOR YOUR REVIEW' : 'NEXT GENERATION' }),
       primary ? sprite(primary.species, false, 'large') : h('div', { class: 'workshop-seed', 'aria-hidden': 'true', text: '✦' }),
       h('h2', { text: primary ? (speciesDef(primary.species) || { name: primary.species }).name : 'Your next descendant' }),
-      h('span', { class: 'tag', text: l.name + ' ' + ROMAN[l.rank] + ' · Inherited focus' }),
-      h('p', { class: 'small muted', text: primary ? 'Starts fresh in slot 3, with no nodes purchased.' : 'Select a primary parent to preview its species.' }),
-      h('p', { class: 'small', text: valid ? 'Both parents stay in your Vault.' : 'Choose two different certified parents.' })
+      h('span', { class: 'tag', text: l.name + (primary ? ' ' + ROMAN[l.rank] : '') + ' · Focus, slot 3' }),
+      primary ? h('small', { class: 'muted', text: l.points + ' points carried · Earns node points this run' }) : null,
+      supportLineage && u.support !== '' ? h('div', { class: 'inherited-support', 'data-id': 'inherited-support-tree' }, [h('span', { class: 'tag', text: supportLineage.name + ' ' + ROMAN[supportLineage.rank] + ' · Slot 4' }), h('small', { class: 'muted', text: supportLineage.points + ' points carried unchanged' })]) : null,
+      h('p', { class: 'small muted', text: primary ? 'Both inherited trees start with zero purchased nodes.' : 'Choose a primary parent to preview its species and lineage.' }),
+      h('p', { class: 'small', text: valid ? 'Synthesis consumes both selected parents.' : 'Choose two unlocked parents carrying different generic trees.' })
     ]);
     workspace.append(h('section', { class: 'workshop-board', 'data-id': 'lineage-breed', 'aria-label': 'Breeding pairing' }, [
-      parentCard('primary', 'Primary', 'Supplies the species and eligible ' + l.name + ' tree.'),
-      parentCard('support', 'Supporting', 'Supports the pairing and remains in your Vault.'), offspring]));
-    if (!eligible.length) workspace.append(h('p', { class: 'small workshop-notice', 'data-id': 'lineage-no-parent', text: 'To begin, seal a monster that has learned the skill node in ' + l.name + '.' }));
+      parentCard('primary', 'Primary', 'Passes its species and ' + l.name + ' lineage. Consumed by synthesis.'),
+      parentCard('support', 'Supporting', 'Passes a second tree and its progress. Consumed by synthesis.'), offspring]));
+    if (!eligible.length) workspace.append(h('p', { class: 'small workshop-notice', 'data-id': 'lineage-no-parent', text: 'To begin, unlock a parent carrying ' + l.name + ' or seal one that learned its first skill node.' }));
     else if (a.vault.filter((e) => e.id >= 0).length < 2) workspace.append(h('p', { class: 'small workshop-notice', text: 'Seal a second monster to supply a different supporting parent.' }));
     const detail = h('section', { class: 'card lineage-detail', 'data-id': 'lineage-detail', 'aria-label': l.name + ' lineage' }, [
-      h('div', { class: 'row between' }, [h('h3', { text: l.name + ' ' + ROMAN[l.rank] }), h('span', { class: 'tag', text: 'Account lineage' })]),
-      h('p', { class: 'num', 'data-id': 'lineage-progress', text: lineageProgress(l) }),
-      l.rank < 10 ? h('progress', { max: l.required, value: l.points, 'aria-label': l.name + ' lineage progress' }) : null,
+      h('div', { class: 'row between' }, [h('h3', { text: l.name + ' ' + ROMAN[l.rank] }), h('span', { class: 'tag', text: primary ? 'Primary inheritance' : 'Tree reference' })]),
+      h('p', { class: 'num', 'data-id': 'lineage-progress', text: primary ? lineageProgress(l) : 'Choose a primary parent to inspect its lineage progress.' }),
+      primary && l.rank < 10 ? h('progress', { max: l.required, value: l.points, 'aria-label': l.name + ' lineage progress' }) : null,
       h('ol', { class: 'lineage-track', 'aria-label': 'Ranks I through X' }, ROMAN.slice(1).map((r, i) => h('li', { class: (i + 1 <= l.rank ? 'earned ' : '') + ([5, 10].includes(i + 1) ? 'milestone' : ''), 'aria-current': i + 1 === l.rank ? 'step' : null, text: r }))),
       h('div', { class: 'lineage-milestones' }, [5, 10].map((rank) => h('div', { class: 'lineage-milestone' + (l.rank >= rank ? ' unlocked' : '') }, [
         h('small', { class: 'gold', text: 'RANK ' + ROMAN[rank] + (l.rank >= rank ? ' · UNLOCKED' : ' · CAPSTONE SHIFT') }),
@@ -1433,25 +1450,30 @@
       h('ol', { class: 'workshop-steps' }, [
         h('li', {}, [h('b', { text: 'Purchase focus-tree nodes' }), h('p', { class: 'small muted', text: 'Earlier nodes share ' + (l.maxPoints - a.lineageCapstonePoints) + ' points, weighted toward skills.' })]),
         h('li', {}, [h('b', { class: 'gold', text: 'Reach the capstone · +' + a.lineageCapstonePoints }), h('p', { class: 'small muted', text: 'A complete tree contributes up to ' + l.maxPoints + ' points.' })]),
-        h('li', {}, [h('b', { text: 'Seal the run' }), h('p', { class: 'small muted', text: 'Deepest node progress becomes permanent, even if you replace the tree. Upgrades resolve automatically.' })])]),
+        h('li', {}, [h('b', { text: 'Seal the run' }), h('p', { class: 'small muted', text: 'Focus progress stays with this monster, even if you replace its tree. The supporting lineage carries forward unchanged.' })])]),
       l.rank < 10 ? h('div', { class: 'lineage-protection', 'data-id': 'lineage-odds' }, [
         h('b', { text: 'Next upgrade: ' + l.chance + '% chance' }),
-        h('p', { class: 'small', text: l.chance >= 100 ? 'Guaranteed when the point threshold is reached.' : 'Rank stays safe after a miss. Earn ' + l.required + ' points for this attempt; each retry refills ' + l.retryPercent + '% of the milestone threshold. Guaranteed within ' + l.attemptsLeft + ' attempts.' })]) : h('p', { class: 'small gold', text: 'Rank X unlocked. Future offspring inherit your completed lineage.' }),
-      h('p', { class: 'small muted', text: 'V and X powers activate after buying the inherited capstone. Existing monsters keep their birth rank.' })
+        h('p', { class: 'small', text: l.chance >= 100 ? 'Guaranteed when the point threshold is reached.' : 'Rank stays safe after a miss. Earn ' + l.required + ' points for this attempt; each retry refills ' + l.retryPercent + '% of the milestone threshold. Guaranteed within ' + l.attemptsLeft + ' attempts.' })]) : h('p', { class: 'small gold', text: 'This monster carries rank X for its descendants.' }),
+      h('p', { class: 'small muted', text: 'V and X powers activate after buying the inherited capstone. A breakthrough improves what this monster can pass on. This run’s inherited tree effects keep their birth ranks.' })
     ]);
     workspace.append(h('div', { class: 'workshop-progress' }, [detail, guidance]));
+    if (l.legacyReserve || supportLineage && supportLineage.legacyReserve) workspace.append(h('p', { class: 'small workshop-notice', 'data-id': 'lineage-reserve-warning', text: 'This pairing transfers matching legacy reserve progress into the descendant. The reserve is claimed once when synthesis succeeds.' }));
+    if ((a.lineageReserves || []).length) workspace.append(h('p', { class: 'small muted', 'data-id': 'lineage-reserve-summary', text: a.lineageReserves.length + ' unmatched legacy lineage' + (a.lineageReserves.length === 1 ? '' : 's') + ' remain reserved until an eligible parent carries the matching tree.' }));
     const actions = actionBar([
       h('div', { class: 'workshop-cost' }, [h('b', { class: 'num', 'data-id': 'breed-cost', text: l.cost + ' Training Shards · You have ' + a.shards }),
-        h('small', { class: 'muted', text: u.review ? 'Confirming starts training immediately. Both parents are kept.' : 'Review your pairing before spending shards.' })]),
-      h('button', { type: 'button', class: 'btn primary block', 'data-act': u.review ? 'breed' : 'breed-review', disabled: u.review ? !canBreed : !valid, text: u.review ? 'Breed & train · ' + l.cost + ' shards' : 'Review offspring →', onclick: () => {
+        h('small', { class: 'muted', text: u.review ? 'Both parents leave your Vault. Only the two shown lineages are inherited. This cannot be undone.' : 'Review both inherited trees before sacrificing the parents.' })]),
+      h('button', { type: 'button', class: 'btn primary block', 'data-act': u.review ? 'breed' : 'breed-review', disabled: u.review ? !canBreed : !valid, text: u.review ? 'Synthesize & train · ' + l.cost + ' shards' : 'Review offspring →', onclick: () => {
         if (!u.review) { u.review = true; u.pickerOpen = false; render(); document.querySelector('[data-act=breed]').focus({ preventScroll: true }); $('main').scrollTop = 0; return; }
-        const result = run.acct('breed', Number(u.primary), Number(u.support), a.talentsOff, l.tree);
+        const result = run.acct('breed', Number(u.primary), Number(u.support), a.talentsOff, l.tree, u.supportTree);
         if (!result.ok) { toast(result.reason); render(); return; }
-        u.review = false; u.pickerOpen = false; resetRunUi(); ui.view = 'run'; render();
+        u.review = false; u.pickerOpen = false; u.primary = ''; u.support = ''; u.supportTree = '';
+        // Consumed Vault positions must not silently retarget a saved team or its displayed result.
+        ui.towerTeam = []; ui.endlessTeam = []; ui.towerResult = null; ui.endlessResult = null; ui.towerFight = null; ui.endlessFight = null;
+        resetRunUi(); ui.view = 'run'; render();
       } }),
       u.review ? h('button', { type: 'button', class: 'linkish', 'data-act': 'breed-back', text: 'Change parents', onclick: () => { u.review = false; render(); document.querySelector('[data-act=breed-primary]').focus({ preventScroll: true }); $('main').scrollTop = 0; } }) : null,
       a.shards < l.cost ? h('p', { class: 'small bad workshop-warning', text: 'Earn ' + (l.cost - a.shards) + ' more shards to breed.' }) : null,
-      a.vaultOver > 0 ? h('p', { class: 'small bad workshop-warning', text: 'Free space in the Vault before starting another run.' }) : null
+      a.vaultOver > 2 ? h('p', { class: 'small bad workshop-warning', text: 'Free more Vault space before synthesizing this pair.' }) : null
     ]);
     main.append(actions);
     if (u.pickParent) parentPicker(l, eligible);
@@ -1472,16 +1494,16 @@
       h('span', { class: 'gold', 'aria-hidden': 'true', text: '→' }),
       h('div', { class: 'parent-pinned', 'data-id': 'parent-offspring-preview' }, [sprite(primary.species, false, 'small'), h('div', {}, [h('small', { class: 'gold', text: 'OFFSPRING PREVIEW' }), h('b', { text: (speciesDef(primary.species) || { name: primary.species }).name }), h('small', { text: lineage.name + ' ' + ROMAN[lineage.rank] })])])
     ]));
-    picker.append(h('p', { class: 'small muted parent-picker-intro', text: key === 'primary' ? 'Choose a certified monster that has learned the skill node in ' + lineage.name + '. Your choice supplies the offspring’s species.' : 'Choose a different certified monster. The offspring inherits the primary’s species and selected focus tree.' }));
+    picker.append(h('p', { class: 'small muted parent-picker-intro', text: key === 'primary' ? 'Choose an unlocked monster carrying ' + lineage.name + ' or its first learned skill. Your choice supplies the species and focus tree.' : 'Choose an unlocked partner with a different generic tree. Both parents are consumed after the inheritance review.' }));
     const roster = h('div', { class: 'parent-roster', 'data-id': 'parent-roster', role: 'group', 'aria-label': key === 'primary' ? 'Primary parent candidates' : 'Supporting parent candidates' });
     const count = h('small', { class: 'muted', 'data-id': 'parent-results', role: 'status' });
-    const reason = (e, i) => e.id < 0 ? 'No certified run ID. Raise and seal a new monster.' : key === 'primary' && !eligible.includes(i) ? 'Needs the first ' + lineage.name + ' skill node.' : key === 'support' && primary && e.id === primary.id ? 'Already chosen as the primary parent.' : '';
+    const reason = (e, i) => e.locked ? 'Locked monsters are protected. Unlock it in the Vault to use it as a parent.' : e.id < 0 ? 'Raise and seal a new monster before using it as a parent.' : key === 'primary' && !eligible.includes(i) ? 'Needs the first ' + lineage.name + ' skill node or its carried lineage.' : key === 'support' && primary && e.id === primary.id ? 'Already chosen as the primary parent.' : key === 'support' && !inheritedLineages(e).some((x) => x.tree !== lineage.tree) ? 'Needs a different generic tree to pass on.' : '';
     const draw = () => {
       const query = u.parentSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
       const entries = a.vault.map((e, i) => ({ e, i, reason: reason(e, i) })).filter(({ e, i, reason: why }) => {
         if (u.parentReady && why) return false;
         const sp = speciesDef(e.species) || { name: e.species };
-        const haystack = [parentName(i), sp.name, (C.elements[sp.element] || {}).name, ...e.trees.map((t) => t.name || treeName(t.id))].join(' ').toLowerCase();
+        const haystack = [parentName(i), sp.name, (C.elements[sp.element] || {}).name, ...inheritedLineages(e).map((t) => t.name || treeName(t.tree)), ...e.trees.map((t) => t.name || treeName(t.id))].join(' ').toLowerCase();
         return query.every((word) => haystack.includes(word));
       }).sort((x, y) => u.parentSort === 'grade' ? y.e.rank - x.e.rank || y.i - x.i : y.i - x.i);
       count.textContent = entries.length + (entries.length === 1 ? ' monster' : ' monsters') + ' · ' + (u.parentReady ? 'Ready to pair' : 'All monsters');
@@ -1495,8 +1517,8 @@
             u[key] = String(i); u.review = false; close();
           } }, [
           h('div', { class: 'parent-option-head' }, [sprite(e.species, e.apex, 'large'), h('div', {}, [h('b', { text: e.name || sp.name }), h('small', { class: 'muted', text: '#' + (i + 1) + ' · Grade ' + up(e.grade) }), elementTag(sp.element)])]),
-          h('div', { class: 'parent-option-trees' }, e.trees.map((t) => h('span', { class: 'tag' + (t.rolled && t.rolled.lineageRank ? ' gold' : ''), text: t.name || treeName(t.id) + (t.rolled && t.rolled.lineageRank ? ' ' + ROMAN[t.rolled.lineageRank] : '') }))),
-          h('small', { class: why ? 'parent-option-reason' : 'gems', 'data-id': 'parent-reason-' + i, text: why || (key === 'primary' ? 'Can pass ' + lineage.name : 'Ready to support this pairing') })
+          h('div', { class: 'parent-option-trees' }, inheritedLineages(e).map((t) => h('span', { class: 'tag' + (t.rank > 1 ? ' gold' : ''), text: t.name + ' ' + (t.legacyReserve ? ROMAN[t.carriedRank] + ' → ' + ROMAN[t.rank] : ROMAN[t.rank]) + ' · ' + t.points + ' points' + (t.legacyReserve ? ' · legacy reserve' : '') }))),
+          h('small', { class: why ? 'parent-option-reason' : 'gems', 'data-id': 'parent-reason-' + i, text: why || (key === 'primary' ? 'Can pass ' + lineage.name : 'Carries another tree for this pairing') })
         ]);
       }));
       if (!entries.length) roster.append(h('p', { class: 'parent-roster-empty muted', 'data-id': 'parent-empty', text: a.vault.length ? 'No monsters match. Try All monsters or another search.' : 'Your Vault is empty. Finish and seal a training run to meet your first parent.' }));
@@ -1507,7 +1529,7 @@
       u.parentReady = id === 'ready'; filters.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.act === 'parent-filter-ready') === u.parentReady))); draw();
     } })));
     const sort = h('button', { type: 'button', class: 'btn small', 'data-act': 'parent-sort', text: u.parentSort === 'newest' ? 'Newest first ↓' : 'Highest grade ↓', onclick: () => { u.parentSort = u.parentSort === 'newest' ? 'grade' : 'newest'; sort.textContent = u.parentSort === 'newest' ? 'Newest first ↓' : 'Highest grade ↓'; draw(); } });
-    picker.append(search, h('div', { class: 'parent-controls' }, [filters, sort]), count, roster, h('p', { class: 'small muted parent-picker-foot', text: 'Selecting a monster only updates your pairing. Review the offspring before breeding.' }));
+    picker.append(search, h('div', { class: 'parent-controls' }, [filters, sort]), count, roster, h('p', { class: 'small muted parent-picker-foot', text: 'Selecting a card changes only the preview. Confirm synthesis to consume both parents and begin training.' }));
     picker.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); return; }
       if (event.key !== 'Tab') return;
@@ -2416,7 +2438,7 @@
         h('b', { text: '+' + l.lastAward + ' ' + l.name + ' lineage points' }),
         l.lastResult ? h('p', { class: 'gold', 'data-id': 'grade-lineage-result', text: l.lastResult }) : null,
         h('p', { class: 'small', text: l.name + ' ' + ROMAN[l.rank] + ' · ' + lineageProgress(l) }),
-        h('button', { class: 'btn small', type: 'button', 'data-act': 'grade-lineages', text: 'View lineage', onclick: () => { ui.lineage.tree = l.tree; ui.view = 'home'; goHomeTab('lineages'); } }),
+        h('button', { class: 'btn small', type: 'button', 'data-act': 'grade-lineages', text: 'Plan its next synthesis', onclick: () => { ui.lineage.tree = l.tree; ui.lineage.primary = String(run.account.vault.findIndex((v) => v.id === e.id)); ui.lineage.support = ''; ui.lineage.supportTree = ''; ui.lineage.review = false; ui.view = 'home'; goHomeTab('lineages'); } }),
       ]));
     }
     main.append(h('div', { class: 'card', 'data-id': 'grade-stats' }, [h('h3', { text: 'Stat breakdown' }), statGrid(e.stats)]));
@@ -2846,7 +2868,7 @@
     const focus = run.state.lineage;
     const r = run.finishRun();
     if (!r.ok) { toast(r.reason); return; }
-    ui.lineageSummary = focus ? Object.assign({}, lineageList().find((l) => l.tree === focus.tree)) : null;
+    ui.lineageSummary = focus ? Object.assign({}, inheritedLineages(r.entry).find((l) => l.tree === focus.tree)) : null;
     ui.sealed = r.entry; ui.payout = r.shards; ui.ticketGain = { pieces: r.ticketPieces, tickets: r.ticketsEarned }; ui.view = 'grade'; ui.earned = r.achievements || [];
     ui.earned.forEach((a) => toast('Achievement: ' + a.name + (a.species ? '. ' + a.speciesName + ' unlocked!' : '')));
     // The wheel shows the climb once, from the floors finishRun returned; only the result is kept (specs/19 section 7).

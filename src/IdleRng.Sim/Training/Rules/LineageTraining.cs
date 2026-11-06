@@ -25,6 +25,121 @@ namespace IdleRng.Sim.Training
 
     public static partial class TrainingRun
     {
+        // Each tree executes the established rules with its own counters. The temporary context
+        // is always restored, including when a choice is rejected; it never changes birth rolls.
+        sealed class SecondaryLineageContext : IDisposable
+        {
+            readonly RunState _run;
+            readonly string _tree;
+            readonly int _rank;
+            readonly LineageTrainingState _state;
+            public SecondaryLineageContext(RunState run, string tree, int rank)
+            {
+                _run = run; _tree = run.Lineage.TreeId; _rank = run.Lineage.Rank; _state = run.LineageTraining;
+                run.Lineage.TreeId = tree; run.Lineage.Rank = rank;
+                run.LineageTraining = run.SecondaryLineageTraining;
+            }
+            public void Dispose()
+            {
+                _run.SecondaryLineageTraining = _run.LineageTraining;
+                _run.LineageTraining = _state;
+                _run.Lineage.TreeId = _tree; _run.Lineage.Rank = _rank;
+            }
+        }
+        static SecondaryLineageContext LTSecondary(RunState s)
+        {
+            string tree = s.Lineage?.SupportingTreeId;
+            if (tree == null || tree == s.Lineage.TreeId) return null;
+            int rank = s.Lineage.Progress != null && s.Lineage.Progress.TryGetValue(tree, out var progress) && progress != null ? progress.Rank : 1;
+            return new SecondaryLineageContext(s, tree, rank);
+        }
+        public static void LineageChoice(ContentDb c, RunState s, string choice, string stat = null)
+        {
+            int split = choice?.IndexOf(':') ?? -1;
+            if (split < 0) { LineageChoiceCurrent(c, s, choice, stat); return; }
+            string tree = choice.Substring(0, split);
+            LTRequire(tree == s.Lineage?.SupportingTreeId);
+            using (var context = LTSecondary(s))
+            {
+                LTRequire(context != null);
+                LineageChoiceCurrent(c, s, choice.Substring(split + 1), stat);
+                var command = s.Log[s.Log.Count - 1]; command.LineageAction = choice; s.Log[s.Log.Count - 1] = command;
+            }
+        }
+        public static IEnumerable<(string Choice, string Stat, string Label, string Description)> AvailableLineageChoices(ContentDb c, RunState s)
+        {
+            if (s.Lineage == null) yield break;
+            foreach (var item in AvailableLineageChoicesCurrent(c, s)) yield return item;
+            if (s.Lineage.SupportingTreeId == null) yield break;
+            var secondary = s.Clone();
+            using (var context = LTSecondary(secondary))
+                if (context != null)
+                    foreach (var item in AvailableLineageChoicesCurrent(c, secondary))
+                        yield return (secondary.Lineage.TreeId + ":" + item.Choice, item.Stat,
+                            c.Text(c.Trees[secondary.Lineage.TreeId].NameKey) + ": " + item.Label, item.Description);
+        }
+        public static string LineageSummary(ContentDb c, RunState s)
+        {
+            string focus = LineageSummaryCurrent(c, s);
+            if (s.Lineage?.SupportingTreeId == null) return focus;
+            var copy = s.Clone();
+            using (var context = LTSecondary(copy))
+            {
+                if (context == null) return focus;
+                return c.Text(c.Trees[s.Lineage.TreeId].NameKey) + ": " + focus + " "
+                    + c.Text(c.Trees[copy.Lineage.TreeId].NameKey) + ": " + LineageSummaryCurrent(c, copy);
+            }
+        }
+        static void LineageGrowth(ContentDb c, RunState s, string stat, ref double growth)
+        {
+            LineageGrowthCurrent(c, s, stat, ref growth);
+            using (var context = LTSecondary(s)) if (context != null) LineageGrowthCurrent(c, s, stat, ref growth);
+        }
+        static void LineageDrillGain(ContentDb c, RunState s, string stat, DrillTier tier, ref double gain)
+        {
+            LineageDrillGainCurrent(c, s, stat, tier, ref gain);
+            using (var context = LTSecondary(s)) if (context != null) LineageDrillGainCurrent(c, s, stat, tier, ref gain);
+        }
+        static void LineageInjury(ContentDb c, RunState s, double energy, ref double chance)
+        {
+            LineageInjuryCurrent(c, s, energy, ref chance);
+            using (var context = LTSecondary(s)) if (context != null) LineageInjuryCurrent(c, s, energy, ref chance);
+        }
+        static void LineageDrillDone(ContentDb c, RunState s, DrillResult result, double energyBefore)
+        {
+            LineageDrillDoneCurrent(c, s, result, energyBefore);
+            using (var context = LTSecondary(s)) if (context != null) LineageDrillDoneCurrent(c, s, result, energyBefore);
+        }
+        static void LineageCycleStart(ContentDb c, RunState s)
+        {
+            LineageCycleStartCurrent(c, s);
+            using (var context = LTSecondary(s)) if (context != null) LineageCycleStartCurrent(c, s);
+        }
+        static void LineageCoreCost(ContentDb c, RunState s, ref double eat)
+        {
+            LineageCoreCostCurrent(c, s, ref eat);
+            using (var context = LTSecondary(s)) if (context != null) LineageCoreCostCurrent(c, s, ref eat);
+        }
+        static void LineageDevour(ContentDb c, RunState s, ref string stat, ref double amount)
+        {
+            LineageDevourCurrent(c, s, ref stat, ref amount);
+            using (var context = LTSecondary(s)) if (context != null) LineageDevourCurrent(c, s, ref stat, ref amount);
+        }
+        static void LineageRankStart(ContentDb c, RunState s, Fighter monster, Fighter opponent)
+        {
+            LineageRankStartCurrent(c, s, monster, opponent);
+            using (var context = LTSecondary(s)) if (context != null) LineageRankStartCurrent(c, s, monster, opponent);
+        }
+        static void LineageRankResult(ContentDb c, RunState s, RankFightResult result)
+        {
+            LineageRankResultCurrent(c, s, result);
+            using (var context = LTSecondary(s)) if (context != null) LineageRankResultCurrent(c, s, result);
+        }
+        static void LineageKitExtra(ContentDb c, RunState s, List<string> extra)
+        {
+            LineageKitExtraCurrent(c, s, extra);
+            using (var context = LTSecondary(s)) if (context != null) LineageKitExtraCurrent(c, s, extra);
+        }
         static double LTGain(ContentDb c) => c.ConstantValues["LINEAGE_TRAIN_GAIN"];
         static double LTCap(ContentDb c) => c.ConstantValues["LINEAGE_TRAIN_CAP"];
         static int LTCharge(ContentDb c) => (int)c.ConstantValues["LINEAGE_TRAIN_CHARGE"];
@@ -39,7 +154,7 @@ namespace IdleRng.Sim.Training
             && n.Index == c.Trees[n.TreeId].Nodes.Count - 1 && n.TreeId != "mastery";
 
         /// <summary>Explicit milestone decisions and resource exchanges; choices never draw RNG or award lineage points.</summary>
-        public static void LineageChoice(ContentDb c, RunState s, string choice, string stat = null)
+        static void LineageChoiceCurrent(ContentDb c, RunState s, string choice, string stat = null)
         {
             LTRequire(s.Phase != RunPhase.Finished && s.Lineage != null && LTActive(c, s, s.Lineage.TreeId));
             var d = s.LineageTraining ?? new LineageTrainingState();
@@ -106,7 +221,7 @@ namespace IdleRng.Sim.Training
         }
 
         /// <summary>Host-driven actionable choices; validation uses a clone and consumes no production state or RNG.</summary>
-        public static IEnumerable<(string Choice, string Stat, string Label, string Description)> AvailableLineageChoices(ContentDb c, RunState s)
+        static IEnumerable<(string Choice, string Stat, string Label, string Description)> AvailableLineageChoicesCurrent(ContentDb c, RunState s)
         {
             if (s.Lineage == null) yield break;
             var candidates = new List<(string Choice, string Stat, string Label, string Description)>();
@@ -160,7 +275,7 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        public static string LineageSummary(ContentDb c, RunState s)
+        static string LineageSummaryCurrent(ContentDb c, RunState s)
         {
             var d = s.LineageTraining;
             if (s.Lineage == null || d == null) return "Choose a milestone direction when its capstone is active.";
@@ -181,7 +296,7 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        static void LineageGrowth(ContentDb c, RunState s, string stat, ref double growth)
+        static void LineageGrowthCurrent(ContentDb c, RunState s, string stat, ref double growth)
         {
             var d = s.LineageTraining;
             if (d == null) return;
@@ -195,7 +310,7 @@ namespace IdleRng.Sim.Training
             if (LTActive(c, s, "mastery", 10) && d.Choice == "preserve" && s.Mastered != null && s.Mastered.Contains(d.Stat)) growth += LTGain(c);
         }
 
-        static void LineageDrillGain(ContentDb c, RunState s, string stat, DrillTier tier, ref double gain)
+        static void LineageDrillGainCurrent(ContentDb c, RunState s, string stat, DrillTier tier, ref double gain)
         {
             if (LTActive(c, s, "iron_vow")) gain = Math.Floor(gain * (1 + Math.Min(LTCap(c), (s.LineageTraining?.Rhythm ?? 0) * LTGain(c))));
             if (LTActive(c, s, "limit_break") && s.Stats.Get(stat) >= c.Constants.StatMax
@@ -206,12 +321,12 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        static void LineageInjury(ContentDb c, RunState s, double e, ref double chance)
+        static void LineageInjuryCurrent(ContentDb c, RunState s, double e, ref double chance)
         {
             if (LTActive(c, s, "second_breath", 10) && s.LineageTraining?.Armed == true) chance = 0;
         }
 
-        static void LineageDrillDone(ContentDb c, RunState s, DrillResult result, double energyBefore)
+        static void LineageDrillDoneCurrent(ContentDb c, RunState s, DrillResult result, double energyBefore)
         {
             if (LTActive(c, s, "heirloom") && s.LineageTraining != null && (s.LineageTraining.SourceStat ?? s.LineageTraining.Stat) == result.Stat)
             { var d = LTState(s); d.Charge = Math.Min(LTCharge(c), d.Charge + 1); }
@@ -224,13 +339,13 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        static void LineageCycleStart(ContentDb c, RunState s)
+        static void LineageCycleStartCurrent(ContentDb c, RunState s)
         {
             if (LTActive(c, s, "ascetic") && s.LineageTraining != null) s.LineageTraining.Charge = 0;
             if (LTActive(c, s, "hungry_core") && s.LineageTraining != null) s.LineageTraining.Used = false;
         }
 
-        static void LineageCoreCost(ContentDb c, RunState s, ref double eat)
+        static void LineageCoreCostCurrent(ContentDb c, RunState s, ref double eat)
         {
             if (!LTActive(c, s, "hungry_core")) return;
             var d = LTState(s);
@@ -239,7 +354,7 @@ namespace IdleRng.Sim.Training
             eat *= choice == "heavy" ? 1 + LTCap(c) : choice == "modest" ? 1 - LTCap(c) : 1;
         }
 
-        static void LineageDevour(ContentDb c, RunState s, ref string stat, ref double amount)
+        static void LineageDevourCurrent(ContentDb c, RunState s, ref string stat, ref double amount)
         {
             if (!LTActive(c, s, "devourer") || s.LineageTraining?.Stat == null) return;
             var d = s.LineageTraining;
@@ -249,7 +364,7 @@ namespace IdleRng.Sim.Training
             amount = Math.Floor(amount);
         }
 
-        static void LineageRankStart(ContentDb c, RunState s, Fighter monster, Fighter opponent)
+        static void LineageRankStartCurrent(ContentDb c, RunState s, Fighter monster, Fighter opponent)
         {
             var d = s.LineageTraining;
             if (d == null) return;
@@ -276,7 +391,7 @@ namespace IdleRng.Sim.Training
             }
         }
 
-        static void LineageRankResult(ContentDb c, RunState s, RankFightResult result)
+        static void LineageRankResultCurrent(ContentDb c, RunState s, RankFightResult result)
         {
             var d = s.LineageTraining;
             if (!result.Won || !LTActive(c, s, "mastery") || d?.Choice != "pursue") return;
@@ -289,7 +404,7 @@ namespace IdleRng.Sim.Training
                 }
         }
 
-        static void LineageKitExtra(ContentDb c, RunState s, List<string> extra)
+        static void LineageKitExtraCurrent(ContentDb c, RunState s, List<string> extra)
         {
             if (LTActive(c, s, "mastery") && s.LineageTraining?.Choice == "preserve" && s.Mastered != null)
                 extra.RemoveAll(id => s.Mastered.Contains(id) && id != s.LineageTraining.Stat);
@@ -297,9 +412,13 @@ namespace IdleRng.Sim.Training
 
         static void LineageHash(CanonicalWriter w, RunState s)
         {
-            var d = s.LineageTraining;
+            LineageTrainingHash(w, s.LineageTraining, "lineage_training");
+            LineageTrainingHash(w, s.SecondaryLineageTraining, "secondary_lineage_training");
+        }
+        static void LineageTrainingHash(CanonicalWriter w, LineageTrainingState d, string marker)
+        {
             if (d == null) return;
-            w.Str("lineage_training"); w.Str(d.Choice); w.Str(d.Stat); w.Str(d.SourceStat); w.Str(d.CoreStat);
+            w.Str(marker); w.Str(d.Choice); w.Str(d.Stat); w.Str(d.SourceStat); w.Str(d.CoreStat);
             w.I32(d.Charge); w.I32(d.Rhythm); w.Bool(d.Used); w.Bool(d.Armed);
             w.F64(d.Excess); w.F64(d.Adaptation); w.F64(d.RedirectGrowth);
         }

@@ -65,6 +65,7 @@ Implementations: `FileSaveStore(directory, slotName)` (files `<slot>.sav`, `<slo
 
 | v12 -> v13 | Fortune prototype ledger starts at I; old runs and Vault entries remain unbred (`specs/29`) |
 | v13 -> v14 | Copy the legacy `Fortuna` ledger into `Lineages["fortune"]`, preserving all progress and attempt counters. Other generic trees default to I; run-local lineage training choice state is saved and hashed (`specs/30`). `Fortuna` remains an alias, not a second ledger |
+| v14 -> v15 | Move lineage progression onto monsters. Materialize frozen birth quality, then assign each old tree ledger to the strongest eligible Vault carrier (grade, total eight stats, smallest certified id), including locked carriers for preservation. Never downgrade a higher carried rank or alter frozen fighter rolls. Unmatched meaningful ledgers remain a one-time legacy reserve in `Account.Lineages`; current saves omit the serialized `Fortuna` alias so claims cannot resurrect it. Active old runs retain birth quality/high-water progress and do not consume parents retroactively. Personal seed/pity/attempts and independent secondary training state are saved and hashed (`specs/30` section 7) |
 
 A save written by a newer schema is not loaded (`SaveInvalidException`) and never overwritten.
 

@@ -1,5 +1,4 @@
-using System;
-using System.Linq;
+using System.Collections.Generic;
 using IdleRng.Runtime.Save;
 using IdleRng.Sim.Account;
 using IdleRng.Sim.Combat;
@@ -12,108 +11,92 @@ namespace IdleRng.Runtime.Tests
     public class FortunaSaveTests
     {
         static Sim.Content.ContentDb Db => TestContent.Db;
-
         static AccountState Parents(ulong seed = 11)
         {
-            var a = AccountOps.New(Db, seed);
-            a.Shards = 10000;
-            a.RunsStarted = 2;
-            a.Vault.Add(new VaultEntry { Id = 0, SpeciesId = "slime", Trees = { new VaultTree { TreeId = "fortune", Bought = 2 } } });
-            a.Vault.Add(new VaultEntry { Id = 1, SpeciesId = "slime" });
+            var a = AccountOps.New(Db, seed); a.Shards = 10000; a.RunsStarted = 2;
+            a.Vault.Add(new VaultEntry { Id = 0, SpeciesId = "slime", Trees = { new VaultTree { TreeId = "fortune", Bought = 2 } },
+                Lineages = new SortedDictionary<string, FortunaLineage> { ["fortune"] = new FortunaLineage { Rank = 5 } } });
+            a.Vault.Add(new VaultEntry { Id = 1, SpeciesId = "slime", Trees = { new VaultTree { TreeId = "bulwark", Bought = 8 } } });
             return a;
         }
 
         [Test]
-        public void BredRunRoundTrip_PreservesRankHighWaterParentIdsAndFrozenRoll()
+        public void BredRunRoundTrip_PreservesBothInheritancesAndFrozenRollAfterConsumingParents()
         {
-            var a = Parents();
-            a.Fortuna.Rank = 5;
-            var s = FortunaBreeding.Breed(Db, a, 0, 1);
-            s.Sp = 100;
+            var a = Parents(); var s = FortunaBreeding.Breed(Db, a, 0, 1); s.Sp = 100;
             for (int i = 0; i < 8; i++) TrainingRun.SpendPoint(Db, s, 2);
             var before = TrainingRun.StateHash(s);
             var b = AccountSave.Decode(Db, AccountSave.Encode(a), out var notice);
-            Assert.That(notice, Is.Null);
+            Assert.That(notice, Is.Null); Assert.That(b.Vault, Is.Empty);
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(before));
             Assert.That((b.Active.Lineage.Rank, b.Active.Lineage.Deepest, b.Active.Lineage.Primary, b.Active.Lineage.Supporting), Is.EqualTo((5, 8, 0, 1)));
+            Assert.That(b.Active.Lineage.SupportingTreeId, Is.EqualTo("bulwark"));
+            Assert.That(b.Active.Lineage.Progress.Keys, Is.EquivalentTo(new[] { "fortune", "bulwark" }));
             Assert.That(b.Active.Slots[2].Roll.LineageRank, Is.EqualTo(5));
+            Assert.That(b.Active.Slots[3].TreeId, Is.EqualTo("bulwark"));
             Assert.That(TrainingRun.MonsterFighter(Db, b.Active).Rules, Does.Contain(RuleModifiers.FortuneBank));
-            Assert.That(AccountSave.Encode(b), Is.EqualTo(AccountSave.Encode(a)), "save/load retains inherited roll exactly");
+            Assert.That(AccountSave.Encode(b), Is.EqualTo(AccountSave.Encode(a)));
         }
 
         [Test]
-        public void OverwrittenFocusTreeRoundTrip_RetainsEarnedPointsWithoutRestoringItsPower()
+        public void OverwrittenFocusTreeRoundTrip_RetainsGeneticProgressWithoutRestoringItsPower()
         {
-            var a = Parents();
-            a.Fortuna.Rank = 5;
-            var s = FortunaBreeding.Breed(Db, a, 0, 1);
-            s.Sp = 100;
+            var a = Parents(); var s = FortunaBreeding.Breed(Db, a, 0, 1); s.Sp = 100;
             for (int i = 0; i < 8; i++) TrainingRun.SpendPoint(Db, s, 2);
-            s.Offers.Insert(0, new TreeOffer { Trees = { "vital_core" } });
-            TrainingRun.TakeTree(Db, s, 0, 2);
+            s.Offers.Insert(0, new TreeOffer { Trees = { "vital_core" } }); TrainingRun.TakeTree(Db, s, 0, 2);
             var b = AccountSave.Decode(Db, AccountSave.Encode(a), out var notice);
-            Assert.That(notice, Is.Null);
-            Assert.That(b.Active.Lineage.Deepest, Is.EqualTo(8));
+            Assert.That(notice, Is.Null); Assert.That(b.Active.Lineage.Deepest, Is.EqualTo(8));
             Assert.That(b.Active.Slots[2].TreeId, Is.EqualTo("vital_core"));
+            Assert.That(b.Active.Lineage.Progress["fortune"].Rank, Is.EqualTo(5));
             Assert.That(TrainingRun.MonsterFighter(Db, b.Active).Rules, Does.Not.Contain(RuleModifiers.FortuneBank));
             Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(TrainingRun.StateHash(s)));
         }
 
         [Test]
-        public void FailedBreakthrough_SaveLoadAndPartsRetainRetryStateAndNextOutcome()
+        public void FailedPersonalBreakthrough_SaveAndPartsKeepRetrySeedAndNextOutcome()
         {
             AccountState a = null;
-            // Find a deterministic seed with a failed first V attempt.
             for (ulong seed = 0; seed < 100; seed++)
             {
-                a = Parents(seed);
-                a.Fortuna.Rank = 4; a.Fortuna.Points = 179;
-                FortunaBreeding.Award(Db, a, new RunState { Lineage = new LineageRun { Deepest = 1 } });
-                if (a.Fortuna.Failures == 1) break;
+                a = Parents(seed); var source = a.Vault[0].Lineages["fortune"]; source.Rank = 4; source.Points = 179;
+                var s = FortunaBreeding.Breed(Db, a, 0, 1); s.Lineage.Deepest = 1; TreeLineages.Award(Db, a, s);
+                if (s.Lineage.Progress["fortune"].Failures == 1) break;
             }
-            Assert.That(a.Fortuna.Failures, Is.EqualTo(1));
+            var expected = a.Active.Lineage.Progress["fortune"];
+            Assert.That(expected.Failures, Is.EqualTo(1));
             var items = AccountParts.Split(a);
-            Assert.That(items[AccountParts.Progress], Does.Contain("Fortuna"));
-            Assert.That(items[AccountParts.Training], Does.Not.Contain("Fortuna"));
-            var b = AccountParts.Join(Db, items, out var notice);
-            Assert.That(notice, Is.Null);
-            var c = AccountSave.Decode(Db, AccountSave.Encode(a));
-            Assert.That((b.Fortuna.Rank, b.Fortuna.Points, b.Fortuna.Failures, b.Fortuna.Attempts),
-                Is.EqualTo((a.Fortuna.Rank, a.Fortuna.Points, a.Fortuna.Failures, a.Fortuna.Attempts)));
-            Assert.That(FortunaBreeding.Required(Db, b.Fortuna), Is.EqualTo(FortunaBreeding.Required(Db, a.Fortuna)));
-            Assert.That(FortunaBreeding.Chance(Db, b.Fortuna), Is.EqualTo(65));
-            // A persisted failure cannot be rerolled by loading: every copy uses the same next attempt.
-            foreach (var account in new[] { a, b, c })
+            Assert.That(items[AccountParts.Progress], Does.Not.Contain("Fortuna"));
+            Assert.That(items[AccountParts.Training], Does.Contain("Progress"));
+            var b = AccountParts.Join(Db, items, out var notice); Assert.That(notice, Is.Null);
+            var d = AccountSave.Decode(Db, AccountSave.Encode(a));
+            foreach (var account in new[] { a, b, d })
             {
-                account.Fortuna.Points = FortunaBreeding.Required(Db, account.Fortuna);
-                FortunaBreeding.Award(Db, account, new RunState { Lineage = new LineageRun() });
+                var p = account.Active.Lineage.Progress["fortune"];
+                Assert.That((p.Rank, p.Points, p.Failures, p.Attempts, p.Seed), Is.EqualTo((expected.Rank, expected.Points, expected.Failures, expected.Attempts, expected.Seed)));
+                Assert.That(TreeLineages.Chance(Db, p), Is.EqualTo(65));
+            }
+            foreach (var account in new[] { a, b, d })
+            {
+                var p = account.Active.Lineage.Progress["fortune"]; p.Points = TreeLineages.Required(Db, p);
+                account.Active.Lineage.Deepest = 0; TreeLineages.Award(Db, account, account.Active);
             }
             Assert.That(AccountParts.Split(b), Is.EqualTo(AccountParts.Split(a)));
-            Assert.That(AccountParts.Split(c), Is.EqualTo(AccountParts.Split(a)));
+            Assert.That(AccountParts.Split(d), Is.EqualTo(AccountParts.Split(a)));
         }
 
         [Test]
-        public void Schema12SaveAndParts_DefaultToRankOne_WithoutChangingExistingRun()
+        public void Schema12SaveAndParts_DefaultToNoReserve_WithoutChangingUnrelatedRun()
         {
-            var a = Parents();
-            AccountOps.StartRun(Db, a, "slime");
+            var a = Parents(); a.Vault[0].Lineages = null; AccountOps.StartRun(Db, a, "slime");
             var hash = TrainingRun.StateHash(a.Active);
-            var body = SaveSerializer.Decode(AccountSave.Encode(a)).body;
-            body["SchemaVersion"] = 12;
-            body["Account"]["SchemaVersion"] = 12;
-            ((JObject)body["Account"]).Remove("Fortuna");
+            var body = SaveSerializer.Decode(AccountSave.Encode(a)).body; body["SchemaVersion"] = 12; body["Account"]["SchemaVersion"] = 12;
+            ((JObject)body["Account"]).Remove("Fortuna"); ((JObject)body["Account"]).Remove("Lineages");
             var b = AccountSave.Decode(Db, SaveSerializer.EncodeBody(body.ToString()), out var notice);
-            Assert.That(notice, Is.Null);
-            Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
-            Assert.That((b.Fortuna.Rank, b.Fortuna.Points, b.Fortuna.Attempts), Is.EqualTo((1, 0, 0)));
-            Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(hash));
-            var parts = AccountParts.Split(a);
-            var progress = JObject.Parse(parts[AccountParts.Progress]); progress.Remove("Fortuna");
-            parts[AccountParts.Progress] = progress.ToString(Newtonsoft.Json.Formatting.None);
+            Assert.That(notice, Is.Null); Assert.That(b.SchemaVersion, Is.EqualTo(AccountState.CurrentSchemaVersion));
+            Assert.That(b.Lineages, Is.Empty); Assert.That(TrainingRun.StateHash(b.Active), Is.EqualTo(hash));
+            var parts = AccountParts.Split(a); parts[AccountParts.Progress] = "{}";
             var c = AccountParts.Join(Db, parts, 12, out notice);
-            Assert.That(notice, Is.Null);
-            Assert.That(c.Fortuna.Rank, Is.EqualTo(1));
-            Assert.That(TrainingRun.StateHash(c.Active), Is.EqualTo(hash));
+            Assert.That(notice, Is.Null); Assert.That(c.Lineages, Is.Empty); Assert.That(TrainingRun.StateHash(c.Active), Is.EqualTo(hash));
         }
     }
 }

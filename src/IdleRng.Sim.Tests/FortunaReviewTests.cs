@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using IdleRng.Sim.Account;
 using IdleRng.Sim.Combat;
@@ -83,6 +84,32 @@ namespace IdleRng.Sim.Tests
             Assert.That(s.Lineage.Rank, Is.EqualTo(1));
             Assert.That(s.Lineage.Deepest, Is.EqualTo(3));
             Assert.That(TrainingRun.StateHash(clone), Is.Not.EqualTo(TrainingRun.StateHash(s)));
+        }
+        [Test]
+        public void PersonalProgressAndSupportingIdentityAreHashed_AndDeepCloned()
+        {
+            var s = TrainingRun.Start(TestContent.Db, "slime", 8);
+            s.Lineage = new LineageRun { TreeId = "fortune", Rank = 4, Primary = 0, Supporting = 1, SupportingTreeId = "brute_force",
+                Progress = new SortedDictionary<string, FortunaLineage> {
+                    ["fortune"] = new FortunaLineage { Rank = 4, Points = 44, Failures = 1, Attempts = 2, Seed = 123 },
+                    ["brute_force"] = new FortunaLineage { Rank = 2, Points = 3, Seed = 456 } } };
+            string original = TrainingRun.StateHash(s);
+            Assert.That(TrainingRun.StateHash(s.Clone()), Is.EqualTo(original));
+            var changes = new (string Name, Action<RunState> Change)[] {
+                ("focus progress", x => x.Lineage.Progress["fortune"].Points++),
+                ("focus seed", x => x.Lineage.Progress["fortune"].Seed++),
+                ("focus pity", x => x.Lineage.Progress["fortune"].Failures++),
+                ("focus attempts", x => x.Lineage.Progress["fortune"].Attempts++),
+                ("secondary rank", x => x.Lineage.Progress["brute_force"].Rank++),
+                ("secondary progress", x => x.Lineage.Progress["brute_force"].Points++),
+                ("secondary identity", x => x.Lineage.SupportingTreeId = "bulwark"),
+            };
+            foreach (var item in changes)
+            {
+                var clone = s.Clone(); item.Change(clone);
+                Assert.That(TrainingRun.StateHash(clone), Is.Not.EqualTo(original), item.Name);
+                Assert.That(TrainingRun.StateHash(s), Is.EqualTo(original), item.Name + " must not mutate its source clone");
+            }
         }
     }
 }
