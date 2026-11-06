@@ -931,6 +931,11 @@ body:has(#app.workshop) { background: var(--workshop-bg); }
 .workshop-steps li { margin: 0 0 16px; padding-left: 12px; border-left: 2px solid var(--line); font-size: 13px; }
 .workshop-steps p { margin: 5px 0 0; }
 .workshop-notice { border-left: 3px solid var(--gold); padding: 10px 14px; margin: 0; background: var(--gold-bg); border-radius: var(--r-xs); }
+.support-tree-choices { display: flex; flex-wrap: wrap; gap: 7px; }
+.support-tree-choices > small { flex-basis: 100%; }
+.support-tree-choices .btn { flex: 1 1 auto; font-size: 11px; }
+.support-tree-choices .btn[aria-pressed="true"] { border-color: var(--gems); background: var(--gems-bg); color: var(--gems); }
+.inherited-support { display: grid; justify-items: center; gap: 6px; }
 .workshop-cost { display: grid; gap: 4px; flex-basis: 100%; text-align: center; }
 .workshop-cost b { font-size: 12px; }
 .workshop-warning { margin: 0; width: 100%; text-align: center; }

@@ -301,7 +301,12 @@ namespace IdleRng.Server
                     if (!kv.Key.StartsWith(AccountParts.EntryPrefix, StringComparison.Ordinal)) continue;
                     int id = int.Parse(kv.Key.Substring(AccountParts.EntryPrefix.Length), NumberStyles.None, CultureInfo.InvariantCulture);
                     ids.Add(id);
-                    if (head.Entries.ContainsKey(id)) continue;   // an entry never changes once written
+                    if (head.Entries.TryGetValue(id, out var prior))
+                    {
+                        // Battle results stay frozen, but a schema migration can add personal inheritance to an old entry.
+                        if (head.Schema == AccountState.CurrentSchemaVersion) continue;
+                        superseded.Add(prior);
+                    }
                     string key = AccountHead.ItemKey(AccountHead.EntryName(id), seq, tag);
                     write[key] = kv.Value;
                     next.Entries[id] = key;

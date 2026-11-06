@@ -1108,6 +1108,16 @@ namespace IdleRng.Sim.Training
                 w.Str("lineage-v1"); w.I32(s.Lineage.Rank); w.I32(s.Lineage.Deepest);
                 w.I32(s.Lineage.Primary); w.I32(s.Lineage.Supporting);
                 if (s.Lineage.TreeId != "fortune") { w.Str("lineage-tree"); w.Str(s.Lineage.TreeId); }
+                if (s.Lineage.Progress != null)
+                {
+                    w.Str("personal-lineages-v1"); w.Str(s.Lineage.SupportingTreeId); w.I32(s.Lineage.Progress.Count);
+                    foreach (var pair in s.Lineage.Progress.OrderBy(x => x.Key, StringComparer.Ordinal))
+                    {
+                        w.Str(pair.Key); var p = pair.Value;
+                        w.I32(p.Rank); w.I32(p.Points); w.I32(p.Failures); w.I32(p.Attempts); w.U64(p.Seed);
+                        w.I32(p.LastAward); w.Str(p.LastResult);
+                    }
+                }
             }
             HookHashRun(w, s);   // lane run-rule state, only for runs that have it
             return Sha256.Hex(Sha256.Compute(w.ToArray()));

@@ -128,7 +128,7 @@ namespace IdleRng.Bots.Tests
             Run(new AccountCommand { Kind = CommandKind.Abandon });
 
             // An established certified parent fixture isolates command partitioning from bot/training balance.
-            // The existing Vault supplies the second parent; the new parent has legally ordered Fortune skill nodes.
+            // Each parent supplies one legally learned, distinct generic tree.
             a.Vault.Add(new VaultEntry
             {
                 Id = a.RunsStarted++, SpeciesId = "slime", Grade = Db.FightRanks[0].Id, RankIndex = 0,
@@ -136,7 +136,14 @@ namespace IdleRng.Bots.Tests
                 Stats = Db.Species["slime"].Base.Clone(),
                 Trees = { new VaultTree { TreeId = "fortune", Bought = 2 } },
             });
-            Run(new AccountCommand { Kind = CommandKind.Breed, A = a.Vault.Count - 1, B = 0 });
+            a.Vault.Add(new VaultEntry
+            {
+                Id = a.RunsStarted++, SpeciesId = "slime", Grade = Db.FightRanks[0].Id, RankIndex = 0,
+                End = RunEnd.Completed, Cycles = Db.Constants.RunCycles,
+                Stats = Db.Species["slime"].Base.Clone(),
+                Trees = { new VaultTree { TreeId = "brute_force", Bought = 5 } },
+            });
+            Run(new AccountCommand { Kind = CommandKind.Breed, A = a.Vault.Count - 2, B = a.Vault.Count - 1, SupportingTree = "brute_force" });
             Run(new AccountCommand { Kind = CommandKind.Spend, A = 2 });
             Run(new AccountCommand { Kind = CommandKind.Abandon });
 

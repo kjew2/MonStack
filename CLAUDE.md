@@ -68,3 +68,5 @@ This file is how lessons reach the next agent. When the user corrects you on som
 - Breeding lineage progress comes only from the inherited focus tree's deepest node progression, weighted toward its capstone; do not add rewards for grades, wins, deeds, parent quality or run completion (`specs/29`, kj 2026-11-03).
 
 - A new browser bridge command must return an explicit success result and be covered by a browser save/reload flow; sim-only tests do not verify client persistence and checkpoint recording.
+
+- Synthesis consumes monsters: commands must include the reviewed supporting inheritance. Reject old queued `breed` commands without it rather than replaying parent-retaining intent as sacrifice.

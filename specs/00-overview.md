@@ -12,7 +12,7 @@ History: the project began as a mobile idle game (stage push, gear, gacha). It p
 | Training run: action-point cycles of Drill and Rest, rank fights, milestones | `src/IdleRng.Sim/Training` | `14` |
 | Skill trees: 4 slots, skill points, offers, chase trees | `src/IdleRng.Sim/Training` | `15` |
 | Account: Vault (cap, lock, dismantle), Training Shards, achievements and species unlocks, the post-run talent vendor, run modifiers, abandon | `src/IdleRng.Sim/Account` | `18` |
-| Breeding and I–X lineages for all 40 generic trees | `src/IdleRng.Sim/Account/TreeLineages.cs` | `30` |
+| Consumptive synthesis and monster-held I–X lineages for all 40 generic trees | `src/IdleRng.Sim/Account/TreeLineages.cs` | `30` |
 | End-of-run gauntlet and Legacy Titles | `src/IdleRng.Sim/Gauntlet` | `19` |
 | Dungeon (built as the Daily Tower): daily lineup of 4v1 boss floors, tickets (one free a day, pieces from sealed runs) and rewards (shards, Skill Book drops, the premium gate), a first web screen | `src/IdleRng.Sim/Tower`, `AccountOps.RunTower`, `web/run.js` | `21` |
 | Endless Tower: 4v4 climb of a weekly season, squad shapes, elites, stacking mutators (sim only so far) | `src/IdleRng.Sim/Tower/EndlessSim.cs` | `28` |
@@ -59,9 +59,9 @@ Every number is a row in `content_src/` (`specs/05`), read through `ContentDb`; 
 | **Rank** | E to S: how far the monster has climbed in its rank fights; the MVP grade |
 | **Ladder** | A run's rank fight opponents, one per rank, rolled at the start from each rank's pool (`rank_enemies`, `specs/14` section 5); a loss is a rematch |
 | **Tree, node, chase trait** | `specs/15` |
-| **Lineage rank** | Account-unlocked tree quality captured by newly bred offspring; I–X for the 40 generic trees (`specs/30`), separate from bought nodes and fight rank |
+| **Lineage rank** | Monster-held inheritable tree quality; I–X for the 40 generic trees (`specs/30`). Synthesis carries selected rank/progress from each consumed parent; bought nodes and frozen combat rank remain separate |
 | **Vault** | The account's finished, frozen monsters |
-| **Training Shards** | The soft currency, paid at the end of a run; buys talent ranks from the vendor and funds breeding |
+| **Training Shards** | The soft currency, paid at the end of a run; buys talent ranks from the vendor and funds synthesis |
 | **Talent** | A permanent account upgrade that changes the next runs (`RunModifiers`) |
 | **Vendor** | The post-run shop: after each sealed run, `VENDOR_OFFERS` random talent offers whose rarity odds follow the run's grade |
 | **Achievement** | An account goal checked when a run is sealed; some unlock a species. A new account owns only the starter species |

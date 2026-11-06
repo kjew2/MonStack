@@ -283,6 +283,7 @@ namespace IdleRng.Sim.Training
     {
         public LineageRun Lineage { get; set; }
         public LineageTrainingState LineageTraining { get; set; }
+        public LineageTrainingState SecondaryLineageTraining { get; set; }
 
         public string SpeciesId { get; set; }
 
@@ -381,6 +382,7 @@ namespace IdleRng.Sim.Training
             var c = (RunState)MemberwiseClone();
             c.Lineage = Lineage?.Clone();
             c.LineageTraining = LineageTraining?.Clone();
+            c.SecondaryLineageTraining = SecondaryLineageTraining?.Clone();
             c.Stats = Stats.Clone();
             c.Mods = Mods.Clone();
             c.Ladder = new List<string>(Ladder);

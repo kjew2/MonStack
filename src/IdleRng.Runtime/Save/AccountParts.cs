@@ -68,6 +68,7 @@ namespace IdleRng.Runtime.Save
         {
             if (a == null) throw new ArgumentNullException(nameof(a));
             var acct = JObject.FromObject(a, SaveSerializer.Serializer);
+            acct.Remove(nameof(AccountState.Fortuna)); // compatibility alias is read only for old schemas
             var items = new SortedDictionary<string, string>(StringComparer.Ordinal);
             foreach (var kv in Fields)
             {

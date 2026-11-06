@@ -68,6 +68,9 @@ namespace IdleRng.Sim.Account
         /// </summary>
         public string Id { get; set; }
 
+        /// <summary>breed: the distinct generic inheritance supplied by the supporting parent.</summary>
+        public string SupportingTree { get; set; }
+
         /// <summary>startRun: books brought (null = none). setLoadout: talents switched off.</summary>
         public List<string> Ids { get; set; }
 
@@ -126,7 +129,7 @@ namespace IdleRng.Sim.Account
             switch (kind)
             {
                 case CommandKind.Breed:
-                    c.A = Int(a, 0); c.B = Int(a, 1); c.TalentsOff = a.Has(2) ? a.StrList(2) : null; c.Id = a.Has(3) ? a.Str(3) : "fortune"; break;
+                    c.A = Int(a, 0); c.B = Int(a, 1); c.TalentsOff = a.Has(2) ? a.StrList(2) : null; c.Id = a.Has(3) ? a.Str(3) : "fortune"; c.SupportingTree = a.Has(4) ? a.Str(4) : null; break;
                 case CommandKind.StartRun:
                     c.Id = a.Str(0);
                     c.Ids = a.Has(1) ? a.StrList(1) : null;
@@ -172,7 +175,7 @@ namespace IdleRng.Sim.Account
         {
             switch (k)
             {
-                case CommandKind.Breed:
+                case CommandKind.Breed: return AccountPart.Training | AccountPart.Wallet | AccountPart.Progress | AccountPart.Vault | AccountPart.Entries | AccountPart.Rulebooks;
                 case CommandKind.StartRun: return AccountPart.Training | AccountPart.Wallet;
                 case CommandKind.FinishRun:
                     return AccountPart.Training | AccountPart.Wallet | AccountPart.Collection | AccountPart.Progress | AccountPart.Dungeon
@@ -197,7 +200,7 @@ namespace IdleRng.Sim.Account
         {
             switch (k)
             {
-                case CommandKind.Breed: return AccountPart.Collection | AccountPart.Vault | AccountPart.Entries | AccountPart.Progress;
+                case CommandKind.Breed: return AccountPart.Collection;
                 case CommandKind.StartRun: return AccountPart.Collection | AccountPart.Vault;   // owned species, talents, the Vault cap
                 case CommandKind.FinishRun: return AccountPart.Endless;   // the endless_floor achievements
                 case CommandKind.RerollVendor: return AccountPart.Collection;                    // maxed talents
@@ -226,7 +229,11 @@ namespace IdleRng.Sim.Account
             if (IsRunCommand(cmd.Kind)) s = a.Active ?? throw new InvalidOperationException("no run");
             switch (cmd.Kind)
             {
-                case CommandKind.Breed: return TreeLineages.Breed(c, a, cmd.A, cmd.B, cmd.Id ?? "fortune", cmd.TalentsOff);
+                case CommandKind.Breed:
+                    // A queued pre-synthesis breed was reviewed as retaining its parents. Never reinterpret it as sacrifice.
+                    if (string.IsNullOrEmpty(cmd.SupportingTree))
+                        throw new InvalidOperationException("Review synthesis and choose the supporting inheritance before consuming parents.");
+                    return TreeLineages.Breed(c, a, cmd.A, cmd.B, cmd.Id ?? "fortune", cmd.TalentsOff, cmd.SupportingTree);
                 case CommandKind.StartRun: return AccountOps.StartRun(c, a, cmd.Id, cmd.Ids, cmd.TalentsOff);
                 case CommandKind.FinishRun: return AccountOps.FinishRun(c, a, cmd.Time);
                 case CommandKind.Abandon: return AccountOps.AbandonRun(c, a);

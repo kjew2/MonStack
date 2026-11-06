@@ -42,7 +42,7 @@
       get state() { if (runCache === undefined) runCache = parse(host.RunState()); return runCache; },   // the active run, or null
       persist() { const t = host.AccountSave(); if (t && t !== 'null') ls.set(SAVE_KEY, t); },
       // Account command (startRun, finishRun, buyOffer, rerollVendor, setLoadout, abandon, dismantle, lock, runTower, setRulebook, runEndless,
-      // setName, debugGrantBook); returns the result, ok:false when refused (or, with sync, while play waits for the server).
+      // setName, breed, debugGrantBook); returns the result, ok:false when refused (or, with sync, while play waits for the server).
       acct(name) { return command(name, [].slice.call(arguments, 1), host.AccountCmd); },
       // Run command (drill, rest, fight, take, discard, spend, book, lineageChoice); returns the result, ok:false when refused.
       cmd(name) { return command(name, [].slice.call(arguments, 1), host.RunCmd); },
@@ -91,6 +91,10 @@
       setName(name) { return run.acct('setName', name); },
       startRun(speciesId, books, talentsOff) { return talentsOff ? run.acct('startRun', speciesId, books || [], talentsOff) : run.acct('startRun', speciesId, books || []); },
       finishRun() { return run.acct('finishRun', run.now()); },
+      // Synthesis consumes two parents and inherits one distinct generic tree from each. The host validates everything.
+      breed(primaryIndex, supportingIndex, talentsOff, focusTree, supportingTree) {
+        return run.acct('breed', primaryIndex, supportingIndex, talentsOff == null ? null : talentsOff, focusTree, supportingTree);
+      },
       randomSeedHex: randomSeedHex,
     };
 
